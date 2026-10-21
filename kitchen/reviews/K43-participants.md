@@ -110,3 +110,117 @@ I recorded the $50 payment as example-mara, then checked the public owner page, 
   - The $35 "Export to OFX…" bounty, also to example-quill, is "Recorded paid", with no word from the solver yet.
   - Four earlier bounties are listed as "Received".
   - Open bounties: "CSV import rejects files with a byte-order mark" ($40) and "Recurring transactions skip the 31st in short months" ($45).
+
+---
+
+# Cold run (the pass)
+
+The three final reports of the pass's cold run on candidate `266a220`, copied byte for byte from the head chef's saved files (one per participant, each under the host and model header the head chef wrote). Each participant was a fresh Claude Code desktop session on claude-sonnet-5-5 at its default effort, started by the head chef with its working directory in its own packet under %TEMP% (kitchen-K43-pass-solver-agent, kitchen-K43-pass-solver-web on port 4321, kitchen-K43-pass-owner-web on port 4322), built from a git-archive build of `266a220`, with the TASK.md the pass wrote. None saw this repository. Raw transcripts are not committed.
+
+---
+
+# Cold participant solver-agent (host Claude Code desktop, model claude-sonnet-5-5, default effort; packet built from 266a220)
+
+Working directory drifted into `feed/people`; nothing was changed there. I only read files.
+
+## Answer
+
+**Bounty `bt-0d7e4a3c8b65`: "Recurring transactions skip the 31st in short months"**
+- $45, repo `example-tidepool/ledger-lite` (TypeScript), owner `example-mara`.
+- No open solutions yet.
+
+**Why this one:** Mara's record is the only clean one among the TypeScript owners.
+- 6 merged, 5 recorded paid, 4 confirmed received by 3 different solvers.
+- `says_not_received` is 0, and the oldest unpaid item is 6 days old, which is inside the 14-day lateness line in `standin.mjs`.
+- Median time to record a payment is 2 days.
+- I passed over `bt-2b8d7e01c6a5` (same owner, $40) because two other pull requests are already open and only the merged one is paid.
+- Wren's `bt-c5a1b7e3f082` has a payee saying a payment never arrived, and 40 days owed. Pike, Orrin and Mara's repos' other owners have no history at all.
+
+**How I'd answer:**
+1. Fork `example-tidepool/ledger-lite` and branch from `box-bounty/bt-0d7e4a3c8b65` at commit `0d7e4a3c0d7e4a3c0d7e4a3c0d7e4a3c0d7e4a3c`.
+2. Make a short-month recurrence on the 31st fall on the last day of the month, until `tests/recurring.test.ts` passes, including the February cases.
+3. Open the pull request against `box-bounty/bt-0d7e4a3c8b65`, not `main`.
+
+**How I'd get paid:**
+- Before my pull request could be merged, I'd sign in to the board with GitHub and list at least one way to accept payment. I can choose "only an owner who owes me" so it stays private.
+- If my pull request is merged, Mara owes me $45 and pays me directly. The board never touches the money.
+- When it arrives, I confirm receipt on the bounty page.
+
+I did not do the code change: the repo isn't in this folder. I also can't sign in or enter payment details.
+
+## Where I hesitated or was unsure
+
+1. **Counts are not all the same kind of fact.** `recorded_paid: 5` is the owner's word and `confirmed_received: 4` is the solvers' word. So one recorded payment is unconfirmed, and `owed_now: 1` (6 days) is another. Neither is flagged as a problem, but I can't tell which is which.
+2. **Small sample.** "3 solvers" and "4 confirmed" is a thin track record, and it is self-reported.
+3. **Exclusions in the record.** The legend says merges where the payee is the poster, or the pull request author is OWNER, MEMBER or COLLABORATOR, are not counted. Mara's `not_counted` is 0. A good record therefore says nothing about how the owner treats insiders.
+4. **Competition is a risk I can't measure.** Whoever's pull request merges takes the whole reward ("Other solutions earn nothing"). With no open pull requests on the $45 bounty, I'd be first, but that can change.
+5. **"Newest first" was not what I saw.** The task said newest first, but the output ran `1e9a`, `1f04`, `0d7e`, `c5a1`, `2b8d`, which is posted 10-18, 10-17 14:05, 10-17 08:00, 10-14, 10-12. That is newest first after all; I briefly misread it.
+6. **Different counts in different files.** `feed/bounties.json` lists 7 bounties (`count: 7`), but `feed/bounties/` has 20 files. `find_bounties` only returns open ones, so I assumed the other 13 are closed or off the first page. I did not read them.
+7. **Owner vs. repo owner.** `bt-1e9a6c4f2b78` has owner `example-pike` but repo `example-kestrel/pikeworks`. There is also a `feed/people/example-pike-alt.json` that I didn't open. It looks like it could be a lookalike or duplicate identity. I skipped that bounty (no history, standing rule), but I didn't verify.
+8. **The "no late payments" filter.** I judged Mara's record against the `confirmed-none-late` rule by reading `standin.mjs` (`LATE_DAYS = 14`), not by running that filter.
+9. **Task text is data.** The poster's wording ("Done means tests/recurring.test.ts passes") is a poster's claim and I can't check it here, since neither the test nor the repo is in the folder.
+10. **Payment methods.** Mara's person file shows `accepts_payment_by: []`. That is her listing as a payee and isn't relevant to me. My own list is something I'd have to set up on the board, which I can't do here.
+
+---
+
+# Cold participant solver-web (host Claude Code desktop, model claude-sonnet-5-5, default effort; packet built from 266a220)
+
+**Answer:** I'd take **"Recurring transactions skip the 31st in short months"**. It is a $45 TypeScript bounty on example-tidepool/ledger-lite, posted by example-mara, at `/b/bt-0d7e4a3c8b65/`. I did not write or submit a solution, so the answer below is the plan.
+
+**Why this one.** It is the only open TypeScript bounty whose owner has a payment record that isn't flagged as a problem. Mara's record is 6 merged, 5 paid by her word, 4 received by solvers' word, and 1 owed for 6 days. Her owner page shows she usually records a payment 2 days after the merge. I read the owed one as a recent merge (15 Oct) that is still inside her usual window. The other TypeScript owners fail:
+- example-wren has a payment "the solver says has not arrived" and owes 2, the oldest for 40 days.
+- example-orrin and example-pike (the $60 and $150 bounties) have no history yet.
+
+I did not use the board's "Confirmed payments; none disputed or owed over 14 days" filter. I read the owners' pages instead.
+
+**How I'd answer:**
+1. Fork example-tidepool/ledger-lite and branch from `box-bounty/bt-0d7e4a3c8b65` (commit `0d7e4a3c0d7e`).
+2. Make a repeat on the 31st fall on the last day of short months, so `tests/recurring.test.ts` passes, including the February cases.
+3. Open a pull request against `box-bounty/bt-0d7e4a3c8b65`, not against `main`.
+
+**How I'd get paid:**
+1. Before the merge, add at least one way to accept payment on `/me/`. I signed in as the sample solver example-fern and added a PayPal.me link visible only to an owner who owes me.
+2. If my solution is merged, I get the whole $45; other solutions get nothing.
+3. Mara pays me directly. The board holds no money and sets no deadline.
+4. She records the payment on the board, and I confirm it when it arrives.
+
+**Where I hesitated, misread or was unsure:**
+- **"Record of paying."** I wasn't sure what counted. "5 paid by the owner's word · 4 received by the solvers' word" means one payment is unconfirmed. "1 owed for 6 days" could be read as a failure to pay, but the page sets no deadline.
+- **The owed payment.** The owner page ("/owner/example-mara/") lists it as "Merged, owed · merged 15 Oct 2026 · to example-quill" for $50. The "Recorded paid" row for $35 is unconfirmed.
+- **Stale "visitor" text.** The bounty page first read "You are viewing as a visitor." After the page finished loading it said "You are viewing as a signed-in solver (example-fern)." My first text and interactive reads of `/me/` also showed signed-out content. This looks like reading before hydration.
+- **Sign-in.** The "Sign in with GitHub" button leads to a "choose a sample account" picker. I hesitated, then chose example-fern because it is sample data on localhost.
+- **Payment link.** On the bounty page, "list at least one way you accept payment" links to `/me/#methods`. It is easy to read as "required to answer," but `/me/` says "You need one before you can be paid, not before you answer a bounty."
+- **Wrong URL guess.** `/people/example-mara/` quietly showed the board home. The real owner page is `/owner/example-mara/`.
+- **Visibility wording.** "Everyone, on my profile" versus "Only an owner who owes me" took a read to follow. The latter shows the method only to an owner who owes me, from the merge until they record the payment.
+- **Payment details.** "Added. In the prototype it is kept only on this page" suggests an owner wouldn't actually see the method. I also can't tell how I'd learn the owner's payment details, or who I'd contact if a payment doesn't arrive.
+- **Not checked.** I did not look at the other Mara bounty (CSV import, $40) beyond the board listing.
+
+The server is stopped; a request to localhost:4321 now fails. The sample sign-in is still active in the browser pane, and I did not sign out of it.
+
+---
+
+# Cold participant owner-web (host Claude Code desktop, model claude-sonnet-5-5, default effort; packet built from 266a220)
+
+I recorded the $50 payment as example-mara, and the server is stopped (nothing is listening on 4322). The background task's "failed, exit 127" notice is the server being killed. It printed `Serving …kitchen-K43-pass-owner-web\site`, so it was my own server.
+
+**Answer**
+- I signed in as example-mara, the first owner on the sign-in list. Under "You owe (1)" was "Monthly totals double-count transfers between two own accounts, $50, to example-quill, merged 15 Oct 2026, 6 days ago".
+- On the bounty page I followed "See how to pay example-quill", paid-by-method details shown, then pressed "Record $50 paid to example-quill". The page then said "Recorded paid by example-mara on 21 Oct 2026 ($50). The owner's word, on this board." and "Not confirmed received by example-quill."
+- The public owner page at `/owner/example-mara/` ("what solvers see about you") now shows:
+  - 6 merged
+  - 6 recorded paid ("example-mara's word")
+  - 4 confirmed received, by 3 solvers
+  - 0 owed now
+  - the $50 bounty listed as "Recorded paid"
+
+**Where I hesitated, misread or was unsure**
+1. **Which owner to be.** The sign-in page says "Either owner account works for trying the owner side", but only mara has something that fits "what you owe" with a single clear item. I guessed mara. wren's account would have shown "owes 2, the oldest for 40 days", which is a different experience.
+2. **"/me" had no sign-in link.** I went straight to `/me/`, which said "Sign in to see what you owe…". The home page only had a small "Sign in" link at the top right, so I wasn't sure where owners were meant to start.
+3. **"Recorded paid, not yet confirmed by the solver" section.** This sits directly under "You owe (1)". It lists "Export to OFX writes amounts with a comma in some locales" with "no word from the solver yet", and it has no amount or action. I wasn't sure whether it counted as something I owe. It doesn't, since it is already recorded paid.
+4. **Money wording.** The page says "Recording moves no money" and "the board carries no money". The button "Record $50 paid" and the text "Pay example-quill directly, by a method they listed" make it clear I pay elsewhere first. I still paused to check that I wasn't about to send money. I had to read the small grey text to be sure.
+5. **"By the owner's word" versus "received by the solvers' word".** The owner profile reads "5 paid by the owner's word · 4 received by the solvers' word · 1 owed". I wasn't sure at first whether the 5 and 4 overlap and whether "owed" is 6 minus 5. After recording, "owed" disappeared from the list rather than showing 0 on the bounty page.
+6. **Wise email shown to me.** The page showed a private method (`quill@example.invalid`) with the note that example-quill "shows this only to an owner who owes them". After I recorded payment it was replaced by "1 more method … not shown now that this payment is recorded". That is explained, but it means the details vanish the moment I press the button, so if I recorded before paying I couldn't see where to pay.
+7. **The "See what solvers see about you" link didn't navigate.** I clicked it from the bounty page and the URL and content didn't change, so I loaded `/owner/example-mara/` directly. It may have been a click timing issue.
+8. **Stale numbers on the first load.** My first load of `/owner/example-mara/` still showed the old figures: "5 recorded paid", "1 owed now, the oldest for 6 days" and "Merged, owed". After a second load it showed "6 … recorded paid" and "0 owed now". Until I reloaded, I would have believed recording hadn't worked.
+9. **"This is your public page as an owner: exactly what every solver sees about you."** This line only appeared after the reload. On the stale first load the subtitle read "What this owner's bounties show, as facts…", so the page's framing changed between loads.
+10. **Time wording.** "Usually records a payment 2 days after the merge" appears alongside "The board sets no deadline". I wasn't sure whether the first is a norm I'm being judged against, and it is unclear how it is computed now that I paid on day 6.
