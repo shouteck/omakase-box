@@ -54,6 +54,8 @@ The verdict carries its level, because "passed" means different things: `ui-veri
 
 **Staffing on Claude Code** (owner, 21 October 2026). A brief's Staffing section sets each role's model and effort; dispatch exactly as written. Participants are fresh sessions, never subagents. Fable only on the owner's word. The Result records each role's host, model and effort.
 
+**Staffing on OpenCode** (owner, 22 October 2026). When a brief's Staffing names an OpenCode agent, the agent profile in `.opencode/agents/` pins the model. The Claude Code head chef dispatches each role as a fresh `opencode run --agent <name> --model <provider/model>` session, a new session for every role (never `--continue`). It confirms the model with `opencode export <session-id>`. Participants run with `--dir` in a scratch folder outside the checkout. Escalation after two FAILs on one finding goes to Claude Code's `box-worker` on Opus 5.5 high.
+
 ## Recipients
 
 From D2.2 on, some waves need a `box-recipient`: an agent given only an exported Box folder outside this checkout and no repository access, standing in for an outside contributor. Its report of what was missing is evidence, not a defect. The CTO gives it the folder path and nothing else. Such an agent is not an independent human and is never reported as one.
