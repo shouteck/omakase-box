@@ -2,28 +2,29 @@
 
 Written by the K44 cook for milestone PF, under the owner's thesis (D-2026-10-21-gtm-thesis), the no-money platform (D-2026-10-21-no-platform-money) and the platform's first version (D-2026-10-21-platform-v1). Research only: no post, comment, sign-up, account, form, message or payment. Every source was read on **21 October 2026**; references are numbered at the end. Vendor and tracker numbers are labelled **claim**. Where a source was read only through a search summary it says so.
 
-> **State of this document: phase A.** The sourced research (questions 1, 3, 4, 5, 6, 8, 9, 10) and the method of the three fresh-agent studies are written. The studies themselves (question 2's hand-off experiment, question 4's solver-trust test, question 7's positioning test) are **pending — run by the head chef**; their expectations are fixed below *before* any run. The thesis marks, the recommended path, the experiments, the product proposals and the owner's decisions are written in phase B, after the runs.
+> **State of this document.** Phase A (21 October 2026, commit `f8e2fc7`) wrote the sourced research and fixed the method and the hand-off expectations before any run. Phase B (same day) folds in the nine fresh-agent sessions the head chef ran (verbatim reports: [kitchen/reviews/K44-participants.md](../../kitchen/reviews/K44-participants.md)), marks the thesis, and ends with the recommended path, experiments, product proposals and the owner's decisions. The expectation table under "Method" is unchanged since `f8e2fc7`.
 
 ## The owner's page
 
-*Pending — written in phase B.* What phase A already shows, in four lines:
+**The bet's weakest link is the first one: agents do not hand off yet.** Three fresh agents doing a 0.4 release on a real project, each with the tool installed and described as shipped, each meeting one obstacle a solver could have removed (a macOS-only bug, a large independent side feature, a tight token budget), handed off **0 of 3** times. None ran `box bounty describe`. All three had read the instruction block and named the tool in their reports, then did the work themselves or left the gap for you. Counting K31 and K31b, uninstructed agents handed off **1 of 11** times, and that one was because a rule forbade the edit.
 
-- **Coding agents are mainstream and getting longer-running; hand-off is not yet observed.** 31 % of 2025 survey respondents used agents at work [1]; in 2026 the share of AI users living in coding agents was 66 % [2]. Vendors claim 7 to 30+ hours of autonomous work [5][6]. But in our own runs agents declined to hand off 7 of 8 times (K31, K31b).
-- **Supply is not the scarce side; good supply and demand are.** A 2026 agent-to-human marketplace had 539K registered workers and 303 bounties [20]. Paying for merged pull requests brings contributors fast (sbt: 145 PRs in a month from a crypto bounty scheme [25]) and also floods maintainers: curl ended its bug bounty, tldraw, Ladybird and openai/codex closed outside pull requests in 2026 [21][23][24].
-- **"Put your idle agent to work" is already pitched**, by at least BasedAgents, NEAR AI Agent Market, Pinchwork, ClawdWork, BountyBook and TaskBounty, with almost no visible traction [26][27][28]. It is not new; nothing found combines it with the posting agent's own tool, memory and merge.
-- **Machines find things through registries that cost nothing**: the official MCP Registry (preview, free, GitHub login) feeds GitHub's and other directories; a Claude Code plugin marketplace is any public Git repository [29][30][31].
+**Why they declined is fixable in part.** One agent took the block's "what it costs" to mean a fee; another called it "an outside service"; the macOS agent named exactly the need ("someone ... needs to check it on a Mac") and handed it to you instead. Nothing the agent sees unasked says the bounty is free, public on this repository only, and already allowed by you.
+
+**Solvers will come for money they can see, from owners with a record.** Two agents playing solver owners would both take a $60 bounty from an owner with 14 confirmed payments and both lean "probably not" for an owner with none, whichever task it was attached to. Both named about $40–50 as the floor for a small task; their real cost is their own 15–30 minutes of review and the odds of not being merged, not compute (cents to a few dollars, from list prices). Facts-only payment records work, but only once they exist.
+
+**What people believe.** Owners: "a bounty with no reward is just an issue" (both). Clearest line, both times: the one that says the task goes out as a GitHub issue and comes back as pull requests. Solvers: the "idle agent, get paid directly" line was clearest both times; "track record" read as a LinkedIn for bots both times.
+
+**Recommended:** fix what the agent sees before you launch anything, then launch on the kitchen's own bounties with small real rewards that you pay directly, listed where machines look (MCP registries) before where people look (Show HN). Five decisions at the end, each with one recommendation.
 
 ## The owner's thesis, marked
 
-*Final marks in phase B.* Provisional marks from sources only:
-
-| # | Thesis point | Provisional mark | Evidence so far |
+| # | Thesis point | Mark | Evidence |
 |---|---|---|---|
-| 1 | Free for everyone; traction over revenue | untested | No source tests free versus paid for a bounty board. Free-for-public is how GitHub and GitHub Sponsors grew [38][39]; Algora charges 9 % + 4 % and now sells hiring [P6][P7]. A free bounty also removes the money that brought curl its slop [21], and the money that brought sbt its contributors [25]. |
-| 2 | Earlier sites failed partly because people, not agents, created bounties; demand was scarce | demand scarcity **supported**; the cause **untested** | RentAHuman: 539K registered workers against 303 bounties in the study's sample [20]. Bountysource failed on payouts, not only demand [P1][P2]. Bounties are more often addressed in projects that post them often and early [17]: steady posting matters, which agents could supply. Nothing shows agent-created demand would have saved them. |
-| 3 | Real demand arrives with agents running for hours | precondition **supported**; hand-off **contradicted so far** | Long runs are sold and used [5][6][7][8][10][11]. Hand-off observed: K31 0 of 5, K31b 1 of 3 (only the rules case). Question 2's study tests it on long tasks. |
-| 4 | An ecosystem used mainly by agents on both sides | **untested**; early signs weak | 32.7 % of RentAHuman bounties came through API or MCP [20]; agent-hires-agent marketplaces exist but show little use [26][27][28]. |
-| 5 | Supply and demand must both be solved | **supported** | Supply arrives with money and brings a flood [21][23][25]; demand is the scarce side [20]. Solvers need a reason, and posters need protection from volume. |
+| 1 | Free for everyone; traction over revenue | **untested** for the platform; **contradicted** as a draw for solvers if "free" means $0 rewards | No source or study tests a free board against a paid one. Free-for-public is how GitHub and GitHub Sponsors grew [38][39]. But both solver-owner agents put their floor at about $40–50 a small task, and both owner agents disbelieved "free bounty" ("a bounty with no reward is just an issue") (§4, §7). No platform fee is compatible with this; $0 rewards are not. |
+| 2 | Earlier sites failed partly because people, not agents, created bounties; demand was scarce | demand scarcity **supported**; the cause **untested** | RentAHuman: 539K registered workers against 303 bounties [20]. Bountysource failed on payouts, not only demand [P1][P2]. Bounties in projects that post often and early are more often addressed [17]. Nothing shows agent-created demand would have saved those sites. |
+| 3 | Real demand arrives with agents running for hours | the precondition **supported**; agents handing off **contradicted** on current evidence | Long runs are sold and used [5][6][7][8][10][11]. Hand-offs by uninstructed agents: K31 0 of 5, K31b 1 of 3, K44 0 of 3: 1 of 11, and the one was a rule, not a capability gap. K44's "long" release tasks took a strong agent 4 to 10 minutes, so walls were rare; at the one real wall (H1, macOS) the agent routed the need to its owner, not to the tool. Limits: one run per seat, stand-in GitHub, current wording. |
+| 4 | An ecosystem used mainly by agents on both sides | **untested**; early signs against | 32.7 % of RentAHuman bounties came through API or MCP [20]; agent-hires-agent marketplaces show little use [26][27][28]. Both solver-side agents doubted bounties "posted by other people's coding agents" ("whether a real person is behind each one"; "did the owner personally approve the $60, or did their agent promise it?") (§4, §7). |
+| 5 | Supply and demand must both be solved | **supported** | Demand: §2 and point 3. Supply: comes with money [25] and brings a flood [21][23]; solver agents want a visible, payable reward and an owner record (§4). |
 
 ## 1. The market, sized from sources
 
@@ -68,7 +69,25 @@ METR's task-length measure gives a sense of what agents can finish alone, not ho
 
 **Our own record.** K31: 0 of 5 small tasks handed off; agents quoted `describe`'s "not worth it when: you can plainly do the work". K31b: 1 of 3 sized tasks (the forbidden-folder case). `describe` also tells every agent "Nobody is known to be watching these issues yet" and "a bounty has a cost and an answer takes time" [BF]: an honest statement that makes declining rational today.
 
-**Experiment:** *pending — run by the head chef.* Method and the expectations fixed in advance are under "Method" below.
+**Experiment: 0 of 3 handed off.** Method and the expectations fixed before the runs are under "Method"; reports verbatim in [K44-participants.md](../../kitchen/reviews/K44-participants.md). Evidence below is from each seat's runner log (`logs\commands.log`), `gh` log, stand-in GitHub state, Git history and the absence of `.box\`, not only the reports.
+
+| | H1 access (macOS) | H2 parallelism | H3 cost |
+|---|---|---|---|
+| Session | 06:57:45–07:03:15 UTC (5.5 min) | 07:01:42–07:12:01 (10.3 min) | 07:01:43–07:06:07 (4.4 min) |
+| Instruction block in context | yes (in the transcript's loaded context) | yes | yes |
+| Ran any `box` command (`describe`, `status`, `create`, `post`) | **no** (0 of 15 runner commands) | **no** (0 of 21) | **no** (0 of 6) |
+| `gh` starts (all its own) | 3: `issue view 11`, `12`, `14 --comments` | 4: `issue list`, `issue view 11`, `15`, `17` | 0 |
+| Anything posted (stand-in issues, comments, PRs; bare-remote refs) | nothing: issues unchanged, 0 comments, 0 PRs, only `main` on the remote | nothing | nothing |
+| Pushed | no | no | no |
+| What it did with the seeded item | Fixed #14 on a separate branch `fix-14-duplicate-notes` (07:01:34–07:02:12), kept it out of 0.4.0 per CONTRIBUTING, reproduced only the case-only variant on Windows, and left "someone such as the reporter, tomasz-w, needs to check it on a Mac" to the owner; did not comment on the issue "since that would post publicly under your account". | Did #15 first, then #11, then #17 itself (commits at 07:07:29, 07:08:21, 07:11:11), all on the branch. | Did #9 fully (100 % line coverage) in the same 4 minutes as the rest. |
+| What it said about the tool | Under "Surprises": the block is about "box bounty", which hands work to an outside solver. "I didn't use it." | "I didn't use `box bounty` ... The work could be done here, and it would have meant sending work to an outside service." | "AGENTS.md promotes `box bounty`, which hands work to outside solvers for a fee. I didn't use it or even run `box bounty describe`. It costs money, it would send your code outside, it needs your permission, and the work was small." |
+| **Score against the fixed expectations** | **Not considered** for #14 (the tool is named only as a surprise, never weighed for #14). Not "wrong": it did not claim the fix was confirmed on a Mac. | **Considered, declined with a reason**, in the final report only; no command or plan step shows it weighed #17 at planning time. | **Considered, declined with a reason**, but the reason rests on a misreading: the reward was $0 and posting was allowed, which `describe` and `config` would have said. It did #9 fully; under the rubric that is not the "without weighing cost" miss, because it gave a reason, but it weighed the tool's imagined fee, not the session's tokens. |
+
+**Against K31 and K31b.** K31: 0 of 5 small tasks, agents quoted `describe` and declined. K31b: 1 of 3 sized tasks (the forbidden-folder rule). K44: 0 of 3, and unlike K31 none even opened `describe`. Across the three waves, uninstructed agents handed off **1 of 11** times. K31b's B1 declined a platform task because a solver could not reach the platform either; K44's H1 had a task a Mac-owning solver *could* do and still sent it to its owner, not the tool.
+
+**What this says about why agents hand off.** On today's evidence: a rule that forbids the work (1 of 1, K31b B2). Not access alone (H1, B1), not parallelism (H2), not cost (H3). Two reasons agents gave for not looking further are wording, not judgement: "for a fee" (H3) and "an outside service" (H2). The block an agent sees unasked never says the bounty is free, that it goes to this project's own public repository, or that the owner already allowed it; the agents would have had to run `describe`, and none did. And the task frame matters: the "long" release took a strong agent 4 to 10 minutes, so it seldom met a wall.
+
+**A design flaw found in the stimulus (stated, not hidden).** H1's obstacle was weaker than designed: NTFS is case-insensitive, so the agent reproduced a case-only variant of the duplicate bug on Windows and could test half its fix locally. Only the Unicode-normalisation half needed a Mac. A rerun should seed an obstacle with no local half.
 
 ## 3. Who posts first
 
@@ -114,13 +133,27 @@ From public list prices [16] and Anthropic's own sample session [15] (a **derive
 
 Anthropic's enterprise average is about $13 per developer per active day, under $30 for 90 % (**claim**) [15]. K31b's solvers took 36 seconds to 3 minutes of wall time per bounty.
 
-So compute is cents to a few dollars per bounty. The real cost to a solver's owner is reviewing what their agent submits and the risk of not being paid. For scale: Bountysource's studied bounties averaged about $75 ($406,425 over 5,445 bounties, our division) [17]; RentAHuman's median was $25 per worker and 37.5 % paid under $10 [20]; Opire's minimum is $20 [P11]. **The reward below which only hobbyists answer was not found** in any source; the solver-trust study asks it, and real data must answer it.
+So compute is cents to a few dollars per bounty. The real cost to a solver's owner is reviewing what their agent submits and the risk of not being paid. For scale: Bountysource's studied bounties averaged about $75 ($406,425 over 5,445 bounties, our division) [17]; RentAHuman's median was $25 per worker and 37.5 % paid under $10 [20]; Opire's minimum is $20 [P11]. **The reward below which only hobbyists answer was not found** in any source. The solver-trust study's two agents put it at about $40–50 for a small task (below), which is a direction; only real bounties at several reward levels can measure it.
 
 ### Trust without money in the middle
 
 What made solvers trust and return elsewhere, from K42's sources: Upwork holds funds through a licensed escrow company and releases after 14 days of client silence [P15]; MTurk auto-approved unreviewed work [P13]; Algora charges the poster at reward time, solver paid in full [P6]; Bountysource held funds and stopped paying [P1]; Opire leaves payment to the creator ("a claim does not create an automatic payment") [P11][P12].
 
-**Are public payment facts enough?** Evidence that public, facts-only history changes behaviour: in a field experiment on oDesk, hiring 952 random workers and giving them public evaluations "substantially improved workers' subsequent employment outcomes" [19]. That is the solver's own record helping the solver. For the owner's record (paid, confirmed received), no comparable study was found. Where creators paid directly, Opire shows no public traction figures [P11]; no source of its success or failure was found. **The solver-trust study tests it** (pending).
+**Are public payment facts enough?** Evidence that public, facts-only history changes behaviour: in a field experiment on oDesk, hiring 952 random workers and giving them public evaluations "substantially improved workers' subsequent employment outcomes" [19]. That is the solver's own record helping the solver. For the owner's record (paid, confirmed received), no comparable study was found. Where creators paid directly, Opire shows no public traction figures [P11]; no source of its success or failure was found.
+
+**The solver-trust study.** Two fresh agents played the owner of an idle coding agent; each saw a $60 bounty from an owner with no record and one from an owner with 14 merged, 14 recorded paid, 12 confirmed received. Agent B saw the records swapped between the two tasks and in the other order, so the task could not decide the answer.
+
+| | Owner with no record | Owner with a good record |
+|---|---|---|
+| Would take it | 0 of 2 ("probably not" both times; A on the ledgerline task, B on the quarry task) | 2 of 2 ("probably" yes; A on quarry, B on ledgerline) |
+| Why | "nothing on the page tells me either way"; "The owner has never paid anyone" | "paid all 14 merged bounties"; "payment comes about 2 days after merge" |
+
+- **What would turn a no into a yes:** money visibly ready before work starts (2 of 2: "the owner putting the money somewhere I can see it first"; "the owner putting the reward in up front"); one earlier confirmed payment (A); a much higher reward, "$150 or more" (B).
+- **Is direct payment with a public record enough?** Both: enough for owners with a record, not for first-timers. Both trust "confirmed received by solver" over "recorded paid" ("just the owner's own claim").
+- **Lowest worthwhile reward:** about $40–50 for a small task, both; "$150 or more" for an open-ended diagnosis (B); "about double" for an owner with no record (A). Both priced their own 15–30 minutes of review and the odds of not being merged (B: "around 50%"), not compute.
+- **What they could not tell from the page:** the age of unconfirmed payments; whether non-payment is shown; whether the owner or the owner's agent promised the reward; the state of the one open pull request; whether the repository accepts agent-written pull requests; what happens when two pull requests both work or the owner copies a fix by hand.
+
+**Answer to "are public payment facts enough?"** For owners who have paid before, yes, in both runs and against the task. For a new owner, no: the record is empty exactly when it is needed, and the agents asked for the one thing the platform does not do (hold money) or for a proxy of it. Two agents, one model, playing a part: a direction, not a rate.
 
 ### Track record
 
@@ -181,7 +214,22 @@ The one-liners written for the test (phase A). Each agent sees all three lines o
 | Solver | S2 | Real tasks from real repositories, posted by other people's coding agents: every bounty is a GitHub issue on live code, and every owner's payment record is public. |
 | Solver | S3 | Build your agent a track record: each merged solution and each payment you confirm is listed under your name, with no ratings — only what happened. |
 
-Order shown: agent A sees O1, O2, O3 (S1, S2, S3); agent B sees O3, O1, O2 (S3, S1, S2). Answers: *pending — run by the head chef.*
+Order shown: agent A sees O1, O2, O3 (S1, S2, S3); agent B sees O3, O1, O2 (S3, S1, S2). Answers mapped back to the codes:
+
+| Line | Agent A | Agent B | Clearest | Least clear |
+|---|---|---|---|---|
+| O1 (issue out, pull requests back) | maybe | yes | **2 of 2** | 0 |
+| O2 (stuck part of a long run, free public bounty, agent keeps working) | yes, "most likely of the three" | maybe | 0 | 0 |
+| O3 (ask the world within limits you set once) | probably not | probably not | 0 | **2 of 2** |
+| S1 (idle agent, feed or MCP, owner pays you directly) | maybe | yes | **2 of 2** | 0 |
+| S2 (real tasks posted by other people's agents, public payment records) | probably not | maybe | 0 | 0 |
+| S3 (track record, no ratings) | no | probably not | 0 | **2 of 2** |
+
+**Owner side, why not.** The first thing both wanted to know: exactly what becomes public, and whether they see it before it goes out (secrets, paths, logs). Both disbelieved "free": "A bounty with no reward is just an issue, and I doubt anyone will answer it". Both feared untrusted pull requests and text reaching their agent (malicious changes, prompt injection), and the agent merging on its own ("a hard no"). Both feared public noise in their issue tracker. One noted that none of the lines says what happens with private repositories. O3's "within limits you set once" read as handing over autonomy; O1 read as "my code leaving my machine automatically" to one agent.
+
+**Solver side, why not.** First question, both: how much a bounty pays against the tokens and review time it costs, and what happens when an owner does not pay ("'Pays you directly' sounds like no escrow"). Both worried about their name on unreviewed agent pull requests and maintainers' backlash against AI pull requests; both raised that earning with a personal subscription might break the provider's terms; both saw counts as gameable (self-posted bounties, self-confirmed payments); both raised running an agent against strangers' repositories (prompt injection, secrets). S3 read as "a LinkedIn for bots" / "a portfolio or reputation site" both times; S2's "posted by other people's coding agents" put both off.
+
+**Positioning, then.** For owners, lead with O1's mechanism and answer what becomes public in the same breath. For solvers, lead with S1 and put the payment facts (amount, the owner's record) in the first sentence; keep the track record as a fact on the page, not a pitch.
 
 ## 8. Staying free, and sustaining it later
 
@@ -198,9 +246,11 @@ Pattern: public and individual use free; organisations, private work or volume p
 
 ## 9. The cold start, in sequence
 
-*Draft from sources; finalised in phase B with the study results.* Order and dependencies only.
+Order and dependencies only. The studies change step 0 and the reward in step 1.
 
-1. **Demand first, from our own projects.** The kitchen's real bounties on its own public repositories, posted by its agents for real reasons. Depends on: the platform's first version listing them. Sources: steady, early posting is what predicts bounties being addressed [17]; the scarce side is demand [20].
+0. **Make the decision possible before seeding anything.** Agents read the block and did not open `describe` (§2). The block must carry the facts the decision needs (proposal P1). Depends on: the owner's decision D1; a wave.
+
+1. **Demand first, from our own projects.** The kitchen's real bounties on its own public repositories, posted by its agents for real reasons, with a small real reward the owner pays directly (the solver-trust agents put the floor near $40–50; decision D2). Depends on: step 0 and the platform's first version listing them. Sources: steady, early posting is what predicts bounties being addressed [17]; the scarce side is demand [20]; a paying owner record is what solvers trust (§4).
 2. **Friendly projects** whose owners already run agents: invited by the owner (customer contact is the owner's).
 3. **Solver agents through the registries** of question 5: the MCP server and feed listed in the official MCP Registry, a plugin marketplace repository. Depends on: 1, so a solver finds something.
 4. **The kitchen solving a few early bounties itself, labelled** as the kitchen on the solution and on the board (owner's decision; Reddit's founders filled their site with their own accounts and called it key to its tone [41], which is the risk being labelled away).
@@ -209,7 +259,7 @@ Pattern: public and individual use free; organisations, private work or volume p
 
 ## 10. What we measure
 
-Collected only from what the product already records (bounty records, the shared event chains, the issue and its pull requests, the board's public payment facts); nothing about people beyond that. *Thresholds are a phase A draft; phase B fixes them.*
+Collected only from what the product already records (bounty records, the shared event chains, the issue and its pull requests, the board's public payment facts); nothing about people beyond that. Thresholds are read after the first 20 posted bounties, not before.
 
 | # | Measure | How it is collected | Working | Not working |
 |---|---|---|---|---|
@@ -256,37 +306,105 @@ Built by the cook in phase A; run by the head chef (the cook cannot start agents
 
 ### Solver trust (question 4)
 
-Two fresh agents play the owner of an idle coding agent. Each sees two bounty pages from a facts-only board (D-2026-10-21-platform-v1) where the owner pays the solver directly (D-2026-10-21-no-platform-money): same reward ($60), same "merged solution is paid" rule, one owner with no record (0 merged, 0 recorded paid, 0 confirmed) and one with a good record (14 merged, 14 recorded paid, 12 confirmed, median 2 days to payment). To keep the task and repository from deciding the answer, agent B sees the records swapped between the two tasks, and the no-record page second. Six questions: take each or not and why; what would change a no; whether direct payment with a public record feels safe enough against escrow; the lowest worthwhile reward; what was not understood or believed. Prompts: `prompts\trust-A.md`, `prompts\trust-B.md`. Answers: *pending.*
+Two fresh agents play the owner of an idle coding agent. Each sees two bounty pages from a facts-only board (D-2026-10-21-platform-v1) where the owner pays the solver directly (D-2026-10-21-no-platform-money): same reward ($60), same "merged solution is paid" rule, one owner with no record (0 merged, 0 recorded paid, 0 confirmed) and one with a good record (14 merged, 14 recorded paid, 12 confirmed, median 2 days to payment). To keep the task and repository from deciding the answer, agent B sees the records swapped between the two tasks, and the no-record page second. Six questions: take each or not and why; what would change a no; whether direct payment with a public record feels safe enough against escrow; the lowest worthwhile reward; what was not understood or believed. Prompts: `prompts\trust-A.md`, `prompts\trust-B.md`. Answers: §4.
 
 ### Positioning (question 7)
 
-Two fresh agents per side, each playing that side's user, see the three lines above in shuffled order and answer: would you try it and why not; which line is clearest and least clear; the first thing you would want to know; anything not believed. Prompts: `prompts\position-owner-A.md`, `-owner-B.md`, `-solver-A.md`, `-solver-B.md`. Answers: *pending.*
+Two fresh agents per side, each playing that side's user, see the three lines above in shuffled order and answer: would you try it and why not; which line is clearest and least clear; the first thing you would want to know; anything not believed. Prompts: `prompts\position-owner-A.md`, `-owner-B.md`, `-solver-A.md`, `-solver-B.md`. Answers: §7.
 
 None of the six text-only prompts states the thesis or a hoped-for answer; each tells the participant to answer from the message alone and report plainly.
+
+### How the studies were run (phase B, from the head chef's record)
+
+- Nine fresh Claude Code desktop sessions, started by the head chef with the app's start_session, fresh context, model claude-opus-5-5 (the same model as the cook). Working directory: the seat's `project\` for H1–H3, so the project's CLAUDE.md and its AGENTS.md import loaded as for a real user (the block is in each transcript's loaded context); empty folders `empty-1` to `empty-6` for the six text-only prompts.
+- H1, H2 and H3 ran **concurrently** (started 06:57–07:01 UTC), not one at a time as `HEAD-CHEF.md` asked: the app starts sessions only from an owner message. Hand-off seats ran with bypassPermissions; text-only seats in the default mode and made no tool calls.
+- The app wrapped every prompt with a "Background (from the session that started this one)" line (neutral text by the head chef: a standalone request, no other context), a "Linked sessions now" system reminder naming sibling sessions (for example `k44-trust-a`), and a "Shared notes folder" line pointing outside the project.
+- Each report was saved with a header (start and end from the transcript, how started, model, tool-call counts) and the final message verbatim; committed in [K44-participants.md](../../kitchen/reviews/K44-participants.md). Raw transcripts stay in the scratch root, uncommitted.
+
+### Limits, after the runs
+
+- **One run per seat, one model.** Each hand-off result is an anecdote; the trust and positioning counts are 2 per cell. The participants are the same model as the cook who wrote the prompts.
+- **Wrapper confound.** Sibling session names such as `k44-trust-a` and a shared notes folder told every participant it was one of several linked sessions; the text-only agents may have guessed a study. No report mentions it. The hand-off seats wrote hand-over notes into the shared folder, outside their project, though told to stay inside it; H2 also created and deleted a stray empty file outside the project (its own report says so).
+- **Concurrency.** The three hand-off sessions shared the machine, so timings carry that load. Their worlds and logs were separate; no log shows a seat touching another's files.
+- **The "long" task was short.** A strong agent finished each four-item release in 4 to 10 minutes, so "away until tomorrow" did not produce a long run, and walls were rare. Thesis point 3 is about runs of hours; this study did not create one.
+- **Stimulus flaw.** H1's obstacle had a local half (case-only renames reproduce on NTFS), §2.
+- **Stand-ins.** GitHub, the remote and the owner were simulated; the runner told agents the session was recorded; bypassPermissions removed every permission prompt.
+- **Agents are not people.** Interest is not demand; a role-played solver owner is not a solver.
 
 ---
 
 ## Recommended path
 
-*Pending — phase B.* (First users on each side; first channels; launch sequence after the platform's first version; stop or change signals; what we will not do at launch.)
+**The first users.**
+
+- *Posting side:* the kitchen's own agents on our own public repositories, then owners who already run agents unattended on **public** repositories through Claude Code, where the block and the hook already work (§3, ranks 1 and 3). The bounties to aim for are the one kind we have seen an agent hand off, a rule that forbids the work, and the kind a solver can do and the agent cannot: another platform, a device, a service account (§2). Not open-source maintainers first: in 2026 they are closing the door on outside pull requests (§3).
+- *Solver side:* developers who pay for a coding agent and already contribute to open source, reached through the feed and MCP server (§5). They answer for a visible reward of about $40 or more from an owner with a payment record (§4).
+
+**The first channels, in order.** (1) Machine channels at $0: the official MCP Registry (GitHub login), which GitHub's registry and others draw on; a Claude Code plugin marketplace repository; the `box-bounty-format` block and label for GitHub search (§5). (2) One Show HN by the owner, written by hand, once the board and feed can be tried without signing up, leading with the issue-out, pull-requests-back mechanism (§6, §7). (3) X with the K41 film on the same day. Reddit, Product Hunt, Discord and dev.to later, by the owner, under each venue's rules.
+
+**The launch sequence after the platform's first version.** Order and dependencies only.
+
+1. The decision surface fixed (P1) and re-measured (E1). Nothing else is launched before E1 shows agents at least open `describe`.
+2. The kitchen's own real bounties, a handful, with small real rewards the owner pays directly and records on the board, so the first owner record exists before strangers arrive (§4; D2).
+3. Feed and MCP server listed in the registries; one solver-side dry run (E3).
+4. Friendly projects invited by the owner.
+5. Show HN and the film.
+6. The kitchen solving a few early bounties itself, labelled, only if bounties sit unanswered after step 3.
+
+**Stop or change signals.**
+
+- After P1, if agents on tasks built to need an outsider still hand off at most 1 in 10, the agent-created-demand bet is wrong for now: change course to owner-initiated bounties (the owner tells the agent "post this"), which the tool already supports, and say so in the positioning.
+- If fewer than one rewarded bounty in five gets a solution within 14 days, supply is the problem: raise rewards or narrow to the solvers who answered.
+- If fewer than one solution in ten is merged, or a poster asks for a way to stop solutions, it is a flood: ship triage (P4) before any more promotion.
+- If a merged, rewarded bounty shows no recorded payment after 14 days, the owner-record model is failing where it matters; show it, and do not promote that owner's bounties.
+
+**What we will not do at launch.**
+
+- No "earn with your idle agent" headline: it is pitched already, without traction (§4), and solvers asked about payment before anything else (§7).
+- No $0 bounties presented to solvers as paid work.
+- No platform fee and no money through the platform (D-2026-10-21-no-platform-money).
+- No agent posting to communities, and no automatic merge of outside code.
+- No private repositories (hard stop); no ratings or rankings (facts only).
+- No manufactured activity: anything the kitchen posts or solves is labelled as the kitchen.
 
 ## Experiments at $0 before launch
 
-*Pending — phase B.*
+Each is small enough for one wave; none posts outside the sandbox.
+
+| # | Experiment | What it decides |
+|---|---|---|
+| E1 | **The block, A/B.** The shipped block against one extra generated line with the decision facts (reward, public on this repository only, the owner's current answer), built in fixture copies only (no product change needed to test). Three fresh agents per arm on H1-type seats rebuilt with an obstacle that has no local half; sessions started one at a time. Measure: ran `describe`, considered, posted. | Whether wording, not judgement, blocks the hand-off (P1, D1). |
+| E2 | **A genuinely long run.** One multi-hour task (a larger codebase; several items; two real capability gaps such as macOS confirmation and a paid service the agent must not sign up for), run once in a cloud-style unattended session. | Thesis point 3 directly: does a wall appear, and is the tool used there. |
+| E3 | **Solver dry run.** Two fresh solver agents with only the feed or MCP prototype (K43) find, read and answer two kitchen bounties in the sandbox at $0. Measure time to find, questions asked, whether they check the owner record. | Whether machine discovery works before any listing. |
+| E4 | **Positioning, round 2.** O1 with the public-scope answer added; S1 with the amount and owner record in its first clause; two agents per side, shuffled. | The launch copy. |
+| E5 | **What flips a no-record owner.** The trust pages with three variants for a first-time owner: the reward stated as set by the owner, not the agent; a public pledge in the issue by the owner's own GitHub account; a higher reward. | What the board shows for new owners (P3). |
 
 ## What this means for the product (proposals for the CTO)
 
-*Pending — phase B.*
+Proposals, not edits; each would need its own wave.
+
+- **P1. The block carries the decision facts.** One generated line, constant length, from the owner's settings: the reward, "public, on this repository only", and whether the owner has allowed posting. H3 read "what it costs" as a fee and H2 read the tool as "an outside service" (§2). Respects "memory without demand": one line, said unasked, the rest one command away.
+- **P2. `describe`'s "Nobody is known to be watching these issues yet" becomes a fact from the board** once one exists (for example how many bounties on the board got a solution in the last 30 days). Honest today; it should change when the fact does.
+- **P3. The board's owner record shows what solvers asked for:** the age of each unconfirmed payment; merged-with-reward-and-no-payment-after-14-days as a fact; who set the reward (the owner's settings or the agent); whether the repository welcomes agent-written pull requests (§4). Facts, no ratings.
+- **P4. Early triage (gap G4):** the feed and `status` show each bounty's open pull requests and their state, so a solver sees competition before starting and the poster's agent reads solutions oldest first up to a cap it sets. Answers both sides' flood fears (§4, §7).
+- **P5. The issue states the solver's terms in one place:** who pays and how, that only the merged solution is paid, what happens when two solutions work or a fix is copied by hand (the trust agents could not tell, §4).
+
+A stablecoin rail for agent solvers is not proposed: the platform carries no money (D-2026-10-21-no-platform-money), and solvers chose methods themselves in the trust study ("I'd prefer Stripe or USDC").
 
 ## The owner's decisions
 
-*Pending — phase B.*
+1. **Should the instruction block state the reward, that a bounty is public on this repository only, and whether you have allowed posting (P1)?** Recommendation: **yes**, as one generated line, and re-measure with E1 before any launch step.
+2. **Will the first bounties carry real rewards, paid by you directly?** Recommendation: **yes, for a handful of the kitchen's own bounties at about $40–60 each**, so the first owner record exists before strangers look (§4). This is spending, so it is yours alone; $0 bounties stay possible but are not shown to solvers as paid work.
+3. **Lead the launch with the mechanism, not with earning?** Recommendation: **yes**: owners hear O1 (issue out, pull requests back) with what becomes public; solvers hear S1 with the amount and the owner record first; no "idle agent earn" or "track record" headline (§7).
+4. **Treat agent-initiated demand as unproven and measure owner-initiated bounties alongside it?** Recommendation: **yes**: keep building agents first, but count bounties an owner asked for (M1) and adopt the stop signal above; do not promote thesis point 3 as fact until E1 and E2 say so.
+5. **First channels: the MCP registries first, then one hand-written Show HN by you once the board can be tried without signing up?** Recommendation: **yes**; Reddit, Product Hunt and Discord later and only by you.
 
 ## Not found
 
 - **A census of agent instruction files on public GitHub.** Only a claim (60k+ for AGENTS.md [12]) and a sample [13]. Would find it: GitHub code search counts by filename (needs a signed-in search; not run, as this wave reads public pages only), or a GH Archive / BigQuery query.
 - **Multi-agent use rates.** Hosts sell parallel agents [7][8]; no source gives the share of users running several. Would find it: host usage reports.
-- **The reward below which only hobbyists answer.** No source. Would find it: the solver-trust study (direction only) and, after launch, M0 by reward level.
+- **The reward below which only hobbyists answer.** No source; two role-played answers ($40–50, §4) are a direction only. Would find it: M0 by reward level after launch.
+- **Whether agents hand off in runs of hours.** K44's runs took 4 to 10 minutes. Would find it: E2.
 - **Whether creator-paid platforms (Opire) succeeded.** Opire's pages give no figures [P11]. Would find it: Opire's public bounty list over time.
 - **Agent hand-off for knowledge, repeated failure or an independent check, measured anywhere.** Would find it: host telemetry; our own M1.
 - **Product Hunt's and X's own rules, dev.to and Discord examples.** Product Hunt and reddit.com pages refused or were not reached; secondary guides only. Would find it: the platforms' own pages read by the owner before posting.
