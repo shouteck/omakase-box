@@ -1,7 +1,8 @@
 # PF3: sign in with GitHub, and profiles
 
 Milestone: PF (the platform) · Station: packaging · Base: `master at dispatch` · Branch: `wave/PF3` · Timebox: 240 minutes; at expiry, report partial findings and stop
-Owner decisions: D-2026-10-21-platform-v1 (feature 5, solver profiles); D-2026-10-21-no-platform-money; spend no money
+Owner decisions: D-2026-10-21-platform-v1, D-2026-10-21-no-platform-money
+Owner context: D-2026-10-21-platform-v1 (feature 5, solver profiles); D-2026-10-21-no-platform-money; spend no money
 
 **Brief.** Written ahead by the CTO on 21 October 2026. Before dispatch, the CTO reconciles it with K43's `PLATFORM-UX.md` (profile content, privacy rules) and corrects names only. **After PF1**; it can run alongside PF2. Cook: high; reviewer: high.
 

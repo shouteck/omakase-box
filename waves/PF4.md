@@ -1,7 +1,8 @@
 # PF4: public payment facts and track records
 
 Milestone: PF (the platform) · Station: packaging · Base: `master at dispatch` · Branch: `wave/PF4` · Timebox: 240 minutes; at expiry, report partial findings and stop
-Owner decisions: D-2026-10-21-platform-v1 (feature 4, owner payment facts; facts-only track records); D-2026-10-21-no-platform-money; spend no money
+Owner decisions: D-2026-10-21-platform-v1, D-2026-10-21-no-platform-money
+Owner context: D-2026-10-21-platform-v1 (feature 4, owner payment facts; facts-only track records); D-2026-10-21-no-platform-money; spend no money
 
 **Brief.** Written ahead by the CTO on 21 October 2026. Before dispatch, the CTO reconciles it with K43's payment-facts design (`PLATFORM-UX.md`, question 4) and corrects names only. **After PF1 and PF3.** Cook: high; reviewer: high.
 

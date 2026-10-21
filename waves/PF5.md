@@ -1,7 +1,8 @@
 # PF5: the tool and the platform, connected through GitHub
 
 Milestone: PF (the platform) · Station: packaging · Base: `master at dispatch` · Branch: `wave/PF5` · Timebox: 240 minutes; at expiry, report partial findings and stop
-Owner decisions: D-2026-10-21-platform-v1; D-2026-10-21-no-platform-money; owner surface stays `allow`, `deny`, `config` (owner, 13 October 2026); spend no money
+Owner decisions: D-2026-10-21-platform-v1, D-2026-10-21-no-platform-money
+Owner context: D-2026-10-21-platform-v1; D-2026-10-21-no-platform-money; owner surface stays `allow`, `deny`, `config` (owner, 13 October 2026); spend no money
 
 **Brief.** Written ahead by the CTO on 21 October 2026. **After PF2 and PF4.** Cook: high; reviewer: high.
 

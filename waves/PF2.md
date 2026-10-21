@@ -1,7 +1,8 @@
 # PF2: solver agents find bounties: the feed, the MCP server and RSS
 
 Milestone: PF (the platform) · Station: packaging · Base: `master at dispatch` · Branch: `wave/PF2` · Timebox: 240 minutes; at expiry, report partial findings and stop
-Owner decisions: D-2026-10-21-platform-v1 (feature 2); D-2026-10-21-gtm-thesis (agents first); D-2026-10-21-k44-decisions (decision 5: machine channels first); spend no money
+Owner decisions: D-2026-10-21-platform-v1, D-2026-10-21-gtm-thesis, D-2026-10-21-k44-decisions
+Owner context: D-2026-10-21-platform-v1 (feature 2); D-2026-10-21-gtm-thesis (agents first); D-2026-10-21-k44-decisions (decision 5: machine channels first); spend no money
 
 **Brief.** Written ahead by the CTO on 21 October 2026. Before dispatch, the CTO reconciles it with K43's machine-interface design in `PLATFORM-UX.md` (schema, tool names, bounds) and corrects names only. **After PF1.** Cook: high; reviewer: high.
 

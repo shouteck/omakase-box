@@ -1,7 +1,8 @@
 # PF6: ready to launch
 
 Milestone: PF (the platform) · Station: packaging · Base: `master at dispatch` · Branch: `wave/PF6` · Timebox: 180 minutes; at expiry, report partial findings and stop
-Owner decisions: D-2026-10-21-k44-decisions (decision 3: lead with the mechanism; decision 5: machine channels first, then one Show HN by the owner); spend no money. **Going live, publishing to npm, listing in registries and posting anywhere are the owner's own actions;** this wave prepares them and does none of them.
+Owner decisions: D-2026-10-21-k44-decisions
+Owner context: D-2026-10-21-k44-decisions (decision 3: lead with the mechanism; decision 5: machine channels first, then one Show HN by the owner); spend no money. **Going live, publishing to npm, listing in registries and posting anywhere are the owner's own actions;** this wave prepares them and does none of them.
 
 **Brief.** Written ahead by the CTO on 21 October 2026. **After PF1 to PF5 and BT42; before K41's final render.** Cook: medium; reviewer: high.
 

@@ -1,7 +1,8 @@
 # PF1: the open board and bounty pages
 
 Milestone: PF (the platform) · Station: packaging · Base: `master at dispatch` · Branch: `wave/PF1` · Timebox: 300 minutes; at expiry, report partial findings and stop
-Owner decisions: D-2026-10-20-platform; D-2026-10-21-no-platform-money; D-2026-10-21-platform-v1 (feature 1, the board, and feature 3, bounty pages); D-2026-10-21-k44-decisions; spend no money
+Owner decisions: D-2026-10-20-platform, D-2026-10-21-no-platform-money, D-2026-10-21-platform-v1, D-2026-10-21-k44-decisions
+Owner context: D-2026-10-20-platform; D-2026-10-21-no-platform-money; D-2026-10-21-platform-v1 (feature 1, the board, and feature 3, bounty pages); D-2026-10-21-k44-decisions; spend no money
 
 **Brief.** Written ahead by the CTO on 21 October 2026, before K43 finished. **Before dispatch, the CTO reconciles it with K43's `docs/box-v4/PLATFORM-UX.md`** (stack, hosting, page content, field names, visual rules) and corrects names only. A change of substance goes back to the owner. Cook: high; reviewer: high.
 
@@ -70,7 +71,7 @@ Dispatch each role with the Agent tool, passing `model` and `effort` exactly as 
 
 ## Done when
 
-- `node scripts/verify.mjs test:platform test:kitchen` exits 0 on the final commit (and `test:box-bounty` if any shared code is touched); hosted CI runs the new suite and is green after merge.
+- `node scripts/verify.mjs` with the new platform suite this wave adds and `test:kitchen` exits 0 on the final commit (and `test:box-bounty` if any shared code is touched); hosted CI runs the new suite and is green after merge.
 - The platform runs locally with one documented command, with the stand-in; screenshots of the board and a bounty page, light and dark, desktop and phone, are under the gitignored `out/`.
 - No secret, token or account exists anywhere in the diff.
 
