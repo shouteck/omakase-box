@@ -8,6 +8,8 @@ import {
   visibleMethods, METHOD_LABEL, daysBetween, fmtDate, plural,
 } from '../lib/facts.mjs';
 
+const SOURCE = { github: 'GitHub', 'project-record': 'the project\'s record on GitHub', board: 'on this board' };
+
 function Methods({ login, viewer, overlay }) {
   const { shown, hidden } = visibleMethods(login, viewer, overlay);
   if (!shown.length && !hidden) return <p>{login} has not listed a payment method yet. Next: ask on the GitHub issue how they want to be paid.</p>;
@@ -53,7 +55,7 @@ function Payment({ b, viewer, overlay }) {
       </p>
       <p>
         {recordedPaid
-          ? <>Recorded paid by <Link href={`/owner/${b.poster}/`}>{b.poster}</Link> on {fmtDate(recordedPaid.at)} (${recordedPaid.amount}). <Soft as="span">The owner&apos;s word{recordedPaid.source === 'memory' ? ', from the project\'s shared memory' : ', on this board'}.</Soft></>
+          ? <>Recorded paid by <Link href={`/owner/${b.poster}/`}>{b.poster}</Link> on {fmtDate(recordedPaid.at)} (${recordedPaid.amount}). <Soft as="span">The owner&apos;s word{recordedPaid.source === 'memory' ? ', from the project\'s record on GitHub' : ', on this board'}.</Soft></>
           : <>Not recorded paid by {b.poster}.</>}
       </p>
       <p>
@@ -64,10 +66,14 @@ function Payment({ b, viewer, overlay }) {
       {recordedPaid && solverWord?.kind === 'not-received' ? <p>The owner and the solver disagree. Both words are shown as theirs; the board does not decide between them.</p> : null}
       {isSelfDealt(b) ? <p>Not counted in anyone&apos;s record: {payee.login} is the poster or has push access to the repository.</p> : null}
 
-      {isOwner && !recordedPaid ? (
+      {isOwner ? (
         <div className="border-t border-line pt-6 mt-2 flex flex-col gap-4">
-          <p className="font-semibold">Pay {payee.login} directly, by a method they listed:</p>
+          <p className="font-semibold">{recordedPaid ? `${payee.login}'s payment methods, for reference:` : `Pay ${payee.login} directly, by a method they listed:`}</p>
           <Methods login={payee.login} viewer={viewer} overlay={overlay} />
+        </div>
+      ) : null}
+      {isOwner && !recordedPaid ? (
+        <div className="flex flex-col gap-4">
           <p>Then record it here. Solvers will see &ldquo;Recorded paid by {b.poster}&rdquo; as your word, and {payee.login} can confirm receipt.</p>
           <div><Primary onClick={() => recordPaid(b.id, b.reward)}>Record ${b.reward} paid to {payee.login}</Primary></div>
           <Soft>Same as running <code>box bounty config set paid {b.id}</code> in your project. Recording moves no money.</Soft>
@@ -101,6 +107,7 @@ export default function BountyView({ id }) {
   const repo = repoOf(b);
   const state = stateOf(b);
   const r = ownerRecord(b.poster, overlay);
+  const mine = viewer ? b.solutions.filter(s => s.author === viewer) : [];
   const role = viewer === b.poster ? 'the owner' : payeeOf(b).login === viewer ? 'the solver who is owed' : viewer ? 'a signed-in solver' : 'a visitor';
 
   return (
@@ -109,13 +116,14 @@ export default function BountyView({ id }) {
       <h1 className="text-2xl font-semibold tracking-tight max-w-prose">{b.title}</h1>
       <p className="mt-3 text-soft">{STATES[state].solver}</p>
       <Soft className="mt-1">You are viewing as {role}{viewer ? ` (${viewer})` : ''}.</Soft>
+      {mine.length ? <p className="mt-3">You ({viewer}) have {mine.map(s => `pull request #${s.pr} (${s.state})`).join(' and ')} on this bounty.</p> : null}
 
       <div className="mt-10">
         <Facts rows={[
           ['Stated reward', b.reward > 0 ? <><strong className="font-semibold">${b.reward}</strong> for the merged solution. The owner pays its author directly; the board carries no money.</> : 'None stated.'],
-          ['This owner', <><Link href={`/owner/${b.poster}/`}>{b.poster}</Link>: {ownerFacts(r)}. <Soft as="span">Merged: GitHub. Recorded paid: the owner&apos;s word. Confirmed received: the solvers&apos; word.</Soft></>],
+          ['This owner', <><Link href={`/owner/${b.poster}/`}>{b.poster}</Link>: {ownerFacts(r)}.{r.medianDaysToRecord !== null ? ` Usually records a payment ${r.medianDaysToRecord === 0 ? 'the day of the merge' : `${plural(r.medianDaysToRecord, 'day')} after the merge`}.` : ''} <Soft as="span">Merges: GitHub. The board sets no deadline.</Soft></>],
           ['Repository', <><a href={`https://github.com/${repo.name}`}>{repo.name}</a> · {repo.language} · public</>],
-          ['Posted', <>{fmtDate(b.createdAt)} ({plural(daysBetween(b.createdAt), 'day')} ago), {b.approvedBy === 'owner-this-bounty' ? 'approved by the owner for this bounty' : 'under the owner\'s standing rule, without asking'}. <a href={`https://github.com/${repo.name}/issues/${b.issue}`}>Issue #{b.issue}</a></>],
+          ['Posted', <>{fmtDate(b.createdAt)} ({plural(daysBetween(b.createdAt), 'day')} ago), {b.approvedBy === 'owner-this-bounty' ? 'the owner said yes to this bounty before it was posted' : 'by the owner\'s tool under a standing permission, without asking each time'}. <a href={`https://github.com/${repo.name}/issues/${b.issue}`}>Issue #{b.issue}</a></>],
           ['Terms', 'The merged solution earns the whole reward. Other solutions earn nothing.'],
         ]} />
       </div>
@@ -129,7 +137,7 @@ export default function BountyView({ id }) {
           <ol className="list-decimal pl-5 flex flex-col gap-2 max-w-prose">
             <li>Fork {repo.name} and branch from <code className="text-sm">box-bounty/{b.id}</code> (commit <code className="text-sm">{b.workCommit.slice(0, 12)}</code>).</li>
             <li>Open a pull request against <code className="text-sm">box-bounty/{b.id}</code> in {repo.name}, not against {repo.defaultBranch}.</li>
-            {b.reward > 0 ? <li>To be paid if yours is merged: <Link href="/me/">list the ways you accept payment</Link> on your profile. The owner pays you directly.</li> : null}
+            {b.reward > 0 ? <li>You can answer without signing in. To be paid if yours is merged, <Link href="/me/#methods">list at least one way you accept payment</Link> first; the owner pays you directly.</li> : null}
           </ol>
           <div className="mt-6"><Primary href={`https://github.com/${repo.name}/tree/box-bounty/${b.id}`}>Open the bounty branch on GitHub</Primary></div>
         </Section>
@@ -157,7 +165,7 @@ export default function BountyView({ id }) {
           {historyOf(b).map((h, i) => (
             <li key={i} className="grid grid-cols-[7.5rem_1fr] gap-4">
               <span className="text-sm text-soft tabular-nums pt-0.5">{fmtDate(h.at)}</span>
-              <span>{h.event}, by {h.by} <Soft as="span">({h.source})</Soft></span>
+              <span>{h.event}, by {h.by} <Soft as="span">({SOURCE[h.source]})</Soft></span>
             </li>
           ))}
         </ol>

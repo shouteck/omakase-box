@@ -19,7 +19,7 @@ export default function SignIn() {
       <Title sub="The board asks GitHub for your public profile only: your login and account age. It cannot see any repository, public or private, and it stores no GitHub token.">Sign in with GitHub</Title>
       {who ? <p className="mb-6">You are signed in as {who}.</p> : null}
       <p className="font-semibold">Prototype: choose a sample account.</p>
-      <Soft className="mt-1">On the real board this is one button that opens GitHub.</Soft>
+      <Soft className="mt-1">On the real board this is one button that opens GitHub. Either owner account works for trying the owner side.</Soft>
       <ul className="mt-6 flex flex-col gap-4">
         {ACCOUNTS.map(([login, what], i) => (
           <li key={login} className="flex flex-wrap items-baseline gap-x-4 gap-y-1">

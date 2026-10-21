@@ -17,12 +17,15 @@
     "owner": {
       "login": "example-mara",
       "record": {
+        "has_history": true,
         "merged": 6,
         "recorded_paid": 5,
         "confirmed_received": 4,
+        "from_solvers": 3,
         "owed_now": 1,
         "oldest_owed_days": 6,
-        "says_not_received": 0
+        "says_not_received": 0,
+        "median_days_to_record_paid": 2
       }
     },
     "repository": {
@@ -55,7 +58,7 @@
       "Open a pull request against the branch box-bounty/bt-2b8d7e01c6a5 in example-tidepool/ledger-lite (not against main)."
     ],
     "how_to_get_paid": [
-      "Sign in to the board with GitHub and list the ways you accept payment on your profile (PayPal.me, Stripe payment link, GitHub Sponsors, Wise email or a wallet address). The owner sees them after a merge.",
+      "You can answer without signing in. To be paid, sign in to the board with GitHub and list at least one way you accept payment (PayPal.me, Stripe payment link, GitHub Sponsors, Wise email or a wallet address) before your pull request could be merged. Methods you mark \"only an owner who owes me\" stay off your public profile; the owner sees them once your solution is merged.",
       "If your pull request is the one merged, the owner owes you $40 and pays you directly. The board never holds, guarantees or moves money.",
       "When the money arrives, confirm receipt on the bounty page. Your confirmation is shown as your word."
     ],
@@ -85,7 +88,7 @@
         "at": "2026-10-12T09:30:00Z",
         "event": "posted",
         "by": "example-mara",
-        "source": "memory"
+        "source": "github"
       },
       {
         "at": "2026-10-14T11:00:00Z",

@@ -18,10 +18,10 @@ const index = JSON.parse(readFileSync(join(dataDir, 'bounties.json'), 'utf8'));
 const details = Object.fromEntries(readdirSync(join(dataDir, 'bounties')).filter(f => f.endsWith('.json'))
   .map(f => { const d = JSON.parse(readFileSync(join(dataDir, 'bounties', f), 'utf8')); return [d.bounty.id, d.bounty]; }));
 const OPEN = new Set(['open', 'solutions-waiting']);
-const [MAX, DEF] = [25, 10];
+const [MAX, DEF, LATE_DAYS] = [25, 10, 14];
 
 const fail = (field, reason, allowed) => ({ error: tools.errors['bad-filter'].replace('{field}', field).replace('{reason}', reason).replace('{allowed}', allowed) });
-const ENUMS = { solutions: ['none', 'some'], owner_record: ['confirmed-payments', 'no-history'], approved_by: ['owner-this-bounty', 'owner-standing-rule'], sort: ['newest', 'reward'] };
+const ENUMS = { solutions: ['none', 'some'], owner_record: ['confirmed-payments', 'confirmed-none-late', 'no-history'], approved_by: ['owner-this-bounty', 'owner-standing-rule'], sort: ['newest', 'reward'] };
 const KNOWN = new Set(['language', 'repository', 'min_reward', 'max_age_days', 'query', 'cursor', 'limit', ...Object.keys(ENUMS)]);
 
 export function findBounties(q = {}) {
@@ -32,7 +32,8 @@ export function findBounties(q = {}) {
   if (!(Number.isInteger(limit) && limit >= 1 && limit <= MAX)) return fail('limit', `must be 1 to ${MAX}`, `1 to ${MAX}`);
   const offset = q.cursor === undefined ? 0 : Number(/^o(\d+)$/.exec(q.cursor)?.[1] ?? NaN);
   if (!Number.isInteger(offset)) return fail('cursor', 'not a cursor this board gave', 'a next_cursor value');
-  const has = e => e.owner.record !== 'no history yet' && e.owner.record.confirmed_received > 0;
+  const has = e => e.owner.record.confirmed_received > 0;
+  const late = e => e.owner.record.says_not_received > 0 || (e.owner.record.oldest_owed_days ?? 0) > LATE_DAYS;
   let list = Object.values(details).filter(e => OPEN.has(e.state));
   if (q.language) list = list.filter(e => e.repository.language.toLowerCase() === String(q.language).toLowerCase());
   if (q.repository) list = list.filter(e => e.repository.name === q.repository);
@@ -41,7 +42,8 @@ export function findBounties(q = {}) {
   if (q.solutions === 'none') list = list.filter(e => e.solutions.open === 0);
   if (q.solutions === 'some') list = list.filter(e => e.solutions.open > 0);
   if (q.owner_record === 'confirmed-payments') list = list.filter(has);
-  if (q.owner_record === 'no-history') list = list.filter(e => e.owner.record === 'no history yet');
+  if (q.owner_record === 'confirmed-none-late') list = list.filter(e => has(e) && !late(e));
+  if (q.owner_record === 'no-history') list = list.filter(e => !e.owner.record.has_history);
   if (q.approved_by) list = list.filter(e => e.approved_by === q.approved_by);
   if (q.query) { const t = String(q.query).toLowerCase(); list = list.filter(e => e.poster_says.title.toLowerCase().includes(t) || e.repository.name.includes(t)); }
   list.sort(q.sort === 'reward' ? (x, y) => y.reward.amount - x.reward.amount : (x, y) => Date.parse(y.posted_at) - Date.parse(x.posted_at));

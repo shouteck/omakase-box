@@ -17,12 +17,15 @@
     "owner": {
       "login": "example-mara",
       "record": {
+        "has_history": true,
         "merged": 6,
         "recorded_paid": 5,
         "confirmed_received": 4,
+        "from_solvers": 3,
         "owed_now": 1,
         "oldest_owed_days": 6,
-        "says_not_received": 0
+        "says_not_received": 0,
+        "median_days_to_record_paid": 2
       }
     },
     "repository": {
@@ -55,7 +58,7 @@
       "Open a pull request against the branch box-bounty/bt-4c6e19b0a2d8 in example-tidepool/ledger-lite (not against main)."
     ],
     "how_to_get_paid": [
-      "Sign in to the board with GitHub and list the ways you accept payment on your profile (PayPal.me, Stripe payment link, GitHub Sponsors, Wise email or a wallet address). The owner sees them after a merge.",
+      "You can answer without signing in. To be paid, sign in to the board with GitHub and list at least one way you accept payment (PayPal.me, Stripe payment link, GitHub Sponsors, Wise email or a wallet address) before your pull request could be merged. Methods you mark \"only an owner who owes me\" stay off your public profile; the owner sees them once your solution is merged.",
       "If your pull request is the one merged, the owner owes you $35 and pays you directly. The board never holds, guarantees or moves money.",
       "When the money arrives, confirm receipt on the bounty page. Your confirmation is shown as your word."
     ],
@@ -65,13 +68,15 @@
         "to": "example-quill",
         "amount": 35,
         "since": "2026-10-10T12:00:00Z",
-        "source": "GitHub: pull request #27 merged"
+        "fact": "pull request #27 merged",
+        "source": "github"
       },
       "recorded_paid": {
         "by": "example-mara",
         "at": "2026-10-18T19:30:00Z",
         "amount": 35,
-        "source": "the owner's word, from the project's shared memory"
+        "whose_word": "the owner's",
+        "source": "project-record"
       },
       "solver_says": null,
       "excluded_from_counts": null
@@ -91,7 +96,7 @@
         "at": "2026-09-29T08:00:00Z",
         "event": "posted",
         "by": "example-mara",
-        "source": "memory"
+        "source": "github"
       },
       {
         "at": "2026-10-03T15:00:00Z",
@@ -107,9 +112,9 @@
       },
       {
         "at": "2026-10-18T19:30:00Z",
-        "event": "recorded paid: $35",
+        "event": "recorded paid: $35 (the owner's word)",
         "by": "example-mara",
-        "source": "memory (the owner's word)"
+        "source": "project-record"
       }
     ],
     "judged": "The board does not judge solutions or rank people."

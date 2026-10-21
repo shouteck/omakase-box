@@ -100,6 +100,8 @@ export function ownerRecord(login, overlay) {
   const owed = st.filter(x => x.s === 'merged-owed' || x.s === 'owner-decides');
   const notReceived = st.filter(x => x.s === 'disputed');
   const oldestOwed = owed.length ? Math.max(...owed.map(x => daysBetween(payeeOf(x.b).mergedAt))) : null;
+  const lags = recorded.map(x => daysBetween(payeeOf(x.b).mergedAt, wordsOf(x.b).recordedPaid.at)).sort((a, b) => a - b);
+  const medianDaysToRecord = lags.length ? lags[Math.floor((lags.length - 1) / 2)] : null;
   return {
     login,
     merged: counted.length,
@@ -109,11 +111,16 @@ export function ownerRecord(login, overlay) {
     owedNow: owed.length,
     oldestOwedDays: oldestOwed,
     saysNotReceived: notReceived.length,
+    medianDaysToRecord,
     notCounted: excluded.length,
     hasHistory: counted.length > 0,
     bounties: mine,
   };
 }
+
+/** Facts a solver must see first: a dispute, or a payment owed longer than LATE_DAYS. */
+export const LATE_DAYS = 14;
+export const hasWarning = r => r.saysNotReceived > 0 || (r.oldestOwedDays ?? 0) > LATE_DAYS;
 
 /** One line, the same everywhere: "6 merged · 5 recorded paid · 4 confirmed received". */
 export function ownerLine(r) {
@@ -155,6 +162,21 @@ export function visibleMethods(login, viewer, overlay) {
 
 export const LIMITS = { defaultLimit: 10, maxLimit: 25, taskChars: 4000, maxSolutions: 50, maxHistory: 50 };
 
+/** The owner's record in one shape, with or without history. */
+export function feedRecord(r) {
+  return {
+    has_history: r.hasHistory,
+    merged: r.merged,
+    recorded_paid: r.recordedPaid,
+    confirmed_received: r.confirmedReceived,
+    from_solvers: r.confirmers,
+    owed_now: r.owedNow,
+    oldest_owed_days: r.oldestOwedDays,
+    says_not_received: r.saysNotReceived,
+    median_days_to_record_paid: r.medianDaysToRecord,
+  };
+}
+
 export function feedEntry(b) {
   const repo = repoOf(b);
   const r = ownerRecord(b.poster);
@@ -168,9 +190,7 @@ export function feedEntry(b) {
       : { amount: 0, currency: 'USD', paid: 'no reward stated' },
     owner: {
       login: b.poster,
-      record: r.hasHistory
-        ? { merged: r.merged, recorded_paid: r.recordedPaid, confirmed_received: r.confirmedReceived, owed_now: r.owedNow, oldest_owed_days: r.oldestOwedDays, says_not_received: r.saysNotReceived }
-        : 'no history yet',
+      record: feedRecord(r),
     },
     repository: { name: repo.name, language: repo.language, url: `https://github.com/${repo.name}` },
     state,
@@ -184,12 +204,12 @@ export function feedEntry(b) {
 }
 
 export function historyOf(b) {
-  const h = [{ at: b.createdAt, event: 'posted', by: b.poster, source: 'memory' }];
+  const h = [{ at: b.createdAt, event: 'posted', by: b.poster, source: 'github' }];
   for (const s of b.solutions) h.push({ at: s.openedAt, event: `solution: pull request #${s.pr}`, by: s.author, source: 'github' });
   for (const s of b.solutions) if (s.state === 'merged') h.push({ at: s.mergedAt, event: `merged: pull request #${s.pr}`, by: b.poster, source: 'github' });
-  if (b.issueState === 'closed' && payeeOf(b).kind === 'none') h.push({ at: b.closedAt, event: 'closed without a merge', by: b.poster, source: 'memory' });
-  for (const p of b.paid) h.push({ at: p.at, event: `${p.withdrawn ? 'paid record withdrawn' : `recorded paid: $${p.amount}`}`, by: b.poster, source: p.source === 'memory' ? 'memory (the owner\'s word)' : 'board (the owner\'s word)' });
-  for (const r of b.receipt) h.push({ at: r.at, event: r.kind === 'received' ? 'confirmed received' : 'says not received', by: r.by, source: 'board (the solver\'s word)' });
+  if (b.issueState === 'closed' && payeeOf(b).kind === 'none') h.push({ at: b.closedAt, event: 'closed without a merge', by: b.poster, source: 'github' });
+  for (const p of b.paid) h.push({ at: p.at, event: `${p.withdrawn ? 'paid record withdrawn' : `recorded paid: $${p.amount} (the owner's word)`}`, by: b.poster, source: p.source === 'memory' ? 'project-record' : 'board' });
+  for (const r of b.receipt) h.push({ at: r.at, event: `${r.kind === 'received' ? 'confirmed received' : 'says not received'} (the solver's word)`, by: r.by, source: 'board' });
   return h.sort((x, y) => Date.parse(x.at) - Date.parse(y.at)).slice(-LIMITS.maxHistory);
 }
 
@@ -203,9 +223,9 @@ export function paymentFacts(b) {
   if (payee.kind === 'none') return { ...f, owed: null, note: state === 'closed-none' ? 'Closed without a merge; nothing is owed.' : `Nothing is owed yet. When a solution is merged, its author is owed $${b.reward} by the owner.` };
   return {
     ...f,
-    owed: { to: payee.login, amount: b.reward, since: payee.mergedAt, source: `GitHub: pull request #${payee.pr} merged` },
-    recorded_paid: recordedPaid ? { by: b.poster, at: recordedPaid.at, amount: recordedPaid.amount, source: recordedPaid.source === 'memory' ? 'the owner\'s word, from the project\'s shared memory' : 'the owner\'s word, on the board' } : null,
-    solver_says: solverWord ? { by: solverWord.by, at: solverWord.at, word: solverWord.kind === 'received' ? 'received' : 'not received', source: 'the solver\'s word, on the board' } : null,
+    owed: { to: payee.login, amount: b.reward, since: payee.mergedAt, fact: `pull request #${payee.pr} merged`, source: 'github' },
+    recorded_paid: recordedPaid ? { by: b.poster, at: recordedPaid.at, amount: recordedPaid.amount, whose_word: 'the owner\'s', source: recordedPaid.source === 'memory' ? 'project-record' : 'board' } : null,
+    solver_says: solverWord ? { by: solverWord.by, at: solverWord.at, word: solverWord.kind === 'received' ? 'received' : 'not received', whose_word: 'the solver\'s', source: 'board' } : null,
     excluded_from_counts: isSelfDealt(b) ? 'the payee is the poster or has push access to the repository' : null,
   };
 }
@@ -223,7 +243,7 @@ export function bountyDetail(b) {
       `Open a pull request against the branch box-bounty/${b.id} in ${repo.name} (not against ${repo.defaultBranch}).`,
     ],
     how_to_get_paid: b.reward > 0 ? [
-      'Sign in to the board with GitHub and list the ways you accept payment on your profile (PayPal.me, Stripe payment link, GitHub Sponsors, Wise email or a wallet address). The owner sees them after a merge.',
+      'You can answer without signing in. To be paid, sign in to the board with GitHub and list at least one way you accept payment (PayPal.me, Stripe payment link, GitHub Sponsors, Wise email or a wallet address) before your pull request could be merged. Methods you mark "only an owner who owes me" stay off your public profile; the owner sees them once your solution is merged.',
       `If your pull request is the one merged, the owner owes you $${b.reward} and pays you directly. The board never holds, guarantees or moves money.`,
       'When the money arrives, confirm receipt on the bounty page. Your confirmation is shown as your word.',
     ] : ['No reward is stated for this bounty.'],
@@ -244,6 +264,7 @@ export function filterBounties(list, q = {}) {
   if (q.solutions === 'none') out = out.filter(b => b.solutions.filter(s => s.state === 'open').length === 0);
   if (q.solutions === 'some') out = out.filter(b => b.solutions.some(s => s.state === 'open'));
   if (q.owner_record === 'confirmed-payments') out = out.filter(b => ownerRecord(b.poster).confirmedReceived > 0);
+  if (q.owner_record === 'confirmed-none-late') out = out.filter(b => { const r = ownerRecord(b.poster); return r.confirmedReceived > 0 && !hasWarning(r); });
   if (q.owner_record === 'no-history') out = out.filter(b => !ownerRecord(b.poster).hasHistory);
   if (q.approved_by) out = out.filter(b => b.approvedBy === q.approved_by);
   if (q.query) { const t = String(q.query).toLowerCase(); out = out.filter(b => b.title.toLowerCase().includes(t) || b.repository.includes(t)); }

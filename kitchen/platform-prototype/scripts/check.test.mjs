@@ -122,6 +122,54 @@ test('every built page carries the sample-data label', () => {
   for (const [p, t] of pages) assert.ok(t.includes('Sample data.'), p);
 });
 
+test('the owner record has one shape, with or without history (K43 phase 2)', () => {
+  const keys = Object.keys(f.feedRecord(f.ownerRecord('example-mara')));
+  assert.deepEqual(Object.keys(f.feedRecord(f.ownerRecord('example-orrin'))), keys);
+  assert.equal(f.feedRecord(f.ownerRecord('example-orrin')).has_history, false);
+  for (const e of findBounties({ limit: 25 }).bounties) assert.equal(typeof e.owner.record, 'object', e.id);
+});
+
+test('"none disputed or owed over 14 days" leaves out an owner with a dispute or an old debt', () => {
+  const ids = f.filterBounties(f.bounties, { owner_record: 'confirmed-none-late' }).map(b => b.poster);
+  assert.ok(f.filterBounties(f.bounties, { owner_record: 'confirmed-payments' }).some(b => b.poster === 'example-wren'), 'wren has confirmed payments');
+  assert.ok(!ids.includes('example-wren') && ids.includes('example-mara'));
+  assert.deepEqual(findBounties({ owner_record: 'confirmed-none-late', limit: 25 }).bounties.map(e => e.id), f.filterBounties(f.bounties, { owner_record: 'confirmed-none-late' }).map(b => b.id));
+});
+
+test('every source is one of three defined names, and the legend defines them', () => {
+  const feed = JSON.parse(readFileSync(join(pub, 'bounties.json'), 'utf8'));
+  for (const name of ['github', 'project-record', 'board']) assert.ok(feed.legend.source.includes(`${name}:`), name);
+  assert.ok(feed.legend['owner.record'].includes('from_solvers:'));
+  for (const b of f.bounties) {
+    const d = f.bountyDetail(b);
+    for (const h of d.history) assert.ok(['github', 'project-record', 'board'].includes(h.source), `${b.id} ${h.source}`);
+    for (const k of ['owed', 'recorded_paid', 'solver_says']) if (d.payment[k]) assert.ok(['github', 'project-record', 'board'].includes(d.payment[k].source), `${b.id} ${k}`);
+  }
+});
+
+test('issue and pull request numbers never collide within a repository (GitHub shares one sequence)', () => {
+  const used = {};
+  for (const b of raw) for (const n of [b.issue, ...b.solutions.map(s => s.pr)]) {
+    const k = `${b.repository}#${n}`;
+    assert.ok(!used[k], `${k} used twice`);
+    used[k] = true;
+  }
+});
+
+test('the sample self-dealing account says so', () => {
+  assert.match(f.people['example-pike-alt'].sampleNote, /self-dealing/);
+  assert.match(readFileSync(join(pub, 'people', 'example-pike-alt.json'), 'utf8'), /Sample self-dealing case/);
+});
+
+test('in-app navigation files resolve (Next asks for dotted names, the export writes folders)', async () => {
+  const { segmentFile } = await import('./serve.mjs');
+  assert.equal(segmentFile(join('x', 'b', 'bt-1', '__next.b.$d$id.__PAGE__.txt')), join('x', 'b', 'bt-1', '__next.b', '$d$id', '__PAGE__.txt'));
+  assert.equal(segmentFile(join('x', 'me', '__next.me.__PAGE__.txt')), join('x', 'me', '__next.me', '__PAGE__.txt'));
+  assert.equal(segmentFile(join('x', 'index.html')), join('x', 'index.html'));
+  const built = join(root, 'out', 'me');
+  if (existsSync(built)) for (const n of readdirSync(join(built, '__next.me'))) assert.ok(existsSync(segmentFile(join(built, `__next.me.${n}`))), n);
+});
+
 function lum(hex) { const c = hex.match(/\w\w/g).map(x => parseInt(x, 16) / 255).map(v => v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; }
 export const contrast = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); };
 

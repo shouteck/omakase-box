@@ -22,7 +22,7 @@
           "min_reward": { "type": "integer", "minimum": 0, "description": "Smallest stated reward in whole USD." },
           "max_age_days": { "type": "integer", "minimum": 0, "description": "Posted at most this many days ago." },
           "solutions": { "type": "string", "enum": ["none", "some"], "description": "\"none\": no open pull request yet; \"some\": at least one." },
-          "owner_record": { "type": "string", "enum": ["confirmed-payments", "no-history"], "description": "\"confirmed-payments\": at least one solver confirmed receiving this owner's payment; \"no-history\": no rewarded bounty of this owner's has been merged." },
+          "owner_record": { "type": "string", "enum": ["confirmed-payments", "confirmed-none-late", "no-history"], "description": "\"confirmed-payments\": at least one solver confirmed receiving this owner's payment; \"confirmed-none-late\": that, and no payee says a recorded payment has not arrived, and nothing has been owed for more than 14 days; \"no-history\": no rewarded bounty of this owner's has been merged." },
           "approved_by": { "type": "string", "enum": ["owner-this-bounty", "owner-standing-rule"], "description": "Whether the owner approved posting this bounty itself, or it was posted under the owner's standing rule." },
           "query": { "type": "string", "maxLength": 100, "description": "Words to find in titles or repository names." },
           "sort": { "type": "string", "enum": ["newest", "reward"] },

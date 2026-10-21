@@ -12,6 +12,7 @@ export default function SolverView({ login }) {
   return (
     <>
       <Title sub={`Facts only: what was merged and which payments ${login} confirmed. No ratings, no ranking. GitHub account since ${people[login]?.since ?? 'unknown'}.`}>{login}, as a solver</Title>
+      {people[login]?.sampleNote ? <p className="mb-6 max-w-prose border-l-2 border-accent pl-4">{people[login].sampleNote}</p> : null}
       <Section title="Track record" id="record">
         {s.hasHistory ? (
           <p className="text-lg"><span className="font-semibold tabular-nums">{s.merged}</span> solutions merged · <span className="font-semibold tabular-nums">{s.confirmedPayments}</span> payments confirmed received</p>

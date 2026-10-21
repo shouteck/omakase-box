@@ -31,7 +31,7 @@ function MethodsEditor({ login }) {
   };
   return (
     <>
-      {list.length === 0 ? <p>None yet. Owners who owe you will see what you list here.</p> : (
+      {list.length === 0 ? <p>None yet. You need one before you can be paid, not before you answer a bounty.</p> : (
         <ul className="flex flex-col gap-2">
           {list.map((m, i) => (
             <li key={i}>{METHOD_LABEL[m.kind]}{m.chain ? ` on ${m.chain}` : ''}: <span className="break-all">{m.value}</span> <Soft as="span">· shown to {m.visibility === 'everyone' ? 'everyone' : 'owners who owe you only'}</Soft> <Quiet onClick={() => setList(list.filter((_, j) => j !== i))}>Remove</Quiet></li>
@@ -63,7 +63,7 @@ function MethodsEditor({ login }) {
           {msg ? <p role="status" className="text-sm">{msg}</p> : null}
         </div>
       </form>
-      <Soft className="mt-4">The board checks only the shape of what you type. It never follows a link or moves money.</Soft>
+      <Soft className="mt-4">&ldquo;Everyone&rdquo; puts the method on your public solver page. &ldquo;Only an owner who owes me&rdquo; keeps it off every public page and feed; the owner of a bounty your solution was merged into still sees it there. The board checks only the shape of what you type. It never follows a link or moves money.</Soft>
     </>
   );
 }
@@ -101,7 +101,7 @@ export default function MeView() {
                 );
               })}
             </ul>
-            {oldest ? <div className="mt-6"><Primary href={`/b/${oldest.id}/#payment`}>Pay and record the oldest</Primary></div> : null}
+            {oldest ? <div className="mt-6"><Primary href={`/b/${oldest.id}/#payment`}>{payeeOf(oldest).kind === 'one' ? `See how to pay ${payeeOf(oldest).login}` : 'See the oldest'}</Primary></div> : null}
           </>
         )}
       </Section>

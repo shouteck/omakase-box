@@ -16,7 +16,17 @@
     },
     "owner": {
       "login": "example-orrin",
-      "record": "no history yet"
+      "record": {
+        "has_history": false,
+        "merged": 0,
+        "recorded_paid": 0,
+        "confirmed_received": 0,
+        "from_solvers": 0,
+        "owed_now": 0,
+        "oldest_owed_days": null,
+        "says_not_received": 0,
+        "median_days_to_record_paid": null
+      }
     },
     "repository": {
       "name": "example-orrin/lumen-forms",
@@ -48,7 +58,7 @@
       "Open a pull request against the branch box-bounty/bt-1f04c2a9e7b3 in example-orrin/lumen-forms (not against main)."
     ],
     "how_to_get_paid": [
-      "Sign in to the board with GitHub and list the ways you accept payment on your profile (PayPal.me, Stripe payment link, GitHub Sponsors, Wise email or a wallet address). The owner sees them after a merge.",
+      "You can answer without signing in. To be paid, sign in to the board with GitHub and list at least one way you accept payment (PayPal.me, Stripe payment link, GitHub Sponsors, Wise email or a wallet address) before your pull request could be merged. Methods you mark \"only an owner who owes me\" stay off your public profile; the owner sees them once your solution is merged.",
       "If your pull request is the one merged, the owner owes you $60 and pays you directly. The board never holds, guarantees or moves money.",
       "When the money arrives, confirm receipt on the bounty page. Your confirmation is shown as your word."
     ],
@@ -63,7 +73,7 @@
         "at": "2026-10-17T14:05:00Z",
         "event": "posted",
         "by": "example-orrin",
-        "source": "memory"
+        "source": "github"
       }
     ],
     "judged": "The board does not judge solutions or rank people."

@@ -35,7 +35,7 @@ The feed and MCP carry **the same facts and wording as the pages**, built from t
 | `min_reward` | whole USD, from the block's `reward.amount` |
 | `max_age_days` | from the block's `createdAt` |
 | `solutions` | `none` / `some` open pull requests on `box-bounty/<id>` |
-| `owner_record` | `confirmed-payments` (at least one solver confirmed receiving this owner's payment) / `no-history` |
+| `owner_record` | `confirmed-payments` (at least one solver confirmed receiving this owner's payment) / `confirmed-none-late` (that, and no payee says a recorded payment has not arrived, and nothing owed for more than 14 days) / `no-history` |
 | `approved_by` | `owner-this-bounty` / `owner-standing-rule` (the `posted` event's `allowedBy.decision`: `once` or `allowed`) |
 | `query` | words in titles or repository names (≤ 100 characters) |
 | `sort` | `newest` (default) / `reward` |
@@ -47,7 +47,7 @@ The feed and MCP carry **the same facts and wording as the pages**, built from t
 
 1. `id`; 2. `poster_says.title`: always under `poster_says`, so a stranger's text is never a field of ours;
 3. `reward`: `{amount, currency, paid: "by the owner, directly"}`;
-4. `owner`: `{login, record: {merged, recorded_paid, confirmed_received, owed_now, oldest_owed_days, says_not_received}}` or `"no history yet"`;
+4. `owner`: `{login, record: {has_history, merged, recorded_paid, confirmed_received, from_solvers, owed_now, oldest_owed_days, says_not_received, median_days_to_record_paid}}`, always this shape (`has_history: false` and zeros for a new owner, so a program never meets a string where it expects an object);
 5. `repository`: `{name, language, url}`; 6. `state`: `open` / `solutions-waiting`; 7. `solutions`: `{open, total}`;
 8. `posted_at`, `age_days`; 9. `approved_by`;
 10. `answer`: `{branch, base_commit, pull_request_base}`; 11. `links`: `{page, issue, detail}`.
@@ -57,12 +57,14 @@ Example entry:
 ```json
 {"id":"bt-0d7e4a3c8b65","poster_says":{"title":"Recurring transactions skip the 31st in short months"},
  "reward":{"amount":45,"currency":"USD","paid":"by the owner, directly"},
- "owner":{"login":"example-mara","record":{"merged":6,"recorded_paid":5,"confirmed_received":4,"owed_now":1,"oldest_owed_days":6,"says_not_received":0}},
+ "owner":{"login":"example-mara","record":{"has_history":true,"merged":6,"recorded_paid":5,"confirmed_received":4,"from_solvers":3,"owed_now":1,"oldest_owed_days":6,"says_not_received":0,"median_days_to_record_paid":2}},
  "repository":{"name":"example-tidepool/ledger-lite","language":"TypeScript","url":"https://github.com/example-tidepool/ledger-lite"},
  "state":"open","solutions":{"open":0,"total":0},"posted_at":"2026-10-17T08:00:00Z","age_days":4,"approved_by":"owner-this-bounty",
  "answer":{"branch":"box-bounty/bt-0d7e4a3c8b65","base_commit":"0d7e4a3c…","pull_request_base":"box-bounty/bt-0d7e4a3c8b65"},
  "links":{"page":"…/b/bt-0d7e4a3c8b65/","issue":"…/issues/44","detail":"…/bounties/bt-0d7e4a3c8b65.json"}}
 ```
+
+**Sources.** Every fact with a `source` uses one of three names, defined in the legend: `github` (read from GitHub's public API), `project-record` (an event the poster's tool pushed to `refs/box-bounty/<id>` on GitHub; only someone with push access can push it, so it is read as the owner's word), `board` (a click on the board by the signed-in person named in `by`). Payment words also carry `whose_word` ("the owner's", "the solver's").
 
 **Caching.** Each page carries an `ETag`; `If-None-Match` returns 304. `read_at` says how old the facts are; the board reads GitHub every 15 minutes within its budget (PF1), so polling more than every 5 minutes gains nothing. Static JSON per filter set is cacheable at the edge.
 
@@ -121,7 +123,7 @@ What a list card and a detail page show, what helps decide, and what is noise. S
 
 1. the title (the poster's words: the board says once above the list "Titles are the posters' own words"; the feed puts it under `poster_says`) and the stated reward, right-aligned (`$45`, or "No reward");
 2. `repository · language · 4 days old · no solutions yet`;
-3. "The owner pays directly. `example-mara`: 6 merged · 5 recorded paid · 4 confirmed received · 1 owed (oldest 6 days)", or "no payment history yet". Owed and "says not received" appear only when above zero.
+3. "Posted by `example-mara`, who pays the solver directly: 6 merged · 5 paid by the owner's word · 4 received by the solvers' word · 1 owed for 6 days", or "no payment history yet". The line names the poster as a person, because the repository's first part is often an organisation (participants read `example-tidepool` as the owner). A dispute or a debt older than 14 days comes **first, in semibold**: "1 payment the solver says has not arrived · owes 2, the oldest for 40 days." The 14 days is a threshold for what is shown first and for one filter value, not a deadline the board enforces.
 
 **Rules.** Payment is described as what it is: "the owner pays directly", never "funded", "guaranteed" or "escrow" (the prototype's check rejects any such word outside a denial). Solver-written text is never on a card. No "best solution", no rating, no ranking of people, no site-wide totals. Every number has a source, named next to it on the bounty and owner pages ("Merged: GitHub. Recorded paid: the owner's word. Confirmed received: the solvers' word") and in the feed's `legend`. A private repository never appears (filtered at read, at render and in every file; checked against built pages).
 
@@ -140,7 +142,7 @@ What a list card and a detail page show, what helps decide, and what is noise. S
 | **says not received** | recorded paid, and the payee says it has not arrived | both | both shown side by side |
 
 - **How a solver confirms.** On the bounty page, signed in as the payee: "Confirm I received $35" (the page's one primary action), or "It has not arrived". The answer is shown with the date as the solver's word and can be withdrawn. Only the payee's account counts; the check proves a non-payee's click changes nothing.
-- **When they disagree.** "Recorded paid by example-wren on 12 Sept 2026 ($50). The owner's word, from the project's shared memory." beside "example-sol says it has not been received, as of 1 Oct 2026. The solver's word." and "The owner and the solver disagree. Both words are shown as theirs; the board does not decide between them." The owner's count shows "1 says not received".
+- **When they disagree.** "Recorded paid by example-wren on 12 Sept 2026 ($50). The owner's word, from the project's record on GitHub." beside "example-sol says it has not been received, as of 1 Oct 2026. The solver's word." and "The owner and the solver disagree. Both words are shown as theirs; the board does not decide between them." The owner's count shows "1 says not received".
 - **Resisting gaming.** Self-dealing is excluded from every count with K42's rule: a payee who is the poster or has push access to the repository is not counted (the owner page says "1 merged bounty not counted: the solver … had push access to the repository, so a payment there says nothing about paying others"); the same merge is excluded from the solver's record. Beyond that, the board shows facts that make a sock puppet visible rather than claiming to detect one: "confirmed received, by 3 different solvers" and each solver's GitHub account age ("GitHub account since 2026"). Every count links to its bounties, so anyone can inspect each one.
 - **No history.** "No history yet. No rewarded bounty of example-orrin's has been merged, so there is nothing to show either way." A new solver: "No history yet." Never zero stars, never a score.
 - **Where solvers' methods go.** Stored once on the profile, each with a shape check and a choice: "Everyone, on my profile" or "Only an owner who owes me" (the latter shown on the bounty page to that owner only, never in the feed, MCP, RSS or public API). The board never follows a link.
@@ -154,7 +156,7 @@ What a list card and a detail page show, what helps decide, and what is noise. S
 | **Bounty** `/b/<id>/` | breadcrumb; the poster's title; the state in one sentence; "You are viewing as …"; facts (stated reward, this owner, repository, posted and how approved, terms); the task as "The poster's words (login), from the GitHub issue"; how to answer (open states); payment for this bounty; solutions (number, author, state; "the board lists them; it does not judge or rank them"); history with sources | open: "Open the bounty branch on GitHub"; owed, as the owner: "Record $50 paid to example-quill"; recorded, as the payee: "Confirm I received $35" |
 | **Owner** `/owner/<login>/` | payment facts table with sources, not-counted note, merged bounties with states, open bounties | none |
 | **Solver** `/solver/<login>/` | track record (merged · confirmed), accepted methods as the solver chose, merged solutions | none |
-| **Your page** `/me/` | you owe; recorded paid, not yet confirmed; owed to you; ways you accept payment (editor); links to your public owner and solver pages; sign out | "Pay and record the oldest" (owner) or "Confirm a payment" (solver); signed out: "Sign in with GitHub" |
+| **Your page** `/me/` | you owe; recorded paid, not yet confirmed; owed to you; ways you accept payment (editor, saying a method is needed before being paid, not before answering, and what each visibility choice does); links to your public owner and solver pages; sign out | "See how to pay example-quill" (owner; it opens the bounty page with the payee's methods, never a payment), or "Confirm a payment" (solver); signed out: "Sign in with GitHub" |
 | **Sign in** `/sign-in/` | "The board asks GitHub for your public profile only … It cannot see any repository, public or private, and it stores no GitHub token" (no-scope OAuth, K42 3.2) | "Sign in with GitHub" |
 | **How it works** `/how/` | owners: K44's clearest line (O1: the task goes out as a GitHub issue, solutions come back as pull requests) with what becomes public in the same breath; solvers: S1 (feed or MCP, pull request, owner pays directly) with the payment facts; what the board is not | "See open bounties" |
 | **For agents** `/agents/` | MCP address and tools, feed with filters and bounds, RSS | none |
@@ -166,7 +168,7 @@ What a list card and a detail page show, what helps decide, and what is noise. S
 | open | "Open. No solution yet."; how to answer; "Nothing is owed yet. When a solution is merged, its author is owed $45 by the owner, paid directly." | the same |
 | solutions waiting | "Open. Solutions are waiting for the owner."; the list | the same |
 | merged, owed | "Owed to example-quill: $50, since 15 Oct 2026 (6 days). Source: GitHub records pull request #31 as merged." "Not recorded paid…" "Not confirmed received…" | the same, then "Pay example-quill directly, by a method they listed", the methods (restricted ones too), and "Record $50 paid to example-quill" ("Same as running `box bounty config set paid <id>`… Recording moves no money.") |
-| payment recorded | "Recorded paid by example-mara on 18 Oct 2026 ($35). The owner's word, from the project's shared memory." | after a click: "Recorded. Solvers now see … See what solvers see about you · Withdraw this record" |
+| payment recorded | "Recorded paid by example-mara on 18 Oct 2026 ($35). The owner's word, from the project's record on GitHub." | after a click: "Recorded. Solvers now see … See what solvers see about you · Withdraw this record"; the payee's methods stay listed "for reference" |
 | receipt confirmed | both words, each attributed | the same |
 | recorded, not received | both words side by side and "the board does not decide between them" | the same |
 | merged, owner decides | "GitHub marks more than one pull request merged: #8 by example-fern and #9 by example-rook… nothing is owed to either until the owner records whom they paid." | the same |
@@ -218,6 +220,8 @@ Same ground (unbleached paper, which K41 already describes as "warm ivory paper"
 **Does it fit?** With no payments, the "processing payment" example no longer applies. "Requesting … payment from visitors" still might: the board's purpose is to help strangers get paid (solvers' PayPal.me and Stripe links shown to visiting owners), and "financial gain of anyone involved" is read broadly. It is arguable either way; only Vercel support can say (their page invites that), and a wrong reading costs a removed deployment.
 
 **Cloudflare (K42's recommendation), rechecked.** Self-Serve Subscription Agreement (last updated 12 September 2025): no non-commercial clause; §2.2.1(h) forbids processing or collecting "personal or business credit card information on any web property that is receiving Free Services" [H5], which the board now never touches. Static assets: "Requests to static assets are free and unlimited", 20,000 files per Worker version and 25 MiB per file on Free [H6][H7]; dynamic requests (feed with filters, MCP, sign-in) 100,000 a day and 10 ms CPU each [H7]; D1 for the board's records (K42 section 5).
+
+**A static-export trap found by the participants.** Next 16's client navigation requests `__next.<segment>.__PAGE__.txt`, while its static export writes `__next.<segment>/__PAGE__.txt`. A plain file server returns 404 for every in-app link and the browser falls back to a slow full load ("clicks that seemed to do nothing"). The prototype's `scripts/serve.mjs` maps the names (`segmentFile`, tested); the deployed board needs the same mapping (a Worker route or `_redirects` rule), or plain links.
 
 **Recommendation: Cloudflare Workers Free with static assets and D1, on `*.workers.dev`, at $0.** The pages are a static export (as the prototype is), so page views cost nothing against the daily limit; only the feed, MCP and sign-in run as a Worker. Vercel remains possible only after a written yes from Vercel support. Next.js with Tailwind stays the stack (static export for pages; Cloudflare's adapter for the Worker parts, K42 [H6 there]).
 

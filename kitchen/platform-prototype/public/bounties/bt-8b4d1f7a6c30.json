@@ -17,12 +17,15 @@
     "owner": {
       "login": "example-wren",
       "record": {
+        "has_history": true,
         "merged": 4,
         "recorded_paid": 2,
         "confirmed_received": 1,
+        "from_solvers": 1,
         "owed_now": 2,
         "oldest_owed_days": 40,
-        "says_not_received": 1
+        "says_not_received": 1,
+        "median_days_to_record_paid": 1
       }
     },
     "repository": {
@@ -55,7 +58,7 @@
       "Open a pull request against the branch box-bounty/bt-8b4d1f7a6c30 in example-wren/sparrow-kit (not against main)."
     ],
     "how_to_get_paid": [
-      "Sign in to the board with GitHub and list the ways you accept payment on your profile (PayPal.me, Stripe payment link, GitHub Sponsors, Wise email or a wallet address). The owner sees them after a merge.",
+      "You can answer without signing in. To be paid, sign in to the board with GitHub and list at least one way you accept payment (PayPal.me, Stripe payment link, GitHub Sponsors, Wise email or a wallet address) before your pull request could be merged. Methods you mark \"only an owner who owes me\" stay off your public profile; the owner sees them once your solution is merged.",
       "If your pull request is the one merged, the owner owes you $50 and pays you directly. The board never holds, guarantees or moves money.",
       "When the money arrives, confirm receipt on the bounty page. Your confirmation is shown as your word."
     ],
@@ -65,19 +68,22 @@
         "to": "example-sol",
         "amount": 50,
         "since": "2026-09-10T11:00:00Z",
-        "source": "GitHub: pull request #6 merged"
+        "fact": "pull request #6 merged",
+        "source": "github"
       },
       "recorded_paid": {
         "by": "example-wren",
         "at": "2026-09-12T08:00:00Z",
         "amount": 50,
-        "source": "the owner's word, from the project's shared memory"
+        "whose_word": "the owner's",
+        "source": "project-record"
       },
       "solver_says": {
         "by": "example-sol",
         "at": "2026-10-01T09:00:00Z",
         "word": "not received",
-        "source": "the solver's word, on the board"
+        "whose_word": "the solver's",
+        "source": "board"
       },
       "excluded_from_counts": null
     },
@@ -96,7 +102,7 @@
         "at": "2026-08-28T10:00:00Z",
         "event": "posted",
         "by": "example-wren",
-        "source": "memory"
+        "source": "github"
       },
       {
         "at": "2026-09-02T10:00:00Z",
@@ -112,15 +118,15 @@
       },
       {
         "at": "2026-09-12T08:00:00Z",
-        "event": "recorded paid: $50",
+        "event": "recorded paid: $50 (the owner's word)",
         "by": "example-wren",
-        "source": "memory (the owner's word)"
+        "source": "project-record"
       },
       {
         "at": "2026-10-01T09:00:00Z",
-        "event": "says not received",
+        "event": "says not received (the solver's word)",
         "by": "example-sol",
-        "source": "board (the solver's word)"
+        "source": "board"
       }
     ],
     "judged": "The board does not judge solutions or rank people."

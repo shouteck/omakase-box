@@ -1,12 +1,15 @@
 import Link from 'next/link';
-import { repoOf, ownerRecord, daysBetween, plural } from '../lib/facts.mjs';
+import { repoOf, ownerRecord, daysBetween, plural, LATE_DAYS } from '../lib/facts.mjs';
 
+/** The owner's record, each count with whose word it is; a dispute or a long debt comes first. */
 export function ownerFacts(r) {
   if (!r.hasHistory) return 'no payment history yet';
-  const parts = [`${r.merged} merged`, `${r.recordedPaid} recorded paid`, `${r.confirmedReceived} confirmed received`];
-  if (r.owedNow) parts.push(`${r.owedNow} owed (oldest ${plural(r.oldestOwedDays, 'day')})`);
-  if (r.saysNotReceived) parts.push(`${r.saysNotReceived} says not received`);
-  return parts.join(' · ');
+  const warn = [];
+  if (r.saysNotReceived) warn.push(r.saysNotReceived === 1 ? '1 payment the solver says has not arrived' : `${r.saysNotReceived} payments the solvers say have not arrived`);
+  if (r.owedNow && r.oldestOwedDays > LATE_DAYS) warn.push(`owes ${r.owedNow}, the oldest for ${plural(r.oldestOwedDays, 'day')}`);
+  const parts = [`${r.merged} merged`, `${r.recordedPaid} paid by the owner's word`, `${r.confirmedReceived} received by the solvers' word`];
+  if (r.owedNow && !(r.oldestOwedDays > LATE_DAYS)) parts.push(`${r.owedNow} owed for ${plural(r.oldestOwedDays, 'day')}`);
+  return <>{warn.length ? <strong className="font-semibold">{warn.join(' · ')}. </strong> : null}{parts.join(' · ')}</>;
 }
 
 export function Reward({ amount }) {
@@ -31,7 +34,7 @@ export default function Card({ b, overlay }) {
       </p>
       {b.reward > 0 ? (
         <p className="mt-2 text-sm">
-          The owner pays directly. <Link href={`/owner/${b.poster}/`}>{b.poster}</Link>: {ownerFacts(r)}
+          Posted by <Link href={`/owner/${b.poster}/`}>{b.poster}</Link>, who pays the solver directly: {ownerFacts(r)}
         </p>
       ) : null}
     </li>

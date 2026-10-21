@@ -1,8 +1,23 @@
 {
   "login": "example-juno",
   "sample_data": true,
+  "legend": {
+    "as_owner.record": "Always the same shape; has_history is false when no rewarded bounty of this owner's has been merged (all counts 0). merged: rewarded bounties GitHub records as merged (GitHub's fact). recorded_paid: the owner says they paid (the owner's word). confirmed_received: the payee says the money arrived (the solver's word). from_solvers: how many different solvers gave those confirmations; one solver can confirm several. owed_now: merged and not recorded paid; oldest_owed_days: the longest of those, in days (the board sets no deadline). says_not_received: recorded paid, but the payee says it has not arrived. median_days_to_record_paid: typical days from merge to the owner's record. Merges where the payee is the poster or has push access to the repository are not counted.",
+    "not_counted": "Merged rewarded bounties left out of the record because the payee was the poster or had push access.",
+    "accepts_payment_by": "Methods this person chose to show everyone. Methods marked \"only an owner who owes me\" are counted, never listed."
+  },
   "as_owner": {
-    "record": "no history yet",
+    "record": {
+      "has_history": false,
+      "merged": 0,
+      "recorded_paid": 0,
+      "confirmed_received": 0,
+      "from_solvers": 0,
+      "owed_now": 0,
+      "oldest_owed_days": null,
+      "says_not_received": 0,
+      "median_days_to_record_paid": null
+    },
     "not_counted": 0
   },
   "as_solver": {

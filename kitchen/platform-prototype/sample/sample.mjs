@@ -40,7 +40,8 @@ export const people = {
   'example-sol': { since: 2020, methods: [{ kind: 'stripe', value: 'https://buy.stripe.com/example-sol', visibility: 'everyone' }] },
   'example-rook': { since: 2022, methods: [{ kind: 'wallet', value: '0x0000000000000000000000000000000000c0ffee', chain: 'Base (USDC)', visibility: 'owed-owners' }] },
   'example-fern': { since: 2026, methods: [] },
-  'example-pike-alt': { since: 2026, methods: [{ kind: 'paypal', value: 'https://paypal.me/example-pike-alt', visibility: 'everyone' }] },
+  // The sample's self-dealing case: a second account of example-pike's with push access.
+  'example-pike-alt': { since: 2026, sampleNote: 'Sample self-dealing case: this account has push access to example-kestrel/pikeworks, where example-pike posts, so its merged solution and payment are not counted in either record. The board cannot know two accounts are one person; it can read push access.', methods: [{ kind: 'paypal', value: 'https://paypal.me/example-pike-alt', visibility: 'everyone' }] },
 };
 
 const c = n => (n.repeat(40)).slice(0, 40); // invented 40-hex commit
@@ -204,7 +205,7 @@ export const bounties = [
     receipt: [{ at: '2026-07-30T18:00:00Z', by: 'example-quill', kind: 'received' }],
   },
   {
-    id: 'bt-0d7e4a3c8b65', repository: 'example-tidepool/ledger-lite', issue: 44, poster: 'example-mara',
+    id: 'bt-0d7e4a3c8b65', repository: 'example-tidepool/ledger-lite', issue: 48, poster: 'example-mara',
     title: 'Recurring transactions skip the 31st in short months',
     task: 'A transaction set to repeat on the 31st never appears in months with 30 days or fewer.\n\nWanted: it falls on the last day of short months. Done means tests/recurring.test.ts passes, including the February cases.',
     createdAt: '2026-10-17T08:00:00Z', reward: 45, workCommit: c('0d7e4a3c'), payment: null,

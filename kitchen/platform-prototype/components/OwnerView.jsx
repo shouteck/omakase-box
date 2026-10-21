@@ -38,7 +38,8 @@ export default function OwnerView({ login }) {
           <p className="max-w-prose">No history yet. No rewarded bounty of {login}&apos;s has been merged, so there is nothing to show either way.</p>
         )}
         {r.notCounted ? <p className="mt-4 max-w-prose">{plural(r.notCounted, 'merged bounty', 'merged bounties')} not counted: the solver was {login} or had push access to the repository, so a payment there says nothing about paying others.</p> : null}
-        <Soft className="mt-4">The owner pays solvers directly. The board never holds, guarantees or moves money.</Soft>
+        {r.medianDaysToRecord !== null ? <p className="mt-4 max-w-prose">{login} usually records a payment {r.medianDaysToRecord === 0 ? 'the day of the merge' : `${plural(r.medianDaysToRecord, 'day')} after the merge`}. Recorded paid but not yet confirmed means the solver has not said either way.</p> : null}
+        <Soft className="mt-4">The owner pays solvers directly. The board sets no deadline and never holds, guarantees or moves money.</Soft>
       </Section>
 
       <Section title="Merged bounties" id="merged">

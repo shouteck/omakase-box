@@ -43,7 +43,7 @@ export default function Board() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <Select label="Language" name="language" value={q.language} onChange={set} options={[['', 'Any'], ...languages.map(l => [l, l])]} />
           <Select label="Stated reward" name="min_reward" value={q.min_reward} onChange={set} options={[['', 'Any'], ['1', '$1 or more'], ['25', '$25 or more'], ['50', '$50 or more'], ['100', '$100 or more']]} />
-          <Select label="Owner's payment record" name="owner_record" value={q.owner_record} onChange={set} options={[['', 'Any'], ['confirmed-payments', 'Has confirmed payments'], ['no-history', 'No history yet']]} />
+          <Select label="Owner's payment record" name="owner_record" value={q.owner_record} onChange={set} options={[['', 'Any'], ['confirmed-payments', 'Has confirmed payments'], ['confirmed-none-late', 'Confirmed payments; none disputed or owed over 14 days'], ['no-history', 'No history yet']]} />
           <Select label="Sort" name="sort" value={q.sort} onChange={set} options={[['newest', 'Newest first'], ['reward', 'Highest reward first']]} />
         </div>
         <details className="text-sm">

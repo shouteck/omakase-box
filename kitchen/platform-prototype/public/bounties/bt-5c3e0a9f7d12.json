@@ -16,7 +16,17 @@
     },
     "owner": {
       "login": "example-juno",
-      "record": "no history yet"
+      "record": {
+        "has_history": false,
+        "merged": 0,
+        "recorded_paid": 0,
+        "confirmed_received": 0,
+        "from_solvers": 0,
+        "owed_now": 0,
+        "oldest_owed_days": null,
+        "says_not_received": 0,
+        "median_days_to_record_paid": null
+      }
     },
     "repository": {
       "name": "example-juno/tallow",
@@ -70,7 +80,7 @@
         "at": "2026-08-15T10:00:00Z",
         "event": "posted",
         "by": "example-juno",
-        "source": "memory"
+        "source": "github"
       },
       {
         "at": "2026-08-18T10:00:00Z",
