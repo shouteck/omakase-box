@@ -1,3 +1,4 @@
+// reads: scripts/verify.mjs, scripts/kitchen-stats.mjs, scripts/suite.mjs
 // K34 regression tests: a verify invocation leaves a durable started.json at
 // run-directory creation, so a killed run stays attributable; stats classify
 // that evidence as unfinished, never as completion. Unit halves run on

@@ -33,9 +33,9 @@ Keep ceremony in proportion: a one-command check needs no page of brief; a produ
 - The candidate's identity is its commit SHA. Verify refuses to run on a tree dirty at start (exit 3, `UNCOMMITTED`); a run that ends dirty keeps per-step verdicts but is never a PASS.
 - A step is `reused` instead of re-run when a completed `summary.json` — the trust anchor — proves it: a clean PASS on this commit, a PASS on one of the nearest 20 ancestors over paths the step does not read, or either dirty only in paths it does not read. `--fresh` forces a real run.
 - Each run records one cheap load snapshot (`load`: platform, CPU capacity, free memory; the load average only where the platform truly measures it — Windows records unsupported, never zero). kitchen-stats flags a duration only against ≥3 earlier eligible runs of the same executed plan on the same recorded platform, strictly over 2× the median — advisory, never a cause or a verdict; a rerun does not erase a failed attempt.
-- `check` runs typecheck; no check-only suites remain after K29. Full acceptance names both surviving suites: `node scripts/verify.mjs --full test:box-bounty test:kitchen`. A suite named in the invocation never runs twice.
+- `check` runs typecheck. `test:kitchen` runs only the files whose `// reads:` header the diff reaches (all for an unmapped path; none is refused); `summary.json` names them. Cook and pass runs are selected; milestone close and the off-machine run are full: `node scripts/verify.mjs --full test:box-bounty test:kitchen`.
 - All runs report `db=none`; removed database modes refuse before work.
-- Name the suites the change affects in the brief. Do not run unrelated legacy suites on every wave.
+- Name the suites the change affects in the brief.
 - A brief that changes what a command does or prints names `test:kitchen` in Done when; verify adds it anyway.
 - A lost or unclear result is fixed by running it again. Do not start a duplicate while a finite command is still running.
 - The reviewer's run is the one that counts. The worker's run is a self-check.

@@ -1,7 +1,8 @@
 // Runs one test suite under vitest: node scripts/suite.mjs <suite> [--suite <sub>].
-// It also owns the two small maps that let verify stop repeating work (K5):
-// which of `check`'s suites a branch's diff can reach, and when an earlier
-// recorded PASS may stand in for a step. Importable — the script body is
+// It also owns the small maps that let verify stop repeating work (K5):
+// which of `check`'s suites a branch's diff can reach, which kitchen test
+// files it can reach (K45), and when an earlier recorded PASS may stand in
+// for a step. Importable — the script body is
 // guarded, so verify.mjs and tests/kitchen can use the exported functions.
 import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
@@ -131,6 +132,130 @@ export function kitchenSuiteReason(paths) {
 export const stepReadsPath = (step, path) =>
   kitchenSuiteReason([path]) === KITCHEN_READ_REASON ? step === 'test:kitchen' : !isInert(path);
 
+// --- which kitchen test files a diff can reach (K45) --------------------------
+
+// Every tests/kitchen/*.test.ts declares what it reads in a header line,
+// `// reads: <entry>, <entry>` (more than one such line is allowed). An entry
+// is an exact path, a `dir/` prefix, or a glob (`*` within one segment, `**`
+// across segments); `@rulebook` stands for the files kitchen-stats'
+// checkLimits reads. A file always reads itself. The declarations are read
+// from the files on every call — never restated here — so a new test file is
+// covered the moment it exists, and one that declares nothing is selected for
+// every change (and fails tests/kitchen/k45-kitchen-reach.test.ts).
+const KITCHEN_DIR = 'tests/kitchen';
+const RULEBOOK = ['AGENTS.md', 'docs/box-v4/KITCHEN.md', 'kitchen/INBOX.md', 'STATUS.md', ...LIVE_RULE_FILES, 'kitchen/roles/', 'kitchen/stations/'];
+// What the suite runner itself reads — the install, the vitest config and the
+// launchers verify and suite.mjs go through. A change here can alter every
+// file's run, so it selects every file.
+export const KITCHEN_RUNNER_READS = ['package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', '.node-version', 'tsconfig.json', 'scripts/vitest.config.mjs', 'scripts/process.mjs', 'scripts/pnpm.mjs', 'scripts/toolchain.json', 'scripts/tooling/'];
+const entryPattern = entry => new RegExp(`^${entry.replace(/[.+^${}()|[\]\\?]/g, '\\$&').replace(/\*\*|\*/g, token => (token === '**' ? '.*' : '[^/]*'))}${entry.endsWith('/') ? '.*' : ''}$`);
+
+// The kitchen test files under rootDir with their declared entries, sorted by
+// name. `reads` is [] when the file declares nothing.
+export function kitchenDeclarations(rootDir = root) {
+  const directory = join(rootDir, ...KITCHEN_DIR.split('/'));
+  const found = [];
+  const walk = (dir, prefix) => {
+    for (const name of readdirSync(dir).sort()) {
+      const path = join(dir, name);
+      if (statSync(path).isDirectory()) walk(path, `${prefix}${name}/`);
+      else if (name.endsWith('.test.ts')) {
+        const text = readFileSync(path, 'utf8');
+        const reads = [...text.matchAll(/^\/\/ reads:(.*)$/gm)].flatMap(match => match[1].split(',').map(entry => entry.trim()).filter(Boolean));
+        found.push({ file: `${prefix}${name}`, reads });
+      }
+    }
+  };
+  if (existsSync(directory)) walk(directory, '');
+  return found;
+}
+
+// scripts/*.mjs import one another; a file that runs scripts/verify.mjs also
+// runs everything verify imports. For each script, the scripts that reach it
+// through static or dynamic './x.mjs' imports (itself included).
+function scriptImporters(rootDir) {
+  const directory = join(rootDir, 'scripts');
+  const imports = new Map();
+  if (existsSync(directory)) for (const name of readdirSync(directory).filter(name => name.endsWith('.mjs'))) {
+    const text = readFileSync(join(directory, name), 'utf8');
+    imports.set(name, [...text.matchAll(/\b(?:from\s+|import\s*\(\s*|import\s+)['"]\.\/([\w.-]+\.mjs)['"]/g)].map(match => match[1]));
+  }
+  const reachedBy = name => {
+    const seen = new Set([name]);
+    let grew = true;
+    while (grew) {
+      grew = false;
+      for (const [importer, targets] of imports) if (!seen.has(importer) && targets.some(target => seen.has(target))) { seen.add(importer); grew = true; }
+    }
+    return [...seen].map(script => `scripts/${script}`);
+  };
+  return path => (/^scripts\/[^/]+\.mjs$/.test(path) && imports.has(path.slice(8)) ? reachedBy(path.slice(8)) : [path]);
+}
+
+// The kitchen files whose declarations reach each path. Built once per call
+// site; kitchenTestFilesForPaths is the one consumer verify uses.
+export function kitchenReach(rootDir = root) {
+  const declared = kitchenDeclarations(rootDir).map(({ file, reads }) => ({
+    file,
+    declares: reads.length > 0,
+    patterns: [`${KITCHEN_DIR}/${file}`, ...reads.flatMap(entry => (entry === '@rulebook' ? RULEBOOK : [entry]))].map(entryPattern),
+  }));
+  const reach = scriptImporters(rootDir);
+  return {
+    files: declared.map(item => item.file),
+    undeclared: declared.filter(item => !item.declares).map(item => item.file),
+    // Only files that declare something; undeclared ones are added by the caller.
+    readersOf: path => {
+      const paths = reach(path);
+      return declared.filter(item => item.declares && item.patterns.some(pattern => paths.some(candidate => pattern.test(candidate)))).map(item => item.file);
+    },
+  };
+}
+
+// The kitchen test files a set of changed paths needs: { files, total, reason }
+// with files sorted and named relative to tests/kitchen. Order of rules, first
+// match wins for each path:
+//   1. a path the suite runner reads (KITCHEN_RUNNER_READS) -> every file;
+//   2. an inert path (isInert — the same answer kitchenSuiteReason and the
+//      ancestor reuse give) -> no file;
+//   3. a path some file declares -> those files;
+//   4. anything else is unmapped -> every file (fail closed).
+// An unreadable diff (null) selects every file. An empty `files` with
+// total > 0 means the diff reaches no kitchen file; verify refuses to call
+// that a pass. total 0 means no kitchen test file exists to select from.
+export function kitchenTestFilesForPaths(paths, rootDir = root) {
+  const reach = kitchenReach(rootDir);
+  const total = reach.files.length;
+  const every = reason => ({ files: [...reach.files], total, reason });
+  if (paths === null) return every('the diff cannot be read, so every file runs');
+  const unique = [...new Set(paths)].sort();
+  // A file that declares nothing runs for every change — never silently skipped.
+  const selected = new Set(reach.undeclared);
+  const mapped = [];
+  for (const path of unique) {
+    if (KITCHEN_RUNNER_READS.some(entry => entryPattern(entry).test(path))) return every(`${path} is read by the suite runner itself, so every file runs`);
+    if (isInert(path)) continue;
+    const readers = reach.readersOf(path);
+    if (!readers.length) return every(`${path} is declared by no kitchen file (unmapped), so every file runs`);
+    for (const file of readers) selected.add(file);
+    mapped.push(path);
+  }
+  const named = list => `${list.slice(0, 3).join(', ')}${list.length > 3 ? ` and ${list.length - 3} more` : ''}`;
+  if (!selected.size) return { files: [], total, reason: unique.length ? `no kitchen file declares a changed path (${named(unique)})` : 'the diff is empty' };
+  const why = [
+    mapped.length ? `these files declare the changed paths (${named(mapped)})` : null,
+    reach.undeclared.length ? `${named(reach.undeclared)} declare no inputs, so they run for every change` : null,
+  ].filter(Boolean).join('; ');
+  return { files: [...selected].sort(), total, reason: why };
+}
+
+// What test:kitchen runs this invocation. `--full` means every file.
+export function selectKitchenFiles(rootDir = root, { full = false, paths } = {}) {
+  if (full) { const files = kitchenReach(rootDir).files; return { files, total: files.length, reason: '--full' }; }
+  return kitchenTestFilesForPaths(paths === undefined ? changedPaths(rootDir) : paths, rootDir);
+}
+export const kitchenSelectionLabel = ({ files, total, reason }) => `selected: ${files.length} of ${total} kitchen files, ${reason}`;
+
 // --- when an earlier PASS may stand in ----------------------------------------
 
 // The trust anchor is the summary.json content — never the directory name or
@@ -145,9 +270,14 @@ export const stepReadsPath = (step, path) =>
 // the step's log must exist. A reused `check` must also have covered at
 // least the suites this invocation needs (pass `suites`), so a --full
 // request never inherits a partial check; summaries from before this field
-// existed ran all check suites. Anything that doesn't parse or match means
-// a real run.
-export function reusableStep(runsDir, sha, stepName, { suites = null } = {}) {
+// existed ran all check suites. K45: a reused `test:kitchen` likewise must
+// have covered every kitchen file this invocation selects (pass
+// `kitchenFiles`): the summary's kitchenSelected must include each one, so a
+// narrow PASS never stands in for a wider selection while a wider one (a
+// --full run, or any superset) stands in for a narrower one. Summaries from
+// before the field existed ran the whole kitchen directory. Anything that
+// doesn't parse or match means a real run.
+export function reusableStep(runsDir, sha, stepName, { suites = null, kitchenFiles = null } = {}) {
   for (const run of readRuns(runsDir).reverse()) {
     if (run.summary !== 'ok' || run.sha !== sha) continue;
     let parsed;
@@ -160,6 +290,9 @@ export function reusableStep(runsDir, sha, stepName, { suites = null } = {}) {
     if (suites) {
       const covered = Array.isArray(parsed.checkSuites) ? parsed.checkSuites : CHECK_SUITES;
       if (!suites.every(suite => covered.includes(suite))) continue;
+    }
+    if (kitchenFiles && Object.hasOwn(parsed, 'kitchenSelected')) {
+      if (!Array.isArray(parsed.kitchenSelected) || !kitchenFiles.every(file => parsed.kitchenSelected.includes(file))) continue;
     }
     const step = (Array.isArray(parsed.steps) ? parsed.steps : []).find(item => item && item.name === stepName && item.exit === 0);
     if (!step) continue;
@@ -229,9 +362,14 @@ async function main() {
     }
     targets.push(real.split(sep).join('/'));
   }
-  if (files.length) console.log(`scoped run: ${targets.length} file(s) under ${relative(root, directory)} — this is an inner loop, never suite acceptance`);
+  // K45: verify passes its kitchen selection as file targets and says so in
+  // KITCHEN_SELECTION; that run is acceptance for the files it names, so it
+  // does not carry the inner-loop wording a hand-scoped run gets. The variable
+  // is not passed on to the tests (they spawn suite.mjs themselves).
+  const { KITCHEN_SELECTION: selection, ...env } = process.env;
+  if (files.length) console.log(selection ? `verify ${selection}` : `scoped run: ${targets.length} file(s) under ${relative(root, directory)} — this is an inner loop, never suite acceptance`);
   const vitest = fileURLToPath(new URL('../node_modules/vitest/vitest.mjs', import.meta.url));
-  process.exit(await runNode(vitest, ['run', `--maxWorkers=${suiteWorkers(suite, subgroup)}`, ...(targets.length ? targets : [directory]), '--config', 'scripts/vitest.config.mjs'], { env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: join(root, '.runtime', 'browsers') } }));
+  process.exit(await runNode(vitest, ['run', `--maxWorkers=${suiteWorkers(suite, subgroup)}`, ...(targets.length ? targets : [directory]), '--config', 'scripts/vitest.config.mjs'], { env: { ...env, PLAYWRIGHT_BROWSERS_PATH: join(root, '.runtime', 'browsers') } }));
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) await main();

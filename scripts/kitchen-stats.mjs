@@ -91,6 +91,7 @@ export function readRuns(runsDir) {
         run.dirty = typeof parsed.dirty === 'boolean' ? parsed.dirty : null;
         run.steps = Array.isArray(parsed.steps) ? parsed.steps.map(step => ({ name: String(step && step.name), exit: step && typeof step.exit === 'number' ? step.exit : null, seconds: step && typeof step.seconds === 'number' ? step.seconds : null, reused: step && typeof step.reused === 'string' ? step.reused : null })) : [];
         run.profile = typeof parsed.profile === 'string' ? parsed.profile : null;
+        run.kitchenSelected = Array.isArray(parsed.kitchenSelected) ? parsed.kitchenSelected.map(String).sort() : null;
         run.notRun = Array.isArray(parsed.notRun) ? parsed.notRun.map(String) : [];
         const summaryLoad = sanitizeLoad(parsed.load);
         if (summaryLoad !== null) { run.load = summaryLoad; run.loadFrom = 'summary'; }
@@ -445,10 +446,15 @@ function durationEligible(run) {
 // executed step set. Platform comes only from a recorded load snapshot —
 // 'unknown' runs compare only against other 'unknown' runs, never across.
 const cohortPlatform = run => (run.load && run.load.platform) || 'unknown';
+// K45: a test:kitchen that ran a selection of the kitchen files is its own
+// plan — keyed by the files it ran — so a 2-file run is never measured against
+// the whole suite, or the other way round.
 function cohortPlan(run) {
   if (run.profile) return 'profile ' + run.profile;
   const names = run.steps.map(step => step.name).sort();
-  return names.length ? 'steps ' + names.join(',') : null;
+  if (!names.length) return null;
+  const kitchen = names.includes('test:kitchen') && run.kitchenSelected ? ' kitchen ' + run.kitchenSelected.join('+') : '';
+  return 'steps ' + names.join(',') + kitchen;
 }
 const median = list => {
   const sorted = [...list].sort((a, b) => a - b);

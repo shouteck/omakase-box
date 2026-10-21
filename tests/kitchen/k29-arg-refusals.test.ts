@@ -1,3 +1,4 @@
+// reads: scripts/verify.mjs, scripts/suite.mjs
 // K29 correction round: removed options must refuse, never pass silently.
 // verify.mjs retired the disposable-Postgres modes with the older platform;
 // --db=none stays as the kept callers' no-database spelling and every other

@@ -1,3 +1,4 @@
+// reads: scripts/kitchen-stats.mjs
 // R1 contract: the real scripts/kitchen-stats.mjs must no longer print the
 // obsolete "Usage per wave" section (or anything matching /usage/i) while every
 // verification figure, wave attribution, missing-data label and limit exit

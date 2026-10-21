@@ -1,3 +1,4 @@
+// reads: scripts/suite.mjs, scripts/verify-*.mjs, tests/box/bounty/, tests/kitchen/
 // K12 pin: every *named* suite whose tests reach a database must be in
 // DB_SUITES, or `verify --only test:<name>` reports db=none and the suite
 // dies on "BOX_TEST_DATABASE_URL is not configured" — the defect the pass

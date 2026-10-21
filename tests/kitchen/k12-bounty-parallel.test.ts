@@ -1,3 +1,4 @@
+// reads: tests/box/bounty/, packages/box-bounty/, scripts/suite.mjs
 // K12: the bounty suite's files run in parallel workers (scripts/suite.mjs
 // `suiteWorkers`). This file pins the audit that made that safe, so a future
 // helper that reintroduces shared state trips here before it reaches the

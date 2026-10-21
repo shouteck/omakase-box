@@ -1,3 +1,4 @@
+// reads: scripts/suite.mjs, scripts/kitchen-stats.mjs, scripts/verify.mjs
 import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';

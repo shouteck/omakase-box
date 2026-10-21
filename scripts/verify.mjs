@@ -13,13 +13,16 @@
 // PASS counts for the commit when every path the tree was dirty in (start and end) is one that step does
 // not read, so a wave file edited mid-run costs no rerun. `check` runs only
 // the suites this branch's diff can reach (`--full` runs them all), and no suite runs twice inside one invocation.
+// K45: test:kitchen likewise runs only the kitchen files whose declared inputs the diff reaches (suite.mjs
+// kitchenTestFilesForPaths; `--full` or an unmapped path runs them all); summary.json records kitchenSelected
+// and kitchenReason, and a reused test:kitchen must have covered at least this run's selection.
 import { spawn } from 'node:child_process';
 import { createWriteStream, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { root } from './process.mjs';
 import { captureLoad } from './host-load.mjs';
-import { changedPaths, kitchenSuiteReason, reusableStep, selectCheckSuites, stepReadsPath, suiteKey } from './suite.mjs';
+import { changedPaths, kitchenSelectionLabel, kitchenSuiteReason, reusableStep, selectCheckSuites, selectKitchenFiles, stepReadsPath, suiteKey } from './suite.mjs';
 
 const args = process.argv.slice(2);
 const only = args.includes('--only');
@@ -45,13 +48,28 @@ if (unknown.length) {
 // caller did not name it — `check`'s reach map only covers its own suites,
 // and BT16's stand-in drift shipped under a bounty change verify ran without
 // the kitchen suite. --only narrows check/build, never this.
-const kitchenReason = kitchenSuiteReason(changedPaths(root));
+const diffPaths = changedPaths(root);
+const kitchenReason = kitchenSuiteReason(diffPaths);
 if (kitchenReason !== null && !suites.includes('test:kitchen')) {
   suites.push('test:kitchen');
   console.log(`added test:kitchen: ${kitchenReason}`);
 }
 const steps = [...(only ? [] : ['check', 'build']), ...suites];
 if (!steps.length) { console.error('Nothing to run.'); process.exit(2); }
+// K45: test:kitchen runs the kitchen files the diff can reach — each file
+// declares its inputs; a runner, unmapped or unreadable path, or --full,
+// selects every file. A selection that reaches no file is refused here, before
+// any run directory or step: zero files run is not a pass.
+const kitchenPlan = steps.includes('test:kitchen') ? selectKitchenFiles(root, { full, paths: diffPaths }) : null;
+if (kitchenPlan && kitchenPlan.files.length === 0 && kitchenPlan.total > 0) {
+  console.error(`verify: test:kitchen refused — ${kitchenSelectionLabel(kitchenPlan)}. Running no kitchen file is not a pass: drop test:kitchen, or pass --full to run every kitchen file.`);
+  process.exit(2);
+}
+const kitchenLabel = kitchenPlan ? kitchenSelectionLabel(kitchenPlan) : null;
+// Every file selected means the plain suite run; a narrower selection is
+// passed to suite.mjs as file targets.
+const kitchenArgs = kitchenPlan && kitchenPlan.files.length < kitchenPlan.total ? kitchenPlan.files.map(file => `tests/kitchen/${file}`) : [];
+if (kitchenLabel) console.log(`test:kitchen ${kitchenLabel}`);
 
 const checkout = root.replace(/[\\/]+$/, '').replaceAll('\\', '/');
 function capture(command, commandArgs) {
@@ -106,12 +124,12 @@ if (dirty) {
 // that read a dirty path ran against uncommitted content: its result is
 // recorded with reusable:false and stands for nothing.
 const pnpm = fileURLToPath(new URL('./pnpm.mjs', import.meta.url));
-function runStep(name, env) {
+function runStep(name, env, extraArgs = []) {
   return new Promise(resolve => {
     const log = `${name.replace(/[^a-z0-9-]/gi, '_')}.log`;
     const sink = createWriteStream(join(runDirectory, log));
     const began = Date.now();
-    const child = spawn(process.execPath, [pnpm, name], { cwd: root, env, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
+    const child = spawn(process.execPath, [pnpm, name, ...extraArgs], { cwd: root, env, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
     for (const stream of [child.stdout, child.stderr]) stream.on('data', chunk => { sink.write(chunk); process.stdout.write(chunk); });
     const finish = exit => sink.end(() => resolve({ name, exit, seconds: Math.round((Date.now() - began) / 1000), log }));
     child.on('error', () => finish(127));
@@ -186,7 +204,8 @@ try {
     // ran on a tree dirty only where this step does not read. A dirty tree
     // of our own changes nothing about what those earlier runs proved;
     // --fresh always runs for real.
-    const hit = fresh ? null : await reusableStepFor(name, name === 'check' ? { suites: checkPlan.suites } : {});
+    // (K45) A reused test:kitchen must have covered this run's selection.
+    const hit = fresh ? null : await reusableStepFor(name, name === 'check' ? { suites: checkPlan.suites } : name === 'test:kitchen' ? { kitchenFiles: kitchenPlan.files } : {});
     if (hit) {
       results.push({ name, exit: 0, seconds: 0, reused: hit.run, reusedSeconds: hit.seconds, ...(hit.ancestor === undefined ? {} : { ancestor: hit.ancestor }) });
       ran.add(name);
@@ -194,7 +213,9 @@ try {
       if (name === 'check') for (const suite of checkPlan.suites) checkCovered.add(suite);
       continue;
     }
-    const result = await runStep(name, env);
+    const result = name === 'test:kitchen'
+      ? await runStep(name, { ...env, KITCHEN_SELECTION: kitchenLabel }, kitchenArgs)
+      : await runStep(name, env);
     results.push(result);
     ran.add(name);
     if (name === 'check' && result.exit === 0) for (const suite of checkPlan.suites) checkCovered.add(suite);
@@ -217,9 +238,12 @@ const passed = !failure && results.length === steps.length && results.every(resu
 const verdict = !passed ? 'FAIL' : dirtyAny ? 'UNCOMMITTED' : 'PASS';
 const notRun = steps.slice(results.length);
 const seconds = Math.round((Date.now() - startedAt.getTime()) / 1000);
-const stepCell = result => `${result.name}=${result.reused ? `reused@${result.reused}${result.ancestor === undefined ? '' : `(ancestor ${result.ancestor.slice(0, 7)}, only inert paths changed)`}` : result.exit}`;
+// K45: the kitchen cell says how much of the suite it covers.
+const kitchenCell = result => (result.name === 'test:kitchen' && kitchenPlan ? `(selected ${kitchenPlan.files.length} of ${kitchenPlan.total} kitchen files)` : '');
+const stepCell = result => `${result.name}=${result.reused ? `reused@${result.reused}${result.ancestor === undefined ? '' : `(ancestor ${result.ancestor.slice(0, 7)}, only inert paths changed)`}` : result.exit}${kitchenCell(result)}`;
 const line = `verify ${sha.slice(0, 7)}${dirtyAny ? '+dirty' : ''} ${verdict} ${results.map(stepCell).join(' ')}${notRun.length ? ` not-run=${notRun.join(',')}` : ''} db=${db.kind} ${seconds}s${failure ? ` (${failure})` : ''}`;
-writeFileSync(join(runDirectory, 'summary.json'), JSON.stringify({ schemaVersion: 1, sha, dirty: dirtyAny, verdict, startedAt: startedAt.toISOString(), seconds, database: db.kind, profile: full ? `verify --full ${suites.join(' ')}` : null, checkSuites: checkPlan ? [...checkCovered] : null, steps: results, notRun, failure: failure ?? null, finalStatus, dirtyPaths, load, line }, null, 2) + '\n');
+writeFileSync(join(runDirectory, 'summary.json'), JSON.stringify({ schemaVersion: 1, sha, dirty: dirtyAny, verdict, startedAt: startedAt.toISOString(), seconds, database: db.kind, profile: full ? `verify --full ${suites.join(' ')}` : null, checkSuites: checkPlan ? [...checkCovered] : null, kitchenSelected: kitchenPlan ? kitchenPlan.files : null, kitchenReason: kitchenLabel, steps: results, notRun, failure: failure ?? null, finalStatus, dirtyPaths, load, line }, null, 2) + '\n');
+if (kitchenLabel) console.log(`test:kitchen ${kitchenLabel}`);
 console.log(`\n${line}\nLogs: ${runDirectory}`);
 if (statusReadFailed) console.error('verify: final Git status could not be read (git status --porcelain failed) — the run is dirty/unreadable and not reusable.');
 else if (dirtyAny) {

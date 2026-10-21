@@ -1,3 +1,4 @@
+// reads: kitchen/demo/record.mjs, kitchen/demo/bt11b-replay.mjs, kitchen/demo/gh-standin.cjs, packages/
 // K16 — the demo recorder. A --standin run reaches no network and no
 // credential yet must still produce the video, one still per step and per
 // page line, the transcript and the index — and the index must cover every
