@@ -18,7 +18,7 @@ The install uses `.npmrc`: nothing published after 14 October 2026 (the reposito
 
 | Path | What |
 |---|---|
-| `data/sample.mjs` | The sample world, each field tagged with where the real board would read it (block, GitHub, shared memory, board). Includes one private-repository bounty that must never appear. |
+| `sample/sample.mjs` | The sample world, each field tagged with where the real board would read it (block, GitHub, shared memory, board). Includes one private-repository bounty that must never appear. |
 | `lib/facts.mjs` | The domain: one state machine (`stateOf`), the payee rule, owner and solver records with the self-dealing exclusion, feed entries and `get_bounty` details. Every page and file is derived from it. |
 | `app/`, `components/` | The pages: board `/`, bounty `/b/<id>/`, owner `/owner/<login>/`, solver `/solver/<login>/`, your page `/me/`, sign-in, how it works, for agents, and `/prototype/` (an index of every state). |
 | `public/bounties.json`, `public/bounties/<id>.json`, `public/people/<login>.json`, `public/rss.xml` | The sample machine interface, written by `npm run feed` (part of `build`). |

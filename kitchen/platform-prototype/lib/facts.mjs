@@ -2,7 +2,7 @@
 // One state machine (stateOf) decides every page, card, feed entry and MCP
 // answer, so no surface can say something another does not.
 
-import { SAMPLE_NOW, BOARD_READ_AT, repositories, people, bounties as allBounties } from '../data/sample.mjs';
+import { SAMPLE_NOW, BOARD_READ_AT, repositories, people, bounties as allBounties } from '../sample/sample.mjs';
 
 export { SAMPLE_NOW, BOARD_READ_AT, people };
 

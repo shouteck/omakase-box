@@ -6,7 +6,7 @@ import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as f from '../lib/facts.mjs';
-import { bounties as raw } from '../data/sample.mjs';
+import { bounties as raw } from '../sample/sample.mjs';
 import { findBounties, getBounty } from '../mcp/standin.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
