@@ -1,6 +1,6 @@
 # K44 participants: the nine final reports, verbatim
 
-Copied byte for byte from the head chef's saved files in the K44 scratch root (`%TEMP%kitchen-K44-gtmeports<name>.md`), each with the header the head chef wrote (start and end time from the transcript, how the session was started, model, tool-call counts). Nothing below the headers is edited. The raw transcripts are not committed. The prompts each participant received are under "Method" in [docs/box-v4/GTM.md](../../docs/box-v4/GTM.md); the hand-off seats' command logs, gh logs and Git history stay in the scratch root until the wave closes.
+Copied byte for byte from the head chef's saved files in the K44 scratch root (`%TEMP%\kitchen-K44-gtm\reports\<name>.md`), each with the header the head chef wrote (start and end time from the transcript, how the session was started, model, tool-call counts). Nothing below the headers is edited. The raw transcripts are not committed. The prompts each participant received are under "Method" in [docs/box-v4/GTM.md](../../docs/box-v4/GTM.md); the hand-off seats' command logs, gh logs and Git history stay in the scratch root until the wave closes.
 
 ---
 
