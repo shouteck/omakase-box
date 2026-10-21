@@ -52,15 +52,15 @@ This card holds rules, not narratives — each trap names the wave that taught i
 - **Repo-local tool state:** `.box/bounties/` is inside the repository by design; the test `fingerprint` excludes `.box`. Since BT31 records live in `.box/local/box.db` (`node:sqlite` WAL, plain substring search, Node floor 22.13); call `closeStores()` before deleting a repo folder on Windows. **Never depend on an optional SQLite compile flag** (BT31-ci).
 - **Windows-only semantics are pinned host-only** by platform or capability probe so suites run off-machine (K10): junctions, `.cmd` launch, the `npm.cmd` recipe (A4), case-insensitive FS.
 - **Restricted host access can fail fixture setup before product assertions** (BT27 EPERM) — read diagnostics before calling it a regression.
-- **Long foreground runs need a heartbeat on this host** — the exec host backgrounds ~10 s of silence; verify completes via a `$TEMP` log + ticker (K22-era).
 - K14 counts Git process starts: new checks ride the pin layer's single `git config` read; pre-check `.git/index` bytes in Node before spawning `ls-files`; K14 measures the **built `dist`** — rebuild before trusting a start count.
 - **A copy of a stranger's tree is a second boundary** — what may run there (info/attributes, hooks), which byte form lives there, what is checked on the way back; `git worktree remove` deletes before registration and fails on Windows while a process sits in the folder (BT7, parked).
 - **Verify outside state independently** (`gh api`, `git ls-remote`), never the tool's word; a long silent `gh` call is normal on this host (BT6 Part C). `undone` is terminal; closed-by-base-deletion reads as rejection (BT6a). `allowedDestinations` gates both directions.
-- **Fresh-reader/measurement journeys reuse `bt8b-fixtures.mjs`** (per-case repos + isolated settings from the built CLI of the exact SHA); cold fresh-agent journeys reuse the `bt17-measure.mjs` world (see evidence card).
+- **Fresh-reader journeys reuse `bt8b-fixtures.mjs`** (per-case repos, isolated settings, the exact SHA's built CLI); cold ones reuse `bt17-measure.mjs` (evidence card).
 - Name negative candidates by the actual source mutation — a cosmetic change is not a probe; a green alternative is not a wrong candidate. **A clean install proves nothing** — only a check that loads the code shows a dangling link (A0). **The silent fallback:** export never reaches back into the owner repository to fill a gap.
 - **A produced artifact is not evidence of what it claims** — rebuild from the current commit before recording or demoing (K16 stale dist; evidence card).
 - **Splitting a hub: outward calls decide the new modules' inbound edges**; count re-exports and inline type imports — the complete graph found 18 cycles where a scan found three (BT25/BT27).
 - **Parseable is not the promised wire format** — validate or normalize at the boundary; test malformed *and* parseable-but-nonconforming (BT35).
+- **The root `.gitignore` ignores any `data/` folder** (K43's sample world went uncommitted). **Verify in a clean worktree** needs the Playwright revision under its `.runtime/browsers`: copy from `%LOCALAPPDATA%/ms-playwright`, never download.
 - **Retirement inventories need document callers too** — check the roadmap, active briefs and contracts before removing a document (K29).
 
 ## The pass checks

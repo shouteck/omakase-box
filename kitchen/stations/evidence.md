@@ -51,11 +51,9 @@ Learned the hard way in R3b and the lab's live runs. They apply to BT5, BT6 and 
 - **Cold fresh-agent journeys reuse the `bt17-measure.mjs` world:** a `NODE_OPTIONS --require` shim routes `gh`→`gh-standin.cjs` and the fake remote URL→a bare repo; each agent gets its own `BOX_BOUNTY_SETTINGS_DIR` and a `box.sh` wrapper baking the env. Two traps from BT17: the fixture repo's `origin` must spell the fake `github.com` URL (cloning from the bare path leaves a local `origin` and the tool correctly refuses `github-remote-required`), and seeded owner settings must have the `said` map deleted or standing explanations never print to the cold agent.
 - **Never present unfinished or failed work as complete** — folded from the retired console card: a passing test is not a usable screen, and state that survives only in a page is a bug. The terminal demo under `kitchen/demo/` is demo tooling, not a restored web app.
 - **Do not download a browser.** The demo's Chromium lives in `.runtime/browsers` and the suite runner sets the path; if it is missing or will not launch, stop and report.
-- **Git output that grows with history needs an explicit buffer.** A test or script that reads `git diff`, `git log` or similar over the repository's history sets `maxBuffer` (Node's default is 1 MiB) and fails by name on a read error; K15's guard crashed with `ENOBUFS` once the wave-file diff passed 1 MiB (K15-ci).
 
-- **A source-delivered environment does not persist across this host's agent tool calls** — each exec gets a fresh shell. K31's gh-logging shims missed several calls; transcript-derived counts were the labelled fallback. Bake env into each command or a wrapper, not a one-time source.
 
-- **Env for measured agents goes in wrappers, not source** — K31's sourced env did not persist across tool calls (missed gh counts); K31b's baked wrapper scripts logged 347/347. Pattern: kitchen/memory/real-use-b/shims/.
+- **Env for measured agents goes in wrappers, not source:** each exec on this host gets a fresh shell, so K31's sourced env missed gh calls; K31b's baked wrappers logged 347/347 (kitchen/memory/real-use-b/shims/).
 
 - **cpSync ENOENT names the destination, not the vanished source** — a missing file in a copied .git is git housekeeping racing the walk (K38). Fixture repos pin gc.auto=0 and maintenance.auto=false at creation; retries are the documented backstop, not the fix.
 
@@ -63,3 +61,4 @@ Learned the hard way in R3b and the lab's live runs. They apply to BT5, BT6 and 
 - **A design wave states invariants, each with the test that proves it; step-by-step state machines are designed in the build wave, against tests.** K42b's PF4 payment steps grew a new edge case in each of three rounds of prose.
 - **Claude Code desktop participants are fresh sessions, never subagents** (those inherit this AGENTS.md): the head chef starts them in their own scratch folders from an owner message and takes each report from `~/.claude/projects/<folder>/*.jsonl`; the app shows sibling names, so name sessions neutrally (K44).
 - **A pooled rate states its denominator by what the right answer was** (K44: 1 of 11 hid 1 of 5).
+- **Start a participant with one plain line** ("open TASK.md and carry out the task it describes"); K43's first start, which also told it how to end its report, was refused by a model safeguard before any work, and the same words resent to that session ran. Its cwd is visible to it, so name packet folders neutrally (K43's held "kitchen" and "pass").
