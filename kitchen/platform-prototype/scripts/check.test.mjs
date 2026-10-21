@@ -182,3 +182,11 @@ test('colour pairs meet WCAG 2.2 AA (4.5:1 for text) in light and dark', () => {
     assert.ok(contrast(v('paper'), v('accent')) >= 4.5, 'paper on accent (the primary button)');
   }
 });
+
+test('self-dealing: a payee who is the poster is excluded even without push access (added by the pass)', () => {
+  // A repository the sample does not know, so no push-access list can mask the poster clause.
+  const b = { id: 'bt-000000000001', repository: 'example-none/none', poster: 'example-self', reward: 10, issueState: 'closed', paid: [], receipt: [],
+    solutions: [{ pr: 2, author: 'example-self', state: 'merged', mergedAt: f.SAMPLE_NOW, headOnDefault: true }] };
+  assert.equal(f.isSelfDealt(b), true);
+  assert.equal(f.isSelfDealt({ ...b, solutions: [{ ...b.solutions[0], author: 'example-other' }] }), false, 'a stranger without push access is counted');
+});
