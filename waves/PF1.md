@@ -1,7 +1,7 @@
 # PF1: the open board and bounty pages
 
 Milestone: PF (the platform) · Station: packaging · Base: `master at dispatch` · Branch: `wave/PF1` · Timebox: 300 minutes; at expiry, report partial findings and stop
-Owner decisions: D-2026-10-20-platform, D-2026-10-21-no-platform-money, D-2026-10-21-platform-v1, D-2026-10-21-k44-decisions
+Owner decisions: D-2026-10-20-platform, D-2026-10-21-no-platform-money, D-2026-10-21-platform-v1, D-2026-10-21-k44-decisions, D-2026-10-22-k43-decisions
 Owner context: D-2026-10-20-platform; D-2026-10-21-no-platform-money; D-2026-10-21-platform-v1 (feature 1, the board, and feature 3, bounty pages); D-2026-10-21-k44-decisions; spend no money
 
 **Brief.** Written ahead by the CTO on 21 October 2026, before K43 finished. **Before dispatch, the CTO reconciles it with K43's `docs/box-v4/PLATFORM-UX.md`** (stack, hosting, page content, field names, visual rules) and corrects names only. A change of substance goes back to the owner. Cook: high; reviewer: high.
@@ -26,6 +26,7 @@ Dispatch each role with the Agent tool, passing `model` and `effort` exactly as 
   - a new verify suite `test:platform` (root `package.json` script plus its entry in `scripts/suite.mjs`'s reach map, so `node scripts/verify.mjs` runs it);
   - its tests;
   - `waves/PF1.md`.
+- **Hosting (owner, D-2026-10-22-k43-decisions):** Cloudflare Workers Free with static assets and D1 on `*.workers.dev`; pages as a static export, the feed, MCP and sign-in as Worker routes; mind K43's static-export trap (`__next.<segment>.__PAGE__.txt` mapping, PLATFORM-UX.md section 8).
 - **Do not touch:** `packages/box-bounty`, `packages/box-cli` (PF5 changes the CLI); hosting accounts; anything live.
 
 ## What it does

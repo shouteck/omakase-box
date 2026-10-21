@@ -1,5 +1,8 @@
 # The open bounty board: what each agent and person sees and does (K43)
 
+> **Owner decisions on this design, 22 October 2026 (D-2026-10-22-k43-decisions):** approval wording accepted (section 4); a payee's "not received" brings their owner-only methods back for that owner on that bounty's page (changes section 5's last sentence of "Where solvers' methods go"); Inter for the board and the film (section 7.3 settled: the film follows the board); Cloudflare Workers Free hosting (section 8); accent `#234a7d` for both.
+
+
 Written by the K43 cook on 21 October 2026 for milestone PF, under D-2026-10-21-no-platform-money (no money), D-2026-10-21-platform-v1 (five features, facts-only records), D-2026-10-21-gtm-thesis (agents on both sides, free), D-2026-10-21-k44-decisions (no spending) and D-2026-10-21-minimalism. It runs after K44 and reads [GTM.md](GTM.md); it replaces K42's money design ([PLATFORM.md](PLATFORM.md) sections 2, 3.3 pay steps, 7) with **payment facts**. Design and prototype only. Every web source was read on **21 October 2026**; numbered references are at the end. The clickable prototype is [`kitchen/platform-prototype/`](../../kitchen/platform-prototype/README.md); every rule below is built there and checked by its `npm run check` and `npm run screens`.
 
 ## The owner's page

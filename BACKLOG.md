@@ -4,6 +4,8 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 ## Product
 
+- **From BT43's engineering review (later, not briefed):** (a) deletion as a signed tombstone in the shared-memory chain, so a machine holding an old chain cannot push a forgotten bounty back; it needs a new `forget` command, which is the owner's decision because the owner surface stays `allow`, `deny`, `config`; (b) owner settings signed and their changes logged, shown in `config`; offline they can be tamper-evident, never tamper-proof, and the docs should stop implying more. See [BT43](waves/BT43.md).
+
 - **Flaky product test** (see [K44](waves/K44.md) Close): `tests/box/bounty/bt39.test.ts` "an unchanged pull-request set costs no per-request file calls" failed on the hosted run for documents-only `bf2c815` (expected 10 to be greater than 10: the second status refresh did not re-list) and passed on the same code at `aafaf67`. Likely timing-dependent "new" vs "seen since"; needs a reproduction before a fix.
 
 - **For the PF4 brief, from the K42b pass** (see [K42b](waves/K42b.md)): fix whether the owner's card is attached when the PaymentIntent is created (invariant 3's "never attempted = `requires_confirmation`" depends on it, else allow `requires_payment_method` with an empty `last_payment_error`); say whether `off` or `deny` cancels an unconfirmed PaymentIntent, so invariant 1 stays simple.
