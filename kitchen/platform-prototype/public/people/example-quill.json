@@ -1,0 +1,20 @@
+{
+  "login": "example-quill",
+  "sample_data": true,
+  "as_owner": null,
+  "as_solver": {
+    "merged_solutions": 5,
+    "confirmed_payments": 2
+  },
+  "accepts_payment_by": [
+    {
+      "method": "PayPal.me",
+      "value": "https://paypal.me/example-quill"
+    },
+    {
+      "method": "GitHub Sponsors",
+      "value": "https://github.com/sponsors/example-quill"
+    }
+  ],
+  "more_methods_shown_only_to_owners_who_owe_them": 1
+}

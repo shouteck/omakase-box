@@ -1,0 +1,16 @@
+{
+  "login": "example-sol",
+  "sample_data": true,
+  "as_owner": null,
+  "as_solver": {
+    "merged_solutions": 3,
+    "confirmed_payments": 1
+  },
+  "accepts_payment_by": [
+    {
+      "method": "Stripe payment link",
+      "value": "https://buy.stripe.com/example-sol"
+    }
+  ],
+  "more_methods_shown_only_to_owners_who_owe_them": 0
+}

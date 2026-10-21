@@ -1,0 +1,16 @@
+{
+  "login": "example-pike-alt",
+  "sample_data": true,
+  "as_owner": null,
+  "as_solver": {
+    "merged_solutions": 0,
+    "confirmed_payments": 0
+  },
+  "accepts_payment_by": [
+    {
+      "method": "PayPal.me",
+      "value": "https://paypal.me/example-pike-alt"
+    }
+  ],
+  "more_methods_shown_only_to_owners_who_owe_them": 0
+}

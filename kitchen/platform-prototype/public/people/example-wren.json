@@ -1,0 +1,22 @@
+{
+  "login": "example-wren",
+  "sample_data": true,
+  "as_owner": {
+    "record": {
+      "merged": 4,
+      "recorded_paid": 2,
+      "confirmed_received": 1,
+      "from_solvers": 1,
+      "owed_now": 2,
+      "oldest_owed_days": 40,
+      "says_not_received": 1
+    },
+    "not_counted": 0
+  },
+  "as_solver": {
+    "merged_solutions": 0,
+    "confirmed_payments": 0
+  },
+  "accepts_payment_by": [],
+  "more_methods_shown_only_to_owners_who_owe_them": 0
+}

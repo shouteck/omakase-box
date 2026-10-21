@@ -1,0 +1,14 @@
+{
+  "login": "example-juno",
+  "sample_data": true,
+  "as_owner": {
+    "record": "no history yet",
+    "not_counted": 0
+  },
+  "as_solver": {
+    "merged_solutions": 0,
+    "confirmed_payments": 0
+  },
+  "accepts_payment_by": [],
+  "more_methods_shown_only_to_owners_who_owe_them": 0
+}

@@ -1,0 +1,22 @@
+{
+  "login": "example-mara",
+  "sample_data": true,
+  "as_owner": {
+    "record": {
+      "merged": 6,
+      "recorded_paid": 5,
+      "confirmed_received": 4,
+      "from_solvers": 3,
+      "owed_now": 1,
+      "oldest_owed_days": 6,
+      "says_not_received": 0
+    },
+    "not_counted": 0
+  },
+  "as_solver": {
+    "merged_solutions": 0,
+    "confirmed_payments": 0
+  },
+  "accepts_payment_by": [],
+  "more_methods_shown_only_to_owners_who_owe_them": 0
+}
