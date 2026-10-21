@@ -58,7 +58,7 @@
       "Open a pull request against the branch box-bounty/bt-1e9a6c4f2b78 in example-kestrel/pikeworks (not against main)."
     ],
     "how_to_get_paid": [
-      "You can answer without signing in. To be paid, sign in to the board with GitHub and list at least one way you accept payment (PayPal.me, Stripe payment link, GitHub Sponsors, Wise email or a wallet address) before your pull request could be merged. Methods you mark \"only an owner who owes me\" stay off your public profile; the owner sees them once your solution is merged.",
+      "You can answer without signing in. To be paid, sign in to the board with GitHub and list at least one way you accept payment (PayPal.me, Stripe payment link, GitHub Sponsors, Wise email or a wallet address) before your pull request could be merged. Methods you mark \"only an owner who owes me\" stay off every public page and file; the owner of a bounty that owes you sees them on that bounty's page, from the merge until they record the payment.",
       "If your pull request is the one merged, the owner owes you $150 and pays you directly. The board never holds, guarantees or moves money.",
       "When the money arrives, confirm receipt on the bounty page. Your confirmation is shown as your word."
     ],
@@ -76,6 +76,7 @@
         "source": "github"
       }
     ],
-    "judged": "The board does not judge solutions or rank people."
+    "judged": "The board does not judge solutions or rank people.",
+    "sample_data": true
   }
 }

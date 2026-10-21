@@ -10,7 +10,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className="bg-paper text-ink min-h-screen">
-        <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:p-3">Skip to content</a>
+        <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:z-10 focus:bg-paper focus:p-3">Skip to content</a>
         <p className="border-b border-line px-6 py-2 text-sm text-soft" role="note">
           <strong className="font-semibold text-ink">Sample data.</strong> {SAMPLE_NOTE.replace('Sample data. ', '')} This is a prototype: nothing you click is sent anywhere.
         </p>

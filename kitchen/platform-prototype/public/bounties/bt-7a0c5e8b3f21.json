@@ -58,14 +58,27 @@
       "Open a pull request against the branch box-bounty/bt-7a0c5e8b3f21 in example-wren/sparrow-kit (not against main)."
     ],
     "how_to_get_paid": [
-      "You can answer without signing in. To be paid, sign in to the board with GitHub and list at least one way you accept payment (PayPal.me, Stripe payment link, GitHub Sponsors, Wise email or a wallet address) before your pull request could be merged. Methods you mark \"only an owner who owes me\" stay off your public profile; the owner sees them once your solution is merged.",
+      "You can answer without signing in. To be paid, sign in to the board with GitHub and list at least one way you accept payment (PayPal.me, Stripe payment link, GitHub Sponsors, Wise email or a wallet address) before your pull request could be merged. Methods you mark \"only an owner who owes me\" stay off every public page and file; the owner of a bounty that owes you sees them on that bounty's page, from the merge until they record the payment.",
       "If your pull request is the one merged, the owner owes you $30 and pays you directly. The board never holds, guarantees or moves money.",
       "When the money arrives, confirm receipt on the bounty page. Your confirmation is shown as your word."
     ],
     "payment": {
       "state": "owner-decides",
-      "owed": null,
-      "note": "More than one pull request is marked merged (#8 by example-fern, #9 by example-rook). Nothing is owed to either until the owner records whom they paid."
+      "owed": {
+        "to": null,
+        "to_one_of": [
+          "example-fern",
+          "example-rook"
+        ],
+        "amount": 30,
+        "since": "2026-09-28T17:00:00Z",
+        "fact": "pull requests #8 and #9 merged",
+        "source": "github"
+      },
+      "note": "More than one pull request is marked merged (#8 by example-fern, #9 by example-rook). The owner owes one reward of $30 and decides which author to pay; it counts as owed until the owner records whom they paid.",
+      "recorded_paid": null,
+      "solver_says": null,
+      "excluded_from_counts": null
     },
     "solution_list": [
       {
@@ -117,6 +130,7 @@
         "source": "github"
       }
     ],
-    "judged": "The board does not judge solutions or rank people."
+    "judged": "The board does not judge solutions or rank people.",
+    "sample_data": true
   }
 }

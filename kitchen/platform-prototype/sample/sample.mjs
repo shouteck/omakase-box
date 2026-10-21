@@ -8,21 +8,27 @@
 export const SAMPLE_NOW = '2026-10-21T09:00:00Z';
 export const BOARD_READ_AT = '2026-10-21T08:45:00Z';
 
-// github: repository facts. pushAccess is read per payee when counting.
+// Only what an anonymous visitor may see: the private repository and the
+// values of owner-only payment methods are in restricted.mjs, which no page
+// imports (M3, K43 correction round 1).
+
+// github: public repository facts. Push access is not here: the board cannot
+// read it for another account with a no-scope token. Self-dealing is read
+// from each merged pull request's `association` instead (lib/facts.mjs).
 export const repositories = {
-  'example-tidepool/ledger-lite': { language: 'TypeScript', visibility: 'public', defaultBranch: 'main', pushAccess: ['example-mara'] },
-  'example-tidepool/tide-cli': { language: 'Go', visibility: 'public', defaultBranch: 'main', pushAccess: ['example-mara'] },
-  'example-orrin/lumen-forms': { language: 'TypeScript', visibility: 'public', defaultBranch: 'main', pushAccess: ['example-orrin'] },
-  'example-wren/sparrow-kit': { language: 'TypeScript', visibility: 'public', defaultBranch: 'main', pushAccess: ['example-wren'] },
-  'example-juno/tallow': { language: 'Python', visibility: 'public', defaultBranch: 'main', pushAccess: ['example-juno'] },
-  'example-juno/riverbed': { language: 'Rust', visibility: 'public', defaultBranch: 'main', pushAccess: ['example-juno'] },
-  'example-kestrel/pikeworks': { language: 'TypeScript', visibility: 'public', defaultBranch: 'main', pushAccess: ['example-pike', 'example-pike-alt'] },
-  // A private repository: the board never lists it (check.test.mjs proves it).
-  'example-hidden/vault': { language: 'TypeScript', visibility: 'private', defaultBranch: 'main', pushAccess: ['example-orrin'] },
+  'example-tidepool/ledger-lite': { language: 'TypeScript', visibility: 'public', defaultBranch: 'main' },
+  'example-tidepool/tide-cli': { language: 'Go', visibility: 'public', defaultBranch: 'main' },
+  'example-orrin/lumen-forms': { language: 'TypeScript', visibility: 'public', defaultBranch: 'main' },
+  'example-wren/sparrow-kit': { language: 'TypeScript', visibility: 'public', defaultBranch: 'main' },
+  'example-juno/tallow': { language: 'Python', visibility: 'public', defaultBranch: 'main' },
+  'example-juno/riverbed': { language: 'Rust', visibility: 'public', defaultBranch: 'main' },
+  'example-kestrel/pikeworks': { language: 'TypeScript', visibility: 'public', defaultBranch: 'main' },
 };
 
-// board: what each person chose to publish when signed in. `since` is the
-// GitHub account's creation year (github, public profile).
+// board: what each person chose to publish when signed in. `methods` are the
+// ones shown to everyone; `ownerOnly` counts those marked "Only an owner who
+// owes me" (their values: restricted.mjs). `since` is the GitHub account's
+// creation year (github, public profile).
 export const people = {
   'example-mara': { since: 2017, methods: [] },
   'example-orrin': { since: 2024, methods: [] },
@@ -34,14 +40,14 @@ export const people = {
     methods: [
       { kind: 'paypal', value: 'https://paypal.me/example-quill', visibility: 'everyone' },
       { kind: 'sponsors', value: 'https://github.com/sponsors/example-quill', visibility: 'everyone' },
-      { kind: 'wise', value: 'quill@example.invalid', visibility: 'owed-owners' },
     ],
+    ownerOnly: 1,
   },
   'example-sol': { since: 2020, methods: [{ kind: 'stripe', value: 'https://buy.stripe.com/example-sol', visibility: 'everyone' }] },
-  'example-rook': { since: 2022, methods: [{ kind: 'wallet', value: '0x0000000000000000000000000000000000c0ffee', chain: 'Base (USDC)', visibility: 'owed-owners' }] },
+  'example-rook': { since: 2022, methods: [], ownerOnly: 1 },
   'example-fern': { since: 2026, methods: [] },
-  // The sample's self-dealing case: a second account of example-pike's with push access.
-  'example-pike-alt': { since: 2026, sampleNote: 'Sample self-dealing case: this account has push access to example-kestrel/pikeworks, where example-pike posts, so its merged solution and payment are not counted in either record. The board cannot know two accounts are one person; it can read push access.', methods: [{ kind: 'paypal', value: 'https://paypal.me/example-pike-alt', visibility: 'everyone' }] },
+  // The sample's self-dealing case: a second account of example-pike's, a collaborator on the repository.
+  'example-pike-alt': { since: 2026, sampleNote: 'Sample self-dealing case: GitHub lists this account as a COLLABORATOR on example-kestrel/pikeworks, where example-pike posts, so its merged solution and payment are not counted in either record. The board cannot know two accounts are one person; it can read how GitHub associates the merged pull request\'s author with the repository.', methods: [{ kind: 'paypal', value: 'https://paypal.me/example-pike-alt', visibility: 'everyone' }] },
 };
 
 const c = n => (n.repeat(40)).slice(0, 40); // invented 40-hex commit
@@ -49,9 +55,11 @@ const c = n => (n.repeat(40)).slice(0, 40); // invented 40-hex commit
 // One entry per bounty. issue/title/task/poster/issueState: github.
 // id/repository/createdAt/reward/workCommit/payment: block.
 // approvedBy: memory (posted.allowedBy). solutions: github (pull requests on
-// box-bounty/<id>, state=all) with headOnDefault from the compare API.
-// paid: memory `paid` events (source "memory") or the owner's click (source
-// "board"). receipt: the payee's click on the board.
+// box-bounty/<id>, state=all) with headOnDefault from the compare API and
+// association = the pull request's public `author_association`, kept as first
+// read after the merge. paid: memory `paid` events (source "memory") or the
+// owner's click (source "board"); `to` names the payee when more than one
+// pull request was merged. receipt: the payee's click on the board.
 export const bounties = [
   {
     id: 'bt-1f04c2a9e7b3', repository: 'example-orrin/lumen-forms', issue: 12, poster: 'example-orrin',
@@ -80,7 +88,7 @@ export const bounties = [
     createdAt: '2026-10-02T10:00:00Z', reward: 50, workCommit: c('3a91c0e2'), payment: null,
     approvedBy: 'owner-this-bounty', issueState: 'closed', closedAt: '2026-10-15T08:10:00Z',
     solutions: [
-      { pr: 31, author: 'example-quill', openedAt: '2026-10-08T13:00:00Z', state: 'merged', mergedAt: '2026-10-15T08:00:00Z', headOnDefault: true },
+      { pr: 31, author: 'example-quill', openedAt: '2026-10-08T13:00:00Z', state: 'merged', mergedAt: '2026-10-15T08:00:00Z', headOnDefault: true, association: 'CONTRIBUTOR' },
       { pr: 33, author: 'example-sol', openedAt: '2026-10-10T09:00:00Z', state: 'closed' },
     ],
     paid: [], receipt: [],
@@ -91,7 +99,7 @@ export const bounties = [
     task: 'With the app language set to German, OFX exports write 12,50 instead of 12.50 and banks reject the file.\n\nWanted: OFX amounts always use a dot. Done means tests/ofx.test.ts passes under LANG=de_DE.',
     createdAt: '2026-09-29T08:00:00Z', reward: 35, workCommit: c('4c6e19b0'), payment: null,
     approvedBy: 'owner-standing-rule', issueState: 'closed', closedAt: '2026-10-10T12:05:00Z',
-    solutions: [{ pr: 27, author: 'example-quill', openedAt: '2026-10-03T15:00:00Z', state: 'merged', mergedAt: '2026-10-10T12:00:00Z', headOnDefault: true }],
+    solutions: [{ pr: 27, author: 'example-quill', openedAt: '2026-10-03T15:00:00Z', state: 'merged', mergedAt: '2026-10-10T12:00:00Z', headOnDefault: true, association: 'CONTRIBUTOR' }],
     paid: [{ at: '2026-10-18T19:30:00Z', amount: 35, source: 'memory' }], receipt: [],
   },
   {
@@ -100,7 +108,7 @@ export const bounties = [
     task: 'tide sync aborts with ENAMETOOLONG on Windows for deep folders.\n\nWanted: long paths sync on Windows. Done means the long-path case in sync_test.go passes on a Windows runner.\n\nWhat I tried: nothing; I have no Windows machine.',
     createdAt: '2026-09-08T07:00:00Z', reward: 60, workCommit: c('5d2a8f6c'), payment: null,
     approvedBy: 'owner-this-bounty', issueState: 'closed', closedAt: '2026-09-20T10:05:00Z',
-    solutions: [{ pr: 10, author: 'example-sol', openedAt: '2026-09-15T10:00:00Z', state: 'merged', mergedAt: '2026-09-20T10:00:00Z', headOnDefault: true }],
+    solutions: [{ pr: 10, author: 'example-sol', openedAt: '2026-09-15T10:00:00Z', state: 'merged', mergedAt: '2026-09-20T10:00:00Z', headOnDefault: true, association: 'CONTRIBUTOR' }],
     paid: [{ at: '2026-09-22T09:00:00Z', amount: 60, source: 'board' }],
     receipt: [{ at: '2026-09-23T07:40:00Z', by: 'example-sol', kind: 'received' }],
   },
@@ -120,8 +128,8 @@ export const bounties = [
     createdAt: '2026-09-15T10:00:00Z', reward: 30, workCommit: c('7a0c5e8b'), payment: null,
     approvedBy: 'owner-standing-rule', issueState: 'closed', closedAt: '2026-09-28T17:05:00Z',
     solutions: [
-      { pr: 8, author: 'example-fern', openedAt: '2026-09-20T10:00:00Z', state: 'merged', mergedAt: '2026-09-28T17:00:00Z', headOnDefault: true },
-      { pr: 9, author: 'example-rook', openedAt: '2026-09-21T10:00:00Z', state: 'merged', mergedAt: '2026-09-28T17:00:00Z', headOnDefault: true },
+      { pr: 8, author: 'example-fern', openedAt: '2026-09-20T10:00:00Z', state: 'merged', mergedAt: '2026-09-28T17:00:00Z', headOnDefault: true, association: 'CONTRIBUTOR' },
+      { pr: 9, author: 'example-rook', openedAt: '2026-09-21T10:00:00Z', state: 'merged', mergedAt: '2026-09-28T17:00:00Z', headOnDefault: true, association: 'CONTRIBUTOR' },
     ],
     paid: [], receipt: [],
   },
@@ -131,7 +139,7 @@ export const bounties = [
     task: 'After closing a dialog with Escape, Tab never leaves the page header.\n\nWanted: focus returns to the element that opened the dialog. Done means tests/dialog.spec.ts passes.',
     createdAt: '2026-08-28T10:00:00Z', reward: 50, workCommit: c('8b4d1f7a'), payment: null,
     approvedBy: 'owner-this-bounty', issueState: 'closed', closedAt: '2026-09-10T11:05:00Z',
-    solutions: [{ pr: 6, author: 'example-sol', openedAt: '2026-09-02T10:00:00Z', state: 'merged', mergedAt: '2026-09-10T11:00:00Z', headOnDefault: true }],
+    solutions: [{ pr: 6, author: 'example-sol', openedAt: '2026-09-02T10:00:00Z', state: 'merged', mergedAt: '2026-09-10T11:00:00Z', headOnDefault: true, association: 'CONTRIBUTOR' }],
     paid: [{ at: '2026-09-12T08:00:00Z', amount: 50, source: 'memory' }],
     receipt: [{ at: '2026-10-01T09:00:00Z', by: 'example-sol', kind: 'not-received' }],
   },
@@ -161,7 +169,7 @@ export const bounties = [
     task: 'Wanted: a dark theme following the system setting.',
     createdAt: '2026-09-25T09:00:00Z', reward: 100, workCommit: c('b2e8d4f0'), payment: null,
     approvedBy: 'owner-standing-rule', issueState: 'closed', closedAt: '2026-09-26T09:05:00Z',
-    solutions: [{ pr: 3, author: 'example-pike-alt', openedAt: '2026-09-25T18:00:00Z', state: 'merged', mergedAt: '2026-09-26T09:00:00Z', headOnDefault: true }],
+    solutions: [{ pr: 3, author: 'example-pike-alt', openedAt: '2026-09-25T18:00:00Z', state: 'merged', mergedAt: '2026-09-26T09:00:00Z', headOnDefault: true, association: 'COLLABORATOR' }],
     paid: [{ at: '2026-09-26T10:00:00Z', amount: 100, source: 'board' }],
     receipt: [{ at: '2026-09-26T10:05:00Z', by: 'example-pike-alt', kind: 'received' }],
   },
@@ -180,7 +188,7 @@ export const bounties = [
     task: 'Opening the budget view with an empty category throws "Cannot read properties of undefined (reading \'total\')".\n\nWanted: empty categories show 0. Done means tests/budget.test.ts passes.',
     createdAt: '2026-08-20T10:00:00Z', reward: 40, workCommit: c('d8f6a2c1'), payment: null,
     approvedBy: 'owner-this-bounty', issueState: 'closed', closedAt: '2026-08-30T10:05:00Z',
-    solutions: [{ pr: 20, author: 'example-quill', openedAt: '2026-08-24T10:00:00Z', state: 'merged', mergedAt: '2026-08-30T10:00:00Z', headOnDefault: true }],
+    solutions: [{ pr: 20, author: 'example-quill', openedAt: '2026-08-24T10:00:00Z', state: 'merged', mergedAt: '2026-08-30T10:00:00Z', headOnDefault: true, association: 'CONTRIBUTOR' }],
     paid: [{ at: '2026-09-01T10:00:00Z', amount: 40, source: 'memory' }],
     receipt: [{ at: '2026-09-02T08:00:00Z', by: 'example-quill', kind: 'received' }],
   },
@@ -190,7 +198,7 @@ export const bounties = [
     task: 'Searching "cafe" does not find "Café". Wanted: accent-insensitive search. Done means tests/search.test.ts passes.',
     createdAt: '2026-08-01T10:00:00Z', reward: 25, workCommit: c('e3c9f5a7'), payment: null,
     approvedBy: 'owner-standing-rule', issueState: 'closed', closedAt: '2026-08-12T10:05:00Z',
-    solutions: [{ pr: 16, author: 'example-rook', openedAt: '2026-08-05T10:00:00Z', state: 'merged', mergedAt: '2026-08-12T10:00:00Z', headOnDefault: true }],
+    solutions: [{ pr: 16, author: 'example-rook', openedAt: '2026-08-05T10:00:00Z', state: 'merged', mergedAt: '2026-08-12T10:00:00Z', headOnDefault: true, association: 'CONTRIBUTOR' }],
     paid: [{ at: '2026-08-13T10:00:00Z', amount: 25, source: 'board' }],
     receipt: [{ at: '2026-08-15T10:00:00Z', by: 'example-rook', kind: 'received' }],
   },
@@ -200,7 +208,7 @@ export const bounties = [
     task: 'An upload that hits a connection reset fails the whole sync. Wanted: retry that file up to three times with backoff. Done means sync_retry_test.go passes.',
     createdAt: '2026-07-10T10:00:00Z', reward: 80, workCommit: c('f0b2d8e6'), payment: null,
     approvedBy: 'owner-this-bounty', issueState: 'closed', closedAt: '2026-07-28T10:05:00Z',
-    solutions: [{ pr: 5, author: 'example-quill', openedAt: '2026-07-20T10:00:00Z', state: 'merged', mergedAt: '2026-07-28T10:00:00Z', headOnDefault: true }],
+    solutions: [{ pr: 5, author: 'example-quill', openedAt: '2026-07-20T10:00:00Z', state: 'merged', mergedAt: '2026-07-28T10:00:00Z', headOnDefault: true, association: 'CONTRIBUTOR' }],
     paid: [{ at: '2026-07-30T10:00:00Z', amount: 80, source: 'memory' }],
     receipt: [{ at: '2026-07-30T18:00:00Z', by: 'example-quill', kind: 'received' }],
   },
@@ -226,7 +234,7 @@ export const bounties = [
     task: 'Popovers inside a scrolled container open at the unscrolled position.\n\nWanted: correct position. Done means tests/popover.spec.ts passes.',
     createdAt: '2026-08-25T10:00:00Z', reward: 40, workCommit: c('2f0b7d5a'), payment: null,
     approvedBy: 'owner-this-bounty', issueState: 'closed', closedAt: '2026-09-10T15:05:00Z',
-    solutions: [{ pr: 4, author: 'example-quill', openedAt: '2026-09-01T10:00:00Z', state: 'merged', mergedAt: '2026-09-10T15:00:00Z', headOnDefault: true }],
+    solutions: [{ pr: 4, author: 'example-quill', openedAt: '2026-09-01T10:00:00Z', state: 'merged', mergedAt: '2026-09-10T15:00:00Z', headOnDefault: true, association: 'CONTRIBUTOR' }],
     paid: [], receipt: [],
   },
   {
@@ -235,7 +243,7 @@ export const bounties = [
     task: 'The last button in a group has square corners. Wanted: rounded like the first.',
     createdAt: '2026-08-10T10:00:00Z', reward: 20, workCommit: c('3a1c8e6b'), payment: null,
     approvedBy: 'owner-standing-rule', issueState: 'closed', closedAt: '2026-08-20T10:05:00Z',
-    solutions: [{ pr: 2, author: 'example-rook', openedAt: '2026-08-14T10:00:00Z', state: 'merged', mergedAt: '2026-08-20T10:00:00Z', headOnDefault: true }],
+    solutions: [{ pr: 2, author: 'example-rook', openedAt: '2026-08-14T10:00:00Z', state: 'merged', mergedAt: '2026-08-20T10:00:00Z', headOnDefault: true, association: 'CONTRIBUTOR' }],
     paid: [{ at: '2026-08-25T10:00:00Z', amount: 20, source: 'memory' }],
     receipt: [{ at: '2026-08-26T10:00:00Z', by: 'example-rook', kind: 'received' }],
   },
@@ -245,16 +253,7 @@ export const bounties = [
     task: 'Wanted: tallow report --quiet prints nothing but errors. Done means tests/test_cli.py passes.',
     createdAt: '2026-08-15T10:00:00Z', reward: 0, workCommit: c('5c3e0a9f'), payment: null,
     approvedBy: 'owner-standing-rule', issueState: 'closed', closedAt: '2026-08-22T10:05:00Z',
-    solutions: [{ pr: 12, author: 'example-sol', openedAt: '2026-08-18T10:00:00Z', state: 'merged', mergedAt: '2026-08-22T10:00:00Z', headOnDefault: true }],
+    solutions: [{ pr: 12, author: 'example-sol', openedAt: '2026-08-18T10:00:00Z', state: 'merged', mergedAt: '2026-08-22T10:00:00Z', headOnDefault: true, association: 'CONTRIBUTOR' }],
     paid: [], receipt: [],
-  },
-  {
-    // On a private repository: must never appear anywhere.
-    id: 'bt-4b2d9f7c5e01', repository: 'example-hidden/vault', issue: 1, poster: 'example-orrin',
-    title: 'PRIVATE SAMPLE: must never be listed',
-    task: 'This bounty sits on a private repository.',
-    createdAt: '2026-10-20T10:00:00Z', reward: 500, workCommit: c('4b2d9f7c'), payment: null,
-    approvedBy: 'owner-this-bounty', issueState: 'open',
-    solutions: [], paid: [], receipt: [],
   },
 ];

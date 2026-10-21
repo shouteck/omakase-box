@@ -74,6 +74,7 @@
         "source": "github"
       }
     ],
-    "judged": "The board does not judge solutions or rank people."
+    "judged": "The board does not judge solutions or rank people.",
+    "sample_data": true
   }
 }

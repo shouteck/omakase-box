@@ -7,6 +7,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as f from '../lib/facts.mjs';
 import { bounties as raw } from '../sample/sample.mjs';
+import { privateBounties, privateRepositories, ownerOnlyMethods } from '../sample/restricted.mjs';
 import { findBounties, getBounty } from '../mcp/standin.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -31,9 +32,12 @@ test('no feed file or built page implies the board holds, guarantees or moves mo
 });
 
 test('a private repository never appears in the feed, details, people, RSS or pages', () => {
-  const priv = raw.find(b => b.repository === 'example-hidden/vault');
-  assert.ok(priv, 'the sample keeps one private-repository bounty to prove this');
+  const priv = privateBounties.find(b => b.repository === 'example-hidden/vault');
+  assert.ok(priv, 'the sample keeps one private-repository bounty to prove this (sample/restricted.mjs)');
   assert.equal(f.findBounty(priv.id), null);
+  // The read boundary drops it: what GitHub returns, public and private together, lists only the public.
+  const read = f.listed([...raw, ...privateBounties], { ...f.repositories, ...privateRepositories });
+  assert.deepEqual(read.map(b => b.id), f.bounties.map(b => b.id));
   for (const [p, t] of [...publicText(), ...builtHtml()]) {
     assert.ok(!t.includes('example-hidden') && !t.includes(priv.id) && !t.includes('PRIVATE SAMPLE'), p);
   }
@@ -104,7 +108,8 @@ test('the owner recording paid, then the solver confirming, moves the state and 
 
 test('a method shown only to owed owners stays off public surfaces', () => {
   assert.ok(!f.visibleMethods('example-quill', null).shown.some(m => m.kind === 'wise'));
-  assert.ok(f.visibleMethods('example-quill', 'example-mara').shown.some(m => m.kind === 'wise'));
+  // Changed by correction round 1 (B1): an owing owner gets it on the owed bounty's page, not anywhere.
+  assert.ok(f.visibleMethods('example-quill', 'example-mara', f.findBounty('bt-3a91c0e2d4f1')).mayFetch);
   assert.ok(!f.visibleMethods('example-quill', 'example-orrin').shown.some(m => m.kind === 'wise'));
   for (const [p, t] of publicText()) assert.ok(!t.includes('quill@example.invalid'), p);
 });
@@ -112,13 +117,13 @@ test('a method shown only to owed owners stays off public surfaces', () => {
 test('every bounty state has a sample, and every name is invented', () => {
   const states = new Set(f.bounties.map(f.stateOf));
   for (const s of Object.keys(f.STATES)) assert.ok(states.has(s), s);
-  for (const b of raw) { assert.match(b.repository, /^example-[a-z]+\/[a-z-]+$/); assert.match(b.poster, /^example-/); for (const s of b.solutions) assert.match(s.author, /^example-/); }
+  for (const b of [...raw, ...privateBounties]) { assert.match(b.repository, /^example-[a-z]+\/[a-z-]+$/); assert.match(b.poster, /^example-/); for (const s of b.solutions) assert.match(s.author, /^example-/); }
   for (const login of Object.keys(f.people)) assert.match(login, /^example-/);
 });
 
-test('every built page carries the sample-data label', () => {
+test('every built page carries the sample-data label', t => {
   const pages = builtHtml();
-  if (!pages.length) return; // before the first build
+  if (!pages.length) { t.skip('no out/ yet. Next: npm run build, then npm run check'); return; } // shown as skipped, never as a pass (L7)
   for (const [p, t] of pages) assert.ok(t.includes('Sample data.'), p);
 });
 
@@ -149,7 +154,7 @@ test('every source is one of three defined names, and the legend defines them', 
 
 test('issue and pull request numbers never collide within a repository (GitHub shares one sequence)', () => {
   const used = {};
-  for (const b of raw) for (const n of [b.issue, ...b.solutions.map(s => s.pr)]) {
+  for (const b of [...raw, ...privateBounties]) for (const n of [b.issue, ...b.solutions.map(s => s.pr)]) {
     const k = `${b.repository}#${n}`;
     assert.ok(!used[k], `${k} used twice`);
     used[k] = true;
@@ -161,13 +166,14 @@ test('the sample self-dealing account says so', () => {
   assert.match(readFileSync(join(pub, 'people', 'example-pike-alt.json'), 'utf8'), /Sample self-dealing case/);
 });
 
-test('in-app navigation files resolve (Next asks for dotted names, the export writes folders)', async () => {
+test('in-app navigation files resolve (Next asks for dotted names, the export writes folders)', async t => {
   const { segmentFile } = await import('./serve.mjs');
   assert.equal(segmentFile(join('x', 'b', 'bt-1', '__next.b.$d$id.__PAGE__.txt')), join('x', 'b', 'bt-1', '__next.b', '$d$id', '__PAGE__.txt'));
   assert.equal(segmentFile(join('x', 'me', '__next.me.__PAGE__.txt')), join('x', 'me', '__next.me', '__PAGE__.txt'));
   assert.equal(segmentFile(join('x', 'index.html')), join('x', 'index.html'));
   const built = join(root, 'out', 'me');
-  if (existsSync(built)) for (const n of readdirSync(join(built, '__next.me'))) assert.ok(existsSync(segmentFile(join(built, `__next.me.${n}`))), n);
+  if (!existsSync(built)) { t.skip('built files not checked: no out/ yet. Next: npm run build, then npm run check'); return; }
+  for (const n of readdirSync(join(built, '__next.me'))) assert.ok(existsSync(segmentFile(join(built, `__next.me.${n}`))), n);
 });
 
 function lum(hex) { const c = hex.match(/\w\w/g).map(x => parseInt(x, 16) / 255).map(v => v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; }
@@ -189,4 +195,110 @@ test('self-dealing: a payee who is the poster is excluded even without push acce
     solutions: [{ pr: 2, author: 'example-self', state: 'merged', mergedAt: f.SAMPLE_NOW, headOnDefault: true }] };
   assert.equal(f.isSelfDealt(b), true);
   assert.equal(f.isSelfDealt({ ...b, solutions: [{ ...b.solutions[0], author: 'example-other' }] }), false, 'a stranger without push access is counted');
+});
+
+// ---------------------------------------------------------------------------
+// K43 correction round 1: the pass's B1, M1, M2, M3 (each failed before its fix).
+// ---------------------------------------------------------------------------
+
+const ownerOnlyShown = (solver, viewer, b) => f.visibleMethods(solver, viewer, b).shown.some(m => m.visibility === 'owed-owners');
+
+test('B1: an owner-only method never shows on a profile page to anyone but the solver', () => {
+  // example-mara paid example-rook in full (bt-e3c9f5a7b1d2, received): she owes rook nothing.
+  assert.equal(ownerOnlyShown('example-rook', 'example-mara'), false, 'paid-in-full owner on /solver/example-rook/');
+  // example-mara owes example-quill on bt-3a91c0e2d4f1, but a profile page is not that bounty's page.
+  assert.equal(ownerOnlyShown('example-quill', 'example-mara'), false, 'owing owner on /solver/example-quill/');
+  assert.equal(f.mayseeOwnerOnly('example-rook', 'example-mara', null), false);
+  assert.equal(f.mayseeOwnerOnly('example-rook', 'example-rook', null), true, 'the solver sees their own');
+});
+
+test('B1: only the owner who owes that solver now, on that bounty\'s page, until the payment is recorded', () => {
+  const owed = f.findBounty('bt-3a91c0e2d4f1'); // mara owes quill $50, not recorded
+  assert.equal(f.mayseeOwnerOnly('example-quill', 'example-mara', owed), true);
+  assert.equal(f.mayseeOwnerOnly('example-quill', 'example-wren', owed), false, 'another owner');
+  assert.equal(f.mayseeOwnerOnly('example-quill', 'example-sol', owed), false, 'another solver');
+  assert.equal(f.mayseeOwnerOnly('example-quill', null, owed), false, 'a visitor');
+  const recorded = f.withOverlay(owed, { [owed.id]: { paid: { at: f.SAMPLE_NOW, amount: 50, source: 'board' } } });
+  assert.equal(f.mayseeOwnerOnly('example-quill', 'example-mara', recorded), false, 'recorded paid: the solver chose "owes me", not "for reference"');
+  assert.equal(f.mayseeOwnerOnly('example-rook', 'example-mara', f.findBounty('bt-e3c9f5a7b1d2')), false, 'paid in full and received');
+  assert.equal(f.mayseeOwnerOnly('example-quill', 'example-mara', f.findBounty('bt-4c6e19b0a2d8')), false, 'recorded paid, unconfirmed');
+});
+
+test('B1: the prototype server grants owner-only values exactly where the rule allows, and nowhere else', () => {
+  const grants = JSON.parse(readFileSync(join(root, 'server', 'grants.json'), 'utf8')).grants;
+  for (const g of grants) assert.ok(f.mayseeOwnerOnly(g.solver, g.viewer, g.bounty ? f.findBounty(g.bounty) : null), JSON.stringify(g));
+  assert.ok(grants.some(g => g.viewer === 'example-mara' && g.solver === 'example-quill' && g.bounty === 'bt-3a91c0e2d4f1'));
+  assert.ok(!grants.some(g => g.viewer === 'example-mara' && g.solver === 'example-rook'), 'mara owes rook nothing');
+  for (const g of grants) if (g.viewer !== g.solver) assert.ok(g.bounty, 'an owner\'s grant is always for one bounty page');
+});
+
+test('M1: "owner decides" is owed on the bounty page exactly as in the owner\'s record', () => {
+  for (const login of Object.keys(f.people)) {
+    const r = f.ownerRecord(login);
+    const owedOnPage = r.bounties.filter(b => !f.isSelfDealt(b) && f.paymentFacts(b).owed && !f.wordsOf(b).recordedPaid);
+    assert.equal(owedOnPage.length, r.owedNow, login);
+  }
+  const od = f.findBounty('bt-7a0c5e8b3f21');
+  assert.equal(f.paymentFacts(od).owed.amount, 30);
+  assert.deepEqual(f.paymentFacts(od).owed.to_one_of, ['example-fern', 'example-rook']);
+});
+
+test('M1: the owner of an "owner decides" bounty records whom they paid, and it becomes an ordinary payment', () => {
+  const od = f.findBounty('bt-7a0c5e8b3f21');
+  const paidRook = { [od.id]: { paid: { at: f.SAMPLE_NOW, amount: 30, source: 'board', to: 'example-rook' } } };
+  const b = f.withOverlay(od, paidRook);
+  assert.equal(f.stateOf(b), 'paid-recorded');
+  assert.equal(f.payeeOf(b).login, 'example-rook');
+  assert.equal(f.ownerRecord('example-wren', paidRook).owedNow, 1);
+  const notACandidate = f.withOverlay(od, { [od.id]: { paid: { ...paidRook[od.id].paid, to: 'example-sol' } } });
+  assert.equal(f.stateOf(notACandidate), 'owner-decides', 'only a merged author can be named');
+});
+
+test('M2: self-dealing is read from GitHub\'s public author_association, never from push access', () => {
+  const b = { id: 'bt-000000000002', repository: 'example-none/none', poster: 'example-owner', reward: 10, issueState: 'closed', paid: [], receipt: [],
+    solutions: [{ pr: 2, author: 'example-other', state: 'merged', mergedAt: f.SAMPLE_NOW, headOnDefault: true, association: 'COLLABORATOR' }] };
+  const as = a => f.isSelfDealt({ ...b, solutions: [{ ...b.solutions[0], association: a }] });
+  for (const a of ['OWNER', 'MEMBER', 'COLLABORATOR']) assert.equal(as(a), true, a);
+  for (const a of ['CONTRIBUTOR', 'FIRST_TIME_CONTRIBUTOR', 'FIRST_TIMER', 'NONE']) assert.equal(as(a), false, a);
+  for (const repo of Object.values(f.repositories)) assert.equal(repo.pushAccess, undefined, 'the board cannot read push access');
+  for (const x of f.bounties) for (const s of x.solutions) if (s.state === 'merged') assert.ok(f.ASSOCIATIONS.includes(s.association), `${x.id} #${s.pr}`);
+});
+
+const restrictedBytes = async () => {
+  const r = await import('../sample/restricted.mjs');
+  return [...r.privateBounties.flatMap(b => [b.id, b.title, b.repository]), ...Object.keys(r.privateRepositories),
+    ...Object.values(r.ownerOnlyMethods).flat().map(m => m.value)];
+};
+const exportFiles = () => walk(join(root, 'out')).filter(p => !p.includes(`${join('out', 'screenshots')}`) && !/\.(png|woff2?|ico)$/.test(p));
+
+test('M3: no file of the static export carries a private repository or an owner-only value (JS, JSON, TXT, HTML, XML, CSS)', async t => {
+  if (!existsSync(join(root, 'out'))) { t.skip('no out/ yet. Next: npm run build, then npm run check'); return; }
+  const bad = await restrictedBytes();
+  const files = exportFiles();
+  assert.ok(files.some(p => p.endsWith('.js')) && files.some(p => p.endsWith('.txt')), 'the scan reaches the client bundle and the navigation files');
+  for (const p of files) { const t2 = readFileSync(p, 'utf8'); for (const s of bad) assert.ok(!t2.includes(s), `${s} in ${p}`); }
+});
+
+test('M3: no page, component or client module imports the restricted sample', () => {
+  for (const d of ['app', 'components', 'lib', 'public']) for (const p of walk(join(root, d))) assert.ok(!/restricted/.test(readFileSync(p, 'utf8')), p);
+});
+
+test('B1: the prototype server answers only a granted viewer, and says why it refuses', async () => {
+  const { ownerOnlyAnswer } = await import('./serve.mjs');
+  const grants = JSON.parse(readFileSync(join(root, 'server', 'grants.json'), 'utf8')).grants;
+  assert.equal(ownerOnlyAnswer(grants, { solver: 'example-quill', viewer: 'example-mara', bounty: 'bt-3a91c0e2d4f1' })[0], 200);
+  const [code, body] = ownerOnlyAnswer(grants, { solver: 'example-rook', viewer: 'example-mara', bounty: '' });
+  assert.equal(code, 403);
+  assert.match(body.error, /only to an owner who owes them/);
+  assert.equal(ownerOnlyAnswer(grants, { solver: 'example-quill', viewer: 'example-mara', bounty: '' })[0], 403, 'not on a profile page');
+  assert.equal(ownerOnlyAnswer(null, { solver: 'example-quill', viewer: 'example-quill' })[0], 503);
+  for (const [login, list] of Object.entries(ownerOnlyMethods)) assert.equal(f.people[login].ownerOnly, list.length, login);
+  for (const p of walk(pub)) assert.ok(!p.includes('grants'), 'grants never in public/');
+});
+
+test('L4, L5: approval says when the record is silent, and every detail is marked sample data', () => {
+  const silent = { ...f.findBounty('bt-0d7e4a3c8b65') };
+  delete silent.approvedBy;
+  assert.equal(f.feedEntry(silent).approved_by, null);
+  for (const b of f.bounties) assert.equal(getBounty({ id: b.id }).bounty.sample_data, true, b.id);
 });

@@ -1,9 +1,9 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Title, Section, Primary, Quiet, Soft } from './ui.jsx';
 import { Reward } from './Card.jsx';
-import { useOverlay, useSession, signOut } from '../lib/client.js';
+import { useOverlay, useSession, useOwnerOnly, signOut } from '../lib/client.js';
 import { bounties, withOverlay, stateOf, payeeOf, people, METHOD_LABEL, daysBetween, fmtDate, plural } from '../lib/facts.mjs';
 
 const SHAPES = {
@@ -16,6 +16,9 @@ const SHAPES = {
 
 function MethodsEditor({ login }) {
   const [list, setList] = useState(people[login]?.methods ?? []);
+  // Your owner-only methods are not in the page's files: the server sends them to you alone.
+  const own = useOwnerOnly(login, login, null, (people[login]?.ownerOnly ?? 0) > 0);
+  useEffect(() => { if (own.state === 'shown') setList(cur => [...cur, ...own.methods.filter(m => !cur.some(c => c.value === m.value))]); }, [own]);
   const [kind, setKind] = useState('paypal');
   const [value, setValue] = useState('');
   const [chain, setChain] = useState('');
@@ -63,7 +66,7 @@ function MethodsEditor({ login }) {
           {msg ? <p role="status" className="text-sm">{msg}</p> : null}
         </div>
       </form>
-      <Soft className="mt-4">&ldquo;Everyone&rdquo; puts the method on your public solver page. &ldquo;Only an owner who owes me&rdquo; keeps it off every public page and feed; the owner of a bounty your solution was merged into still sees it there. The board checks only the shape of what you type. It never follows a link or moves money.</Soft>
+      <Soft className="mt-4">&ldquo;Everyone&rdquo; puts the method on your public solver page. &ldquo;Only an owner who owes me&rdquo; keeps it off every public page and file, your solver page included: only the owner of a bounty that owes you sees it, on that bounty&apos;s page, from the merge until they record the payment. The board checks only the shape of what you type. It never follows a link or moves money.</Soft>
     </>
   );
 }

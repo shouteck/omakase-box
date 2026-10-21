@@ -4,7 +4,7 @@
 
 import { SAMPLE_NOW, BOARD_READ_AT, repositories, people, bounties as allBounties } from '../sample/sample.mjs';
 
-export { SAMPLE_NOW, BOARD_READ_AT, people };
+export { SAMPLE_NOW, BOARD_READ_AT, people, repositories };
 
 export const BOARD_NAME = 'Open bounty board';
 export const BOARD_URL = 'https://board.example.invalid';
@@ -16,9 +16,11 @@ export const daysBetween = (from, to = SAMPLE_NOW) => Math.max(0, Math.floor((Da
 export const fmtDate = iso => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 export const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
-// Hard stop: a private repository never appears, at any step.
-export const isListed = b => repositories[b.repository]?.visibility === 'public';
-export const bounties = allBounties.filter(isListed);
+// Hard stop: a private repository never appears, at any step. The board
+// filters when it reads GitHub (listed), so nothing private reaches a page,
+// a file or a client bundle; the sample a page imports is already public only.
+export const listed = (list, repos) => list.filter(b => repos[b.repository]?.visibility === 'public');
+export const bounties = listed(allBounties, repositories);
 export const findBounty = id => bounties.find(b => b.id === id) ?? null;
 export const repoOf = b => ({ name: b.repository, ...repositories[b.repository] });
 
@@ -33,29 +35,49 @@ export function withOverlay(b, overlay) {
   };
 }
 
-/** Who is owed: GitHub facts only (K42 3.3 step 4). */
+const latestPaid = b => [...b.paid].sort((x, y) => Date.parse(x.at) - Date.parse(y.at)).at(-1);
+
+/** Who is owed: GitHub facts (K42 3.3 step 4). When more than one pull
+ * request is merged, the owner decides: the payee is the merged author the
+ * owner names when recording paid (`to`), and nobody until then. */
 export function payeeOf(b) {
   const merged = b.solutions.filter(s => s.state === 'merged' && s.headOnDefault);
-  if (merged.length === 1) return { kind: 'one', login: merged[0].author, pr: merged[0].pr, mergedAt: merged[0].mergedAt };
-  if (merged.length > 1) return { kind: 'owner-decides', prs: merged.map(s => ({ pr: s.pr, author: s.author })), mergedAt: merged[0].mergedAt };
+  const one = s => ({ kind: 'one', login: s.author, pr: s.pr, mergedAt: s.mergedAt, association: s.association });
+  if (merged.length === 1) return one(merged[0]);
+  if (merged.length > 1) {
+    const last = latestPaid(b);
+    const named = last && !last.withdrawn ? merged.find(s => s.author === last.to) : null;
+    if (named) return { ...one(named), chosenFrom: merged.map(s => s.author) };
+    return { kind: 'owner-decides', prs: merged.map(s => ({ pr: s.pr, author: s.author })), mergedAt: merged[0].mergedAt };
+  }
   return { kind: 'none' };
 }
 
 /** Latest non-withdrawn word of each side. */
 export function wordsOf(b) {
-  const paid = [...b.paid].sort((x, y) => Date.parse(x.at) - Date.parse(y.at)).at(-1);
-  const recordedPaid = paid && !paid.withdrawn ? paid : null;
+  const paid = latestPaid(b);
   const payee = payeeOf(b);
+  // With more than one merge, a record counts only once it names a merged author.
+  const recordedPaid = paid && !paid.withdrawn && payee.kind === 'one' ? paid : null;
   const r = payee.kind === 'one' ? b.receipt.filter(x => x.by === payee.login).sort((x, y) => Date.parse(x.at) - Date.parse(y.at)).at(-1) : null;
   const solverWord = r && !r.withdrawn ? r : null;
   return { recordedPaid, solverWord };
 }
 
-/** Self-dealing (K42 rule): the payee is the poster or has push access. */
+/** GitHub's author_association values (REST pull request object, GraphQL CommentAuthorAssociation). */
+export const ASSOCIATIONS = ['OWNER', 'MEMBER', 'COLLABORATOR', 'CONTRIBUTOR', 'FIRST_TIME_CONTRIBUTOR', 'FIRST_TIMER', 'MANNEQUIN', 'NONE'];
+/** The ones that put the author on the repository owner's side: owner, member of the owning organisation, invited collaborator. */
+export const INSIDE = ['OWNER', 'MEMBER', 'COLLABORATOR'];
+
+/** Self-dealing (K42's rule, as the board can read it): the payee is the
+ * poster, or GitHub associates the merged pull request's author with the
+ * repository as OWNER, MEMBER or COLLABORATOR. Push access itself is not
+ * readable for another account with a no-scope token; this reads wider
+ * (a read-only collaborator is excluded too), so it errs towards not counting. */
 export function isSelfDealt(b) {
   const p = payeeOf(b);
   if (p.kind !== 'one') return false;
-  return p.login === b.poster || (repositories[b.repository]?.pushAccess ?? []).includes(p.login);
+  return p.login === b.poster || INSIDE.includes(p.association);
 }
 
 export const STATES = {
@@ -145,13 +167,26 @@ export function solverRecord(login, overlay) {
 
 export const METHOD_LABEL = { paypal: 'PayPal.me', stripe: 'Stripe payment link', sponsors: 'GitHub Sponsors', wise: 'Wise (email)', wallet: 'Wallet address' };
 
-/** Payment methods a viewer may see. `owed-owners` only for an owner who owes this solver. */
-export function visibleMethods(login, viewer, overlay) {
+/** "Only an owner who owes me" (B1, K43 correction round 1): the solver
+ * themself, anywhere; otherwise only the poster of the bounty page being
+ * viewed (`b`, with the viewer's clicks applied), while that bounty owes this
+ * solver: merged to them and not recorded paid. Never on a profile page to
+ * anyone else, never after the payment is recorded, never in a file. */
+export function mayseeOwnerOnly(solver, viewer, b = null) {
+  if (!viewer) return false;
+  if (viewer === solver) return true;
+  if (!b || b.poster !== viewer) return false;
+  const p = payeeOf(b);
+  return p.kind === 'one' && p.login === solver && stateOf(b) === 'merged-owed';
+}
+
+/** What a page may show of a solver's methods: the public ones; how many are
+ * owner-only; and whether this viewer may ask the server for their values. */
+export function visibleMethods(login, viewer, b = null) {
   const p = people[login];
-  if (!p) return { shown: [], hidden: 0 };
-  const owesThem = viewer && bounties.some(b => b.poster === viewer && payeeOf(withOverlay(b, overlay)).login === login && b.reward > 0);
-  const shown = p.methods.filter(m => m.visibility === 'everyone' || (m.visibility === 'owed-owners' && (owesThem || viewer === login)));
-  return { shown, hidden: p.methods.length - shown.length };
+  if (!p) return { shown: [], ownerOnly: 0, mayFetch: false };
+  const ownerOnly = p.ownerOnly ?? 0;
+  return { shown: p.methods, ownerOnly, mayFetch: ownerOnly > 0 && mayseeOwnerOnly(login, viewer, b) };
 }
 
 // ---------------------------------------------------------------------------
@@ -197,7 +232,7 @@ export function feedEntry(b) {
     solutions: { open, total: b.solutions.length },
     posted_at: b.createdAt,
     age_days: daysBetween(b.createdAt),
-    approved_by: b.approvedBy,
+    approved_by: b.approvedBy ?? null,
     answer: { branch: `box-bounty/${b.id}`, base_commit: b.workCommit, pull_request_base: `box-bounty/${b.id}` },
     links: { page: `${BOARD_URL}/b/${b.id}/`, issue: `https://github.com/${repo.name}/issues/${b.issue}`, detail: `${BOARD_URL}/bounties/${b.id}.json` },
   };
@@ -208,7 +243,7 @@ export function historyOf(b) {
   for (const s of b.solutions) h.push({ at: s.openedAt, event: `solution: pull request #${s.pr}`, by: s.author, source: 'github' });
   for (const s of b.solutions) if (s.state === 'merged') h.push({ at: s.mergedAt, event: `merged: pull request #${s.pr}`, by: b.poster, source: 'github' });
   if (b.issueState === 'closed' && payeeOf(b).kind === 'none') h.push({ at: b.closedAt, event: 'closed without a merge', by: b.poster, source: 'github' });
-  for (const p of b.paid) h.push({ at: p.at, event: `${p.withdrawn ? 'paid record withdrawn' : `recorded paid: $${p.amount} (the owner's word)`}`, by: b.poster, source: p.source === 'memory' ? 'project-record' : 'board' });
+  for (const p of b.paid) h.push({ at: p.at, event: `${p.withdrawn ? 'paid record withdrawn' : `recorded paid: $${p.amount}${p.to ? ` to ${p.to}` : ''} (the owner's word)`}`, by: b.poster, source: p.source === 'memory' ? 'project-record' : 'board' });
   for (const r of b.receipt) h.push({ at: r.at, event: `${r.kind === 'received' ? 'confirmed received' : 'says not received'} (the solver's word)`, by: r.by, source: 'board' });
   return h.sort((x, y) => Date.parse(x.at) - Date.parse(y.at)).slice(-LIMITS.maxHistory);
 }
@@ -219,14 +254,20 @@ export function paymentFacts(b) {
   const { recordedPaid, solverWord } = wordsOf(b);
   const f = { state };
   if (b.reward === 0) return { ...f, owed: null, note: 'No reward stated; nothing is owed.' };
-  if (payee.kind === 'owner-decides') return { ...f, owed: null, note: `More than one pull request is marked merged (${payee.prs.map(p => `#${p.pr} by ${p.author}`).join(', ')}). Nothing is owed to either until the owner records whom they paid.` };
+  if (payee.kind === 'owner-decides') return {
+    ...f,
+    owed: { to: null, to_one_of: payee.prs.map(p => p.author), amount: b.reward, since: payee.mergedAt, fact: `pull requests ${payee.prs.map(p => `#${p.pr}`).join(' and ')} merged`, source: 'github' },
+    note: `More than one pull request is marked merged (${payee.prs.map(p => `#${p.pr} by ${p.author}`).join(', ')}). The owner owes one reward of $${b.reward} and decides which author to pay; it counts as owed until the owner records whom they paid.`,
+    recorded_paid: null, solver_says: null, excluded_from_counts: null,
+  };
   if (payee.kind === 'none') return { ...f, owed: null, note: state === 'closed-none' ? 'Closed without a merge; nothing is owed.' : `Nothing is owed yet. When a solution is merged, its author is owed $${b.reward} by the owner.` };
   return {
     ...f,
     owed: { to: payee.login, amount: b.reward, since: payee.mergedAt, fact: `pull request #${payee.pr} merged`, source: 'github' },
     recorded_paid: recordedPaid ? { by: b.poster, at: recordedPaid.at, amount: recordedPaid.amount, whose_word: 'the owner\'s', source: recordedPaid.source === 'memory' ? 'project-record' : 'board' } : null,
     solver_says: solverWord ? { by: solverWord.by, at: solverWord.at, word: solverWord.kind === 'received' ? 'received' : 'not received', whose_word: 'the solver\'s', source: 'board' } : null,
-    excluded_from_counts: isSelfDealt(b) ? 'the payee is the poster or has push access to the repository' : null,
+    ...(payee.chosenFrom ? { chosen_by_owner_from: payee.chosenFrom } : {}),
+    excluded_from_counts: isSelfDealt(b) ? (payee.login === b.poster ? 'the payee is the poster' : `GitHub lists the payee as ${payee.association} of the repository`) : null,
   };
 }
 
@@ -243,7 +284,7 @@ export function bountyDetail(b) {
       `Open a pull request against the branch box-bounty/${b.id} in ${repo.name} (not against ${repo.defaultBranch}).`,
     ],
     how_to_get_paid: b.reward > 0 ? [
-      'You can answer without signing in. To be paid, sign in to the board with GitHub and list at least one way you accept payment (PayPal.me, Stripe payment link, GitHub Sponsors, Wise email or a wallet address) before your pull request could be merged. Methods you mark "only an owner who owes me" stay off your public profile; the owner sees them once your solution is merged.',
+      'You can answer without signing in. To be paid, sign in to the board with GitHub and list at least one way you accept payment (PayPal.me, Stripe payment link, GitHub Sponsors, Wise email or a wallet address) before your pull request could be merged. Methods you mark "only an owner who owes me" stay off every public page and file; the owner of a bounty that owes you sees them on that bounty\'s page, from the merge until they record the payment.',
       `If your pull request is the one merged, the owner owes you $${b.reward} and pays you directly. The board never holds, guarantees or moves money.`,
       'When the money arrives, confirm receipt on the bounty page. Your confirmation is shown as your word.',
     ] : ['No reward is stated for this bounty.'],
@@ -251,6 +292,7 @@ export function bountyDetail(b) {
     solution_list: b.solutions.slice(0, LIMITS.maxSolutions).map(s => ({ pull_request: s.pr, author: s.author, state: s.state, opened_at: s.openedAt, ...(s.mergedAt ? { merged_at: s.mergedAt } : {}), url: `https://github.com/${repo.name}/pull/${s.pr}` })),
     history: historyOf(b),
     judged: 'The board does not judge solutions or rank people.',
+    sample_data: true,
   };
 }
 
