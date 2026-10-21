@@ -1,6 +1,6 @@
 # Status
 
-Updated by the CTO on 22 October 2026 at the K43 close.
+Updated by the CTO on 22 October 2026 at the K45 kickoff.
 
 ## Now
 
@@ -18,12 +18,11 @@ Updated by the CTO on 22 October 2026 at the K43 close.
   - whether "owes me" covers a disputed payment (PF3);
   - the board's one typeface against K41's serif plus monospace.
 - **Verify/cost:** `verify: 3 runs, total 358s` locally (1 PASS, 2 FAIL from master's size rule). Four more runs in clean worktrees passed and are not counted. Off-machine: master green at `d70bddf`.
-- **In the checkout, not ours:** nine untracked briefs, `waves/BT43.md`–`BT50.md` and `waves/K45.md` (written 21 October, 22:09–23:05). Left untouched. They make verify refuse in the main checkout until committed or moved by whoever wrote them.
 - Six empty `%TEMP%\kitchen-K43-*` folders remain until their participant sessions are archived.
 
 ## Next
 
-This run stops after K43. No wave is in flight or starts automatically.
+**K45 in flight** on `wave/K45` (owner: `START.MD: K45`). This run stops after K45.
 
 - **See the prototype:** `cd kitchen/platform-prototype && npm start`, then http://localhost:4310/. It is already built in `out/`. A fresh build needs `npm ci && npm run build` first.
 - **Before dispatching any queued brief:** BT42, PF1–PF6 and K41 fail `brief-check`, mostly on glosses in the "Owner decisions" field; PF1 also names a `test:platform` script that does not exist yet. PF1–PF6 also take K43's proposed corrections (Result, "Deliverable 5" and "Correction round 1").

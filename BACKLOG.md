@@ -2,6 +2,10 @@
 
 Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks work now. The head chef adds a line here when a wave leaves something behind, and removes it when a wave fixes it or the owner drops it. One line each; link the wave file for detail.
 
+## Kitchen tooling
+
+- **From the K43 inbox (22 October 2026 kickoff):** (a) one command that runs the AGENTS.md + KITCHEN.md size rule and `brief-check` on every changed brief before a kitchen-document push (today two manual steps in `kitchen/roles/cto.md`); (b) verify runs made in a disposable worktree are lost when it is removed — let verify take a runs directory, or copy `.kitchen/runs/*` into the main checkout first, so kitchen-stats counts them (K43 lost four of seven).
+
 ## Product
 
 - **From BT43's engineering review (later, not briefed):** (a) deletion as a signed tombstone in the shared-memory chain, so a machine holding an old chain cannot push a forgotten bounty back; it needs a new `forget` command, which is the owner's decision because the owner surface stays `allow`, `deny`, `config`; (b) owner settings signed and their changes logged, shown in `config`; offline they can be tamper-evident, never tamper-proof, and the docs should stop implying more. See [BT43](waves/BT43.md).
