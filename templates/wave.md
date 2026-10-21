@@ -23,6 +23,7 @@ What will be true when this is done, as something a person can observe or a comm
 - <if the wave claims an invariant over code paths — "no read calls the writer", "nothing reaches X" — name the mechanical check that enumerates every caller (a grep, a spy); a list written from memory missed one in BT22 and the pass caught it>
 - <if a check covers every user-facing hit of something, name the mechanical pattern and the expected count, not a sample list; a sample invites a reasoned skip (BT41)>
 - <if this wave removes, skips or speeds up a check: first write the test that proves a real break is still caught, then make the change>
+- <if a brief sets a timing target for a command (seconds, runs), derive it from a measured run or a declared map (e.g. the `// reads:` headers), never from the head chef's estimate of which files read what (K45)>
 
 ## Review lenses
 
