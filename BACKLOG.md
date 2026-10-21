@@ -6,6 +6,14 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 - **From the K43 inbox (22 October 2026 kickoff):** (a) one command that runs the AGENTS.md + KITCHEN.md size rule and `brief-check` on every changed brief before a kitchen-document push (today two manual steps in `kitchen/roles/cto.md`); (b) verify runs made in a disposable worktree are lost when it is removed — let verify take a runs directory, or copy `.kitchen/runs/*` into the main checkout first, so kitchen-stats counts them (K43 lost four of seven).
 
+- **From the K45 pass** (see [K45](waves/K45.md)):
+  - `k6-scope-budget` and `k37-load-stats` declare `scripts/verify.mjs` but do not depend on it (about 3 s more per verify change; errs toward running more);
+  - `k19-github-standin` is selected for package changes only because the brief asked, though it imports no package code (about 10 s);
+  - a suite.mjs-only change runs at 78 s against the 80 s line;
+  - summary.json does not name the files it did not run, and its reason truncates after three paths;
+  - the whole-directory path in `suite.mjs` `main()` runs only at `--full`.
+- **Bounty suite under load** (K45): the first `--full` on `875400d` timed out four tests at 30 s with CPU at 96–100 %, then passed on rerun; `1d7a6ff` and `f623b3f` showed the same pattern. The per-test limit has little margin on this host. See also the bt39 flaky line below.
+
 ## Product
 
 - **From BT43's engineering review (later, not briefed):** (a) deletion as a signed tombstone in the shared-memory chain, so a machine holding an old chain cannot push a forgotten bounty back; it needs a new `forget` command, which is the owner's decision because the owner surface stays `allow`, `deny`, `config`; (b) owner settings signed and their changes logged, shown in `config`; offline they can be tamper-evident, never tamper-proof, and the docs should stop implying more. See [BT43](waves/BT43.md).
