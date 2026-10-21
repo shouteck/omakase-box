@@ -21,3 +21,4 @@ This run stops after K42b. No wave is in flight or starts automatically.
 - K41 (film) and publishing stay held until the platform's first version exists.
 - **In BACKLOG:** the CLI merge-recognition finding from K42 (unproven, needs a reproducing test first) and two notes for the PF4 brief.
 - BT33 stays parked; remaining performance limits in BACKLOG.
+- **Owner decision, 21 October 2026 (D-2026-10-21-no-platform-money):** the platform is open source, free and carries no money; automated payment through it is not planned ("Stage 2" dropped). Payment stays direct owner to solver, with public payment facts on the platform. D1, D3–D7 and PF3/PF4/PF6 are moot; D2 (hosting) is reopened since Vercel's payment restriction may no longer bite. **K43 is being revised** for the no-money platform and its feature set; K44 adds whether public payment facts are enough trust for solvers.
