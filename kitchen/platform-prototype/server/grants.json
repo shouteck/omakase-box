@@ -1,0 +1,54 @@
+{
+  "prototype": "Stands in for the board's server. The real board sends an owner-only method only to the signed-in GitHub account a grant names, on that bounty's page; this prototype has no accounts, so its server trusts the sample account the browser says is signed in.",
+  "grants": [
+    {
+      "viewer": "example-quill",
+      "solver": "example-quill",
+      "bounty": null,
+      "methods": [
+        {
+          "kind": "wise",
+          "value": "quill@example.invalid",
+          "visibility": "owed-owners"
+        }
+      ]
+    },
+    {
+      "viewer": "example-mara",
+      "solver": "example-quill",
+      "bounty": "bt-3a91c0e2d4f1",
+      "methods": [
+        {
+          "kind": "wise",
+          "value": "quill@example.invalid",
+          "visibility": "owed-owners"
+        }
+      ]
+    },
+    {
+      "viewer": "example-wren",
+      "solver": "example-quill",
+      "bounty": "bt-2f0b7d5a3c89",
+      "methods": [
+        {
+          "kind": "wise",
+          "value": "quill@example.invalid",
+          "visibility": "owed-owners"
+        }
+      ]
+    },
+    {
+      "viewer": "example-rook",
+      "solver": "example-rook",
+      "bounty": null,
+      "methods": [
+        {
+          "kind": "wallet",
+          "value": "0x0000000000000000000000000000000000c0ffee",
+          "chain": "Base (USDC)",
+          "visibility": "owed-owners"
+        }
+      ]
+    }
+  ]
+}

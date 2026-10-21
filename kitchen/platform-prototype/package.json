@@ -1,0 +1,28 @@
+{
+  "name": "open-bounty-board-prototype",
+  "version": "0.0.0",
+  "private": true,
+  "description": "K43 clickable prototype of the open bounty board. Sample data only; no backend, no accounts, no money.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=24.11.0"
+  },
+  "scripts": {
+    "feed": "node scripts/feed.mjs",
+    "build": "node scripts/feed.mjs && next build",
+    "start": "node scripts/serve.mjs out 4310",
+    "check": "node --test scripts/check.test.mjs",
+    "screens": "node scripts/screens.mjs"
+  },
+  "dependencies": {
+    "@fontsource/inter": "5.3.0",
+    "next": "16.4.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "tailwindcss": "4.3.3"
+  }
+}

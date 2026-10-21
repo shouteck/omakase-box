@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel>
+<title>Open bounty board: new bounties (sample data)</title>
+<link>https://board.example.invalid/</link>
+<description>Sample data. Every name here is invented and its links lead nowhere; nothing is a real record. The board carries no money: the owner pays the merged solution's author directly.</description>
+<item><title>Document the config file format</title><link>https://board.example.invalid/b/bt-9c3e6a1d0b47/</link><guid>bt-9c3e6a1d0b47</guid><pubDate>Mon, 19 Oct 2026 15:00:00 GMT</pubDate><description>example-juno/tallow. Posted 19 Oct 2026. The title is the poster's words.</description></item>
+<item><title>$150: Rewrite the settings page in the new component library</title><link>https://board.example.invalid/b/bt-1e9a6c4f2b78/</link><guid>bt-1e9a6c4f2b78</guid><pubDate>Sun, 18 Oct 2026 09:00:00 GMT</pubDate><description>example-kestrel/pikeworks. Posted 18 Oct 2026. The title is the poster's words.</description></item>
+<item><title>$60: Date field loses the time zone when a form is restored from a draft</title><link>https://board.example.invalid/b/bt-1f04c2a9e7b3/</link><guid>bt-1f04c2a9e7b3</guid><pubDate>Sat, 17 Oct 2026 14:05:00 GMT</pubDate><description>example-orrin/lumen-forms. Posted 17 Oct 2026. The title is the poster's words.</description></item>
+<item><title>$45: Recurring transactions skip the 31st in short months</title><link>https://board.example.invalid/b/bt-0d7e4a3c8b65/</link><guid>bt-0d7e4a3c8b65</guid><pubDate>Sat, 17 Oct 2026 08:00:00 GMT</pubDate><description>example-tidepool/ledger-lite. Posted 17 Oct 2026. The title is the poster's words.</description></item>
+<item><title>$80: Menu keyboard navigation skips disabled items inconsistently</title><link>https://board.example.invalid/b/bt-c5a1b7e3f082/</link><guid>bt-c5a1b7e3f082</guid><pubDate>Wed, 14 Oct 2026 13:00:00 GMT</pubDate><description>example-wren/sparrow-kit. Posted 14 Oct 2026. The title is the poster's words.</description></item>
+<item><title>$40: CSV import rejects files with a byte-order mark</title><link>https://board.example.invalid/b/bt-2b8d7e01c6a5/</link><guid>bt-2b8d7e01c6a5</guid><pubDate>Mon, 12 Oct 2026 09:30:00 GMT</pubDate><description>example-tidepool/ledger-lite. Posted 12 Oct 2026. The title is the poster's words.</description></item>
+<item><title>$120: Port the tokenizer from regex to a hand-written lexer</title><link>https://board.example.invalid/b/bt-a17f2c9e4d56/</link><guid>bt-a17f2c9e4d56</guid><pubDate>Tue, 06 Oct 2026 09:00:00 GMT</pubDate><description>example-juno/riverbed. Posted 6 Oct 2026. The title is the poster's words.</description></item>
+</channel></rss>
