@@ -61,3 +61,5 @@ Learned the hard way in R3b and the lab's live runs. They apply to BT5, BT6 and 
 
 - **A design that adds a trigger names the command that fires it, what a refusal leaves behind and what a retry finds.** K42's payment rule took three corrections, each fix opening the next edge case.
 - **A design wave states invariants, each with the test that proves it; step-by-step state machines are designed in the build wave, against tests.** K42b's PF4 payment steps grew a new edge case in each of three rounds of prose.
+- **Claude Code desktop participants are fresh sessions, never subagents** (those inherit this AGENTS.md): the head chef starts them in their own scratch folders from an owner message and takes each report from `~/.claude/projects/<folder>/*.jsonl`; the app shows sibling names, so name sessions neutrally (K44).
+- **A pooled rate states its denominator by what the right answer was** (K44: 1 of 11 hid 1 of 5).

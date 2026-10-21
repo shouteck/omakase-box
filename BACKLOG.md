@@ -4,6 +4,8 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 ## Product
 
+- **Flaky product test** (see [K44](waves/K44.md) Close): `tests/box/bounty/bt39.test.ts` "an unchanged pull-request set costs no per-request file calls" failed on the hosted run for documents-only `bf2c815` (expected 10 to be greater than 10: the second status refresh did not re-list) and passed on the same code at `aafaf67`. Likely timing-dependent "new" vs "seen since"; needs a reproduction before a fix.
+
 - **For the PF4 brief, from the K42b pass** (see [K42b](waves/K42b.md)): fix whether the owner's card is attached when the PaymentIntent is created (invariant 3's "never attempted = `requires_confirmation`" depends on it, else allow `requires_payment_method` with an empty `last_payment_error`); say whether `off` or `deny` cancels an unconfirmed PaymentIntent, so invariant 1 stays simple.
 
 - **CLI merge recognition may count a PR as merged with nothing new landing** (code reading in [K42](waves/K42.md), not run): `merged.ts`/`collect.ts` appear to accept a PR whose head commit is already on the owner's branch. Needs a reproducing test before any fix. The platform design (PLATFORM.md 3.6) refuses to pay such a PR alone either way. Also from the K42 pass: a PR merged on GitHub directly into `box-bounty/<id>` leaves the closing step refusing `github-branch-changed` for good (today's behaviour too); PF4 can treat "the record's PR is reported merged" as done.
