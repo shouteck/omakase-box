@@ -16,6 +16,7 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 ## Product
 
+- **Bounty wording after BT42** (BT42 pass and fresh-agent check): `describe` still says "a bounty has a cost" (`wording.ts:30`), the word K44's agents read as a fee. The new block's "always your call" was read by a fresh agent as "no need to ask for each use", which is false under `ask`. Old copies of the block remain in `kitchen/memory/` prototype scripts. See [BT42](waves/BT42.md).
 - **A stranger's PR can claim the owner's own later commit** (BT44 pass, existed before BT44): a PR whose head is a commit the owner pushed after the post descends from the base, is new to it and is on the branch, so the bounty closes as an outside solution, and with a reward the pay message would presumably name that PR's `pay-to` (inferred, not observed). Ancestry alone cannot tell it apart; a fix needs another fact, such as the branch not holding the PR's commits when the PR was first seen, or GitHub's merged state (PF4). See [BT44](waves/BT44.md).
 - **From BT43's engineering review (later, not briefed):** (a) deletion as a signed tombstone in the shared-memory chain, so a machine holding an old chain cannot push a forgotten bounty back; it needs a new `forget` command, which is the owner's decision because the owner surface stays `allow`, `deny`, `config`; (b) owner settings signed and their changes logged, shown in `config`; offline they can be tamper-evident, never tamper-proof, and the docs should stop implying more. See [BT43](waves/BT43.md).
 

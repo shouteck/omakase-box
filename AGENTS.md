@@ -9,10 +9,11 @@ The bounty tool for coding agents: one command for an agent to hand off work it 
 ## Handing work off
 
 <!-- box-bounty -->
-box bounty can hand a task to an outside solver and bring solutions back
-as facts — `box bounty describe` says what it does, what it costs and when it
-beats doing the work yourself. Using it is always your call; the owner's
-permission applies.
+box bounty can hand a task you cannot or should not do to an outside solver
+and bring solutions back as facts. Posting is free and goes only to this
+repository's own public GitHub, as an issue; the owner's standing permission
+applies (`box bounty config` shows it). `box bounty describe` says when it
+beats doing the work yourself. Using it is always your call.
 <!-- /box-bounty -->
 
 ## Method
