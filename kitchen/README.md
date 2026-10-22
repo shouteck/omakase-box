@@ -35,8 +35,12 @@ The owner's message decides, and the head chef stops when that much is done: `ST
 
 ## How any host staffs a role
 
-1. If the host has named agent profiles for these roles, use them. This repository ships thin ones for Claude Code (`.claude/agents/`) and Devin (`.devin/agents/`); they only point at the role files here.
-2. Otherwise start a fresh agent and give it, as its whole prompt: the role file, the wave file, the station card, and the commit SHA if it is the reviewer. Codex, OpenCode and Cursor work this way.
+1. If the host has named agent profiles for these roles, use them. This repository ships thin ones for Claude Code (`.claude/agents/`), Devin (`.devin/agents/`) and OpenCode (`.opencode/agents/`, one per pinned model); they only point at the role files here.
+2. Otherwise start a fresh agent and give it, as its whole prompt: the role file, the wave file, the station card, and the commit SHA if it is the reviewer. Codex and Cursor work this way.
 3. The recipient is the exception: it must not see this repository, so paste the text of `roles/recipient.md` into its prompt and give it only the Box folder.
 
 A fresh agent never inherits the head chef's conversation. If it is not in the files you hand over, the agent does not know it. Record which host and model filled each role in the wave file.
+
+**Claude Code** (owner, 21 October 2026). The brief's Staffing section sets each role's model and effort; dispatch exactly as written. Participants are fresh sessions, never subagents. Fable only on the owner's word.
+
+**OpenCode** (owner, 22 October 2026). The agent profile in `.opencode/agents/` pins the model. The head chef (OpenCode's `head-chef` agent, or Claude Code) runs each role as a new `opencode run --agent <name> --model <provider/model>` session, never `--continue`, and confirms the model with `opencode session export <session-id>`. Participants run in a scratch folder outside the checkout (`--dir`, or that folder as the shell's working directory where the CLI has no `--dir`). After two FAILs on one finding, the head chef asks the owner whether the next correction runs in Claude Code (`box-worker`, Opus 5.5 high) or on another named model.
