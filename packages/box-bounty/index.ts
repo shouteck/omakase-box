@@ -42,8 +42,12 @@ export type { FindMatch } from './find.js';
 export { lookDocument } from './json.js';
 export type { StatusDocumentOptions } from './json.js';
 export type { LookResult, LookTarget } from './look.js';
-export { LOOK_DIFF_LIMIT } from './look.js';
+export { exportLook, LOOK_DIFF_LIMIT } from './look.js';
+export type { LookExport } from './look.js';
 export { quoteForeign, showPath } from './notice.js';
+// The reading boundary (BT43): the one renderer for a stranger's text.
+export { blockFooter, blockHeader, LOOK_FOREIGN_FIELDS, solverAccount, solverBlock, solverLine, SOLVER_WORDS, STATUS_FOREIGN_FIELDS } from './untrusted.js';
+export type { ForeignField, ForeignSource } from './untrusted.js';
 export type { GitHubChoice, GitHubPublication } from './gh.js';
 export type { GitHubPlan } from './publish-plan.js';
 export type { IssueComment } from './collect.js';

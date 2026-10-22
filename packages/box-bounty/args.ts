@@ -182,13 +182,14 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
     }
   },
   look: {
-    label: 'box bounty look', usage: 'box bounty look [<id>] <n> [--full] [--json] [--repo <path>]',
+    label: 'box bounty look', usage: 'box bounty look [<id>] <n> [--full] [--export] [--json] [--repo <path>]',
     blurb: 'collect pull request <n> (or show solution <n> already collected) — its change, written by the solver and marked as theirs',
     example: 'box bounty look bt-a1b2c3d4e5f6 2',
     positionals: 2,
     values: { '--repo': REPO },
     switches: {
       '--full': { help: 'print the whole change, however large' },
+      '--export': { help: 'write the whole change and a manifest under .box/local/solutions/ and print none of it' },
       '--json': { help: 'print one JSON document (schema box-bounty/look@1) instead of text' }
     },
     refused: folderRefusal

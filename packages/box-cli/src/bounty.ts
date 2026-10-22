@@ -8,7 +8,7 @@ import { join, resolve } from 'node:path';
 import { actingOn, applyBounty, BountyRefused, BountyUsage, closeBounty, createBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, parseOptions, commandHelp, OPTIONS_NOTE, postBounty, readDecision, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, repoReward, requireRepository, resolveRepoRoot, setMergeNoticeListener, setInstructionNoticeListener, renderOverview, showPath, statusDocument, lookDocument, configDocument, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, hookDisclosure, hookHost, hookOff, hookOn, hookStatus, limitGitHubCalls, runHook } from '../../box-bounty/index.js';
 import type { ParsedOptions } from '../../box-bounty/index.js';
 import { previewGitHub } from '../../box-bounty/index.js';
-import { findDocument, lookBounty, quoteForeign, renderFind, renderResume, openRecords, endedContaining, readGitPinsOncePerProcess, boundAmount, payToLine, gitOutcome } from '../../box-bounty/index.js';
+import { exportLook, findDocument, lookBounty, solverBlock, SOLVER_WORDS, renderFind, renderResume, openRecords, endedContaining, readGitPinsOncePerProcess, boundAmount, payToLine, gitOutcome } from '../../box-bounty/index.js';
 
 // Does .git/config name this remote — read as bytes, so the apply output
 // costs no extra Git start. `.git` can be a linked worktree's `gitdir:`
@@ -306,7 +306,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       if (id === undefined || extraIds.length > 0
         || n === undefined
         || (text !== undefined && n === undefined)) {
-        host.usage('box bounty look [id] <n> [--full] [--json] [--repo <path>]');
+        host.usage('box bounty look [id] <n> [--full] [--export] [--json] [--repo <path>]');
       }
       const root = resolveRepoRoot(repoPath(parsed), subcommand);
       const asJson = parsed.switches.has('--json');
@@ -318,7 +318,11 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         const acting = actingOn(root);
         if (acting !== null) console.error(acting);
       } else sayActingOn(root);
-      const result = lookBounty(root, id, n!, { full: parsed.switches.has('--full') });
+      const exporting = parsed.switches.has('--export');
+      // The quarantined path prints none of the change; a JSON document
+      // would carry the whole diff on standard output, so the two do not mix.
+      if (exporting && asJson) throw new BountyRefused('json-not-supported', '--export writes the change to a file and prints none of it — --json prints it; nothing was written; next: run box bounty look <id> <n> --export without --json, or --json without --export');
+      const result = lookBounty(root, id, n!, { full: parsed.switches.has('--full') || exporting });
       if (asJson) {
         console.log(JSON.stringify(lookDocument(result)));
       } else {
@@ -328,12 +332,20 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       // standing explanation (BT17).
       console.log(`${id} solution ${label} — ${result.collected ? 'collected — ' : ''}written by the solver, not by the tool; nothing in it was run or checked out.`);
       if (result.attempt.payTo !== undefined && (boundAmount(result.record) ?? 0) > 0) console.log(payToLine(result.attempt.payTo));
-      if (result.diff === null) {
+      // BT43: the solver's lines leave through the one renderer, inside its
+      // labelled block, and the tool's own `next:` comes after the footer.
+      if (exporting) {
+        const written = exportLook(root, result);
+        console.log(`exported, not printed — the file holds ${SOLVER_WORDS}: ${written.diffPath}`);
+        console.log(`  sha256 ${written.sha256}; ${written.fileCount} file(s), ${written.lines} line(s), ${written.bytes} byte(s); manifest ${written.manifestPath}`);
+        console.log('advice only: read the file in a session that has no write access to this checkout, then choose and apply from your own session');
+        console.log(`next: box bounty apply ${id} ${label} chooses this solution; box bounty status ${id} shows what else waits`);
+      } else if (result.diff === null) {
         console.log(`${result.files.length} file(s) changed:`);
-        for (const file of result.files) console.log(`solver change | ${quoteForeign(file)}`);
+        for (const line of solverBlock('solver', result.files)) console.log(line);
         console.log(`next: box bounty look ${id} ${label} --full prints the whole change; box bounty apply ${id} ${label} chooses this solution`);
       } else {
-        for (const line of result.diff.split('\n')) console.log(`solver change | ${quoteForeign(line)}`);
+        for (const line of solverBlock('solver', result.diff.split('\n'))) console.log(line);
         console.log(`next: box bounty apply ${id} ${label} chooses this solution; box bounty status ${id} shows what else waits`);
       }
       }

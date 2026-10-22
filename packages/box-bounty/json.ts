@@ -4,7 +4,8 @@
 // are ISO 8601, amounts whole dollars, commits full hashes, and an absent
 // fact is null, never a missing key. Text written by someone else — a pull
 // request description, an issue comment — appears only inside `fromOthers`,
-// marked as theirs; it is never the tool's own words.
+// marked as theirs; it is never the tool's own words. Every field a stranger
+// wrote is named in the document's closing `foreignFields` list (BT43).
 //
 // Every document is built from the same typed facts the text views read —
 // the record, the settings, the GitHub refresh — never by parsing the text.
@@ -29,6 +30,7 @@ import { promisedTotal } from './money.js';
 import { paymentOf } from './pay.js';
 import { bountyAge,endedNextStep,nextStep,notNext,staleReminderLines,validAt } from './render.js';
 import { sharedEnded,sharedOpen,sharedRead } from './store.js';
+import { LOOK_FOREIGN_FIELDS,STATUS_FOREIGN_FIELDS } from './untrusted.js';
 import { refreshSharedMemory } from './chain.js';
 import type { Attempt,BountyRecord,ScanFinding,StageEvent,WaitingFor } from './record.js';
 import { actingOn,askMergeNoticeLine,loadSettings,loadState,localFirstMergeLine,readDecision,readInstructions,repoReward,repositoryIdentity,rewardNoticeLine,saidOnce,settingsFile } from './settings.js';
@@ -378,7 +380,9 @@ export function statusDocument(repoRoot: string, options: StatusDocumentOptions,
     // The `records:` line as a fact (BT28): whether `.box/bounties/` is
     // tracked in Git, and how many files — the warning's trigger.
     records: { tracked: trackedFiles > 0, trackedFiles },
-    bounties
+    bounties,
+    // BT43, additive: which fields hold a stranger's words, and whose.
+    foreignFields: STATUS_FOREIGN_FIELDS
   };
 }
 
@@ -409,7 +413,10 @@ export function lookDocument(result: LookResult): JsonObject {
     // The pull request's own description, recorded credential-redacted at
     // collection: the solver's words, marked as theirs. Null on attempts
     // recorded before the description was kept.
-    fromOthers: attempt.description === undefined ? null : { from: attempt.author ?? null, text: attempt.description }
+    fromOthers: attempt.description === undefined ? null : { from: attempt.author ?? null, text: attempt.description },
+    // BT43, additive: every field above that holds the solver's words,
+    // each named with `source: "solver"`.
+    foreignFields: LOOK_FOREIGN_FIELDS
   };
 }
 

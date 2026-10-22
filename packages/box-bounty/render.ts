@@ -8,6 +8,7 @@ import { existsSync,mkdirSync,readFileSync,writeFileSync } from 'node:fs';
 import { BountyRefused } from './errors.js';
 import { join } from 'node:path';
 import { quoteForeign,showPath } from './notice.js';
+import { solverAccount,solverBlock } from './untrusted.js';
 import { boundAmount } from './format.js';
 import { dryMergeOnto,GIT_LEAST } from './git.js';
 import { GH_LEAST } from './gh.js';
@@ -486,8 +487,8 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
         const comments = issueComments(repoRoot, record);
         lines.push(`      ${comments.length} comment(s) written by others, not by the tool:`);
         for (const comment of comments) {
-          lines.push(`        ${comment.author === null ? 'an account whose name could not be read' : JSON.stringify(comment.author)} at ${comment.at}:`);
-          for (const line of comment.body.split('\n')) lines.push(`          other account | ${quoteForeign(line)}`);
+          lines.push(`        ${comment.author === null ? 'an account whose name could not be read' : quoteForeign(comment.author)} at ${comment.at}:`);
+          lines.push(...solverBlock('other account', comment.body.split('\n'), '          '));
         }
         lines.push(`      next: answer on issue ${record.github.issue.number} in your own words with your own gh — gh issue comment ${record.github.issue.number} --body "<your own words>"; or box bounty status ${record.id}`);
       }
@@ -516,7 +517,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
         if (record.github === undefined || options.full === true) {
           lines.push(`      attempts (${attempts.length}):`);
           for (const attempt of ordered) {
-            lines.push(`        #${attempt.n} ${attempt.outcome} — ${ATTEMPT_WORD[attempt.outcome]}; ${attempt.seenAt === undefined ? 'new' : `seen since ${attempt.seenAt}`}${attempt.author !== undefined ? `; from GitHub account ${attempt.author}` : ''}${pays && attempt.payTo !== undefined ? `; ${payToLine(attempt.payTo)}` : ''}${attempt.conflicts !== null && attempt.conflicts.length > 0 ? `; merges with conflicts in ${attempt.conflicts.map(showPath).join(', ')}` : ''}`);
+            lines.push(`        #${attempt.n} ${attempt.outcome} — ${ATTEMPT_WORD[attempt.outcome]}; ${attempt.seenAt === undefined ? 'new' : `seen since ${attempt.seenAt}`}${attempt.author !== undefined ? `; from GitHub account ${solverAccount(attempt.author)}` : ''}${pays && attempt.payTo !== undefined ? `; ${payToLine(attempt.payTo)}` : ''}${attempt.conflicts !== null && attempt.conflicts.length > 0 ? `; merges with conflicts in ${attempt.conflicts.map(showPath).join(', ')}` : ''}`);
           }
         }
         const top = ordered[0]!;
@@ -627,7 +628,7 @@ export function renderHelp(): string {
     '  create    save the task and private context and snapshot the working state → drafted',
     '  post      publishes the GitHub issue and branch → posted — or waits on the owner',
     '  status    every open bounty, the pull requests waiting, the attempts and the next step; --comments prints comments written by others, marked as theirs',
-    '  look [id] <n>  collect pull request n (or show solution n already collected) — its change, written by the solver and marked as theirs; --full prints a large change',
+    '  look [id] <n>  collect pull request n (or show solution n already collected) — its change, written by the solver and marked as theirs; --full prints a large change; --export writes it to a file and prints none',
     '  apply [id] [<n>]  merge a solution onto the current code — collects like look when n names a pull request — the recorded decision → applied',
     '  close [id]  end a bounty with nothing merged; --reason "<why>" stays on the record → rejected, without it → withdrawn',
     '  find <words>  every record whose id, title, why, part-of or task text matches — open first, bounded',
