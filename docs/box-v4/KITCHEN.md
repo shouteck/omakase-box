@@ -32,7 +32,7 @@ Keep ceremony in proportion: a one-command check needs no page of brief; a produ
 
 - The candidate's identity is its commit SHA. Verify refuses to run on a tree dirty at start (exit 3, `UNCOMMITTED`); a run that ends dirty keeps per-step verdicts but is never a PASS.
 - A step is `reused` instead of re-run when a completed `summary.json` — the trust anchor — proves it: a clean PASS on this commit, a PASS on one of the nearest 20 ancestors over paths the step does not read, or either dirty only in paths it does not read. `--fresh` forces a real run.
-- Each run records one cheap load snapshot (`load`: platform, CPU capacity, free memory; the load average only where the platform truly measures it — Windows records unsupported, never zero). kitchen-stats flags a duration only against ≥3 earlier eligible runs of the same executed plan on the same recorded platform, strictly over 2× the median — advisory, never a cause or a verdict; a rerun does not erase a failed attempt.
+- Each run records one cheap load snapshot. kitchen-stats flags a duration far over the median of earlier comparable runs (rules in the script) — advisory, never a cause or a verdict; a rerun does not erase a failed attempt.
 - `check` runs typecheck. `test:kitchen` runs only the files whose `// reads:` header the diff reaches (all for an unmapped path; none is refused); `summary.json` names them. Cook and pass runs are selected; milestone close and the off-machine run are full: `node scripts/verify.mjs --full test:box-bounty test:kitchen`.
 - All runs report `db=none`; removed database modes refuse before work.
 - Name the suites the change affects in the brief.
@@ -52,9 +52,7 @@ The verdict carries its level, because "passed" means different things: `ui-veri
 
 **Same model on both sides is normal here.** The pass is a fresh agent with no share in the cook's reasoning — the independence the kitchen relies on. Shared blind spots are covered mechanically: the pass's attacks, tests that must fail, the off-machine run.
 
-**Staffing on Claude Code** (owner, 21 October 2026). A brief's Staffing section sets each role's model and effort; dispatch exactly as written. Participants are fresh sessions, never subagents. Fable only on the owner's word. The Result records each role's host, model and effort.
-
-**Staffing on OpenCode** (owner, 22 October 2026). When a brief's Staffing names an OpenCode agent, the agent profile in `.opencode/agents/` pins the model. The head chef (on OpenCode, the `head-chef` agent; or Claude Code) dispatches each role as a fresh `opencode run --agent <name> --model <provider/model>` session, a new session for every role (never `--continue`). It confirms the model with `opencode export <session-id>`. Participants run with `--dir` in a scratch folder outside the checkout. After two FAILs on one finding the head chef stops and asks the owner whether the next correction runs in Claude Code (`box-worker`, Opus 5.5 high) or on another named model.
+**Staffing.** A brief's Staffing section sets each role's host, model and effort; dispatch exactly as written and record them in the Result. Host rules (Claude Code, OpenCode) are in [kitchen/README.md](../../kitchen/README.md).
 
 ## Recipients
 
