@@ -123,13 +123,21 @@ function checkOne(repoRoot: string, record: BountyRecord, candidates: readonly M
   // One rev-list answers both questions the check needs: the branch exists,
   // and which candidate commits it reaches — a merge on any other branch is
   // simply absent from the set and is never mentioned. `refs/heads/<name>`
-  // keeps a strange recorded name from reading as a flag.
-  const listed = gitOutcome(repoRoot, ['rev-list', `refs/heads/${branch}`]);
+  // keeps a strange recorded name from reading as a flag. `--parents` adds
+  // each commit's parents to this same one read, so the ancestry questions
+  // below are walked on that output and cost no extra Git start (BT44).
+  const listed = gitOutcome(repoRoot, ['rev-list', '--parents', `refs/heads/${branch}`]);
   if (listed.status !== 0 || listed.error !== undefined) {
     emit(`${record.id} — a merged solution cannot be recognised: ${branch}, the branch it was created on, is gone or unreadable`);
     return;
   }
-  const onBranch = new Set(listed.stdout.split('\n').map(line => line.trim()).filter(line => line !== ''));
+  const parents = new Map<string, readonly string[]>();
+  for (const line of listed.stdout.split('\n')) {
+    const columns = line.trim().split(' ').filter(column => column !== '');
+    if (columns.length === 0) continue;
+    parents.set(columns[0]!, columns.slice(1));
+  }
+  const onBranch: ReadonlySet<string> = new Set(parents.keys());
   // Being on the branch is not landing (BT44): a candidate counts only when
   // it is new work on top of the commit the bounty was posted on — it must
   // descend from that base (the same descent `collect` demands before it
@@ -139,14 +147,14 @@ function checkOne(repoRoot: string, record: BountyRecord, candidates: readonly M
   // close the bounty and fire the pay message for work that added nothing.
   // The base is the publication's commit for a history post, else the
   // record's base commit; a record that can name neither keeps the plain
-  // membership check. A candidate whose commit is not a local object fails
-  // the first probe by Git's own refusal and is skipped.
+  // membership check. A candidate whose commit is not reachable from the
+  // branch fails the descent walk by absence and is skipped.
   const base = record.github?.kind === 'history' ? record.github.commit : baseCommitOf(record);
   const eligible = base === null
     ? candidates
     : candidates.filter(candidate =>
-      gitOutcome(repoRoot, ['merge-base', '--is-ancestor', base, candidate.commit]).status === 0
-      && gitOutcome(repoRoot, ['merge-base', '--is-ancestor', candidate.commit, base]).status !== 0);
+      reachesThrough(parents, candidate.commit, base)
+      && !reachesThrough(parents, base, candidate.commit));
   const merged = eligible.filter(candidate => onBranch.has(candidate.commit));
   if (merged.length === 0) return;
 
@@ -161,6 +169,25 @@ function checkOne(repoRoot: string, record: BountyRecord, candidates: readonly M
   // first-parent history wins — the deepest entry, furthest from the tip.
   entries.sort((a, b) => (chainIndex.get(b.merge) ?? chain.length) - (chainIndex.get(a.merge) ?? chain.length));
   closeOne(repoRoot, record, branch, entries[0]!.candidate, entries[0]!.merge);
+}
+
+// Is `older` an ancestor of (or equal to) `newer` — the question
+// `git merge-base --is-ancestor` answers, walked on the branch's own parent
+// map so the scan's single rev-list pays for it. A commit outside the map
+// reaches nothing. Git history is acyclic; the seen set only keeps a corrupt
+// map from looping.
+function reachesThrough(parents: ReadonlyMap<string, readonly string[]>, newer: string, older: string): boolean {
+  if (newer === older) return true;
+  const seen = new Set<string>([newer]);
+  const stack = [...(parents.get(newer) ?? [])];
+  while (stack.length > 0) {
+    const next = stack.pop()!;
+    if (next === older) return true;
+    if (seen.has(next)) continue;
+    seen.add(next);
+    stack.push(...(parents.get(next) ?? []));
+  }
+  return false;
 }
 
 // The commit that carried a solution onto the branch: the commit itself when
