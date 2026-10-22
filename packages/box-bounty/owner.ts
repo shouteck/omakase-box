@@ -17,6 +17,7 @@ import { githubRemotes, repositoryAddress } from './repository.js';
 import { boundAmount } from './format.js';
 import { paymentOf } from './pay.js';
 import { sharePaid } from './chain.js';
+import { solverAccountOr } from './untrusted.js';
 
 // What `allow` prints before it writes: the owner block first — the plain
 // sentences that say what a bounty is, that it is public under the owner's
@@ -441,7 +442,7 @@ function recordPaid(repoRoot: string, id: string, withdraw: boolean): string {
   // `paid` chain event carrying only amount, whose word and the withdrawal
   // mark — never the solver, never the link, nothing to the issue.
   sharePaid(repoRoot, record, amount, withdraw);
-  const solver = payment.solver ?? 'the solver';
+  const solver = solverAccountOr(payment.solver, 'the solver');
   return withdraw
     ? `${id}: the paid record is withdrawn — $${amount} owed to ${solver} reads as owed again; the record keeps both events.`
     : `${id}: paid $${amount} to ${solver}, recorded ${at} — the owner's word on the record; the tool never checked and never moved money.`;

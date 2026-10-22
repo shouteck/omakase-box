@@ -60,6 +60,10 @@ export const solverBlock = (source: ForeignSource, lines: readonly string[], ind
 // stranger's text.
 const LOGIN_SHAPE = /^[a-z\d][a-z\d-]{0,38}(?:\[bot\])?$/i;
 export const solverAccount = (name: string): string => LOGIN_SHAPE.test(name) ? name : quoteForeign(name);
+/** The same for a name a record may lack: `absent` is the tool's own words
+    for the missing name and prints as it is. */
+export const solverAccountOr = (name: string | null | undefined, absent: string): string =>
+  name === null || name === undefined ? absent : solverAccount(name);
 
 // `--json` provenance, additive: each document ends with `foreignFields`,
 // one `{field, source}` entry per field whose text a stranger wrote — the

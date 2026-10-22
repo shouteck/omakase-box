@@ -261,7 +261,12 @@ so the footer appears once. The frame follows RFC 7468's begin/end armour
 and mail's per-line quote prefix, at one line each. Another account's
 comment prints the same way under `status --comments`, behind
 `other account |`. A large change prints its list of changed files first,
-in the same block; `look <n> --full` prints the whole diff.
+in the same block; `look <n> --full` prints the whole diff. A solver's
+account name, wherever a line names it (a solution, a payment owed or
+recorded, the owner's pay message, `config set paid`), prints as it is in
+GitHub's login shape and quoted like any other stranger's text otherwise,
+since a record read back from the store or a shared chain is not
+shape-checked.
 
 `look <n> --export` is the quarantined reading path: it writes the whole
 change to `.box/local/solutions/<id>-<n>.diff` and a manifest beside it

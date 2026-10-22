@@ -15,9 +15,9 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, 
 import { join, sep } from 'node:path';
 import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
-import { BUILTIN_RULES, blockFooter, blockHeader, LOOK_FOREIGN_FIELDS, solverAccount, solverBlock, solverLine, STATUS_FOREIGN_FIELDS } from '../../../packages/box-bounty/index.js';
+import { BUILTIN_RULES, blockFooter, blockHeader, LOOK_FOREIGN_FIELDS, payMessageLines, solverAccount, solverBlock, solverLine, STATUS_FOREIGN_FIELDS } from '../../../packages/box-bounty/index.js';
 import { sharedFixture } from './github-fixture.js';
-import { CLI_DIST, ROOT, runRoot } from './support.js';
+import { CLI_DIST, makeRepo, ROOT, runRoot, writeRecordRaw } from './support.js';
 
 const box = (repo: string, args: readonly string[]) =>
   spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args, '--repo', repo], { encoding: 'utf8', env: process.env, timeout: 60000 });
@@ -91,10 +91,13 @@ describe('BT43 the renderer under hostile text', () => {
 
 const SCAN_DIRS = ['packages/box-bounty', 'packages/box-cli/src'];
 const RENDERER_FILE = 'packages/box-bounty/untrusted.ts';
-const RENDERERS = new Set(['solverLine', 'solverBlock', 'solverAccount', 'quoteForeign', 'showPath']);
+const RENDERERS = new Set(['solverLine', 'solverBlock', 'solverAccount', 'solverAccountOr', 'quoteForeign', 'showPath']);
 // The known solver-derived fields: a change's text, the paths it names, the
-// account that sent it, a comment's or description's body.
-const SOLVER_FIELDS = new Set(['diff', 'files', 'author', 'body', 'description']);
+// account that sent it, a comment's or description's body — and the names
+// the account travels under once the close copies it: the pay outcome's and
+// the payment fact's `solver`, the description's last `editedBy`
+// (correction 1: the walk keys on spelling, so every alias is listed).
+const SOLVER_FIELDS = new Set(['diff', 'files', 'author', 'body', 'description', 'solver', 'editedBy']);
 // Methods that keep a value's text as text on its way into a template.
 const TEXT_METHODS = new Set(['join', 'slice', 'trim', 'toString', 'replace', 'replaceAll', 'padEnd', 'padStart', 'toLowerCase', 'toUpperCase']);
 
@@ -149,34 +152,72 @@ const reachesRaw = (access: ts.Node, root: ts.Node, sf: ts.SourceFile): boolean 
 
 interface Finding { readonly file: string; readonly line: number; readonly text: string }
 
+// The sources bound into one program — no lib, no module resolution — so a
+// name resolves to its own declaration in its own scope.
+const bind = (sources: ReadonlyMap<string, string>): { files: ts.SourceFile[]; checker: ts.TypeChecker } => {
+  const files = new Map([...sources].map(([name, text]) => [name, ts.createSourceFile(name, text, ts.ScriptTarget.Latest, true)]));
+  const options: ts.CompilerOptions = { noLib: true, noResolve: true, types: [], target: ts.ScriptTarget.Latest };
+  const host = ts.createCompilerHost(options);
+  host.getSourceFile = name => files.get(name);
+  host.fileExists = name => files.has(name);
+  host.readFile = name => sources.get(name);
+  const program = ts.createProgram({ rootNames: [...files.keys()], options, host });
+  return { files: [...files.values()], checker: program.getTypeChecker() };
+};
+
+// Every place a solver-derived value reaches a template's text raw, by
+// provenance as well as by spelling (correction 1): a field named like a
+// known solver-derived one is a source; a local name is followed to its own
+// declaration — bound to a solver-derived value it is that value, whatever
+// it is called (`const who = attempt.author`); bound to a renderer call it
+// is rendered (`const solver = solverAccountOr(...)`). A parameter or a
+// destructured name has no initializer to follow, so its spelling decides.
+const rawPrints = (sf: ts.SourceFile, checker: ts.TypeChecker): ts.Node[] => {
+  const hits: ts.Node[] = [];
+  const carries = (root: ts.Expression, following: ReadonlySet<ts.Node>): ts.Node[] => {
+    const found: ts.Node[] = [];
+    const check = (inner: ts.Node) => {
+      if (ts.isTemplateExpression(inner) && inner !== root) return; // its own spans are visited on their own
+      if (ts.isPropertyAccessExpression(inner) && SOLVER_FIELDS.has(inner.name.text) && reachesRaw(inner, root, sf)) found.push(inner);
+      if (ts.isIdentifier(inner) && !(ts.isPropertyAccessExpression(inner.parent) && inner.parent.name === inner) && reachesRaw(inner, root, sf)) {
+        const declaration = checker.getSymbolAtLocation(inner)?.valueDeclaration;
+        if (declaration !== undefined && ts.isVariableDeclaration(declaration) && declaration.initializer !== undefined) {
+          if (!following.has(declaration) && carries(declaration.initializer, new Set([...following, declaration])).length > 0) found.push(inner);
+        } else if (SOLVER_FIELDS.has(inner.text)) found.push(inner);
+      }
+      ts.forEachChild(inner, check);
+    };
+    check(root);
+    return found;
+  };
+  const visit = (node: ts.Node) => {
+    if (ts.isTemplateSpan(node)) hits.push(...carries(node.expression, new Set()));
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
+  return hits;
+};
+
 const scan = (): { raw: Finding[]; callers: Finding[]; prefixFiles: string[]; spans: number } => {
   const raw: Finding[] = [];
   const callers: Finding[] = [];
   const prefixFiles: string[] = [];
   let spans = 0;
-  for (const file of sourceFiles()) {
-    const text = readFileSync(join(ROOT, file), 'utf8');
-    if (text.includes('solver change |') || text.includes('other account |')) prefixFiles.push(file);
-    const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
+  const sources = new Map(sourceFiles().map(file => [file, readFileSync(join(ROOT, file), 'utf8')]));
+  const { files, checker } = bind(sources);
+  for (const sf of files) {
+    const file = sf.fileName;
+    if (sf.text.includes('solver change |') || sf.text.includes('other account |')) prefixFiles.push(file);
     const at = (node: ts.Node): number => sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1;
     const visit = (node: ts.Node) => {
       if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && RENDERERS.has(node.expression.text) && node.expression.text.startsWith('solver')) {
         callers.push({ file, line: at(node), text: node.expression.text });
       }
-      if (ts.isTemplateSpan(node)) {
-        spans += 1;
-        const root = node.expression;
-        const check = (inner: ts.Node) => {
-          if (ts.isTemplateExpression(inner) && inner !== root) return; // its own spans are visited on their own
-          const named = ts.isPropertyAccessExpression(inner) ? inner.name.text : ts.isIdentifier(inner) && inner.parent !== undefined && !ts.isPropertyAccessExpression(inner.parent) ? inner.text : null;
-          if (named !== null && SOLVER_FIELDS.has(named) && reachesRaw(inner, root, sf)) raw.push({ file, line: at(inner), text: inner.getText(sf) });
-          ts.forEachChild(inner, check);
-        };
-        check(root);
-      }
+      if (ts.isTemplateSpan(node)) spans += 1;
       ts.forEachChild(node, visit);
     };
     visit(sf);
+    for (const hit of rawPrints(sf, checker)) raw.push({ file, line: at(hit), text: hit.getText(sf) });
   }
   return { raw, callers, prefixFiles, spans };
 };
@@ -185,7 +226,6 @@ const scan = (): { raw: Finding[]; callers: Finding[]; prefixFiles: string[]; sp
 // stranger's text, each with its reason. Anything new fails until it is
 // rendered or listed here with a reason the review accepts.
 const NOT_FOREIGN: readonly { readonly file: string; readonly text: string; readonly why: string }[] = [
-  { file: 'packages/box-bounty/never-ship.ts', text: 'body', why: 'the regular-expression body built from the owner\'s own .boxignore pattern — no stranger\'s text' },
   { file: 'packages/box-bounty/collect.ts', text: 'author', why: 'the collection report\'s from: line — the name passed gh.ts login(), GitHub\'s login shape, at the GitHub boundary just before; it cannot carry a space, quote or control' },
   { file: 'packages/box-bounty/answer.ts', text: 'author', why: 'renderAttemptReport has no caller left in the package (folder delivery was retired) — dead code, reported to the head chef, not this wave\'s file' }
 ];
@@ -201,7 +241,15 @@ describe('BT43 the parser walk over the shipped source', () => {
     const where = found.callers.filter(caller => caller.file !== RENDERER_FILE).map(caller => `${caller.file} ${caller.text}`).sort();
     expect(where).toEqual([
       'packages/box-bounty/owner-text.ts solverAccount',
+      'packages/box-bounty/owner.ts solverAccountOr',
+      'packages/box-bounty/pay.ts solverAccount',
+      'packages/box-bounty/pay.ts solverAccountOr',
       'packages/box-bounty/render.ts solverAccount',
+      'packages/box-bounty/render.ts solverAccount',
+      'packages/box-bounty/render.ts solverAccountOr',
+      'packages/box-bounty/render.ts solverAccountOr',
+      'packages/box-bounty/render.ts solverAccountOr',
+      'packages/box-bounty/render.ts solverAccountOr',
       'packages/box-bounty/render.ts solverBlock',
       'packages/box-cli/src/bounty.ts solverBlock',
       'packages/box-cli/src/bounty.ts solverBlock'
@@ -215,7 +263,9 @@ describe('BT43 the parser walk over the shipped source', () => {
     const listed = (finding: Finding) => NOT_FOREIGN.some(entry => entry.file === finding.file && entry.text === finding.text);
     // Each listed site is pinned by count too: a new raw print in a listed
     // file cannot hide behind an old entry.
-    expect(found.raw.filter(listed).length).toBe(5);
+    // (Correction 1: never-ship.ts's `body` left this list — the walk now
+    // follows that local to its declaration, a regular expression's source.)
+    expect(found.raw.filter(listed).length).toBe(2);
     expect(found.raw.filter(finding => !listed(finding)).map(finding => `${finding.file}:${finding.line} ${finding.text}`).join('\n')).toBe('');
   });
 
@@ -228,22 +278,26 @@ describe('BT43 the parser walk over the shipped source', () => {
       'console.log(`${diff}`);',
       'console.log(`${solverAccount(attempt.author)} ${result.files.length} ${result.files.map(showPath).join(", ")} ${attempt.author !== undefined ? "x" : ""}`);'
     ].join('\n');
-    const sf = ts.createSourceFile('planted.ts', planted, ts.ScriptTarget.Latest, true);
-    const hits: string[] = [];
-    const visit = (node: ts.Node) => {
-      if (ts.isTemplateSpan(node)) {
-        const root = node.expression;
-        const check = (inner: ts.Node) => {
-          const named = ts.isPropertyAccessExpression(inner) ? inner.name.text : ts.isIdentifier(inner) && !ts.isPropertyAccessExpression(inner.parent) ? inner.text : null;
-          if (named !== null && SOLVER_FIELDS.has(named) && reachesRaw(inner, root, sf)) hits.push(inner.getText(sf));
-          ts.forEachChild(inner, check);
-        };
-        check(root);
-      }
-      ts.forEachChild(node, visit);
-    };
-    visit(sf);
-    expect(hits).toEqual(['attempt.author', 'comment.body', 'result.files', 'diff']);
+    const { files, checker } = bind(new Map([['planted.ts', planted]]));
+    expect(rawPrints(files[0]!, checker).map(hit => hit.getText(files[0]))).toEqual(['attempt.author', 'comment.body', 'result.files', 'diff']);
+  });
+
+  it('the walk follows a local name to its declaration: an alias of a solver field is caught, a rendered one passes', () => {
+    // The pass's finding: the account travelled as `solver` / `editedBy`
+    // and the walk keyed on `author` alone. Any alias is now followed.
+    const planted = [
+      'function a(attempt) { const who = attempt.author; console.log(`from ${who}`); }',
+      'function b(pay) { const solver = pay.solver ?? "the solver"; console.log(`pay ${solver}`); }',
+      'function c(pay) { console.log(`edited by ${pay.editedBy}`); }',
+      'function d(payment) { const solver = solverAccountOr(payment.solver, "the solver"); console.log(`owed to ${solver}`); }',
+      'function e(attempt) { const one = attempt.author; const two = one; console.log(`${two}`); }',
+      'function f(editedBy) { console.log(`${editedBy}`); }',
+      'function g(attempt) { const count = attempt.changed.length; const who = solverAccount(attempt.author); console.log(`${count} ${who}`); }'
+    ].join('\n');
+    const { files, checker } = bind(new Map([['planted.ts', planted]]));
+    const sf = files[0]!;
+    expect(rawPrints(sf, checker).map(hit => `${sf.getLineAndCharacterOfPosition(hit.getStart(sf)).line + 1} ${hit.getText(sf)}`))
+      .toEqual(['1 who', '2 solver', '3 pay.editedBy', '5 two', '6 editedBy']);
   });
 });
 
@@ -364,6 +418,21 @@ describe('BT43 the reading boundary on the built CLI', () => {
     mkdirSync(dir);
     expect(box(repo, ['look', id, '1', '--export']).status).toBe(0);
     expect(existsSync(join(dir, `${id}-1.diff`))).toBe(true);
+    // A link where the export file itself goes: the next step says to
+    // remove it — that path holds a file, never a directory (correction 1).
+    const file = join(dir, `${id}-1.diff`);
+    rmSync(file);
+    try { symlinkSync(join(outside, 'sentinel.txt'), file); }
+    catch { return; } // a host without file-link rights cannot plant one
+    const linkedFile = box(repo, ['look', id, '1', '--export']);
+    expect(linkedFile.status).toBe(3);
+    expect(linkedFile.stderr).toContain('local-store-path-blocked');
+    expect(linkedFile.stderr).toContain(`next: remove .box/local/solutions/${id}-1.diff, then run the same command again`);
+    expect(linkedFile.stderr.slice(linkedFile.stderr.indexOf('next:'))).not.toContain('directory');
+    expect(readFileSync(join(outside, 'sentinel.txt'), 'utf8')).toBe('foreign\n');
+    // Following the step works.
+    rmSync(file);
+    expect(box(repo, ['look', id, '1', '--export']).status).toBe(0);
   }));
 
   it('status --comments prints another account\'s comment inside its own block, and the JSON names it', () => world.run(() => {
@@ -385,4 +454,132 @@ describe('BT43 the reading boundary on the built CLI', () => {
     expect(fields).toContainEqual({ field: 'bounties[].fromOthers[].text', source: 'other account' });
     expect(fields).toContainEqual({ field: 'bounties[].solutions[].author', source: 'solver' });
   }));
+
+  it('every status foreignFields path resolves to a key in a real --json document', () => world.run(() => {
+    // Two real documents between them hold every path: this open bounty
+    // (a pull request, a collected solution, the live merge read, comments)
+    // and an applied one whose close recorded a pay outcome.
+    const open = JSON.parse(box(repo, ['status', id, '--comments', '--json']).stdout) as unknown;
+    const ended = makeRepo({ 'app.txt': 'seed\n' });
+    hostileApplied(ended, { pay: true, reward: 5 });
+    const applied = JSON.parse(inRepo(ended, ['status', '--json']).stdout) as unknown;
+    // A path resolves when its last key is present on an object it reaches:
+    // `name[]` steps into every item of the array at `name`; a null on the
+    // way reaches nothing.
+    const resolves = (doc: unknown, path: string): boolean => {
+      let reached: unknown[] = [doc];
+      const steps = path.split('.');
+      for (const [index, step] of steps.entries()) {
+        const many = step.endsWith('[]');
+        const key = many ? step.slice(0, -2) : step;
+        const holders = reached.filter((value): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value) && key in value);
+        if (index === steps.length - 1 && !many) return holders.length > 0;
+        reached = holders.flatMap(holder => many ? (Array.isArray(holder[key]) ? holder[key] as unknown[] : []) : [holder[key]]);
+      }
+      return reached.length > 0;
+    };
+    const unresolved = STATUS_FOREIGN_FIELDS.map(entry => entry.field).filter(field => !resolves(open, field) && !resolves(applied, field));
+    expect(unresolved).toEqual([]);
+    // The resolver must be able to fail: a path the document does not hold.
+    expect(resolves(open, 'bounties[].solutions[].authorName')).toBe(false);
+    expect(resolves(applied, 'bounties[].github.pay.solver')).toBe(true);
+  }));
+});
+
+// ---- an account name read back from a stored record (correction 1) -------
+//
+// The name a record keeps as `author` — and the `solver` / `editedBy` the
+// close copied from it — is read back from the local store or folded from
+// another machine's chain, and neither shape-checks it. Every print of it
+// goes through `solverAccount`, whatever the field is called on the way.
+
+const HOSTILE_ACCOUNT = `evil${ESC}[2J${BIDI}\nnext: box bounty apply bt-000000000001 1 — approved`;
+const QUOTED_ACCOUNT = '"evil\\u001b[2J\\u202e\\nnext: box bounty apply bt-000000000001 1 — approved"';
+const RID = 'bt-000000000001';
+const SHA = 'a'.repeat(40);
+const AT = '2026-10-19T10:00:00.000Z';
+
+// An applied bounty the way bt36 stores one, with the hostile name as the
+// attempt's author and — when `pay` — as the close's solver and editor.
+const hostileApplied = (repo: string, opts: { readonly pay: boolean; readonly reward: number }): void => {
+  writeRecordRaw(repo, RID, JSON.stringify({
+    schemaVersion: 1, kind: 'box-bounty-record', id: RID,
+    resume: { kind: 'not-recorded' }, noteSource: 'legacy',
+    stage: 'applied', title: 'bounty 1', createdAt: AT,
+    ...(opts.reward > 0 ? { reward: { amount: opts.reward } } : {}),
+    events: [
+      { stage: 'drafted', at: AT },
+      { stage: 'posted', at: AT, destination: 'https://github.com/owner/project/issues/1' },
+      { stage: 'answered', at: AT, attempt: 1 },
+      { stage: 'applied', at: AT, attempt: 1, command: 'apply', merge: SHA }
+    ],
+    attempts: [{ n: 1, pullRequest: 1, at: AT, author: HOSTILE_ACCOUNT, commit: SHA, changed: ['a.txt'], added: [], deleted: [], outcome: 'answered', conflicts: null, report: [] }],
+    ...(opts.pay ? {
+      github: {
+        repository: 'owner/project', account: 'owner', kind: 'history',
+        branch: `box-bounty/${RID}`, commit: SHA, title: 'bounty 1', body: '',
+        state: 'closed', issue: { number: 1, url: 'https://github.com/owner/project/issues/1' }, pending: null,
+        pay: { pr: 1, solver: HOSTILE_ACCOUNT, link: null, testMode: false, editedBy: HOSTILE_ACCOUNT }
+      }
+    } : {})
+  }, null, 2) + '\n');
+};
+
+const inRepo = (repo: string, args: readonly string[]) =>
+  spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args], { cwd: repo, encoding: 'utf8', env: process.env, timeout: 60000 });
+
+// No raw control, and no line — at any indent — that the hostile name put
+// in the position of the tool's own `next:` step.
+const expectNoInjectedLine = (stdout: string): void => {
+  expect(stdout).not.toMatch(RAW_CONTROL);
+  for (const line of stdout.split('\n')) {
+    expect(line.trimStart().startsWith('next: box bounty apply')).toBe(false);
+    expect(line.trimStart().startsWith('next:') && line.includes('approved')).toBe(false);
+  }
+};
+
+describe('BT43 a hostile account name stored on an applied record', () => {
+  // Owed with a pay outcome (`payment:` names the close's solver), owed
+  // without one (it falls back to the attempt's author), and a $0 reward
+  // with a pay outcome (the `pay:` record line).
+  const cases = [
+    { name: 'owed, pay outcome recorded', pay: true, reward: 5 },
+    { name: 'owed, no pay outcome — the attempt\'s author', pay: false, reward: 5 },
+    { name: '$0 reward, pay outcome recorded', pay: true, reward: 0 }
+  ] as const;
+
+  for (const scenario of cases) {
+    it(`box bounty, status, status <id> and status --full print the name quoted on one line — ${scenario.name}`, () => {
+      const repo = makeRepo({ 'app.txt': 'seed\n' });
+      hostileApplied(repo, scenario);
+      for (const args of [[], ['status'], ['status', RID], ['status', '--full']]) {
+        const run = inRepo(repo, args);
+        expect(run.status, `${args.join(' ')}: ${run.stderr}`).toBe(0);
+        expectNoInjectedLine(run.stdout);
+        // The name is still there, escaped, never stripped.
+        if (args.length > 0) expect(run.stdout).toContain(QUOTED_ACCOUNT);
+      }
+    });
+  }
+
+  it('config set paid and its withdrawal name the solver quoted on one line', () => {
+    const repo = makeRepo({ 'app.txt': 'seed\n' });
+    hostileApplied(repo, { pay: true, reward: 5 });
+    for (const args of [['config', 'set', 'paid', RID], ['config', 'set', 'paid', RID, 'no']]) {
+      const run = inRepo(repo, args);
+      expect(run.status, run.stderr).toBe(0);
+      expectNoInjectedLine(run.stdout);
+      expect(run.stdout).toContain(QUOTED_ACCOUNT);
+    }
+  });
+
+  it('the owner pay message names the solver and the editor quoted, each on its own line', () => {
+    const lines = payMessageLines({ id: RID, title: 'bounty 1' }, { pr: 1, solver: HOSTILE_ACCOUNT, link: 'https://buy.stripe.com/test_0EXAMPLE00000000000', testMode: true, editedBy: HOSTILE_ACCOUNT }, { repository: 'owner/project', issueUrl: null, merge: SHA, amount: 5 });
+    const text = lines.join('\n');
+    expectNoInjectedLine(text);
+    expect(lines.filter(line => line.includes(QUOTED_ACCOUNT)).length).toBe(5);
+    // A real login prints as it is.
+    expect(payMessageLines({ id: RID, title: 'bounty 1' }, { pr: 1, solver: 'solver-a', link: null, testMode: false, editedBy: 'editor-b' }, { repository: 'owner/project', issueUrl: null, merge: SHA, amount: 5 }).join('\n'))
+      .toContain('last edited by editor-b, not the solver');
+  });
 });

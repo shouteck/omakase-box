@@ -8,7 +8,7 @@ import { existsSync,mkdirSync,readFileSync,writeFileSync } from 'node:fs';
 import { BountyRefused } from './errors.js';
 import { join } from 'node:path';
 import { quoteForeign,showPath } from './notice.js';
-import { solverAccount,solverBlock } from './untrusted.js';
+import { solverAccount,solverAccountOr,solverBlock } from './untrusted.js';
 import { boundAmount } from './format.js';
 import { dryMergeOnto,GIT_LEAST } from './git.js';
 import { GH_LEAST } from './gh.js';
@@ -553,9 +553,9 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
     const payment = paymentOf(record);
     const paid = payment !== null
       ? payment.paidAt === null
-        ? `; payment owed $${payment.amount} to ${payment.solver ?? 'the solver'}`
+        ? `; payment owed $${payment.amount} to ${solverAccountOr(payment.solver, 'the solver')}`
         : `; paid $${payment.amount} on ${validAt(payment.paidAt)?.slice(0, 10) ?? 'an unrecorded date'}`
-      : pay !== undefined ? `; pay $${boundAmount(record) ?? '?'} to ${pay.solver ?? 'the solver'}` : '';
+      : pay !== undefined ? `; pay $${boundAmount(record) ?? '?'} to ${solverAccountOr(pay.solver, 'the solver')}` : '';
     // A hand merge the owner's decision would have held (ask/off) is marked
     // where it is read back: the owner was not asked before that merge (BT13).
     const unasked = record.events.some(event => event.stage === 'applied' && event.unasked === true) ? ' — the owner was not asked before the merge' : '';
@@ -586,7 +586,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
       // posted from another machine is recorded on that machine — the
       // shared row is read-only here, so no `config set paid` is quoted.
       if (payment !== null) {
-        const solver = payment.solver ?? 'the solver';
+        const solver = solverAccountOr(payment.solver, 'the solver');
         const link = payment.link === 'recorded' ? 'at the link they supplied'
           : payment.link === 'none' ? 'no recognised payment link was given'
           : 'no payment link recorded';
@@ -594,7 +594,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
           ? `  payment: owed $${payment.amount} to ${solver} (${link})${entry.record.shared === true ? ' — recording happens on the machine that posted this bounty' : ` — the owner records it: box bounty config set paid ${entry.record.id}`}`
           : `  payment: paid $${payment.amount} on ${validAt(payment.paidAt)?.slice(0, 10) ?? 'an unrecorded date'} — the owner's word, recorded`);
       } else if (pay !== undefined) {
-        lines.push(`  pay: ${pay.pr !== null ? `pull request ${pay.pr}` : 'the returned folder'}${pay.solver !== null ? ` by ${pay.solver}` : ''} was merged — pay $${boundAmount(entry.record) ?? '?'} to ${pay.solver ?? 'the solver'}${pay.link !== null ? ' at the link they supplied' : ' — no recognised payment link was given'} — a record, not a reminder`);
+        lines.push(`  pay: ${pay.pr !== null ? `pull request ${pay.pr}` : 'the returned folder'}${pay.solver !== null ? ` by ${solverAccount(pay.solver)}` : ''} was merged — pay $${boundAmount(entry.record) ?? '?'} to ${solverAccountOr(pay.solver, 'the solver')}${pay.link !== null ? ' at the link they supplied' : ' — no recognised payment link was given'} — a record, not a reminder`);
       }
       // The finding stays visible after the bounty ends — the owner learns a
       // flagged file sat in their working tree even when the agent stopped it.

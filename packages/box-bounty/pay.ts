@@ -8,6 +8,7 @@
 
 import { boundAmount } from './format.js';
 import type { BountyRecord } from './record.js';
+import { solverAccount, solverAccountOr } from './untrusted.js';
 
 // What a recognised payment link looks like today, per Stripe's own
 // documentation (payment links are `https://buy.stripe.com/<id>`; test-mode
@@ -106,7 +107,9 @@ export function payToFactShape(value: unknown): value is PayToFact {
 // end of its work, and that is all the tool does.
 export function payMessageLines(record: { id: string; title: string }, pay: PayOutcome, opts: { repository: string; issueUrl: string | null; merge: string | undefined; amount: number; unasked?: boolean; partial?: readonly string[]; firstMerge?: boolean }): string[] {
   const prUrl = pay.pr !== null ? `https://github.com/${opts.repository}/pull/${pay.pr}` : null;
-  const solver = pay.solver ?? 'an account whose name could not be read';
+  // The names are read back from the record, which another machine's chain
+  // or the local store may have filled: printed through the renderer (BT43).
+  const solver = solverAccountOr(pay.solver, 'an account whose name could not be read');
   const owner = [
     `The bounty "${record.title}" ended with a solution merged into your code — it was written by ${solver}.`,
     `The bounty stated $${opts.amount}, which you pay by hand — the tool never moves money.`
@@ -120,7 +123,7 @@ export function payMessageLines(record: { id: string; title: string }, pay: PayO
   } else {
     owner.push(`The merged solution gave no usable payment link${prUrl !== null ? ` — the change is at ${prUrl}` : ''}.`);
   }
-  if (pay.editedBy !== null) owner.push(`The text the payment link was read from was last edited by ${pay.editedBy}, not the solver.`);
+  if (pay.editedBy !== null) owner.push(`The text the payment link was read from was last edited by ${solverAccount(pay.editedBy)}, not the solver.`);
   if (pay.readFailed === true) owner.push('The solver\'s text could not be read again at close — this is what was recorded when it came in.');
   if (opts.unasked === true) owner.push('You were not asked before this merge.');
   if (opts.partial !== undefined && opts.partial.length > 0) owner.push(`Of the files the solution changed, the merge left these as they were: ${opts.partial.join(', ')}.`);

@@ -90,7 +90,10 @@ const SOLUTIONS_DIR = ['.box', 'local', 'solutions'] as const;
 // Each component is walked before anything is written: a link or a
 // non-directory at `.box`, `.box/local` or `.box/local/solutions` — or a
 // non-file where an export goes — is refused, never followed.
-const blocked = (named: string): BountyRefused => new BountyRefused('local-store-path-blocked', `${named} is a link or not what the tool made — an export must be a real file in a real directory inside this checkout; the export was not written; next: remove ${named} or make it a real directory inside this checkout, then run the same command again`);
+// The next step fits what belongs there: a directory component can be
+// replaced by a real directory; the export file itself is only removed —
+// the tool writes it afresh.
+const blocked = (named: string, belongs: 'directory' | 'file'): BountyRefused => new BountyRefused('local-store-path-blocked', `${named} is a link or not what the tool made — an export must be a real file in a real directory inside this checkout; the export was not written; next: ${belongs === 'directory' ? `remove ${named} or make it a real directory inside this checkout` : `remove ${named}`}, then run the same command again`);
 
 export function exportLook(root: string, result: LookResult): LookExport {
   if (result.diff === null) throw new Error('exportLook needs the whole diff — call lookBounty with full: true');
@@ -99,7 +102,7 @@ export function exportLook(root: string, result: LookResult): LookExport {
     dir = join(dir, part);
     const stat = lstatSync(dir, { throwIfNoEntry: false });
     if (stat === undefined) mkdirSync(dir);
-    else if (stat.isSymbolicLink() || !stat.isDirectory()) throw blocked(SOLUTIONS_DIR.slice(0, index + 1).join('/'));
+    else if (stat.isSymbolicLink() || !stat.isDirectory()) throw blocked(SOLUTIONS_DIR.slice(0, index + 1).join('/'), 'directory');
   }
   const base = `${result.record.id}-${result.attempt.n}`;
   const bytes = Buffer.from(result.diff, 'utf8');
@@ -124,7 +127,7 @@ export function exportLook(root: string, result: LookResult): LookExport {
   const place = (name: string, content: Buffer | string): void => {
     const target = join(dir, name);
     const stat = lstatSync(target, { throwIfNoEntry: false });
-    if (stat !== undefined && !stat.isFile()) throw blocked(`${SOLUTIONS_DIR.join('/')}/${name}`);
+    if (stat !== undefined && !stat.isFile()) throw blocked(`${SOLUTIONS_DIR.join('/')}/${name}`, 'file');
     const staging = join(dir, `.${name}.${process.pid}.${Date.now()}.tmp`);
     writeFileSync(staging, content, { flag: 'wx' });
     renameSync(staging, target);
