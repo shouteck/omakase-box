@@ -12,10 +12,11 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
   - a suite.mjs-only change runs at 78 s against the 80 s line;
   - summary.json does not name the files it did not run, and its reason truncates after three paths;
   - the whole-directory path in `suite.mjs` `main()` runs only at `--full`.
-- **Bounty suite under load** (K45): the first `--full` on `875400d` timed out four tests at 30 s with CPU at 96–100 %, then passed on rerun; `1d7a6ff` and `f623b3f` showed the same pattern. The per-test limit has little margin on this host. See also the bt39 flaky line below.
+- **Bounty suite under load** (K45; blocks BT44): the 30 s per-test limit (`scripts/vitest.config.mjs`) has little margin on this host. K45: four timeouts on the first `--full` of `875400d`, CPU at 96–100 %, then a pass on rerun; `1d7a6ff` and `f623b3f` the same. BT44: three verify runs on `e6ef820` (the last with no other kitchen work running) each timed out a different 1–4 tests at 30–37 s, and none passed. See also the bt39 flaky line below. See [BT44](waves/BT44.md).
 
 ## Product
 
+- **A stranger's PR can claim the owner's own later commit** (BT44 pass, existed before BT44): a PR whose head is a commit the owner pushed after the post descends from the base, is new to it and is on the branch, so the bounty closes as an outside solution, and with a reward the pay message would presumably name that PR's `pay-to` (inferred, not observed). Ancestry alone cannot tell it apart; a fix needs another fact, such as the branch not holding the PR's commits when the PR was first seen, or GitHub's merged state (PF4). See [BT44](waves/BT44.md).
 - **From BT43's engineering review (later, not briefed):** (a) deletion as a signed tombstone in the shared-memory chain, so a machine holding an old chain cannot push a forgotten bounty back; it needs a new `forget` command, which is the owner's decision because the owner surface stays `allow`, `deny`, `config`; (b) owner settings signed and their changes logged, shown in `config`; offline they can be tamper-evident, never tamper-proof, and the docs should stop implying more. See [BT43](waves/BT43.md).
 
 - **Flaky product test** (see [K44](waves/K44.md) Close): `tests/box/bounty/bt39.test.ts` "an unchanged pull-request set costs no per-request file calls" failed on the hosted run for documents-only `bf2c815` (expected 10 to be greater than 10: the second status refresh did not re-list) and passed on the same code at `aafaf67`. Likely timing-dependent "new" vs "seen since"; needs a reproduction before a fix.
