@@ -270,7 +270,15 @@ shape-checked. A path the solver chose prints quoted wherever a line of
 the tool's names it — the files a merge left as they were in the owner's
 pay message (`close <id>`, the hook's finish slot) and a conflict list
 included — and `status --full`'s `history:` lines print each stored event
-as JSON with the same characters escaped.
+as JSON with the same characters escaped. Beneath those renderers sits one
+output guard: everything the bounty command writes to standard output or
+standard error, the hook's context text included, passes through the same
+character escapes at the stream, so no raw control, bidirectional override
+or zero-width character reaches a terminal or an agent, whichever line of
+the tool prints it. A `--json` document is the one exception; it is data, and
+`foreignFields` names what a stranger wrote. A refusal or a failure prints
+on one line, a line break inside it written `\n`, except the declared
+multi-line `repository-choice-needed`.
 
 `look <n> --export` is the quarantined reading path: it writes the whole
 change to `.box/local/solutions/<id>-<n>.diff` and a manifest beside it

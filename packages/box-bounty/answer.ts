@@ -335,8 +335,10 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget, 
     // resolution is the agent's own merge, under the owner's own Git.
     const conflicted = new Set(paths.map(path => path.toLowerCase()));
     const clean = deltaPaths.filter(path => !conflicted.has(path.toLowerCase())).sort();
+    // `git log --oneline`'s own form, hash and subject split by a space: the
+    // CLI's output guard escapes a tab like any other control (BT43).
     const commits = base !== null
-      ? gitOutcome(repoRoot, ['log', '--format=%h%x09%s', `${base}..HEAD`, '--', ...paths]).stdout
+      ? gitOutcome(repoRoot, ['log', '--format=%h %s', `${base}..HEAD`, '--', ...paths]).stdout
           .split('\n').map(line => line.trim()).filter(line => line !== '')
       : [];
     return { record, outcome: 'conflict', attempt: attempt.n, conflicts: paths, clean, commits, base: base ?? undefined };
