@@ -12,16 +12,16 @@
 // dropping the descent check (`base` ancestor of candidate) turns the
 // side-branch case red; dropping the novelty check (candidate must not be
 // an ancestor of `base`) turns the zero-change case red. The parent case is
-// caught by both. Positive controls live in bt7b/bt7b-review: the
+// caught by both. Positive controls at the end of this file: the
 // fast-forward land and the ordinary merge commit still close the bounty
-// and name the landing commit — they run in this same suite.
+// and name the landing commit.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import './support.js';
 import { checkMergedSolutions, listGitHubAnswers, loadRecord, postBounty, setMergeNoticeListener } from '../../../packages/box-bounty/index.js';
 import { git, write } from './support.js';
-import { fixture } from './github-fixture.js';
+import { fixture, postedFixture } from './github-fixture.js';
 import type { GhState, GithubFixture } from './github-fixture.js';
 
 const STRIPE_LIVE = 'https://buy.stripe.com/9AQ00deadbeef0000';
@@ -116,4 +116,40 @@ describe('a pull request pointing at history the branch already has closes nothi
     listGitHubAnswers(repo, id);
     expectStaysOpen(context, id, sideTip);
   }, 'Repair app'));
+});
+
+// Positive controls: a pull request that is real new work on the posted
+// commit still closes the bounty once it lands, by either shape of land, and
+// the record names the commit that carried it onto the branch.
+describe('a pull request that descends from the posted commit and lands still closes', () => {
+  const landAndCheck = (context: GithubFixture & { readonly waitingPr: string }, land: (repo: string, head: string) => string): void => {
+    const { repo, id, waitingPr, state } = context;
+    listGitHubAnswers(repo, id);
+    git(repo, ['fetch', 'https://github.com/owner/project.git', waitingPr]);
+    const carrier = land(repo, waitingPr);
+    noticed.length = 0;
+    checkMergedSolutions(repo);
+    const record = loadRecord(repo, id);
+    expect(record.stage).toBe('applied');
+    const event = record.events.at(-1)!;
+    expect(event.command).toBe('merged');
+    expect(event.merge).toBe(carrier);
+    expect(noticed.some(line => line.includes('pull request #1') && line.includes('closed'))).toBe(true);
+    expect(state().issues[0]!.state).toBe('closed');
+  };
+
+  it('a fast-forward land names the solution commit itself', () => postedFixture(context => {
+    landAndCheck(context, (repo, head) => {
+      git(repo, ['merge', '--ff-only', head]);
+      expect(git(repo, ['rev-parse', 'HEAD'])).toBe(head);
+      return head;
+    });
+  }, { collected: false }));
+
+  it('an ordinary merge commit names the merge', () => postedFixture(context => {
+    landAndCheck(context, (repo, head) => {
+      git(repo, ['merge', '--no-ff', '-X', 'theirs', '-m', 'agent merged the solution', head]);
+      return git(repo, ['rev-parse', 'HEAD']);
+    });
+  }, { collected: false }));
 });
