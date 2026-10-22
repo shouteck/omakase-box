@@ -18,7 +18,7 @@ import { realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { gitOutcome,gitProgram } from './git.js';
 import { shipRules } from './never-ship.js';
-import { attemptsOf,dropDurabilityRefs,openRecords,setRecordReadScan,transitionTo } from './record.js';
+import { attemptsOf,baseCommitOf,dropDurabilityRefs,openRecords,setRecordReadScan,transitionTo } from './record.js';
 import type { Attempt,BountyRecord } from './record.js';
 import { syncGitHubDecision } from './close.js';
 import { emitMergeNotice as emit,showPath } from './notice.js';
@@ -130,7 +130,24 @@ function checkOne(repoRoot: string, record: BountyRecord, candidates: readonly M
     return;
   }
   const onBranch = new Set(listed.stdout.split('\n').map(line => line.trim()).filter(line => line !== ''));
-  const merged = candidates.filter(candidate => onBranch.has(candidate.commit));
+  // Being on the branch is not landing (BT44): a candidate counts only when
+  // it is new work on top of the commit the bounty was posted on — it must
+  // descend from that base (the same descent `collect` demands before it
+  // records a pull request) and must not already be the base or part of its
+  // history. Otherwise a pull request pointing at a commit the branch
+  // already contains — the posted commit itself, or anything older — would
+  // close the bounty and fire the pay message for work that added nothing.
+  // The base is the publication's commit for a history post, else the
+  // record's base commit; a record that can name neither keeps the plain
+  // membership check. A candidate whose commit is not a local object fails
+  // the first probe by Git's own refusal and is skipped.
+  const base = record.github?.kind === 'history' ? record.github.commit : baseCommitOf(record);
+  const eligible = base === null
+    ? candidates
+    : candidates.filter(candidate =>
+      gitOutcome(repoRoot, ['merge-base', '--is-ancestor', base, candidate.commit]).status === 0
+      && gitOutcome(repoRoot, ['merge-base', '--is-ancestor', candidate.commit, base]).status !== 0);
+  const merged = eligible.filter(candidate => onBranch.has(candidate.commit));
   if (merged.length === 0) return;
 
   // A solution landed — finding which commit carried it spends more git,
@@ -190,7 +207,10 @@ function closeOne(repoRoot: string, record: BountyRecord, branch: string, candid
   // be asked — or nothing was written, or a merge wait still stood — the
   // owner was not asked before it, and the closing output, status and the
   // pay message all say so. The merge still closes the bounty: closing
-  // never waits (BT13).
+  // never waits (BT13). One conservative edge, also recorded at BT13: a
+  // merge the owner answered whose tool apply then conflicted — the agent
+  // hand-merging afterwards — still reads "not asked", because the wait
+  // was never released; wrong but conservative on that narrow path.
   const decision = readDecision(repoRoot);
   const unasked = record.waiting?.for === 'merge' || decision.decision !== 'allowed';
   const label = candidate.attempt !== undefined ? `solution ${candidate.attempt.n}` : `a solution from pull request #${candidate.pr}`;
@@ -223,8 +243,10 @@ function closeOne(repoRoot: string, record: BountyRecord, branch: string, candid
 }
 
 // Every path the landed merge changed, lowercase — `merge^1..merge` under
-// the repository's own view. An empty set means the diff could not be read:
-// the partial fact then says nothing rather than guess.
+// the repository's own view. An empty set means the diff could not be read
+// (or nothing was touched); on a failed read the partial fact in closeOne
+// then names EVERY solution path as left-as-were — wrong but conservative
+// on a rare diff failure, recorded at BT13 and kept deliberately.
 function mergeTouched(repoRoot: string, merge: string): ReadonlySet<string> {
   const diff = gitOutcome(repoRoot, ['diff', '--name-only', '-z', '--no-renames', `${merge}^1`, merge]);
   if (diff.status !== 0 || diff.error !== undefined) return new Set();
