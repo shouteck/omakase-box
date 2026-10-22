@@ -318,7 +318,7 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget, 
       .split('\0').filter(line => line !== '').sort();
     const aborted = ownerGitOutcome(repoRoot, ['merge', '--abort'], ownerAttrs);
     if (aborted.status !== 0) {
-      throw new GitFailed(`git merge --abort failed in ${repoRoot} after a conflict in ${paths.join(', ')}: ${aborted.stderr.trim()} — resolve the merge state by hand`);
+      throw new GitFailed(`git merge --abort failed in ${repoRoot} after a conflict in ${paths.map(showPath).join(', ')}: ${aborted.stderr.trim()} — resolve the merge state by hand`);
     }
     restoreBytes(repoRoot, saved);
     // The abort and the byte restore both write the worktree and can leave

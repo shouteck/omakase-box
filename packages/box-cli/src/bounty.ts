@@ -338,7 +338,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         const written = exportLook(root, result);
         console.log(`exported, not printed — the file holds ${SOLVER_WORDS}: ${written.diffPath}`);
         console.log(`  sha256 ${written.sha256}; ${written.fileCount} file(s), ${written.lines} line(s), ${written.bytes} byte(s); manifest ${written.manifestPath}`);
-        console.log('advice only: read the file in a session that has no write access to this checkout, then choose and apply from your own session');
+        console.log('advice only: read the file in a session that has no write access to this checkout, then choose and apply from your own session; the file holds the change\'s raw bytes, so open it as text, not with cat in a terminal');
         console.log(`next: box bounty apply ${id} ${label} chooses this solution; box bounty status ${id} shows what else waits`);
       } else if (result.diff === null) {
         console.log(`${result.files.length} file(s) changed:`);

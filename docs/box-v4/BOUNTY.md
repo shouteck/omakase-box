@@ -266,7 +266,11 @@ account name, wherever a line names it (a solution, a payment owed or
 recorded, the owner's pay message, `config set paid`), prints as it is in
 GitHub's login shape and quoted like any other stranger's text otherwise,
 since a record read back from the store or a shared chain is not
-shape-checked.
+shape-checked. A path the solver chose prints quoted wherever a line of
+the tool's names it — the files a merge left as they were in the owner's
+pay message (`close <id>`, the hook's finish slot) and a conflict list
+included — and `status --full`'s `history:` lines print each stored event
+as JSON with the same characters escaped.
 
 `look <n> --export` is the quarantined reading path: it writes the whole
 change to `.box/local/solutions/<id>-<n>.diff` and a manifest beside it
@@ -274,8 +278,10 @@ change to `.box/local/solutions/<id>-<n>.diff` and a manifest beside it
 and prints only the path, the hash and the counts — no line of the change.
 `.box/local/` is this checkout's own and never ships. The closing line is
 advice, not a control: read the file in a session that has no write access
-to this checkout, then choose and apply from your own. `--export` and
-`--json` do not combine (`json-not-supported`).
+to this checkout, then choose and apply from your own. The file holds the
+change's raw bytes, so the same line says to open it as text, not with
+`cat` in a terminal. `--export` and `--json` do not combine
+(`json-not-supported`).
 
 What this does and does not do: no escaping can make natural language safe
 to read. The block makes it unmissable whose words are whose and keeps a

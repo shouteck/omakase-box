@@ -7,7 +7,7 @@
 import { existsSync,mkdirSync,readFileSync,writeFileSync } from 'node:fs';
 import { BountyRefused } from './errors.js';
 import { join } from 'node:path';
-import { quoteForeign,showPath } from './notice.js';
+import { foreignJson,quoteForeign,showPath } from './notice.js';
 import { solverAccount,solverAccountOr,solverBlock } from './untrusted.js';
 import { boundAmount } from './format.js';
 import { dryMergeOnto,GIT_LEAST } from './git.js';
@@ -245,7 +245,7 @@ export const endedNextStep = (record: BountyRecord): string =>
 // undo has no replacement command).
 const EVENT_COMMAND_VIEW: Record<string, string> = { answer: 'look', reject: 'close', withdraw: 'close', undo: 'revert', confirm: 'post', 'owner answer': 'allow', 'owner allow': 'allow', 'owner ask': 'allow --ask', 'owner off': 'deny', 'owner on': 'allow', 'owner setup': 'config', 'owner summary': 'status --since' };
 const historyJson = (event: StageEvent): string =>
-  JSON.stringify(event.command === undefined || EVENT_COMMAND_VIEW[event.command] === undefined ? event : { ...event, command: EVENT_COMMAND_VIEW[event.command] });
+  foreignJson(event.command === undefined || EVENT_COMMAND_VIEW[event.command] === undefined ? event : { ...event, command: EVENT_COMMAND_VIEW[event.command] });
 
 
 // The reward side of `status`/`config`: what each new bounty on this

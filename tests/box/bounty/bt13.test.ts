@@ -239,7 +239,7 @@ describe('messages meant for the owner', () => {
     expect(status.stdout).toContain('for the owner — pass this on in these words:');
     expect(status.stdout).toContain('The bounty "Repair app" ended with a solution merged into your code');
     expect(status.stdout).toContain('Pay solver at https://buy.stripe.com/test_28E7sLbHrbu70eC5C5afS00');
-    expect(status.stdout).toContain('Of the files the solution changed, the merge left these as they were: app.txt, new-file.txt');
+    expect(status.stdout).toContain('Of the files the solution changed, the merge left these as they were: "app.txt", "new-file.txt"');
     const event = loadRecord(repo, id).events.at(-1);
     expect(event).toMatchObject({ command: 'merged', partial: ['app.txt', 'new-file.txt'] });
     expect(event?.unasked).toBeUndefined(); // allowed — the owner waived asking

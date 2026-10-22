@@ -7,6 +7,7 @@
 // on a merge.
 
 import { boundAmount } from './format.js';
+import { showPath } from './notice.js';
 import type { BountyRecord } from './record.js';
 import { solverAccount, solverAccountOr } from './untrusted.js';
 
@@ -126,7 +127,8 @@ export function payMessageLines(record: { id: string; title: string }, pay: PayO
   if (pay.editedBy !== null) owner.push(`The text the payment link was read from was last edited by ${solverAccount(pay.editedBy)}, not the solver.`);
   if (pay.readFailed === true) owner.push('The solver\'s text could not be read again at close — this is what was recorded when it came in.');
   if (opts.unasked === true) owner.push('You were not asked before this merge.');
-  if (opts.partial !== undefined && opts.partial.length > 0) owner.push(`Of the files the solution changed, the merge left these as they were: ${opts.partial.join(', ')}.`);
+  // The solver chose these names; each is quoted, as merged.ts states the same list (BT43).
+  if (opts.partial !== undefined && opts.partial.length > 0) owner.push(`Of the files the solution changed, the merge left these as they were: ${opts.partial.map(showPath).join(', ')}.`);
   const lines = [
     'for the owner — pass this on in these words:',
     ...owner.map(line => `  ${line}`),

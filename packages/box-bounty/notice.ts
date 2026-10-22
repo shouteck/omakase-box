@@ -19,9 +19,14 @@ export const emitMergeNotice = (line: string): void => { mergeNoticeListener?.(l
 // paragraph separators, the byte-order mark) are escaped the same way, so what
 // is printed is what is there. Every surface uses this one helper.
 const HIDDEN = /[\u007f-\u009f\u00ad\u061c\u180e\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff\ufff9-\ufffb]/g;
-export const quoteForeign = (text: string): string =>
-  JSON.stringify(text).replace(HIDDEN, char => `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`);
+const escapeHidden = (json: string): string => json.replace(HIDDEN, char => `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`);
+export const quoteForeign = (text: string): string => escapeHidden(JSON.stringify(text));
 export const showPath = quoteForeign;
+// The same escapes over a whole stored value printed on a text line: a
+// record's event under `status --full`, which can hold a solver's paths
+// (BT43). Those characters sit only inside the JSON's strings, so the line
+// stays valid JSON that decodes to the same value.
+export const foreignJson = (value: object): string => escapeHidden(JSON.stringify(value));
 
 // The report of facts: who sent the answer and when, the change with counts
 // and lines, the dry merge read, and eager flags — never a verdict. The

@@ -17,6 +17,7 @@ import { githubRemotes, repositoryAddress } from './repository.js';
 import { boundAmount } from './format.js';
 import { paymentOf } from './pay.js';
 import { sharePaid } from './chain.js';
+import { showPath } from './notice.js';
 import { solverAccountOr } from './untrusted.js';
 
 // What `allow` prints before it writes: the owner block first — the plain
@@ -196,7 +197,7 @@ function allowMerge(repoRoot: string, record: BountyRecord, waiting: WaitingFor)
   const result = applyBounty(repoRoot, record.id, bound.n, { answered: true });
   const lines = result.outcome === 'applied'
     ? [`${record.id}: answered once; solution ${bound.n} merged as ${result.mergeCommit}. No repository decision changed.`]
-    : [`${record.id}: answered once; the merge conflicted in ${(result.conflicts ?? []).join(', ')} — worktree and index are exactly as before; the answer stands while the solution and this branch's state are unchanged. No repository decision changed.`];
+    : [`${record.id}: answered once; the merge conflicted in ${(result.conflicts ?? []).map(showPath).join(', ')} — worktree and index are exactly as before; the answer stands while the solution and this branch's state are unchanged. No repository decision changed.`];
   if (result.firstMergeNotice !== undefined) lines.push(result.firstMergeNotice);
   if (result.payMessage !== undefined) lines.push(...result.payMessage);
   return lines.join('\n');
