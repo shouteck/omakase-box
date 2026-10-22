@@ -819,12 +819,13 @@ describe('BT43 a solver\'s file names in the pay message and the history', () =>
 // guard alone would print a name escaped but unquoted.
 
 // Every character the guard escapes, built from code points so this file
-// carries none of them: C0 but the line feed, DEL and C1, the soft hyphen,
+// carries none of them: C0 but the line feed and the tab (the clarification:
+// the owner's own text keeps its tabs), DEL and C1, the soft hyphen,
 // the Arabic letter mark, the Mongolian vowel separator, the zero-width
 // characters and marks, the line and paragraph separators, the bidi
 // embeddings and overrides, the invisible operators and isolates, the BOM
 // and the interlinear annotation marks.
-const GUARDED_RANGES: readonly (readonly [number, number])[] = [[0x00, 0x09], [0x0b, 0x1f], [0x7f, 0x9f], [0xad, 0xad], [0x61c, 0x61c], [0x180e, 0x180e], [0x200b, 0x200f], [0x2028, 0x202e], [0x2060, 0x206f], [0xfeff, 0xfeff], [0xfff9, 0xfffb]];
+const GUARDED_RANGES: readonly (readonly [number, number])[] = [[0x00, 0x08], [0x0b, 0x1f], [0x7f, 0x9f], [0xad, 0xad], [0x61c, 0x61c], [0x180e, 0x180e], [0x200b, 0x200f], [0x2028, 0x202e], [0x2060, 0x206f], [0xfeff, 0xfeff], [0xfff9, 0xfffb]];
 const GUARDED: ReadonlySet<string> = new Set(GUARDED_RANGES.flatMap(([low, high]) => Array.from({ length: high - low + 1 }, (_, i) => String.fromCharCode(low + i))));
 const rawGuarded = (text: string): string[] => [...text].filter(char => GUARDED.has(char)).map(char => char.charCodeAt(0).toString(16));
 
@@ -872,7 +873,7 @@ const historyOnlyPr = ({ repo, bare, scratch, id, state, update }: GithubFixture
 };
 
 describe('BT43 the output guard at the CLI sink (correction 3)', () => {
-  it('escapes every guarded character exactly as quoteForeign does, keeps the line feed, and leaves the tool\'s own text alone', () => {
+  it('escapes every guarded character exactly as quoteForeign does, keeps the line feed and the tab, and leaves the tool\'s own text alone', () => {
     // Every class in one string, twice, with a line feed between.
     const all = [...GUARDED].join('');
     const guarded = escapeControls(`${all}\n${all}`);
@@ -880,12 +881,17 @@ describe('BT43 the output guard at the CLI sink (correction 3)', () => {
     expect(guarded.split('\n')).toHaveLength(2);
     // Escaped, never stripped: it decodes back to what was written.
     expect(JSON.parse(`"${guarded.replace('\n', '\\n')}"`)).toBe(`${all}\n${all}`);
-    // One escape set: for every BMP character but the line feed, the quote,
-    // the backslash and the lone surrogates (no UTF-8 stream carries one),
-    // the guard writes exactly what quoteForeign writes inside its quotes.
+    // The tab passes as it is (the clarification); quoteForeign, which
+    // renders a stranger's line, still writes it `\t`.
+    expect(escapeControls(`a${String.fromCharCode(0x09)}b`)).toBe(`a${String.fromCharCode(0x09)}b`);
+    expect(quoteForeign(`a${String.fromCharCode(0x09)}b`)).toBe('"a\\tb"');
+    // One escape set: for every BMP character but the line feed, the tab,
+    // the quote, the backslash and the lone surrogates (no UTF-8 stream
+    // carries one), the guard writes exactly what quoteForeign writes inside
+    // its quotes.
     const differ: string[] = [];
     for (let code = 0; code <= 0xffff; code += 1) {
-      if (code === 0x0a || code === 0x22 || code === 0x5c || (code >= 0xd800 && code <= 0xdfff)) continue;
+      if (code === 0x0a || code === 0x09 || code === 0x22 || code === 0x5c || (code >= 0xd800 && code <= 0xdfff)) continue;
       const char = String.fromCharCode(code);
       if (escapeControls(char) !== quoteForeign(char).slice(1, -1)) differ.push(code.toString(16));
     }
@@ -1000,5 +1006,18 @@ describe('BT43 the output guard at the CLI sink (correction 3)', () => {
     expect(rawGuarded(conflict.stdout)).toEqual([]);
     expect(conflict.stdout).toContain('conflicts in: "app.txt"');
     expect(conflict.stdout).toContain(`of the solution's files, these would merge cleanly: ${SHOWN_FILE}`);
+  }));
+
+  it('a tab in the owner\'s own text prints unchanged: create --full\'s why line and post --preview\'s task text (clarification)', () => fixture(context => {
+    const { repo } = context;
+    const TAB = String.fromCharCode(0x09);
+    const task = `# Repair the app.\nsteps:\n${TAB}make${TAB}check\n`;
+    const created = spawnSync(process.execPath, [CLI_DIST, 'bounty', 'create', '--task', '-', '--why', `needs${TAB}another view`, '--full'], { cwd: repo, input: task, encoding: 'utf8', env: process.env, timeout: 60000 });
+    expect(created.status, created.stderr).toBe(0);
+    expect(created.stdout).toContain(`why: needs${TAB}another view (record only`);
+    const drafted = /(bt-[a-f0-9]{12}) — drafted in/.exec(created.stdout)![1]!;
+    const preview = inRepo(repo, ['post', drafted, '--preview']);
+    expect(preview.status, preview.stderr).toBe(0);
+    expect(preview.stdout).toContain(`${TAB}make${TAB}check`);
   }));
 });
