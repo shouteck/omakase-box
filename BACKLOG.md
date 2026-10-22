@@ -12,7 +12,7 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
   - a suite.mjs-only change runs at 78 s against the 80 s line;
   - summary.json does not name the files it did not run, and its reason truncates after three paths;
   - the whole-directory path in `suite.mjs` `main()` runs only at `--full`.
-- **Bounty suite under load** (K45; blocks BT44): the 30 s per-test limit (`scripts/vitest.config.mjs`) has little margin on this host. K45: four timeouts on the first `--full` of `875400d`, CPU at 96–100 %, then a pass on rerun; `1d7a6ff` and `f623b3f` the same. BT44: three verify runs on `e6ef820` (the last with no other kitchen work running) each timed out a different 1–4 tests at 30–37 s, and none passed. See also the bt39 flaky line below. See [BT44](waves/BT44.md).
+- **Bounty suite under load** (K45, BT44): the 30 s per-test limit (`scripts/vitest.config.mjs`) has little margin on this host. K45: four timeouts on the first `--full` of `875400d`, CPU at 96–100 %, then a pass on rerun; `1d7a6ff` and `f623b3f` the same. BT44: three verify runs on `e6ef820` (the last with no other kitchen work running) each timed out a different 1–4 tests at 30–37 s; a fourth run on a quiet host (game closed, 7.6 GB free against 2.5 GB) passed in 876 s. See also the bt39 flaky line below. See [BT44](waves/BT44.md).
 
 ## Product
 

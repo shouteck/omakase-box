@@ -1,25 +1,21 @@
 # Status
 
-Updated by the CTO on 22 October 2026, when BT44 was parked.
+Updated by the CTO on 22 October 2026, when BT44 closed.
 
 ## Now
 
-- **BT44 parked** on `wave/BT44` (`ea4eab5`). It is not merged.
-  - The pass found no correction to make: the change does what the brief says, and its tests fail when the guard is broken.
-  - No verify has been green on `e6ef820`: three runs each timed out a different few tests at 30 s, in files BT44 does not touch.
-  - The blocker is the environment (BACKLOG "Bounty suite under load"). **Owner, 22 October: hold.** BT44 stays parked until the owner names a fix.
-- **BT42 not started.** Its verify would hit the same timeouts. Its fresh-agent check also needs participant sessions started from an owner turn.
-- **Staffing:** on 22 October the owner moved BT44 and BT42 from OpenCode to Claude Code. Both briefs say so.
-- **Off-machine:** master is green at `bde237b`. The red at `3b1ab15` (the 20 KB rule) was fixed in `bb599b9`.
-- **New in BACKLOG from the BT44 pass:** a stranger's PR can claim a commit the owner pushed after the post. This existed before BT44.
+- **BT44 merged** (`2cc13d4`). A bounty now counts as merged only when its solution is new to the branch and descends from the posted commit. A PR pointing at an existing commit leaves the bounty open, with no notice and no pay message.
+  - Independent PASS (test-verified) on `ea4eab5`: `verify ea4eab5 PASS … 876s`, on a quiet host.
+  - Three earlier runs went red only on 30 s timeouts while the host was busy (BACKLOG "Bounty suite under load").
+- **BT42 next.** The owner lifted the hold on 22 October. It is staffed on Claude Code, and its fresh-agent check needs participant sessions started from an owner turn.
+- **Off-machine:** green at `bde237b`. The run on `0725b62` was cancelled after 18 min; the merge push is not yet read.
+- **Stray process for the owner:** an idle `node.exe` (PID 16324, parent `bash.exe` 17672) left by the BT44 pass's mis-quoted shell command. Ending it is the owner's call.
+- **From the BT44 pass, in BACKLOG:** a stranger's PR can claim a commit the owner pushed after the post.
 
 ## Next
 
-- **When the owner lifts the hold:** a kitchen wave for the bounty suite's 30 s margin. Then one verify on `wave/BT44` and its merge, then BT42.
-- **Afterwards, as before:**
-  - BT43, BT45, BT48, BT49, BT50, BT47 and BT46 on `packages/box-bounty`;
-  - PF1, then PF2 and PF3, then PF4 in parallel worktrees;
-  - PF5 after BT43, BT49 and BT50;
-  - K41 after PF5, PF6 last.
+- BT42, then BT43, BT45, BT48, BT49, BT50, BT47 and BT46 on `packages/box-bounty`.
+- PF1, then PF2 and PF3, then PF4, in parallel worktrees.
+- PF5 after BT43, BT49 and BT50.
+- K41 after PF5, PF6 last.
 - **brief-check:** PF2–PF6 name `test:platform`, which PF1 creates. Re-check them after PF1.
-- **See the prototype:** `cd kitchen/platform-prototype && npm start`, then http://localhost:4310/.
