@@ -13,6 +13,7 @@ import type { BountyRecord } from './record.js';
 import { repositoryAddress } from './repository.js';
 import { readReward } from './settings.js';
 import { boundAmount,formatFor,publicText,renderFormat } from './format.js';
+import { showPath } from './notice.js';
 
 // The listing a stranger reads: the task, what was tried, the branch to work
 // from (with the base commit as context — never the bare commit to branch
@@ -51,9 +52,12 @@ function listingHistory(record: BountyRecord, repository: string, plan: GitHubPl
   const note = record.noteSource === 'generated' ? null : content.note;
   const branch = `box-bounty/${record.id}`;
   const title = `[box bounty ${record.id}] ${publicText(record.title)}`;
+  // A commit's subject prints quoted (BT43 correction 4): the commits a post
+  // publishes for the first time can include a solver's, merged locally by
+  // apply, under the subject the solver wrote.
   const onTop = plan.pushed.length === 0
     ? `it points at that commit — nothing new was published`
-    : `it carries the poster's work in progress — ${plan.pushed.length} commit(s) on top of that commit: ${plan.pushed.map(c => `\`${c.sha.slice(0, 12)}\` ${c.subject}`).join(', ')}`;
+    : `it carries the poster's work in progress — ${plan.pushed.length} commit(s) on top of that commit: ${plan.pushed.map(c => `\`${c.sha.slice(0, 12)}\` ${showPath(c.subject)}`).join(', ')}`;
   const body = [
     `# Bounty: ${publicText(record.title)}`,
     '',
@@ -84,8 +88,11 @@ function listingHistory(record: BountyRecord, repository: string, plan: GitHubPl
       'payment is the poster\'s to make by hand — posting an answer does not guarantee it.'
     ] : []),
     'The merged solution earns the whole reward. Other solutions and parts used by hand earn nothing.',
+    // The licence file's name and package.json's declared licence are read
+    // from the branch root, where an applied solution can have put them:
+    // both quoted (BT43 correction 5).
     plan.licence.file !== null
-      ? publicText(`licence: ${plan.licence.file}${plan.licence.declared !== null ? ` (package.json declares ${plan.licence.declared})` : ''}`)
+      ? publicText(`licence: ${showPath(plan.licence.file)}${plan.licence.declared !== null ? ` (package.json declares ${showPath(plan.licence.declared)})` : ''}`)
       : 'licence: no licence file was found at the branch root',
     '',
     `<!-- box-bounty:${record.id} -->`,
@@ -106,20 +113,22 @@ function renderPlanPreview(repository: string, record: BountyRecord, plan: GitHu
   } else {
     lines.push(`  commits published for the first time (${plan.pushed.length}):`);
     for (const commit of plan.pushed) {
-      lines.push(`    ${commit.sha.slice(0, 12)} ${commit.subject}${commit.sha === plan.wipCommit ? ' — the tool\'s work-in-progress commit' : ''}`);
+      lines.push(`    ${commit.sha.slice(0, 12)} ${showPath(commit.subject)}${commit.sha === plan.wipCommit ? ' — the tool\'s work-in-progress commit' : ''}`);
       for (const file of plan.publishedFiles.find(entry => entry.commit === commit.sha)?.files ?? []) lines.push(`      ${file.status} ${JSON.stringify(file.path)}`);
     }
     if (plan.wip !== null) {
-      if (plan.wip.changed.length > 0) lines.push(`  files changed in the work-in-progress commit: ${plan.wip.changed.join(', ')}`);
-      if (plan.wip.added.length > 0) lines.push(`  files added in the work-in-progress commit: ${plan.wip.added.join(', ')}`);
-      if (plan.wip.deleted.length > 0) lines.push(`  files deleted in the work-in-progress commit: ${plan.wip.deleted.join(', ')}`);
+      // Every path the preview names is quoted (BT43 correction 5): a file
+      // a solver's merged pull request added is tracked like the owner's.
+      if (plan.wip.changed.length > 0) lines.push(`  files changed in the work-in-progress commit: ${plan.wip.changed.map(showPath).join(', ')}`);
+      if (plan.wip.added.length > 0) lines.push(`  files added in the work-in-progress commit: ${plan.wip.added.map(showPath).join(', ')}`);
+      if (plan.wip.deleted.length > 0) lines.push(`  files deleted in the work-in-progress commit: ${plan.wip.deleted.map(showPath).join(', ')}`);
     }
   }
   lines.push(`Uncommitted changes to tracked files: ${plan.wipCommit !== null ? 'included as one commit on the branch' : plan.leftHome > 0 ? `${plan.leftHome} file(s) stay home — the task was not said to need them` : 'none present'}`);
-  lines.push(`Untracked: ${plan.untracked} entr${plan.untracked === 1 ? 'y' : 'ies'} stay home${plan.include.length > 0 ? `; published by name: ${plan.include.join(', ')}` : ''}`);
+  lines.push(`Untracked: ${plan.untracked} entr${plan.untracked === 1 ? 'y' : 'ies'} stay home${plan.include.length > 0 ? `; published by name: ${plan.include.map(showPath).join(', ')}` : ''}`);
   if (plan.publicNeverShip.length > 0) {
     const named = plan.publicNeverShip.slice(0, PREVIEW_PUBLIC_NAMES);
-    lines.push(`Already public — this tool cannot take it back: ${plan.publicNeverShip.length} never-ship-named path(s) exist in the public history: ${named.join(', ')}${plan.publicNeverShip.length > PREVIEW_PUBLIC_NAMES ? ` … and ${plan.publicNeverShip.length - PREVIEW_PUBLIC_NAMES} more` : ''}`);
+    lines.push(`Already public — this tool cannot take it back: ${plan.publicNeverShip.length} never-ship-named path(s) exist in the public history: ${named.map(showPath).join(', ')}${plan.publicNeverShip.length > PREVIEW_PUBLIC_NAMES ? ` … and ${plan.publicNeverShip.length - PREVIEW_PUBLIC_NAMES} more` : ''}`);
   }
   if (plan.scan.hits.length === 0) {
     // No headline "clean" while flagged content only missed the list — a
@@ -129,10 +138,10 @@ function renderPlanPreview(repository: string, record: BountyRecord, plan: GitHu
       : `Pre-publish scan: clean — ${plan.scan.commitsScanned} first-published commit(s) read${plan.include.length > 0 ? ` plus ${plan.include.length} named file(s)` : ''}`);
   } else {
     lines.push(`Pre-publish scan: ${plan.scan.hits.length} secret-shaped hit(s) — a post would wait for the owner:`);
-    for (const hit of plan.scan.hits) lines.push(`    ${hit.path}:${hit.line} — ${hit.rule}${hit.commit !== undefined ? ` — in unpushed commit ${hit.commit.slice(0, 12)}` : ''}`);
+    for (const hit of plan.scan.hits) lines.push(`    ${showPath(hit.path)}:${hit.line} — ${hit.rule}${hit.commit !== undefined ? ` — in unpushed commit ${hit.commit.slice(0, 12)}` : ''}`);
   }
   if (plan.scan.suppressed > 0 && plan.scan.hits.length > 0) lines.push(`  ${plan.scan.suppressed} hit(s) sit on paths the owner listed safe to publish — not held`);
-  if (plan.scan.binary.length > 0) lines.push(`  not scanned — Git treats them as binary: ${plan.scan.binary.join(', ')}`);
+  if (plan.scan.binary.length > 0) lines.push(`  not scanned — Git treats them as binary: ${plan.scan.binary.map(showPath).join(', ')}`);
   lines.push(`Issue title: ${text.title}`);
   lines.push('Issue body:');
   lines.push(text.body);
@@ -243,9 +252,11 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
         `${id} — the pre-publish scan found ${plan.scan.hits.length} secret-shaped hit(s); this bounty waits for the owner:`,
         // The owner block first (BT13, F3): what was found, in which file,
         // that nothing was published, and the choices — a question, not a
-        // command; no commits, no git words.
+        // command; no commits, no git words. The file is named quoted, as
+        // every path the tool prints (BT43 correction 5): after an apply it
+        // can be a name a solver chose, and these are words to pass on.
         'for the owner — pass this on in these words:',
-        ...plan.scan.hits.map(hit => `  Something in your project looks like a password or key: file ${hit.path}, line ${hit.line}.`),
+        ...plan.scan.hits.map(hit => `  Something in your project looks like a password or key: file ${showPath(hit.path)}, line ${hit.line}.`),
         '  Nothing has been published.',
         '  You can say the file is safe to publish, say it must never be published, or have it changed first — which do you want?',
         plan.scan.hits.some(hit => hit.commit !== undefined)
@@ -255,16 +266,16 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
           // owner's call, never the agent's to make alone.
           ? 'for you — the owner\'s answer lands on the publish lists: box bounty config add safe-to-publish <path> or add never-publish <path>. For a hit inside an unpushed commit a new commit removing the content does not help — the commit carrying it would still be published; changing that history is the owner\'s call, not the agent\'s to make alone. Or end it — nothing was published and the owner\'s files are untouched.'
           : 'for you — the owner\'s answer lands on the publish lists: box bounty config add safe-to-publish <path> or add never-publish <path>; or remove the flagged content and post again — that sends the bounty; or end it — nothing was published and the owner\'s files are untouched.',
-        ...plan.scan.hits.map(hit => `  hit: ${hit.path}:${hit.line} — ${hit.rule}${hit.commit !== undefined ? ` — in unpushed commit ${hit.commit.slice(0, 12)} — an ordinary git push would publish it too` : ''}`),
+        ...plan.scan.hits.map(hit => `  hit: ${showPath(hit.path)}:${hit.line} — ${hit.rule}${hit.commit !== undefined ? ` — in unpushed commit ${hit.commit.slice(0, 12)} — an ordinary git push would publish it too` : ''}`),
         ...(plan.scan.suppressed > 0 ? [`${plan.scan.suppressed} hit(s) on safe-listed paths are not held`] : []),
-        ...(plan.scan.binary.length > 0 ? [`not scanned — Git treats them as binary: ${plan.scan.binary.join(', ')}`] : []),
+        ...(plan.scan.binary.length > 0 ? [`not scanned — Git treats them as binary: ${plan.scan.binary.map(showPath).join(', ')}`] : []),
         'the scan is a stated pattern list, not proof of absence.', `next: pass the owner block on in its words; box bounty status ${id} shows when the answer lands`
       ].join('\n'));
     }
     if (plan.include.length > 0 && seen !== 'untracked-file') {
       waitForOwner(root, record, { for: 'post', reason: 'untracked-file', at: new Date().toISOString(), to: 'github', choice, shown: shownOfPlan(plan) });
       return invalid('publish-held', [
-        `${id} — an untracked file is named for publishing (${plan.include.join(', ')}); this bounty waits for the owner`,
+        `${id} — an untracked file is named for publishing (${plan.include.map(showPath).join(', ')}); this bounty waits for the owner`,
         `the owner answers this one with box bounty allow ${id} — the answer is bound to what would be published now — or ends it with box bounty close ${id}`, `next: pass the owner block on in its words; box bounty status ${id} shows when the answer lands`
       ].join('\n'));
     }

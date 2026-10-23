@@ -1,5 +1,5 @@
 import { invalid,isObject,signedAccount,type GitHubPublication,publicationRef,remoteBranchSha,remoteGit,recoverIssue,api,login } from './gh.js';
-import { emitMergeNotice } from './notice.js';
+import { emitMergeNotice, showPath } from './notice.js';
 import { BountyRefused } from './errors.js';
 import { git } from './git.js';
 import { attemptsOf,persistRecord } from './record.js';
@@ -59,7 +59,9 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
       const pushed = publication.pushed ?? [];
       if (publication.kind === 'history' && pushed.length > 0) {
         const marker = `<!-- box-bounty:${record.id}:branch-removed -->`;
-        const body = `The bounty branch \`${publication.branch}\` is removed. It carried ${pushed.length} commit(s) that existed only there — their identifiers stay valid in any clone that fetched them: ${pushed.map(commit => `\`${commit.sha}\` ${commit.subject}`).join(', ')}.\n\n${marker}`;
+        // Each subject quoted, as the note below: a solver's commit, merged
+        // by apply and published by a later post, can be among them (BT43).
+        const body = `The bounty branch \`${publication.branch}\` is removed. It carried ${pushed.length} commit(s) that existed only there — their identifiers stay valid in any clone that fetched them: ${pushed.map(commit => `\`${commit.sha}\` ${showPath(commit.subject)}`).join(', ')}.\n\n${marker}`;
         if (!comments.some(entry => isObject(entry) && entry['body'] === body && isObject(entry['user']) && entry['user']['login'] === publication.account)) {
           const response = api(root, `${endpoint}/comments`, { body });
           if (!isObject(response) || response['body'] !== body || !isObject(response['user']) || response['user']['login'] !== publication.account) return invalid('github-response-invalid', 'GitHub did not confirm the branch-removal comment; next: run box bounty close again; box bounty status shows what is recorded');
@@ -99,8 +101,10 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
     if (tip !== null) { remoteGit(root, publication.repository, ['push', `:refs/heads/${publication.branch}`]); changed = true; }
     git(root, ['update-ref', '-d', publicationRef(record.id)]);
     publication.state = 'closed';
+    // The note prints on close's and apply's output, each subject quoted as
+    // in the comment above (BT43 correction 4).
     if (publication.kind === 'history' && (publication.pushed?.length ?? 0) > 0) {
-      publication.closedNote = `${publication.branch} carried ${publication.pushed!.length} commit(s) published only there — ${publication.pushed!.map(commit => `${commit.sha.slice(0, 12)} ${commit.subject}`).join(', ')} — and is now removed`;
+      publication.closedNote = `${publication.branch} carried ${publication.pushed!.length} commit(s) published only there — ${publication.pushed!.map(commit => `${commit.sha.slice(0, 12)} ${showPath(commit.subject)}`).join(', ')} — and is now removed`;
     }
     // A bounty that stated a reward and ends on a merged solution records
     // whom to pay: the pull request description is re-read now — with the

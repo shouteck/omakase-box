@@ -4,6 +4,7 @@ import { homedir } from 'node:os';
 import { dirname, isAbsolute, resolve } from 'node:path';
 import { resolveProgram } from './program.js';
 import { BountyRefused } from './errors.js';
+import { showPath } from './notice.js';
 
 // The least Git the tool runs on: merges and dry merges pin GIT_ATTR_SOURCE
 // (git 2.40) so a solver-carried .gitattributes can name nothing, and the dry
@@ -259,7 +260,7 @@ export function gitFilteredBlob(repo: string, path: string, bytes: Buffer): stri
   });
   if (result.status !== 0 || result.error !== undefined) {
     const detail = ((result.stderr?.toString() ?? result.error?.message ?? `exit ${result.status}`)).trim();
-    throw new GitFailed(`git hash-object --path=${path} failed in ${repo}: ${detail}`);
+    throw new GitFailed(`git hash-object --path=${showPath(path)} failed in ${repo}: ${detail}`);
   }
   return result.stdout.toString().trim();
 }

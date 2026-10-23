@@ -9,6 +9,7 @@ import type { Attempt, BountyRecord } from './record.js';
 import { repositoryChoiceLines } from './repository.js';
 import { readDecision, repoReward, unlistedRemotes } from './settings.js';
 import type { DecisionRead } from './settings.js';
+import { solverAccount } from './untrusted.js';
 
 // The words the owner's three answers wear everywhere they are printed.
 export const DECISION_WORDS = {
@@ -90,7 +91,7 @@ export function ownerWaitLines(repoRoot: string, record: BountyRecord, read: Dec
 // this branch tip.
 export function mergeWaitLines(record: BountyRecord, attempt: Attempt): string[] {
   const id = record.id;
-  const from = attempt.author !== undefined ? ` from GitHub account ${attempt.author}` : ' from a returned folder';
+  const from = attempt.author !== undefined ? ` from GitHub account ${solverAccount(attempt.author)}` : ' from a returned folder';
   return [
     ...ownerBlock([
       `A solution to "${record.title}"${from} is ready to merge into your code.`,

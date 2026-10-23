@@ -8,6 +8,7 @@ import { BUILTIN_RULES, publishListed, publishLists, shipRules } from './never-s
 import type { NeverShipRule } from './never-ship.js';
 import { looksBinary, scanText } from './scan.js';
 import type { ScanHit } from './scan.js';
+import { showPath } from './notice.js';
 import { canonicalForNew, writeNewRecord } from './record.js';
 import { readDecision, repoReward, requireRepository } from './settings.js';
 import { createSnapshot } from './snapshot.js';
@@ -79,7 +80,7 @@ const toPosixPath = (path: string): string => path.split('\\').join('/');
 function readTextFile(path: string, reason: string, repoRoot: string, rules: readonly NeverShipRule[]): { file: string; text: string } {
   const absolute = resolve(path);
   if (!statSync(absolute, { throwIfNoEntry: false })?.isFile()) {
-    throw new BountyRefused(reason, `file ${path} does not exist; next: pass a readable file`);
+    throw new BountyRefused(reason, `file ${showPath(path)} does not exist; next: pass a readable file`);
   }
   // The file's bytes are embedded verbatim into the bounty — a never-ship path
   // is refused here exactly as it would be inside the snapshot. Inside the repo
@@ -91,10 +92,10 @@ function readTextFile(path: string, reason: string, repoRoot: string, rules: rea
   const key = (inside ? offset : toPosixPath(real)).toLowerCase();
   const matched = (inside ? rules : BUILTIN_RULES).find(rule => rule.match(key));
   if (matched !== undefined) {
-    throw new BountyRefused('never-ship-input', `${path} resolves to ${inside ? offset : real}, which the never-ship rule '${matched.name}' removes — the task file must be safe to embed. They may sit anywhere outside the never-ship paths — inside the repository or outside it, committed or not; next: name a task file outside the never-ship paths`);
+    throw new BountyRefused('never-ship-input', `${showPath(path)} resolves to ${showPath(inside ? offset : real)}, which the never-ship rule '${matched.name}' removes — the task file must be safe to embed. They may sit anywhere outside the never-ship paths — inside the repository or outside it, committed or not; next: name a task file outside the never-ship paths`);
   }
   const text = readFileSync(absolute, 'utf8');
-  if (text.trim() === '') throw new BountyRefused(reason, `file ${path} is empty; next: pass a file with real content`);
+  if (text.trim() === '') throw new BountyRefused(reason, `file ${showPath(path)} is empty; next: pass a file with real content`);
   return { file: inside ? offset : basename(real), text };
 }
 
@@ -216,10 +217,12 @@ export function renderPreview(plan: BountyPlan): string {
     lines.push(`  pre-publish scan of the shipped set: clean — ${plan.scan.filesScanned} file(s) read`);
   } else {
     lines.push(`  pre-publish scan of the working state: ${plan.scan.hits.length} secret-shaped hit(s) — posting re-checks what becomes public for the first time:`);
-    for (const hit of plan.scan.hits) lines.push(`    ${hit.path}:${hit.line} — ${hit.rule}`);
+    // Every path the tool names is quoted (BT43 correction 5): after an
+    // apply the working state holds file names a solver chose.
+    for (const hit of plan.scan.hits) lines.push(`    ${showPath(hit.path)}:${hit.line} — ${hit.rule}`);
   }
   if (plan.scan.suppressed > 0) lines.push(`    ${plan.scan.suppressed} hit(s) sit on paths the owner listed safe to publish — not held`);
-  if (plan.scan.binary.length > 0) lines.push(`    not scanned — Git would treat them as binary: ${plan.scan.binary.slice(0, PREVIEW_NAMES_PER_RULE).join(', ')}${plan.scan.binary.length > PREVIEW_NAMES_PER_RULE ? ` … and ${plan.scan.binary.length - PREVIEW_NAMES_PER_RULE} more` : ''}`);
+  if (plan.scan.binary.length > 0) lines.push(`    not scanned — Git would treat them as binary: ${plan.scan.binary.slice(0, PREVIEW_NAMES_PER_RULE).map(showPath).join(', ')}${plan.scan.binary.length > PREVIEW_NAMES_PER_RULE ? ` … and ${plan.scan.binary.length - PREVIEW_NAMES_PER_RULE} more` : ''}`);
   if (plan.removed.length === 0) {
     lines.push('  never-ship removed: nothing');
   } else {
@@ -244,7 +247,7 @@ export function renderPreview(plan: BountyPlan): string {
         : `none — a GitHub post waits for the owner's permission; box bounty allow ${address} is their answer`;
   } catch { /* an unlistable repository leaves permission unknown */ }
   lines.push(`  posting permission: ${permission}`);
-  lines.push(`  task: ${plan.task.file}`);
+  lines.push(`  task: ${plan.task.file === 'standard input' ? plan.task.file : showPath(plan.task.file)}`);
   lines.push('  note: written by the tool from the changed files — kept locally');
   lines.push(plan.task.file === 'standard input' ? '  standard input creates no task file' : '  the task file stays where it is — the tool reads it and never commits or removes it');
   return lines.join('\n');

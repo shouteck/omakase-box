@@ -95,10 +95,15 @@ describe('the repository’s own old records', () => {
     const expected: Record<string, [string, string][]> = {
       'bt-e197a6998847': [['{"stage":"verified"', '{"stage":"answered"']],
     };
+    // BT43 correction 5's declared display difference: a scan finding names
+    // its path quoted, as every path the tool prints does. Only that span of
+    // a `scan finding` line changes; every other byte stays pinned.
+    const quotedFinding = (text: string): string =>
+      text.replace(/^( *scan finding(?: \(recorded at create\))?: )(.+?):(\d+) \(/gm, (_all, head: string, path: string, line: string) => `${head}${JSON.stringify(path)}:${line} (`);
     for (const [id, text] of blocks) {
       const stored = baseline[id];
       expect(stored, `baseline block for ${id}`).toBeDefined();
-      let want = stored!;
+      let want = quotedFinding(stored!);
       for (const [was, now] of expected[id] ?? []) {
         expect(want, `baseline for ${id} still holds "${was}"`).toContain(was);
         want = want.split(was).join(now);
