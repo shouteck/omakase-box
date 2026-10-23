@@ -4,6 +4,7 @@ import type { Stats } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { BountyRefused } from './errors.js';
 import { gitOutcome } from './git.js';
+import { showPath } from './notice.js';
 import { attemptsOf, openRecords } from './record.js';
 import { readInstructionNotes, readInstructions, writeInstructionNotes } from './settings.js';
 import { renderRulesBlock, RULES_MARKERS } from './wording.js';
@@ -121,7 +122,9 @@ function projectGitDir(root: string): string | null {
   return dir;
 }
 
-const toolOwned = (named: string): BountyRefused => new BountyRefused('instruction-file-tool-owned', `${named} belongs to Git or to this tool; an instruction file must be one your agents read; next: name an instruction file your agents read. Nothing changed`);
+// Every instruction file is named quoted (BT43 correction 5): one found by
+// the directory walk can be a file a solver's merged pull request added.
+const toolOwned = (named: string): BountyRefused => new BountyRefused('instruction-file-tool-owned', `${showPath(named)} belongs to Git or to this tool; an instruction file must be one your agents read; next: name an instruction file your agents read. Nothing changed`);
 
 // `.git/` and `.box/` belong to Git and to this tool — a block synced into
 // `.git/config` breaks Git in the checkout and one in `.box/bounties/`
@@ -137,7 +140,7 @@ const toolOwned = (named: string): BountyRefused => new BountyRefused('instructi
 // elsewhere under the root is refused the same way.
 export function checkInstructionFile(repoRoot: string, named: string): string {
   const { root, path, rel, actual, problem, leaf, canonical } = walkProjectPath(repoRoot, named);
-  if (problem?.kind === 'outside') throw new BountyRefused('instruction-file-outside-repo', `${named}: instruction-file-outside-repo; nothing changed; next: name a file inside the repository`);
+  if (problem?.kind === 'outside') throw new BountyRefused('instruction-file-outside-repo', `${showPath(named)}: instruction-file-outside-repo; nothing changed; next: name a file inside the repository`);
   const owns = (value: string) => folded(value).split('/').some(part => part === '.git' || part === '.box');
   if (owns(rel)) throw toolOwned(named);
   if (owns(actual)) throw toolOwned(named);
@@ -153,13 +156,13 @@ export function checkInstructionFile(repoRoot: string, named: string): string {
     }
   }
   if (problem !== null) {
-    if (problem.kind === 'link') throw new BountyRefused('instruction-file-link', `${named}: instruction-file-link; nothing changed; next: name a real file, not a link`);
-    throw new BountyRefused('instruction-file-missing', `${named}: instruction-file-missing; next: name an existing file`);
+    if (problem.kind === 'link') throw new BountyRefused('instruction-file-link', `${showPath(named)}: instruction-file-link; nothing changed; next: name a real file, not a link`);
+    throw new BountyRefused('instruction-file-missing', `${showPath(named)}: instruction-file-missing; next: name an existing file`);
   }
   const stat = leaf!;
-  if (!stat.isFile()) throw new BountyRefused('instruction-file-not-file', `${named}: instruction-file-not-file; nothing changed; next: name a plain file`);
-  if (stat.nlink > 1) throw new BountyRefused('instruction-file-link', `${named}: instruction-file-link; nothing changed; next: name a real file, not a link`);
-  if (!folded(canonical!).startsWith(`${folded(root)}/`)) throw new BountyRefused('instruction-file-outside-repo', `${named}: instruction-file-outside-repo; nothing changed; next: name a file inside the repository`);
+  if (!stat.isFile()) throw new BountyRefused('instruction-file-not-file', `${showPath(named)}: instruction-file-not-file; nothing changed; next: name a plain file`);
+  if (stat.nlink > 1) throw new BountyRefused('instruction-file-link', `${showPath(named)}: instruction-file-link; nothing changed; next: name a real file, not a link`);
+  if (!folded(canonical!).startsWith(`${folded(root)}/`)) throw new BountyRefused('instruction-file-outside-repo', `${showPath(named)}: instruction-file-outside-repo; nothing changed; next: name a file inside the repository`);
   return path;
 }
 
@@ -269,8 +272,9 @@ export function syncInstructions(repoRoot: string, add = false): string[] {
   const canonical = Buffer.from(instructionBlock(repoRoot));
   const interior = canonical.subarray(Buffer.byteLength(RULES_MARKERS.open), canonical.length - Buffer.byteLength(RULES_MARKERS.close));
   for (const file of files) {
+    const named = showPath(file.path);
     try {
-      if (file.refusal !== undefined) { messages.push(`${file.path}: refused (${file.refusal}); nothing changed`); continue; }
+      if (file.refusal !== undefined) { messages.push(`${named}: refused (${file.refusal}); nothing changed`); continue; }
       const path = checkInstructionFile(repoRoot, file.path);
       const before = readFileSync(path);
       const marked = span(before);
@@ -291,13 +295,13 @@ export function syncInstructions(repoRoot: string, add = false): string[] {
         }
         if (terminal === undefined || span(readFileSync(checkInstructionFile(repoRoot, terminal.path))) === null) {
           if (add) throw new BountyRefused('instruction-import-unmaintained', 'instruction-import-unmaintained; nothing changed; next: add the imported file to the maintained list or remove the import');
-          messages.push(`${file.path}: imported file lacks the block; existing bytes kept. Add it with box bounty config set instructions true`);
+          messages.push(`${named}: imported file lacks the block; existing bytes kept. Add it with box bounty config set instructions true`);
           continue;
         }
         if (marked !== null) replaceFile(path, before, Buffer.concat([before.subarray(0, marked.openAt), before.subarray(marked.closeAt + Buffer.byteLength(RULES_MARKERS.close))]));
         messages.push(marked === null
-          ? `${file.path}: imports ${imported}; block kept there once`
-          : `${file.path}: imports ${imported} — its block was removed here and kept once in ${imported}; the edit is in the worktree, not committed`);
+          ? `${named}: imports ${showPath(imported)}; block kept there once`
+          : `${named}: imports ${showPath(imported)} — its block was removed here and kept once in ${showPath(imported)}; the edit is in the worktree, not committed`);
         continue;
       }
       if (marked === null && !add) continue;
@@ -306,9 +310,9 @@ export function syncInstructions(repoRoot: string, add = false): string[] {
         : Buffer.concat([before.subarray(0, marked.afterOpen), interior, before.subarray(marked.closeAt)]);
       replaceFile(path, before, after);
       messages.push(before.equals(after)
-        ? `${file.path}: block current`
-        : `${file.path}: block updated — the edit is in the worktree, not committed; commit it with the project`);
-    } catch (error) { messages.push(`${file.path}: refused (${error instanceof BountyRefused ? error.reason : 'instruction-file-unreadable'}); nothing changed`); }
+        ? `${named}: block current`
+        : `${named}: block updated — the edit is in the worktree, not committed; commit it with the project`);
+    } catch (error) { messages.push(`${named}: refused (${error instanceof BountyRefused ? error.reason : 'instruction-file-unreadable'}); nothing changed`); }
   }
   return messages;
 }
@@ -326,15 +330,16 @@ export function instructionNotices(repoRoot: string, includeMissing = true): str
   }
   const files = discoverInstructions(repoRoot);
   for (const file of files) {
-    if (file.refusal !== undefined) { lines.push(`${file.path}: refused (${file.refusal}); nothing changed`); continue; }
+    const named = showPath(file.path);
+    if (file.refusal !== undefined) { lines.push(`${named}: refused (${file.refusal}); nothing changed`); continue; }
     try {
       if (!includeMissing) continue;
       if (span(readFileSync(checkInstructionFile(repoRoot, file.path))) !== null || imports(repoRoot, file, files) !== null) continue;
       const key = createHash('sha256').update(file.path).digest('hex');
       if (notices.includes(key)) continue;
-      lines.push(`${file.path} lacks the block; add it with box bounty config set instructions true`);
+      lines.push(`${named} lacks the block; add it with box bounty config set instructions true`);
       notices.push(key);
-    } catch (error) { lines.push(`${file.path}: refused (${error instanceof BountyRefused ? error.reason : 'instruction-file-unreadable'}); nothing changed`); }
+    } catch (error) { lines.push(`${named}: refused (${error instanceof BountyRefused ? error.reason : 'instruction-file-unreadable'}); nothing changed`); }
   }
   if (retired !== noted.retired || notices.length !== noted.notices.length) writeInstructionNotes(repoRoot, { notices, ...(retired === undefined ? {} : { retired }) });
   return lines;

@@ -1,6 +1,7 @@
 import { existsSync, lstatSync, readFileSync, realpathSync } from 'node:fs';
 import { basename as pathBasename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { BountyRefused } from './errors.js';
+import { showPath } from './notice.js';
 import { loadSettings, saveSettings, settingsFile } from './settings.js';
 
 // Never-ship is the security boundary of a whole-repository bounty. The rules below
@@ -208,18 +209,21 @@ export function shipRules(repoRoot: string): readonly NeverShipRule[] {
 function publishEntryPath(repoRoot: string, which: string, named: string): string {
   const root = realpathSync(repoRoot);
   const absolute = resolve(root, named);
+  // The typed path is quoted wherever it is named (BT43 correction 5): it is
+  // often a name a scan hold showed, which after an apply can be a solver's.
+  const shown = showPath(named);
   let ancestor = absolute;
   const tail: string[] = [];
   while (!existsSync(ancestor)) {
     const parent = dirname(ancestor);
-    if (parent === ancestor) throw new BountyRefused('publish-list-outside', `${which} ${named} cannot be resolved; nothing changed; next: fix or remove the ${named} entry in ${which}`);
+    if (parent === ancestor) throw new BountyRefused('publish-list-outside', `${which} ${shown} cannot be resolved; nothing changed; next: fix or remove the ${shown} entry in ${which}`);
     tail.unshift(pathBasename(ancestor));
     ancestor = parent;
   }
   const canon = join(realpathSync(ancestor), ...tail);
   const offset = toPosix(relative(root, canon));
   if (offset === '' || offset === '..' || offset.startsWith('../') || isAbsolute(offset)) {
-    throw new BountyRefused('publish-list-outside', `${which} ${named} resolves to ${canon}${offset === '' ? '' : ', outside the repository'} — a listed path names a path inside the repository; nothing changed; next: remove ${named} from ${which} or name a path inside the repository`);
+    throw new BountyRefused('publish-list-outside', `${which} ${shown} resolves to ${showPath(canon)}${offset === '' ? '' : ', outside the repository'} — a listed path names a path inside the repository; nothing changed; next: remove ${shown} from ${which} or name a path inside the repository`);
   }
   let current = root;
   for (const part of relative(root, absolute).split(sep)) {
@@ -227,7 +231,7 @@ function publishEntryPath(repoRoot: string, which: string, named: string): strin
     current = join(current, part);
     const stat = lstatSync(current, { throwIfNoEntry: false });
     if (stat === undefined) break;
-    if (stat.isSymbolicLink()) throw new BountyRefused('publish-list-link', `${which} ${named} resolves through a link — a listed path must be a real path inside the repository; nothing changed; next: replace ${named} in ${which} with a real path inside the repository`);
+    if (stat.isSymbolicLink()) throw new BountyRefused('publish-list-link', `${which} ${shown} resolves through a link — a listed path must be a real path inside the repository; nothing changed; next: replace ${shown} in ${which} with a real path inside the repository`);
   }
   return offset;
 }
@@ -240,6 +244,7 @@ function publishEntryPath(repoRoot: string, which: string, named: string): strin
 export function changePublishList(repoRoot: string, which: 'never-publish' | 'safe-to-publish', verb: 'add' | 'remove', named: string): string {
   const root = realpathSync(repoRoot);
   const offset = publishEntryPath(repoRoot, which, named);
+  const listed = showPath(offset);
   if (which === 'safe-to-publish' && verb === 'add') {
     // Judged against the whole never-ship table — built-ins, .boxignore and
     // the never publish list itself. The project-claim check is skipped on
@@ -250,7 +255,7 @@ export function changePublishList(repoRoot: string, which: 'never-publish' | 'sa
     const existing = loadSettings().publishing?.[root]?.never ?? [];
     if (existing.length > 0) rules.push({ name: 'owner-never-publish', match: path => listedUnder(existing, path) });
     const rule = rules.find(candidate => candidate.match(offset.toLowerCase()));
-    if (rule !== undefined) throw new BountyRefused('publish-list-never-ship', `safe to publish ${offset} names a path the never-ship rule '${rule.name}' keeps out — the safe list cannot carry a never-ship path; nothing changed; next: remove ${offset} from the safe list — never-ship paths cannot be listed`);
+    if (rule !== undefined) throw new BountyRefused('publish-list-never-ship', `safe to publish ${listed} names a path the never-ship rule '${rule.name}' keeps out — the safe list cannot carry a never-ship path; nothing changed; next: remove ${listed} from the safe list — never-ship paths cannot be listed`);
   }
   const stat = lstatSync(settingsFile(), { throwIfNoEntry: false });
   if (stat !== undefined && (stat.isSymbolicLink() || !stat.isFile())) throw new BountyRefused('publish-list-settings-link', 'the owner settings file is a link or not a plain file; nothing changed; next: make the owner settings file a plain file, then rerun the same command');
@@ -259,14 +264,14 @@ export function changePublishList(repoRoot: string, which: 'never-publish' | 'sa
   const previous = settings.publishing?.[root] ?? { never: [], safe: [] };
   const list = [...previous[key]];
   if (verb === 'add') {
-    if (list.some(entry => entry.toLowerCase() === offset.toLowerCase())) return `${which}: ${offset} was already listed; nothing changed`;
+    if (list.some(entry => entry.toLowerCase() === offset.toLowerCase())) return `${which}: ${listed} was already listed; nothing changed`;
     list.push(offset);
   } else {
     const index = list.findIndex(entry => entry.toLowerCase() === offset.toLowerCase());
-    if (index === -1) throw new BountyRefused('publish-list-not-listed', `${which}: ${offset} is not listed; nothing changed; next: add ${offset} to ${which} or remove it from the named paths`);
+    if (index === -1) throw new BountyRefused('publish-list-not-listed', `${which}: ${listed} is not listed; nothing changed; next: add ${listed} to ${which} or remove it from the named paths`);
     list.splice(index, 1);
   }
   const next = { never: [...(key === 'never' ? list : previous.never)], safe: [...(key === 'safe' ? list : previous.safe)] };
   saveSettings({ ...settings, publishing: { ...settings.publishing, [root]: next } });
-  return `${which}: ${offset} ${verb === 'add' ? 'added' : 'removed'}, written to ${settingsFile()}`;
+  return `${which}: ${listed} ${verb === 'add' ? 'added' : 'removed'}, written to ${settingsFile()}`;
 }

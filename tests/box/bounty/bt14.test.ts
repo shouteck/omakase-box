@@ -15,7 +15,7 @@ describe('an instruction-file edit names the file and says it is not committed',
   it('the sync line names the file and the uncommitted fact', () => {
     const repo = makeRepo({ 'TASK.md': 'Fix the sum.\n', 'AGENTS.md': 'owner words\n' });
     const out = changeConfig(repo, 'set', 'instructions', 'true');
-    expect(out).toContain('AGENTS.md: block updated');
+    expect(out).toContain('"AGENTS.md": block updated');
     expect(out).toContain('not committed');
   });
 });

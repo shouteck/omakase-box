@@ -218,7 +218,7 @@ describe('the owner\'s settings file holds only the owner\'s choices', () => {
     };
     const first = once(['status']);
     expect(first.stdout).toContain('.box/limits.json is no longer read');
-    expect(first.stdout).toContain('AGENTS.md lacks the block');
+    expect(first.stdout).toContain('"AGENTS.md" lacks the block');
     once(['status', '--json']);
     once(['config']);
     once(['config', '--json']);

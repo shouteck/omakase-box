@@ -4,6 +4,7 @@ import { lstatSync,mkdtempSync,readFileSync,realpathSync,rmSync } from 'node:fs'
 import { tmpdir } from 'node:os';
 import { isAbsolute,join,relative,resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
+import { showPath } from './notice.js';
 import { git,gitBlob,gitFilteredBlob,gitIndexWrite,gitOutcome,gitProgram,gitRefsWrite,ownerGitOutcome } from './git.js';
 import type { IndexChange } from './git.js';
 import { publishListed,publishLists } from './never-ship.js';
@@ -194,26 +195,29 @@ function validateIncludes(root: string, names: readonly string[], rules: readonl
     let real = '';
     try { real = realpathSync(absolute); } catch { real = ''; }
     const offset = real === '' ? '' : toPosix(relative(realRoot, real));
+    // The typed name and what it resolves to are both quoted (BT43
+    // correction 5): either can be a file name a solver chose.
+    const typed = showPath(name);
     if (real === '' || offset === '' || offset.startsWith('../') || offset === '..' || isAbsolute(offset)) {
-      return invalid('github-include-invalid', `--include ${name} does not resolve to a file inside the repository — name untracked files inside the checkout, one by one; next: name untracked files inside the checkout, one by one, with --include <path>`);
+      return invalid('github-include-invalid', `--include ${typed} does not resolve to a file inside the repository — name untracked files inside the checkout, one by one; next: name untracked files inside the checkout, one by one, with --include <path>`);
     }
     const stat = lstatSync(absolute, { throwIfNoEntry: false });
     if (stat === undefined || !stat.isFile() || stat.isSymbolicLink()) {
       return invalid(stat === undefined ? 'github-include-missing' : 'github-include-invalid',
         stat === undefined
-          ? `--include ${name} does not exist — untracked files are published only when named, and only files that exist can be named; next: name an existing untracked file with --include <path>`
-          : `--include ${name} resolves to ${offset}, which is not a plain untracked file — name each file itself; next: name a plain untracked file with --include <path>`);
+          ? `--include ${typed} does not exist — untracked files are published only when named, and only files that exist can be named; next: name an existing untracked file with --include <path>`
+          : `--include ${typed} resolves to ${showPath(offset)}, which is not a plain untracked file — name each file itself; next: name a plain untracked file with --include <path>`);
     }
     if (offset.startsWith('.box/bounties/') || offset.startsWith('.box/local/')) {
-      return invalid('github-include-invalid', `--include ${name} resolves to ${offset} — the tool's own bounty records carry owner-only context and are never published; next: name a different file with --include <path>`);
+      return invalid('github-include-invalid', `--include ${typed} resolves to ${showPath(offset)} — the tool's own bounty records carry owner-only context and are never published; next: name a different file with --include <path>`);
     }
     const rule = rules.find(candidate => candidate.match(offset.toLowerCase()));
     if (rule !== undefined) {
-      return invalid('github-include-never-ship', `--include ${name} resolves to ${offset}, which the never-ship rule '${rule.name}' covers — it cannot be published; nothing was posted; next: drop ${name} from --include — a never-ship path cannot be published`);
+      return invalid('github-include-never-ship', `--include ${typed} resolves to ${showPath(offset)}, which the never-ship rule '${rule.name}' covers — it cannot be published; nothing was posted; next: drop ${typed} from --include — a never-ship path cannot be published`);
     }
     const tracked = ownerGitOutcome(root, ['ls-files', '--error-unmatch', '-z', '--', offset]);
     if (tracked.status === 0) {
-      return invalid('github-include-invalid', `--include ${name} resolves to ${offset}, which is already tracked — it is published through the uncommitted-changes choice, not named by hand; next: leave it out of --include and answer the uncommitted-changes choice`);
+      return invalid('github-include-invalid', `--include ${typed} resolves to ${showPath(offset)}, which is already tracked — it is published through the uncommitted-changes choice, not named by hand; next: leave it out of --include and answer the uncommitted-changes choice`);
     }
     included.push(offset);
   }
@@ -262,7 +266,7 @@ function buildWip(root: string, record: BountyRecord, tracked: readonly NamedSta
           return false;
         }
         if (stat.isSymbolicLink() || (index < parts.length - 1 && !stat.isDirectory()) || (index === parts.length - 1 && !stat.isFile())) {
-          return invalid('github-non-plain-path', `the uncommitted state holds a link or other non-plain entry at ${path} — the tool publishes file contents, not links; nothing was posted; next: remove or replace ${path}, then run box bounty post again`);
+          return invalid('github-non-plain-path', `the uncommitted state holds a link or other non-plain entry at ${showPath(path)} — the tool publishes file contents, not links; nothing was posted; next: remove or replace ${showPath(path)}, then run box bounty post again`);
         }
       }
       // The blob is what `git add` would store for the path — its configured
@@ -274,7 +278,7 @@ function buildWip(root: string, record: BountyRecord, tracked: readonly NamedSta
       try {
         blob = gitFilteredBlob(root, path, readFileSync(absolute));
       } catch (error) {
-        return invalid('github-filter-failed', `the filtered form of ${path} cannot be produced — ${error instanceof Error ? error.message : String(error)} — the tool publishes the filtered form only; next: fix the configured filter or commit the file, then run box bounty post again. Nothing was posted`);
+        return invalid('github-filter-failed', `the filtered form of ${showPath(path)} cannot be produced — ${error instanceof Error ? error.message : String(error)} — the tool publishes the filtered form only; next: fix the configured filter or commit the file, then run box bounty post again. Nothing was posted`);
       }
       pending.push({ mode: modes.get(path) ?? '100644', sha: blob, path });
       return true;
@@ -429,7 +433,7 @@ export function planGitHub(root: string, repository: string, record: BountyRecor
     }
     if (violations.length > 0) {
       const named = [...new Map(violations.map(v => [v.path, v])).values()];
-      return invalid('github-never-ship', `a change being published for the first time touches never-ship paths — refused, nothing was posted: ${named.map(v => `${v.path} (rule '${v.rule}')`).join(', ')}; next: take the never-ship paths out of the change, then run box bounty post again`);
+      return invalid('github-never-ship', `a change being published for the first time touches never-ship paths — refused, nothing was posted: ${named.map(v => `${showPath(v.path)} (rule '${v.rule}')`).join(', ')}; next: take the never-ship paths out of the change, then run box bounty post again`);
     }
     // The pre-publish scan: the added lines of every commit published for
     // the first time, of the work-in-progress diff, and of each named
@@ -458,7 +462,7 @@ export function planGitHub(root: string, repository: string, record: BountyRecor
         const bytes = readFileSync(join(root, ...offset.split('/')));
         if (looksBinary(bytes)) { binary.push(offset); continue; }
         found.push(...scanText(offset, bytes.toString('utf8')));
-      } catch { return invalid('github-include-missing', `--include ${offset} could not be read for the pre-publish scan; nothing was posted; next: name an existing untracked file with --include <path>`); }
+      } catch { return invalid('github-include-missing', `--include ${showPath(offset)} could not be read for the pre-publish scan; nothing was posted; next: name an existing untracked file with --include <path>`); }
     }
     // The owner's safe to publish list is the scan's only exception: hits on
     // those paths are counted, never held — never-ship rules still apply to

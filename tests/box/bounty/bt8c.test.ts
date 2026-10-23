@@ -30,8 +30,8 @@ describe('the owner\'s two lists live in the owner\'s settings, never in the pro
     changeConfig(repo, 'add', 'safe-to-publish', 'src/app.py');
     changeConfig(repo, 'add', 'never-publish', 'src');
     config = renderConfig(repo);
-    expect(config).toContain('safe to publish: src/app.py');
-    expect(config).toContain('never publish: src');
+    expect(config).toContain('safe to publish: "src/app.py"');
+    expect(config).toContain('never publish: "src"');
     changeConfig(repo, 'remove', 'safe-to-publish', 'src/app.py');
     expect(renderConfig(repo)).toContain('safe to publish: none listed');
     // Removing an entry that is not listed is a named refusal, nothing changes.
@@ -251,15 +251,15 @@ describe('a settled finding claims only what was verified, and stays visible', (
     closeBounty(repo, id);
     for (const status of [statusGitHub(repo), statusGitHub(repo, { id }), statusGitHub(repo, { id, full: true })]) {
       expect(status).toContain('scan finding');
-      expect(status).toContain('keys.txt:1');
+      expect(status).toContain('"keys.txt":1');
       expect(status).toContain('ended — nothing was published');
     }
     // The compact ended line marks the fact so the owner knows to look.
     expect(statusGitHub(repo)).toContain('scan finding recorded');
     // The summary the owner reads carries it whatever --since says — a
     // settled finding is a standing fact, not an event.
-    expect(renderSummary(repo)).toContain('keys.txt:1');
-    expect(renderSummary(repo, '2099-01-01T00:00:00.000Z')).toContain('keys.txt:1');
+    expect(renderSummary(repo)).toContain('"keys.txt":1');
+    expect(renderSummary(repo, '2099-01-01T00:00:00.000Z')).toContain('"keys.txt":1');
   }));
 });
 

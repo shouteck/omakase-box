@@ -86,8 +86,8 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     const head = git(repo, ['rev-parse', 'HEAD']);
     const preview = previewGitHub(repo, id, choice(true));
     expect(preview).toContain('the tool\'s work-in-progress commit');
-    expect(preview).toContain('files changed in the work-in-progress commit: app.txt');
-    expect(preview).toContain('files added in the work-in-progress commit: new.txt');
+    expect(preview).toContain('files changed in the work-in-progress commit: "app.txt"');
+    expect(preview).toContain('files added in the work-in-progress commit: "new.txt"');
     const result = postBounty(repo, id, 'github', { choice: choice(true) });
     const pub = result.record.github!;
     expect(pub.wipCommit).toMatch(/^[a-f\d]{40}$/);
@@ -115,7 +115,7 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     write(repo, 'notes/stay.txt', 'stays home\n');
     write(repo, 'stray.log', 'home too\n');
     const preview = previewGitHub(repo, id, choice(false, ['notes/hint.txt']));
-    expect(preview).toContain('published by name: notes/hint.txt');
+    expect(preview).toContain('published by name: "notes/hint.txt"');
     refused(() => previewGitHub(repo, id, choice(false, ['notes/no-such.txt'])), 'github-include-invalid');
     refused(() => previewGitHub(repo, id, choice(false, ['.env.local'])), 'github-include-invalid'); // missing first — existence is checked before rules
     write(repo, '.env.local', 'SECRET\n');

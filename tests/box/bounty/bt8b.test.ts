@@ -68,7 +68,7 @@ describe('instruction blocks', () => {
   it.each(['CLAUDE.md', 'GEMINI.md'])('recognizes inline imports in %s and ignores code spans and fences with LF, CRLF or CR', name => {
     const repo = setup({ [name]: 'Read @AGENTS.md for shared instructions.\n', 'AGENTS.md': 'shared\n' });
     const original = bytes(repo, name);
-    expect(changeConfig(repo, 'set', 'instructions', 'true')).toContain('imports AGENTS.md');
+    expect(changeConfig(repo, 'set', 'instructions', 'true')).toContain('imports "AGENTS.md"');
     expect(bytes(repo, name)).toEqual(original);
     for (const eol of ['\n', '\r\n', '\r']) {
       for (const example of ['`@AGENTS.md`\n', '```markdown\n@AGENTS.md\n```\n', '~~~\n@AGENTS.md\n~~~', '~~~\n@AGENTS.md', '    @AGENTS.md\n']) {

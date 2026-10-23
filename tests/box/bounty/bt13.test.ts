@@ -207,7 +207,7 @@ describe('messages meant for the owner', () => {
     if (held.status !== 0) console.log('STDERR:', held.stderr);
     expect(held.status).toBe(0); // publish-held prints on stdout with exit 0
     expect(held.stdout).toContain('for the owner — pass this on in these words:');
-    expect(held.stdout).toContain('looks like a password or key: file config/creds.txt');
+    expect(held.stdout).toContain('looks like a password or key: file "config/creds.txt"');
     expect(held.stdout).toContain('Nothing has been published');
     expect(held.stdout).toContain('which do you want?');
     expect(held.stdout).toContain('safe-to-publish');

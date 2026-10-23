@@ -194,8 +194,10 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       }
       const plan = result.plan;
       const lines = [`${result.id} — drafted in ${plan.repoRoot}`];
-      for (const hit of plan.scan.hits) lines.push(`  scan hit: ${hit.path}:${hit.line} — ${hit.rule}`);
-      if (plan.scan.binary.length > 0) lines.push(`  not scanned — Git would treat them as binary: ${plan.scan.binary.join(', ')}`);
+      // Each path quoted (BT43 correction 5): after an apply the working
+      // state holds file names a solver chose.
+      for (const hit of plan.scan.hits) lines.push(`  scan hit: ${showPath(hit.path)}:${hit.line} — ${hit.rule}`);
+      if (plan.scan.binary.length > 0) lines.push(`  not scanned — Git would treat them as binary: ${plan.scan.binary.map(showPath).join(', ')}`);
       for (const entry of plan.ruleRemovals) lines.push(`  never-ship removed (${entry.rule}): ${entry.removed}`);
       if (plan.titleShortened) lines.push(`  title: ${plan.title} (shortened)`);
       const { amount } = repoReward(plan.repoRoot);
@@ -264,7 +266,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       }
       const { record, destination } = postBounty(repoRoot, id, to, { choice: { withChanges, include } });
       console.log(`${record.id} — posted — delivered to ${destination}`);
-      if (record.github?.scanBinary !== undefined && record.github.scanBinary.length > 0) console.log(`scan: not scanned — Git treats them as binary: ${record.github.scanBinary.join(', ')}`);
+      if (record.github?.scanBinary !== undefined && record.github.scanBinary.length > 0) console.log(`scan: not scanned — Git treats them as binary: ${record.github.scanBinary.map(showPath).join(', ')}`);
       // Which written owner answer allowed the post is an audit fact —
       // `status <id> --full` carries it; the compact post stays at three lines.
       console.log(`next: box bounty status reads the pull requests; box bounty look ${record.id} <number> collects one and shows its change`);

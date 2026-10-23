@@ -177,7 +177,7 @@ describe('the pre-publish scan — secret shapes hold the one bounty that carrie
     expect(thrown).toBeInstanceOf(BountyRefused);
     const refusal = thrown as BountyRefused;
     expect(refusal.reason).toBe('publish-held');
-    expect(refusal.message).toContain('config.txt:1');
+    expect(refusal.message).toContain('"config.txt":1');
     expect(refusal.message).toContain('passworded-connection-string');
     expect(refusal.message).not.toContain('s3cret-hun73r');
     // The hit message offers the agent only its own moves — no owner command.

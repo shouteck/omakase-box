@@ -38,8 +38,8 @@ it('an instruction file under any .git or .box segment is refused by name — by
   // Only exact segment names count: .github and git.md stay ordinary files.
   write(repo, 'docs/.github/x.md', 'x\n');
   write(repo, 'notes/git.md', 'x\n');
-  expect(changeConfig(repo, 'set', 'instruction-file', 'docs/.github/x.md')).toContain('instruction-file: docs/.github/x.md');
-  expect(changeConfig(repo, 'set', 'instruction-file', 'notes/git.md')).toContain('instruction-file: notes/git.md');
+  expect(changeConfig(repo, 'set', 'instruction-file', 'docs/.github/x.md')).toContain('instruction-file: "docs/.github/x.md"');
+  expect(changeConfig(repo, 'set', 'instruction-file', 'notes/git.md')).toContain('instruction-file: "notes/git.md"');
 });
 
 // The pass found the boundary still writable through a Windows 8.3

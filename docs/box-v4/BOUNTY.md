@@ -298,6 +298,35 @@ solver's line out of the place the tool's own prose and `next:` steps take;
 `--export` lets the session holding merge authority skip reading the change
 at all. Neither makes a reading agent immune to what the text says.
 
+In short, the tool gives three guarantees about a stranger's text, and one
+limit:
+
+1. **Every line of output, whatever its source:** no raw control character
+   reaches a terminal or an agent, and no line starts with a stranger's
+   text — a refusal or a failure is always one line. The output guard holds
+   this for every write, so it does not depend on any list of print sites.
+2. **Where an agent reads solver text on purpose** — `look`, `status
+   --comments` — it sits inside the one labelled block; `look --export` is
+   the way to not read it at all; `--json` names the stranger's fields in
+   `foreignFields`.
+3. **Inside the tool's own sentences,** every file path and commit subject
+   is quoted, the owner's and the solver's alike: once `apply` merges a
+   solution, the owner's tree and history hold the names, subjects and
+   contents the solver wrote, and the tool cannot tell whose a name is. That
+   covers the scan's hits and its not-scanned list (create, `status`,
+   `status --since`, `post --preview`, the held post's owner block, a
+   completed post), the work-in-progress and `--include` lists, the publish
+   lists and instruction files `config` names, the licence line of the issue
+   body (the licence file's name and the licence package.json declares), and
+   the refusals that name a path. A path the tool builds itself (under
+   `.box/`, a hook's settings file, the owner settings file) and the
+   repository's own location print as they are.
+
+The limit: quoting marks where a stranger's words begin and end; it does not
+change what they say. An agent that reads them can still be persuaded, so
+the place to read a solution is a session that cannot write, and the choice
+stays the agent's or the owner's.
+
 Because the diff is read off objects, what it shows is the form Git stores,
 not the form your working tree shows (git-lfs pointers, git-crypt
 ciphertext). Your filters apply only when the tool lands a merge on your own
