@@ -13,6 +13,7 @@ import type { BountyRecord } from './record.js';
 import { repositoryAddress } from './repository.js';
 import { readReward } from './settings.js';
 import { boundAmount,formatFor,publicText,renderFormat } from './format.js';
+import { showPath } from './notice.js';
 
 // The listing a stranger reads: the task, what was tried, the branch to work
 // from (with the base commit as context — never the bare commit to branch
@@ -51,9 +52,12 @@ function listingHistory(record: BountyRecord, repository: string, plan: GitHubPl
   const note = record.noteSource === 'generated' ? null : content.note;
   const branch = `box-bounty/${record.id}`;
   const title = `[box bounty ${record.id}] ${publicText(record.title)}`;
+  // A commit's subject prints quoted (BT43 correction 4): the commits a post
+  // publishes for the first time can include a solver's, merged locally by
+  // apply, under the subject the solver wrote.
   const onTop = plan.pushed.length === 0
     ? `it points at that commit — nothing new was published`
-    : `it carries the poster's work in progress — ${plan.pushed.length} commit(s) on top of that commit: ${plan.pushed.map(c => `\`${c.sha.slice(0, 12)}\` ${c.subject}`).join(', ')}`;
+    : `it carries the poster's work in progress — ${plan.pushed.length} commit(s) on top of that commit: ${plan.pushed.map(c => `\`${c.sha.slice(0, 12)}\` ${showPath(c.subject)}`).join(', ')}`;
   const body = [
     `# Bounty: ${publicText(record.title)}`,
     '',
@@ -106,7 +110,7 @@ function renderPlanPreview(repository: string, record: BountyRecord, plan: GitHu
   } else {
     lines.push(`  commits published for the first time (${plan.pushed.length}):`);
     for (const commit of plan.pushed) {
-      lines.push(`    ${commit.sha.slice(0, 12)} ${commit.subject}${commit.sha === plan.wipCommit ? ' — the tool\'s work-in-progress commit' : ''}`);
+      lines.push(`    ${commit.sha.slice(0, 12)} ${showPath(commit.subject)}${commit.sha === plan.wipCommit ? ' — the tool\'s work-in-progress commit' : ''}`);
       for (const file of plan.publishedFiles.find(entry => entry.commit === commit.sha)?.files ?? []) lines.push(`      ${file.status} ${JSON.stringify(file.path)}`);
     }
     if (plan.wip !== null) {

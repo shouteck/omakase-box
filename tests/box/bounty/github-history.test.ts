@@ -49,8 +49,8 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     const head = git(repo, ['rev-parse', 'HEAD']);
     const preview = previewGitHub(repo, id);
     expect(preview).toContain('commits published for the first time (2)');
-    expect(preview).toContain(`${c2!.slice(0, 12)} first local`);
-    expect(preview).toContain(`${c1!.slice(0, 12)} second local`);
+    expect(preview).toContain(`${c2!.slice(0, 12)} "first local"`);
+    expect(preview).toContain(`${c1!.slice(0, 12)} "second local"`);
     expect(preview).toContain(`Base: commit ${base}`);
     const result = postBounty(repo, id, 'github');
     const pub = result.record.github!;
@@ -61,7 +61,7 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     expect(git(bare, ['rev-list', '--topo-order', `refs/heads/${pub.branch}`])).toBe(git(repo, ['rev-list', '--topo-order', 'HEAD']));
     const issue = state().issues[0]!;
     expect(issue.body).toContain(`2 commit(s) on top of that commit`);
-    expect(issue.body).toContain(`\`${c2!.slice(0, 12)}\` first local`);
+    expect(issue.body).toContain(`\`${c2!.slice(0, 12)}\` "first local"`);
   }));
 
   it('uncommitted changes stay home unless the task is said to need them', () => fixture(({ repo, id, bare }) => {

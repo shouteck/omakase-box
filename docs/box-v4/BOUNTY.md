@@ -273,8 +273,9 @@ included — and `status --full`'s `history:` lines print each stored event
 as JSON with the same characters escaped. Beneath those renderers sits one
 output guard: everything the bounty command writes to standard output or
 standard error, the hook's context text included, passes through the same
-character escapes at the stream, so no raw control (a tab aside, which the
-owner's own text keeps), bidirectional override or zero-width character
+character escapes at the stream, so no raw control (a tab and a carriage
+return right before a line feed aside, which the owner's own text keeps; a
+lone carriage return is escaped), bidirectional override or zero-width character
 reaches a terminal or an agent, whichever line of the tool prints it. A `--json` document is the one exception; it is data, and
 `foreignFields` names what a stranger wrote. A refusal or a failure prints
 on one line, a line break inside it written `\n`, except the declared
@@ -353,7 +354,9 @@ When a solution clashes with current code, `apply` aborts the merge — the
 worktree and index are exactly as before, the record keeps the conflicting
 paths — and states the facts: which files clash, which of the solution's
 files would merge cleanly, and which commits on this branch touched the
-clashing files since the shared commit. It names `look <n>` so you can read
+clashing files since the shared commit, each as its short hash and its
+subject quoted (a solver's commits, merged by an earlier `apply`, keep the
+subjects the solver wrote). It names `look <n>` so you can read
 the solution before deciding what to do, and says once that a merge you make
 yourself runs under the owner's own Git settings — the tool's pins are not
 part of it.
@@ -415,7 +418,8 @@ never a possibly-stale local tracking name — and prints:
 - the commit the bounty branch is based on: the **newest commit on the current
   branch the GitHub repository already has**;
 - what becomes public that was not: each unpushed commit with its identifier
-  and subject, and — when the task is said to need uncommitted work — the
+  and its subject quoted (a solver's commit merged by `apply` and not yet
+  pushed is among them), and — when the task is said to need uncommitted work — the
   tool's work-in-progress commit with the files it changes, adds and deletes;
   or `nothing new is published`;
 - what stays home: uncommitted changes to tracked files that were not said to

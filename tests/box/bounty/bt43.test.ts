@@ -1028,9 +1028,9 @@ describe('BT43 the output guard at the CLI sink (correction 3)', () => {
 // history with the subjects the solver wrote. Every text line that names a
 // commit by its subject — apply's list of commits touching the clashing
 // files, and the commits a later post publishes for the first time (its
-// preview, the issue body it prints and publishes, and close's note on the
-// removed branch) — prints the subject quoted after a bare hash: the fourth
-// pass's finding and the sweep after it.
+// preview, the issue body it prints and publishes, and close's note and
+// issue comment on the removed branch) — prints the subject quoted after a
+// bare hash: the fourth pass's finding and the sweep after it.
 
 // The fourth pass's subject: a fake approval in the position of the tool's
 // next step, with ESC CSI and a bidi override.
@@ -1089,7 +1089,7 @@ describe('BT43 a solver\'s commit subject (correction 4)', () => {
     expect(lines.at(-1)).toMatch(/^next: read the solution with box bounty look /);
   }));
 
-  it('a subject merged by apply and published by a later post prints quoted in the preview\'s commit list, the issue body and close\'s note', () => fixture(context => {
+  it('a subject merged by apply and published by a later post prints quoted in the preview\'s commit list, the issue body, close\'s note and its removal comment', () => fixture(context => {
     const { repo, id, state } = context;
     postBounty(repo, id, 'github');
     const n = subjectPr(context, id, hostileSubject(id), 'fixed by the solver\n');
@@ -1117,6 +1117,11 @@ describe('BT43 a solver\'s commit subject (correction 4)', () => {
     expect(note, closed.stdout).toBeDefined();
     expect(note).toContain(`${short} ${shownSubject(id)}`);
     expect(nextLines(closed.stdout).filter(line => line.includes('approved'))).toEqual([]);
+    // The comment that names them on the issue before the branch goes.
+    const removal = state().comments.find(comment => comment.body.includes('is removed'));
+    expect(removal, JSON.stringify(state().comments)).toBeDefined();
+    expect(rawGuarded(removal!.body)).toEqual([]);
+    expect(removal!.body).toContain(`\`${state().prs[n - 1]!.head.sha}\` ${shownSubject(id)}`);
   }));
 
   it('owner text with CRLF line ends previews as it did before the guard: no literal \\r', () => fixture(context => {
