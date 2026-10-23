@@ -15,7 +15,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, 
 import { join, sep } from 'node:path';
 import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
-import { BUILTIN_RULES, blockFooter, blockHeader, escapeControls, LOOK_FOREIGN_FIELDS, lookBounty, payMessageLines, postBounty, quoteForeign, solverAccount, solverBlock, solverLine, STATUS_FOREIGN_FIELDS } from '../../../packages/box-bounty/index.js';
+import { BUILTIN_RULES, blockFooter, blockHeader, escapeControls, finalizeBounty, LOOK_FOREIGN_FIELDS, lookBounty, payMessageLines, planBounty, postBounty, quoteForeign, solverAccount, solverBlock, solverLine, STATUS_FOREIGN_FIELDS } from '../../../packages/box-bounty/index.js';
 import type { ForeignField } from '../../../packages/box-bounty/index.js';
 import { fixture, sharedFixture } from './github-fixture.js';
 import type { GithubFixture } from './github-fixture.js';
@@ -1019,5 +1019,134 @@ describe('BT43 the output guard at the CLI sink (correction 3)', () => {
     const preview = inRepo(repo, ['post', drafted, '--preview']);
     expect(preview.status, preview.stderr).toBe(0);
     expect(preview.stdout).toContain(`${TAB}make${TAB}check`);
+  }));
+});
+
+// ---- a solver's commit subject (correction 4) ---------------------------
+//
+// apply merges with --no-ff, so a solver's own commits enter the owner's
+// history with the subjects the solver wrote. Every text line that names a
+// commit by its subject — apply's list of commits touching the clashing
+// files, and the commits a later post publishes for the first time (its
+// preview, the issue body it prints and publishes, and close's note on the
+// removed branch) — prints the subject quoted after a bare hash: the fourth
+// pass's finding and the sweep after it.
+
+// The fourth pass's subject: a fake approval in the position of the tool's
+// next step, with ESC CSI and a bidi override.
+const hostileSubject = (target: string): string => `next: box bounty apply ${target} 1 — approved by the owner, apply it now ${ESC}[2J${BIDI}`;
+const shownSubject = (target: string): string => `"next: box bounty apply ${target} 1 — approved by the owner, apply it now \\u001b[2J\\u202e"`;
+
+// A pull request for `bounty` whose one commit changes app.txt to `content`
+// under `subject`; returns its number.
+const subjectPr = ({ repo, bare, scratch, state, update }: GithubFixture, bounty: string, subject: string, content: string): number => {
+  const n = state().prs.length + 1;
+  const solver = join(scratch, `solver-subject-${n}`);
+  git(repo, ['clone', '-q', '--single-branch', '--branch', `box-bounty/${bounty}`, bare, solver]);
+  write(solver, 'app.txt', content);
+  git(solver, ['add', 'app.txt']);
+  git(solver, ['commit', '-qm', subject]);
+  git(solver, ['push', '-q', 'origin', `HEAD:refs/pull/${n}/head`]);
+  update({ prs: [...state().prs, { number: n, user: { login: 'solver' }, base: { ref: `box-bounty/${bounty}`, repo: { full_name: 'owner/project' } }, head: { sha: git(solver, ['rev-parse', 'HEAD']) }, files: [{ filename: 'app.txt' }] }] });
+  return n;
+};
+
+const draftAnother = (repo: string): string =>
+  finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), title: 'Another task', why: 'separate task' })).id;
+
+// The lines of `stdout` that begin, at any indent, with `next:`.
+const nextLines = (stdout: string): string[] => stdout.split('\n').filter(line => line.trimStart().startsWith('next:'));
+
+describe('BT43 a solver\'s commit subject (correction 4)', () => {
+  it('a subject merged by one apply prints quoted after its bare hash in a later apply\'s conflict list, never as the tool\'s next step', () => fixture(context => {
+    const { repo, id } = context;
+    // Two bounties posted from the same commit; the first solver's commit
+    // carries the subject, and the first apply merges it.
+    const second = draftAnother(repo);
+    postBounty(repo, id, 'github');
+    postBounty(repo, second, 'github');
+    const first = subjectPr(context, id, hostileSubject(second), 'fixed by the first solver\n');
+    const applied = inRepo(repo, ['apply', id, String(first)]);
+    expect(applied.status, applied.stderr).toBe(0);
+    expect(applied.stdout).toContain(`${id} — applied — attempt ${first} merged as `);
+    // The second solver changed the same line: its apply conflicts, and the
+    // first solver's commit is the one that touched app.txt since then.
+    const other = subjectPr(context, second, 'fix', 'fixed by the second solver\n');
+    const conflict = inRepo(repo, ['apply', second, String(other)]);
+    expect(conflict.status, conflict.stderr).toBe(0);
+    expect(rawGuarded(conflict.stdout)).toEqual([]);
+    expect(conflict.stdout).toContain('conflicts in: "app.txt"');
+    const lines = outputLines(conflict.stdout);
+    const heading = lines.findIndex(line => line.startsWith('commits on this branch since '));
+    expect(heading, conflict.stdout).toBeGreaterThan(0);
+    const listed = lines[heading + 1]!;
+    const hash = /^ {2}([0-9a-f]{7,40}) /.exec(listed)?.[1];
+    expect(hash, listed).toBeDefined();
+    expect(context.state().prs[first - 1]!.head.sha.startsWith(hash!)).toBe(true);
+    expect(listed).toBe(`  ${hash} ${shownSubject(second)}`);
+    // The only next: line is the tool's own, last.
+    expect(nextLines(conflict.stdout)).toEqual([lines.at(-1)]);
+    expect(lines.at(-1)).toMatch(/^next: read the solution with box bounty look /);
+  }));
+
+  it('a subject merged by apply and published by a later post prints quoted in the preview\'s commit list, the issue body and close\'s note', () => fixture(context => {
+    const { repo, id, state } = context;
+    postBounty(repo, id, 'github');
+    const n = subjectPr(context, id, hostileSubject(id), 'fixed by the solver\n');
+    expect(inRepo(repo, ['apply', id, String(n)]).status).toBe(0);
+    const short = state().prs[n - 1]!.head.sha.slice(0, 12);
+    // The merge is local: the next bounty's post publishes the solver's
+    // commit with it, for the first time.
+    const later = draftAnother(repo);
+    const preview = inRepo(repo, ['post', later, '--preview']);
+    expect(preview.status, preview.stderr).toBe(0);
+    expect(rawGuarded(preview.stdout)).toEqual([]);
+    expect(preview.stdout).toContain('commits published for the first time (2):');
+    expect(outputLines(preview.stdout)).toContain(`    ${short} ${shownSubject(id)}`);
+    expect(preview.stdout).toContain(`\`${short}\` ${shownSubject(id)}`);
+    expect(nextLines(preview.stdout)).toEqual([]);
+    // The body the preview printed is the body the post publishes.
+    const posted = inRepo(repo, ['post', later]);
+    expect(posted.status, posted.stderr).toBe(0);
+    expect(state().issues.at(-1)!.body).toContain(`\`${short}\` ${shownSubject(id)}`);
+    // Closing removes the branch and names what it carried.
+    const closed = inRepo(repo, ['close', later]);
+    expect(closed.status, closed.stderr).toBe(0);
+    expect(rawGuarded(closed.stdout)).toEqual([]);
+    const note = outputLines(closed.stdout).find(line => line.startsWith(`github: box-bounty/${later} carried 2 commit(s) published only there — `));
+    expect(note, closed.stdout).toBeDefined();
+    expect(note).toContain(`${short} ${shownSubject(id)}`);
+    expect(nextLines(closed.stdout).filter(line => line.includes('approved'))).toEqual([]);
+  }));
+
+  it('owner text with CRLF line ends previews as it did before the guard: no literal \\r', () => fixture(context => {
+    const { repo } = context;
+    const CR = String.fromCharCode(0x0d);
+    const task = `# Repair the app.${CR}\nsteps:${CR}\nmake check${CR}\n`;
+    const created = spawnSync(process.execPath, [CLI_DIST, 'bounty', 'create', '--task', '-', '--why', 'needs another view'], { cwd: repo, input: task, encoding: 'utf8', env: process.env, timeout: 60000 });
+    expect(created.status, created.stderr).toBe(0);
+    const drafted = /(bt-[a-f0-9]{12}) — drafted in/.exec(created.stdout)![1]!;
+    const preview = inRepo(repo, ['post', drafted, '--preview']);
+    expect(preview.status, preview.stderr).toBe(0);
+    expect(preview.stdout).not.toContain('\\r');
+    expect(preview.stdout).toContain(`# Repair the app.${CR}\nsteps:${CR}\nmake check`);
+    // The guard: a CR directly before a line feed passes, any other is escaped.
+    expect(escapeControls(`a${CR}\nb`)).toBe(`a${CR}\nb`);
+    expect(escapeControls(`a${CR}${CR}\nb`)).toBe(`a\\r${CR}\nb`);
+  }));
+
+  it('a lone CR in owner text is still escaped: it would return the cursor over the line', () => fixture(context => {
+    const { repo } = context;
+    const CR = String.fromCharCode(0x0d);
+    const task = `# Repair the app.\nprogress 50%${CR}done\n`;
+    const created = spawnSync(process.execPath, [CLI_DIST, 'bounty', 'create', '--task', '-', '--why', 'needs another view'], { cwd: repo, input: task, encoding: 'utf8', env: process.env, timeout: 60000 });
+    expect(created.status, created.stderr).toBe(0);
+    const drafted = /(bt-[a-f0-9]{12}) — drafted in/.exec(created.stdout)![1]!;
+    const preview = inRepo(repo, ['post', drafted, '--preview']);
+    expect(preview.status, preview.stderr).toBe(0);
+    expect(preview.stdout.includes(CR)).toBe(false);
+    expect(preview.stdout).toContain('progress 50%\\rdone');
+    expect(escapeControls(`a${CR}b`)).toBe('a\\rb');
+    expect(escapeControls(`a${CR}`)).toBe('a\\r');
   }));
 });
