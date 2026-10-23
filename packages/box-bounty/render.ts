@@ -7,7 +7,8 @@
 import { existsSync,mkdirSync,readFileSync,writeFileSync } from 'node:fs';
 import { BountyRefused } from './errors.js';
 import { join } from 'node:path';
-import { quoteForeign,showPath } from './notice.js';
+import { foreignJson,quoteForeign,showPath } from './notice.js';
+import { solverAccount,solverAccountOr,solverBlock } from './untrusted.js';
 import { boundAmount } from './format.js';
 import { dryMergeOnto,GIT_LEAST } from './git.js';
 import { GH_LEAST } from './gh.js';
@@ -244,7 +245,7 @@ export const endedNextStep = (record: BountyRecord): string =>
 // undo has no replacement command).
 const EVENT_COMMAND_VIEW: Record<string, string> = { answer: 'look', reject: 'close', withdraw: 'close', undo: 'revert', confirm: 'post', 'owner answer': 'allow', 'owner allow': 'allow', 'owner ask': 'allow --ask', 'owner off': 'deny', 'owner on': 'allow', 'owner setup': 'config', 'owner summary': 'status --since' };
 const historyJson = (event: StageEvent): string =>
-  JSON.stringify(event.command === undefined || EVENT_COMMAND_VIEW[event.command] === undefined ? event : { ...event, command: EVENT_COMMAND_VIEW[event.command] });
+  foreignJson(event.command === undefined || EVENT_COMMAND_VIEW[event.command] === undefined ? event : { ...event, command: EVENT_COMMAND_VIEW[event.command] });
 
 
 // The reward side of `status`/`config`: what each new bounty on this
@@ -278,7 +279,7 @@ const scanFindingLines = (record: BountyRecord, indent: string): string[] => {
   const out: string[] = [];
   for (const finding of record.scanFindings ?? []) {
     for (const hit of finding.hits) {
-      out.push(`${indent}scan finding${finding.where === 'create' ? ' (recorded at create)' : ''}: ${hit.path}:${hit.line} (${hit.rule}) — ${finding.settled ?? 'flagged — unsettled'}`);
+      out.push(`${indent}scan finding${finding.where === 'create' ? ' (recorded at create)' : ''}: ${showPath(hit.path)}:${hit.line} (${hit.rule}) — ${finding.settled ?? 'flagged — unsettled'}`);
     }
   }
   return out;
@@ -445,7 +446,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
         const liveFinding = (record.scanFindings ?? []).some(finding => finding.settled === null);
         for (const hit of record.waiting.hits ?? []) {
           if (record.waiting.reason === 'secrets' && liveFinding) break; // the finding below names the same hits
-          lines.push(`      scan hit: ${hit.path}:${hit.line} (${hit.rule})`);
+          lines.push(`      scan hit: ${showPath(hit.path)}:${hit.line} (${hit.rule})`);
         }
         lines.push(record.waiting.reason === 'secrets'
           ? '      the owner decides in box bounty config — the path goes on safe to publish or never publish there'
@@ -486,8 +487,8 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
         const comments = issueComments(repoRoot, record);
         lines.push(`      ${comments.length} comment(s) written by others, not by the tool:`);
         for (const comment of comments) {
-          lines.push(`        ${comment.author === null ? 'an account whose name could not be read' : JSON.stringify(comment.author)} at ${comment.at}:`);
-          for (const line of comment.body.split('\n')) lines.push(`          other account | ${quoteForeign(line)}`);
+          lines.push(`        ${comment.author === null ? 'an account whose name could not be read' : quoteForeign(comment.author)} at ${comment.at}:`);
+          lines.push(...solverBlock('other account', comment.body.split('\n'), '          '));
         }
         lines.push(`      next: answer on issue ${record.github.issue.number} in your own words with your own gh — gh issue comment ${record.github.issue.number} --body "<your own words>"; or box bounty status ${record.id}`);
       }
@@ -516,7 +517,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
         if (record.github === undefined || options.full === true) {
           lines.push(`      attempts (${attempts.length}):`);
           for (const attempt of ordered) {
-            lines.push(`        #${attempt.n} ${attempt.outcome} — ${ATTEMPT_WORD[attempt.outcome]}; ${attempt.seenAt === undefined ? 'new' : `seen since ${attempt.seenAt}`}${attempt.author !== undefined ? `; from GitHub account ${attempt.author}` : ''}${pays && attempt.payTo !== undefined ? `; ${payToLine(attempt.payTo)}` : ''}${attempt.conflicts !== null && attempt.conflicts.length > 0 ? `; merges with conflicts in ${attempt.conflicts.map(showPath).join(', ')}` : ''}`);
+            lines.push(`        #${attempt.n} ${attempt.outcome} — ${ATTEMPT_WORD[attempt.outcome]}; ${attempt.seenAt === undefined ? 'new' : `seen since ${attempt.seenAt}`}${attempt.author !== undefined ? `; from GitHub account ${solverAccount(attempt.author)}` : ''}${pays && attempt.payTo !== undefined ? `; ${payToLine(attempt.payTo)}` : ''}${attempt.conflicts !== null && attempt.conflicts.length > 0 ? `; merges with conflicts in ${attempt.conflicts.map(showPath).join(', ')}` : ''}`);
           }
         }
         const top = ordered[0]!;
@@ -552,9 +553,9 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
     const payment = paymentOf(record);
     const paid = payment !== null
       ? payment.paidAt === null
-        ? `; payment owed $${payment.amount} to ${payment.solver ?? 'the solver'}`
+        ? `; payment owed $${payment.amount} to ${solverAccountOr(payment.solver, 'the solver')}`
         : `; paid $${payment.amount} on ${validAt(payment.paidAt)?.slice(0, 10) ?? 'an unrecorded date'}`
-      : pay !== undefined ? `; pay $${boundAmount(record) ?? '?'} to ${pay.solver ?? 'the solver'}` : '';
+      : pay !== undefined ? `; pay $${boundAmount(record) ?? '?'} to ${solverAccountOr(pay.solver, 'the solver')}` : '';
     // A hand merge the owner's decision would have held (ask/off) is marked
     // where it is read back: the owner was not asked before that merge (BT13).
     const unasked = record.events.some(event => event.stage === 'applied' && event.unasked === true) ? ' — the owner was not asked before the merge' : '';
@@ -585,7 +586,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
       // posted from another machine is recorded on that machine — the
       // shared row is read-only here, so no `config set paid` is quoted.
       if (payment !== null) {
-        const solver = payment.solver ?? 'the solver';
+        const solver = solverAccountOr(payment.solver, 'the solver');
         const link = payment.link === 'recorded' ? 'at the link they supplied'
           : payment.link === 'none' ? 'no recognised payment link was given'
           : 'no payment link recorded';
@@ -593,7 +594,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
           ? `  payment: owed $${payment.amount} to ${solver} (${link})${entry.record.shared === true ? ' — recording happens on the machine that posted this bounty' : ` — the owner records it: box bounty config set paid ${entry.record.id}`}`
           : `  payment: paid $${payment.amount} on ${validAt(payment.paidAt)?.slice(0, 10) ?? 'an unrecorded date'} — the owner's word, recorded`);
       } else if (pay !== undefined) {
-        lines.push(`  pay: ${pay.pr !== null ? `pull request ${pay.pr}` : 'the returned folder'}${pay.solver !== null ? ` by ${pay.solver}` : ''} was merged — pay $${boundAmount(entry.record) ?? '?'} to ${pay.solver ?? 'the solver'}${pay.link !== null ? ' at the link they supplied' : ' — no recognised payment link was given'} — a record, not a reminder`);
+        lines.push(`  pay: ${pay.pr !== null ? `pull request ${pay.pr}` : 'the returned folder'}${pay.solver !== null ? ` by ${solverAccount(pay.solver)}` : ''} was merged — pay $${boundAmount(entry.record) ?? '?'} to ${solverAccountOr(pay.solver, 'the solver')}${pay.link !== null ? ' at the link they supplied' : ' — no recognised payment link was given'} — a record, not a reminder`);
       }
       // The finding stays visible after the bounty ends — the owner learns a
       // flagged file sat in their working tree even when the agent stopped it.
@@ -627,7 +628,7 @@ export function renderHelp(): string {
     '  create    save the task and private context and snapshot the working state → drafted',
     '  post      publishes the GitHub issue and branch → posted — or waits on the owner',
     '  status    every open bounty, the pull requests waiting, the attempts and the next step; --comments prints comments written by others, marked as theirs',
-    '  look [id] <n>  collect pull request n (or show solution n already collected) — its change, written by the solver and marked as theirs; --full prints a large change',
+    '  look [id] <n>  collect pull request n (or show solution n already collected) — its change, written by the solver and marked as theirs; --full prints a large change; --export writes it to a file and prints none',
     '  apply [id] [<n>]  merge a solution onto the current code — collects like look when n names a pull request — the recorded decision → applied',
     '  close [id]  end a bounty with nothing merged; --reason "<why>" stays on the record → rejected, without it → withdrawn',
     '  find <words>  every record whose id, title, why, part-of or task text matches — open first, bounded',

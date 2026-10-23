@@ -17,6 +17,8 @@ import { githubRemotes, repositoryAddress } from './repository.js';
 import { boundAmount } from './format.js';
 import { paymentOf } from './pay.js';
 import { sharePaid } from './chain.js';
+import { showPath } from './notice.js';
+import { solverAccountOr } from './untrusted.js';
 
 // What `allow` prints before it writes: the owner block first — the plain
 // sentences that say what a bounty is, that it is public under the owner's
@@ -195,7 +197,7 @@ function allowMerge(repoRoot: string, record: BountyRecord, waiting: WaitingFor)
   const result = applyBounty(repoRoot, record.id, bound.n, { answered: true });
   const lines = result.outcome === 'applied'
     ? [`${record.id}: answered once; solution ${bound.n} merged as ${result.mergeCommit}. No repository decision changed.`]
-    : [`${record.id}: answered once; the merge conflicted in ${(result.conflicts ?? []).join(', ')} — worktree and index are exactly as before; the answer stands while the solution and this branch's state are unchanged. No repository decision changed.`];
+    : [`${record.id}: answered once; the merge conflicted in ${(result.conflicts ?? []).map(showPath).join(', ')} — worktree and index are exactly as before; the answer stands while the solution and this branch's state are unchanged. No repository decision changed.`];
   if (result.firstMergeNotice !== undefined) lines.push(result.firstMergeNotice);
   if (result.payMessage !== undefined) lines.push(...result.payMessage);
   return lines.join('\n');
@@ -255,13 +257,15 @@ export function renderConfig(repoRoot: string | null, options?: { readonly full?
   }
   if (repoRoot !== null) {
     const publish = publishLists(repoRoot);
-    lines.push(`never publish: ${publish.never.length === 0 ? 'none listed' : publish.never.join(', ')} — kept out of every bounty; change: box bounty config add never-publish <path>, or remove never-publish <path>`);
-    lines.push(`safe to publish: ${publish.safe.length === 0 ? 'none listed' : publish.safe.join(', ')} — paths the pre-publish scan does not hold a bounty over; change: box bounty config add safe-to-publish <path>, or remove safe-to-publish <path>`);
+    // Every listed path is quoted (BT43 correction 5): the owner lists the
+    // names a scan hold showed, and after an apply those can be a solver's.
+    lines.push(`never publish: ${publish.never.length === 0 ? 'none listed' : publish.never.map(showPath).join(', ')} — kept out of every bounty; change: box bounty config add never-publish <path>, or remove never-publish <path>`);
+    lines.push(`safe to publish: ${publish.safe.length === 0 ? 'none listed' : publish.safe.map(showPath).join(', ')} — paths the pre-publish scan does not hold a bounty over; change: box bounty config add safe-to-publish <path>, or remove safe-to-publish <path>`);
     const choice = readInstructions(repoRoot);
     lines.push(`instructions: ${choice.enabled ? 'on' : 'off'}; change: box bounty config set instructions <true|false>`);
-    lines.push(`instruction-file: ${choice.file ?? 'none chosen'}; choose any existing file: box bounty config set instruction-file <existing-path>`);
+    lines.push(`instruction-file: ${choice.file === undefined ? 'none chosen' : showPath(choice.file)}; choose any existing file: box bounty config set instruction-file <existing-path>`);
     const found = discoverInstructions(repoRoot);
-    lines.push(`instruction files found: ${found.length === 0 ? 'none; name an existing file with box bounty config set instruction-file <existing-path>' : found.map(file => `${file.path}${file.refusal === undefined ? '' : ` (refused: ${file.refusal})`}`).join(', ')}`);
+    lines.push(`instruction files found: ${found.length === 0 ? 'none; name an existing file with box bounty config set instruction-file <existing-path>' : found.map(file => `${showPath(file.path)}${file.refusal === undefined ? '' : ` (refused: ${file.refusal})`}`).join(', ')}`);
     lines.push(...instructionNotices(repoRoot, false));
     // Whether the records are committed is a fact needing attention (BT28):
     // tracked records on a repository that posts to GitHub publish owner-only
@@ -337,7 +341,7 @@ export function changeConfig(repoRoot: string | null, verb: string, name: string
     const file = checkInstructionFile(repoRoot, value);
     checkInstructionMarkers(file);
     writeInstructions(repoRoot, { ...previous, file: relative(repoRoot, file).replaceAll('\\', '/') });
-    return [`instruction-file: ${value}; saved in the owner's settings. Enable or add the block: box bounty config set instructions true`, ...syncInstructions(repoRoot, true)].join('\n');
+    return [`instruction-file: ${showPath(value)}; saved in the owner's settings. Enable or add the block: box bounty config set instructions true`, ...syncInstructions(repoRoot, true)].join('\n');
   }
   if ((name === 'never-publish' || name === 'safe-to-publish') && (verb === 'add' || verb === 'remove')) {
     if (repoRoot === null) throw new BountyRefused('config-value-invalid', `${name} lists paths inside one repository; nothing changed; next: run box bounty config inside a checkout`);
@@ -441,7 +445,7 @@ function recordPaid(repoRoot: string, id: string, withdraw: boolean): string {
   // `paid` chain event carrying only amount, whose word and the withdrawal
   // mark — never the solver, never the link, nothing to the issue.
   sharePaid(repoRoot, record, amount, withdraw);
-  const solver = payment.solver ?? 'the solver';
+  const solver = solverAccountOr(payment.solver, 'the solver');
   return withdraw
     ? `${id}: the paid record is withdrawn — $${amount} owed to ${solver} reads as owed again; the record keeps both events.`
     : `${id}: paid $${amount} to ${solver}, recorded ${at} — the owner's word on the record; the tool never checked and never moved money.`;
@@ -468,7 +472,7 @@ export function renderSummary(repoRoot: string, since?: string): string {
     // time of its own, so every finding on the record is reported, whatever
     // --since says about the events around it.
     for (const finding of record.scanFindings ?? []) {
-      for (const hit of finding.hits) findings.push(`${record.id}: ${hit.path}:${hit.line} (${hit.rule}) — ${finding.settled ?? 'flagged — unsettled'}`);
+      for (const hit of finding.hits) findings.push(`${record.id}: ${showPath(hit.path)}:${hit.line} (${hit.rule}) — ${finding.settled ?? 'flagged — unsettled'}`);
     }
   }
   const read = readDecision(repoRoot);

@@ -325,7 +325,7 @@ function collectHistoryPullRequest(root: string, record: BountyRecord, publicati
   }
   if (violations.length > 0) {
     const named = [...new Map(violations.map(v => [v.path, v])).values()];
-    return invalid('answer-never-ship', `the pull request touches never-ship paths in its history — refused, nothing was collected: ${named.map(v => `${v.path} (rule '${v.rule}')`).join(', ')}; next: end the bounty with box bounty close ${record.id} --reason "<why>" — never-ship paths cannot be collected`);
+    return invalid('answer-never-ship', `the pull request touches never-ship paths in its history — refused, nothing was collected: ${named.map(v => `${showPath(v.path)} (rule '${v.rule}')`).join(', ')}; next: end the bounty with box bounty close ${record.id} --reason "<why>" — never-ship paths cannot be collected`);
   }
   const change = pullRequestChange(root, publication.commit, commit);
   if (change.changed.length === 0 && change.added.length === 0 && change.deleted.length === 0) {

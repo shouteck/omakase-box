@@ -2,6 +2,7 @@ import { realpathSync, statSync } from 'node:fs';
 import { isAbsolute, join, relative } from 'node:path';
 import { BountyRefused } from './errors.js';
 import { git, gitOutcome, ownerGit } from './git.js';
+import { showPath } from './notice.js';
 import { storedIds } from './store.js';
 import type { NeverShipRule } from './never-ship.js';
 
@@ -131,13 +132,13 @@ export function classifySnapshot(repoRoot: string, commit: string, rules: readon
   if (escapes.length > 0) {
     throw new BountyRefused(
       'link-escape',
-      `${escapes.length} path(s) inside the repository resolve outside it — refused, not followed: ${escapes.sort().join(', ')}; next: remove the link or junction.`
+      `${escapes.length} path(s) inside the repository resolve outside it — refused, not followed: ${escapes.sort().map(showPath).join(', ')}; next: remove the link or junction.`
     );
   }
   if (unreadable.length > 0) {
     throw new BountyRefused(
       'unreadable-path',
-      `${unreadable.length} path(s) in the snapshot cannot be read (a broken link, a link to a directory, or a file that vanished mid-scan): ${unreadable.sort().join(', ')}; next: fix or remove the listed paths, then rerun the same command`
+      `${unreadable.length} path(s) in the snapshot cannot be read (a broken link, a link to a directory, or a file that vanished mid-scan): ${unreadable.sort().map(showPath).join(', ')}; next: fix or remove the listed paths, then rerun the same command`
     );
   }
   // BT31: records live in `.box/local/box.db` now — `add -A` no longer sees

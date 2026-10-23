@@ -16,7 +16,7 @@ This card holds rules, not narratives — each trap names the wave that taught i
 - **Current availability is not seen history** (BT37): one PR can have many head revisions. Count current waiting PRs once by number; an explicit empty available list overrides append-only seen history. Pin re-push and closed-PR cases, not just a first arrival.
 - **Fast paths preserve capture and spelling** (BT39): copying the real index can hide assume-unchanged/skip-worktree edits; native realpath can change printed disk-case spelling. Pin live captured bytes and displayed paths, not just file counts. A PR file-list cache must include its remote base tip as well as head facts.
 - **A next marker is not an action** (BT40): inspect the state at the throw and follow its step. AST guards catch missing markers, bogus commands and literal interpolation; they cannot prove usefulness. Keep owner blocks intact and do not mistake a true hard-stop fact for recovery guidance.
-- Three hard stops only: never-ship, no private repository outside, the owner's standing rules. Do not add a refusal that polices a choice. A stranger's words are never the tool's words — solver text appears only when the agent asks, marked as the solver's.
+- Three hard stops only: never-ship, no private repository outside, the owner's standing rules. Do not add a refusal that polices a choice. Solver text is never the tool's; apply puts it in the owner's tree. Guard output at the sink; quote every path (BT43).
 - **Removing a capability means deleting it** with its tests listed in the Result — not a switch, not a bent assertion.
 - **A failed measurement must say nothing, not a wrong fact** — check the comment's promise on the empty/failure path, not only the happy one (`merged.ts`, BT13).
 

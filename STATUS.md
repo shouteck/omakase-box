@@ -1,28 +1,22 @@
 # Status
 
-Updated by the CTO on 23 October 2026, when BT42 closed.
+Updated by the CTO on 23 October 2026, when BT43 closed.
 
 ## Now
 
-- **BT42 merged** (`3d140ef`). The block an agent sees says, in constant words, that posting is free, goes only to this repository's own public GitHub as an issue, and falls under the owner's standing permission (`box bounty config`).
-  - Independent PASS (test-verified) on `796244e`.
-  - Fresh-agent check: Haiku 5.5 on the new block got cost, destination and permission right. Sonnet 5.5 on the old block guessed "probably costs money".
-  - This repository's own `AGENTS.md` block is refreshed to match.
-- **BT44 merged** (`2cc13d4`). A bounty counts as merged only when its solution is new to the branch and descends from the posted commit.
-- **Off-machine:** green on the BT44 close (`7d0d4ab`). The BT42 merge push is not yet read.
-- **For the owner:**
-  - The stray idle `node.exe` (PID 16324, parent `bash.exe` 17672) from the BT44 pass is still there. Ending it is your call.
-  - Archive the two BT42 participant sessions when you like; then their `%TEMP%\kitchen-BT42-participant-*` folders can go.
-  - Six empty `%TEMP%\kitchen-K43-*` folders likewise wait on their sessions.
-- **New in BACKLOG:**
-  - a stranger's PR can claim a commit the owner pushed after the post (BT44 pass);
-  - bounty wording after BT42 ("a bounty has a cost"; "always your call" read as "no need to ask").
+- **BT43 merged** (`6cefe00`) into `claude/dreamy-turing-gmf4pa`, the branch this cloud session pushes. **Not yet on master:** merging that branch, by pull request or by hand, is the owner's step, and the off-machine run checks it then.
+  - The bounty command's output passes one guard that escapes every control character. Refusals print as one line. `look` frames solver text in one labelled block. `look --export` writes the diff under `.box/local/solutions/` and prints only path and hash. `--json` marks solver fields. Every printed path and commit subject is quoted.
+  - The owner amended the Outcome to those guarantees (`D-2026-10-23-bt43-outcome`). Accepted on the sixth pass (PASS, test-verified, `c1d2b52`), after five FAILs, two parks and two owner "go"s.
+  - Host limit: this run used a Linux cloud container (Node 22.22.0, git 2.43). k16 ran on the host's Chromium 1194 linked in as revision 1243. The real revision runs when this reaches master.
+- **Off-machine:** green on `1a2100b`, the last master push. Nothing from this session has reached master.
+- **For the owner** (from BT42/BT44 on the Windows host, unchanged): the stray idle `node.exe` (PID 16324); the BT42 participant sessions and their `%TEMP%` folders; six empty `%TEMP%\kitchen-K43-*` folders.
+- **New in BACKLOG:** pass 6's seven items under BT43, among them the scan's misread of quoted git headers and the docs overstating what the guard alone guarantees.
 
 ## Next
 
-This run stops after BT42. No wave is in flight or starts automatically.
+This run stops after BT43. No wave is in flight or starts automatically.
 
-- BT43, BT45, BT48, BT49, BT50, BT47 and BT46 on `packages/box-bounty`.
+- BT45, BT48, BT49, BT50, BT47 and BT46 on `packages/box-bounty`.
 - PF1, then PF2 and PF3, then PF4, in parallel worktrees.
 - PF5 after BT43, BT49 and BT50.
 - K41 after PF5, PF6 last.

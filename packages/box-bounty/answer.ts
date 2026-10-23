@@ -53,7 +53,8 @@ export interface ApplyResult {
   /** On a conflict: the solution's files that would have merged cleanly. */
   readonly clean?: readonly string[] | undefined;
   /** On a conflict: commits on this branch since the shared commit that
-      touched the clashing files — `sha subject`, oldest last. */
+      touched the clashing files — `sha "subject"`, the subject quoted,
+      oldest last. */
   readonly commits?: readonly string[] | undefined;
   /** On a conflict: the shared commit the facts are measured from. */
   readonly base?: string | undefined;
@@ -318,7 +319,7 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget, 
       .split('\0').filter(line => line !== '').sort();
     const aborted = ownerGitOutcome(repoRoot, ['merge', '--abort'], ownerAttrs);
     if (aborted.status !== 0) {
-      throw new GitFailed(`git merge --abort failed in ${repoRoot} after a conflict in ${paths.join(', ')}: ${aborted.stderr.trim()} — resolve the merge state by hand`);
+      throw new GitFailed(`git merge --abort failed in ${repoRoot} after a conflict in ${paths.map(showPath).join(', ')}: ${aborted.stderr.trim()} — resolve the merge state by hand`);
     }
     restoreBytes(repoRoot, saved);
     // The abort and the byte restore both write the worktree and can leave
@@ -335,9 +336,17 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget, 
     // resolution is the agent's own merge, under the owner's own Git.
     const conflicted = new Set(paths.map(path => path.toLowerCase()));
     const clean = deltaPaths.filter(path => !conflicted.has(path.toLowerCase())).sort();
+    // `git log --oneline`'s form, the hash bare and the subject quoted (BT43
+    // correction 4): a solver's own commits enter this history, with the
+    // subjects the solver wrote, when apply merges them. `%h` holds no space
+    // and git's `%s` no line feed, so the first space on each line splits
+    // the two.
     const commits = base !== null
-      ? gitOutcome(repoRoot, ['log', '--format=%h%x09%s', `${base}..HEAD`, '--', ...paths]).stdout
-          .split('\n').map(line => line.trim()).filter(line => line !== '')
+      ? gitOutcome(repoRoot, ['log', '--format=%h %s', `${base}..HEAD`, '--', ...paths]).stdout
+          .split('\n').filter(line => line !== '').map(line => {
+            const space = line.indexOf(' ');
+            return `${line.slice(0, space)} ${showPath(line.slice(space + 1))}`;
+          })
       : [];
     return { record, outcome: 'conflict', attempt: attempt.n, conflicts: paths, clean, commits, base: base ?? undefined };
   }

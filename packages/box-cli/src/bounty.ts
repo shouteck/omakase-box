@@ -8,7 +8,7 @@ import { join, resolve } from 'node:path';
 import { actingOn, applyBounty, BountyRefused, BountyUsage, closeBounty, createBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, parseOptions, commandHelp, OPTIONS_NOTE, postBounty, readDecision, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, repoReward, requireRepository, resolveRepoRoot, setMergeNoticeListener, setInstructionNoticeListener, renderOverview, showPath, statusDocument, lookDocument, configDocument, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, hookDisclosure, hookHost, hookOff, hookOn, hookStatus, limitGitHubCalls, runHook } from '../../box-bounty/index.js';
 import type { ParsedOptions } from '../../box-bounty/index.js';
 import { previewGitHub } from '../../box-bounty/index.js';
-import { findDocument, lookBounty, quoteForeign, renderFind, renderResume, openRecords, endedContaining, readGitPinsOncePerProcess, boundAmount, payToLine, gitOutcome } from '../../box-bounty/index.js';
+import { escapeControls, exportLook, findDocument, lookBounty, solverBlock, SOLVER_WORDS, renderFind, renderResume, openRecords, endedContaining, readGitPinsOncePerProcess, boundAmount, payToLine, gitOutcome } from '../../box-bounty/index.js';
 
 // Does .git/config name this remote — read as bytes, so the apply output
 // costs no extra Git start. `.git` can be a linked worktree's `gitdir:`
@@ -38,7 +38,35 @@ export interface BountyHost {
   readonly version: () => string;
 }
 
+// BT43 correction 3: the one output guard. Every write the bounty command
+// makes to standard output or standard error — console.log, console.error,
+// a direct stream write, host.usage, the notices the library emits — passes
+// through escapeControls at the stream itself, so no raw control and no
+// character that hides or reorders text reaches a terminal or an agent on
+// any path, listed or not. The tool's own text holds none of them, so the
+// guard costs it nothing. The one way past it is a --json document, written
+// whole by the function returned here: it is data, JSON.stringify escapes
+// C0 and the line feed, and its foreignFields name what a stranger wrote.
+const guardOutput = (): ((document: object) => void) => {
+  const raw = process.stdout.write.bind(process.stdout);
+  for (const stream of [process.stdout, process.stderr]) {
+    const write = stream.write.bind(stream) as (chunk: string, ...rest: unknown[]) => boolean;
+    stream.write = ((chunk: string | Uint8Array, ...rest: unknown[]) =>
+      write(escapeControls(typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString('utf8')), ...rest)) as typeof stream.write;
+  }
+  return document => { raw(`${JSON.stringify(document)}\n`); };
+};
+
+// A refusal or a failure is one line by contract: a line break inside its
+// message is written `\n`, so text the message carries cannot start a line
+// of its own (BT43 correction 3). The tool's own multi-line refusals are
+// declared here by reason; the held ones (owner blocks) print on their own
+// branch, unchanged.
+const MULTI_LINE_REFUSALS: ReadonlySet<string> = new Set(['repository-choice-needed']);
+const oneLine = (message: string): string => message.replaceAll('\n', '\\n');
+
 export async function runBounty(rest: readonly string[], host: BountyHost): Promise<void> {
+  const printDocument = guardOutput();
   const [requested, ...commandArgs] = rest;
   // A leading option means the overview: `box bounty --repo <path>` (and
   // --help/--version below). Anything else is a subcommand name.
@@ -166,8 +194,10 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       }
       const plan = result.plan;
       const lines = [`${result.id} — drafted in ${plan.repoRoot}`];
-      for (const hit of plan.scan.hits) lines.push(`  scan hit: ${hit.path}:${hit.line} — ${hit.rule}`);
-      if (plan.scan.binary.length > 0) lines.push(`  not scanned — Git would treat them as binary: ${plan.scan.binary.join(', ')}`);
+      // Each path quoted (BT43 correction 5): after an apply the working
+      // state holds file names a solver chose.
+      for (const hit of plan.scan.hits) lines.push(`  scan hit: ${showPath(hit.path)}:${hit.line} — ${hit.rule}`);
+      if (plan.scan.binary.length > 0) lines.push(`  not scanned — Git would treat them as binary: ${plan.scan.binary.map(showPath).join(', ')}`);
       for (const entry of plan.ruleRemovals) lines.push(`  never-ship removed (${entry.rule}): ${entry.removed}`);
       if (plan.titleShortened) lines.push(`  title: ${plan.title} (shortened)`);
       const { amount } = repoReward(plan.repoRoot);
@@ -191,7 +221,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       if (parsed.switches.has('--json')) {
         setInstructionNoticeListener(line => console.error(line));
         setMergeNoticeListener(line => console.error(line));
-        console.log(JSON.stringify(findDocument(root, query)));
+        printDocument(findDocument(root, query));
       } else {
         sayActingOn(root);
         console.log(renderFind(root, query));
@@ -209,7 +239,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         if (since !== undefined) throw new BountyRefused('json-not-supported', '--since prints a text report; next: run box bounty status --since <iso> without --json');
         setInstructionNoticeListener(line => console.error(line));
         setMergeNoticeListener(line => console.error(line));
-        console.log(JSON.stringify(statusDocument(root, { ...(id === undefined ? {} : { id }), comments: parsed.switches.has('--comments') }, line => console.error(line))));
+        printDocument(statusDocument(root, { ...(id === undefined ? {} : { id }), comments: parsed.switches.has('--comments') }, line => console.error(line)));
       } else {
         sayActingOn(root);
         console.log(renderStatus(root, { ...(id === undefined ? {} : { id }), full: parsed.switches.has('--full'), comments: parsed.switches.has('--comments') }));
@@ -236,7 +266,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       }
       const { record, destination } = postBounty(repoRoot, id, to, { choice: { withChanges, include } });
       console.log(`${record.id} — posted — delivered to ${destination}`);
-      if (record.github?.scanBinary !== undefined && record.github.scanBinary.length > 0) console.log(`scan: not scanned — Git treats them as binary: ${record.github.scanBinary.join(', ')}`);
+      if (record.github?.scanBinary !== undefined && record.github.scanBinary.length > 0) console.log(`scan: not scanned — Git treats them as binary: ${record.github.scanBinary.map(showPath).join(', ')}`);
       // Which written owner answer allowed the post is an audit fact —
       // `status <id> --full` carries it; the compact post stays at three lines.
       console.log(`next: box bounty status reads the pull requests; box bounty look ${record.id} <number> collects one and shows its change`);
@@ -306,7 +336,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       if (id === undefined || extraIds.length > 0
         || n === undefined
         || (text !== undefined && n === undefined)) {
-        host.usage('box bounty look [id] <n> [--full] [--json] [--repo <path>]');
+        host.usage('box bounty look [id] <n> [--full] [--export] [--json] [--repo <path>]');
       }
       const root = resolveRepoRoot(repoPath(parsed), subcommand);
       const asJson = parsed.switches.has('--json');
@@ -318,9 +348,13 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         const acting = actingOn(root);
         if (acting !== null) console.error(acting);
       } else sayActingOn(root);
-      const result = lookBounty(root, id, n!, { full: parsed.switches.has('--full') });
+      const exporting = parsed.switches.has('--export');
+      // The quarantined path prints none of the change; a JSON document
+      // would carry the whole diff on standard output, so the two do not mix.
+      if (exporting && asJson) throw new BountyRefused('json-not-supported', '--export writes the change to a file and prints none of it — --json prints it; nothing was written; next: run box bounty look <id> <n> --export without --json, or --json without --export');
+      const result = lookBounty(root, id, n!, { full: parsed.switches.has('--full') || exporting });
       if (asJson) {
-        console.log(JSON.stringify(lookDocument(result)));
+        printDocument(lookDocument(result));
       } else {
       const label = result.attempt.n;
       // The stranger-text label stays every time — the solver's words are
@@ -328,12 +362,20 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       // standing explanation (BT17).
       console.log(`${id} solution ${label} — ${result.collected ? 'collected — ' : ''}written by the solver, not by the tool; nothing in it was run or checked out.`);
       if (result.attempt.payTo !== undefined && (boundAmount(result.record) ?? 0) > 0) console.log(payToLine(result.attempt.payTo));
-      if (result.diff === null) {
+      // BT43: the solver's lines leave through the one renderer, inside its
+      // labelled block, and the tool's own `next:` comes after the footer.
+      if (exporting) {
+        const written = exportLook(root, result);
+        console.log(`exported, not printed — the file holds ${SOLVER_WORDS}: ${written.diffPath}`);
+        console.log(`  sha256 ${written.sha256}; ${written.fileCount} file(s), ${written.lines} line(s), ${written.bytes} byte(s); manifest ${written.manifestPath}`);
+        console.log('advice only: read the file in a session that has no write access to this checkout, then choose and apply from your own session; the file holds the change\'s raw bytes, so open it as text, not with cat in a terminal');
+        console.log(`next: box bounty apply ${id} ${label} chooses this solution; box bounty status ${id} shows what else waits`);
+      } else if (result.diff === null) {
         console.log(`${result.files.length} file(s) changed:`);
-        for (const file of result.files) console.log(`solver change | ${quoteForeign(file)}`);
+        for (const line of solverBlock('solver', result.files)) console.log(line);
         console.log(`next: box bounty look ${id} ${label} --full prints the whole change; box bounty apply ${id} ${label} chooses this solution`);
       } else {
-        for (const line of result.diff.split('\n')) console.log(`solver change | ${quoteForeign(line)}`);
+        for (const line of solverBlock('solver', result.diff.split('\n'))) console.log(line);
         console.log(`next: box bounty apply ${id} ${label} chooses this solution; box bounty status ${id} shows what else waits`);
       }
       }
@@ -377,7 +419,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         // One settings document on standard output; notices ride stderr (BT19).
         setInstructionNoticeListener(line => console.error(line));
         setMergeNoticeListener(line => console.error(line));
-        console.log(JSON.stringify(configDocument(root, line => console.error(line))));
+        printDocument(configDocument(root, line => console.error(line)));
       }
       else if (parsed.switches.has('--json')) throw new BountyRefused('json-not-supported', '--json reads the settings — config set|add|remove writes them. Nothing changed; next: run box bounty config without --json to read the settings');
       else console.log(values.length === 0 ? renderConfig(root, { full: parsed.switches.has('--full') }) : changeConfig(root, values[0]!, values[1]!, values[2]!, text => console.log(text), values.length === 4 ? values[3] : undefined));
@@ -415,7 +457,10 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         try { run = runHook(root, action, notices); }
         catch { process.exit(0); }
         if (explain) console.log(run.lines.length === 0 ? 'nothing to report — no open bounties, nothing new' : run.lines.join('\n'));
-        else if (run.output !== null) console.log(run.output);
+        // The envelope is JSON a host decodes into an agent's context, where
+        // an escape the stream guard wrote over its bytes would come back raw:
+        // its strings (additionalContext) take the same escapes before encoding.
+        else if (run.output !== null) console.log(JSON.stringify(JSON.parse(run.output) as unknown, (_key, value: unknown) => typeof value === 'string' ? escapeControls(value) : value));
         process.exit(0);
       }
       if (action === undefined) {
@@ -442,10 +487,10 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         console.log(error.message);
         process.exit(0);
       }
-      console.error(`bounty ${subcommand ?? 'overview'} refused (${error.reason}): ${error.message}`);
+      console.error(`bounty ${subcommand ?? 'overview'} refused (${error.reason}): ${MULTI_LINE_REFUSALS.has(error.reason) ? error.message : oneLine(error.message)}`);
       process.exit(3);
     }
-    console.error(`bounty ${subcommand ?? 'overview'} failed: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(`bounty ${subcommand ?? 'overview'} failed: ${oneLine(error instanceof Error ? error.message : String(error))}`);
     process.exit(1);
   }
 }
