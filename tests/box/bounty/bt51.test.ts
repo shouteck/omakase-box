@@ -2,12 +2,13 @@
 // GitHub's rule: a pull request is marked merged when its head reaches its
 // base branch. What is asserted is the bare remote's refs and the pull
 // request's mark, never the tool's word alone.
+import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { answerGitHub, applyBounty, checkMergedSolutions, closeBounty, loadRecord, postBounty } from '../../../packages/box-bounty/index.js';
+import { answerGitHub, applyBounty, checkMergedSolutions, closeBounty, loadRecord, postBounty, setMergeNoticeListener } from '../../../packages/box-bounty/index.js';
 import { fixture, type GithubFixture } from './github-fixture.js';
-import { git, rewriteRecordRaw, write } from './support.js';
+import { CLI_DIST, git, rewriteRecordRaw, write } from './support.js';
 
 const tipOf = (bare: string, id: string): string | null => {
   const line = git(bare, ['for-each-ref', '--format=%(refname) %(objectname)', 'refs/heads']).split('\n').find(entry => entry.startsWith(`refs/heads/box-bounty/${id} `));
@@ -21,10 +22,9 @@ const pending = (world: GithubFixture) => loadRecord(world.repo, world.id).githu
 const refuseUpdates = (bare: string) => write(bare, 'hooks/update', '#!/bin/sh\ncase "$3" in 0000000000000000000000000000000000000000) exit 0;; esac\necho refused >&2\nexit 1\n');
 const allowUpdates = (bare: string) => write(bare, 'hooks/update', '#!/bin/sh\nexit 0\n');
 const posted = (run: (world: GithubFixture) => void) => fixture(world => { postBounty(world.repo, world.id, 'github'); run(world); });
-const recordSeen = (world: GithubFixture, n: number, commit: string) => rewriteRecordRaw(world.repo, world.id, record => ({
-  ...record,
-  github: { ...(record['github'] as object), seenPullRequests: [{ n, commit, at: '2026-10-01T00:00:00.000Z', author: world.state().prs.find(pr => pr.number === n)!.user.login }] }
-}));
+const recordSeen = (world: GithubFixture, n: number, commit: string) => rewriteRecordRaw(world.repo, world.id, record => {
+  (record['github'] as Record<string, unknown>)['seenPullRequests'] = [{ n, commit, at: '2026-10-01T00:00:00.000Z', author: world.state().prs.find(pr => pr.number === n)!.user.login }];
+});
 const handMerge = (world: GithubFixture, head: string) => {
   git(world.repo, ['merge', '--no-ff', '-X', 'theirs', '-m', 'agent merged the solution', head]);
   checkMergedSolutions(world.repo);
@@ -120,7 +120,7 @@ describe('a chosen solution shows as merged on GitHub', { timeout: 180000 }, () 
     allowUpdates(bare);
     git(repo, ['fetch', bare, 'refs/heads/main']);
     const unrelated = git(repo, ['commit-tree', '-m', 'no parent', `${git(repo, ['rev-parse', 'HEAD'])}^{tree}`]);
-    rewriteRecordRaw(repo, id, record => ({ ...record, attempts: (record['attempts'] as object[]).map(attempt => ({ ...attempt, commit: unrelated })) }));
+    rewriteRecordRaw(repo, id, record => { for (const attempt of record['attempts'] as Record<string, unknown>[]) attempt['commit'] = unrelated; });
     closeBounty(repo, id);
     expect(pending(world)).toContain('bounty-branch-not-advanced: head-not-descended');
     expect(tipOf(bare, id)).toBe(posted);
@@ -197,6 +197,24 @@ describe('a chosen solution shows as merged on GitHub', { timeout: 180000 }, () 
     expect(tipOf(bare, id)).toBeNull();
     expect(merged(world, 1)).toBe(false);
     expect(pending(world)).toBeNull();
+  }));
+
+  it("apply's output says what the owner still has to do for the board to count it", () => posted(world => {
+    const { repo, id, pr } = world;
+    pr('solver1');
+    const run = spawnSync(process.execPath, [CLI_DIST, 'bounty', 'apply', id, '1'], { cwd: repo, encoding: 'utf8', env: process.env, timeout: 60000 });
+    expect(run.status).toBe(0);
+    expect(run.stdout).toContain('not on GitHub yet');
+    expect(run.stdout).toContain('the board counts this merge once it is on the default branch on GitHub; the tool never pushes it');
+  }));
+
+  it('a hand merge says the same through the notice', () => posted(world => {
+    const head = world.pr('solver1');
+    answerGitHub(world.repo, world.id, 1);
+    const noticed: string[] = [];
+    setMergeNoticeListener(line => noticed.push(line));
+    handMerge(world, head);
+    expect(noticed.join('\n')).toContain('the board counts this merge once main is pushed to the default branch on GitHub');
   }));
 
   it('a rewarded bounty left pending still records whom to pay', () => fixture(world => {

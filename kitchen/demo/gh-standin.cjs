@@ -88,7 +88,12 @@ if (rest === 'labels/box-bounty' && method === 'GET') { if (state.labels.some(la
 if (rest === 'labels' && method === 'POST') { state.labels.push({ name: input.name }); save(state); emit({ name: input.name }); }
 if (/^pulls\/\d+$/.test(rest)) {
   const pr = state.prs.find(pr => pr.number === Number(rest.split('/')[1]));
-  if (!pr) fail(); emit(pr);
+  if (!pr) fail();
+  // GitHub's rule (BT51): marked merged when its head reaches its base branch; the mark stays.
+  if (pr.merged !== true && spawnSync('git', ['-C', bare, 'merge-base', '--is-ancestor', pr.head.sha, 'refs/heads/' + pr.base.ref]).status === 0) {
+    pr.merged = true; pr.merged_at = new Date().toISOString(); pr.state = 'closed'; save(state);
+  }
+  emit({ merged: false, merged_at: null, created_at: '2020-01-01T00:00:00Z', ...pr });
 }
 if (/^pulls\/\d+\/files$/.test(rest)) {
   const pr = state.prs.find(pr => pr.number === Number(rest.split('/')[1]));

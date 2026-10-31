@@ -326,6 +326,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
             : remoteNamed(applyRoot, 'origin') ? `not on GitHub yet: this branch has no upstream — publish it with: git push -u origin ${branch}`
             : `not on GitHub yet: this branch (${branch}) has no upstream and this checkout has no remote named origin — publish it by pushing ${branch} to the repository's remote`);
         }
+        if (result.record.github !== undefined) console.log('the board counts this merge once it is on the default branch on GitHub; the tool never pushes it');
         console.log(`ended — ${jobLine(result.record)}; to reverse it: git revert -m 1 ${result.mergeCommit}`);
         console.log(renderResume(result.record));
       } else {

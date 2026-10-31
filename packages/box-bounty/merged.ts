@@ -254,6 +254,7 @@ function closeOne(repoRoot: string, record: BountyRecord, branch: string, candid
   syncGitHubDecision(repoRoot, record, { decision });
   shareMerged(repoRoot, record, candidate.attempt?.n, merge, unasked);
   emit(`${record.id} — ${label} is merged on ${branch} at ${merge.slice(0, 12)} — the bounty is closed (recorded applied)`);
+  if (record.github !== undefined) emit(`${record.id} — the board counts this merge once ${branch} is pushed to the default branch on GitHub; the tool never pushes it`);
   if (unasked) emit(`${record.id} — fact: the owner was not asked before this merge`);
   if (partial.length > 0) emit(`${record.id} — fact: of the files the solution changed, the merge left these as they were: ${partial.map(showPath).join(', ')}`);
   const author = candidate.attempt?.author ?? record.github?.seenPullRequests?.find(pr => pr.n === candidate.pr && pr.commit === candidate.commit)?.author;

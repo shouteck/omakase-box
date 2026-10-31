@@ -291,21 +291,11 @@ export function resolveAttempt(root: string, record: BountyRecord, n: number, vi
   return invalid('unknown-attempt', `solution ${n} does not exist on ${record.id} — the bounty knows ${known}; ${way}; next: box bounty status ${record.id}`);
 }
 
-// The history path: the pull request's commits are the answer. Refusals, each
-// changing nothing: its history does not descend from the bounty branch; its
-// tree holds a link, a submodule or an unsafe name; a path it carries matches
-// never-ship anywhere in its new history; it changes nothing at all.
-// `description` is the pull request's own description text, credential-redacted
-// by the caller. It is recorded for `look --json`'s `fromOthers` (BT19) — the
-// tool never renders it as its own words.
-function collectHistoryPullRequest(root: string, record: BountyRecord, publication: GitHubPublication, commit: string, author: string, pr: number, via?: string, payTo: PayToFact = { state: 'none' }, description?: string) {
-  if (gitOutcome(root, ['merge-base', '--is-ancestor', publication.commit, commit]).status !== 0) {
-    return invalid('github-pr-not-descended', `the pull request's history does not descend from ${publication.branch}, the bounty branch — there is nothing sound to compare it with; nothing was collected; next: ask the solver to rebase the pull request on ${publication.branch}, or do not collect it`);
-  }
-  const remoteTip = remoteBranchSha(root, publication.repository, publication.branch);
-  if (remoteTip !== publication.commit) {
-    return invalid('github-branch-changed', `${publication.branch} on the remote is ${remoteTip ?? 'gone'}, not the ${publication.commit} this tool posted — it was changed outside the tool; nothing was collected; next: ask the owner — the remote branch was changed outside the tool`);
-  }
+// What a pull request's head must pass before the tool takes it: tree safety
+// and never-ship across its new history. Collection refuses on it; the closing
+// step runs it again before moving the bounty branch, because a hand-merged
+// head may never have been collected (BT51). Returns the new commits.
+export function checkSolutionHistory(root: string, record: BountyRecord, publication: GitHubPublication, commit: string): string[] {
   const tree = gitOutcome(root, ['ls-tree', '-rz', commit]);
   if (tree.status !== 0) return invalid('github-pr-unreadable', 'Git could not read the pull request tree; next: check signed-in Git and rerun the same command');
   for (const entry of tree.stdout.split('\0')) {
@@ -336,6 +326,25 @@ function collectHistoryPullRequest(root: string, record: BountyRecord, publicati
     const named = [...new Map(violations.map(v => [v.path, v])).values()];
     return invalid('answer-never-ship', `the pull request touches never-ship paths in its history — refused, nothing was collected: ${named.map(v => `${showPath(v.path)} (rule '${v.rule}')`).join(', ')}; next: end the bounty with box bounty close ${record.id} --reason "<why>" — never-ship paths cannot be collected`);
   }
+  return newCommits;
+}
+
+// The history path: the pull request's commits are the answer. Refusals, each
+// changing nothing: its history does not descend from the bounty branch; its
+// tree holds a link, a submodule or an unsafe name; a path it carries matches
+// never-ship anywhere in its new history; it changes nothing at all.
+// `description` is the pull request's own description text, credential-redacted
+// by the caller. It is recorded for `look --json`'s `fromOthers` (BT19) — the
+// tool never renders it as its own words.
+function collectHistoryPullRequest(root: string, record: BountyRecord, publication: GitHubPublication, commit: string, author: string, pr: number, via?: string, payTo: PayToFact = { state: 'none' }, description?: string) {
+  if (gitOutcome(root, ['merge-base', '--is-ancestor', publication.commit, commit]).status !== 0) {
+    return invalid('github-pr-not-descended', `the pull request's history does not descend from ${publication.branch}, the bounty branch — there is nothing sound to compare it with; nothing was collected; next: ask the solver to rebase the pull request on ${publication.branch}, or do not collect it`);
+  }
+  const remoteTip = remoteBranchSha(root, publication.repository, publication.branch);
+  if (remoteTip !== publication.commit) {
+    return invalid('github-branch-changed', `${publication.branch} on the remote is ${remoteTip ?? 'gone'}, not the ${publication.commit} this tool posted — it was changed outside the tool; nothing was collected; next: ask the owner — the remote branch was changed outside the tool`);
+  }
+  const newCommits = checkSolutionHistory(root, record, publication, commit);
   const change = pullRequestChange(root, publication.commit, commit);
   if (change.changed.length === 0 && change.added.length === 0 && change.deleted.length === 0) {
     return invalid('answer-empty', `the pull request changes nothing against the bounty branch — a return that changes nothing is no solution; next: ask for a pull request that changes something, or end the bounty with box bounty close ${record.id} --reason "<why>"`);
