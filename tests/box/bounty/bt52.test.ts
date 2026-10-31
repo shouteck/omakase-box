@@ -83,6 +83,9 @@ describe('a later agent on another machine can finish a bounty', { timeout: 1800
       expect(result.outcome).toBe('applied');
       expect(git(b.repo, ['merge-base', '--is-ancestor', world.waitingPr, 'HEAD'])).toBe('');
       expect(loadRecord(b.repo, world.id).github!.pending).toBeNull();
+      const ended = renderStatus(b.repo);
+      expect(ended).toContain('the saved job stayed on the machine that posted it');
+      expect(ended).not.toContain('continue the saved job');
     });
     expect(world.state().prs[0]!.merged).toBe(true);
     expect(world.state().issues[0]!.state).toBe('closed');

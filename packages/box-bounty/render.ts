@@ -241,7 +241,7 @@ export const nextStep = (record: BountyRecord): string => {
 // revert when its merge landed, and the ways to look again or start fresh.
 // Shared by the text status and the status --json document (BT19).
 export const endedNextStep = (record: BountyRecord): string =>
-  `continue the saved job${record.stage === 'applied' ? `; to reverse the merge: git revert -m 1 ${record.events.find(event => event.stage === 'applied')?.merge ?? '<merge>'}` : ''}; inspect: box bounty status ${record.id} --full; or create another with box bounty create --task <file> --why "<one line>"`;
+  `${record.adopted !== undefined ? 'the saved job stayed on the machine that posted it' : 'continue the saved job'}${record.stage === 'applied' ? `; to reverse the merge: git revert -m 1 ${record.events.find(event => event.stage === 'applied')?.merge ?? '<merge>'}` : ''}; inspect: box bounty status ${record.id} --full; or create another with box bounty create --task <file> --why "<one line>"`;
 
 // History events record the command that drove them, and records written
 // while older commands existed keep those names on disk — history is never
