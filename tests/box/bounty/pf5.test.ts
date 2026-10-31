@@ -265,6 +265,18 @@ describe('the owner message', () => {
     expect(merged(repo, id, pr)).toContain('The board could not be read for other ways they accept');
   }));
 
+  it('a redirect is not followed, even to an address that would answer', () => fixture(({ repo, id, scratch, pr }) => {
+    rewarded(scratch, board);
+    routes({
+      [PROFILE]: { status: 302, body: {}, headers: { location: `${board}/moved` } },
+      '/moved': { status: 200, body: { methods: [paypal], methods_more: 0 } }
+    });
+    postBounty(repo, id, 'github');
+    const message = merged(repo, id, pr);
+    expect(requests().map(request => request.path)).not.toContain('/moved');
+    expect(message).not.toContain('lists these ways');
+  }));
+
   it('a non-link method prints quoted, so its characters cannot pass as the tool\'s prose', () => fixture(({ repo, id, scratch, pr }) => {
     rewarded(scratch, board);
     routes({ [PROFILE]: { status: 200, body: { methods: [{ kind: 'wise-email', value: 'a‮b@example.com' }], methods_more: 0 } } });
