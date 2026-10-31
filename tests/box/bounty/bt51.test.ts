@@ -3,7 +3,7 @@
 // base branch. What is asserted is the bare remote's refs and the pull
 // request's mark, never the tool's word alone.
 import { spawnSync } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { answerGitHub, applyBounty, checkMergedSolutions, closeBounty, loadRecord, postBounty, setMergeNoticeListener } from '../../../packages/box-bounty/index.js';
@@ -19,8 +19,13 @@ const merged = (world: GithubFixture, n: number) => world.state().prs.find(pr =>
 const pending = (world: GithubFixture) => loadRecord(world.repo, world.id).github!.pending;
 // The remote refuses every new tip and still takes a deletion: a retry that
 // completes under this hook proves it pushed nothing.
-const refuseUpdates = (bare: string) => write(bare, 'hooks/update', '#!/bin/sh\ncase "$3" in 0000000000000000000000000000000000000000) exit 0;; esac\necho refused >&2\nexit 1\n');
-const allowUpdates = (bare: string) => write(bare, 'hooks/update', '#!/bin/sh\nexit 0\n');
+// Executable, or Git on Linux ignores the hook and the push lands (BT51-ci).
+const updateHook = (bare: string, script: string) => {
+  write(bare, 'hooks/update', script);
+  chmodSync(join(bare, 'hooks', 'update'), 0o755);
+};
+const refuseUpdates = (bare: string) => updateHook(bare, '#!/bin/sh\ncase "$3" in 0000000000000000000000000000000000000000) exit 0;; esac\necho refused >&2\nexit 1\n');
+const allowUpdates = (bare: string) => updateHook(bare, '#!/bin/sh\nexit 0\n');
 const posted = (run: (world: GithubFixture) => void) => fixture(world => { postBounty(world.repo, world.id, 'github'); run(world); });
 const recordSeen = (world: GithubFixture, n: number, commit: string) => rewriteRecordRaw(world.repo, world.id, record => {
   (record['github'] as Record<string, unknown>)['seenPullRequests'] = [{ n, commit, at: '2026-10-01T00:00:00.000Z', author: world.state().prs.find(pr => pr.number === n)!.user.login }];
