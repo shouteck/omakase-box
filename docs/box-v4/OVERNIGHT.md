@@ -15,7 +15,7 @@ Show the owner the night plan as the pre-cook card (START.md) and wait for "go" 
 
 **During the night:**
 
-- Every wave runs exactly as in the day: brief, cook, the pass, merge on PASS. Nothing reaches master without the pass. A night run never skips review, weakens a test or lowers a verdict level to keep moving.
+- Every wave runs exactly as in the day: brief, plan if long, build, verify, the checks in KITCHEN.md, merge. Nothing reaches master without them. A night run never skips a check, weakens a test or lowers a level to keep moving.
 - Never stop to ask. When a question comes up that only the owner can answer, park it in the night file with the options and the default you would choose, then move to the next wave in the queue that does not depend on it. Kitchen cleanup waves are there for exactly this.
 - A wave that stalls (two attempts with nothing new, or three times its timebox) is parked: leave its branch as it is, write down what was tried and what you would try next, move on. Two parked waves in a row means something shared is wrong: stop the run.
 - After every wave, merged or parked: replace STATUS.md, push master, add a line to the night file. If the session dies, at most the wave in flight is lost.

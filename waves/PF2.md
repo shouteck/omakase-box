@@ -3,18 +3,9 @@
 Milestone: PF (the platform) · Station: packaging · Base: `master at dispatch` · Branch: `wave/PF2` · Timebox: 240 minutes; at expiry, report partial findings and stop
 Owner decisions: D-2026-10-21-platform-v1, D-2026-10-21-gtm-thesis, D-2026-10-21-k44-decisions
 Owner context: D-2026-10-21-platform-v1 (feature 2); D-2026-10-21-gtm-thesis (agents first); D-2026-10-21-k44-decisions (decision 5: machine channels first); spend no money
+Horizon: long: start with `/plan` and keep the plan in this file
 
-**Brief.** Written ahead by the CTO on 21 October 2026. Before dispatch, the CTO reconciles it with K43's machine-interface design in `PLATFORM-UX.md` (schema, tool names, bounds) and corrects names only. **After PF1.** Cook: high; reviewer: high.
-
-## Staffing (Claude Code, coordinator on Opus 5.5)
-
-Dispatch each role with the Agent tool, passing `model` and `effort` exactly as written here. This brief is the explicit instruction those settings need.
-
-- **Cook:** `box-worker`, **Sonnet 5.5**, effort **high**: a well-specified interface over PF1's data.
-- **The pass:** `box-reviewer`, fresh, **Opus 5.5**, effort **high**: prompt-injection hygiene and bounds need the stronger reader. Never the agent that cooked.
-- **Participants:** two fresh sessions (never subagents), **Sonnet 5.5** at its default effort.
-- **Corrections:** a correction round uses a fresh cook at the same model and effort. After two FAILs on the same finding, the next correction steps up one level (Sonnet 5.5 to Opus 5.5 high, or Opus 5.5 high to Opus 5.5 xhigh) and the Result says so. Fable 5.1 is never used without the owner's word.
-- **Record** the host, model and effort of every role in the Result (KITCHEN.md).
+**Brief.** Written ahead by the CTO on 21 October 2026. Before starting, the CTO reconciles it with K43's machine-interface design in `PLATFORM-UX.md` (schema, tool names, bounds) and corrects names only. **After PF1.**
 
 ## Outcome
 
@@ -54,13 +45,13 @@ A solver agent with no web browser can find bounties that match its skills, read
 - The fresh-agent check succeeded.
 - `packages/box-platform/README.md` documents the feed and the MCP tools.
 
-## Review lenses
+## Lenses
 
 - [x] **Security:** no private data; prompt-injection hygiene, meaning poster text never appears in tool descriptions and is always marked.
-- [x] **User experience:** the pass runs the agent task itself through MCP only.
-- [x] **Measurement fairness:** the pass checks the bounds on a stand-in it seeds.
+- [x] **User experience:** the CTO runs the agent task itself through MCP only.
+- [x] **Measurement fairness:** the CTO checks the bounds on a stand-in it seeds.
 
-## Notes for the worker
+## Notes
 
 - Feature playbook; principles: prove-it-works.
 - Downloads (the MCP SDK) on the pre-cook card.

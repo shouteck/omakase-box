@@ -5,27 +5,27 @@ The rules are in [AGENTS.md](../../AGENTS.md). This file is the procedure. The r
 ## Units of work
 
 - A **milestone** (D2, D3, ...) is what the CEO approves. It has an outcome the CEO can observe.
-- A **wave** is one task inside a milestone: one brief, one branch, one worker, one reviewer. The CTO opens and closes waves without asking, but only as many as the START message allows; then it stops.
+- A **wave** is one task inside a milestone: one brief, one branch, carried out by the CTO. The CTO opens and closes waves without asking, but only as many as the START message allows; then it stops.
 
 ## A wave, start to finish
 
 1. **Brief.** Copy [the template](../../templates/wave.md) to `waves/<id>.md` and fill it in, naming the station it belongs to (see [the brigade](../../kitchen/README.md)) and the [owner decisions](DECISIONS.md) it relies on. One page; if it does not fit, the task is too big — split it. `node scripts/brief-check.mjs` checks its references before dispatch (START.md step 4).
-2. **Branch.** `wave/<id>` from current master. The main checkout is the default; sequential cooks share it. Separate worktrees are only for genuinely parallel writers (one writer per branch).
-3. **Implement.** The worker gets its role file, the wave file and the station card, and nothing else by default. It commits to the branch and runs `node scripts/verify.mjs` itself before handing back.
-4. **Review.** The reviewer checks out the worker's commit, reads `git diff master...wave/<id>` against the brief, runs `node scripts/verify.mjs` with the suites the brief names, and writes the verdict into the wave file: commit SHA, the verify summary line, PASS or FAIL, findings.
-5. **Fix loop.** On FAIL the worker fixes and commits; the reviewer reruns on the new SHA. No new approval. Rerunning a check is always allowed. If the CTO changes the scope mid-wave, the wave file is edited first and the worker is pointed at it. After a second correction, stop resuming the same worker: start a fresh one with the wave file up to date — instructions decay across resumes. A FAIL whose cause is a design choice with no precedent goes to a prototype wave, not another correction.
-6. **Close.** On PASS the CTO merges with `--no-ff`, pushes master, removes every resource the wave created, replaces STATUS.md and deletes the merged branch with `git branch -d` (the owner gave standing approval on 6 October 2026). If your host still wants a confirmation for that, do not ask and do not hold the close: leave the branch; the next kickoff sweeps merged `wave/*` branches. It also records the wave's verify cost — `node scripts/kitchen-stats.mjs --wave=<id>`; its `line`, counts and provenance go in the Result. Local history only, missing on a fresh clone.
-7. **Reflect.** Before the next wave, the CTO writes two lines in the Result: what went wrong or was repeated, and which script, template line, check or profile it becomes. Sort each lesson by reach. **Wave:** nothing more to do. **Station:** add it to the station card. **Kitchen:** add one line to `kitchen/INBOX.md`. Cooks and the pass only report; sorting is the head chef's job. "Nothing" is an acceptable answer; a lesson left as prose in a report is not.
+2. **Branch.** `wave/<id>` from current master. The main checkout is the default; separate worktrees are only for genuinely parallel writers (one writer per branch).
+3. **Plan, if long.** A wave that is long by clock or by concept (several dependent steps, a design unknown, more than one sitting of focused work) starts with `/plan`; the brief says `Horizon: long` where that is already known. The agreed plan goes in the wave file under `## Plan`, so a later session can resume from it. A host without `/plan` writes the same section first. An overnight run writes it without waiting.
+4. **Implement.** The CTO builds on the branch, with the playbook and the station card, and commits.
+5. **Verify and check.** The CTO runs `node scripts/verify.mjs` on the commit with the suites the brief names, then answers "Checking the work" below in the wave file: commit SHA, verify summary line, level, findings. A failure is fixed and rerun on the new SHA, with no new approval. If the scope has to change, edit the wave file first. A failure whose cause is a design choice with no precedent goes to a prototype wave.
+6. **Close.** When the checks hold, the CTO merges with `--no-ff`, pushes master, removes every resource the wave created, replaces STATUS.md and deletes the merged branch with `git branch -d` (the owner gave standing approval on 6 October 2026). If your host still wants a confirmation for that, do not ask and do not hold the close: leave the branch; the next kickoff sweeps merged `wave/*` branches. It also records the wave's verify cost — `node scripts/kitchen-stats.mjs --wave=<id>`; its `line`, counts and provenance go in the Result. Local history only, missing on a fresh clone.
+7. **Reflect.** Before the next wave, the CTO writes two lines in the Result: what went wrong or was repeated, and which script, template line, check or profile it becomes. Sort each lesson by reach. **Wave:** nothing more to do. **Station:** add it to the station card. **Kitchen:** add one line to `kitchen/INBOX.md`. "Nothing" is an acceptable answer; a lesson left as prose in a report is not.
 
 When the last wave of a milestone closes, send the CEO the finished card with the next proposal. While a decision is with the CEO, keep doing everything that does not depend on it: briefs, read-only investigation, cleanup. Do not sit idle behind a gate.
 
-Keep ceremony in proportion: a one-command check needs no page of brief; a product-behaviour change needs a reviewer who is not the author.
+Keep ceremony in proportion: a one-command check needs no page of brief.
 
-**States.** A brief on master awaiting the owner's "go" is **awaiting approval**, not a wave in flight; only the owner starts it. A running wave may be **parked** (a `Park <id>` commit): the head chef parks it and only the head chef resumes it — after a second correction, a fresh worker per step 5. Parking is not acceptance: no verdict, no merge.
+**States.** A brief on master awaiting the owner's "go" is **awaiting approval**, not a wave in flight; only the owner starts it. A running wave may be **parked** (a `Park <id>` commit); a later session resumes it from the wave file. Parking is not acceptance: no merge.
 
 ## Verification
 
-- **One executed full run per candidate.** The cook fixes with file-scoped checks, then runs full verify on its committed candidate. The pass relies on that record and runs its own attacks; it uses `--fresh` only for a stated doubt about the record.
+- **One executed full run per candidate.** The CTO fixes with file-scoped checks, then runs full verify on the committed candidate. `--fresh` is only for a stated doubt about a record.
 - **Off-machine verify.** Code pushes to master run `verify --full` on GitHub Actions (free tier) — a safety net, never a gate. Read the latest result with `gh run list -R shouteck/omakase-box --limit 3` at kickoff and before the next merge; if it is red, the next wave is the fix.
 
 `node scripts/verify.mjs [suites...]` is the only acceptance command. It runs typecheck, build and the named suites on the host without a database, and writes one log per step plus `started.json` and `summary.json` under `.kitchen/runs/`. The exit code is the verdict: zero only when every step passed.
@@ -33,26 +33,23 @@ Keep ceremony in proportion: a one-command check needs no page of brief; a produ
 - The candidate's identity is its commit SHA. Verify refuses to run on a tree dirty at start (exit 3, `UNCOMMITTED`); a run that ends dirty keeps per-step verdicts but is never a PASS.
 - A step is `reused` instead of re-run when a completed `summary.json` — the trust anchor — proves it: a clean PASS on this commit, a PASS on one of the nearest 20 ancestors over paths the step does not read, or either dirty only in paths it does not read. `--fresh` forces a real run.
 - Each run records one cheap load snapshot. kitchen-stats flags a duration far over the median of earlier comparable runs (rules in the script) — advisory, never a cause or a verdict; a rerun does not erase a failed attempt.
-- `check` runs typecheck. `test:kitchen` runs only the files whose `// reads:` header the diff reaches (all for an unmapped path; none is refused); `summary.json` names them. Cook and pass runs are selected; milestone close and the off-machine run are full: `node scripts/verify.mjs --full test:box-bounty test:kitchen`.
+- `check` runs typecheck. `test:kitchen` runs only the files whose `// reads:` header the diff reaches (all for an unmapped path; none is refused); `summary.json` names them. Wave runs are selected; milestone close and the off-machine run are full: `node scripts/verify.mjs --full test:box-bounty test:kitchen`.
 - All runs report `db=none`; removed database modes refuse before work.
 - Name the suites the change affects in the brief.
 - A brief that changes what a command does or prints names `test:kitchen` in Done when; verify adds it anyway.
 - A lost or unclear result is fixed by running it again. Do not start a duplicate while a finite command is still running.
-- The reviewer's run is the one that counts. The worker's run is a self-check.
 
 A wave that needs a real GitHub journey runs it in the sandbox `shouteck/box-bounty-sandbox` — the tool is allowed standing there; `kitchen/sandbox.md` has the rules. No live step touches the working repository or needs the owner as a test subject.
 
-## Review
+## Checking the work
 
-The reviewer answers three questions: does the diff do what the brief says and nothing else, does verify pass on this exact commit, and would the checks have caught a wrong implementation. For the third, ask of each new test whether it would still pass if the code under test returned nothing; a test that would is not a check. It may add tests on the branch; it may not weaken existing ones.
+There is no reviewer, so the CTO checks its own commit from the real artifact, not from memory of writing it, and answers three questions in the Result: does `git diff master...<SHA>` do what the brief says and nothing else, does verify pass on this exact commit, and would the checks have caught a wrong implementation? For the third, try the behaviour directly and ask of each new test whether it would still pass if the code under test returned nothing; a test that would is not a check. Break the guarantee once in a scratch copy and show the test fail.
 
-The verdict carries its level, because "passed" means different things: `ui-verified` (a person-facing flow was exercised for real), `test-verified` (behavioural tests ran on the commit) or `typecheck-only`. Behavioural work needs better than `typecheck-only`.
+The result carries its level, because "passed" means different things: `ui-verified` (a person-facing flow was exercised for real), `test-verified` (behavioural tests ran on the commit) or `typecheck-only`. Behavioural work needs better than `typecheck-only`.
 
-**Lenses.** A generalist reviewer looks hardest where it is told to look. The brief therefore ticks the lenses that apply (security, user experience, measurement fairness) and the reviewer must answer each ticked one in the Result. An unanswered ticked lens means the verdict is not PASS. Tick only what applies; most waves need one or none.
+**Lenses.** The brief ticks the lenses that apply (security, user experience, measurement fairness), and the CTO answers each ticked one in the Result: what was tried and what was found. An unanswered ticked lens means no merge. Tick only what applies; most waves need one or none. With no second reader, blind spots are covered mechanically: tests that must fail, hostile inputs, fresh-agent checks where a brief names them, and the off-machine run.
 
-**Same model on both sides is normal here.** The pass is a fresh agent with no share in the cook's reasoning — the independence the kitchen relies on. Shared blind spots are covered mechanically: the pass's attacks, tests that must fail, the off-machine run.
-
-**Staffing.** A brief's Staffing section sets each role's host, model and effort; dispatch exactly as written and record them in the Result. Host rules (Claude Code, OpenCode) are in [kitchen/README.md](../../kitchen/README.md).
+**Models.** Record the host and model that carried out the wave in the Result. Never claim one that was not used.
 
 ## Recipients
 
@@ -112,4 +109,4 @@ Closing one:
 
 ## Hosts and structure
 
-The brigade and the stations are in [kitchen/README.md](../../kitchen/README.md). They are the same on every host. Host notes are in [PSTACK.md](PSTACK.md). Record which host and model filled each role in the wave file.
+The roles and the stations are in [kitchen/README.md](../../kitchen/README.md). They are the same on every host. Host notes are in [PSTACK.md](PSTACK.md). Record the host and model in the wave file.

@@ -8,6 +8,5 @@ You are the head chef (CTO) of the Box kitchen. Read `kitchen/roles/cto.md` now 
 Specific to Claude Code:
 
 - It has no pstack plugin, so read the mode file the role names instead of invoking a skill.
-- Dispatch the `box-worker` and `box-reviewer` subagents, one at a time, each with a complete standalone prompt naming the wave file, and the commit SHA for the reviewer. `box-recipient` is given only the Box folder path.
-- Subagents here cannot start their own subagents.
+- Carry out the wave yourself; there is no cook or reviewer to dispatch. A long wave starts with `/plan` (plan mode). `box-recipient` is given only the Box folder path.
 - Use `git -c safe.directory=C:/Users/shout/Desktop/Projects/private-task-mvp <arguments>` for every Git call.

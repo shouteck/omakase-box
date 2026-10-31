@@ -63,7 +63,7 @@ This card holds rules, not narratives — each trap names the wave that taught i
 - **The root `.gitignore` ignores any `data/` folder** (K43's sample world went uncommitted). **Verify in a clean worktree** needs the Playwright revision under its `.runtime/browsers`: copy from `%LOCALAPPDATA%/ms-playwright`, never download.
 - **Retirement inventories need document callers too** — check the roadmap, active briefs and contracts before removing a document (K29).
 
-## The pass checks
+## Before merging
 
 - Run export and declared checks outside the repository; try poisoned/preseeded cache bytes before trusting a speedup (K6).
 - Confirm excluded modules are really absent; try each negative: omitted dependency, escaping path or link, unlisted input, edit outside editable paths, wrong base commit, altered agreement.

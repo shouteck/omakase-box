@@ -3,17 +3,9 @@
 Milestone: PF (the platform) · Station: packaging · Base: `master at dispatch` · Branch: `wave/PF1` · Timebox: 300 minutes; at expiry, report partial findings and stop
 Owner decisions: D-2026-10-20-platform, D-2026-10-21-no-platform-money, D-2026-10-21-platform-v1, D-2026-10-21-k44-decisions, D-2026-10-22-k43-decisions
 Owner context: D-2026-10-20-platform; D-2026-10-21-no-platform-money; D-2026-10-21-platform-v1 (feature 1, the board, and feature 3, bounty pages); D-2026-10-21-k44-decisions; spend no money
+Horizon: long: start with `/plan` and keep the plan in this file
 
-**Brief.** Written ahead by the CTO on 21 October 2026, before K43 finished. **Before dispatch, the CTO reconciles it with K43's `docs/box-v4/PLATFORM-UX.md`** (stack, hosting, page content, field names, visual rules) and corrects names only. A change of substance goes back to the owner. Cook: high; reviewer: high.
-
-## Staffing (Claude Code, coordinator on Opus 5.5)
-
-Dispatch each role with the Agent tool, passing `model` and `effort` exactly as written here. This brief is the explicit instruction those settings need.
-
-- **Cook:** `box-worker`, **Opus 5.5**, effort **high**: a new package, a new verify suite and the private-repository rule.
-- **The pass:** `box-reviewer`, fresh, **Opus 5.5**, effort **high**. Never the agent that cooked.
-- **Corrections:** a correction round uses a fresh cook at the same model and effort. After two FAILs on the same finding, the next correction steps up one level (Sonnet 5.5 to Opus 5.5 high, or Opus 5.5 high to Opus 5.5 xhigh) and the Result says so. Fable 5.1 is never used without the owner's word.
-- **Record** the host, model and effort of every role in the Result (KITCHEN.md).
+**Brief.** Written ahead by the CTO on 21 October 2026, before K43 finished. **Before starting, the CTO reconciles it with K43's `docs/box-v4/PLATFORM-UX.md`** (stack, hosting, page content, field names, visual rules) and corrects names only. A change of substance goes back to the owner.
 
 ## Outcome
 
@@ -76,13 +68,13 @@ Dispatch each role with the Agent tool, passing `model` and `effort` exactly as 
 - The platform runs locally with one documented command, with the stand-in; screenshots of the board and a bounty page, light and dark, desktop and phone, are under the gitignored `out/`.
 - No secret, token or account exists anywhere in the diff.
 
-## Review lenses
+## Lenses
 
 - [x] **Security:** the private-repository rule at every step; untrusted issue text rendered safely; no token in code.
-- [x] **User experience:** the pass compares each page with K43's design and checks contrast and keyboard use.
-- [x] **Measurement fairness:** the pass seeds its own stand-in case and checks the card facts against it.
+- [x] **User experience:** the CTO compares each page with K43's design and checks contrast and keyboard use.
+- [x] **Measurement fairness:** the CTO seeds its own stand-in case and checks the card facts against it.
 
-## Notes for the worker
+## Notes
 
 - Feature playbook; principles: prove-it-works, write less code of higher quality.
 - Downloads (the stack's npm packages) are named on the pre-cook card and wait for the owner's "go".

@@ -20,24 +20,19 @@ beats doing the work yourself. Using it is always your call.
 
 Every kitchen, on every host, works the pstack way (Lauren Tan, "poteto"): go deep before going fast, write less code of higher quality, and prove work on the real thing. This is a rule, not a suggestion.
 
-- **CTO:** at kickoff, load the mode skill, `.devin/plugins/box-pstack/skills/poteto-mode/SKILL.md`. Hosts that have the plugin installed invoke it as a skill; other hosts read the file.
-- **Worker:** before writing code, open the playbook that fits the wave in `.devin/plugins/box-pstack/skills/poteto-mode/playbooks/` (feature, bug fix, refactoring, investigation, prototype) and follow its steps.
+- **CTO:** at kickoff, load the mode skill, `.devin/plugins/box-pstack/skills/poteto-mode/SKILL.md`. Hosts that have the plugin installed invoke it as a skill; other hosts read the file. Before writing code, open the playbook that fits the wave in `.devin/plugins/box-pstack/skills/poteto-mode/playbooks/` (feature, bug fix, refactoring, investigation, prototype) and follow its steps.
 - **Everyone:** the principles are in `.devin/plugins/box-pstack/skills/principle-*/SKILL.md`. Read the ones the task calls for, and in your report name each principle that changed a decision and what it changed. Do not cite one you did not read.
 - Where pstack text assumes Cursor tools, cloud workers or pull requests, keep the idea and use what the host has. Where it conflicts with who decides what below, this file wins.
 
 ## Roles
 
-The same brigade on every host; [kitchen/README.md](kitchen/README.md) has the full picture and how any host staffs a role.
+The same on every host; [kitchen/README.md](kitchen/README.md) has the full picture.
 
 - **Owner (CEO)** sets product direction and approves each milestone.
-- **Head chef (CTO)**, the root agent, writes briefs, dispatches, merges and reports. It writes kitchen tooling and docs. It does not write product code.
-- **Cook (worker)** implements one brief on one branch.
-- **The pass (reviewer)** verifies the cook's exact commit. Never the agent that wrote it, and it reports to the head chef, never to a station. Usually the same model family as the cook; a fresh agent is what makes it independent.
-- **Blind taster (recipient)**, from D2.2, attempts a change using only an exported Box, with no access to this repository.
+- **CTO (head chef)** is the fresh session the owner talks to. It carries out each wave itself: brief, code, tests, verify, merge, report. There is no cook and no reviewer (owner, 31 October 2026). A long wave, by clock or by concept, starts with `/plan`.
+- **Blind taster (recipient)**, from D2.2, attempts a change using only an exported Box, with no access to this repository. **Participants** in a fresh-agent check are fresh sessions in scratch folders.
 
-Role instructions live in `kitchen/roles/` and station knowledge in `kitchen/stations/`. They are plain files, so nothing depends on one host's features: a host with named agent profiles uses them, and any other host starts a fresh agent and hands it the role file, the wave file and the station card.
-
-Today the kitchen has one stove: head chef, one cook, the pass — two levels, the whole brigade. Every brief names a station, and the cook and the pass read that station's card.
+Role instructions live in `kitchen/roles/` and station knowledge in `kitchen/stations/`. Every brief names a station, and the CTO reads that station's card.
 
 ## Who decides what
 
@@ -57,7 +52,7 @@ How much the kitchen cooks is set by the START message, not by what happens to b
 
 ## Rules that do not bend
 
-1. Product code, tests and tooling reach master only through a reviewed wave. Acceptance is the reviewer's PASS on a commit SHA plus a green `node scripts/verify.mjs` run on that SHA. Kitchen documents (this file, STATUS.md, KITCHEN.md, briefs, agent profiles) are the CTO's to commit directly.
+1. Product code, tests and tooling reach master only through a wave. Acceptance is a green `node scripts/verify.mjs` run on the commit SHA, plus the brief's Done when checks and ticked lenses answered from the real artifact in the wave file. Kitchen documents (this file, STATUS.md, KITCHEN.md, briefs, agent profiles) are the CTO's to commit directly.
 2. Never edit a test's expected outcome to make a candidate pass. A missing, failed or unknown check is not a pass.
 3. One writer per branch. Parallel work uses separate worktrees.
 4. Report what actually happened. No invented test results, agent identities, model diversity, customer evidence or Git history.

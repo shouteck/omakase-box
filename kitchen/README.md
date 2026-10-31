@@ -1,46 +1,42 @@
-# The kitchen brigade
+# The kitchen
 
-One structure for every host: Claude Code, Devin, Codex, OpenCode, Cursor or anything else that can read files and start a fresh agent. Nothing here depends on a host's own features. The rules are in [AGENTS.md](../AGENTS.md); the procedure is in [docs/box-v4/KITCHEN.md](../docs/box-v4/KITCHEN.md).
+One structure for every host: Claude Code, Devin, Codex, OpenCode, Cursor or anything else that can read and write files. Nothing here depends on a host's own features. The rules are in [AGENTS.md](../AGENTS.md); the procedure is in [docs/box-v4/KITCHEN.md](../docs/box-v4/KITCHEN.md).
 
 ## Who is in the kitchen
 
 | Kitchen | Role | Does | Role file |
 |---|---|---|---|
 | Owner | CEO (the human) | Sets the menu, approves each milestone | none |
-| Head chef | CTO | Writes briefs, dispatches, merges, reports. Never cooks | [roles/cto.md](roles/cto.md) |
-| Cook | Worker | Implements one brief on one branch | [roles/worker.md](roles/worker.md) |
-| The pass | Reviewer | Checks the cook's exact commit. Reports to the head chef | [roles/reviewer.md](roles/reviewer.md) |
+| Head chef | CTO | The fresh session the owner talks to. Writes the brief, carries out the wave, merges, reports | [roles/cto.md](roles/cto.md) |
 | Blind taster | Recipient | Attempts a change from an exported Box alone | [roles/recipient.md](roles/recipient.md) |
 
-The **research lab** (branch `lab`, its own worktree) is paused by the owner as of 10 October 2026. The kitchen does not read, answer or sync it. Its prototypes are reference reading only; anything the product needs is rebuilt as a reviewed wave.
+There is no cook and no reviewer (owner, 31 October 2026, D-2026-10-31-cto-carries-waves).
+
+The **research lab** (branch `lab`, its own worktree) is paused by the owner as of 10 October 2026. The kitchen does not read, answer or sync it. Its prototypes are reference reading only; anything the product needs is rebuilt as a normal wave.
 
 ## Stations
 
-A station is a cuisine: an area of the product with its own knowledge, traps and checks. Each has a one-page card — bounded, today, at 12,288 UTF-8 bytes, enforced by `scripts/kitchen-stats.mjs`. Every brief names one station, and the cook and the reviewer read that card with the brief.
+A station is a cuisine: an area of the product with its own knowledge, traps and checks. Each has a one-page card — bounded, today, at 12,288 UTF-8 bytes, enforced by `scripts/kitchen-stats.mjs`. Every brief names one station, and the CTO reads that card with the brief.
 
 | Station | Covers | Card |
 |---|---|---|
 | Packaging | Selecting source for a Box, export, clean-directory proof, submit, verify, and the bounty tool's journey | [stations/packaging.md](stations/packaging.md) |
 | Evidence | Measurements, comparisons, what may be claimed | [stations/evidence.md](stations/evidence.md) |
 
-A card is knowledge, not a manager. At wave close, the Reflect step adds to the card whatever the next cook on that station would want to have known. Replace stale lines instead of appending; a trap's story stays in the wave file that taught it.
+A card is knowledge, not a manager. At wave close, the Reflect step adds to the card whatever the next session on that station would want to have known. Replace stale lines instead of appending; a trap's story stays in the wave file that taught it.
 
 ## The shape
 
-**One stove.** Head chef, one cook, the pass. One wave at a time on the main checkout; genuinely parallel writers get separate worktrees, one writer per branch. The retired lead layer and the archived station cards are history (K35): there is no lead role to dispatch and no third level — if parallel capacity is ever needed, that is a new owner decision, not a dormant rule to revive.
+**One CTO per wave.** One wave at a time on the main checkout; parallel waves are separate sessions in separate worktrees, one writer per branch. A long wave, by clock or by concept, starts with `/plan`, and the plan lives in the wave file so a later session can resume.
 
 ## How much gets cooked
 
-The owner's message decides, and the head chef stops when that much is done: `START.md` is one wave, `START.md: <waves>` or `START.md xN` is those, and `START.md overnight` is the night queue with one morning card. Same brigade and the same pass on every route. See [START.md](../START.md).
+The owner's message decides, and the head chef stops when that much is done: `START.md` is one wave, `START.md: <waves>` or `START.md xN` is those, and `START.md overnight` is the night queue with one morning card. The same process on every route. See [START.md](../START.md).
 
-## How any host staffs a role
+## On any host
 
-1. If the host has named agent profiles for these roles, use them. This repository ships thin ones for Claude Code (`.claude/agents/`), Devin (`.devin/agents/`) and OpenCode (`.opencode/agents/`, one per pinned model); they only point at the role files here.
-2. Otherwise start a fresh agent and give it, as its whole prompt: the role file, the wave file, the station card, and the commit SHA if it is the reviewer. Codex and Cursor work this way.
-3. The recipient is the exception: it must not see this repository, so paste the text of `roles/recipient.md` into its prompt and give it only the Box folder.
+1. A fresh session reads `AGENTS.md`, `STATUS.md`, `kitchen/roles/cto.md` and the wave file, then carries out the wave. Thin host files exist only to point there: `.claude/skills/kitchen/`, `.devin/rules/`.
+2. On a host without `/plan`, the session writes the wave file's `## Plan` section itself before starting a long wave.
+3. Participants in a fresh-agent check are fresh sessions in scratch folders, never subagents. The recipient must not see this repository, so paste the text of `roles/recipient.md` into its prompt and give it only the Box folder.
 
-A fresh agent never inherits the head chef's conversation. If it is not in the files you hand over, the agent does not know it. Record which host and model filled each role in the wave file.
-
-**Claude Code** (owner, 21 October 2026). The brief's Staffing section sets each role's model and effort; dispatch exactly as written. Participants are fresh sessions, never subagents. Fable only on the owner's word.
-
-**OpenCode** (owner, 22 October 2026). The agent profile in `.opencode/agents/` pins the model. The head chef (OpenCode's `head-chef` agent, or Claude Code) runs each role as a new `opencode run --agent <name> --model <provider/model>` session, never `--continue`, and confirms the model with `opencode session export <session-id>`. Participants run in a scratch folder outside the checkout (`--dir`, or that folder as the shell's working directory where the CLI has no `--dir`). After two FAILs on one finding, the head chef asks the owner whether the next correction runs in Claude Code (`box-worker`, Opus 5.5 high) or on another named model.
+Record the host and model in the wave file. Fable only on the owner's word.

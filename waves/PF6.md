@@ -3,17 +3,9 @@
 Milestone: PF (the platform) · Station: packaging · Base: `master at dispatch` · Branch: `wave/PF6` · Timebox: 180 minutes; at expiry, report partial findings and stop
 Owner decisions: D-2026-10-21-k44-decisions
 Owner context: D-2026-10-21-k44-decisions (decision 3: lead with the mechanism; decision 5: machine channels first, then one Show HN by the owner); spend no money. **Going live, publishing to npm, listing in registries and posting anywhere are the owner's own actions;** this wave prepares them and does none of them.
+Horizon: short
 
-**Brief.** Written ahead by the CTO on 21 October 2026. **After PF1 to PF5 and BT42; before K41's final render.** Cook: medium; reviewer: high.
-
-## Staffing (Claude Code, coordinator on Opus 5.5)
-
-Dispatch each role with the Agent tool, passing `model` and `effort` exactly as written here. This brief is the explicit instruction those settings need.
-
-- **Cook:** `box-worker`, **Sonnet 5.5**, effort **medium**: documents, metadata and a script.
-- **The pass:** `box-reviewer`, fresh, **Opus 5.5**, effort **high**: secrets and the owner's account steps. Never the agent that cooked.
-- **Corrections:** a correction round uses a fresh cook at the same model and effort. After two FAILs on the same finding, the next correction steps up one level (Sonnet 5.5 to Opus 5.5 high, or Opus 5.5 high to Opus 5.5 xhigh) and the Result says so. Fable 5.1 is never used without the owner's word.
-- **Record** the host, model and effort of every role in the Result (KITCHEN.md).
+**Brief.** Written ahead by the CTO on 21 October 2026. **After PF1 to PF5 and BT42; before K41's final render.**
 
 ## Outcome
 
@@ -36,7 +28,7 @@ The owner can go live, publish and announce in one sitting, without the kitchen 
    - the deploy command;
    - a post-deploy check list: the board lists the sandbox's bounties; a private repository is absent; MCP and the feed answer.
 2. **Production configuration:** the CLI's default platform address (PF5) is set to the deployment's free subdomain, as a constant the owner confirms before release.
-3. **The install line returns.** BT12 held `npx box-bounty bounty help` out of the instruction block until the owner owns the name. This wave prepares the change on its branch, **merged only after the owner confirms the npm publish succeeded**. The pass checks the name resolves on npm to the owner's package.
+3. **The install line returns.** BT12 held `npx box-bounty bounty help` out of the instruction block until the owner owns the name. This wave prepares the change on its branch, **merged only after the owner confirms the npm publish succeeded**. The CTO checks the name resolves on npm to the owner's package.
 4. **The package:**
    - `node packages/box-cli/pack.mjs` rebuilds the tarball;
    - the version is set to the first public version the owner chooses;
@@ -64,13 +56,13 @@ The owner can go live, publish and announce in one sitting, without the kitchen 
 - `node scripts/verify.mjs test:box-bounty test:platform test:kitchen` exits 0; hosted CI green after merge.
 - A fresh agent given only `DEPLOY.md` can list every step the owner must take, with each step's cost, without asking a question.
 
-## Review lenses
+## Lenses
 
 - [x] **Security:** no secret in any file; every account step is the owner's; the install line points only at the owner's published package.
-- [x] **User experience:** the pass follows `DEPLOY.md` against a local stand-in host as far as it can without an account.
+- [x] **User experience:** the CTO follows `DEPLOY.md` against a local stand-in host as far as it can without an account.
 - [ ] **Measurement fairness:** not applicable.
 
-## Notes for the worker
+## Notes
 
 - Feature playbook; principles: prove-it-works.
 - Do not edit `waves/PF6.md` while a verify runs. Report at the timebox.

@@ -30,7 +30,7 @@ Measurements, comparisons and what the kitchen is allowed to claim. Runs through
 
 - **Convention and comparison waves need their own fixture checkout:** a `git init` plus two fake `github.com` remotes exercises repo-dependent commands against scratch settings (`BOX_BOUNTY_SETTINGS_DIR`) without touching the owner's. K20 needed this to see BT16's multi-remote paths. For scale measurements across N records (K25, BT29), record both lines and characters — a joined single line (`ended:`) stays 1 line while growing ~75 chars per record — seed N−1 `asRecord`-valid files plus one real CLI `create` so write-triggered surfaces (`OPEN`, instruction block) run without N process spawns, and include a posted-records mix (`github` + `attempts` populated, instant-fail `gh` shim on PATH) so branches gated on `record.github !== undefined` are measured.
 
-## The pass checks
+## Before merging
 
 - Tick the measurement-fairness lens for any wave on this station.
 - Recount the denominator from the raw records, not from the summary.
@@ -42,10 +42,10 @@ Measurements, comparisons and what the kitchen is allowed to claim. Runs through
 Learned the hard way in R3b and the lab's live runs. They apply to BT5, BT6 and any wave where a solver works from a bounty.
 
 - **Start the solver in an empty folder outside every checkout.** In R3b the solver's session began inside this repository, where the real fix was one file away; its blindness was by instruction only and the result could not be trusted as blind.
-- **Save the solver's own report and its start and end times at hand-off,** before the cook writes any result. In R3b nothing was saved and every statement about what the solver did was unsupported.
+- **Save the solver's own report and its start and end times at hand-off,** before any result is written. In R3b nothing was saved and every statement about what the solver did was unsupported.
 - **One real use before many.** A live run of twenty-four attempts found only afterwards that the tool under test had returned nothing on every call. Run one, stop, read the record, then decide.
 - **Check the scoring with no solver first:** the known-good change must score as accepted and a do-nothing change as rejected, through the same path the solver's work will take.
-- **A brief that says "stop if the product refuses" must say who may approve a workaround.** A cook once worked round a refusal before asking.
+- **A brief that says "stop if the product refuses" must say who may approve a workaround.** A session once worked round a refusal before asking.
 - **Clean up by exact name, never by pattern,** when agents share a scratch folder.
 - **A stand-in that answers is not one that answers correctly.** Before a stand-in GitHub carries participants, run each command the journey needs and compare with a real-GitHub transcript (`kitchen/demo/bt11b-real-transcript.txt`) — `tests/kitchen/k19-github-standin.test.ts` does exactly that for every committed stand-in. K18's stand-in (copied from `bt11b-replay.mjs`) returned the issue list for one issue and read `page=` out of `per_page=`, so every refresh failed and no pull request was ever listed; one participant run was spent before anyone noticed. And the shim is a `gh` binary, not only an API client: answer `gh version`/`gh auth` before parsing endpoints — K19 lost one verify cycle to a fixture that parsed the endpoint first. On Claude Code the cook cannot start participants: the head chef starts them and saves each own report verbatim at hand-off.
 - **Cold fresh-agent journeys reuse the `bt17-measure.mjs` world:** a `NODE_OPTIONS --require` shim routes `gh`→`gh-standin.cjs` and the fake remote URL→a bare repo; each agent gets its own `BOX_BOUNTY_SETTINGS_DIR` and a `box.sh` wrapper baking the env. Two traps from BT17: the fixture repo's `origin` must spell the fake `github.com` URL (cloning from the bare path leaves a local `origin` and the tool correctly refuses `github-remote-required`), and seeded owner settings must have the `said` map deleted or standing explanations never print to the cold agent.

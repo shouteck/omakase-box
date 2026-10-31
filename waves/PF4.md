@@ -3,17 +3,9 @@
 Milestone: PF (the platform) · Station: packaging · Base: `master at dispatch` · Branch: `wave/PF4` · Timebox: 240 minutes; at expiry, report partial findings and stop
 Owner decisions: D-2026-10-21-platform-v1, D-2026-10-21-no-platform-money
 Owner context: D-2026-10-21-platform-v1 (feature 4, owner payment facts; facts-only track records); D-2026-10-21-no-platform-money; spend no money
+Horizon: long: start with `/plan` and keep the plan in this file
 
-**Brief.** Written ahead by the CTO on 21 October 2026. Before dispatch, the CTO reconciles it with K43's payment-facts design (`PLATFORM-UX.md`, question 4) and corrects names only. **After PF1 and PF3.** Cook: high; reviewer: high.
-
-## Staffing (Claude Code, coordinator on Opus 5.5)
-
-Dispatch each role with the Agent tool, passing `model` and `effort` exactly as written here. This brief is the explicit instruction those settings need.
-
-- **Cook:** `box-worker`, **Opus 5.5**, effort **high**: attribution, push-access checks and self-dealing rules.
-- **The pass:** `box-reviewer`, fresh, **Opus 5.5**, effort **high**. Never the agent that cooked.
-- **Corrections:** a correction round uses a fresh cook at the same model and effort. After two FAILs on the same finding, the next correction steps up one level (Sonnet 5.5 to Opus 5.5 high, or Opus 5.5 high to Opus 5.5 xhigh) and the Result says so. Fable 5.1 is never used without the owner's word.
-- **Record** the host, model and effort of every role in the Result (KITCHEN.md).
+**Brief.** Written ahead by the CTO on 21 October 2026. Before starting, the CTO reconciles it with K43's payment-facts design (`PLATFORM-UX.md`, question 4) and corrects names only. **After PF1 and PF3.**
 
 ## Outcome
 
@@ -59,13 +51,13 @@ Each owner and solver profile shows the counts. The platform never moves money a
 - `node scripts/verify.mjs test:platform test:kitchen` exits 0; hosted CI green after merge.
 - Every payment word on every surface is checked against the rule "never funded, guaranteed or escrow".
 
-## Review lenses
+## Lenses
 
 - [x] **Security:** only the owner (push access) records paid; only the payee confirms; counts resist self-dealing.
-- [x] **User experience:** the pass reads an owner profile and a bounty page as a solver would and answers "would this owner pay me?" from facts only.
-- [x] **Measurement fairness:** the pass seeds disagreements and self-dealing in the stand-in and checks every count.
+- [x] **User experience:** the CTO reads an owner profile and a bounty page as a solver would and answers "would this owner pay me?" from facts only.
+- [x] **Measurement fairness:** the CTO seeds disagreements and self-dealing in the stand-in and checks every count.
 
-## Notes for the worker
+## Notes
 
 - Feature playbook; principles: prove-it-works.
 - Do not edit `waves/PF4.md` while a verify runs. Report at the timebox.
