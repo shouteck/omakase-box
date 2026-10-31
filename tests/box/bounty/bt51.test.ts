@@ -205,7 +205,7 @@ describe('a chosen solution shows as merged on GitHub', { timeout: 180000 }, () 
     const run = spawnSync(process.execPath, [CLI_DIST, 'bounty', 'apply', id, '1'], { cwd: repo, encoding: 'utf8', env: process.env, timeout: 60000 });
     expect(run.status).toBe(0);
     expect(run.stdout).toContain('not on GitHub yet');
-    expect(run.stdout).toContain('the board counts this merge once it is on the default branch on GitHub; the tool never pushes it');
+    expect(run.stdout).toContain('this merge counts for the solver once it is on the default branch on GitHub; the tool never pushes it');
   }));
 
   it('a hand merge says the same through the notice', () => posted(world => {
@@ -214,7 +214,7 @@ describe('a chosen solution shows as merged on GitHub', { timeout: 180000 }, () 
     const noticed: string[] = [];
     setMergeNoticeListener(line => noticed.push(line));
     handMerge(world, head);
-    expect(noticed.join('\n')).toContain('the board counts this merge once main is pushed to the default branch on GitHub');
+    expect(noticed.join('\n')).toContain('this merge counts for the solver once main is pushed to the default branch on GitHub');
   }));
 
   it('a rewarded bounty left pending still records whom to pay', () => fixture(world => {

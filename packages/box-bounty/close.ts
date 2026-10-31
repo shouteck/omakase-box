@@ -166,11 +166,12 @@ const branchChanged = (publication: GitHubPublication, tip: string): BountyRefus
 // request, or the commit and number the hand-merge scan wrote on the event.
 // Null when the record names no pull request (records from before pull
 // requests were the only return), which keeps the plain tip check.
-function decidedSolution(record: BountyRecord, event: { attempt?: number; reason?: string }): { commit: string; pr: number } | null {
+function decidedSolution(record: BountyRecord, event: { attempt?: number; reason?: string }): { commit: string; pr: number; collectedAt?: string } | null {
   const attempt = event.attempt !== undefined ? attemptsOf(record).find(entry => entry.n === event.attempt) : undefined;
   const pr = attempt?.pullRequest ?? decidedPullRequest(event);
   const commit = attempt?.commit ?? /^commit ([a-f\d]{40})/.exec(event.reason ?? '')?.[1];
-  return pr === null || commit === undefined ? null : { commit, pr };
+  if (pr === null || commit === undefined) return null;
+  return attempt?.at === undefined ? { commit, pr } : { commit, pr, collectedAt: attempt.at };
 }
 const decidedPullRequest = (event: { reason?: string }): number | null => {
   const match = /pull request #(\d+)/.exec(event.reason ?? '');
@@ -189,9 +190,13 @@ function readPull(root: string, publication: GitHubPublication, pr: number): { m
 // is older than the pull request, and the head was already on the default
 // branch on GitHub. A stranger cannot forge the first: that commit's date is
 // fixed by its id (BT51).
-function landedBeforePull(root: string, publication: GitHubPublication, createdAt: string, head: string, merge: string | undefined): boolean {
+function landedBeforePull(root: string, publication: GitHubPublication, solution: { commit: string; pr: number; collectedAt?: string }, merge: string | undefined): boolean {
+  const head = solution.commit;
   const landed = merge === undefined ? Number.NaN : Date.parse(gitOutcome(root, ['show', '-s', '--format=%cI', merge]).stdout.trim());
-  if (!(landed < Date.parse(createdAt))) return false;
+  // Landed after this machine collected the pull request: it existed by then,
+  // so the answer is known without asking GitHub.
+  if (solution.collectedAt !== undefined && landed >= Date.parse(solution.collectedAt)) return false;
+  if (!(landed < Date.parse(readPull(root, publication, solution.pr).createdAt))) return false;
   const info = api(root, `repos/${publication.repository}`);
   if (!isObject(info) || typeof info['default_branch'] !== 'string') return invalid('github-response-invalid', 'GitHub returned an unreadable repository; next: check gh and rerun the same command');
   const compared = api(root, `repos/${publication.repository}/compare/${encodeURIComponent(info['default_branch'])}...${head}`);
@@ -204,7 +209,7 @@ function landedBeforePull(root: string, publication: GitHubPublication, createdA
 // reports it merged — `gh pr merge`'s order. Every way this stops leaves the
 // branch and is a named reason; only a branch changed by someone else keeps
 // today's refusal.
-function advanceBountyBranch(root: string, record: BountyRecord, publication: GitHubPublication, solution: { commit: string; pr: number }, merge: string | undefined): { notAdvanced: string | null; pushed: boolean; deleted: boolean } {
+function advanceBountyBranch(root: string, record: BountyRecord, publication: GitHubPublication, solution: { commit: string; pr: number; collectedAt?: string }, merge: string | undefined): { notAdvanced: string | null; pushed: boolean; deleted: boolean } {
   let pushed = false;
   const stop = (notAdvanced: string) => ({ notAdvanced, pushed, deleted: false });
   try {
@@ -218,7 +223,7 @@ function advanceBountyBranch(root: string, record: BountyRecord, publication: Gi
     if (tip === null) return readPull(root, publication, solution.pr).merged ? { notAdvanced: null, pushed, deleted: false } : stop('bounty-branch-missing');
     if (tip !== publication.commit && tip !== solution.commit) throw branchChanged(publication, tip);
     if (tip === publication.commit) {
-      if (landedBeforePull(root, publication, readPull(root, publication, solution.pr).createdAt, solution.commit, merge)) return stop('head-predates-pull-request');
+      if (landedBeforePull(root, publication, solution, merge)) return stop('head-predates-pull-request');
       // Without force, so GitHub takes it only as a fast-forward; the proven
       // commit, never a name that resolves again (BT32).
       try { remoteGit(root, publication.repository, ['push', `${solution.commit}:refs/heads/${publication.branch}`]); }
