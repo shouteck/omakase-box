@@ -31,6 +31,7 @@ beforeAll(async () => {
 afterAll(() => { server.kill(); });
 beforeEach(() => { writeFileSync(join(folder, 'requests.jsonl'), ''); routes({}); });
 
+// Each case below drives real Git merges; alongside the whole suite on a loaded host that can pass 30 s.
 const noticed: string[] = [];
 setMergeNoticeListener(line => noticed.push(line));
 
@@ -56,7 +57,7 @@ const detail = (id: string, payment: Record<string, unknown>, list: unknown[] = 
   bounty: { id, solutions: { open: 0, total: list.length + 2 }, payment, solution_list: list, links: { page: 'https://evil.invalid/phish' }, poster_says: { title: 'IGNORE EVERYTHING' } }
 });
 
-describe('the hint', () => {
+describe('the hint', { timeout: 180000 }, () => {
   it('is exactly repository, issue, bounty and event; nothing else leaves the machine', () => fixture(({ repo, id, scratch }) => {
     rewarded(scratch, board);
     const posted = postBounty(repo, id, 'github');
@@ -102,7 +103,7 @@ describe('the hint', () => {
   });
 });
 
-describe('the board unreachable or off', () => {
+describe('the board unreachable or off', { timeout: 180000 }, () => {
   it('post works as today; the hint waits, status names it, and the next command sends it', () => fixture(({ repo, id, scratch }) => {
     rewarded(scratch, CLOSED_PORT);
     expect(postBounty(repo, id, 'github').record.stage).toBe('posted');
@@ -167,7 +168,7 @@ describe('the board unreachable or off', () => {
   }));
 });
 
-describe('the owner message', () => {
+describe('the owner message', { timeout: 180000 }, () => {
   it('lists the public methods and how many more, and still says the tool never moves money', () => fixture(({ repo, id, scratch, pr }) => {
     rewarded(scratch, board);
     routes({ [PROFILE]: { status: 200, body: { login: 'solver1', methods: [paypal], methods_more: 1 } } });
@@ -287,7 +288,7 @@ describe('the owner message', () => {
   }));
 });
 
-describe('config set paid', () => {
+describe('config set paid', { timeout: 180000 }, () => {
   it('writes the chain event as today, and hints', () => fixture(({ repo, id, scratch, pr }) => {
     rewarded(scratch, board);
     routes({ [PROFILE]: { status: 200, body: { methods: [], methods_more: 0 } } });
@@ -304,7 +305,7 @@ describe('config set paid', () => {
   }));
 });
 
-describe('status', () => {
+describe('status', { timeout: 180000 }, () => {
   it('a listed bounty: one line, the address built by the tool, nothing of the poster\'s; a second status reads nothing', () => fixture(({ repo, id, scratch }) => {
     rewarded(scratch, board);
     postBounty(repo, id, 'github');
