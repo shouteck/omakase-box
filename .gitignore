@@ -20,3 +20,8 @@ packages/box-cli/dist-package/
 kitchen/platform-prototype/out/
 kitchen/platform-prototype/.next/
 kitchen/platform-prototype/next-env.d.ts
+packages/box-platform/out/
+packages/box-platform/.next/
+packages/box-platform/.wrangler/
+packages/box-platform/dist/
+packages/box-platform/next-env.d.ts

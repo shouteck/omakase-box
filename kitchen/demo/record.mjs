@@ -75,7 +75,8 @@ export function buildIsStale(packagesDir) {
   const walk = (dir) => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const path = join(dir, entry.name);
-      if (entry.isDirectory()) { if (entry.name !== 'node_modules' && entry.name !== 'dist') walk(path); }
+      // box-platform is not bundled into the CLI, and its build writes .ts files.
+      if (entry.isDirectory()) { if (entry.name !== 'node_modules' && entry.name !== 'dist' && entry.name !== 'box-platform') walk(path); }
       else if (entry.name.endsWith('.ts') && !entry.name.endsWith('.d.ts')) newestSrc = Math.max(newestSrc, statSync(path).mtimeMs);
     }
   };

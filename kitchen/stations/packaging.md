@@ -68,3 +68,4 @@ This card holds rules, not narratives — each trap names the wave that taught i
 - Confirm excluded modules are really absent; try each negative: omitted dependency, escaping path or link, unlisted input, edit outside editable paths, wrong base commit, altered agreement.
 - Record the share of owner source the package disclosed.
 - Verify any outside claim independently before repeating it.
+- **A walk over `packages/` meets build output** (PF1): `next build` writes `.ts`. Name its scope.

@@ -138,6 +138,10 @@ describe('the recorder refuses a stale build', () => {
     expect(buildIsStale(packagesDir)).toBe('box-cli');
     utimesSync(join(src, 'cli.ts'), new Date('2020-01-01'), new Date('2020-01-01'));
     expect(buildIsStale(packagesDir)).toBeNull();
+    // The board's build writes .ts files; none of them is the CLI's source.
+    mkdirSync(join(packagesDir, 'box-platform', '.next', 'types'), { recursive: true });
+    writeFileSync(join(packagesDir, 'box-platform', '.next', 'types', 'routes.ts'), 'export {};\n');
+    expect(buildIsStale(packagesDir)).toBeNull();
     rmSync(dist, { recursive: true, force: true });
     expect(buildIsStale(packagesDir)).toBe('box-cli');
   });
