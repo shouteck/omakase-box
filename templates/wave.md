@@ -2,7 +2,7 @@
 
 Milestone: <D2> · Station: <packaging | evidence> · Base: `<master SHA>` · Branch: `wave/<id>` · Timebox: <minutes; waves here have taken 15 to 50; at expiry, report partial findings and stop>
 Owner decisions: <IDs from docs/box-v4/DECISIONS.md this brief relies on, or none>
-Horizon: <short | long: several dependent steps, a design unknown or more than one sitting; a long wave starts with /plan and keeps the plan in this file>
+Horizon: <short | long: several dependent steps, a design unknown or more than one sitting; a long wave starts with /plan and keeps the plan in this file, naming the playbook and principles read>
 
 ## Outcome
 
