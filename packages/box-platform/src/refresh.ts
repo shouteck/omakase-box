@@ -107,6 +107,10 @@ async function search(env: Env, github: GitHub, now: number): Promise<{ readonly
   return { complete };
 }
 
+/** So a bounty with many merged pull requests cannot spend a refresh and hold up the others. Never asked first: what was never read. */
+const COMPARES_PER_READ = 5;
+const ASSOCIATIONS = new Set(['COLLABORATOR', 'CONTRIBUTOR', 'FIRST_TIMER', 'FIRST_TIME_CONTRIBUTOR', 'MANNEQUIN', 'MEMBER', 'NONE', 'OWNER']);
+
 async function readPullRequests(env: Env, github: GitHub, id: string, repository: string): Promise<void> {
   const answer = await github.get(`/repos/${repository}/pulls?state=all&base=box-bounty/${id}&per_page=100`);
   if (answer.status !== 200 || !Array.isArray(answer.json)) return;
@@ -115,10 +119,27 @@ async function readPullRequests(env: Env, github: GitHub, id: string, repository
     const author = pull['user']['login'];
     if (typeof author !== 'string' || !LOGIN.test(author)) continue;
     const merged = typeof pull['merged_at'] === 'string' ? pull['merged_at'] : null;
-    await env.DB.prepare(`INSERT INTO pull_requests (bounty_id, number, author, state, opened_at, merged_at) VALUES (?, ?, ?, ?, ?, ?)
-      ON CONFLICT (bounty_id, number) DO UPDATE SET author = excluded.author, state = excluded.state, merged_at = excluded.merged_at`)
-      .bind(id, pull['number'] as number, author, merged !== null ? 'merged' : pull['state'] === 'closed' ? 'closed' : 'open', pull['created_at'], merged)
+    const association = typeof pull['author_association'] === 'string' && ASSOCIATIONS.has(pull['author_association']) ? pull['author_association'] : null;
+    const head = record(pull['head']) && typeof pull['head']['sha'] === 'string' && /^[a-f\d]{40}$/.test(pull['head']['sha']) ? pull['head']['sha'] : null;
+    // The association stays as first read after the merge: a later invitation does not rewrite history.
+    await env.DB.prepare(`INSERT INTO pull_requests (bounty_id, number, author, state, opened_at, merged_at, association, head_sha) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT (bounty_id, number) DO UPDATE SET author = excluded.author, state = excluded.state, merged_at = excluded.merged_at, head_sha = excluded.head_sha,
+        association = CASE WHEN pull_requests.merged_at IS NOT NULL THEN pull_requests.association ELSE excluded.association END`)
+      .bind(id, pull['number'] as number, author, merged !== null ? 'merged' : pull['state'] === 'closed' ? 'closed' : 'open', pull['created_at'], merged, association, head)
       .run();
+  }
+  await readOnDefault(env, github, id, repository);
+}
+
+/** Is a merged head on the default branch? Yes stays yes. A failed read stays unknown, and the page says nothing is confirmed. */
+async function readOnDefault(env: Env, github: GitHub, id: string, repository: string): Promise<void> {
+  const unknown = await env.DB.prepare(`SELECT p.number, p.head_sha, r.default_branch FROM pull_requests p JOIN repositories r ON r.name = ? WHERE p.bounty_id = ? AND p.state = 'merged' AND p.head_sha IS NOT NULL AND COALESCE(p.on_default, 0) != 1 ORDER BY p.on_default IS NOT NULL, p.number LIMIT ?`)
+    .bind(repository, id, COMPARES_PER_READ).all<{ number: number; head_sha: string; default_branch: string }>();
+  for (const { number, head_sha, default_branch } of unknown.results) {
+    const answer = await github.get(`/repos/${repository}/compare/${head_sha}...${encodeURIComponent(default_branch)}`);
+    const status = answer.status === 200 && record(answer.json) ? answer.json['status'] : null;
+    if (typeof status !== 'string') continue;
+    await env.DB.prepare('UPDATE pull_requests SET on_default = ? WHERE bounty_id = ? AND number = ?').bind(status === 'ahead' || status === 'identical' ? 1 : 0, id, number).run();
   }
 }
 

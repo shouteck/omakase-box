@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Quiet, SampleNote, Stale, plural } from './ui.jsx';
 
-const EMPTY = { query: '', language: '', min_reward: '', sort: 'newest', solutions: '', max_age_days: '', approved_by: '', repository: '' };
+const EMPTY = { query: '', language: '', min_reward: '', owner_record: '', sort: 'newest', solutions: '', max_age_days: '', approved_by: '', repository: '' };
 const params = q => {
   const out = new URLSearchParams();
   for (const [key, value] of Object.entries(q)) if (value && value !== EMPTY[key]) out.set(key, value);
@@ -34,9 +34,25 @@ function Card({ b }) {
       <p className="mt-1 text-sm text-soft break-words">
         {[b.repository, b.language, b.age_days === 0 ? 'posted today' : `${plural(b.age_days, 'day')} old`, b.solutions_open ? `${plural(b.solutions_open, 'solution')} waiting` : 'no solutions yet'].filter(Boolean).join(' · ')}
       </p>
-      <p className="mt-2 text-sm">Posted by {b.poster}{b.amount > 0 ? ', who pays the solver directly.' : '.'}</p>
+      <p className="mt-2 text-sm">Posted by {b.poster}{b.amount > 0 ? ', who pays the solver directly' : ''}: <RecordLine record={b.record} /></p>
     </li>
   );
+}
+
+/** K43's line: a dispute or a debt older than 14 days first, in semibold. Whose word each count is, every time. */
+function RecordLine({ record }) {
+  if (!record.has_history) return 'no payment history yet.';
+  const first = [
+    record.says_not_received > 0 ? `${plural(record.says_not_received, 'payment')} the solver says ${record.says_not_received === 1 ? 'has' : 'have'} not arrived` : null,
+    record.oldest_owed_days > 14 ? `owes ${record.owed_now}, the oldest for ${record.oldest_owed_days} days` : null
+  ].filter(Boolean);
+  const rest = [
+    `${record.merged} merged`,
+    `${record.recorded_paid} paid by the owner's word`,
+    `${record.confirmed_received} received by the solvers' word`,
+    record.owed_now > 0 && record.oldest_owed_days <= 14 ? `${record.owed_now} owed for ${plural(record.oldest_owed_days, 'day')}` : null
+  ].filter(Boolean);
+  return <>{first.length > 0 ? <span className="font-semibold">{first.join(' · ')} · </span> : null}{rest.join(' · ')}.</>;
 }
 
 export default function Board() {
@@ -88,9 +104,10 @@ export default function Board() {
           Search
           <input type="search" maxLength={100} value={q.query} onChange={e => set('query', e.target.value)} placeholder="Words in a title or repository" className="border border-soft bg-paper text-ink text-base px-3 py-2 rounded-sm placeholder:text-soft" />
         </label>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <Select label="Language" name="language" value={q.language} onChange={set} options={[['', 'Any'], ...(data?.languages ?? []).map(l => [l, l]), ...(q.language && !data?.languages?.includes(q.language) ? [[q.language, q.language]] : [])]} />
           <Select label="Stated reward" name="min_reward" value={q.min_reward} onChange={set} options={[['', 'Any'], ['1', '$1 or more'], ['25', '$25 or more'], ['50', '$50 or more'], ['100', '$100 or more']]} />
+          <Select label="Owner's payment record" name="owner_record" value={q.owner_record} onChange={set} options={[['', 'Any'], ['confirmed-payments', 'A solver confirmed a payment'], ['confirmed-none-late', 'Confirmed, none disputed or late'], ['no-history', 'No history yet']]} />
           <Select label="Sort" name="sort" value={q.sort} onChange={set} options={[['newest', 'Newest first'], ['reward', 'Highest reward first']]} />
         </div>
         <details className="text-sm">

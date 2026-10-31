@@ -68,8 +68,11 @@ describe('the pages', () => {
     const text = await card.innerText();
     expect(text).toContain('$45');
     expect(text).toContain('example-tidepool/ledger-lite · TypeScript · 4 days old · 2 solutions waiting');
-    expect(text).toContain('Posted by example-mara, who pays the solver directly.');
+    expect(text).toContain('Posted by example-mara, who pays the solver directly: ');
+    expect(text).toMatch(/\d merged · \d paid by the owner's word · \d received by the solvers' word/);
     expect(await page.locator('main').innerText()).toContain(`Titles are the posters' own words.`);
+    await visit(page, '/?repository=example-org/repo-1&query=Add thing 1');
+    await expect.poll(() => card.innerText()).toContain('Posted by poster-1, who pays the solver directly: no payment history yet.');
     await close();
   });
 
@@ -188,6 +191,55 @@ describe('the pages', () => {
     await expect.poll(() => solver.page.locator('[data-primary]').innerText()).toBe('Sign in with GitHub');
     expect(await solver.page.locator('main').innerText()).not.toContain(secret);
     await solver.close();
+  });
+
+  it('an owner records a payment, the payee disputes it, then confirms: each word attributed, on the page and the profiles, to a stranger too', async () => {
+    const signedIn = async (id: number, login: string) => {
+      board.standin.signInAs = { id, login };
+      const person = await fresh();
+      await visit(person.page, '/me/');
+      await person.page.click('[data-primary]');
+      await person.page.waitForSelector('select[name=kind]');
+      await visit(person.page, `/b/${STATE_IDS.owed}/`);
+      return person;
+    };
+    const says = (person: { page: Page }) => person.page.locator('main').innerText();
+    const stranger = await fresh();
+    await visit(stranger.page, `/b/${STATE_IDS.owed}/`);
+    await expect.poll(() => says(stranger)).toContain('Owed to example-quill: $45, since');
+    expect(await says(stranger)).toContain('Source: GitHub records pull request #68 merged.');
+    expect(await says(stranger)).toContain('Not recorded paid by example-mara.');
+    expect(await says(stranger)).not.toContain('Record $45');
+
+    const payee = await signedIn(7001, 'example-quill');
+    await expect.poll(() => says(payee)).toContain('Owed to example-quill');
+    expect(await says(payee)).not.toContain('Record $45');
+
+    const owner = await signedIn(7100, 'example-mara');
+    await owner.page.click('text=Record $45 paid to example-quill');
+    await expect.poll(() => says(owner)).toContain('Recorded paid by example-mara on');
+    expect(await says(owner)).toContain('The owner\'s word, from their click on the board. Recording moves no money.');
+    expect(await says(owner)).toContain('Earned by example-quill: $45');
+
+    await visit(payee.page, `/b/${STATE_IDS.owed}/`);
+    await payee.page.click('text=It has not arrived');
+    await expect.poll(() => says(payee)).toContain('example-quill says it has not been received');
+    await visit(stranger.page, `/b/${STATE_IDS.owed}/`);
+    await expect.poll(() => says(stranger)).toContain('The owner and the solver disagree. Both words are shown as theirs; the board does not decide between them.');
+    expect(await says(stranger)).toContain('Recorded paid by example-mara');
+    await visit(stranger.page, '/owner/example-mara/');
+    await expect.poll(() => says(stranger)).toContain('Says not received');
+
+    await payee.page.click('text=Confirm I received $45');
+    await expect.poll(() => says(payee)).toContain('example-quill says it was received');
+    await visit(stranger.page, '/solver/example-quill/');
+    await expect.poll(() => says(stranger)).toContain('1 payment they confirmed received (their word)');
+
+    await visit(owner.page, `/b/${STATE_IDS.owed}/`);
+    await owner.page.click('text=Withdraw this record');
+    await expect.poll(() => says(owner)).toContain('Owed to example-quill');
+    expect(await says(owner)).not.toContain('says it was received');
+    for (const person of [stranger, payee, owner]) await person.close();
   });
 
   it('the sign-in page says what it asks for, and an error code in the address shows fixed words only', async () => {

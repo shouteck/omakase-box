@@ -30,6 +30,9 @@ CREATE TABLE IF NOT EXISTS pull_requests (
   state TEXT NOT NULL,
   opened_at TEXT NOT NULL,
   merged_at TEXT,
+  association TEXT,
+  head_sha TEXT,
+  on_default INTEGER,
   PRIMARY KEY (bounty_id, number)
 );
 CREATE TABLE IF NOT EXISTS events (
@@ -67,6 +70,15 @@ CREATE TABLE IF NOT EXISTS receipts (
   payee TEXT NOT NULL,
   says TEXT NOT NULL,
   record_at TEXT NOT NULL,
+  at TEXT NOT NULL
+);
+-- The owner's "paid" click, or its withdrawal: one standing row, weighed against the chain's events by date.
+CREATE TABLE IF NOT EXISTS paid_clicks (
+  bounty_id TEXT PRIMARY KEY,
+  by_login TEXT NOT NULL,
+  to_login TEXT,
+  amount INTEGER,
+  withdrawn INTEGER NOT NULL,
   at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS log (

@@ -1,8 +1,9 @@
 // The board's reads, shared by the pages' API and the machine interface: the
 // filters, the private rule at render, and what a state or a history line says.
 import { type Env, GitHub, GitHubUnavailable, BudgetSpent } from './github.js';
+import { ownersMatching, OWNER_RECORD_FILTERS } from './payments.js';
 import { readRepository } from './refresh.js';
-import { getMeta } from './store.js';
+import { type Db, getMeta } from './store.js';
 
 const MAX_QUERY = 100;
 const RENDER_RECHECK_MS = 5 * 60000;
@@ -19,6 +20,7 @@ export async function freshness(env: Env): Promise<{ read_at: string | null; sta
 const ENUMS: Record<string, readonly string[]> = {
   solutions: ['none', 'some'],
   approved_by: ['owner-this-bounty', 'owner-standing-rule'],
+  owner_record: Object.keys(OWNER_RECORD_FILTERS),
   sort: ['newest', 'reward']
 };
 const WHOLE = /^\d{1,9}$/;
@@ -58,6 +60,15 @@ export function filterOf(q: URLSearchParams, now: number, wholes: readonly strin
     add(`(b.title LIKE ? ESCAPE '\\' OR b.repository LIKE ? ESCAPE '\\')`, like, like);
   }
   return { where, values };
+}
+
+/** The one filter that needs the counts: they are worked out on read, so it runs after filterOf. */
+export async function addOwnerRecord(db: Db, q: URLSearchParams, filter: Filter, now: number): Promise<void> {
+  const asked = q.get('owner_record');
+  if (!asked) return;
+  const { logins, negate } = await ownersMatching(db, asked, now);
+  filter.where.push(`LOWER(b.poster) ${negate ? 'NOT ' : ''}IN (SELECT value FROM json_each(?))`);
+  filter.values.push(JSON.stringify(logins));
 }
 
 export type BountyRow = { id: string; repository: string; issue_number: number; title: string; task: string; poster: string; issue_state: string; closed_at: string | null; amount: number; created_at: string; work_commit: string; approved_by: string | null; language: string | null; default_branch: string; read_at: number };

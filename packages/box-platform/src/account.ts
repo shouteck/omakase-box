@@ -2,9 +2,10 @@
 // answer that may carry an owner-only method. The feed, MCP and RSS never come here.
 import type { Env } from './github.js';
 import { checkMethod, isLink, MAX_METHODS, type Method, parseStored, publicOnly } from './methods.js';
+import { type BountyPayment, emptyPayment, factsOf, landedOf, loadPayments, notCounted, notCountedOf, ownerRecord, paymentOf, solverRecord } from './payments.js';
 import { readBounty } from './query.js';
 import { LOGIN } from './refresh.js';
-import { currentReceipt, ownerOnlyAllowed, type PaidEvent, payeeOf, type PaymentFacts, type Receipt, roleOf, standingRecord } from './visibility.js';
+import { ownerOnlyAllowed, payeeOf, roleOf, same } from './visibility.js';
 
 const SESSION_COOKIE = '__Host-board_session';
 const STATE_COOKIE = '__Host-board_oauth_state';
@@ -143,30 +144,39 @@ type ProfileRow = { id: string; title: string; amount: number; repository: strin
 async function solverProfile(env: Env, login: string): Promise<Response> {
   const merged = await env.DB.prepare(`SELECT b.id, b.title, b.amount, b.repository, p.merged_at, p.number FROM pull_requests p JOIN bounties b ON b.id = p.bounty_id
     WHERE p.author = ? COLLATE NOCASE AND p.state = 'merged' ORDER BY p.merged_at DESC, b.id LIMIT ?`).bind(login, LIST_MAX).all<ProfileRow>();
-  return json(200, { login, methods: publicOnly(await methodsOfLogin(env, login)).map(shown), merged: merged.results });
+  const inputs = await loadPayments(env.DB, `EXISTS (SELECT 1 FROM pull_requests p WHERE p.bounty_id = b.id AND p.state = 'merged' AND p.author = ? COLLATE NOCASE)`, login);
+  const listed = merged.results.map(row => {
+    const input = inputs.find(entry => entry.id === row.id);
+    const mine = input === undefined ? undefined : landedOf(input).find(pull => same(pull.author, login));
+    const counted = input !== undefined && mine !== undefined && notCounted(mine, input.poster) === null;
+    const payment = input === undefined ? null : paymentOf(input);
+    return { ...row, counted, payment_state: payment !== null && same(payment.owed?.to ?? null, login) ? payment.state : null };
+  });
+  return json(200, { login, record: solverRecord(login, inputs), methods: publicOnly(await methodsOfLogin(env, login)).map(shown), merged: listed });
 }
 
-async function ownerProfile(env: Env, login: string): Promise<Response> {
+async function ownerProfile(env: Env, login: string, now: number): Promise<Response> {
   const bounties = await env.DB.prepare(`SELECT b.id, b.title, b.amount, b.repository, b.issue_state FROM bounties b WHERE b.poster = ? COLLATE NOCASE ORDER BY b.created_at DESC, b.id LIMIT ?`).bind(login, LIST_MAX).all<ProfileRow>();
-  return json(200, { login, bounties: bounties.results });
+  const inputs = await loadPayments(env.DB, 'b.poster = ? COLLATE NOCASE', login);
+  const states = new Map(inputs.map(input => [input.id, paymentOf(input)]));
+  const listed = bounties.results.map(row => ({ ...row, payment_state: states.get(row.id)?.state ?? null, counted: states.get(row.id)?.excluded_from_counts === null }));
+  return json(200, { login, record: ownerRecord(inputs, now), not_counted: notCountedOf(inputs), bounties: listed });
 }
 
-async function paymentFacts(env: Env, id: string, now: number): Promise<PaymentFacts | null> {
+async function paymentInput(env: Env, id: string, now: number): Promise<BountyPayment | null> {
   const read = await readBounty(env, id, now);
   if (read === null) return null;
-  const paid = (await env.DB.prepare(`SELECT at, amount, withdrawn FROM events WHERE bounty_id = ? AND type = 'paid'`).bind(id).all<PaidEvent>()).results;
-  const merged = read.pulls.filter(pull => pull.state === 'merged').map(pull => ({ number: pull.number, author: pull.author }));
-  const record = standingRecord(paid);
-  const stored = await env.DB.prepare('SELECT says, record_at, at FROM receipts WHERE bounty_id = ?').bind(id).first<Receipt>();
-  return { amount: read.row.amount, poster: read.row.poster, merged, record, receipt: currentReceipt(record, stored) };
+  return (await loadPayments(env.DB, 'b.id = ?', id))[0] ?? emptyPayment(read.row);
 }
 
 const ask = (author: string, number: number) => `Next: ask on pull request #${number} how ${author} wants to be paid.`;
+const NOT_ON_BOARD = { error: 'This bounty is not on the board. Next: search the board.' };
 
-/** Every merged author's methods, as this viewer may see them. */
+/** The public payment facts, and every merged author's methods as this viewer may see them. */
 async function paymentView(env: Env, id: string, viewer: Viewer | null, now: number): Promise<Response> {
-  const facts = await paymentFacts(env, id, now);
-  if (facts === null) return json(404, { error: 'This bounty is not on the board. Next: search the board.' });
+  const input = await paymentInput(env, id, now);
+  if (input === null) return json(404, NOT_ON_BOARD);
+  const facts = factsOf(input);
   const login = viewer?.login ?? null;
   const role = roleOf(facts, login);
   const payee = payeeOf(facts);
@@ -175,14 +185,47 @@ async function paymentView(env: Env, id: string, viewer: Viewer | null, now: num
     const methods = (author === payee && ownerOnlyAllowed(facts, login) ? all : publicOnly(all)).map(shown);
     return { login: author, methods, next: methods.length === 0 ? ask(author, number) : null };
   })) : [];
-  const concerned = role !== 'other';
   return json(200, {
     viewer: login, role, payee, payees,
+    payment: paymentOf(input),
     recorded: facts.record === null ? null : { at: facts.record.at, amount: facts.record.amount },
     owner_only_hidden: role === 'owner' && payee !== null && !ownerOnlyAllowed(facts, login),
-    receipt: concerned ? facts.receipt : null,
-    can_answer: role === 'payee' && facts.record !== null
+    receipt: facts.receipt,
+    can_answer: role === 'payee' && facts.record !== null,
+    can_record: role === 'owner' && facts.amount > 0 && facts.merged.length > 0 && facts.record === null,
+    can_withdraw: role === 'owner' && facts.record !== null
   });
+}
+
+/** The owner's click, or its withdrawal. Only the issue's author; the amount is the bounty's; the same click twice changes nothing. */
+async function recordPaid(request: Request, env: Env, id: string, viewer: Viewer, now: number): Promise<Response> {
+  const body = await readBody(request);
+  if ('refused' in body) return body.refused;
+  const sent = (body.value ?? {}) as { to?: unknown; withdraw?: unknown };
+  const input = await paymentInput(env, id, now);
+  if (input === null) return json(404, NOT_ON_BOARD);
+  const facts = factsOf(input);
+  if (roleOf(facts, viewer.login) !== 'owner') return json(403, { error: 'Only the poster of this bounty can record its payment. Nothing changed.' });
+  const at = new Date(now).toISOString();
+  const save = (to: string | null, amount: number | null, withdrawn: number) => env.DB.prepare(`INSERT INTO paid_clicks (bounty_id, by_login, to_login, amount, withdrawn, at) VALUES (?, ?, ?, ?, ?, ?)
+    ON CONFLICT (bounty_id) DO UPDATE SET by_login = excluded.by_login, to_login = excluded.to_login, amount = excluded.amount, withdrawn = excluded.withdrawn, at = excluded.at`)
+    .bind(id, viewer.login, to, amount, withdrawn, at).run();
+  if (sent.withdraw === true) {
+    if (facts.record !== null) {
+      await save(null, null, 1);
+      await env.DB.prepare('DELETE FROM receipts WHERE bounty_id = ?').bind(id).run();
+    }
+    return paymentView(env, id, viewer, now);
+  }
+  if (facts.amount === 0 || facts.merged.length === 0) return json(409, { error: 'Nothing is owed on this bounty, so there is nothing to record. Nothing changed.' });
+  const named = typeof sent.to === 'string' ? facts.merged.find(pull => same(pull.author, sent.to as string))?.author : facts.merged.length === 1 ? facts.merged[0]!.author : undefined;
+  if (named === undefined) return json(400, { error: `Name one merged author: ${facts.merged.map(pull => pull.author).join(' or ')}. Nothing changed.` });
+  if (facts.record !== null) {
+    if (same(payeeOf(facts), named)) return paymentView(env, id, viewer, now);
+    return json(409, { error: 'A payment to someone else is already recorded. Nothing changed. Next: withdraw that record first.' });
+  }
+  await save(named, facts.amount, 0);
+  return paymentView(env, id, viewer, now);
 }
 
 const ANSWERS: readonly unknown[] = ['received', 'not-received', null];
@@ -192,8 +235,9 @@ async function answerReceipt(request: Request, env: Env, id: string, viewer: Vie
   if ('refused' in body) return body.refused;
   const says = (body.value as { says?: unknown } | null)?.says;
   if (!ANSWERS.includes(says)) return json(400, { error: 'Say received, not-received or null to withdraw. Next: use the page.' });
-  const facts = await paymentFacts(env, id, now);
-  if (facts === null) return json(404, { error: 'This bounty is not on the board. Next: search the board.' });
+  const input = await paymentInput(env, id, now);
+  if (input === null) return json(404, NOT_ON_BOARD);
+  const facts = factsOf(input);
   if (roleOf(facts, viewer.login) !== 'payee') return json(403, { error: 'Only the author of the merged solution can answer this. Nothing changed.' });
   if (facts.record === null) return json(409, { error: 'No payment is recorded on this bounty. Nothing to answer. Next: nothing to do until the owner records one.' });
   await env.DB.prepare('DELETE FROM receipts WHERE bounty_id = ?').bind(id).run();
@@ -227,17 +271,18 @@ export async function accountResponse(request: Request, env: Env, url: URL, now:
   if (method === 'GET' && person !== null) {
     const login = loginFrom(person[2]!);
     if (login === null) return json(404, { error: 'That is not a GitHub login. Next: check the address.' });
-    return person[1] === 'solver' ? solverProfile(env, login) : ownerProfile(env, login);
+    return person[1] === 'solver' ? solverProfile(env, login) : ownerProfile(env, login, now);
   }
-  const payment = /^\/api\/b\/(bt-[a-f\d]{12})\/(payment|receipt)$/.exec(path);
+  const payment = /^\/api\/b\/(bt-[a-f\d]{12})\/(payment|receipt|paid)$/.exec(path);
   if (payment !== null) {
     const id = payment[1]!;
     if (method === 'GET' && payment[2] === 'payment') return paymentView(env, id, await viewerOf(request, env, now), now);
-    if (method === 'POST' && payment[2] === 'receipt') {
+    if (method === 'POST' && payment[2] !== 'payment') {
       const refusal = writeRefusal(request, url, true);
       if (refusal !== null) return refusal;
       const viewer = await viewerOf(request, env, now);
-      return viewer === null ? json(401, SIGN_IN_FIRST) : answerReceipt(request, env, id, viewer, now);
+      if (viewer === null) return json(401, SIGN_IN_FIRST);
+      return payment[2] === 'receipt' ? answerReceipt(request, env, id, viewer, now) : recordPaid(request, env, id, viewer, now);
     }
   }
   return null;

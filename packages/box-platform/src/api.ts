@@ -4,7 +4,8 @@ import { accountResponse } from './account.js';
 import { feedResponse, detailResponse, rssResponse, schemaResponse } from './feed.js';
 import type { Env } from './github.js';
 import { mcpResponse } from './mcp.js';
-import { DAY, filterOf, freshness, FROM_LISTED, OPEN_COUNT, OPEN_WHERE, readBounty, stateOf } from './query.js';
+import { ownerRecords } from './payments.js';
+import { addOwnerRecord, DAY, filterOf, freshness, FROM_LISTED, OPEN_COUNT, OPEN_WHERE, readBounty, stateOf } from './query.js';
 
 const PAGE_SIZE = 20;
 const SOLUTIONS_MAX = 50;
@@ -22,6 +23,7 @@ async function board(env: Env, url: URL, now: number): Promise<Response> {
   const q = url.searchParams;
   const filter = filterOf(q, now, ['min_reward', 'max_age_days', 'page']);
   if ('error' in filter) return json(400, { error: filter.error });
+  await addOwnerRecord(env.DB, q, filter, now);
   const { where, values } = filter;
   const from = `${FROM_LISTED} WHERE ${where.join(' AND ')}`;
   const total = (await env.DB.prepare(`SELECT COUNT(*) AS n ${from}`).bind(...values).first<{ n: number }>())?.n ?? 0;
@@ -34,6 +36,7 @@ async function board(env: Env, url: URL, now: number): Promise<Response> {
   const openTotal = (await env.DB.prepare(`SELECT COUNT(*) AS n ${allOpen}`).first<{ n: number }>())?.n ?? 0;
   const languages = await env.DB.prepare(`SELECT DISTINCT r.language AS v ${allOpen} AND r.language IS NOT NULL ORDER BY v`).all<{ v: string }>();
   const repositories = await env.DB.prepare(`SELECT DISTINCT b.repository AS v ${allOpen} ORDER BY v`).all<{ v: string }>();
+  const records = await ownerRecords(env.DB, rows.results.map(row => row.poster), now);
   return json(200, {
     ...await freshness(env),
     open_total: openTotal, count: total, page, pages, page_size: PAGE_SIZE,
@@ -41,7 +44,7 @@ async function board(env: Env, url: URL, now: number): Promise<Response> {
     repositories: repositories.results.map(row => row.v),
     bounties: rows.results.map(row => ({
       id: row.id, title: row.title, amount: row.amount, repository: row.repository, language: row.language,
-      poster: row.poster, solutions_open: row.solutions_open,
+      poster: row.poster, record: records.get(row.poster.toLowerCase()), solutions_open: row.solutions_open,
       age_days: Math.max(0, Math.floor((now - Date.parse(row.created_at)) / DAY))
     }))
   });

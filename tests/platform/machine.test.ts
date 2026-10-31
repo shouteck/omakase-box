@@ -63,7 +63,7 @@ describe('the feed', () => {
     const page = await askJson(r, `/bounties.json?limit=25`);
     const first = page.bounties[0]; // n = 0: newest, no reward, one open pull request, approved once
     expect(first).toMatchObject({
-      id: idOf(1), poster_says: { title: 'Fix thing 0' }, reward: { amount: 0, currency: 'USD' }, owner: { login: 'poster-0', record: null },
+      id: idOf(1), poster_says: { title: 'Fix thing 0' }, reward: { amount: 0, currency: 'USD' }, owner: { login: 'poster-0', record: { has_history: false, merged: 0, recorded_paid: 0, confirmed_received: 0, from_solvers: 0, owed_now: 0, oldest_owed_days: 0, says_not_received: 0, median_days_to_record_paid: null } },
       repository: { name: 'example-org/repo-0', language: 'TypeScript', url: 'https://github.com/example-org/repo-0' },
       state: 'solutions-waiting', solutions: { open: 1, total: 1 }, age_days: 0, approved_by: 'owner-this-bounty',
       answer: { branch: `box-bounty/${idOf(1)}`, pull_request_base: `box-bounty/${idOf(1)}` },
@@ -103,7 +103,7 @@ describe('the feed', () => {
     ['a limit over the maximum', 'limit=26', 'limit:'],
     ['a limit of nothing', 'limit=0', 'limit:'],
     ['a bad filter value', 'solutions=lots', 'solutions:'],
-    ['a filter that waits for payment records', 'owner_record=confirmed-payments', 'owner_record:'],
+    ['an owner_record value that is not one', 'owner_record=good', 'owner_record:'],
     ['an unknown filter', 'lang=Go', 'lang:'],
     ['a made-up cursor', 'cursor=bm90LWEtY3Vyc29y', 'cursor:']
   ])('refuses %s and names the next step', async (_name, query, words) => {
@@ -151,7 +151,7 @@ describe('the feed', () => {
     expect(bounty.how_to_answer[2]).toContain('pull request against the branch');
     expect(bounty.how_to_get_paid.join(' ')).toContain('owes you $50 and pays you directly');
     expect(JSON.stringify(bounty).toLowerCase()).not.toMatch(/funded|escrow/);
-    expect(bounty.payment).toBeNull();
+    expect(bounty.payment).toMatchObject({ state: 'nothing-owed', owed: null, note: expect.stringContaining('paid directly') });
     expect(bounty.judged).toContain('does not judge');
     expect(Object.keys(bounty).slice(0, ENTRY_ORDER.length)).toEqual(ENTRY_ORDER);
   });

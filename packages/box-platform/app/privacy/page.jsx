@@ -16,7 +16,8 @@ export default function Page() {
       <Section title="If you choose to publish" id="chosen">
         <ul className="list-disc pl-5 flex flex-col gap-2 max-w-prose">
           <li>The ways you accept payment, with who may see each one. Remove one and it is gone. An email or wallet address you list is stored because you listed it.</li>
-          <li>Your answer about whether a recorded payment arrived.</li>
+          <li>Your answer about whether a recorded payment arrived, shown publicly as your word until you withdraw it.</li>
+          <li>Your click recording a bounty you posted as paid, shown publicly as your word until you withdraw it.</li>
         </ul>
       </Section>
       <Section title="What it never does" id="never">

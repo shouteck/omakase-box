@@ -2,13 +2,13 @@
 // nowhere else (PLATFORM-UX section 5, with D-2026-10-22-k43-decisions): only the
 // poster of one bounty, on that bounty's page, while it owes this solver, or while
 // the payee says that bounty's recorded payment has not arrived.
-export type PaidEvent = { at: string; amount: number | null; withdrawn: number | null };
+export type PaidEvent = { at: string; amount: number | null; withdrawn: number | null; to?: string | null };
 export type Receipt = { says: 'received' | 'not-received'; record_at: string; at: string };
 export type Role = 'owner' | 'payee' | 'other';
 
-const same = (a: string | null, b: string | null): boolean => a !== null && b !== null && a.toLowerCase() === b.toLowerCase();
+export const same = (a: string | null, b: string | null): boolean => a !== null && b !== null && a.toLowerCase() === b.toLowerCase();
 
-/** The latest `paid` event decides; a withdrawn one means no record stands. */
+/** The latest `paid` event or click decides; a withdrawn one means no record stands. */
 export function standingRecord(events: readonly PaidEvent[]): PaidEvent | null {
   const latest = [...events].sort((x, y) => Date.parse(x.at) - Date.parse(y.at)).at(-1);
   return latest === undefined || latest.withdrawn ? null : latest;
@@ -25,9 +25,12 @@ export type PaymentFacts = {
   receipt: Receipt | null;
 };
 
-/** The one merged author of a rewarded bounty. More than one: the owner decides, and nobody is named. */
-export const payeeOf = (facts: Pick<PaymentFacts, 'amount' | 'merged'>): string | null =>
-  facts.amount > 0 && facts.merged.length === 1 ? facts.merged[0]!.author : null;
+/** The one merged author of a rewarded bounty. More than one: the owner decides, and nobody is named until a record names one of them. */
+export function payeeOf(facts: Pick<PaymentFacts, 'amount' | 'merged'> & { record?: PaidEvent | null }): string | null {
+  if (facts.amount === 0) return null;
+  if (facts.merged.length === 1) return facts.merged[0]!.author;
+  return facts.merged.find(pull => same(pull.author, facts.record?.to ?? null))?.author ?? null;
+}
 
 export function roleOf(facts: PaymentFacts, viewer: string | null): Role {
   if (same(viewer, facts.poster)) return 'owner';
