@@ -7,6 +7,27 @@ Horizon: long: start with `/plan` and keep the plan in this file
 
 **Brief.** Written ahead by the CTO on 21 October 2026. Before starting, the CTO reconciles it with K43's payment-facts design (`PLATFORM-UX.md`, question 4) and corrects names only. **After PF1 and PF3.**
 
+**Reconciled with K43 (31 October 2026).** Where this brief and K43 differ, K43 is built. Write paths: `packages/box-platform/`, `tests/platform/`, `waves/PF4.md`.
+
+| Brief says | Built as | Why |
+|---|---|---|
+| Paid button needs push access | Only the account signed in as the issue's author | The board cannot read push access (K43 section 5; PF3 used this) |
+| Self-dealing: poster or push access | Poster, or the merged pull request's `author_association` is OWNER, MEMBER or COLLABORATOR, kept from the first read after merge | What GitHub shows without a token. Wording: "GitHub lists them as ...", never "has push access" |
+| Merged = GitHub records it merged | Merged and head on the default branch (compare API), as K42 3.3 step 4 and K43 say | A merge into the bounty branch alone owes nothing yet; the page says so |
+| Two merged: nothing owed to either | Counts once as owed, `to: null`, `to_one_of`, until the owner's click names one merged author | K43's rule; same meaning |
+
+## Plan
+
+Agreed with the owner in plan mode, 31 October 2026. Read before code: feature playbook, Prove It Works. `architect` skipped: K43 settled the design. One writer.
+
+1. **Compute on read, no stored counts.** `src/payments.ts` holds every rule as pure functions (`paymentOf` with one named state, `ownerRecord`, `solverRecord`, `excluded`) and one loader. Nothing goes stale after a click, refresh or purge. Cost: the `owner_record` filter reads all merged rewarded bounties.
+2. **Decisions:** a chain `paid` event has no payee, so only the click settles a two-merge bounty (`to` on the event is PF5's). `median_days_to_record_paid` is `null` when nothing is recorded, because 0 would be a false fact.
+3. **Store:** `pull_requests` gains `association`, `head_sha`, `on_default`; new `paid_clicks`, purged with the bounty. `standingRecord` takes chain and click, latest wins; `payeeOf` honours a record's `to`.
+4. **Routes:** `POST /api/b/<id>/paid` (`{to}` or `{withdraw: true}`); the amount is the bounty's; the same click twice changes nothing; a different payee must withdraw first. Receipts become public.
+5. **Surfaces:** feed, detail, MCP, `owner_record` filter, board card and filter, bounty page, profiles, `how`, `privacy`, README.
+6. **Not built, each a BACKLOG line:** landed but not marked merged; solvers' GitHub account age; `/me/` owe and owed sections; the real-GitHub test of private organisation membership (PF6).
+7. **Steps:** pure rules and table tests; schema, stand-in, refresh; routes and machine interface; pages and browser journey; bites; verify; own browser run; close.
+
 ## Outcome
 
 Every bounty with a reward shows, as attributed facts:
