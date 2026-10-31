@@ -14,6 +14,8 @@ import { repositoryAddress } from './repository.js';
 import { readReward } from './settings.js';
 import { boundAmount,formatFor,publicText,renderFormat } from './format.js';
 import { showPath } from './notice.js';
+import { hitPlace, isTextField, scanFields } from './scan.js';
+import { SCAN_LIMIT_LINE, WITHHELD } from './wording.js';
 
 // The listing a stranger reads: the task, what was tried, the branch to work
 // from (with the base commit as context — never the bare commit to branch
@@ -102,6 +104,15 @@ function listingHistory(record: BountyRecord, repository: string, plan: GitHubPl
   return { branch, title, body: body + block };
 }
 
+// The text a post publishes is scanned as it will be published (BT45): the
+// issue title, the rendered issue body (title and task inside it) and the
+// why, which the posted event carries onto the shared memory. Its hits join
+// the plan's — one hold, the same wait for the owner.
+function withTextHits(plan: GitHubPlan, record: BountyRecord, text: { title: string; body: string }): GitHubPlan {
+  const hits = scanFields([['(issue title)', text.title], ['(issue body)', text.body], ['(why)', record.why ?? '']]);
+  return hits.length === 0 ? plan : { ...plan, scan: { ...plan.scan, hits: [...hits, ...plan.scan.hits] } };
+}
+
 function renderPlanPreview(repository: string, record: BountyRecord, plan: GitHubPlan, text: { branch: string; title: string; body: string }): string {
   const lines: string[] = [];
   lines.push(`GitHub preview: ${repository}, public. Anyone can read the issue and branch.`);
@@ -135,16 +146,20 @@ function renderPlanPreview(repository: string, record: BountyRecord, plan: GitHu
     // safe-listed hit says so in its own words instead (BT13, F4).
     lines.push(plan.scan.suppressed > 0
       ? `Pre-publish scan: ${plan.scan.suppressed} secret-shaped hit(s) sit on paths the owner listed safe to publish — not held; ${plan.scan.commitsScanned} first-published commit(s) read${plan.include.length > 0 ? ` plus ${plan.include.length} named file(s)` : ''}`
-      : `Pre-publish scan: clean — ${plan.scan.commitsScanned} first-published commit(s) read${plan.include.length > 0 ? ` plus ${plan.include.length} named file(s)` : ''}`);
+      : `Pre-publish scan: clean — ${plan.scan.commitsScanned} first-published commit(s) read${plan.include.length > 0 ? ` plus ${plan.include.length} named file(s)` : ''}, with the issue title, body and why`);
   } else {
     lines.push(`Pre-publish scan: ${plan.scan.hits.length} secret-shaped hit(s) — a post would wait for the owner:`);
-    for (const hit of plan.scan.hits) lines.push(`    ${showPath(hit.path)}:${hit.line} — ${hit.rule}${hit.commit !== undefined ? ` — in unpushed commit ${hit.commit.slice(0, 12)}` : ''}`);
+    for (const hit of plan.scan.hits) lines.push(`    ${hitPlace(hit)} — ${hit.rule}${hit.commit !== undefined ? ` — in unpushed commit ${hit.commit.slice(0, 12)}` : ''}`);
   }
   if (plan.scan.suppressed > 0 && plan.scan.hits.length > 0) lines.push(`  ${plan.scan.suppressed} hit(s) sit on paths the owner listed safe to publish — not held`);
   if (plan.scan.binary.length > 0) lines.push(`  not scanned — Git treats them as binary: ${plan.scan.binary.map(showPath).join(', ')}`);
-  lines.push(`Issue title: ${text.title}`);
+  lines.push(`  ${SCAN_LIMIT_LINE}`);
+  // A flagged field is not printed — a post would hold, so it is not what
+  // goes out, and the value is never shown (BT45).
+  const flagged = (label: string): boolean => plan.scan.hits.some(hit => hit.path === label);
+  lines.push(`Issue title: ${flagged('(issue title)') ? WITHHELD : text.title}`);
   lines.push('Issue body:');
-  lines.push(text.body);
+  lines.push(flagged('(issue body)') ? WITHHELD : text.body);
   return lines.join('\n');
 }
 
@@ -161,7 +176,7 @@ export function approveGitHub(root: string, record: BountyRecord, choice: GitHub
   // editable `reward` summary — and a recorded approval predates rewards: its
   // frozen body states $0.
   const text = listingHistory(record, repository, plan, boundAmount(record) ?? readReward(repositoryAddress(repository)).amount);
-  const preview = renderPlanPreview(repository, record, plan, text);
+  const preview = renderPlanPreview(repository, record, withTextHits(plan, record, text), text);
   return {
     repository,
     preview,
@@ -226,7 +241,7 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
     // a named refusal — the owner settles it in `config` (safe to publish /
     // never publish), or the flagged content is removed and the post rerun.
     if (opts?.answered === true && priorWait?.reason === 'secrets') {
-      return invalid('allow-scan-held', `${id} waits on the pre-publish scan — an owner answer cannot release it; nothing was posted; next: the owner decides in box bounty config — the path goes on safe to publish or never publish, or the flagged content is removed and the post run again`);
+      return invalid('allow-scan-held', `${id} waits on the pre-publish scan — an owner answer cannot release it; nothing was posted; next: the owner decides in box bounty config — the path goes on safe to publish or never publish, or the flagged content is removed and the post run again${(priorWait.hits ?? []).some(hit => isTextField(hit.path)) ? `; a hit in the bounty's own text is removed by creating the bounty again (box bounty close ${id} ends this one)` : ''}`);
     }
     const plan = planGitHub(root, repository, record, shipRules(root), choice);
     // An owner answer is bound to what the owner was shown would be
@@ -244,32 +259,42 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
     // for the decision alone can still carry scan hits the owner never saw —
     // those hold again, listing them. Rerunning `post` is never an answer.
     const seen = opts?.answered === true ? priorWait?.reason : undefined;
-    if (plan.scan.hits.length > 0) {
-      waitForOwner(root, record, { for: 'post', reason: 'secrets', at: new Date().toISOString(), to: 'github', choice, hits: plan.scan.hits, shown: shownOfPlan(plan) });
-      recordScanFinding(record, plan.scan.hits, 'post');
+    const text = listingHistory(record, repository, plan, reward!.amount);
+    const hits = withTextHits(plan, record, text).scan.hits;
+    if (hits.length > 0) {
+      waitForOwner(root, record, { for: 'post', reason: 'secrets', at: new Date().toISOString(), to: 'github', choice, hits, shown: shownOfPlan(plan) });
+      recordScanFinding(record, hits, 'post');
       persistRecord(root, record);
+      // A hit in the bounty's own text has no file for the owner's lists to
+      // settle (BT45): the agent takes it out and creates the bounty again.
+      const fileHits = hits.some(hit => !isTextField(hit.path));
+      const textHits = hits.some(hit => isTextField(hit.path));
       return invalid('publish-held', [
-        `${id} — the pre-publish scan found ${plan.scan.hits.length} secret-shaped hit(s); this bounty waits for the owner:`,
+        `${id} — the pre-publish scan found ${hits.length} secret-shaped hit(s); this bounty waits for the owner:`,
         // The owner block first (BT13, F3): what was found, in which file,
         // that nothing was published, and the choices — a question, not a
         // command; no commits, no git words. The file is named quoted, as
         // every path the tool prints (BT43 correction 5): after an apply it
         // can be a name a solver chose, and these are words to pass on.
         'for the owner — pass this on in these words:',
-        ...plan.scan.hits.map(hit => `  Something in your project looks like a password or key: file ${showPath(hit.path)}, line ${hit.line}.`),
+        ...hits.map(hit => isTextField(hit.path)
+          ? `  Something in this bounty's own text looks like a password or key: ${hit.path.slice(1, -1)}, line ${hit.line}.`
+          : `  Something in your project looks like a password or key: file ${showPath(hit.path)}, line ${hit.line}.`),
         '  Nothing has been published.',
-        '  You can say the file is safe to publish, say it must never be published, or have it changed first — which do you want?',
-        plan.scan.hits.some(hit => hit.commit !== undefined)
+        ...(fileHits ? ['  You can say the file is safe to publish, say it must never be published, or have it changed first — which do you want?'] : []),
+        ...(textHits ? ['  The bounty\'s text cannot be listed safe; the agent can take it out and create the bounty again, or stop.'] : []),
+        ...(textHits ? [`for you — the bounty's text is fixed at create: remove it from the title, why or task text and create the bounty again (box bounty close ${id} ends this one); or stop — nothing was published.`] : []),
+        ...(!fileHits ? [] : [plan.scan.hits.some(hit => hit.commit !== undefined)
           // A secret sitting inside an unpushed commit is not helped by a
           // new commit removing the file's content — the commit carrying it
           // would still publish (BT14). Changing that history is the
           // owner's call, never the agent's to make alone.
           ? 'for you — the owner\'s answer lands on the publish lists: box bounty config add safe-to-publish <path> or add never-publish <path>. For a hit inside an unpushed commit a new commit removing the content does not help — the commit carrying it would still be published; changing that history is the owner\'s call, not the agent\'s to make alone. Or end it — nothing was published and the owner\'s files are untouched.'
-          : 'for you — the owner\'s answer lands on the publish lists: box bounty config add safe-to-publish <path> or add never-publish <path>; or remove the flagged content and post again — that sends the bounty; or end it — nothing was published and the owner\'s files are untouched.',
-        ...plan.scan.hits.map(hit => `  hit: ${showPath(hit.path)}:${hit.line} — ${hit.rule}${hit.commit !== undefined ? ` — in unpushed commit ${hit.commit.slice(0, 12)} — an ordinary git push would publish it too` : ''}`),
+          : 'for you — the owner\'s answer lands on the publish lists: box bounty config add safe-to-publish <path> or add never-publish <path>; or remove the flagged content and post again — that sends the bounty; or end it — nothing was published and the owner\'s files are untouched.']),
+        ...hits.map(hit => `  hit: ${hitPlace(hit)} — ${hit.rule}${hit.commit !== undefined ? ` — in unpushed commit ${hit.commit.slice(0, 12)} — an ordinary git push would publish it too` : ''}`),
         ...(plan.scan.suppressed > 0 ? [`${plan.scan.suppressed} hit(s) on safe-listed paths are not held`] : []),
         ...(plan.scan.binary.length > 0 ? [`not scanned — Git treats them as binary: ${plan.scan.binary.map(showPath).join(', ')}`] : []),
-        'the scan is a stated pattern list, not proof of absence.', `next: pass the owner block on in its words; box bounty status ${id} shows when the answer lands`
+        SCAN_LIMIT_LINE, `next: pass the owner block on in its words; box bounty status ${id} shows when the answer lands`
       ].join('\n'));
     }
     if (plan.include.length > 0 && seen !== 'untracked-file') {
@@ -279,7 +304,6 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
         `the owner answers this one with box bounty allow ${id} — the answer is bound to what would be published now — or ends it with box bounty close ${id}`, `next: pass the owner block on in its words; box bounty status ${id} shows when the answer lands`
       ].join('\n'));
     }
-    const text = listingHistory(record, repository, plan, reward!.amount);
     const publication: GitHubPublication = {
       repository,
       account,

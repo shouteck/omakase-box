@@ -6,7 +6,8 @@ import { BountyRefused } from './errors.js';
 import { gitOutcome, ownerGitOutcome } from './git.js';
 import { BUILTIN_RULES, publishListed, publishLists, shipRules } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
-import { looksBinary, scanText } from './scan.js';
+import { hitPlace, isTextField, looksBinary, scanFields, scanText } from './scan.js';
+import { SCAN_LIMIT_LINE, WITHHELD } from './wording.js';
 import type { ScanHit } from './scan.js';
 import { showPath } from './notice.js';
 import { canonicalForNew, writeNewRecord } from './record.js';
@@ -175,7 +176,11 @@ export function planBounty(options: CreateOptions): BountyPlan {
     }
   }
   const scanHits = found.filter(hit => !publishListed(publish.safe, hit.path));
-  const scan = { hits: scanHits, suppressed: found.length - scanHits.length, binary: scanBinary, filesScanned: files.length - scanBinary.length };
+  // The bounty's own text is read too (BT45) — the title as it will be
+  // published, the why and the task. A field has no path, so the safe
+  // list never applies to it.
+  const textHits = scanFields([['(title)', title], ['(why)', why], ['(task text)', task.text]]);
+  const scan = { hits: [...textHits, ...scanHits], suppressed: found.length - scanHits.length, binary: scanBinary, filesScanned: files.length - scanBinary.length };
   const ruleRemovals: RuleRemoval[] = rules
     .map(rule => ({ rule: rule.name, paths: removed.filter(entry => entry.rule === rule.name).map(entry => entry.path) }))
     .filter(entry => entry.paths.length > 0)
@@ -214,13 +219,16 @@ export function renderPreview(plan: BountyPlan): string {
   lines.push(`  repository: ${plan.repoRoot}`);
 
   if (plan.scan.hits.length === 0) {
-    lines.push(`  pre-publish scan of the shipped set: clean — ${plan.scan.filesScanned} file(s) read`);
+    lines.push(`  pre-publish scan of the shipped set and the bounty's text: clean — ${plan.scan.filesScanned} file(s) read, with the title, why and task text`);
   } else {
-    lines.push(`  pre-publish scan of the working state: ${plan.scan.hits.length} secret-shaped hit(s) — posting re-checks what becomes public for the first time:`);
+    lines.push(`  pre-publish scan of the working state and the bounty's text: ${plan.scan.hits.length} secret-shaped hit(s) — posting re-checks what becomes public for the first time:`);
     // Every path the tool names is quoted (BT43 correction 5): after an
     // apply the working state holds file names a solver chose.
-    for (const hit of plan.scan.hits) lines.push(`    ${showPath(hit.path)}:${hit.line} — ${hit.rule}`);
+    for (const hit of plan.scan.hits) lines.push(`    ${hitPlace(hit)} — ${hit.rule}`);
+    // A field has no path for the owner's lists to settle (BT45).
+    if (plan.scan.hits.some(hit => isTextField(hit.path))) lines.push('    next: remove it from the title, why or task text and create the bounty again — box bounty close <id> ends this draft');
   }
+  lines.push(`  ${SCAN_LIMIT_LINE}`);
   if (plan.scan.suppressed > 0) lines.push(`    ${plan.scan.suppressed} hit(s) sit on paths the owner listed safe to publish — not held`);
   if (plan.scan.binary.length > 0) lines.push(`    not scanned — Git would treat them as binary: ${plan.scan.binary.slice(0, PREVIEW_NAMES_PER_RULE).map(showPath).join(', ')}${plan.scan.binary.length > PREVIEW_NAMES_PER_RULE ? ` … and ${plan.scan.binary.length - PREVIEW_NAMES_PER_RULE} more` : ''}`);
   if (plan.removed.length === 0) {
@@ -231,8 +239,10 @@ export function renderPreview(plan: BountyPlan): string {
       lines.push(`    ${entry.rule}: ${entry.removed}`);
     }
   }
-  lines.push(`  title: ${plan.title}${plan.titleShortened ? ` (shortened — a leading # and anything past the first sentence or ${TITLE_LIMIT} characters are dropped)` : ''}`);
-  lines.push(`  why: ${plan.why} (record only — never shipped)`);
+  // A field the scan flagged is not echoed back: the value is never printed (BT45).
+  const flagged = (label: string): boolean => plan.scan.hits.some(hit => hit.path === label);
+  lines.push(flagged('(title)') ? `  title: ${WITHHELD}` : `  title: ${plan.title}${plan.titleShortened ? ` (shortened — a leading # and anything past the first sentence or ${TITLE_LIMIT} characters are dropped)` : ''}`);
+  lines.push(flagged('(why)') ? `  why: ${WITHHELD}` : `  why: ${plan.why} (record only — never shipped)`);
   lines.push(`  reward: $${repoReward(plan.repoRoot).amount} in force now for this repository — a posted bounty states the amount in force at posting`);
   // The post's owner gate, stated at create (BT14): an agent that learns it
   // here is not surprised when post waits.

@@ -8,6 +8,8 @@
 // No setting switches it off.
 // ---------------------------------------------------------------------------
 
+import { showPath } from './notice.js';
+
 export interface SecretRule { readonly name: string; readonly pattern: RegExp }
 
 // The stated list. Each name is what a hit reports.
@@ -65,6 +67,22 @@ export function scanText(path: string, text: string): ScanHit[] {
   text.split('\n').forEach((line, index) => scanLine(path, index + 1, line, hits));
   return hits;
 }
+
+// The bounty's own text (BT45): the title, the why and the task text at
+// create, and what a post publishes (issue title, issue body, why on the
+// shared memory) — read by the same rules, one label per field. A hit's
+// `path` is the label; it has no file, so no publish list can settle it:
+// the content is removed and the bounty created again.
+export const TEXT_FIELDS = ['(title)', '(why)', '(task text)', '(issue title)', '(issue body)'] as const;
+export type TextField = typeof TEXT_FIELDS[number];
+export const isTextField = (path: string): path is TextField => (TEXT_FIELDS as readonly string[]).includes(path);
+export function scanFields(fields: readonly (readonly [TextField, string])[]): ScanHit[] {
+  return fields.flatMap(([label, text]) => scanText(label, text));
+}
+// Where a hit is, as printed: a field is the tool's own label; a file path
+// is quoted like every path the tool prints (BT43).
+export const hitPlace = (hit: { readonly path: string; readonly line: number }): string =>
+  isTextField(hit.path) ? `${hit.path} line ${hit.line}` : `${showPath(hit.path)}:${hit.line}`;
 
 // Scan a unified diff's added lines — the bytes being published for the
 // first time — tracking the new file's path and line numbers. Context and

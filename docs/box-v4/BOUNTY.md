@@ -802,9 +802,13 @@ Because nobody sees a preview any more, everything a GitHub post would
 publish **for the first time** is scanned for secret-shaped content before
 it goes out: the added lines of each commit not yet pushed, the tool's
 work-in-progress commit when `--with-changes` is chosen, and every untracked
-file `--include` names. `create` also scans the working-state snapshot so
-the agent can fix a hit before `post`; a hit at `create` holds nothing and is recorded the same
-way. The patterns are a small stated list, not proof of absence:
+file `--include` names — and the bounty's own text: the issue title, the
+rendered issue body and the why the shared memory carries. `create` also
+scans the working-state snapshot and the title, why and task text so the
+agent can fix a hit before `post`; a hit at `create` holds nothing and is
+recorded the same way. A hit in the bounty's text has no path for the
+owner's lists to settle: the agent removes it and creates the bounty again,
+or stops. The patterns are a small stated list, not proof of absence:
 
 - private key blocks (`-----BEGIN … PRIVATE KEY-----`);
 - well-known token and key formats (GitHub, GitLab, AWS, Slack, OpenAI,
