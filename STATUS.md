@@ -1,13 +1,14 @@
 # Status
 
-Updated by the CTO on 31 October 2026, when BT50 closed.
+Updated by the CTO on 31 October 2026, when BT47 closed.
 
 ## Now
 
 - **BT49 is on master** (`6d07b06`): an over-size issue is refused before anything is pushed, and a change over 2 MiB lists its files instead of printing. GitHub's limits are from secondary sources; see the [wave file](waves/BT49.md).
 - **The off-machine run went red and is fixed:** BT48's packaging-card lines broke a size limit (`2b0e040`). BT48's own `bt43` test ran there and passed.
 - **BT50 is on master** (`7cc6e18`): a GitHub failure names its cause and next step, and reads retry once. Only the 404 and success shapes were met live; see the [wave file](waves/BT50.md).
-- **Running now:** BT47, then BT46 (owner's START message).
+- **BT47 is on master** (`783a865`): the bt39 flake's cause found (a no-op in the test), the poster's own comments shown and labelled, the commit-graph buffer named, the Node floor pinned; see the [wave file](waves/BT47.md).
+- **Running now:** BT46 (owner's START message).
 - **Branches (owner, 31 October 2026):** work closes onto master. The cloud session branch `claude/serene-noether-m9qvs3` is left as it is.
 - **For the owner:**
   - the stray idle `node.exe` from BT44 (PID 16324), if it is still running;
