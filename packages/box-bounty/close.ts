@@ -1,8 +1,9 @@
 import { invalid,isObject,signedAccount,type GitHubPublication,publicationRef,remoteBranchSha,remoteGit,recoverIssue,api,login } from './gh.js';
 import { readPayAccepts } from './board.js';
 import { emitMergeNotice, showPath } from './notice.js';
+import { checkSolutionHistory } from './collect.js';
 import { BountyRefused } from './errors.js';
-import { git } from './git.js';
+import { git,gitOutcome } from './git.js';
 import { attemptsOf,persistRecord } from './record.js';
 import type { BountyRecord } from './record.js';
 import { readDecision } from './settings.js';
@@ -95,27 +96,45 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
       // body the PATCH rewrote (the format block) is a real change too.
       if (publication.state !== 'closed' || closed['body'] !== snapshot.body) changed = true;
     }
-    const tip = remoteBranchSha(root, publication.repository, publication.branch);
-    if (tip !== null && tip !== publication.commit) {
-      throw new BountyRefused('github-branch-changed', `${publication.branch} on the remote is ${tip}, not the ${publication.commit} this tool posted — it was changed outside the tool; removing it is not this tool's call; next: ask the owner — the remote branch was changed outside the tool and removing it is not this tool's call`);
+    // A bounty that stated a reward and ends on a merged solution records
+    // whom to pay: the pull request description is re-read now — with the
+    // account that last edited it — so the pay message the agent relays says
+    // what the solver actually left there (BT11b). $0 and non-merged closes
+    // record nothing. Before the branch step, so a branch that cannot advance
+    // never holds the message back (BT51).
+    if (event.merge !== undefined && (boundAmount(record) ?? 0) > 0) {
+      const pay = readPay(root, publication, record, event);
+      const accepts = readPayAccepts(pay.solver);
+      publication.pay = accepts === undefined ? pay : { ...pay, accepts };
     }
-    if (tip !== null) { remoteGit(root, publication.repository, ['push', `:refs/heads/${publication.branch}`]); changed = true; }
+    // A merge moves the bounty branch to the chosen head, so GitHub marks the
+    // pull request merged (BT51). A record already closed is finished: an
+    // ending from before this step stays as it ended.
+    const solution = (event.command === 'apply' || event.command === 'merged') && publication.state !== 'closed' ? decidedSolution(record, event) : null;
+    if (solution !== null) {
+      const advanced = advanceBountyBranch(root, record, publication, solution, event.merge);
+      if (advanced.pushed) changed = true;
+      if (advanced.notAdvanced !== null) {
+        // A retry cannot change these: the head itself is the reason.
+        const next = /^head-/.test(advanced.notAdvanced)
+          ? 'next: ask the owner — this head will not be moved onto the bounty branch, so GitHub will not mark this pull request merged; whether to credit it and when to remove the branch are the owner\'s call'
+          : `next: box bounty close ${record.id} retries this`;
+        publication.pending = `github-decision-pending (bounty-branch-not-advanced: ${advanced.notAdvanced}): local merged stands; ${publication.branch} stays as it is; ${next}`;
+        persistRecord(root, record);
+        return;
+      }
+      if (advanced.deleted) changed = true;
+    } else {
+      const tip = remoteBranchSha(root, publication.repository, publication.branch);
+      if (tip !== null && tip !== publication.commit) throw branchChanged(publication, tip);
+      if (tip !== null) { remoteGit(root, publication.repository, ['push', `:refs/heads/${publication.branch}`]); changed = true; }
+    }
     git(root, ['update-ref', '-d', publicationRef(record.id)]);
     publication.state = 'closed';
     // The note prints on close's and apply's output, each subject quoted as
     // in the comment above (BT43 correction 4).
     if (publication.kind === 'history' && (publication.pushed?.length ?? 0) > 0) {
       publication.closedNote = `${publication.branch} carried ${publication.pushed!.length} commit(s) published only there — ${publication.pushed!.map(commit => `${commit.sha.slice(0, 12)} ${showPath(commit.subject)}`).join(', ')} — and is now removed`;
-    }
-    // A bounty that stated a reward and ends on a merged solution records
-    // whom to pay: the pull request description is re-read now — with the
-    // account that last edited it — so the pay message the agent relays says
-    // what the solver actually left there (BT11b). $0 and non-merged closes
-    // record nothing.
-    if (event.merge !== undefined && (boundAmount(record) ?? 0) > 0) {
-      const pay = readPay(root, publication, record, event);
-      const accepts = readPayAccepts(pay.solver);
-      publication.pay = accepts === undefined ? pay : { ...pay, accepts };
     }
     publication.pending = null;
     delete record.waiting; // the held outside close is done
@@ -142,6 +161,99 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
     publication.pending = `github-decision-pending${detail}: local ${local} stands; retry box bounty close ${record.id} to comment, close the issue and remove ${publication.branch}`;
   }
   persistRecord(root, record);
+}
+
+const branchChanged = (publication: GitHubPublication, tip: string): BountyRefused =>
+  new BountyRefused('github-branch-changed', `${publication.branch} on the remote is ${tip}, not the ${publication.commit} this tool posted — it was changed outside the tool; removing it is not this tool's call; next: ask the owner — the remote branch was changed outside the tool and removing it is not this tool's call`);
+
+// The solution a merge decision names: the collected attempt's commit and pull
+// request, or the commit and number the hand-merge scan wrote on the event.
+// Null when the record names no pull request (records from before pull
+// requests were the only return), which keeps the plain tip check.
+function decidedSolution(record: BountyRecord, event: { attempt?: number; reason?: string }): { commit: string; pr: number; collectedAt?: string } | null {
+  const attempt = event.attempt !== undefined ? attemptsOf(record).find(entry => entry.n === event.attempt) : undefined;
+  const pr = attempt?.pullRequest ?? decidedPullRequest(event);
+  const commit = attempt?.commit ?? /^commit ([a-f\d]{40})/.exec(event.reason ?? '')?.[1];
+  if (pr === null || commit === undefined) return null;
+  return attempt?.at === undefined ? { commit, pr } : { commit, pr, collectedAt: attempt.at };
+}
+const decidedPullRequest = (event: { reason?: string }): number | null => {
+  const match = /pull request #(\d+)/.exec(event.reason ?? '');
+  return match !== null ? Number(match[1]) : null;
+};
+
+function readPull(root: string, publication: GitHubPublication, pr: number): { merged: boolean; createdAt: string } {
+  const data = api(root, `repos/${publication.repository}/pulls/${pr}`);
+  if (!isObject(data) || typeof data['created_at'] !== 'string') return invalid('github-response-invalid', 'GitHub returned unreadable pull request facts; next: check gh and rerun the same command');
+  return { merged: data['merged'] === true, createdAt: data['created_at'] };
+}
+
+// A stranger can open a pull request whose head is the owner's own commit,
+// already public. Moving the branch would have GitHub mark that stranger's pull
+// request merged. Two facts name it: what landed the head on the owner's branch
+// is older than the pull request, and the head was already on the default
+// branch on GitHub. A stranger cannot forge the first: that commit's date is
+// fixed by its id (BT51).
+function landedBeforePull(root: string, publication: GitHubPublication, solution: { commit: string; pr: number; collectedAt?: string }, merge: string | undefined): boolean {
+  const head = solution.commit;
+  const landed = merge === undefined ? Number.NaN : Date.parse(gitOutcome(root, ['show', '-s', '--format=%cI', merge]).stdout.trim());
+  // Landed after this machine collected the pull request: it existed by then,
+  // so the answer is known without asking GitHub.
+  if (solution.collectedAt !== undefined && landed >= Date.parse(solution.collectedAt)) return false;
+  if (!(landed < Date.parse(readPull(root, publication, solution.pr).createdAt))) return false;
+  const info = api(root, `repos/${publication.repository}`);
+  if (!isObject(info) || typeof info['default_branch'] !== 'string') return invalid('github-response-invalid', 'GitHub returned an unreadable repository; next: check gh and rerun the same command');
+  const compared = api(root, `repos/${publication.repository}/compare/${encodeURIComponent(info['default_branch'])}...${head}`);
+  if (!isObject(compared)) return invalid('github-response-invalid', 'GitHub returned an unreadable comparison; next: check gh and rerun the same command');
+  return compared['status'] === 'behind' || compared['status'] === 'identical';
+}
+
+const MARK_WAITS = [1, 2, 3, 4];
+
+// PLATFORM.md 3.3 step 3. Move the bounty branch to the chosen head without
+// force, read the pull request back, and remove the branch only when GitHub
+// reports it merged — `gh pr merge`'s order. Every way this stops leaves the
+// branch and is a named reason; only a branch changed by someone else keeps
+// today's refusal.
+function advanceBountyBranch(root: string, record: BountyRecord, publication: GitHubPublication, solution: { commit: string; pr: number; collectedAt?: string }, merge: string | undefined): { notAdvanced: string | null; pushed: boolean; deleted: boolean } {
+  let pushed = false;
+  const stop = (notAdvanced: string) => ({ notAdvanced, pushed, deleted: false });
+  try {
+    if (gitOutcome(root, ['merge-base', '--is-ancestor', publication.commit, solution.commit]).status !== 0) return stop('head-not-descended');
+    try { checkSolutionHistory(root, record, publication, solution.commit); }
+    catch (error) {
+      if (error instanceof BountyRefused) return stop(`head-refused, ${error.reason}`);
+      throw error;
+    }
+    const tip = remoteBranchSha(root, publication.repository, publication.branch);
+    if (tip === null) return readPull(root, publication, solution.pr).merged ? { notAdvanced: null, pushed, deleted: false } : stop('bounty-branch-missing');
+    if (tip !== publication.commit && tip !== solution.commit) throw branchChanged(publication, tip);
+    if (tip === publication.commit) {
+      if (landedBeforePull(root, publication, solution, merge)) return stop('head-predates-pull-request');
+      // Without force, so GitHub takes it only as a fast-forward; the proven
+      // commit, never a name that resolves again (BT32).
+      try { remoteGit(root, publication.repository, ['push', `${solution.commit}:refs/heads/${publication.branch}`]); }
+      catch (error) {
+        if (error instanceof BountyRefused) return stop('push-refused');
+        throw error;
+      }
+      pushed = true;
+    }
+    // Real GitHub marks a moment after the push (seen in the sandbox, BT51), so
+    // a run that just pushed waits briefly; a late mark past that is the retry's.
+    let marked = readPull(root, publication, solution.pr).merged;
+    for (const seconds of pushed ? MARK_WAITS : []) {
+      if (marked) break;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, seconds * 1000);
+      marked = readPull(root, publication, solution.pr).merged;
+    }
+    if (!marked) return stop('not-marked-merged');
+    remoteGit(root, publication.repository, ['push', `:refs/heads/${publication.branch}`]);
+    return { notAdvanced: null, pushed, deleted: true };
+  } catch (error) {
+    if (error instanceof BountyRefused && error.reason !== 'github-branch-changed') return stop(error.reason);
+    throw error;
+  }
 }
 
 // Acquire the current issue body and every decision comment in one paginated
@@ -186,10 +298,7 @@ function closingIssue(root: string, publication: GitHubPublication): { body: str
 // the description could not be read again.
 function readPay(root: string, publication: GitHubPublication, record: BountyRecord, event: { attempt?: number; reason?: string }): PayOutcome {
   const attempt = event.attempt !== undefined ? attemptsOf(record).find(entry => entry.n === event.attempt) : undefined;
-  const pr = attempt?.pullRequest ?? (() => {
-    const match = /pull request #(\d+)/.exec(event.reason ?? '');
-    return match !== null ? Number(match[1]) : null;
-  })();
+  const pr = attempt?.pullRequest ?? decidedPullRequest(event);
   const solver = attempt?.author ?? (pr !== null ? publication.seenPullRequests?.find(entry => entry.n === pr)?.author ?? null : null);
   const recorded = attempt?.payTo ?? (pr !== null ? publication.seenPullRequests?.find(entry => entry.n === pr)?.payTo : undefined);
   if (pr === null) return { pr: null, solver, link: null, testMode: false, editedBy: null };

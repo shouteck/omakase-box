@@ -83,7 +83,9 @@ export interface GhState {
   // Kept beside the comment, not on it: tests assert the stored comment as
   // exactly {body, user}. Seeded comments have no entry and show on every issue.
   commentIssue?: Record<string, number>;
-  prs: { number: number; user: { login: string }; base: { ref: string; repo: { full_name: string } }; head: { sha: string }; files: { filename: string }[]; body?: string; editedBy?: string }[];
+  prs: { number: number; user: { login: string }; base: { ref: string; repo: { full_name: string } }; head: { sha: string }; files: { filename: string }[]; body?: string; editedBy?: string; merged?: boolean; merged_at?: string; created_at?: string }[];
+  /** Reads of a reached pull request that still answer "not merged" (BT51's late mark). */
+  markDelay?: number;
   labels: { name: string }[];
   calls: string[][];
 }
@@ -138,6 +140,15 @@ const onIssue = n => state.comments.filter((comment, index) => issueOf(comment, 
 // answers that only under pulls/<n>/files — so files stays in state and
 // never leaves in a response (K22: the stand-ins must agree key-for-key).
 const publicPr = pr => { const { files, ...rest } = pr; return rest; };
+// GitHub's rule (BT51): a pull request is marked merged when its head reaches
+// its base branch, by another pull request or directly, and the mark stays
+// after the branch is gone. markDelay holds the mark back for that many reads.
+const ancestorOnRemote = (sha, ref) => require('node:child_process').spawnSync('git', ['-C', process.env.BT8A_GIT_REMOTE, 'merge-base', '--is-ancestor', sha, ref], { windowsHide: true }).status === 0;
+const markMerged = pr => {
+  if (pr.merged === true || !process.env.BT8A_GIT_REMOTE || !ancestorOnRemote(pr.head.sha, 'refs/heads/' + pr.base.ref)) return;
+  if ((state.markDelay ?? 0) > 0) { state.markDelay -= 1; return; }
+  pr.merged = true; pr.merged_at = new Date().toISOString(); pr.state = 'closed';
+};
 let result;
 if (endpoint === 'graphql' && input.query && input.query.includes('pullRequest')) {
   const pr = state.prs.find(pr => pr.number === input.variables.number);
@@ -157,7 +168,7 @@ else if (endpoint === 'graphql') {
   result = { data: { repository: { issue: { body: issue.body, author: issue.user, comments: { edges, pageInfo: { hasNextPage: state.graphqlMode ? true : next < own.length } } } } } };
 }
 else if (endpoint === 'user') result = { login: state.account };
-else if (endpoint === 'repos/' + state.repository) result = state.malformed ? { visibility: '${leakCanary}' } : { full_name: state.repository, private: state.private, visibility: state.visibility, permissions: { push: state.push ?? true }, html_url: 'https://github.com/' + state.repository };
+else if (endpoint === 'repos/' + state.repository) result = state.malformed ? { visibility: '${leakCanary}' } : { full_name: state.repository, private: state.private, visibility: state.visibility, permissions: { push: state.push ?? true }, html_url: 'https://github.com/' + state.repository, default_branch: 'main' };
 else if (resource.endsWith('/pulls') && input) {
   const n = nextNumber();
   result = { number: n, html_url: 'https://github.com/' + state.repository + '/pull/' + n, state: 'open', title: input.title, body: input.body, user: { login: input.user ?? input.author ?? 'solver' }, head: { sha: input.head ?? '0'.repeat(40) }, base: { ref: input.base ?? 'main', repo: { full_name: state.repository } } };
@@ -167,7 +178,12 @@ else if (endpoint.includes('/pulls/')) {
   const n = Number(endpoint.split('/pulls/')[1].split('/')[0].split('?')[0]);
   const pr = state.prs.find(pr => pr.number === n);
   if (!pr) fail();
-  result = endpoint.includes('/files') ? paged(pr.files) : publicPr(pr);
+  if (!endpoint.includes('/files')) markMerged(pr);
+  result = endpoint.includes('/files') ? paged(pr.files) : { merged: false, merged_at: null, created_at: '2020-01-01T00:00:00Z', ...publicPr(pr) };
+} else if (endpoint.includes('/compare/')) {
+  // compare/<base>...<head>: 'behind' or 'identical' when head is already on base.
+  const [base, head] = resource.split('/compare/')[1].split('...');
+  result = { status: ancestorOnRemote(head, 'refs/heads/' + base) ? 'behind' : 'ahead' };
 } else if (resource.endsWith('/pulls')) {
   const wanted = query.get('state') ?? 'open';
   const base = query.get('base');

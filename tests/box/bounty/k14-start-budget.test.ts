@@ -103,7 +103,11 @@ const BUDGET: Record<string, { git: number; gh: number }> = {
   'look-full': { git: 6, gh: 0 },
   // BT32: +11 — the merge appends `solution`/`merged` events and pushes the
   // chain on top of the refresh the command already pays.
-  'apply': { git: 26, gh: 5 },
+  // BT51 (owner, 1 November 2026): Git +6 — merge-base descent, ls-tree tree
+  // safety, rev-list new history, one never-ship read per new commit (this
+  // journey's head has one), show landing date, push to the bounty branch.
+  // gh +1 — reading the pull request back.
+  'apply': { git: 32, gh: 6 },
   'status-applied': { git: 9, gh: 0 }, // BT32: +6 — same refresh + import as status-posted
   'close-ended': { git: 4, gh: 5 },
   'close-reason': { git: 4, gh: 0 },

@@ -195,6 +195,30 @@ describe('on the real routes', () => {
     expect((await facts(ID)).state).toBe('owed');
   });
 
+  it('a merge through the closing step (BT51): marked merged before the owner pushes reads not yet, the owner\'s push reads owed', async () => {
+    const seeded = r.standin.issues.find(entry => entry.id === ID)!;
+    const reading = seeded.pulls![0]!;
+    const { merged_at: at } = reading;
+    delete reading.merged_at;
+    reading.state = 'open';
+    await r.env.DB.prepare('DELETE FROM pull_requests WHERE bounty_id = ?').bind(ID).run();
+    await reread();
+    expect((await facts(ID)).state).toBe('nothing-owed');
+    // `apply` moved the bounty branch: GitHub marks it; the owner has not pushed.
+    reading.state = 'closed';
+    reading.merged_at = at!;
+    reading.landed = false;
+    await reread();
+    expect(await facts(ID)).toMatchObject({ state: 'merged-not-on-default', owed: null, note: expect.stringContaining('Nothing is owed yet') });
+    expect((await solver(SOLVER)).record.merged).toBe(0);
+    // The owner's own push.
+    reading.landed = true;
+    await r.env.DB.prepare('UPDATE pull_requests SET on_default = NULL WHERE bounty_id = ?').bind(ID).run();
+    await reread();
+    expect(await facts(ID)).toMatchObject({ state: 'owed', owed: { to: SOLVER, amount: 50 } });
+    expect((await solver(SOLVER)).record.merged).toBe(1);
+  });
+
   it('a compare GitHub will not answer stays unknown, and says nothing is confirmed', async () => {
     r.standin.issues.find(entry => entry.id === ID)!.pulls![0]!.landed = null;
     await r.env.DB.prepare('UPDATE pull_requests SET on_default = NULL WHERE bounty_id = ?').bind(ID).run();
