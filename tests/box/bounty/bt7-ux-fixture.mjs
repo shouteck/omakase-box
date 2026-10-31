@@ -91,7 +91,7 @@ const resource=endpoint.split('?')[0];
 const publicPr=pr=>{const{files,...rest}=pr;return rest;};
 let result;
 if(endpoint==='user') result={login:'owner'};
-else if(endpoint==='repos/owner/project') result={full_name:'owner/project',private:false,visibility:'public',permissions:{push:true},html_url:'https://github.com/owner/project'};
+else if(endpoint==='repos/owner/project') result={full_name:'owner/project',private:false,visibility:'public',permissions:{push:true},default_branch:'main',html_url:'https://github.com/owner/project'};
 else if(endpoint==='graphql'&&input.query&&input.query.includes('pullRequest')){const pr=state.prs.find(pr=>pr.number===input.variables.number);if(!pr)fail();result={data:{repository:{pullRequest:{body:pr.body??'',userContentEdits:{nodes:[]}}}}}}
 else if(endpoint==='graphql'){const issue=state.issues.find(issue=>issue.number===input.variables.number);if(!issue)fail();const own=state.comments.filter(c=>c.issue===undefined||c.issue===issue.number);const offset=Number(input.variables.after??0);result={data:{repository:{issue:{body:issue.body,author:{login:'owner'},comments:{edges:own.slice(offset,offset+100).map((c,i)=>({cursor:String(offset+i+1),node:{body:c.body,author:c.user}})),pageInfo:{hasNextPage:offset+100<own.length}}}}}}}
 else if(resource.endsWith('/pulls')&&input){const n=nextNumber();result={number:n,html_url:'https://github.com/owner/project/pull/'+n,state:'open',title:input.title,body:input.body,user:{login:input.author??'solver'},base:{ref:input.base,repo:{full_name:'owner/project'}},head:{sha:input.head??'0'.repeat(40)}};state.prs.push({...result,files:[]});}
