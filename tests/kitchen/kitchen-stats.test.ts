@@ -216,6 +216,22 @@ describe('budgetCheck — K29: the exporter ratchet is retired, not transplanted
   });
 });
 
+describe('the commit graph read', () => {
+  // The real repository's log against a buffer it cannot fit: Git's own
+  // ENOBUFS, not a mock. The default buffer holds what the page reads today.
+  it('names an oversized graph instead of returning an empty one', () => {
+    const named = spawnSync(process.execPath, ['--input-type=module', '-e', `import * as k from './scripts/kitchen-stats.mjs'; try { console.log('size', k.commitGraph(process.cwd(), 16).size); } catch (error) { console.log(error.message); }`], { cwd: root, encoding: 'utf8', timeout: 30000 });
+    expect(named.stdout).toContain('commit-graph-over-buffer: git log --all printed more than 16 bytes');
+    const whole = spawnSync(process.execPath, ['--input-type=module', '-e', `import * as k from './scripts/kitchen-stats.mjs'; console.log(k.commitGraph(process.cwd()).size);`], { cwd: root, encoding: 'utf8', timeout: 30000 });
+    expect(Number(whole.stdout)).toBeGreaterThan(100);
+  });
+
+  it('a folder that is not a repository still reads as an empty graph', () => {
+    const run = spawnSync(process.execPath, ['--input-type=module', '-e', `import { tmpdir } from 'node:os'; import * as k from './scripts/kitchen-stats.mjs'; console.log(k.commitGraph(tmpdir()).size);`], { cwd: root, encoding: 'utf8', timeout: 30000 });
+    expect(run.stdout.trim()).toBe('0');
+  });
+});
+
 describe('the page itself', () => {
   it('exits 1 naming the broken limit on a fabricated root, 0 on the real repo', () => {
     const bad = fakeRoot0();

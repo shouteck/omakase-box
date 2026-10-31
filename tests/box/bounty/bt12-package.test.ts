@@ -129,6 +129,17 @@ describe('what it needs is stated and checked', () => {
       expect(rulesBlockInterior(state).join('\n'), state).not.toContain(INSTALL_PACKAGE);
     }
   });
+  // BT47: the floor is stated in five places; each is read and compared. The
+  // refusal's own wording is asserted by the node-too-old case below.
+  it('the check, the packed manifest, the install job and the first-run guide state one floor', () => {
+    const workflow = readFileSync(join(ROOT, '.github/workflows/verify.yml'), 'utf8');
+    const job = workflow.slice(workflow.indexOf('name: Switch to Node 22'));
+    expect(/node-version: '([\d.]+)'/.exec(job)?.[1]).toBe(NODE_MINIMUM);
+    expect((manifest()['engines'] as { node: string })['node']).toBe(`>=${NODE_MINIMUM}`);
+    const [major, minor] = NODE_MINIMUM.split('.');
+    expect(readFileSync(join(ROOT, 'FIRST-FIVE-MINUTES.md'), 'utf8')).toContain(`Node ${major}.${minor} or later`);
+    expect(readFileSync(join(ROOT, 'packages/box-cli/src/node-check.ts'), 'utf8')).toContain('Node ${NODE_MINIMUM} or later is required');
+  });
   it('declares Node 22 as the floor, and no scanned feature needs newer', () => {
     // The floor is NODE_MINIMUM — the oldest Node the install test runs on
     // (the hosted install-node22 job). This table does not derive or prove

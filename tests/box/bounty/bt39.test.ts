@@ -149,8 +149,11 @@ describe('status does not re-ask GitHub for a listing it already recorded', () =
     expect(fileCalls()).toBe(afterSecond);
     // A re-pushed pull request (same number, new head) is a different fact:
     // the listing refreshes, paying the per-request reads again.
+    // The first character is flipped, so the head always moves: writing a fixed
+    // prefix did nothing to a sha that already had it, 1 run in 256 (BT47).
     const state = context.state();
-    context.update({ prs: state.prs.map(pr => pr.number === 1 ? { ...pr, head: { sha: context.waitingPr.replace(/^../, 'ff') } } : pr) });
+    const moved = `${context.waitingPr.startsWith('f') ? 'e' : 'f'}${context.waitingPr.slice(1)}`;
+    context.update({ prs: state.prs.map(pr => pr.number === 1 ? { ...pr, head: { sha: moved } } : pr) });
     renderStatus(repo);
     expect(fileCalls()).toBeGreaterThan(afterSecond);
   }));
