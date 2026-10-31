@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import PaymentPanel from './PaymentPanel.jsx';
 import { Facts, Primary, SampleNote, Section, Soft, Stale, TheirWords, Title, fmtDate } from './ui.jsx';
 
 const SOURCE = { github: 'GitHub', 'project-record': 'the project\'s record on GitHub' };
@@ -39,7 +40,7 @@ function View({ data }) {
       <Stale data={data} />
       <Facts rows={[
         ['Stated reward', b.amount > 0 ? `$${b.amount}` : 'No reward'],
-        ['Posted by', b.poster],
+        ['Posted by', <a key="poster" href={`/owner/${b.poster}/`}>{b.poster}</a>],
         ['Repository', <>{b.repository}{b.language ? ` · ${b.language}` : ''}</>],
         ['Posted', fmtDate(b.posted_at)],
         ['Posting approved', b.approved_by ? APPROVED[b.approved_by] : 'The project\'s record does not say.'],
@@ -63,12 +64,13 @@ function View({ data }) {
 
       <Section title="Payment for this bounty" id="payment">
         <p className="max-w-prose">{payment(b)}</p>
+        <PaymentPanel id={b.id} />
       </Section>
 
       <Section title="Solutions" id="solutions">
         {b.solutions.length === 0 ? <p>No solution yet.</p> : (
           <ul className="flex flex-col gap-2">
-            {b.solutions.map(s => <li key={s.number}><a href={s.url} rel="nofollow noopener">Pull request #{s.number}</a> by {s.author}: {s.state}</li>)}
+            {b.solutions.map(s => <li key={s.number}><a href={s.url} rel="nofollow noopener">Pull request #{s.number}</a> by <a href={`/solver/${s.author}/`}>{s.author}</a>: {s.state}</li>)}
           </ul>
         )}
         <Soft className="mt-3">The board lists them; it does not judge or rank them.</Soft>

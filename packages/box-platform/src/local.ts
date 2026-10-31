@@ -39,7 +39,7 @@ export async function startLocal(options: { schema: string; out: string; port?: 
   const api = await standin.start();
   (options.seed ?? (s => seedDemo(s, Date.now())))(standin);
   const db = localDb(options.schema);
-  const env: Env = { DB: db, GITHUB_API: api, ASSETS: assetsFrom(options.out), SAMPLE: true, ...(options.now ? { now: options.now } : {}) };
+  const env: Env = { DB: db, GITHUB_API: api, GITHUB_WEB: api, GITHUB_OAUTH_CLIENT_ID: standin.oauthClientId, GITHUB_OAUTH_CLIENT_SECRET: standin.oauthClientSecret, ASSETS: assetsFrom(options.out), SAMPLE: true, ...(options.now ? { now: options.now } : {}) };
   const server = createServer(async (request, response) => {
     try {
       const method = request.method ?? 'GET';
@@ -47,7 +47,9 @@ export async function startLocal(options: { schema: string; out: string; port?: 
       for await (const chunk of request) chunks.push(chunk as Buffer);
       const headers = new Headers(Object.entries(request.headers).flatMap(([name, value]) => typeof value === 'string' ? [[name, value] as [string, string]] : []));
       const answer = await handle(new Request(`http://${request.headers.host ?? 'localhost'}${request.url ?? '/'}`, { method, headers, ...(method === 'GET' || method === 'HEAD' ? {} : { body: Buffer.concat(chunks) }) }), env);
-      response.writeHead(answer.status, Object.fromEntries(answer.headers));
+      // Object.fromEntries would keep only one of several set-cookie headers.
+      const cookies = answer.headers.getSetCookie();
+      response.writeHead(answer.status, { ...Object.fromEntries(answer.headers), ...(cookies.length > 0 ? { 'set-cookie': cookies } : {}) });
       response.end(Buffer.from(await answer.arrayBuffer()));
     } catch (error) {
       response.writeHead(500, { 'content-type': 'text/plain' }).end(`The board failed: ${String(error)}`);

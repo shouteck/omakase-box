@@ -43,6 +43,32 @@ CREATE TABLE IF NOT EXISTS events (
   kind TEXT,
   PRIMARY KEY (bounty_id, sha)
 );
+-- People: the GitHub identity and what each chose to publish. No token, no email
+-- beyond one a solver lists, and a session holds only the hash of its cookie.
+CREATE TABLE IF NOT EXISTS sessions (
+  token_hash TEXT PRIMARY KEY,
+  github_id INTEGER NOT NULL,
+  login TEXT NOT NULL,
+  expires_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS methods (
+  github_id INTEGER NOT NULL,
+  login TEXT NOT NULL COLLATE NOCASE,
+  position INTEGER NOT NULL,
+  kind TEXT NOT NULL,
+  value TEXT NOT NULL,
+  chain TEXT,
+  visibility TEXT NOT NULL,
+  PRIMARY KEY (github_id, position)
+);
+CREATE INDEX IF NOT EXISTS methods_login ON methods (login);
+CREATE TABLE IF NOT EXISTS receipts (
+  bounty_id TEXT PRIMARY KEY,
+  payee TEXT NOT NULL,
+  says TEXT NOT NULL,
+  record_at TEXT NOT NULL,
+  at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS log (
   at INTEGER NOT NULL,
   reason TEXT NOT NULL,

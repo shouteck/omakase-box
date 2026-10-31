@@ -1,6 +1,6 @@
 // A GitHub stand-in: the endpoints the board reads, on localhost, with every
 // fact seeded so a test can check the board against it. No real GitHub, no token.
-import { createServer, type Server } from 'node:http';
+import { createServer, type IncomingMessage, type Server } from 'node:http';
 import { renderFormat } from '../../box-bounty/format.js';
 
 export type StandinPull = { number: number; author: string; state: 'open' | 'closed'; merged_at?: string; created_at: string };
@@ -28,7 +28,47 @@ export class Standin {
   /** Requests left before GitHub answers 403 with x-ratelimit-remaining: 0. */
   rateLimitAfter: number | null = null;
   resetAt = 0;
+  /** Who the next person signing in at the stand-in is; a test changes it. */
+  signInAs: { id: number; login: string } = { id: 7001, login: 'example-quill' };
+  readonly oauthClientId = 'standin-client';
+  readonly oauthClientSecret = 'standin-client-word';
+  /** Every token handed out, so a test can look for them where they must not be. */
+  tokensIssued: string[] = [];
+  /** Every authorize address asked for, so a test can read what it requested. */
+  authorizeAsked: string[] = [];
+  private codes = new Map<string, { id: number; login: string }>();
+  private tokens = new Map<string, { id: number; login: string }>();
+  private nextOauth = 1;
   private server: Server | null = null;
+
+  /** GitHub's sign-in: answers straight away as `signInAs`, as if the person said yes. */
+  private oauth(request: IncomingMessage, url: URL, body: string): { status: number; json?: unknown; location?: string } | null {
+    if (url.pathname === '/login/oauth/authorize') {
+      this.authorizeAsked.push(url.href);
+      if (url.searchParams.get('client_id') !== this.oauthClientId) return { status: 404 };
+      const code = `code-${this.nextOauth++}`;
+      this.codes.set(code, this.signInAs);
+      const back = new URL(url.searchParams.get('redirect_uri') ?? '');
+      back.searchParams.set('code', code);
+      back.searchParams.set('state', url.searchParams.get('state') ?? '');
+      return { status: 302, location: back.href };
+    }
+    if (url.pathname === '/login/oauth/access_token' && request.method === 'POST') {
+      const sent = JSON.parse(body) as { client_id?: string; client_secret?: string; code?: string };
+      const who = this.codes.get(sent.code ?? '');
+      if (sent.client_secret !== this.oauthClientSecret || who === undefined) return { status: 200, json: { error: 'bad_verification_code' } };
+      this.codes.delete(sent.code!);
+      const token = `standin-access-${this.nextOauth++}-${who.id}`;
+      this.tokens.set(token, who);
+      this.tokensIssued.push(token);
+      return { status: 200, json: { access_token: token, token_type: 'bearer', scope: '' } };
+    }
+    if (url.pathname === '/user') {
+      const who = this.tokens.get((request.headers.authorization ?? '').replace(/^Bearer /, ''));
+      return who === undefined ? { status: 401 } : { status: 200, json: who };
+    }
+    return null;
+  }
 
   private answer(path: string, query: URLSearchParams): { status: number; json?: unknown } {
     if (path === '/search/issues') {
@@ -87,8 +127,15 @@ export class Standin {
   }
 
   async start(): Promise<string> {
-    this.server = createServer((request, response) => {
+    this.server = createServer(async (request, response) => {
       const url = new URL(request.url ?? '/', 'http://localhost');
+      const chunks: Buffer[] = [];
+      for await (const chunk of request) chunks.push(chunk as Buffer);
+      const signIn = this.oauth(request, url, Buffer.concat(chunks).toString());
+      if (signIn !== null) {
+        response.writeHead(signIn.status, signIn.location ? { location: signIn.location } : { 'content-type': 'application/json' }).end(signIn.location ? undefined : JSON.stringify(signIn.json ?? { message: 'Not Found' }));
+        return;
+      }
       this.requests.push(url.pathname);
       if (this.rateLimitAfter !== null) {
         if (this.rateLimitAfter <= 0) {
@@ -114,7 +161,7 @@ export class Standin {
 /** One bounty per state the page shows, one hostile text, one private repository. */
 export const STATE_IDS = {
   open: 'bt-0d7e4a3c8b65', waiting: 'bt-2b8d7e01c6a5', merged: 'bt-3a91c0e2d4f1', moreThanOne: 'bt-77aa00bb11cc',
-  closed: 'bt-55cc66dd77ee', noReward: 'bt-99ee88dd77cc', hostile: 'bt-abadabadabad', private: 'bt-feedfeedfeed'
+  closed: 'bt-55cc66dd77ee', noReward: 'bt-99ee88dd77cc', hostile: 'bt-abadabadabad', private: 'bt-feedfeedfeed', owed: 'bt-c0ffeec0ffee'
 } as const;
 export const HOSTILE = `<img src=x onerror="window.__pwned=1"><script>window.__pwned=1</script>`;
 
@@ -133,6 +180,7 @@ export function seedStates(standin: Standin, now: number): void {
     { ...base, id: STATE_IDS.closed, number: 52, title: 'Export to a format nobody uses', state: 'closed', closedAt: ago(2), pulls: [{ ...pull(67, 'example-fern'), state: 'closed' }] },
     { ...base, id: STATE_IDS.noReward, number: 53, title: 'Tidy the settings page', amount: 0 },
     { ...base, id: STATE_IDS.hostile, number: 54, title: `Hostile title ${HOSTILE}`, task: `Hostile task ${HOSTILE}` },
+    { ...base, id: STATE_IDS.owed, number: 55, title: 'Duplicate rows after a retry', state: 'closed', closedAt: ago(1), pulls: [pull(68, 'example-quill', ago(1))] },
     { ...base, id: STATE_IDS.private, repository: 'example-hidden/vault', number: 3, title: 'PRIVATE SAMPLE', task: 'PRIVATE SAMPLE TASK' }
   );
 }

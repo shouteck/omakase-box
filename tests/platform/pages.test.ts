@@ -132,6 +132,78 @@ describe('the pages', () => {
     await close();
   });
 
+  it('a solver signs in and lists a method in two steps, an owner-only one reaches only the owner it is owed by, and a page never holds it signed out', async () => {
+    const secret = 'browser-sentinel@example.com';
+    const standin = board.standin;
+    standin.signInAs = { id: 7001, login: 'example-quill' };
+    const solver = await fresh();
+    await visit(solver.page, '/me/');
+    await solver.page.click('[data-primary]');
+    await solver.page.waitForSelector('select[name=kind]');
+    expect(await solver.page.locator('main').innerText()).toContain('Signed in as example-quill.');
+    // A wrong shape is refused where it was typed, with its next step.
+    await solver.page.fill('input[name=value]', 'https://evil.example/paypal');
+    await solver.page.click('button[data-primary]');
+    await expect.poll(() => solver.page.locator('[role=status]').innerText()).toBe('That is not a PayPal.me. Next: paste a link that starts with https://paypal.me/');
+    await solver.page.fill('input[name=value]', 'https://paypal.me/examplequill');
+    await solver.page.click('button[data-primary]');
+    await expect.poll(() => solver.page.locator('main').innerText()).toContain('Everyone, on my profile. Remove');
+    // Choosing the email preselects "only an owner who owes me".
+    await solver.page.selectOption('select[name=kind]', 'wise-email');
+    expect(await solver.page.isChecked('input[value=owner-only]')).toBe(true);
+    await solver.page.fill('input[name=value]', secret);
+    await solver.page.click('button[data-primary]');
+    await expect.poll(() => solver.page.locator('main').innerText()).toContain(secret);
+
+    const bodies: string[] = [];
+    const stranger = await fresh();
+    stranger.page.on('response', async response => { try { bodies.push(await response.text()); } catch { /* a redirect has no body */ } });
+    await visit(stranger.page, `/b/${STATE_IDS.owed}/`);
+    await expect.poll(() => stranger.page.locator('main').innerText()).toContain('https://paypal.me/examplequill');
+    expect(await stranger.page.locator('main').innerText()).not.toContain('Pay the author directly');
+    await visit(stranger.page, '/solver/example-quill/');
+    await expect.poll(() => stranger.page.locator('main').innerText()).toContain('https://paypal.me/examplequill');
+    expect(await stranger.page.locator('main').innerText()).toContain('Merged solutions');
+    expect(await stranger.page.locator('main a[href="https://paypal.me/examplequill"]').getAttribute('rel')).toContain('nofollow');
+    expect(bodies.join('\n')).not.toContain(secret);
+    await stranger.close();
+
+    standin.signInAs = { id: 7100, login: 'example-mara' };
+    const owner = await fresh();
+    await visit(owner.page, '/me/');
+    await owner.page.click('[data-primary]');
+    await owner.page.waitForSelector('select[name=kind]');
+    await visit(owner.page, `/b/${STATE_IDS.owed}/`);
+    await expect.poll(() => owner.page.locator('main').innerText()).toContain(secret);
+    expect(await owner.page.locator('main').innerText()).toContain('Pay the author directly, by a method they listed.');
+    await visit(owner.page, '/owner/example-mara/');
+    await expect.poll(() => owner.page.locator('main').innerText()).toContain('Open bounties');
+    await visit(owner.page, '/solver/example-quill/');
+    await expect.poll(() => owner.page.locator('main').innerText()).toContain('https://paypal.me/examplequill');
+    expect(await owner.page.locator('main').innerText()).not.toContain(secret);
+    await owner.close();
+
+    // Sign-out from the page: the owner-only method is gone for that browser.
+    await solver.page.click('text=Sign out');
+    await expect.poll(() => solver.page.locator('[data-primary]').innerText()).toBe('Sign in with GitHub');
+    expect(await solver.page.locator('main').innerText()).not.toContain(secret);
+    await solver.close();
+  });
+
+  it('the sign-in page says what it asks for, and an error code in the address shows fixed words only', async () => {
+    const { page, close } = await fresh();
+    await page.goto(`${board.url}/sign-in/?error=<script>window.__pwned=1</script>`);
+    await page.waitForSelector('[data-primary]');
+    const plain = await page.locator('main').innerText();
+    expect(plain).toContain('public profile only');
+    expect(plain).not.toContain('script');
+    await page.goto(`${board.url}/sign-in/?error=try-again`);
+    await expect.poll(() => page.locator('main [role=alert]').innerText()).toContain('Next: sign in again.');
+    await visit(page, '/privacy/');
+    expect(await page.locator('main').innerText()).toContain('It never asks for your email address');
+    await close();
+  });
+
   it('a private repository: not listed, not rendered by direct URL, no bytes in any answer', async () => {
     const { page, close } = await fresh();
     const bodies: string[] = [];
@@ -156,13 +228,13 @@ describe('the pages', () => {
     expect(files.length).toBeGreaterThan(5);
     for (const file of files) {
       const text = readFileSync(file).toString('latin1');
-      for (const secret of ['example-hidden', 'PRIVATE SAMPLE', 'example-mara', 'bt-0d7e4a3c8b65']) expect(text.includes(secret), `${file} holds ${secret}`).toBe(false);
+      for (const secret of ['example-hidden', 'PRIVATE SAMPLE', 'example-mara', 'bt-0d7e4a3c8b65', 'browser-sentinel@example.com']) expect(text.includes(secret), `${file} holds ${secret}`).toBe(false);
     }
   });
 
   it('every page\'s words stay clear of a money claim', async () => {
     const { page, close } = await fresh();
-    for (const path of ['/', '/how/', '/agents/', `/b/${STATE_IDS.merged}/`]) {
+    for (const path of ['/', '/how/', '/agents/', '/me/', '/sign-in/', '/privacy/', '/solver/example-quill/', '/owner/example-mara/', `/b/${STATE_IDS.merged}/`]) {
       await visit(page, path);
       expect(moneyClaims(await page.locator('body').innerText()), path).toEqual([]);
     }

@@ -13,9 +13,10 @@ export default function RootLayout({ children }) {
             <a href="/" className="font-semibold mr-auto" style={{ textDecoration: 'none', color: 'var(--color-ink)' }}>Open bounty board</a>
             <a href="/how/">How it works</a>
             <a href="/agents/">For agents</a>
+            <a href="/me/">Your page</a>
           </nav>
           <main id="main" tabIndex={-1} className="pt-8 pb-24">{children}</main>
-          <footer className="border-t border-line py-8 text-sm text-soft">Public GitHub repositories only. No money passes through the board.</footer>
+          <footer className="border-t border-line py-8 text-sm text-soft">Public GitHub repositories only. No money passes through the board. <a href="/privacy/">What the board stores</a></footer>
         </div>
       </body>
     </html>

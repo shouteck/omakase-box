@@ -15,6 +15,11 @@ export interface Env {
   readonly GITHUB_API?: string;
   /** Created by the owner later; none exists now. Absent means unauthenticated. */
   readonly GITHUB_TOKEN?: string;
+  /** The owner's OAuth app (README). Absent: sign-in says it is not set up. */
+  readonly GITHUB_OAUTH_CLIENT_ID?: string;
+  readonly GITHUB_OAUTH_CLIENT_SECRET?: string;
+  /** Where people sign in; only the local stand-in sets this. */
+  readonly GITHUB_WEB?: string;
   readonly now?: () => number;
   /** The board's static export (Workers static assets, or the local host's files). */
   readonly ASSETS?: { fetch(request: Request): Promise<Response> };
