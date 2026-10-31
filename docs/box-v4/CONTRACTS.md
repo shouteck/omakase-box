@@ -64,7 +64,7 @@ A refusal is a `BountyRefused` (`errors.ts:5`) whose first argument is a stable 
 - T1. Unasked text stays constant per state — the block changes only when the fact changes (PLAN.md "memory without demand"; `render.ts` sync).
 - T2. The overview is bounded regardless of record count (`render.ts`, K25 `kitchen/memory/measure.mjs`).
 - T3. Others' text is marked as theirs — `fromOthers` in JSON and every stranger-written field named in `foreignFields`, quoted inside a labelled block in text (`json.ts`, `untrusted.ts`, `render.ts`; `bt11b-pass.test.ts:153` hostile words never reach hook/status/record; `bt43.test.ts`).
-- T4. Reads change nothing shared — a read appends no chain event and pushes nothing (`chain.ts:414`, `bt32.test.ts` quiet test).
+- T4. Reads change nothing shared — a read appends no chain event and pushes nothing (`chain.ts:414`, `bt32.test.ts` quiet test). With a board set (PF5), a read may resend a hint an earlier change queued, and `status` may GET the board's public answers; neither carries anything but the repository, issue number, bounty id, event name or a login (`board.ts` `hintOf`; `pf5.test.ts`).
 - T5. A malformed stored field degrades to a named corrupt fact, never a silent wrong answer (`record.ts` `asRecord`, `record-corrupt`).
 - T6. Outside state is shown with the time it was read, never kept as a pretend-current copy (`collect.ts`, `bt10.test.ts` ended-status reads).
 

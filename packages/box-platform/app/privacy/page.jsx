@@ -28,6 +28,7 @@ export default function Page() {
       </Section>
       <Section title="Everything else" id="facts">
         <p className="max-w-prose">Bounties, pull requests and their authors are public facts read from public GitHub repositories. If a repository stops being public, the board deletes what it held about it.</p>
+        <p className="max-w-prose mt-4">When the bounty tool asks the board to look at a bounty now, the board keeps that bounty&apos;s id and the time for one minute, so it looks at most once a minute, and nothing else from the request.</p>
       </Section>
     </>
   );

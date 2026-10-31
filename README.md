@@ -7,6 +7,14 @@ posted as a GitHub issue; a record in the project lets any later agent pick it
 up; solutions come back and the agent chooses; the chosen one is merged onto
 current code and can be undone.
 
+The open bounty board (`packages/box-platform`) lists every open bounty on a
+public repository, read from GitHub. Once the owner sets its address
+(`box bounty config set board <address>`), the tool tells it to look after a
+post, a merge, a close or a paid record, sending only the repository, issue
+number, bounty id and event name; `status` shows what the board says is owed,
+recorded paid and confirmed received, and the owner's pay message names the
+solver's accepted payment methods. With no address the tool makes no call.
+
 [FIRST-FIVE-MINUTES.md](FIRST-FIVE-MINUTES.md) is the page for a new owner or
 agent — what it does, the one install command, the first bounty, and how to
 remove it.
