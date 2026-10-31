@@ -106,3 +106,5 @@ Each owner and solver profile shows the counts. The platform never moves money a
   - **Not built, in BACKLOG:** landed but not marked merged; account age; `/me/` owe and owed sections; `to` on the chain's event (PF5).
   - **A squash merge would read as not landed,** so nothing would show as owed. This follows K42's rule and has not met real GitHub: PF6 must check it.
   - The `owner_record` filter reads every merged bounty per request; not measured against Workers Free's CPU limit.
+- Merged: the `--no-ff` merge that follows this commit · Verify cost: `verify: 2 runs, total 309s`, local run history · Resources removed: local board and browser pane stopped. `kitchen-stats` exited 0; its `MISSING` line is the 22 October `--full` run's summary, which predates this wave.
+- Reflect: a wording fault again surfaced only when reading the running board after verify passed, as in PF3 -> kitchen: INBOX line. A bound can be broken by a new field without any new input: the existing maximum-size test caught `to_one_of`, while the compare budget needed its own test -> wave: both have tests; the packaging card has 6 bytes left, so no line added.
