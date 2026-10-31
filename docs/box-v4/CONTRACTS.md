@@ -205,7 +205,7 @@ A refusal is a `BountyRefused` (`errors.ts:5`) whose first argument is a stable 
 - PL5. `--json` exists only where a command grew it; elsewhere `json-not-supported` (`args.ts:343`, `bounty.ts:209,382`).
 - PL6. Every refusal is named — `BountyRefused` carries a machine-readable reason (`errors.ts`; k29-arg-refusals checks names).
 
-**Refusals.** `git-missing`, `git-too-old`, `github-cli-missing`, `github-cli-too-old`, `github-cli-unsafe`, `github-not-signed-in`, `github-command-failed`, `github-call-budget`, `github-response-invalid`, `github-git-failed`, `github-visibility-unreadable`, `github-push-denied`, `json-not-supported`, `authority-arguments`, `command-removed`, `bounty-ambiguous`.
+**Refusals.** `git-missing`, `git-too-old`, `github-cli-missing`, `github-cli-too-old`, `github-cli-unsafe`, `github-not-signed-in`, `github-rate-limited`, `github-permission-denied`, `github-repository-missing`, `github-unavailable`, `github-unreachable` (named from status, headers and safe markers, BT50), `github-command-failed` (the fallback), `github-call-budget`, `github-response-invalid`, `github-git-failed`, `github-visibility-unreadable`, `github-push-denied`, `json-not-supported`, `authority-arguments`, `command-removed`, `bounty-ambiguous`.
 
 **Scale target.** — (process-start budget instead: `k14-start-budget.test.ts` pins per-command Git/gh starts).
 
