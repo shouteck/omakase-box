@@ -8,8 +8,7 @@ Updated by the CTO on 23 October 2026, when BT43 closed.
 - **BT43 is on master** (`2143821`), and the off-machine run is green. Outcome amended by the owner (`D-2026-10-23-bt43-outcome`); seven follow-ups in BACKLOG.
 - **For the owner:**
   - the stray idle `node.exe` from BT44 (PID 16324), if it is still running;
-  - the BT42 participant sessions and their `%TEMP%` folders; six empty `%TEMP%\kitchen-K43-*` folders;
-  - an untracked `nul` file in the main checkout, dated 24 October: not opened, not removed.
+  - the BT42 participant sessions and their `%TEMP%` folders; six empty `%TEMP%\kitchen-K43-*` folders.
 
 ## Next
 
