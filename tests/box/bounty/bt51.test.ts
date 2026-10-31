@@ -70,11 +70,22 @@ describe('a chosen solution shows as merged on GitHub', { timeout: 180000 }, () 
     expect(pending(world)).toBeNull();
   }));
 
+  it('a mark a moment after the push, as on real GitHub, finishes in the same command', () => posted(world => {
+    const { repo, bare, id, pr } = world;
+    pr('solver1');
+    answerGitHub(repo, id, 1);
+    world.update({ markDelay: 1 });
+    applyBounty(repo, id, 1);
+    expect(pending(world)).toBeNull();
+    expect(merged(world, 1)).toBe(true);
+    expect(tipOf(bare, id)).toBeNull();
+  }));
+
   it('a late mark keeps the branch at the head; the retry completes without a second push', () => posted(world => {
     const { repo, bare, id, pr } = world;
     const head = pr('solver1');
     answerGitHub(repo, id, 1);
-    world.update({ markDelay: 1 });
+    world.update({ markDelay: 5 }); // past the run's own wait: the first read and four more
     applyBounty(repo, id, 1);
     expect(pending(world)).toContain('bounty-branch-not-advanced: not-marked-merged');
     expect(tipOf(bare, id)).toBe(head);
@@ -163,6 +174,8 @@ describe('a chosen solution shows as merged on GitHub', { timeout: 180000 }, () 
     recordSeen(world, 1, own);
     checkMergedSolutions(repo);
     expect(pending(world)).toContain('bounty-branch-not-advanced: head-predates-pull-request');
+    expect(pending(world)).toContain('next: ask the owner');
+    expect(pending(world)).not.toContain('retries');
     expect(tipOf(bare, id)).toBe(posted);
     expect(merged(world, 1)).toBe(false);
   }));

@@ -115,7 +115,11 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
       const advanced = advanceBountyBranch(root, record, publication, solution, event.merge);
       if (advanced.pushed) changed = true;
       if (advanced.notAdvanced !== null) {
-        publication.pending = `github-decision-pending (bounty-branch-not-advanced: ${advanced.notAdvanced}): local merged stands; ${publication.branch} stays as it is; next: box bounty close ${record.id} retries this`;
+        // A retry cannot change these: the head itself is the reason.
+        const next = /^head-/.test(advanced.notAdvanced)
+          ? 'next: ask the owner — this head will not be moved onto the bounty branch, so GitHub will not mark this pull request merged; whether to credit it and when to remove the branch are the owner\'s call'
+          : `next: box bounty close ${record.id} retries this`;
+        publication.pending = `github-decision-pending (bounty-branch-not-advanced: ${advanced.notAdvanced}): local merged stands; ${publication.branch} stays as it is; ${next}`;
         persistRecord(root, record);
         return;
       }
@@ -204,6 +208,8 @@ function landedBeforePull(root: string, publication: GitHubPublication, solution
   return compared['status'] === 'behind' || compared['status'] === 'identical';
 }
 
+const MARK_WAITS = [1, 2, 3, 4];
+
 // PLATFORM.md 3.3 step 3. Move the bounty branch to the chosen head without
 // force, read the pull request back, and remove the branch only when GitHub
 // reports it merged — `gh pr merge`'s order. Every way this stops leaves the
@@ -233,7 +239,15 @@ function advanceBountyBranch(root: string, record: BountyRecord, publication: Gi
       }
       pushed = true;
     }
-    if (!readPull(root, publication, solution.pr).merged) return stop('not-marked-merged');
+    // Real GitHub marks a moment after the push (seen in the sandbox, BT51), so
+    // a run that just pushed waits briefly; a late mark past that is the retry's.
+    let marked = readPull(root, publication, solution.pr).merged;
+    for (const seconds of pushed ? MARK_WAITS : []) {
+      if (marked) break;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, seconds * 1000);
+      marked = readPull(root, publication, solution.pr).merged;
+    }
+    if (!marked) return stop('not-marked-merged');
     remoteGit(root, publication.repository, ['push', `:refs/heads/${publication.branch}`]);
     return { notAdvanced: null, pushed, deleted: true };
   } catch (error) {
