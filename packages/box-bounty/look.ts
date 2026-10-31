@@ -55,13 +55,13 @@ export interface LookResult {
 // file names, and the list must not become the flood the diff was held from.
 function namesWithinCap(files: readonly string[]): readonly string[] {
   let bytes = 0;
-  const kept: string[] = [];
-  for (const file of files) {
-    bytes += Buffer.byteLength(file, 'utf8') + 1;
+  let kept = 0;
+  for (const name of files) {
+    bytes += Buffer.byteLength(name, 'utf8') + 1;
     if (bytes > LOOK_BYTES_MAX) break;
-    kept.push(file);
+    kept += 1;
   }
-  return kept;
+  return files.slice(0, kept);
 }
 
 export function lookBounty(root: string, id: string, target: LookTarget, options: { readonly full?: boolean; readonly whole?: boolean } = {}): LookResult {
