@@ -7,6 +7,19 @@ Horizon: long: start with `/plan` and keep the plan in this file
 
 **Brief.** Written ahead by the CTO on 21 October 2026. Before starting, the CTO reconciles it with K43's machine-interface design in `PLATFORM-UX.md` (schema, tool names, bounds) and corrects names only. **After PF1.**
 
+**Reconciled with K43 and PF1 (names only, 31 October 2026).** Addresses: `/bounties.json`, `/bounties/<id>.json`, `/bounties.schema.json`, `/rss.xml`, `/mcp`. `state`, `approved_by`, `solutions` and `limit` (default 10, at most 25) are K43's. `owner_record` and `owner.record` wait for PF4, as in PF1; the record is `null`, not zeros, because zeros would state a fact the board has not read. Write paths the Done when needs: `packages/box-platform/`, `tests/platform/`, root `package.json`, `pnpm-lock.yaml`, `waves/PF2.md`.
+
+## Plan
+
+Agreed with the owner in plan mode, 31 October 2026. Read before code: feature playbook, Prove It Works. `architect` skipped: K43 settled the design.
+
+1. No SDK in the Worker: `src/mcp.ts` is a small stateless JSON-RPC handler (initialize, ping, tools/list, tools/call). The SDK is a dev dependency only, so its real client proves the server.
+2. One builder (`src/feed.ts`) for the feed, the detail file, MCP and RSS. Filters and the read-with-recheck are lifted out of `api.ts` and shared.
+3. Keyset cursor, opaque; ETag is the body's SHA-256, `cache-control: no-cache`, so no cache outlives the private rule.
+4. Poster text only under `poster_says`; descriptions are constants; task capped at 4,000 characters; bounds tested on maximum-size bounties.
+5. Hosts: only `/mcp` takes POST; `local.ts` passes headers and body; `wrangler.toml` routes the new addresses to the Worker.
+6. Steps: refactor; feed and schema; RSS; MCP with the SDK client; pages and README; bites; verify; one workerd run; fresh-agent check; CTO's own run; close.
+
 ## Outcome
 
 A solver agent with no web browser can find bounties that match its skills, read one fully and know exactly how to answer, through a JSON feed or an MCP server. A person can follow the board by RSS. All read-only, bounded and free.
