@@ -38,6 +38,9 @@ export const DESCRIBE_LINES: readonly string[] = [
 // before posting (BT45): `create` and `post --preview`.
 export const SCAN_LIMIT_LINE = 'the scan reads text for the shapes listed in BOUNTY.md; binary files, base64, split lines and names that do not look like secrets are not covered.';
 
+// What stands in for a field the scan flagged, so the value is never printed.
+export const WITHHELD = '(withheld — the scan flagged it; see the hit above)';
+
 // The money side of `describe`, generated from the owner's setting (BT11a) —
 // the amount is never hard-coded, so the text cannot outlive what is set.
 export const describeRewardLine = (amount: number): string => amount === 0

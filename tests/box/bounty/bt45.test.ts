@@ -40,6 +40,8 @@ describe('the task text is scanned at create and at post', () => {
 
     const preview = previewGitHub(repo, created.id);
     expect(preview).toMatch(/Pre-publish scan: 1 secret-shaped hit\(s\) — a post would wait for the owner:\n {4}\(issue body\) line \d+ — github-token/);
+    expect(preview).toContain('Issue body:\n(withheld — the scan flagged it; see the hit above)');
+    expect(preview).not.toContain(TOKEN);
 
     const message = heldMessage(repo, created.id);
     expect(state().issues).toHaveLength(0);
@@ -61,10 +63,15 @@ describe('the task text is scanned at create and at post', () => {
   it('a --why hit and a --title hit behave the same way, each named by its field', () => fixture(({ repo, state }) => {
     const why = draft(repo, 'Fix the login.\n', { why: `the key ${TOKEN} stopped working` });
     expect(why.plan.scan.hits).toEqual([{ path: '(why)', line: 1, rule: 'github-token' }]);
+    expect(renderPreview(why.plan)).not.toContain(TOKEN);
+    expect(previewGitHub(repo, why.id)).not.toContain(TOKEN);
     expect(heldMessage(repo, why.id)).toContain('hit: (why) line 1 — github-token');
 
     const title = draft(repo, 'Fix the login.\n', { title: `rotate ${TOKEN}` });
     expect(title.plan.scan.hits).toEqual([{ path: '(title)', line: 1, rule: 'github-token' }]);
+    expect(renderPreview(title.plan)).toContain('title: (withheld');
+    expect(renderPreview(title.plan)).not.toContain(TOKEN);
+    expect(previewGitHub(repo, title.id)).not.toContain(TOKEN);
     const message = heldMessage(repo, title.id);
     expect(message).toContain('hit: (issue title) line 1 — github-token');
     expect(message).toMatch(/hit: \(issue body\) line \d+ — github-token/);

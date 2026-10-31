@@ -15,7 +15,7 @@ import { readReward } from './settings.js';
 import { boundAmount,formatFor,publicText,renderFormat } from './format.js';
 import { showPath } from './notice.js';
 import { hitPlace, isTextField, scanFields } from './scan.js';
-import { SCAN_LIMIT_LINE } from './wording.js';
+import { SCAN_LIMIT_LINE, WITHHELD } from './wording.js';
 
 // The listing a stranger reads: the task, what was tried, the branch to work
 // from (with the base commit as context — never the bare commit to branch
@@ -154,9 +154,12 @@ function renderPlanPreview(repository: string, record: BountyRecord, plan: GitHu
   if (plan.scan.suppressed > 0 && plan.scan.hits.length > 0) lines.push(`  ${plan.scan.suppressed} hit(s) sit on paths the owner listed safe to publish — not held`);
   if (plan.scan.binary.length > 0) lines.push(`  not scanned — Git treats them as binary: ${plan.scan.binary.map(showPath).join(', ')}`);
   lines.push(`  ${SCAN_LIMIT_LINE}`);
-  lines.push(`Issue title: ${text.title}`);
+  // A flagged field is not printed — a post would hold, so it is not what
+  // goes out, and the value is never shown (BT45).
+  const flagged = (label: string): boolean => plan.scan.hits.some(hit => hit.path === label);
+  lines.push(`Issue title: ${flagged('(issue title)') ? WITHHELD : text.title}`);
   lines.push('Issue body:');
-  lines.push(text.body);
+  lines.push(flagged('(issue body)') ? WITHHELD : text.body);
   return lines.join('\n');
 }
 

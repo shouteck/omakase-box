@@ -7,7 +7,7 @@ import { gitOutcome, ownerGitOutcome } from './git.js';
 import { BUILTIN_RULES, publishListed, publishLists, shipRules } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
 import { hitPlace, isTextField, looksBinary, scanFields, scanText } from './scan.js';
-import { SCAN_LIMIT_LINE } from './wording.js';
+import { SCAN_LIMIT_LINE, WITHHELD } from './wording.js';
 import type { ScanHit } from './scan.js';
 import { showPath } from './notice.js';
 import { canonicalForNew, writeNewRecord } from './record.js';
@@ -239,8 +239,10 @@ export function renderPreview(plan: BountyPlan): string {
       lines.push(`    ${entry.rule}: ${entry.removed}`);
     }
   }
-  lines.push(`  title: ${plan.title}${plan.titleShortened ? ` (shortened — a leading # and anything past the first sentence or ${TITLE_LIMIT} characters are dropped)` : ''}`);
-  lines.push(`  why: ${plan.why} (record only — never shipped)`);
+  // A field the scan flagged is not echoed back: the value is never printed (BT45).
+  const flagged = (label: string): boolean => plan.scan.hits.some(hit => hit.path === label);
+  lines.push(flagged('(title)') ? `  title: ${WITHHELD}` : `  title: ${plan.title}${plan.titleShortened ? ` (shortened — a leading # and anything past the first sentence or ${TITLE_LIMIT} characters are dropped)` : ''}`);
+  lines.push(flagged('(why)') ? `  why: ${WITHHELD}` : `  why: ${plan.why} (record only — never shipped)`);
   lines.push(`  reward: $${repoReward(plan.repoRoot).amount} in force now for this repository — a posted bounty states the amount in force at posting`);
   // The post's owner gate, stated at create (BT14): an agent that learns it
   // here is not surprised when post waits.
