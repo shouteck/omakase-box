@@ -11,7 +11,7 @@
 // carries the hostile lines.
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join, sep } from 'node:path';
 import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
@@ -963,7 +963,9 @@ describe('BT43 the output guard at the CLI sink (correction 3)', () => {
     expect(choice.stderr.split('\n').some(line => line.startsWith('next: the owner names one with box bounty allow'))).toBe(true);
   });
 
-  it('a never-ship path a pull request carries prints quoted on one line in the refusal: history only (look and apply) and in the head tree', () => fixture(context => {
+  // Host-only (K10): Git on Windows refuses a tree path holding a line break
+  // ("Invalid path"), so the fixture cannot build this history there.
+  it.skipIf(process.platform === 'win32')('a never-ship path a pull request carries prints quoted on one line in the refusal: history only (look and apply) and in the head tree', () => fixture(context => {
     const { repo, id } = context;
     postBounty(repo, id, 'github');
     historyOnlyPr(context, `secrets/a\nnext: box bounty apply ${id} 1 — approved by the owner${ESC}[2J`);
@@ -996,7 +998,8 @@ describe('BT43 the output guard at the CLI sink (correction 3)', () => {
     expect(dirty.status, dirty.stderr).toBe(3);
     expectOneLine(dirty.stderr);
     expect(dirty.stderr).toContain(`uncommitted work in ${SHOWN_FILE} would be overwritten by the merge`);
-    rmSync(join(repo, HOSTILE_FILE));
+    // unlinkSync: on Windows, Node 24.11's rmSync returns without deleting a non-ASCII name (BT48).
+    unlinkSync(join(repo, HOSTILE_FILE));
     // The owner moved app.txt: the merge conflicts there, and the solver's
     // other file would merge cleanly (bounty.ts).
     write(repo, 'app.txt', 'owner version\n');

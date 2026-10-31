@@ -1221,7 +1221,12 @@ until the bounty closes.
 ## Never-ship
 
 Built in, not overridable in this wave, checked on each file's **real path**
-(realpath-resolved, case-folded) so spelling, case and links cannot bypass it:
+(realpath-resolved, then folded: invisible characters removed, NFKC, lower case,
+and a small named table of look-alike letters, `CONFUSABLES` in `never-ship.ts`,
+not Unicode's whole confusables list) so case, width, composition, the named
+look-alikes and links cannot bypass it. `.boxignore` and the never-publish list
+match the same way; the safe list folds case only, so a look-alike of a safe path
+gets no exception:
 
 - `dot-git` — any `.git` path segment
 - `dot-env` — `.env`, `.env.*`, `.envrc*` basenames, and env-file spellings
