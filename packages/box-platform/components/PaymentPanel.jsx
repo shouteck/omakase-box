@@ -31,7 +31,7 @@ export default function PaymentPanel({ id }) {
   if (view === null) return error ? <p role="alert" className="mt-4 max-w-prose">{error}</p> : null;
   return (
     <div className="mt-6 flex flex-col gap-6 max-w-prose">
-      {view.payees.length > 0 ? <p>Pay the author directly, by a method they listed.</p> : null}
+      {view.payees.length > 0 && view.role === 'owner' ? <p>{view.recorded ? 'For reference, the methods they listed.' : 'Pay the author directly, by a method they listed.'}</p> : null}
       {view.payees.map(payee => (
         <div key={payee.login}>
           <p className="mb-2 font-semibold"><a href={`/solver/${payee.login}/`}>{payee.login}</a></p>

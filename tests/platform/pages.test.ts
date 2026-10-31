@@ -160,6 +160,7 @@ describe('the pages', () => {
     stranger.page.on('response', async response => { try { bodies.push(await response.text()); } catch { /* a redirect has no body */ } });
     await visit(stranger.page, `/b/${STATE_IDS.owed}/`);
     await expect.poll(() => stranger.page.locator('main').innerText()).toContain('https://paypal.me/examplequill');
+    expect(await stranger.page.locator('main').innerText()).not.toContain('Pay the author directly');
     await visit(stranger.page, '/solver/example-quill/');
     await expect.poll(() => stranger.page.locator('main').innerText()).toContain('https://paypal.me/examplequill');
     expect(await stranger.page.locator('main').innerText()).toContain('Merged solutions');
