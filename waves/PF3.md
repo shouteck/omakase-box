@@ -67,3 +67,26 @@ Anyone can sign in with GitHub. A solver can list the ways they accept payment, 
 
 - Feature playbook; principles: prove-it-works.
 - Do not edit `waves/PF3.md` while a verify runs. Report at the timebox.
+
+## Result
+
+- CTO: Claude Code desktop on Windows / Claude Opus 5.5
+- Commit: `b1f1a43`.
+- Verify: `verify b1f1a43 PASS check=0 build=0 test:platform=0 test:kitchen=0(selected 18 of 18 kitchen files) db=none 139s`. The first candidate, `370b6c8`, also passed; the later commit changes one line found in my own run.
+- Level: `ui-verified` locally: real Chromium journeys against the same `handle()` and a stand-in OAuth server, plus my own run in the app's browser. New: `tests/platform/account.test.ts` (59 tests) and two page journeys. Real GitHub OAuth was not exercised; it needs the owner's app (PF6).
+- Checks:
+  - The diff does what the brief says, inside the reconciled write paths. No existing test's expected outcome changed; two lists gained entries (pages checked for money claims, bytes barred from the export).
+  - Verify passes on this commit.
+  - Bites, each in the working tree and restored, each went red in the account tests: restricted made public (8 failed, the brief's); dispute never reopens (3); poster check off (7); token stored (1); Origin check off (3); state check off (1); session kept at sign-out (1); payee check off (1); shape check off (16); receipts not purged (1).
+- Done when: verify exits 0; the diff scan for token shapes found none, and the stand-in's client word is not a secret; the owner's setup steps are in the README; hosted CI is read after merge (STATUS.md).
+- Lenses:
+  - **Security:** Authorize address carries no `scope`. Token sentinel absent from every row of every table; the cookie's own value absent too, only its hash stored. Cookies `__Host-`, Secure, HttpOnly, SameSite=Lax. Writes refuse a missing, foreign or look-alike Origin, a non-JSON type and an oversized body. A stolen cookie after sign-out and an expired session are refused; wrong state and a reused code sign nobody in. `javascript:` and look-alike hosts refused for every kind; stored rows are parsed again on read; the sign-in error shows fixed words, tried with a script in the address. A sentinel owner-only value is absent from the feed, details, RSS, MCP, public APIs and profiles, read anonymously, as a third party, as the owner and as the payee. **Limits:** the token is discarded, not revoked at GitHub. A renamed login keeps a live session up to 30 days, and the earlier holder's methods stay under that login until the new holder signs in. No rate limit on sign-in or writes.
+  - **User experience:** in the browser, signed out, `/me/` offers one action; after sign-in it shows the form on that page. Paste and Save: two steps, kind and visibility preselected; a wrong shape is refused in place with its next step. My run found one fault, fixed in `b1f1a43`: "Pay the author directly" showed to everyone, the payee included. Screenshots timed out with the window hidden, so I read this run as page text; the visual-rule test measures only the board and bounty pages, not the new ones.
+- Method: feature playbook and Prove It Works, read before code. Prove It Works changed one decision: the browser run after verify passed, which found the wording fault no test covered. `architect` skipped: K43 and the owner's decision settled the design. Throughput checkpoint n/a: one writer.
+- Findings and departures:
+  - **Ahead of PF4, by the brief's dispute test:** the payee's "received" and "not received" exist now, visible only to the payee and that owner. The record comes only from the chain's `paid` event. The owner's button, public payment facts, counts, `owner.record`, `payment` and `owner_record` stay PF4's.
+  - **PF4's brief says push access decides who records paid; K43 says the issue's author, because the board cannot read push access.** PF3 uses K43's rule. PF4 must reconcile its brief.
+  - `how_to_get_paid` now points at `/me/`, with the pull request as fallback. K43's three steps wait for PF4's confirm receipt.
+  - Secure cookies work on `http://localhost` in Chromium, which is what was tested; other browsers were not tried locally.
+- Merged: recorded in STATUS.md's commit · Resources removed: board and browser pane stopped.
+- Reflect: a PowerShell here-string with double quotes in a commit message broke `git commit` when passed to a native program, and verify refused the dirty tree -> kitchen: INBOX line. The refresh's anonymous budget hid a new chain event from my tests -> station: card line.
