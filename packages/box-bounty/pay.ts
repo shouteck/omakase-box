@@ -61,7 +61,11 @@ export function checkedAccepts(methods: unknown, more: unknown): PayAccepts | nu
   return { methods: kept, more: count };
 }
 
-function acceptsShape(value: unknown): value is PayAccepts {
+// The one print of a list: each `shown` was rendered when the answer was read
+// (checkedAccepts), and a kept copy passes acceptsShape again before it prints.
+export const methodWords = (accepts: PayAccepts): string[] => accepts.methods.map(method => `${method.label} ${method.shown}`);
+
+export function acceptsShape(value: unknown): value is PayAccepts {
   if (value === null || typeof value !== 'object') return false;
   const { methods, more, unreadAt } = value as Record<string, unknown>;
   if (!Array.isArray(methods) || !Number.isSafeInteger(more) || (more as number) < 0 || !(unreadAt === undefined || typeof unreadAt === 'string' && /^https?:\/\/[^\s"]+$/.test(unreadAt))) return false;
@@ -166,7 +170,7 @@ export function payMessageLines(record: { id: string; title: string }, pay: PayO
   const listed = accepts !== undefined && accepts.methods.length + accepts.more > 0;
   if (listed) {
     // The solver's own list on the board: their word, shape-checked, never followed.
-    if (accepts.methods.length > 0) owner.push(`${solver} lists these ways to be paid on the board: ${accepts.methods.map(method => `${method.label} ${method.shown}`).join(', ')}.`);
+    if (accepts.methods.length > 0) owner.push(`${solver} lists these ways to be paid on the board: ${methodWords(accepts).join(', ')}.`);
     if (accepts.more > 0) owner.push(`${accepts.more} more ${accepts.more === 1 ? 'is' : 'are'} shown only to you, signed in, on the bounty's page on the board.`);
     owner.push(`Before you pay, check the amount is $${opts.amount} and that the account there belongs to ${solver}.`);
   } else if (pay.link !== null) {

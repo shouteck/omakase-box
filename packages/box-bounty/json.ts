@@ -536,7 +536,9 @@ export function configDocument(repoRoot: string | null, notice: (line: string) =
     publishLists: lists,
     waiting,
     // The `records:` line as a fact (BT28) — null outside a checkout.
-    records: trackedFiles === null ? null : { tracked: trackedFiles > 0, trackedFiles }
+    records: trackedFiles === null ? null : { tracked: trackedFiles > 0, trackedFiles },
+    // PF5: the board's address; null when every call to it is off.
+    board: boardAddress() === '' ? null : boardAddress()
   };
 }
 

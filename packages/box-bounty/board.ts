@@ -5,7 +5,7 @@
 // A stranger can run a board, so every answer is checked before it is kept.
 
 import { spawnSync } from 'node:child_process';
-import { checkedAccepts, paymentOf, type PayAccepts } from './pay.js';
+import { acceptsShape, checkedAccepts, methodWords, paymentOf, type PayAccepts } from './pay.js';
 import { isOpenStage, listRecords, type BountyRecord } from './record.js';
 import { loadSettings } from './settings.js';
 import { metaGet, metaKeys, metaSet, sharedEnded, sharedOpen } from './store.js';
@@ -179,7 +179,7 @@ function acceptsFrom(reply: Reply): PayAccepts | null {
 // message stands. `unread` says it was not read, and where to look.
 export function readPayAccepts(solver: string | null): PayAccepts | undefined {
   if (solver === null || !LOGIN.test(solver) || boardAddress() === '') return undefined;
-  const page = `${boardAddress()}/solver/${solver}/`;
+  const page = `${boardAddress()}/solver/${solverAccount(solver)}/`;
   if (held) return { methods: [], more: 0, unreadAt: page };
   return acceptsFrom(boardCalls([{ path: `/api/solver/${encodeURIComponent(solver)}` }])[0]!) ?? { methods: [], more: 0, unreadAt: page };
 }
@@ -232,7 +232,9 @@ function factFrom(id: string, detail: Record<string, unknown>, at: string): Boar
 function storedFact(root: string, id: string): BoardFact | null {
   try {
     const value: unknown = JSON.parse(metaGet(root, readKey(id)) ?? 'null');
-    return isObject(value) && typeof value['kind'] === 'string' ? value as unknown as BoardFact : null;
+    // A kept copy is read like an answer: a list of methods that fails its shape reads as not read.
+    if (!isObject(value) || typeof value['kind'] !== 'string') return null;
+    return value['accepts'] === undefined || value['accepts'] === null || acceptsShape(value['accepts']) ? value as unknown as BoardFact : null;
   } catch { return null; }
 }
 
@@ -291,8 +293,6 @@ export function boardFact(root: string, record: BountyRecord): BoardFact | null 
 }
 
 const day = (at: string | null): string => at?.slice(0, 10) ?? 'an unstated date';
-
-export const methodWords = (accepts: PayAccepts): string[] => accepts.methods.map(method => `${method.label} ${method.shown}`);
 
 // One line per bounty, K43's words. The board's facts are attributed; the
 // tool says nothing of its own about them.
