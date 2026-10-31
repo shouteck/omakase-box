@@ -156,6 +156,11 @@ describe('the feed', () => {
     expect(Object.keys(bounty).slice(0, ENTRY_ORDER.length)).toEqual(ENTRY_ORDER);
   });
 
+  it('a bounty with no reward promises no payment and asks for no payment details', async () => {
+    const { bounty } = await askJson(r, `/bounties/${idOf(1)}.json`); // n = 0: no reward
+    expect(bounty.how_to_get_paid).toEqual(['No reward is stated, so nothing is owed if your pull request is merged.']);
+  });
+
   it('a mistyped or malformed id is a 404 that names the next step', async () => {
     for (const id of ['bt-000000000fff', 'nonsense', '..%2Fx']) {
       const answer = await ask(r, `/bounties/${id}.json`);
@@ -320,6 +325,8 @@ describe('MCP, through the SDK client', () => {
     expect(found.isError).toBeFalsy();
     const feed = await (await fetch(`${board.url}/bounties.json?language=TypeScript&min_reward=25&limit=5`)).json();
     expect(found.structuredContent).toEqual(feed);
+    expect(found.structuredContent.sample_data).toBe(true);
+    expect(found.structuredContent.legend.sample_data).toContain('Sample data');
     expect(JSON.parse(found.content[0].text)).toEqual(found.structuredContent);
     expect(found.structuredContent.bounties).toHaveLength(5);
   });
