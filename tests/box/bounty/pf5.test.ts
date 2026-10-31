@@ -195,6 +195,17 @@ describe('the owner message', () => {
     expect(renderStatus(repo)).not.toContain('evil.invalid');
   }));
 
+  it('a kept board fact edited on disk is checked again: a look-alike link reads as not read', () => fixture(({ repo, id, scratch }) => {
+    rewarded(scratch, board);
+    postBounty(repo, id, 'github');
+    const fact = { kind: 'listed', at: new Date().toISOString(), page: `${board}/b/${id}/`, solutions: 1, payment: 'owed', amount: 5, to: 'solver1', toOneOf: [], since: null, pullRequest: null, recordedBy: null, recordedAt: null, solverBy: null, solverSays: null, solverAt: null };
+    metaSet(repo, `board_read:${id}`, JSON.stringify({ ...fact, accepts: { methods: [{ kind: 'paypal', label: 'PayPal.me', shown: 'https://paypal.me/solver1' }], more: 0 } }));
+    expect(renderStatus(repo)).toContain('accepts: PayPal.me https://paypal.me/solver1');
+    metaSet(repo, `board_read:${id}`, JSON.stringify({ ...fact, accepts: { methods: [{ kind: 'paypal', label: 'PayPal.me', shown: 'https://paypal.me.evil.invalid/x' }], more: 0 } }));
+    expect(renderStatus(repo)).not.toContain('evil.invalid');
+    expect(renderStatus(repo)).toContain(`board: not read yet; next: box bounty status ${id}`);
+  }));
+
   it('with none listed falls back to the pay-to line', () => fixture(({ repo, id, scratch, pr, state, update }) => {
     rewarded(scratch, board);
     routes({ [PROFILE]: { status: 200, body: { login: 'solver1', methods: [], methods_more: 0 } } });
