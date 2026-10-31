@@ -100,7 +100,7 @@ States needing payment facts (recorded, confirmed, disputed) arrive in PF4.
 - CTO: Claude Code desktop on Windows / Claude Opus 5.5
 - Commit: `4d5744e`.
 - Verify: `verify 4d5744e PASS check=0 build=0 test:platform=0 test:kitchen=0(selected 18 of 18 kitchen files) db=none 150s`. The first run, on `9fd9ccd`, failed k16: see Findings.
-- Level: `ui-verified` (Chromium drove the built pages against the stand-in; no person used them). 67 platform tests.
+- Level: `ui-verified` (Chromium drove the built pages against the stand-in; no person used them). 66 platform tests.
 - Checks:
   - The diff does what the brief says, plus the write paths named in the reconciliation. `packages/box-bounty` and `packages/box-cli` are untouched.
   - Verify passes on this commit.
