@@ -93,7 +93,8 @@ export function refreshGitHubStatus(root: string, record: BountyRecord): void {
     const answers = listGitHubAnswers(root, record.id, record, false);
     const comments = issueComments(root, record, issue); // the issue read above — status asks GitHub for it once
     const unnamed = comments.filter(comment => comment.author === null).length;
-    publication.questions = { count: comments.length, latestAt: comments.map(comment => comment.at).sort().at(-1) ?? null, ...(unnamed > 0 ? { unnamed } : {}) };
+    const fromPoster = comments.filter(comment => comment.fromPoster).length;
+    publication.questions = { count: comments.length, latestAt: comments.map(comment => comment.at).sort().at(-1) ?? null, ...(unnamed > 0 ? { unnamed } : {}), ...(fromPoster > 0 ? { fromPoster } : {}) };
     publication.outside = { at: new Date().toISOString(), issueState: issue['state'], answers };
     publication.unavailableAt = null;
     publication.unavailableReason = null;
@@ -124,7 +125,9 @@ export function refreshGitHubFormat(root: string, record: BountyRecord): void {
   persistRecord(root, record);
 }
 
-export type IssueComment = { readonly author: string | null; readonly body: string; readonly at: string };
+// `fromPoster`: written under the account that posted the bounty, which may be
+// a solver or the agent itself, so its words are still another's, never the tool's.
+export type IssueComment = { readonly author: string | null; readonly body: string; readonly at: string; readonly fromPoster: boolean };
 
 function boundIssue(root: string, record: BountyRecord, fetched?: unknown): { repository: string; number: number; account: string } {
   const publication = record.github;
@@ -136,11 +139,17 @@ function boundIssue(root: string, record: BountyRecord, fetched?: unknown): { re
 
 export function issueComments(root: string, record: BountyRecord, fetched?: unknown): IssueComment[] {
   const issue = boundIssue(root, record, fetched);
+  // The tool's own comments end in its marker and come from the posting
+  // account (`close.ts`). Both are required: anyone can type the marker.
+  const toolMarker = `<!-- box-bounty:${record.id}:`;
+  const fromTool = (body: unknown, fromPoster: boolean): boolean => fromPoster && typeof body === 'string' && body.slice(body.lastIndexOf('\n') + 1).startsWith(toolMarker);
   return pages(root, `repos/${issue.repository}/issues/${issue.number}/comments`).flatMap(entry => {
-    if (!isObject(entry) || !isObject(entry['user']) || entry['user']['login'] === issue.account) return [];
+    if (!isObject(entry) || !isObject(entry['user'])) return [];
+    const fromPoster = entry['user']['login'] === issue.account;
+    if (fromTool(entry['body'], fromPoster)) return [];
     if (typeof entry['body'] !== 'string' || typeof entry['created_at'] !== 'string' || !Number.isFinite(Date.parse(entry['created_at']))) return invalid('github-response-invalid', 'GitHub returned an unreadable comment; next: box bounty status');
     const author = entry['user']['login'];
-    return [{ author: typeof author === 'string' && READABLE_LOGIN.test(author) ? author : null, body: redact(entry['body']), at: entry['created_at'] }];
+    return [{ author: typeof author === 'string' && READABLE_LOGIN.test(author) ? author : null, body: redact(entry['body']), at: entry['created_at'], fromPoster }];
   });
 }
 

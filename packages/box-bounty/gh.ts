@@ -25,7 +25,7 @@ export interface GitHubPublication {
   readonly title: string;
   readonly body: string;
   /** `unnamed`: how many of them carry an account name GitHub returned in a form the tool will not print. */
-  questions?: { readonly count: number; readonly latestAt: string | null; readonly unnamed?: number };
+  questions?: { readonly count: number; readonly latestAt: string | null; readonly unnamed?: number; readonly fromPoster?: number };
   seenPullRequests?: { readonly n: number; readonly commit: string; readonly at: string; readonly author?: string; readonly payTo?: PayToFact }[];
   availablePullRequests?: { readonly n: number; readonly commit: string; readonly at: string; readonly author?: string; readonly payTo?: PayToFact }[];
   /** Recorded at close when a bounty with a reward ended on a merged

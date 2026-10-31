@@ -131,7 +131,8 @@ const githubEntry = (publication: GitHubPublication, attempts: readonly Attempt[
   comments: publication.questions === undefined ? null : {
     count: publication.questions.count,
     latestAt: publication.questions.latestAt,
-    unnamed: publication.questions.unnamed ?? 0
+    unnamed: publication.questions.unnamed ?? 0,
+    fromPoster: publication.questions.fromPoster ?? 0
   },
   unavailable: publication.unavailableAt === undefined || publication.unavailableAt === null ? null : {
     at: publication.unavailableAt,
@@ -313,7 +314,7 @@ export function statusDocument(repoRoot: string, options: StatusDocumentOptions,
       // own issue first — the same read the text view makes, kept under
       // `fromOthers` so their words are never the tool's.
       data['fromOthers'] = record.github !== undefined && record.github.issue !== null
-        ? issueComments(repoRoot, record).map(comment => ({ from: comment.author, at: comment.at, text: comment.body }))
+        ? issueComments(repoRoot, record).map(comment => ({ from: comment.author, fromPoster: comment.fromPoster, at: comment.at, text: comment.body }))
         : [];
     } else {
       data['fromOthers'] = null;

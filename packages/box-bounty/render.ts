@@ -480,7 +480,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
           : '      retry box bounty status');
       }
       // A zero count is nothing to say; comments that exist need attention.
-      if (record.github?.questions !== undefined && (record.github.questions.count > 0 || options.full === true)) lines.push(`      comments from other accounts: ${record.github.questions.count}${record.github.questions.unnamed === undefined ? '' : ` (${record.github.questions.unnamed} from an account whose name could not be read)`}; latest: ${record.github.questions.latestAt ?? 'none'}; read: box bounty status ${record.id} --comments`);
+      if (record.github?.questions !== undefined && (record.github.questions.count > 0 || options.full === true)) lines.push(`      comments from other accounts: ${record.github.questions.count - (record.github.questions.fromPoster ?? 0)}${record.github.questions.fromPoster === undefined ? '' : `; from the account that posted this bounty: ${record.github.questions.fromPoster}`}${record.github.questions.unnamed === undefined ? '' : ` (${record.github.questions.unnamed} from an account whose name could not be read)`}; latest: ${record.github.questions.latestAt ?? 'none'}; read: box bounty status ${record.id} --comments`);
       // `--comments` prints the issue's comments, each line marked as written
       // by another account — the issue is bound to this bounty first, so a
       // record pointed at the wrong issue is a named refusal, not a leak.
@@ -488,7 +488,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
         const comments = issueComments(repoRoot, record);
         lines.push(`      ${comments.length} comment(s) written by others, not by the tool:`);
         for (const comment of comments) {
-          lines.push(`        ${comment.author === null ? 'an account whose name could not be read' : quoteForeign(comment.author)} at ${comment.at}:`);
+          lines.push(`        ${comment.author === null ? 'an account whose name could not be read' : quoteForeign(comment.author)}${comment.fromPoster ? ' (the account that posted this bounty)' : ''} at ${comment.at}:`);
           lines.push(...solverBlock('other account', comment.body.split('\n'), '          '));
         }
         lines.push(`      next: answer on issue ${record.github.issue.number} in your own words with your own gh — gh issue comment ${record.github.issue.number} --body "<your own words>"; or box bounty status ${record.id}`);
