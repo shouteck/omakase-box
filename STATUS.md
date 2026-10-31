@@ -1,11 +1,12 @@
 # Status
 
-Updated by the CTO on 31 October 2026, when BT48 closed.
+Updated by the CTO on 31 October 2026, when BT49 closed.
 
 ## Now
 
-- **BT48 is on master** (`4130e65`): never-ship judges a path by what it looks like. Invisible characters, width, composition and a small named table of look-alike letters are folded before every rule, `.boxignore` and never-publish match. The safe list folds case only. The table is a named set, not full Unicode coverage; limits are in the [wave file](waves/BT48.md).
-- **Read the off-machine run at the next kickoff:** BT48 changed `bt43.test.ts`, and one of its tests now runs only there. BT45's run, the one its k16 gap relied on, was green.
+- **BT49 is on master** (`6d07b06`): an over-size issue is refused before anything is pushed, and a change over 2 MiB lists its files instead of printing. GitHub's limits are from secondary sources; see the [wave file](waves/BT49.md).
+- **The off-machine run went red and is fixed:** BT48's packaging-card lines broke a size limit (`2b0e040`). BT48's own `bt43` test ran there and passed.
+- **Running now:** BT50, then BT47 and BT46 (owner's START message).
 - **Branches (owner, 31 October 2026):** work closes onto master. The cloud session branch `claude/serene-noether-m9qvs3` is left as it is.
 - **For the owner:**
   - the stray idle `node.exe` from BT44 (PID 16324), if it is still running;
@@ -13,9 +14,6 @@ Updated by the CTO on 31 October 2026, when BT48 closed.
 
 ## Next
 
-No wave is in flight or starts automatically.
-
-- BT49, BT50, BT47 and BT46 on `packages/box-bounty`.
 - Unbriefed, found in BT48 (BACKLOG): `rmSync` leaves non-ASCII names on Windows, which may leave a solver's file behind after a refused `apply`.
 - PF1, then PF2 and PF3, then PF4, in separate sessions and worktrees if run alongside the tool waves.
 - PF5 after BT49, BT50, PF2 and PF4.
