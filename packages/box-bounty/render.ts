@@ -23,6 +23,8 @@ import { paymentOf,payToLine } from './pay.js';
 import { applicableAttempts,attemptsOf,endedCount,endedRecords,isOpenStage,listRecords,loadRecord,openRecords,persistRecord,recordDir,retiredRoute,setOpenSurfacesSync,trackedRecordFiles } from './record.js';
 import { corruptFiles,endedContaining,metaKeys,sharedEnded,sharedEndedCount,sharedOpen,sharedRead } from './store.js';
 import { refreshSharedMemory } from './chain.js';
+import { adoptOpenShared } from './adopt.js';
+import { RESUME_STAYED } from './wording.js';
 import { askMergeNoticeLine,loadState,localFirstMergeLine,repoReward,rewardNoticeLine,saidOnce } from './settings.js';
 import type { AttemptOutcome,BountyRecord,ListedBounty,StageEvent } from './record.js';
 
@@ -32,6 +34,7 @@ import type { AttemptOutcome,BountyRecord,ListedBounty,StageEvent } from './reco
 export function renderResume(record: BountyRecord, indent = '', full = false): string {
   const context = record.resume;
   if (context?.kind !== 'recorded') return [`${indent}Return to your job`, `${indent}  The branch, commit and changed files were not recorded for this older bounty.`].join('\n');
+  if (record.adopted !== undefined) return [`${indent}Picked up on this machine (${record.id}) — where the work stood stayed on the machine that posted it`, `${indent}  branch here: ${showPath(context.branch)}`, `${indent}  ${RESUME_STAYED}`].join('\n');
   return [`${indent}Saved job context (${record.id}) — where the work stood when the bounty was created`, `${indent}  branch: ${showPath(context.branch)}${full ? `; commit: ${context.commit}` : ''}`, `${indent}  changed files: ${context.changed.length === 0 ? 'none' : context.changed.map(showPath).join(', ')}`, ...(context.note === null ? [] : [`${indent}  note: ${JSON.stringify(context.note)}`])].join('\n');
 }
 
@@ -296,13 +299,16 @@ const scanFindingLines = (record: BountyRecord, indent: string): string[] => {
 export function renderStatus(repoRoot: string, options: { readonly id?: string; readonly full?: boolean; readonly comments?: boolean } = {}): string {
   // BT32: `status` is one of the five commands that refresh shared memory.
   refreshSharedMemory(repoRoot);
+  // BT52: an open bounty another machine posted becomes a local record here,
+  // so the refresh below sees its pull requests; one that will not bind says so.
+  const notPickedUp = adoptOpenShared(repoRoot);
   let single: BountyRecord | undefined;
   if (options.id !== undefined) {
     try {
       single = loadRecord(repoRoot, options.id);
     } catch (error) {
       // BT32: an id the chain knows is shown, not refused — status reads.
-      if (!(error instanceof BountyRefused) || error.reason !== 'shared-only') throw error;
+      if (!(error instanceof BountyRefused)) throw error;
       single = sharedRead(repoRoot, options.id) ?? undefined;
       if (single === undefined) throw error;
     }
@@ -348,9 +354,13 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
     else if (entry.record !== null && options.full) refreshGitHubFormat(repoRoot, entry.record);
   }
   const open = listed.filter(entry => entry.record !== null && isOpenStage(entry.record.stage));
+  // A bounty the refresh found ended on another machine moves to the ended side.
+  for (const entry of listed) {
+    if (entry.record !== null && !isOpenStage(entry.record.stage) && !endedShown.includes(entry)) { endedShown.push(entry); endedTotal += 1; }
+  }
   const ended = endedShown;
   const corrupt = listed.filter(entry => entry.record === null);
-  const lines: string[] = [];
+  const lines: string[] = [...notPickedUp];
   // Pending shared-memory pushes are named in the overview (BT32).
   for (const key of metaKeys(repoRoot, 'chain_pending:')) {
     lines.push(`${key.slice('chain_pending:'.length)} — shared bounty memory not pushed yet; it will be retried`);

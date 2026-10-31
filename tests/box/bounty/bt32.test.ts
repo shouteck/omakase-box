@@ -92,18 +92,15 @@ describe('BT32 shared bounty memory', { timeout: 180000 }, () => {
     }); }
   });
 
-  it('a second machine imports the chain and status shows the shared bounty; acting on it is refused', () => {
+  it('a second machine imports the chain, picks the bounty up and status shows it', () => {
     { const world = sharedPostedFixture(); world.run(() => {
       const other = secondMachine(world);
       const status = renderStatus(other);
       expect(status).toContain(world.id);
-      expect(status).toContain('posted from another machine');
-      expect(sharedRead(other, world.id)?.title).toBe('Repair app');
-      // The shared row never becomes a writable local record.
-      const failure = () => closeBounty(other, world.id);
-      expect(failure).toThrowError(BountyRefused);
-      try { loadRecord(other, world.id); expect.unreachable(); }
-      catch (error) { expect(error).toMatchObject({ reason: 'shared-only' }); }
+      expect(status).toContain('stayed on the machine that posted it');
+      // BT52: the shared row became a local record, once GitHub agreed with it.
+      expect(sharedRead(other, world.id)).toBeNull();
+      expect(loadRecord(other, world.id).title).toBe('Repair app');
       // find sees it too — recall by purpose crosses machines, including a
       // word that only ever lived in the why (M3/M5).
       expect(findBounties(other, 'repair').total).toBeGreaterThan(0);

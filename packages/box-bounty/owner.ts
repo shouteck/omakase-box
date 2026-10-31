@@ -1,3 +1,4 @@
+import { syncBeforeAction } from './adopt.js';
 import { BountyRefused } from './errors.js';
 import { postBounty } from './commands.js';
 import { listRecords, loadRecord, openRecords, persistRecord, retiredRoute, trackedRecordFiles } from './record.js';
@@ -155,6 +156,7 @@ export function denyRepository(repoRoot: string | null, name?: string): string {
   return `${address}: not allowed — removed from the active list; all-projects does not re-allow it; open bounties are untouched.${money}\nnext: box bounty allow ${address} re-allows it${retiredNotice === null ? '' : `\n${retiredNotice}`}${askNotice === null ? '' : `\n${askNotice}`}`;
 }
 export function allowBounty(repoRoot: string, id: string): string {
+  syncBeforeAction(repoRoot, id);
   const record = loadRecord(repoRoot, id);
   const waiting = record.waiting;
   if (record.stage === 'waiting' && waiting?.for === 'merge') return allowMerge(repoRoot, record, waiting);

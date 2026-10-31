@@ -887,6 +887,16 @@ export function sharedRead(repoRoot: string, id: string): BountyRecord | null {
   });
 }
 
+// The shared row whatever the local records say — for a local bounty whose
+// chain may have ended on another machine (BT52).
+export function sharedFor(repoRoot: string, id: string): BountyRecord | null {
+  return withDb(repoRoot, false, entry => {
+    if (entry === undefined) return null;
+    const row = stmt(entry!, 'SELECT json FROM shared WHERE id=?').get(id) as { json: string } | undefined;
+    return row === undefined ? null : sharedRowToRecord(row);
+  });
+}
+
 // find over shared rows: same all-words substring rule as searchRecords.
 export function sharedSearch(repoRoot: string, needle: string): BountyRecord[] {
   return withDb(repoRoot, false, entry => {

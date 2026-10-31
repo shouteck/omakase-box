@@ -24,6 +24,7 @@ import { dryMergeOnto } from './git.js';
 import { discoverInstructions,instructionNotices } from './instructions.js';
 import type { LookResult } from './look.js';
 import { publishLists } from './never-ship.js';
+import { adoptOpenShared } from './adopt.js';
 import { BountyRefused } from './errors.js';
 import { applicableAttempts,attemptsOf,baseCommitOf,isOpenStage,listRecords,loadRecord,persistRecord,trackedRecordFiles } from './record.js';
 import { promisedTotal } from './money.js';
@@ -155,7 +156,7 @@ const githubEntry = (publication: GitHubPublication, attempts: readonly Attempt[
 // A record from before contexts existed carries `not-recorded` — null here.
 const resumeEntry = (record: BountyRecord): JsonObject | null =>
   record.resume?.kind === 'recorded'
-    ? { branch: record.resume.branch, commit: record.resume.commit, changed: [...record.resume.changed], note: record.resume.note }
+    ? { branch: record.resume.branch, commit: record.resume.commit, changed: [...record.resume.changed], note: record.resume.note, noteStayedOnPostingMachine: record.adopted !== undefined }
     : null;
 
 // The fresh "current code now" read the text status runs under --full (or
@@ -272,6 +273,7 @@ export interface StatusDocumentOptions {
 export function statusDocument(repoRoot: string, options: StatusDocumentOptions, notice: (line: string) => void): JsonObject {
   // BT32: `status --json` is one of the five commands that refresh shared memory.
   refreshSharedMemory(repoRoot);
+  adoptOpenShared(repoRoot).forEach(notice);
   const ownerRead = readDecision(repoRoot);
   const { amount, limit } = repoReward(repoRoot);
   // BT32: a shared-only id is answered from the imported chain row exactly
@@ -280,7 +282,7 @@ export function statusDocument(repoRoot: string, options: StatusDocumentOptions,
   if (options.id !== undefined) {
     try { single = loadRecord(repoRoot, options.id); }
     catch (error) {
-      if (!(error instanceof BountyRefused) || error.reason !== 'shared-only') throw error;
+      if (!(error instanceof BountyRefused)) throw error;
       single = sharedRead(repoRoot, options.id) ?? undefined;
       if (single === undefined) throw error;
     }

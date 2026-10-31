@@ -288,18 +288,17 @@ function share(root: string, record: BountyRecord, scanned: Record<string, strin
   return result;
 }
 
-// `posted` — at a successful post. `task` is the text as published; `followup`
-// is the --resume note (the larger job and where it stood).
+// `posted` — at a successful post. `task` is the text as published. The
+// --resume note is private context and stays on this machine (BT52); events
+// written before that may carry it as `followup`, which still imports.
 export function sharePosted(root: string, record: BountyRecord, task: string): PushResult | 'held' {
   const publication = record.github;
   if (publication === undefined || publication.issue === null) return 'held';
-  const followup = record.resume?.kind === 'recorded' ? record.resume.note : null;
   const event: ChainEvent = {
     v: 1, type: 'posted', at: new Date().toISOString(), actor: actorOf(record),
     id: record.id, title: record.title, task,
     ...(record.why !== undefined ? { why: record.why } : {}),
     ...(record.partOf !== undefined ? { partOf: record.partOf } : {}),
-    ...(followup !== null && followup !== undefined ? { followup } : {}),
     base: publication.base ?? publication.commit,
     branch: publication.branch,
     issue: { number: publication.issue.number, url: publication.issue.url },
@@ -311,7 +310,7 @@ export function sharePosted(root: string, record: BountyRecord, task: string): P
     ...(record.allowedBy !== undefined ? { allowedBy: { decision: record.allowedBy.decision, level: record.allowedBy.level } } : {})
   };
   queueBoardHint(root, record, 'posted');
-  return share(root, record, { title: record.title, task, why: record.why, partOf: record.partOf, followup }, event);
+  return share(root, record, { title: record.title, task, why: record.why, partOf: record.partOf }, event);
 }
 
 // `solution` — when a pull request is collected (look, apply, status refresh).
@@ -388,15 +387,16 @@ const writeChainState = (root: string, next: { fetchedAt?: string; error?: { at:
 // retry whatever push is still pending. A fetch failure answers from the
 // cache and the notice is emitted once per spell.
 export function syncChains(root: string, force = false): void {
-  const url = remoteUrl(root);
-  if (url === null) return;
   const prior = loadChainState(root);
   if (!force && prior.fetchedAt !== undefined && Date.now() - Date.parse(prior.fetchedAt) < FETCH_INTERVAL_MS) {
     // Inside the throttle window the remote-tracking refs cannot have moved
-    // since the fetch that set it — only pending pushes can still need work.
-    retryPending(root, url);
+    // since the fetch that set it — only pending pushes can still need work,
+    // and only they resolve the remote.
+    retryPending(root);
     return;
   }
+  const url = remoteUrl(root);
+  if (url === null) return;
   const fetched = gitOutcome(root, ['fetch', '--no-tags', '--prune', url, `+${CHAIN_NS}/*:${CHAIN_REMOTE_NS}/*`]);
   if (fetched.status !== 0 || fetched.error !== undefined) {
     // Offline, throttled or refusing: answer from the cache, and say so once
@@ -743,6 +743,8 @@ function foldEvents(id: string, events: readonly ChainEvent[]): SharedRow | null
   const followup = typeof posted['followup'] === 'string' ? posted['followup'] : null;
   const title = typeof posted['title'] === 'string' ? posted['title'] : id;
   const task = typeof posted['task'] === 'string' ? posted['task'] : '';
+  const published = isObject(posted['published']) && Array.isArray(posted['published']['pushed']) ? posted['published']['pushed'] : [];
+  const pushed = published.flatMap(entry => isObject(entry) && typeof entry['sha'] === 'string' && /^[a-f\d]{40}$/.test(entry['sha']) && typeof entry['subject'] === 'string' ? [{ sha: entry['sha'], subject: entry['subject'] }] : []);
   const record: Record<string, unknown> = {
     schemaVersion: 1,
     kind: 'box-bounty-record',
@@ -764,7 +766,11 @@ function foldEvents(id: string, events: readonly ChainEvent[]): SharedRow | null
       account: typeof posted['actor'] === 'string' ? posted['actor'] : 'unknown',
       kind: 'history',
       branch: typeof posted['branch'] === 'string' ? posted['branch'] : `box-bounty/${id}`,
-      commit: typeof posted['base'] === 'string' ? posted['base'] : '',
+      // The tip the bounty branch was posted at: the last commit published
+      // for the first time, else the base (BT52).
+      commit: pushed.at(-1)?.sha ?? (typeof posted['base'] === 'string' ? posted['base'] : ''),
+      ...(typeof posted['base'] === 'string' ? { base: posted['base'] } : {}),
+      pushed,
       title,
       body: '',
       state: endedAt === null ? 'posted' : 'closed',
@@ -782,10 +788,4 @@ function foldEvents(id: string, events: readonly ChainEvent[]): SharedRow | null
     record,
     searchText
   };
-}
-
-// The message shared-only actions carry — one place decides the wording.
-export function sharedOnlyRefusal(record: BountyRecord): BountyRefused {
-  const url = record.github?.issue?.url;
-  return new BountyRefused('shared-only', `this bounty was posted from another machine${url !== undefined && url !== '' ? `; its issue is ${url}` : ''}; next: act on it from that machine, or on GitHub`);
 }

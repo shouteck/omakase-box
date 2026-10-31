@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { lstatSync,mkdirSync,renameSync,writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { syncBeforeAction } from './adopt.js';
 import { BountyRefused } from './errors.js';
 import { gitOutcome } from './git.js';
 import { SOLVER_WORDS } from './untrusted.js';
@@ -65,6 +66,7 @@ function namesWithinCap(files: readonly string[]): readonly string[] {
 }
 
 export function lookBounty(root: string, id: string, target: LookTarget, options: { readonly full?: boolean; readonly whole?: boolean } = {}): LookResult {
+  syncBeforeAction(root, id);
   let record = loadRecord(root, id);
   requireCurrentDelivery(record);
   let attempt: Attempt;
