@@ -82,3 +82,27 @@ Each owner and solver profile shows the counts. The platform never moves money a
 
 - Feature playbook; principles: prove-it-works.
 - Do not edit `waves/PF4.md` while a verify runs. Report at the timebox.
+
+## Result
+
+- CTO: Claude Code desktop on Windows / Claude Opus 5.5
+- Commit: `6294f7d`.
+- Verify: `verify 6294f7d PASS check=0 build=0 test:platform=0 test:kitchen=0(selected 18 of 18 kitchen files) db=none 154s`. The first candidate, `1c40532`, also passed; the later commit changes page words, one profile field and BACKLOG.
+- Level: `ui-verified` locally: a real Chromium journey (owner records, payee disputes, then confirms, owner withdraws) against the same `handle()` and the stand-in, plus my own signed-out read in the app's browser. New: `tests/platform/payments.test.ts`. Real GitHub was not exercised; that is PF6.
+- Checks:
+  - The diff does what the reconciled brief says. BACKLOG is the one file outside the write paths: what PF4 left, and K42b's card notes dropped because the board charges no card.
+  - Verify passes on this commit.
+  - **Changed expectations, each because the brief replaces the behaviour:** `record: null` and `payment: null` (machine, refresh, account profile tests) now the real shapes; the refused `owner_record` is now refused only for a bad value; a stranger's `receipt` was null and is now public; the card's "Posted by" line gains the record. No other expected outcome changed.
+  - Bites, each in the working tree and restored, each red in `payments.test.ts`, run before the wording commit: self-dealing exclusion off, the brief's (13 failed); on-default check off (5); payee check off (2); and one failure each for poster check off, association overwritten, named payee unchecked, client amount trusted, second click bumps the date, chain record settling two merges, clicks not purged, compares unbounded.
+- Done when: verify exits 0. Payment words: tested on the feed, details, payment answers, profiles and board API, and by the existing check on every page; no claim found. Hosted CI is read at the next kickoff (STATUS.md).
+- Lenses:
+  - **Security:** only the issue's author records paid (a stranger, the payee, a signed-out request and a foreign Origin all refused, nothing written); only the payee answers; the amount is the bounty's whatever is sent; a name not merged is refused; clicks purge with a private repository. Self-dealing rests on what GitHub shows: a second account with no association is still counted, and that is not detected. **Limits:** whether a private organisation member reads as MEMBER is untested; a login that changes hands is PF3's stated limit; no rate limit on writes.
+  - **User experience:** I read the board, an owner page and a two-merge bounty signed out as a solver. "Would this owner pay me?" is answered from facts only: for `example-mara`, 3 merged, 1 recorded paid, 0 confirmed, 2 owed, the oldest for 2 days. That read found three faults no test had caught, fixed in `6294f7d`: "2 owed for 2 days" misstated the older debt; "by 0 different solvers"; no way to see which bounty a count came from. Those fixes passed tests; I did not re-read them in the app's browser. Signed-in pages were exercised only through the journey, as page text.
+  - **Measurement fairness:** seeded nine bounties (owed, late, recorded, confirmed, disputed, another solver, self-dealing, no reward, not landed) and worked out each count by hand before running: merged 6, recorded 4, confirmed 2, from 2 solvers, owed 2, oldest 40 days, 1 disputed, median 3 days. All match. Self-dealing is out of the owner's and solver's counts both, and the filters were checked against owners worked out by hand.
+- Method: feature playbook and Prove It Works, read before code. Prove It Works changed one decision: reading the running board after verify passed, which found the three faults above. `architect` skipped: K43 settled the design. Throughput checkpoint n/a: one writer.
+- Findings and departures:
+  - **Two bounds the brief did not name, both found by trying the worst case:** 80 merged pull requests broke the 40 KB detail bound, so authors shown are capped at 10; many merged pull requests could spend every refresh on compares and hold up other bounties, so a read makes at most 5.
+  - `median_days_to_record_paid` is `null` when nothing is recorded, against K43's zeros.
+  - **Not built, in BACKLOG:** landed but not marked merged; account age; `/me/` owe and owed sections; `to` on the chain's event (PF5).
+  - **A squash merge would read as not landed,** so nothing would show as owed. This follows K42's rule and has not met real GitHub: PF6 must check it.
+  - The `owner_record` filter reads every merged bounty per request; not measured against Workers Free's CPU limit.
