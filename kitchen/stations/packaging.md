@@ -23,6 +23,7 @@ This card holds rules, not narratives — each trap names the wave that taught i
 ## The security boundary
 
 - **Never-ship is the security boundary: the whole repository goes out.** Check each file's real path, fold case on both pattern and path, refuse links that leave the repository, never list removed files' names. Rule table: `packages/box-bounty/never-ship.ts`. The `secrets` rule matches any *segment* containing "secrets", basenames included.
+- **Rules match a path's skeleton, not its spelling** (`matchingSkeleton`, BT48): a new rule goes in the table and gets the fold; an exception (the safe list) must not fold, or a look-alike inherits it. The table is a named set; never claim full confusables coverage.
 - **Emitted bytes equal the recorded identifier.** `bounty create` writes `repo/` from the snapshot commit via `git cat-file blob`, never the live worktree (TOCTOU/junction/autocrlf, BT6a-era). Clean filters (git-lfs) ship filtered bytes. The snapshot commit keeps removed blobs reachable under `.git/objects` — required, never a leak.
 - **Nothing a solver wrote is ever run.** The unsafe-command preflight (`git.ts` `unsafeOwnerCommands`) models *what executes*, not which programs exist: `sh -c` filter/driver values, bare interpreters reading stdin, `alias.*`/`-c` re-entry, includes resolving against their own file's dir with `~`, launchers reading in-repo manifests (BT6b, three passes). Once a program places outside the tree, every operand deciding what executes must place or recurse — enumerating dangerous programs loses.
 - **No token-shaped literal in tracked source, anywhere — including wave files.** Push protection scans every commit's bytes; build scan-pattern values at run time, describe shapes in docs, run `scanText` over added diff lines. Standing guard: `tests/box/bounty/secret-literals.test.ts` (BT8).
@@ -35,6 +36,7 @@ This card holds rules, not narratives — each trap names the wave that taught i
 ## Git and path traps
 
 - **Windows paths:** store forward slashes, build with path functions, test both forms. `realpathSync` does not expand 8.3 names — only the parent's `readdir` reveals the true name; segment checks run on re-spelled, declared and canonical spellings (BT26). Exclusion runs on the canonical path — `realpathSync` before BOTH containment and exclusion (D2.1's two bypasses).
+- **`rmSync` can silently not delete** (Node 24.11.0 on Windows, BT48): a non-ASCII name stays, recursive or not, with no error. After deleting a name you do not control, check it is gone; in a test use `unlinkSync`, which works.
 - **Git output is a third path dialect and it folds.** `diff`/`ls-tree` emit tree spellings (junction-tracked) and `diff.renames` drops rename sources — canonicalize and pass `--no-renames`; judge deletions by the *base tree's* spellings, never live disk (BT3b).
 - **Junctions leave no git artifact** — where the note cannot know, report a change, never the all-clear (`waves/BT3b.md`).
 - **`rev-list --ancestry-path` is not "did it land"** — for a merge carried inside another merge it returns nothing; use binary search of the first-parent chain with `merge-base --is-ancestor` (BT7b-1).
