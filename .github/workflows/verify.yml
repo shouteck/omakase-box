@@ -106,6 +106,11 @@ jobs:
       - name: verify
         run: node scripts/verify.mjs --full test:box-bounty test:kitchen
 
+      # PF1: the board's own suite, apart from the kitchen's acceptance profile,
+      # whose duration budget measures the two suites above.
+      - name: platform suite
+        run: node scripts/suite.mjs platform
+
       - name: Upload verify run logs
         if: always()
         uses: actions/upload-artifact@v7

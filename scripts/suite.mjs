@@ -26,7 +26,9 @@ export const CHECK_SUITES = [];
 const CHECK_PATH_SUITES = [
   ['tests/box/', []],
   ['packages/box-bounty/', []],
-  ['packages/box-cli/', []]
+  ['packages/box-cli/', []],
+  ['packages/box-platform/', []],
+  ['tests/platform/', []]
 ];
 // K22 — files a kitchen test reads are never inert, however doc-shaped:
 // scripts/kitchen-stats.mjs reads the four limit files and every waves/*.md

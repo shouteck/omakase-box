@@ -14,7 +14,8 @@
     "check:full": "node scripts/workspace.mjs check --full",
     "build": "node scripts/workspace.mjs build",
     "test:box-bounty": "node scripts/suite.mjs box --suite bounty",
-    "test:kitchen": "node scripts/suite.mjs kitchen"
+    "test:kitchen": "node scripts/suite.mjs kitchen",
+    "test:platform": "node scripts/suite.mjs platform"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",
