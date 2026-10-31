@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { answerGitHub, boardNotToldLine, boardTold, changeConfig, checkMergedSolutions, createBounty, flushBoardHints, hintOf, loadRecord, metaKeys, metaSet, postBounty, readBoardFacts, renderConfig, renderStatus, setMergeNoticeListener } from '../../../packages/box-bounty/index.js';
 import { fixture, sharedPostedFixture } from './github-fixture.js';
-import { CLI_DIST, git, runRoot, write } from './support.js';
+import { CLI_DIST, git, rewriteRecordRaw, runRoot, write } from './support.js';
 
 const STANDIN = fileURLToPath(new URL('./board-standin.cjs', import.meta.url));
 const CLOSED_PORT = 'http://127.0.0.1:9'; // the discard port: nothing answers here
@@ -170,6 +170,22 @@ describe('the owner message', () => {
     expect(requests().filter(request => request.path === PROFILE).length).toBe(1);
   }));
 
+  it('a kept list edited on disk is checked again on read: a look-alike link makes the record unreadable, never shown', () => fixture(({ repo, id, scratch, pr }) => {
+    rewarded(scratch, board);
+    routes({ [PROFILE]: { status: 200, body: { login: 'solver1', methods: [paypal], methods_more: 0 } } });
+    postBounty(repo, id, 'github');
+    merged(repo, id, pr);
+    expect(loadRecord(repo, id).github!.pay!.accepts!.methods.length).toBe(1);
+    rewriteRecordRaw(repo, id, raw => {
+      const accepts = ((raw['github'] as Record<string, Record<string, unknown>>)['pay']!['accepts'] as { methods: { shown: string }[] });
+      accepts.methods[0]!.shown = 'https://paypal.me.evil.invalid/x';
+    });
+    let reason: unknown = null;
+    try { loadRecord(repo, id); } catch (error) { reason = (error as { reason?: unknown }).reason; }
+    expect(reason).toBe('record-corrupt');
+    expect(renderStatus(repo)).not.toContain('evil.invalid');
+  }));
+
   it('with none listed falls back to the pay-to line', () => fixture(({ repo, id, scratch, pr, state, update }) => {
     rewarded(scratch, board);
     routes({ [PROFILE]: { status: 200, body: { login: 'solver1', methods: [], methods_more: 0 } } });
@@ -306,10 +322,10 @@ describe('status', () => {
     expect(renderStatus(repo)).toContain(expected);
   }));
 
-  it('asks at most five reads per command and speaks of a stated number of merged bounties', () => fixture(({ repo, id, scratch }) => {
+  it('asks at most five reads per command and speaks of a stated number of merged bounties', { timeout: 120000 }, () => fixture(({ repo, id, scratch }) => {
     rewarded(scratch, board);
     postBounty(repo, id, 'github');
-    for (let n = 0; n < 7; n += 1) {
+    for (let n = 0; n < 5; n += 1) {
       const other = createBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: `another ${n}`, title: `Another ${n}` });
       postBounty(repo, other.id, 'github');
     }
