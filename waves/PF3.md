@@ -7,6 +7,19 @@ Horizon: long: start with `/plan` and keep the plan in this file
 
 **Brief.** Written ahead by the CTO on 21 October 2026. Before starting, the CTO reconciles it with K43's `PLATFORM-UX.md` (profile content, privacy rules) and corrects names only. **After PF1**; it can run alongside PF2.
 
+**Reconciled with K43 (31 October 2026).** Pages: `/sign-in/`, `/me/`, `/solver/<login>/`, `/owner/<login>/`, and `/privacy/` for the note. Visibility choices in K43's words: "Everyone, on my profile", "Only an owner who owes me". Owner means the issue's author, K43's rule; the owner's "not received" change overrides K43's last sentence on methods. Write paths: `packages/box-platform/`, `tests/platform/`, `waves/PF3.md`.
+
+## Plan
+
+Agreed with the owner in plan mode, 31 October 2026. Read before code: feature playbook, Prove It Works. `architect` skipped: K43 and D-2026-10-22-k43-decisions settled the design. One writer.
+
+1. **Dependency on PF4:** the record comes from the chain's stored `paid` events; PF3 adds only the payee's receipt answer, visible to the payee and that owner. PF4 keeps the paid button, public payment facts, counts, `owner.record`, `payment`, `owner_record`.
+2. **Store:** `sessions` (SHA-256 of the cookie value, GitHub id, login, expiry), `methods` (by GitHub id, at most 10), `receipts` (tied to the `paid` event's `at`; purged with the bounty). A login held under another id is deleted at sign-in.
+3. **`src/methods.ts`:** a table per kind: label, default visibility, shape, refusal with next step. Rows parsed again on read. **`src/visibility.ts`:** the only place the rule lives.
+4. **`src/account.ts`:** routes for sign-in, callback, sign-out, `/api/me`, `/api/me/methods`, `/api/solver/<login>`, `/api/owner/<login>`, `/api/b/<id>/payment`, `/api/b/<id>/receipt`. `__Host-` cookies; every write needs same `Origin`, JSON and at most 16 KB. Feed, MCP, RSS and public detail never read `methods`.
+5. **Stand-in** gains OAuth and `/user`. **Pages:** one-page `/me/`, payment view on the bounty page, nav and footer links, `how_to_get_paid`, README setup for PF6.
+6. **Steps:** pure rules and table tests; schema and sign-in; routes; pages and browser journey; bites (restricted public, dispute never reopens, token stored, Origin off, state off); verify; own browser run; close.
+
 ## Outcome
 
 Anyone can sign in with GitHub. A solver can list the ways they accept payment, once. An owner has a profile page. The platform stores only the GitHub identity and what each person chose to publish.

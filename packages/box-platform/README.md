@@ -23,6 +23,21 @@ The feed and the tools answer from one builder, `src/feed.ts`. The list reads th
 
 The MCP server is written by hand (`src/mcp.ts`): the SDK's server brings a web framework to a Worker with 10 ms of CPU. The SDK's client is a development dependency, and the tests connect through it.
 
+## Signing in
+
+Sign-in is GitHub OAuth with no scope: public identity only. The token is used once and discarded. Sessions are server-side, and the store keeps only the cookie's hash. What is stored is listed at `/privacy/`.
+
+The owner's setup, for PF6:
+
+1. Create an OAuth app at https://github.com/settings/applications/new. Homepage: the board's address. Authorization callback URL: `<the board's address>/auth/github/callback`.
+2. Set the Client ID: `wrangler secret put GITHUB_OAUTH_CLIENT_ID`.
+3. Generate a client secret and set it: `wrangler secret put GITHUB_OAUTH_CLIENT_SECRET`.
+4. Apply the schema again, which adds only new tables: `wrangler d1 execute open-bounty-board --remote --file schema.sql`.
+
+Without these the board works, and sign-in says it is not set up. Locally the stand-in signs you in as `example-quill`; nothing leaves localhost.
+
+Who may see an owner-only payment method is decided in `src/visibility.ts` and nowhere else, and read only by `src/account.ts`. The feed, MCP, RSS and the public bounty answer never read methods.
+
 Tests: `node scripts/suite.mjs platform`.
 
 What runs where: `src/worker.ts` is the deployed form (Cloudflare Workers Free, static assets, D1); `src/local.ts` runs the same `handle()` and `refresh()` on node. Deployment is PF6's recipe, and the owner's to run.

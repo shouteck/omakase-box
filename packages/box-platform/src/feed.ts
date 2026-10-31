@@ -137,7 +137,7 @@ export async function bountyDetail(env: Env, id: string, now: number, origin: st
         `Open a pull request against the branch ${branch} in ${row.repository} (not against ${row.default_branch}).`
       ],
       how_to_get_paid: row.amount > 0 ? [
-        'You need a GitHub account to answer, and no sign-in to this board. The board has no payment profiles yet, so say in your pull request how you accept payment.',
+        `You need a GitHub account to answer, and no sign-in to this board. Before you can be paid, the owner needs a way to pay you: a person signs in with GitHub once at ${origin}/me/ and lists the ways they accept payment; or say how in your pull request.`,
         `If your pull request is the one merged, the owner owes you $${row.amount} and pays you directly. The board never holds, guarantees or moves money.`,
         'The board does not track receipt yet. Settle it with the owner on the pull request.'
       ] : ['No reward is stated, so nothing is owed if your pull request is merged.'],

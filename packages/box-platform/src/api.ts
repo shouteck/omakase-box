@@ -1,5 +1,6 @@
 // What a browser may have: only facts about bounties on public repositories,
 // filtered here on the server. No unfiltered record ever leaves this file.
+import { accountResponse } from './account.js';
 import { feedResponse, detailResponse, rssResponse, schemaResponse } from './feed.js';
 import type { Env } from './github.js';
 import { mcpResponse } from './mcp.js';
@@ -80,6 +81,8 @@ export async function handle(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
   const now = env.now?.() ?? Date.now();
   if (url.pathname === '/mcp') return mcpResponse(request, env, now);
+  const account = await accountResponse(request, env, url, now);
+  if (account !== null) return account;
   if (request.method !== 'GET' && request.method !== 'HEAD') return json(405, { error: 'Read-only. Next: use GET.' });
   if (url.pathname === '/bounties.json') return feedResponse(request, env, now);
   if (url.pathname === '/bounties.schema.json') return schemaResponse(request);
@@ -93,5 +96,7 @@ export async function handle(request: Request, env: Env): Promise<Response> {
   if (env.ASSETS === undefined) return json(503, { error: 'The pages are not built. Next: node packages/box-platform/local.mjs.' });
   // Any /b/<something>/ gets the same shell, so the shell says nothing about whether it exists.
   if (/^\/b\/[^/]+\/?$/.test(url.pathname)) return env.ASSETS.fetch(new Request(new URL('/b/', url), request));
+  const profile = /^\/(solver|owner)\/[^/]+\/?$/.exec(url.pathname);
+  if (profile !== null) return env.ASSETS.fetch(new Request(new URL(`/${profile[1]}/`, url), request));
   return env.ASSETS.fetch(request);
 }

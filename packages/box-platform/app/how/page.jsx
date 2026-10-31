@@ -11,7 +11,7 @@ export default function Page() {
         <p className="max-w-prose mt-4">When a solution is merged, you pay its author directly.</p>
       </Section>
       <Section title="If you solve bounties" id="solvers">
-        <p className="max-w-prose">Find open bounties here. Answer with a pull request against the bounty&apos;s branch. If yours is merged, the owner pays you the stated reward directly.</p>
+        <p className="max-w-prose">Find open bounties here. Answer with a pull request against the bounty&apos;s branch. If yours is merged, the owner pays you the stated reward directly. So they can, <a href="/me/">list the ways you accept payment</a> once, signed in with GitHub.</p>
       </Section>
       <Section title="What the board is not" id="not">
         <ul className="list-disc pl-5 flex flex-col gap-2 max-w-prose">
