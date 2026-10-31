@@ -48,5 +48,5 @@ Horizon: short
 - Findings and limits:
   - **Not proven on Linux.** The cause is read from the code and two runs' counts (`gh` 6, then 7), not reproduced there. The next off-machine run is the proof.
   - BT51-ci's Git fix held on Linux: `apply` measured Git 32 in run 41250885715. Its hook fix too: bt51 no longer fails there.
-- Merged: `<merge>` · Verify cost: `verify: 1 runs, total 1210s` · Resources removed: yes, nothing outside Git was created
+- Merged: `4229d30` · Verify cost: `verify: 1 runs, total 1210s` · Resources removed: yes, nothing outside Git was created
 - Reflect: BT51-ci named the budget failure's cause and missed a second one hiding behind it, because a failing list stops at the first overage per command -> wave: nothing more; the Linux gap is already in BACKLOG.
