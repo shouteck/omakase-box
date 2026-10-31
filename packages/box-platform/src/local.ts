@@ -42,7 +42,11 @@ export async function startLocal(options: { schema: string; out: string; port?: 
   const env: Env = { DB: db, GITHUB_API: api, ASSETS: assetsFrom(options.out), SAMPLE: true, ...(options.now ? { now: options.now } : {}) };
   const server = createServer(async (request, response) => {
     try {
-      const answer = await handle(new Request(`http://localhost${request.url ?? '/'}`, { method: request.method ?? 'GET' }), env);
+      const method = request.method ?? 'GET';
+      const chunks: Buffer[] = [];
+      for await (const chunk of request) chunks.push(chunk as Buffer);
+      const headers = new Headers(Object.entries(request.headers).flatMap(([name, value]) => typeof value === 'string' ? [[name, value] as [string, string]] : []));
+      const answer = await handle(new Request(`http://${request.headers.host ?? 'localhost'}${request.url ?? '/'}`, { method, headers, ...(method === 'GET' || method === 'HEAD' ? {} : { body: Buffer.concat(chunks) }) }), env);
       response.writeHead(answer.status, Object.fromEntries(answer.headers));
       response.end(Buffer.from(await answer.arrayBuffer()));
     } catch (error) {

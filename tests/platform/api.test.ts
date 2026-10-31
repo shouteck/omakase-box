@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { handle, historyOf, stateOf } from '../../packages/box-platform/src/api.js';
+import { handle } from '../../packages/box-platform/src/api.js';
+import { historyOf, stateOf } from '../../packages/box-platform/src/query.js';
 import { seed120 } from '../../packages/box-platform/standin/standin.js';
 import { askJson, NOW, refreshUntilDone, rig, type Rig } from './support.js';
 
