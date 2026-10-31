@@ -34,6 +34,10 @@ export const DESCRIBE_LINES: readonly string[] = [
   'prints the few lines to put to them. box bounty help shows the journey.'
 ];
 
+// The pre-publish scan's limits, one line wherever a scan result is shown
+// before posting (BT45): `create` and `post --preview`.
+export const SCAN_LIMIT_LINE = 'the scan reads text for the shapes listed in BOUNTY.md; binary files, base64, split lines and names that do not look like secrets are not covered.';
+
 // The money side of `describe`, generated from the owner's setting (BT11a) —
 // the amount is never hard-coded, so the text cannot outlive what is set.
 export const describeRewardLine = (amount: number): string => amount === 0

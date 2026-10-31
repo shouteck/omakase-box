@@ -18,6 +18,7 @@ import { boundAmount } from './format.js';
 import { paymentOf } from './pay.js';
 import { sharePaid } from './chain.js';
 import { showPath } from './notice.js';
+import { hitPlace } from './scan.js';
 import { solverAccountOr } from './untrusted.js';
 
 // What `allow` prints before it writes: the owner block first — the plain
@@ -472,7 +473,7 @@ export function renderSummary(repoRoot: string, since?: string): string {
     // time of its own, so every finding on the record is reported, whatever
     // --since says about the events around it.
     for (const finding of record.scanFindings ?? []) {
-      for (const hit of finding.hits) findings.push(`${record.id}: ${showPath(hit.path)}:${hit.line} (${hit.rule}) — ${finding.settled ?? 'flagged — unsettled'}`);
+      for (const hit of finding.hits) findings.push(`${record.id}: ${hitPlace(hit)} (${hit.rule}) — ${finding.settled ?? 'flagged — unsettled'}`);
     }
   }
   const read = readDecision(repoRoot);

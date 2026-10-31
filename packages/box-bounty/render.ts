@@ -8,6 +8,7 @@ import { existsSync,mkdirSync,readFileSync,writeFileSync } from 'node:fs';
 import { BountyRefused } from './errors.js';
 import { join } from 'node:path';
 import { foreignJson,quoteForeign,showPath } from './notice.js';
+import { hitPlace } from './scan.js';
 import { solverAccount,solverAccountOr,solverBlock } from './untrusted.js';
 import { boundAmount } from './format.js';
 import { dryMergeOnto,GIT_LEAST } from './git.js';
@@ -279,7 +280,7 @@ const scanFindingLines = (record: BountyRecord, indent: string): string[] => {
   const out: string[] = [];
   for (const finding of record.scanFindings ?? []) {
     for (const hit of finding.hits) {
-      out.push(`${indent}scan finding${finding.where === 'create' ? ' (recorded at create)' : ''}: ${showPath(hit.path)}:${hit.line} (${hit.rule}) — ${finding.settled ?? 'flagged — unsettled'}`);
+      out.push(`${indent}scan finding${finding.where === 'create' ? ' (recorded at create)' : ''}: ${hitPlace(hit)} (${hit.rule}) — ${finding.settled ?? 'flagged — unsettled'}`);
     }
   }
   return out;
@@ -446,7 +447,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
         const liveFinding = (record.scanFindings ?? []).some(finding => finding.settled === null);
         for (const hit of record.waiting.hits ?? []) {
           if (record.waiting.reason === 'secrets' && liveFinding) break; // the finding below names the same hits
-          lines.push(`      scan hit: ${showPath(hit.path)}:${hit.line} (${hit.rule})`);
+          lines.push(`      scan hit: ${hitPlace(hit)} (${hit.rule})`);
         }
         lines.push(record.waiting.reason === 'secrets'
           ? '      the owner decides in box bounty config — the path goes on safe to publish or never publish there'
