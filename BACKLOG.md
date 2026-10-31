@@ -16,6 +16,8 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 - **`bt43.test.ts:966` does not run on Windows** (BT48): Git refuses the path there; only the off-machine run covers it.
 - **Bounty suite under load** (K45, BT44): the 30 s per-test limit (`scripts/vitest.config.mjs`) has little margin on this host. K45: four timeouts on the first `--full` of `875400d`, CPU at 96–100 %, then a pass on rerun; `1d7a6ff` and `f623b3f` the same. BT44: three verify runs on `e6ef820` (the last with no other kitchen work running) each timed out a different 1–4 tests at 30–37 s; a fourth run on a quiet host (game closed, 7.6 GB free against 2.5 GB) passed in 876 s. See also the bt39 flaky line below. See [BT44](waves/BT44.md).
 
+- **Linux-only test faults reach master unseen** (BT51-ci): acceptance runs on Windows and the off-machine run fires only after a merge. Needs a kitchen wave: a guard on tests that write hooks without `chmodSync`, or a Linux check on a wave branch before merging.
+
 ## Product
 
 - **Board, before any deploy (PF1, for PF6):** (a) no read has met real GitHub: the search query, `commits?sha=refs/box-bounty/<id>` and `contents/event.json?ref=` are unproven outside the stand-in; run them once in the sandbox. (b) A refresh tick averaged 39 ms CPU here with the stand-in and SQLite in the same process; Workers Free allows 10 ms, so measure it on Cloudflare and split the tick if it is over. (c) Unauthenticated capacity is about 6 bounties' details a tick (15 requests); past that, solution counts lag.
