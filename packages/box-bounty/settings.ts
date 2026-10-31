@@ -57,6 +57,8 @@ export interface OwnerSettings {
   readonly default?: SettingsLevel;
   readonly repositories: Readonly<Record<string, SettingsLevel>>;
   readonly instructions?: Readonly<Record<string, InstructionSettings>>;
+  /** The board's address (PF5). Empty: every call to it is off. Absent: the default. */
+  readonly board?: string;
   /** The owner's two publish lists (BT8c), keyed by the repository's real
       folder path — they are about the working files in this checkout, not
       the public repository: `never` paths are kept out of every bounty like
@@ -193,7 +195,7 @@ const HARD_STOP_WORDS = ['nevership', 'private', 'secret', 'scan', 'hardstop', '
 export function unknownSetting(name: string): never {
   const folded = name.toLowerCase().replace(/[-_]/g, '');
   const hard = HARD_STOP_WORDS.some(word => folded.includes(word));
-  throw new BountyRefused(hard ? 'settings-hard-stop' : 'settings-unknown-name', `${settingsFile()}: "${name}" ${hard ? 'tries to reach a hard stop; hard stops cannot be changed' : 'is not a setting the tool knows; known settings: all-projects, repositories, instructions, instruction-file, reward, reward-limit, paid'}. Nothing changed; next: ${hard ? 'a hard stop cannot be configured — choose a configurable setting; box bounty config lists them' : 'name a known setting — box bounty config lists them'}`);
+  throw new BountyRefused(hard ? 'settings-hard-stop' : 'settings-unknown-name', `${settingsFile()}: "${name}" ${hard ? 'tries to reach a hard stop; hard stops cannot be changed' : 'is not a setting the tool knows; known settings: all-projects, repositories, instructions, instruction-file, reward, reward-limit, paid, board'}. Nothing changed; next: ${hard ? 'a hard stop cannot be configured — choose a configurable setting; box bounty config lists them' : 'name a known setting — box bounty config lists them'}`);
 }
 const bad = (detail: string): never => { throw new BountyRefused('settings-malformed', `${settingsFile()}: ${detail}; next: fix the settings file or remove it`); };
 function change(value: unknown, where: string): Change {
@@ -400,13 +402,24 @@ function moneySetting(value: unknown, where: string, refuse: (detail: string) =>
 
 // Consume legacy paths once. Unresolved paths grant nothing under a blanket
 // default, and conflicting copies require a fresh repository decision.
+/** The address in one spelling, or null: https anywhere, http only on this machine; nothing but the host. */
+export function boardAddressOf(value: string): string | null {
+  if (value === '') return '';
+  let url: URL;
+  try { url = new URL(value); } catch { return null; }
+  const local = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
+  if (url.protocol !== 'https:' && !(url.protocol === 'http:' && local)) return null;
+  if (url.username !== '' || url.password !== '' || url.pathname !== '/' || url.search !== '' || url.hash !== '') return null;
+  return url.origin;
+}
 export function loadSettings(): OwnerSettings {
   const path = settingsFile();
   if (!existsSync(path)) return { repositories: {} };
   let parsed: unknown;
   try { parsed = JSON.parse(readFileSync(path, 'utf8')); } catch { return bad('not readable JSON'); }
   if (!isObject(parsed)) return bad('must hold a JSON object');
-  for (const name of Object.keys(parsed)) if (!['kind', 'default', 'projects', 'repositories', 'migrations', 'firstMerges', 'instructions', 'publishing', 'reward', 'rewardLimit', 'retiredReward', 'rewardPromiseSaid', 'rewardNoticeAt', 'askMergeNoticeAt', 'mergeAnswers', 'said'].includes(name)) unknownSetting(name);
+  if (parsed['board'] !== undefined && (typeof parsed['board'] !== 'string' || boardAddressOf(parsed['board']) !== parsed['board'])) return bad('board must be a web address with nothing after the host, or empty');
+  for (const name of Object.keys(parsed)) if (!['board', 'kind', 'default', 'projects', 'repositories', 'migrations', 'firstMerges', 'instructions', 'publishing', 'reward', 'rewardLimit', 'retiredReward', 'rewardPromiseSaid', 'rewardNoticeAt', 'askMergeNoticeAt', 'mergeAnswers', 'said'].includes(name)) unknownSetting(name);
   if (parsed['kind'] !== undefined && parsed['kind'] !== 'box-owner-settings') return bad('kind must be box-owner-settings');
   const repositories: Record<string, SettingsLevel> = {};
   const rawRepositories = parsed['repositories'];
@@ -497,7 +510,7 @@ export function loadSettings(): OwnerSettings {
       mergeAnswers[key] = { n: entry['n'] as number, commit: entry['commit'], head: entry['head'], at: entry['at'] };
     }
   }
-  const settings: OwnerSettings = { ...(defaultLevel !== undefined ? { default: defaultLevel } : {}), repositories, ...(rawInstructions === undefined ? {} : { instructions }), ...(rawPublishing === undefined ? {} : { publishing }), ...(Object.keys(mergeAnswers).length === 0 ? {} : { mergeAnswers }) };
+  const settings: OwnerSettings = { ...(parsed['board'] === undefined ? {} : { board: parsed['board'] as string }), ...(defaultLevel !== undefined ? { default: defaultLevel } : {}), repositories, ...(rawInstructions === undefined ? {} : { instructions }), ...(rawPublishing === undefined ? {} : { publishing }), ...(Object.keys(mergeAnswers).length === 0 ? {} : { mergeAnswers }) };
   const legacy = parsed['projects'];
   if (legacy !== undefined && !isObject(legacy)) return bad('projects must hold an object keyed by legacy folder path');
   const carried = STATE_KEYS.some(key => parsed[key] !== undefined) || Object.keys(movedInstructionNotes).length > 0;

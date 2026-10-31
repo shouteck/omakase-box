@@ -47,17 +47,18 @@ function readIssue(issue: unknown): Listed | { readonly refused: string; readonl
   return { id: format.value.id, repository: from, issue };
 }
 
-async function storeIssue(db: Db, listed: Listed, now: number): Promise<void> {
+/** False when the issue may not hold this id. */
+async function storeIssue(db: Db, listed: Listed, now: number): Promise<boolean> {
   const { issue } = listed;
   const body = issue['body'] as string;
   const format = readFormat(body);
-  if (format.kind !== 'present') return;
+  if (format.kind !== 'present') return false;
   const value = format.value;
   // The first issue to claim an id keeps it: a copy elsewhere cannot overwrite it.
   const held = await db.prepare('SELECT repository, issue_number FROM bounties WHERE id = ?').bind(value.id).first<{ repository: string; issue_number: number }>();
   if (held !== null && (held.repository.toLowerCase() !== listed.repository.toLowerCase() || held.issue_number !== issue['number'])) {
     await log(db, now, 'id-claimed-by-another-issue', issue['html_url'] as string);
-    return;
+    return false;
   }
   await db.prepare(`INSERT INTO bounties (id, repository, issue_number, title, task, poster, issue_state, closed_at, amount, created_at, work_commit, seen_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -66,6 +67,7 @@ async function storeIssue(db: Db, listed: Listed, now: number): Promise<void> {
       (issue['user'] as Record<string, string>)['login']!, issue['state'] === 'closed' ? 'closed' : 'open',
       typeof issue['closed_at'] === 'string' ? issue['closed_at'] : null, value.reward.amount, value.createdAt, value.workCommit, now)
     .run();
+  return true;
 }
 
 /** Reads one repository and applies the private rule. True while it stays public. */
@@ -200,6 +202,30 @@ async function readIssueAgain(env: Env, github: GitHub, id: string, repository: 
   }
   await storeIssue(env.DB, listed, now);
   return true;
+}
+
+export type Look = 'read' | 'not-public' | 'not-this-bounty' | 'budget-spent' | 'github-unavailable';
+
+/** One bounty read now because a hint asked. What the hint named is only where to look: GitHub must say the same. */
+export async function lookNow(env: Env, repository: string, number: number, id: string, now: number): Promise<Look> {
+  const github = new GitHub(env, true);
+  try {
+    if (!await readRepository(env, github, repository, now)) return 'not-public';
+    const answer = await github.get(`/repos/${repository}/issues/${number}`);
+    if (answer.status !== 200) return 'not-this-bounty';
+    const listed = readIssue(answer.json);
+    if ('refused' in listed || listed.id !== id || listed.repository.toLowerCase() !== repository.toLowerCase()) return 'not-this-bounty';
+    // A copy of another repository's bounty must not read its pull requests into that bounty.
+    if (!await storeIssue(env.DB, listed, now)) return 'not-this-bounty';
+    await readPullRequests(env, github, id, listed.repository);
+    await readEvents(env, github, id, listed.repository);
+    await env.DB.prepare('UPDATE bounties SET details_read_at = ? WHERE id = ?').bind(now, id).run();
+    return 'read';
+  } catch (error) {
+    if (error instanceof BudgetSpent) return 'budget-spent';
+    if (error instanceof GitHubUnavailable) return 'github-unavailable';
+    throw error;
+  }
 }
 
 export type RefreshResult = { readonly requests: number; readonly state: 'done' | 'budget-spent' | 'github-unavailable'; readonly reason?: string };

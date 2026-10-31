@@ -6,8 +6,9 @@
 // message the tool builds for the owner when a bounty with a reward closes
 // on a merge.
 
+import { KINDS, isLink } from '../box-platform/src/methods.js';
 import { boundAmount } from './format.js';
-import { showPath } from './notice.js';
+import { quoteForeign, showPath } from './notice.js';
 import type { BountyRecord } from './record.js';
 import { solverAccount, solverAccountOr } from './untrusted.js';
 
@@ -33,6 +34,45 @@ const FORBIDDEN = /[\x00-\x1f\x7f-\x9f\u200b\u200e\u200f\u202a-\u202e\u2066-\u20
 export type PayToFact =
   | { readonly state: 'none' | 'unrecognised' }
   | { readonly state: 'recognised' | 'test-mode'; readonly link: string };
+
+// PF5 — what the board's public profile says a solver accepts. `shown` is what
+// prints: a link in its checked shape, anything else quoted. `more` counts what
+// only the owner sees on the bounty page. `unreadAt` says the board was not
+// read, and where to look.
+export interface PayAccepts {
+  readonly methods: readonly { readonly kind: string; readonly label: string; readonly shown: string }[];
+  readonly more: number;
+  readonly unreadAt?: string;
+}
+const METHODS_SHOWN = 10;
+const OWN_KIND = (kind: unknown): kind is string => typeof kind === 'string' && Object.hasOwn(KINDS, kind);
+
+// The board's answer, or a stored copy of it: only a known kind, in that
+// kind's own shape. Anything else is left out, never shown.
+export function checkedAccepts(methods: unknown, more: unknown): PayAccepts | null {
+  if (!Array.isArray(methods)) return null;
+  const count = Number.isSafeInteger(more) && (more as number) >= 0 ? more as number : 0;
+  const kept = methods.slice(0, METHODS_SHOWN).flatMap(entry => {
+    if (entry === null || typeof entry !== 'object') return [];
+    const { kind, value } = entry as Record<string, unknown>;
+    if (!OWN_KIND(kind) || typeof value !== 'string' || value.length > 254 || !KINDS[kind]!.shape.test(value)) return [];
+    return [{ kind, label: KINDS[kind]!.label, shown: isLink({ kind }) ? value : quoteForeign(value) }];
+  });
+  return { methods: kept, more: count };
+}
+
+function acceptsShape(value: unknown): value is PayAccepts {
+  if (value === null || typeof value !== 'object') return false;
+  const { methods, more, unreadAt } = value as Record<string, unknown>;
+  if (!Array.isArray(methods) || !Number.isSafeInteger(more) || (more as number) < 0 || !(unreadAt === undefined || typeof unreadAt === 'string' && /^https?:\/\/[^\s"]+$/.test(unreadAt))) return false;
+  return methods.every(entry => {
+    if (entry === null || typeof entry !== 'object') return false;
+    const { kind, label, shown } = entry as Record<string, unknown>;
+    if (!OWN_KIND(kind) || label !== KINDS[kind]!.label || typeof shown !== 'string') return false;
+    const value = isLink({ kind }) ? shown : (() => { try { return JSON.parse(shown) as unknown; } catch { return null; } })();
+    return typeof value === 'string' && KINDS[kind]!.shape.test(value);
+  });
+}
 
 // Reads only the pull request description text handed to it — never a
 // comment, never a file. The first line that starts with `pay-to:` is the
@@ -80,6 +120,9 @@ export interface PayOutcome {
   /** The description could not be read again at close; the fact recorded at
       collection stands and the message says so. */
   readonly readFailed?: boolean;
+  /** What the board said the solver accepts, read once at close (PF5).
+      Absent: the board was off. */
+  readonly accepts?: PayAccepts;
 }
 
 export function payOutcomeShape(value: unknown): value is PayOutcome {
@@ -89,7 +132,8 @@ export function payOutcomeShape(value: unknown): value is PayOutcome {
     && (typeof pay['solver'] === 'string' || pay['solver'] === null)
     && (typeof pay['link'] === 'string' && LINK.test(pay['link']) || pay['link'] === null)
     && typeof pay['testMode'] === 'boolean'
-    && (typeof pay['editedBy'] === 'string' || pay['editedBy'] === null);
+    && (typeof pay['editedBy'] === 'string' || pay['editedBy'] === null)
+    && (pay['accepts'] === undefined || acceptsShape(pay['accepts']));
 }
 
 export function payToFactShape(value: unknown): value is PayToFact {
@@ -118,12 +162,21 @@ export function payMessageLines(record: { id: string; title: string }, pay: PayO
   // A recorded first merge rides in this same block (BT14): one fact for
   // the owner, one line for the agent — never two unrelated messages.
   if (opts.firstMerge === true) owner.push('It was the first solution written by someone outside your project to be merged into your code.');
-  if (pay.link !== null) {
+  const accepts = pay.accepts;
+  const listed = accepts !== undefined && accepts.methods.length + accepts.more > 0;
+  if (listed) {
+    // The solver's own list on the board: their word, shape-checked, never followed.
+    if (accepts.methods.length > 0) owner.push(`${solver} lists these ways to be paid on the board: ${accepts.methods.map(method => `${method.label} ${method.shown}`).join(', ')}.`);
+    if (accepts.more > 0) owner.push(`${accepts.more} more ${accepts.more === 1 ? 'is' : 'are'} shown only to you, signed in, on the bounty's page on the board.`);
+    owner.push(`Before you pay, check the amount is $${opts.amount} and that the account there belongs to ${solver}.`);
+  } else if (pay.link !== null) {
     owner.push(`Pay ${solver} at ${pay.link}${pay.testMode ? ' (a test link — no real money moves through it)' : ''}.`);
     owner.push(`Before you pay, check the page asks for $${opts.amount} and that the account name there belongs to ${solver}.`);
   } else {
     owner.push(`The merged solution gave no usable payment link${prUrl !== null ? ` — the change is at ${prUrl}` : ''}.`);
+    owner.push('Ask the solver on the issue how they want to be paid.');
   }
+  if (accepts?.unreadAt !== undefined) owner.push(`The board could not be read for other ways they accept; their page is ${accepts.unreadAt}`);
   if (pay.editedBy !== null) owner.push(`The text the payment link was read from was last edited by ${solverAccount(pay.editedBy)}, not the solver.`);
   if (pay.readFailed === true) owner.push('The solver\'s text could not be read again at close — this is what was recorded when it came in.');
   if (opts.unasked === true) owner.push('You were not asked before this merge.');

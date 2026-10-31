@@ -152,7 +152,10 @@ async function solverProfile(env: Env, login: string): Promise<Response> {
     const payment = input === undefined ? null : paymentOf(input);
     return { ...row, counted, payment_state: payment !== null && same(payment.owed?.to ?? null, login) ? payment.state : null };
   });
-  return json(200, { login, record: solverRecord(login, inputs), methods: publicOnly(await methodsOfLogin(env, login)).map(shown), merged: listed });
+  const methods = await methodsOfLogin(env, login);
+  const open = publicOnly(methods);
+  // How many are held back, never what they are: the tool's owner message says where to see them.
+  return json(200, { login, record: solverRecord(login, inputs), methods: open.map(shown), methods_more: methods.length - open.length, merged: listed });
 }
 
 async function ownerProfile(env: Env, login: string, now: number): Promise<Response> {

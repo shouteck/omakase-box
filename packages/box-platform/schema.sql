@@ -81,6 +81,11 @@ CREATE TABLE IF NOT EXISTS paid_clicks (
   withdrawn INTEGER NOT NULL,
   at TEXT NOT NULL
 );
+-- When a hint last moved this bounty's read earlier. Kept one minute; nothing else from a hint is kept.
+CREATE TABLE IF NOT EXISTS hints (
+  bounty_id TEXT PRIMARY KEY,
+  at INTEGER NOT NULL
+);
 CREATE TABLE IF NOT EXISTS log (
   at INTEGER NOT NULL,
   reason TEXT NOT NULL,

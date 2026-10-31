@@ -31,6 +31,7 @@ import { BountyRefused } from './errors.js';
 import { git, gitNamedBlobs, gitOutcome, gitRefsWrite, gitStdin, gitWriteBlob } from './git.js';
 import type { RefWrite } from './git.js';
 import { isObject } from './gh.js';
+import { queueBoardHint } from './board.js';
 import { emitMergeNotice } from './notice.js';
 import type { Attempt, BountyRecord } from './record.js';
 import { scanText } from './scan.js';
@@ -309,6 +310,7 @@ export function sharePosted(root: string, record: BountyRecord, task: string): P
     ...(record.reward !== undefined ? { reward: { amount: record.reward.amount, currency: 'USD' } } : {}),
     ...(record.allowedBy !== undefined ? { allowedBy: { decision: record.allowedBy.decision, level: record.allowedBy.level } } : {})
   };
+  queueBoardHint(root, record, 'posted');
   return share(root, record, { title: record.title, task, why: record.why, partOf: record.partOf, followup }, event);
 }
 
@@ -335,6 +337,7 @@ export function shareMerged(root: string, record: BountyRecord, n: number | unde
     mergeCommit,
     ...(unasked ? { unasked: true } : {})
   };
+  queueBoardHint(root, record, 'merged');
   return share(root, record, {}, event);
 }
 
@@ -346,6 +349,7 @@ export function shareClosed(root: string, record: BountyRecord, kind: 'rejected'
     ...(reason !== undefined && reason !== '' ? { reason } : {}),
     ...(unasked ? { unasked: true } : {})
   };
+  queueBoardHint(root, record, 'closed');
   return share(root, record, { reason }, event);
 }
 
@@ -359,6 +363,7 @@ export function sharePaid(root: string, record: BountyRecord, amount: number, wi
     amount, by: 'owner',
     ...(withdrawn ? { withdrawn: true } : {})
   };
+  queueBoardHint(root, record, 'paid');
   return share(root, record, {}, event);
 }
 

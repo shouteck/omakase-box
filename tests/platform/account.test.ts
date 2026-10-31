@@ -439,7 +439,7 @@ describe('profiles', () => {
 
   it('a person the board has never heard of: facts empty, not an error, and nothing fetched', async () => {
     const before = r.standin.requests.length;
-    expect(await (await send(null, '/api/solver/example-nobody')).json()).toEqual({ login: 'example-nobody', record: { has_history: false, merged: 0, confirmed_received: 0 }, methods: [], merged: [] });
+    expect(await (await send(null, '/api/solver/example-nobody')).json()).toEqual({ login: 'example-nobody', record: { has_history: false, merged: 0, confirmed_received: 0 }, methods: [], methods_more: 0, merged: [] });
     expect(await (await send(null, '/api/owner/example-nobody')).json()).toEqual({ login: 'example-nobody', record: { has_history: false, merged: 0, recorded_paid: 0, confirmed_received: 0, from_solvers: 0, owed_now: 0, oldest_owed_days: 0, says_not_received: 0, median_days_to_record_paid: null }, not_counted: [], bounties: [] });
     expect(r.standin.requests.length).toBe(before);
   });

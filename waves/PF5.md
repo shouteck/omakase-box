@@ -14,6 +14,30 @@ Horizon: long: start with `/plan` and keep the plan in this file
 
 So the CLI gains **no new command and no credential.** It tells the platform "look now" with an unauthenticated hint carrying identifiers only, and reads the solver's accepted payment methods from the platform's public API. This keeps the owner's surface at `allow`, `deny` and `config`.
 
+## Plan
+
+Agreed with the owner in plan mode, 31 October 2026. Read before code: feature playbook, Prove It Works, Laziness Protocol. `architect` skipped: the brief and K43 settled the design. One writer.
+
+1. **Network is one synchronous child process** (`packages/box-bounty/board.ts`): the library is synchronous and the pay message is built inside a sync close path. Empty environment, one 2.5 s deadline per batch, no redirects, 64 KB per answer. An empty address starts no process.
+2. **Address:** `config set board <url>`, `""` is off; `https://`, or `http://` on loopback; no credentials, path or query. The default is empty until PF6.
+3. **Hints:** `hintOf` is the only builder, exactly `{repository, issue, bounty, event}`. Queued at the four `share*` choke points in `chain.ts`, in the store's meta. Flushed at the end of every command except `hook`, at most 10. A failed flush after a command that changed something prints one stderr line.
+4. **T4 here means:** a read pushes nothing and appends no chain event. A read may resend a queued hint and `status` may GET; neither carries anything but identifiers.
+5. **Pay message:** at close, `/api/solver/<login>` is read once and stored on `github.pay` as `accepts`, rechecked against `KINDS` on read. Order: methods, `pay-to:`, "ask the solver on the issue". Not reached, or the hook path: says so and names the profile page.
+6. **`status`:** reads `/bounties/<id>.json` (and the profile when owed) for open posted and rewarded merged bounties, at most 5 per command, stalest first, cached 5 minutes. The renderer reads only the cache. `--json` carries the same facts under `board`.
+7. **Platform:** `POST /api/hint`, at most 512 bytes, exact keys. One look per bounty per minute, a global per-minute cap, refused past half the hour's GitHub budget. `lookNow` reuses the refresh's readers; the private rule first; nothing from the body but the id is stored. `/api/solver/<login>` gains `methods_more`, a count only.
+8. **Not built:** `to` on the chain's `paid` event: optional in STATUS, unasked by the brief, against BT36's "never the solver". Stays a BACKLOG line.
+
+## Parked
+
+Parked 31 October 2026 when the usage limit was reached; not accepted. Built on this branch: plan items 1 to 7, with `tests/platform/hints.test.ts` and `tests/box/bounty/pf5.test.ts`. Inner-loop runs only: pf5 38 of 38, platform suite 234 of 234; `test:box-bounty` and `test:kitchen` not run, so stale wording elsewhere in the suite is unchecked. `account.test.ts` gained `methods_more: 0` in one expected profile, because the brief adds the field.
+
+Left, in order:
+1. Docs: BOUNTY.md and README (board, hints, what is sent), platform README, `privacy` and `how` pages (the hint keeps only a bounty id for a minute), the T4 line in CONTRACTS.md (what "reads" means here), BACKLOG (`to` on the chain's `paid` event stays unbuilt).
+2. Bites, restored after: a path added to the hint (the brief's); no empty-address guard; method recheck off; budget reserve off; the `storeIssue` guard in `lookNow` off.
+3. `node scripts/verify.mjs test:box-bounty test:platform test:kitchen`.
+4. The whole loop against the local board (UX lens); read the changed pages running.
+5. Close per `kitchen/roles/cto.md`. Reflect: a `cd` slipped into a Bash call and moved the session's directory, against the role's rule.
+
 ## Outcome
 
 - A bounty appears on the board moments after `post`, instead of at the next scheduled search.
