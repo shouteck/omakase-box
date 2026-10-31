@@ -17,6 +17,24 @@ import { showPath } from './notice.js';
 import { hitPlace, isTextField, scanFields } from './scan.js';
 import { SCAN_LIMIT_LINE, WITHHELD } from './wording.js';
 
+// GitHub's own ceilings, the tool's bar (BT49): its validation answers "body is
+// too long (maximum is 65536 characters)" and refuses a title over 256; both
+// count Unicode code points, so a character here is one code point. Checked
+// before anything is pushed, so the size is named instead of a failed create.
+export const ISSUE_BODY_MAX = 65_536;
+export const ISSUE_TITLE_MAX = 256;
+const characters = (text: string): number => [...text].length;
+const remake = (id: string): string => `box bounty close ${id} ends this one, then box bounty create makes it again`;
+
+function assertTitleFits(id: string, title: string): void {
+  const count = characters(title);
+  if (count > ISSUE_TITLE_MAX) invalid('title-too-long', `the issue title, with the tool's prefix, is ${count} characters and GitHub takes at most ${ISSUE_TITLE_MAX}; nothing was posted; next: shorten the title — it is fixed at create: ${remake(id)}`);
+}
+
+function assertBodyFits(id: string, count: number, task: number): void {
+  if (count > ISSUE_BODY_MAX) invalid('issue-too-large', `the issue body would be at least ${count} characters (the task text is ${task}) and GitHub takes at most ${ISSUE_BODY_MAX}; nothing was posted; next: split the task or shorten it — it is fixed at create: ${remake(id)}`);
+}
+
 // The listing a stranger reads: the task, what was tried, the branch to work
 // from (with the base commit as context — never the bare commit to branch
 // from, or a branch carrying work in progress would refuse the answer), how
@@ -53,7 +71,8 @@ function listingHistory(record: BountyRecord, repository: string, plan: GitHubPl
   // An authored --note is public by choice; automatic job context stays local.
   const note = record.noteSource === 'generated' ? null : content.note;
   const branch = `box-bounty/${record.id}`;
-  const title = `[box bounty ${record.id}] ${publicText(record.title)}`;
+  const title = issueTitle(record);
+  assertTitleFits(record.id, title);
   // A commit's subject prints quoted (BT43 correction 4): the commits a post
   // publishes for the first time can include a solver's, merged locally by
   // apply, under the subject the solver wrote.
@@ -101,7 +120,21 @@ function listingHistory(record: BountyRecord, repository: string, plan: GitHubPl
     ''
   ].join('\n');
   const block = renderFormat(formatFor(record, { repository, branch, commit: plan.tip, pushed: plan.pushed }, reward));
+  assertBodyFits(record.id, characters(body + block), characters(content.task.text.trim()));
   return { branch, title, body: body + block };
+}
+
+const issueTitle = (record: BountyRecord): string => `[box bounty ${record.id}] ${publicText(record.title)}`;
+
+// Before the owner is asked anything: the title exactly, the body by the text
+// the record itself holds. The rendered listing is measured exactly once the
+// plan exists (listingHistory), so an owner's answer is never spent on a post
+// that can only be refused for its size, short of the last template lines.
+function assertTextFits(record: BountyRecord): void {
+  assertTitleFits(record.id, issueTitle(record));
+  const content = bountyContent(record);
+  const task = characters(content.task.text.trim());
+  assertBodyFits(record.id, task + (record.noteSource === 'generated' || content.note === null ? 0 : characters(content.note.text.trim())), task);
 }
 
 // The text a post publishes is scanned as it will be published (BT45): the
@@ -216,6 +249,7 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
   // recorded approval or a started publication keeps the amount it went out
   // with: none for a pre-BT11a approval, the bound one for a retry.
   const reward = record.github === undefined && record.githubApproval === undefined ? rewardForPost(root) : null;
+  if (reward !== null) assertTextFits(record);
   // Read local permission before any gh probe. A waiting post publishes
   // nothing; visibility remains a hard stop once permission permits a call.
   // `reused` is true when the gate passed on a recorded one-bounty answer
@@ -405,6 +439,9 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
     return invalid('github-branch-changed', `${record.github.branch} on the remote is ${branchTip}, not the ${record.github.commit} this tool approved — it was changed outside the tool; nothing was posted; next: ask the owner — the remote branch was changed outside the tool`);
   }
   const publication = record.github;
+  // A publication frozen by an older version may never have been measured.
+  assertTitleFits(id, publication.title);
+  assertBodyFits(id, characters(publication.body), 0);
   let destination: string;
   try {
     remoteGit(root, repository, ['push', `${publication.commit}:refs/heads/${publication.branch}`]);
