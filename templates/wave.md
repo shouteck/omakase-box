@@ -6,7 +6,7 @@ Horizon: <short | long: several dependent steps, a design unknown or more than o
 
 ## Outcome
 
-What will be true when this is done, as something a person can observe or a command can show.
+What will be true when this is done, as something a person can observe or a command can show. A security outcome names its mechanism and its limit, never "no path can" (BT43: five passes each found one more site).
 
 ## Scope
 

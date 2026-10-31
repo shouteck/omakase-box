@@ -68,6 +68,9 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 ## Kitchen and environment
 
+- Cloud-host browser route (from the inbox, 31 October 2026): a cloud Linux container has no Playwright Chromium at the pinned revision. BT43 dressed the host's 1194 as 1243 under `.runtime/`; BT45 could not (rule 5) and merged with k16 not run on the owner's word (D-2026-10-31-bt45-merge-on-ci). Decide once, by the owner or a K wave: a supported browser path for cloud hosts, or a k16 preflight that names the host gap.
+- Encode the file-tools rule (from the inbox, 31 October 2026): two BT43 agents and the BT45 CTO wrote files through heredocs despite the rule in both role files. Text is not holding; a pre-tool hook or a verify check on stray files, through a kitchen wave.
+
 - BT16's response-shape change escaped scoped verify: `kitchen/demo/gh-standin.cjs` is driven by `test:kitchen` (`k16-record.test.ts`) but reached by no check suite, so master went red on the hosted run (38687637404) until K20 repaired the fixture. `k19-github-standin.test.ts` parity does not compare the `permissions` field — the drift had no guard. Map `kitchen/` demo/measure drivers to a suite, or name `test:kitchen` whenever a stand-in response shape changes. See [K20](waves/K20.md).
 
 
