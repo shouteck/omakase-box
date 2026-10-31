@@ -32,6 +32,8 @@ real merges — with nobody asked.
   true; a bounty that pays is the owner's decision, always.
 - Messages to anyone outside the sandbox's own issues and pull requests.
 
+A proof script uses a scratch solver clone and stops at its first failed step: one committed to the sandbox's `main` after a failed switch (BT51). Real GitHub marks a merge a moment after the push; the instant stand-ins hide that.
+
 ## How a wave cleans up
 
 Close what it opened: end posted bounties (`box bounty close` or a merge the
