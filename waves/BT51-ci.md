@@ -17,7 +17,7 @@ The bounty suite gives the same answers on Linux as on Windows for BT51's tests 
 
 ## Scope
 
-- Write: `tests/box/bounty/bt51.test.ts`, `tests/box/bounty/k14-start-budget.test.ts`, any other test that writes a hook the same way
+- Write: `tests/box/bounty/bt51.test.ts`, `tests/box/bounty/k14-start-budget.test.ts`, `tests/box/bounty/answer.test.ts` (its must-not-fire `post-merge` hook has the same flaw: on Linux it could never fire)
 - Read for context: `tests/box/bounty/github-fixture.ts`
 - Do not touch: `packages/`, the `BUDGET` table, any expected outcome
 

@@ -1,6 +1,6 @@
 import { postToGitHub, collectPullRequest, applyPullRequest, applyGitHub, closeGitHub, statusGitHub, pullRequestFor, solverCli } from './github-solver.js';
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, readFileSync, readlinkSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, cpSync, existsSync, mkdirSync, readFileSync, readlinkSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { applyBounty, BountyRefused, closeBounty, finalizeBounty, lookBounty, planBounty, postBounty, renderStatus, resolveRepoRoot } from '../../../packages/box-bounty/index.js';
@@ -360,6 +360,7 @@ describe('the boundary the pass proved open', () => {
     git(repo, ['config', 'filter.pwn.smudge', 'cat']);
     git(repo, ['config', 'merge.pwn.driver', `node -e "require('node:fs').writeFileSync('${mark('driver')}','x')" %O %A %B`]);
     write(join(repo, '.git', 'hooks'), 'post-merge', `#!/bin/sh\nnode -e "require('node:fs').writeFileSync('${mark('hook')}','x')"\n`);
+    chmodSync(join(repo, '.git', 'hooks', 'post-merge'), 0o755); // armed on Linux too: Git ignores a hook that is not executable
     const { id, delivered } = posted(repo);
     const dir = returned(delivered, root => {
       write(root, 'repo/.gitattributes', '* filter=pwn merge=pwn\n');

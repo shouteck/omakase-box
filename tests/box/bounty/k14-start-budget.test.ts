@@ -14,13 +14,15 @@ import { CLI_DIST, git, recordIds, runRoot, write } from './support.js';
 // append one JSON line per child_process start to <K14_BUDGET_DIR>/<pid>.jsonl.
 // The directory variable is this test's own — an external instrumented run's
 // spy writes under its own name and cannot double a count here — and the
-// loaded-once guard keeps a double --require from hooking spawn twice.
+// loaded-once guard keeps a double --require from hooking spawn twice. The gh
+// stand-in is GitHub, not the tool: on Linux it runs as `node standin.cjs`, so
+// the spy loads inside it, and what it starts is not counted (BT51-ci).
 const SPY = String.raw`
 const fs = require('node:fs');
 const path = require('node:path');
 const cp = require('node:child_process');
 const dir = process.env.K14_BUDGET_DIR;
-if (dir && !globalThis.__k14BudgetSpy) {
+if (dir && !globalThis.__k14BudgetSpy && path.basename(process.argv[1] ?? '') !== 'standin.cjs') {
   globalThis.__k14BudgetSpy = true;
   const file = path.join(dir, String(process.pid) + '.jsonl');
   const line = (program, args) => {
@@ -117,6 +119,23 @@ const BUDGET: Record<string, { git: number; gh: number }> = {
   // adoption work, on top of resolving the checkout. No record writes.
   'hook-start': { git: 4, gh: 0 }
 };
+
+it('the spy counts a start in the tool and none inside the gh stand-in', () => {
+  const root = runRoot('k14-spy-standin');
+  const spy = join(root, 'spy.cjs');
+  writeFileSync(spy, SPY);
+  const startsIn = (script: string): number => {
+    const dir = join(root, script, 'starts');
+    mkdirSync(dir, { recursive: true });
+    const path = join(root, script, script);
+    writeFileSync(path, "require('node:child_process').spawnSync('git', ['--version']);\n");
+    const run = spawnSync(process.execPath, ['--require', spy, path], { encoding: 'utf8', env: { ...process.env, NODE_OPTIONS: '', K14_BUDGET_DIR: dir } });
+    expect(run.status).toBe(0);
+    return tally(dir).git;
+  };
+  expect(startsIn('tool.cjs')).toBe(1);
+  expect(startsIn('standin.cjs')).toBe(0);
+});
 
 it('every bounty command stays within its Git and gh start budget', () => fixture(context => {
   const { repo, scratch, id } = context;
