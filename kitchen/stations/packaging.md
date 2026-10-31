@@ -69,4 +69,3 @@ This card holds rules, not narratives — each trap names the wave that taught i
 - Record the share of owner source the package disclosed.
 - Verify any outside claim independently before repeating it.
 - **A walk over `packages/` meets build output** (PF1): `next build` writes `.ts`. Name its scope.
-- **A platform test that adds a chain event needs the token's refresh budget** (PF3): `refreshUntilDone` stops once every bounty was read once, so the anonymous budget may not reach the change. Use `rig(<token>)`.
