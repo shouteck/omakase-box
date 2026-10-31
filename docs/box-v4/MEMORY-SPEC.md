@@ -65,7 +65,7 @@ A fact no question needs is not memory (a removal candidate). A question no fact
 | F-done | what "done" looks like | agent, create | public once posted | forever | **MISSING as its own fact** (inside the task, if the agent wrote it) |
 | F-why | why delegate rather than do it here | agent, create | project | forever | `why` |
 | F-tried | what was already tried and suspected | agent, create | project (public helps solvers) | forever | **MISSING as its own fact** (inside the task, or the generated `content.note` of local changes) |
-| F-followup | what happens when it comes back | agent, create | project | until the bounty ends, then history | `resume.note` |
+| F-followup | what happens when it comes back | agent, create | this machine (BT52: private, not on the chain; older events may carry it) | until the bounty ends, then history | `resume.note` |
 | F-partof | the larger job | agent, create | project | forever | `partOf` |
 | F-localstate | branch, commit, uncommitted files at create | tool, create | machine | until the bounty ends | `resume.branch/commit/changed` |
 | F-stage | where it is in the loop | tool, every milestone | project | forever | `stage` |
@@ -130,12 +130,14 @@ real GitHub (`kitchen/memory/delegation/evidence/bt32-step0.txt`). Pushed
 and fetched through the project's own remote; ordinary clones, working
 trees and `git grep` never see it. Fetched events are validated against the
 schema and merged into the local store's `shared` table — a rebuildable
-cache, never local authority: a local record for the same id always wins,
-and a shared-only bounty refuses actions by name.
+cache, never local authority: a local record for the same id always wins, and
+a shared row becomes a local record only once GitHub's issue agrees with it
+(BT52; BOUNTY.md). Anyone with push access can write a chain, so its solutions,
+endings, reward and `allowedBy` are never acted on alone.
 
 | Event | Milestone | Fields (v: 1, beyond `v`/`type`/`at`/`actor`) |
 |---|---|---|
-| `posted` | `post` lands | id, title, task (text as published), why, partOf, followup, base, branch, issue{number,url}, published{pushed[{sha,subject}],wip}, reward{amount,currency}, allowedBy{decision,level} |
+| `posted` | `post` lands | id, title, task (text as published), why, partOf, followup (read on old events, no longer written), base, branch, issue{number,url}, published{pushed[{sha,subject}],wip}, reward{amount,currency}, allowedBy{decision,level} |
 | `solution` | a pull request is collected | n, pullRequest, author, commit, changed, added, deleted, payTo{state} |
 | `merged` | `apply` or outside-merge recognition | n, mergeCommit, unasked |
 | `closed` | `close` ends a bounty | kind (rejected/withdrawn), reason, unasked |

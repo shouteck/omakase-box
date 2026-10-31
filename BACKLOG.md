@@ -36,7 +36,6 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 
 
-- **K40 continuation/notification boundary** (see [K40](waves/K40.md), F9/P5): a fresh clone could read public bounty history but `look` refused `shared-only`, and its status did not observe the waiting PR; the hook did not surface an owed payment although apply prints an owner payment block. BT41 can clarify existing behavior in text, not add new cross-machine collection/apply, PR queries or payment notifications. Such behavior belongs in an owner-scoped wave/platform design, not an inferred documentation fix. The claimed absence of a revoke command was refuted by complete-material S5b.
 
 - **Remaining performance limits** (see [BT46](waves/BT46.md)): `create` medians on this host are 1.5 s at 1k, 5.5 s at 10k and 66 s at 100k, from five alternating runs. What remains at scale is per-file `realpath` and `stat`, `ls-tree`, and scanning on the main thread. Status changed-list regeneration still performs per-PR GitHub reads. These are not real-GitHub latency guarantees; future optimization needs isolated five-run comparisons.
 

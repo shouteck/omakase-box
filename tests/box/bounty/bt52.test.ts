@@ -148,6 +148,14 @@ describe('a later agent on another machine can finish a bounty', { timeout: 1800
     }, { prAuthor: 'solver1' }));
   }
 
+  it('a tampered posted event naming a real issue of the same author that is not this bounty\'s is refused', () => postedFixture(world => {
+    const own = world.state().issues[0]!;
+    world.update({ issues: [...world.state().issues, { ...own, number: 40, html_url: 'https://github.com/owner/project/issues/40', body: own.body.replaceAll(world.id, 'bt-000000000000') }] });
+    forgePosted(world, { issue: { number: 40, url: 'https://github.com/owner/project/issues/40' } });
+    const b = machineB(world);
+    b.on(() => expect(refusedReason(() => lookBounty(b.repo, world.id, 1))).toBe('shared-record-mismatch'));
+  }, { prAuthor: 'solver1' }));
+
   it('a forged solution event is never offered: only a pull request collects', () => postedFixture(world => {
     appendForged(world, { type: 'solution', n: 77, pullRequest: 77, author: 'forger', commit: 'b'.repeat(40), changed: ['app.txt'], added: [], deleted: [] });
     const b = machineB(world);
