@@ -23,6 +23,12 @@ import type { Attempt,BountyRecord } from './record.js';
 // flooding the agent's context with hundreds of lines it may not need.
 export const LOOK_DIFF_LIMIT = 200;
 
+// The most of a change the tool ever prints or serialises, `--full` and
+// `--json` alike (BT49): over it nothing of the diff is shown, never a part
+// passed off as the whole. The tool's own bar, sized to protect an agent's
+// context; `--export` writes to a file and is not bound by it.
+export const LOOK_BYTES_MAX = 2 * 1024 * 1024;
+
 // A solution's number: `look <id> <n>` shows attempt n — collecting pull
 // request n first when the bounty is posted on GitHub and no attempt
 // carries it yet.
@@ -40,9 +46,25 @@ export interface LookResult {
   /** The full diff — null when the change is large and `full` was not asked for. */
   readonly diff: string | null;
   readonly large: boolean;
+  /** Set when the change is over LOOK_BYTES_MAX: `diff` is null even with
+      `full`. `files` is then held to the same cap; `fileCount` is the truth. */
+  readonly tooLarge: { readonly reason: 'solution-too-large-to-show'; readonly bytes: number; readonly limit: number; readonly fileCount: number; readonly filesOmitted: number; readonly next: string } | null;
 }
 
-export function lookBounty(root: string, id: string, target: LookTarget, options: { readonly full?: boolean } = {}): LookResult {
+// As many names as the byte cap holds, in Git's order: a change can be all
+// file names, and the list must not become the flood the diff was held from.
+function namesWithinCap(files: readonly string[]): readonly string[] {
+  let bytes = 0;
+  const kept: string[] = [];
+  for (const file of files) {
+    bytes += Buffer.byteLength(file, 'utf8') + 1;
+    if (bytes > LOOK_BYTES_MAX) break;
+    kept.push(file);
+  }
+  return kept;
+}
+
+export function lookBounty(root: string, id: string, target: LookTarget, options: { readonly full?: boolean; readonly whole?: boolean } = {}): LookResult {
   let record = loadRecord(root, id);
   requireCurrentDelivery(record);
   let attempt: Attempt;
@@ -63,9 +85,21 @@ export function lookBounty(root: string, id: string, target: LookTarget, options
   const from = base ?? '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
   const diffArgs = ['--no-ext-diff', '--no-textconv', '--no-renames'];
   const files = gitOutcome(root, ['diff', ...diffArgs, '--name-only', '-z', from, attempt.commit]).stdout.split('\0').filter(Boolean);
-  const diff = gitOutcome(root, ['diff', ...diffArgs, from, attempt.commit]).stdout;
+  const own = `git diff --no-ext-diff --no-textconv --stat ${from} ${attempt.commit}`;
+  const outcome = gitOutcome(root, ['diff', ...diffArgs, from, attempt.commit]);
+  // A failed read, the output buffer's limit included, leaves part of a diff.
+  if (outcome.error !== undefined || outcome.status !== 0) throw new BountyRefused('solution-unreadable', `Git could not produce the whole change, or it is larger than the tool can read; nothing of it is shown; next: inspect it with your own git (${own}), or box bounty apply ${id} ${attempt.n} chooses this solution`);
+  const diff = outcome.stdout;
+  const bytes = Buffer.byteLength(diff, 'utf8');
+  if (options.whole !== true && bytes > LOOK_BYTES_MAX) {
+    const listed = namesWithinCap(files);
+    return {
+      record, attempt, collected, files: listed, large: true, diff: null,
+      tooLarge: { reason: 'solution-too-large-to-show', bytes, limit: LOOK_BYTES_MAX, fileCount: files.length, filesOmitted: files.length - listed.length, next: `inspect it with your own git (${own}), or box bounty look ${id} ${attempt.n} --export writes it to a file; box bounty apply ${id} ${attempt.n} chooses this solution` }
+    };
+  }
   const large = diff.split('\n').length > LOOK_DIFF_LIMIT;
-  return { record, attempt, collected, files, large, diff: large && options.full !== true ? null : diff };
+  return { record, attempt, collected, files, large, tooLarge: null, diff: large && options.full !== true && options.whole !== true ? null : diff };
 }
 
 // `look --export` (BT43): the quarantined reading path. The whole change is
@@ -96,7 +130,7 @@ const SOLUTIONS_DIR = ['.box', 'local', 'solutions'] as const;
 const blocked = (named: string, belongs: 'directory' | 'file'): BountyRefused => new BountyRefused('local-store-path-blocked', `${named} is a link or not what the tool made — an export must be a real file in a real directory inside this checkout; the export was not written; next: ${belongs === 'directory' ? `remove ${named} or make it a real directory inside this checkout` : `remove ${named}`}, then run the same command again`);
 
 export function exportLook(root: string, result: LookResult): LookExport {
-  if (result.diff === null) throw new Error('exportLook needs the whole diff — call lookBounty with full: true');
+  if (result.diff === null) throw new Error('exportLook needs the whole diff — call lookBounty with whole: true');
   let dir = root;
   for (const [index, part] of SOLUTIONS_DIR.entries()) {
     dir = join(dir, part);

@@ -352,7 +352,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       // The quarantined path prints none of the change; a JSON document
       // would carry the whole diff on standard output, so the two do not mix.
       if (exporting && asJson) throw new BountyRefused('json-not-supported', '--export writes the change to a file and prints none of it — --json prints it; nothing was written; next: run box bounty look <id> <n> --export without --json, or --json without --export');
-      const result = lookBounty(root, id, n!, { full: parsed.switches.has('--full') || exporting });
+      const result = lookBounty(root, id, n!, { full: parsed.switches.has('--full'), whole: exporting });
       if (asJson) {
         printDocument(lookDocument(result));
       } else {
@@ -370,6 +370,12 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         console.log(`  sha256 ${written.sha256}; ${written.fileCount} file(s), ${written.lines} line(s), ${written.bytes} byte(s); manifest ${written.manifestPath}`);
         console.log('advice only: read the file in a session that has no write access to this checkout, then choose and apply from your own session; the file holds the change\'s raw bytes, so open it as text, not with cat in a terminal');
         console.log(`next: box bounty apply ${id} ${label} chooses this solution; box bounty status ${id} shows what else waits`);
+      } else if (result.tooLarge !== null) {
+        console.log(`${result.tooLarge.reason}: the change is ${result.tooLarge.bytes} bytes, over the ${result.tooLarge.limit} the tool prints; none of the diff is shown.`);
+        console.log(`${result.tooLarge.fileCount} file(s) changed:`);
+        for (const line of solverBlock('solver', result.files)) console.log(line);
+        if (result.tooLarge.filesOmitted > 0) console.log(`${result.tooLarge.filesOmitted} more file name(s) are not listed; the list has the same limit.`);
+        console.log(`next: ${result.tooLarge.next}`);
       } else if (result.diff === null) {
         console.log(`${result.files.length} file(s) changed:`);
         for (const line of solverBlock('solver', result.files)) console.log(line);

@@ -410,6 +410,8 @@ export function lookDocument(result: LookResult): JsonObject {
     payTo: attempt.payTo?.state ?? null,
     large: result.large,
     diff: result.diff,
+    // BT49, additive: null, or why `diff` is null even under --full.
+    tooLarge: result.tooLarge === null ? null : { ...result.tooLarge },
     // The pull request's own description, recorded credential-redacted at
     // collection: the solver's words, marked as theirs. Null on attempts
     // recorded before the description was kept.

@@ -42,7 +42,7 @@ export type { FindMatch } from './find.js';
 export { lookDocument } from './json.js';
 export type { StatusDocumentOptions } from './json.js';
 export type { LookResult, LookTarget } from './look.js';
-export { exportLook, LOOK_DIFF_LIMIT } from './look.js';
+export { exportLook, LOOK_BYTES_MAX, LOOK_DIFF_LIMIT } from './look.js';
 export type { LookExport } from './look.js';
 export { escapeControls, quoteForeign, showPath } from './notice.js';
 // The reading boundary (BT43): the one renderer for a stranger's text.
