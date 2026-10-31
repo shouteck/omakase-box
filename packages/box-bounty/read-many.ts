@@ -17,8 +17,8 @@ const DELIVERED = 0;
 const IN_FLIGHT = 1;
 
 const WORKER = `
-const { workerData } = require('node:worker_threads');
-const { readFile } = require('node:fs/promises');
+const { workerData } = process.getBuiltinModule('node:worker_threads');
+const { readFile } = process.getBuiltinModule('node:fs/promises');
 const { paths, sizes, port, shared, cap, width } = workerData;
 const counters = new Int32Array(shared);
 const pause = () => new Promise(resolve => setTimeout(resolve, 1));
