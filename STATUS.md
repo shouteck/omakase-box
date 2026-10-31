@@ -4,6 +4,8 @@ Updated by the CTO on 1 November 2026, when PF5 closed.
 
 ## Now
 
+- **BT51 is parked on `wave/BT51` at its Park commit, not merged:** the code works on real GitHub (`apply` reads `MERGED`), and verify has not passed. The last run hit 9 timeouts while the host was loaded. Next: close heavy apps, run verify on that branch; if green, close it. The Result is in `waves/BT51.md` on that local branch.
+
 - **PF5 is on master:** a bounty reaches the board moments after `post`; the owner's pay message names the solver's accepted methods; `status` says what the board shows; no new command or credential. The address is empty, so every call is off, until PF8 sets it. Local only, against stand-ins. See the [wave file](waves/PF5.md).
 - **Before any deploy (BACKLOG, Product):** no read has met real GitHub, including whether a squash merge reads as landed and how a private organisation member is reported; a refresh tick, a hint's look and the `owner_record` filter may exceed Workers Free's 10 ms CPU; sign-in has not met real GitHub OAuth. The owner's app steps are in `packages/box-platform/README.md`. All belong to PF8.
 - **Read the off-machine run at the next kickoff:** it covers PF5's merge.
