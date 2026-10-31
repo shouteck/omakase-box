@@ -1,5 +1,5 @@
 import { parseNameStatus,neverShipViolations,commitStatuses,EMPTY_TREE } from './publish-plan.js';
-import { invalid,isObject,type GitHubPublication,remoteBranchSha,remoteGit,api,pages,number,redact,login,READABLE_LOGIN } from './gh.js';
+import { invalid,isObject,type GitHubPublication,remoteBranchSha,remoteGit,api,pages,number,redact,login,READABLE_LOGIN,namesGitHubCause } from './gh.js';
 import { NOTHING_RUN,quoteForeign,showPath } from './notice.js';
 import { BountyRefused } from './errors.js';
 import { dryMergeOnto,git,gitOutcome } from './git.js';
@@ -242,7 +242,7 @@ export function answerGitHub(root: string, id: string, pr: number, via?: 'look' 
   const { repository, branch } = publication;
   let data: unknown;
   try { data = api(root, `repos/${repository}/pulls/${pr}`); }
-  catch { return invalid('github-pr-missing', 'that pull request cannot be read in the project repository; nothing was collected; next: rerun the command with a pull request number that exists in the project repository'); }
+  catch (error) { if (namesGitHubCause(error)) throw error; return invalid('github-pr-missing', 'that pull request cannot be read in the project repository; nothing was collected; next: rerun the command with a pull request number that exists in the project repository'); }
   if (!isObject(data) || !isObject(data['base']) || !isObject(data['base']['repo']) || data['base']['ref'] !== branch || data['base']['repo']['full_name'] !== repository) return invalid('github-pr-wrong-branch', 'the pull request targets another branch or repository; nothing was collected; next: name a pull request that targets the project repository');
   if (!isObject(data['head']) || typeof data['head']['sha'] !== 'string' || !/^[a-f\d]{40}$/.test(data['head']['sha']) || !isObject(data['user'])) return invalid('github-response-invalid', 'GitHub returned unreadable pull request facts; next: check gh and rerun the same command');
   const author = login(data['user']['login']);

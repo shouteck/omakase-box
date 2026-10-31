@@ -70,6 +70,8 @@ export interface GhState {
   ghVersion?: string;
   malformed?: boolean;
   fail?: string | undefined;
+  ghFailure?: { on: string; stdout?: string; stderr?: string; exit?: number; times?: number } | undefined;
+  rateLimitReset?: number;
   loseIssueResponse?: boolean;
   failBodyUpdate?: boolean;
   graphqlMode?: 'empty-next' | 'repeat-next' | 'bad-edge';
@@ -108,6 +110,15 @@ const endpoint = args[args.indexOf('--hostname') + 2];
 const input = args.includes('--input') ? JSON.parse(fs.readFileSync(args[args.indexOf('--input') + 1], 'utf8')) : null;
 if (state.failBodyUpdate && input && typeof input.body === 'string' && endpoint.includes('/issues/') && !endpoint.includes('/comments')) fail();
 if (state.fail && endpoint.includes(state.fail)) fail();
+// BT50: a scripted failure with gh's real shape; 'times' ends it after that many.
+if (state.ghFailure && endpoint.includes(state.ghFailure.on) && (state.ghFailure.times === undefined || state.ghFailure.times > 0)) {
+  if (state.ghFailure.times !== undefined) state.ghFailure.times -= 1;
+  save();
+  process.stdout.write(state.ghFailure.stdout ?? '');
+  process.stderr.write(state.ghFailure.stderr ?? '');
+  process.exit(state.ghFailure.exit ?? 1);
+}
+if (endpoint === 'rate_limit' && state.rateLimitReset) { save(); console.log(JSON.stringify({ resources: { core: { reset: state.rateLimitReset } } })); process.exit(0); }
 // GitHub-faithful request handling (K19): query parameters are read as
 // parameters — 'per_page' is a page size, 'page' is which page — a single
 // issue or pull request answers as one object, lists are filtered by their

@@ -1,5 +1,5 @@
 import { type GitHubPlan,PREVIEW_PUBLIC_NAMES,planGitHub,shownOfPlan } from './publish-plan.js';
-import { invalid,type GitHubChoice,digest,isObject,publicRepository,signedAccount,type GitHubPublication,publicationRef,remoteBranchSha,remoteGit,recoverIssue,ensureLabel,api,issueNumber } from './gh.js';
+import { invalid,type GitHubChoice,digest,isObject,publicRepository,signedAccount,type GitHubPublication,publicationRef,remoteBranchSha,remoteGit,recoverIssue,ensureLabel,api,issueNumber,namesGitHubCause } from './gh.js';
 import { lstatSync,readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { TOOL_VERSION } from './create.js';
@@ -461,10 +461,13 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
     if (record.stage !== 'posted') transitionTo(root, record, 'posted', { destination: publication.issue.url });
     else persistRecord(root, record);
     destination = publication.issue.url;
-  } catch {
+  } catch (error) {
     publication.pending = `post-incomplete: ${publication.state}; issue ${publication.issue?.url ?? 'not recorded'}; retry box bounty post ${id} or remove with box bounty close ${id}`;
     persistRecord(root, record);
-    return invalid('github-post-incomplete', `${publication.pending}; next: retry box bounty post ${id} or remove it with box bounty close ${id}`);
+    // A named GitHub cause travels with the refusal (BT50); its own next step
+    // is dropped, since this one says how to resume the post.
+    const cause = namesGitHubCause(error) ? `; ${error.reason}: ${error.message.split('; next:')[0]}` : '';
+    return invalid('github-post-incomplete', `${publication.pending}${cause}; next: retry box bounty post ${id} or remove it with box bounty close ${id}`);
   }
   // BT32: the posted milestone is a shared chain event — scanned, appended,
   // pushed; a push that cannot land is held locally and retried, never a

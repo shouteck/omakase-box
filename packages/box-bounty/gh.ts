@@ -130,8 +130,97 @@ function gh(root: string, args: readonly string[]): string {
   // in-flight call.
   if (Date.now() >= ghDeadline) return invalid('github-call-budget', 'the GitHub budget for this run is spent — the run stays inside its bound and the next one can ask again; next: rerun the command — a new run gets a fresh budget');
   const result = launch(program, root, args);
-  if (result.error !== undefined || result.status !== 0) return invalid('github-command-failed', 'GitHub CLI could not complete the requested operation; next: check gh sign-in and access, then rerun the same command');
+  if (result.error !== undefined || result.status !== 0) {
+    throw classifyGitHubFailure(result, () => {
+      // GET /rate_limit is free, asked at most once per failure, and still a
+      // call: it spends the run's budget and never outlives its deadline.
+      if (ghCallBudget <= 0 || Date.now() >= ghDeadline) return null;
+      ghCallBudget -= 1;
+      const limits = launch(program, root, ['api', '--hostname', 'github.com', 'rate_limit']);
+      if (limits.error !== undefined || limits.status !== 0) return null;
+      try {
+        const data: unknown = JSON.parse(limits.stdout ?? '');
+        const core = isObject(data) && isObject(data['resources']) ? data['resources']['core'] : null;
+        return isObject(core) && typeof core['reset'] === 'number' ? core['reset'] * 1000 : null;
+      } catch { return null; }
+    });
+  }
   return result.stdout ?? '';
+}
+
+// `gh api --include` puts the status line and headers before the body, on
+// success and on failure alike. A response without them is all body.
+export function splitResponse(stdout: string): { readonly status: number | null; readonly headers: ReadonlyMap<string, string>; readonly body: string } {
+  const first = /^HTTP\/[\d.]+ (\d{3})\b/.exec(stdout);
+  const end = /\r?\n\r?\n/.exec(stdout);
+  if (first === null) return { status: null, headers: new Map(), body: stdout };
+  const block = end === null ? stdout : stdout.slice(0, end.index);
+  const headers = new Map<string, string>();
+  for (const line of block.split(/\r?\n/).slice(1)) {
+    const colon = line.indexOf(':');
+    if (colon > 0) headers.set(line.slice(0, colon).trim().toLowerCase(), line.slice(colon + 1).trim());
+  }
+  return { status: Number(first[1]), headers, body: end === null ? '' : stdout.slice(end.index + end[0].length) };
+}
+
+// When a rate limit lifts, from the response alone: Retry-After (seconds or a
+// date), then X-RateLimit-Reset (epoch seconds). Only a parsed number leaves.
+function rateLimitEnd(headers: ReadonlyMap<string, string>, now: number): number | null {
+  const after = headers.get('retry-after');
+  if (after !== undefined) {
+    if (/^\d+$/.test(after)) return now + Number(after) * 1000;
+    const date = Date.parse(after);
+    if (!Number.isNaN(date)) return date;
+  }
+  const reset = headers.get('x-ratelimit-reset');
+  return reset !== undefined && /^\d+$/.test(reset) ? Number(reset) * 1000 : null;
+}
+
+const RATE_MARKER = /rate limit|secondary rate|abuse/i;
+const NETWORK_MARKER = /could not resolve host|no such host|dial tcp|connection (?:refused|reset|timed out)|i\/o timeout|network is unreachable|tls handshake|unexpected eof/i;
+
+// The one place a gh failure gets its name (BT50). It reads gh's diagnostics
+// and prints none of them: they can carry credentials and stranger text, so
+// every message below is the tool's own and the only value taken from the
+// failure is a parsed time. An unrecognised failure stays github-command-failed.
+export function classifyGitHubFailure(result: { readonly error?: Error | undefined; readonly status: number | null; readonly stdout?: string | null; readonly stderr?: string | null }, readLimitEnd: () => number | null = () => null, now = Date.now()): BountyRefused {
+  if (result.error !== undefined) return new BountyRefused('github-unreachable', 'GitHub could not be reached or did not answer in time; next: check the connection, then rerun the same command');
+  const stderr = result.stderr ?? '';
+  const response = splitResponse(result.stdout ?? '');
+  const code = response.status ?? Number(/\bHTTP (\d{3})\b/.exec(stderr)?.[1] ?? 0);
+  const limited = code === 429 || RATE_MARKER.test(stderr) || code === 403 && (response.headers.has('retry-after') || response.headers.get('x-ratelimit-remaining') === '0');
+  if (limited) {
+    const end = rateLimitEnd(response.headers, now) ?? readLimitEnd();
+    return end === null
+      ? new BountyRefused('github-rate-limited', 'GitHub\'s rate limit stops this account for now and did not say until when; next: wait a few minutes, then rerun the same command')
+      : new BountyRefused('github-rate-limited', `GitHub's rate limit stops this account until ${new Date(end).toISOString()}; next: wait until then, then rerun the same command`);
+  }
+  if (code === 401 || result.status === 4 || stderr.includes('gh auth login')) return new BountyRefused('github-not-signed-in', 'GitHub does not accept this sign-in: gh is not signed in or its token has expired; next: sign in with gh auth login, then rerun the same command');
+  if (code === 403) return new BountyRefused('github-permission-denied', 'GitHub says this account may not do this here; next: sign in with gh auth login to an account that can, or ask the owner, then rerun the same command');
+  if (code === 404) return new BountyRefused('github-repository-missing', 'GitHub says this does not exist, or this account cannot see it; next: check the remote with git remote -v and the account with gh auth status, then rerun the same command');
+  if (code >= 500 && code <= 599) return new BountyRefused('github-unavailable', 'GitHub answered with a server error; next: rerun the same command later');
+  if (NETWORK_MARKER.test(stderr)) return new BountyRefused('github-unreachable', 'GitHub could not be reached or did not answer in time; next: check the connection, then rerun the same command');
+  return new BountyRefused('github-command-failed', 'GitHub CLI could not complete the requested operation; next: check gh sign-in and access, then rerun the same command');
+}
+
+// A failure whose cause says more than the step that met it: a caller's own
+// "could not read X" must not hide it. A 404 is not here — "missing" is what
+// several callers legitimately ask, so each decides for itself.
+export const namesGitHubCause = (error: unknown): error is BountyRefused => error instanceof BountyRefused
+  && ['github-rate-limited', 'github-not-signed-in', 'github-permission-denied', 'github-unavailable', 'github-unreachable'].includes(error.reason);
+
+// One retry, about a second later, for a read that met a server error or the
+// network; never for a write, where a retry can duplicate. It spends the run's
+// budget and is skipped when the budget or the deadline cannot pay for it.
+const RETRY_WAIT_MS = 1000;
+function readGitHub(root: string, args: readonly string[]): string {
+  try { return gh(root, args); }
+  catch (error) {
+    if (!(error instanceof BountyRefused) || error.reason !== 'github-unavailable' && error.reason !== 'github-unreachable') throw error;
+    if (ghCallBudget <= 0 || Date.now() + RETRY_WAIT_MS >= ghDeadline) throw error;
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, RETRY_WAIT_MS);
+    return gh(root, args);
+  }
 }
 
 // The per-call limit every gh spawn runs under. Commands pay 60 seconds;
@@ -164,13 +253,13 @@ function launch(program: ReturnType<typeof resolveProgram>, root: string, args: 
 export function api(root: string, endpoint: string, payload?: object, method?: string): unknown {
   const work = mkdtempSync(join(tmpdir(), 'box-bt6-gh-'));
   try {
-    const args = ['api', '--hostname', 'github.com', endpoint];
+    const args = ['api', '--hostname', 'github.com', endpoint, '--include'];
     if (payload !== undefined) {
       const path = join(work, 'input.json');
       writeFileSync(path, JSON.stringify(payload));
       args.push('--method', method ?? 'POST', '--input', path);
     }
-    const output = gh(root, args);
+    const output = splitResponse(payload === undefined ? readGitHub(root, args) : gh(root, args)).body;
     try { return JSON.parse(output); }
     catch { return invalid('github-response-invalid', 'GitHub returned unreadable data; next: check gh and rerun the same command'); }
   } finally { rmSync(work, { recursive: true, force: true }); }
@@ -203,12 +292,15 @@ export function publicRepository(root: string): string {
   catch (error) {
     // CLI presence/version refusals keep their own names — only the auth
     // call's failure means not-signed-in.
-    if (error instanceof BountyRefused && error.reason.startsWith('github-cli-')) throw error;
+    if (error instanceof BountyRefused && (error.reason.startsWith('github-cli-') || error.reason === 'github-unreachable')) throw error;
     return invalid('github-not-signed-in', `GitHub CLI gh ${GH_LEAST} or later, signed in, is required for GitHub bounties — gh is present but not signed in to GitHub (https://cli.github.com); next: sign in with gh auth login, then rerun the same command`);
   }
   let info: unknown;
   try { info = api(root, `repos/${repository}`); }
-  catch { return invalid('github-visibility-unreadable', `${PUBLIC_ONLY}; next: check gh access to the repository, then rerun the same command`); }
+  catch (error) {
+    if (namesGitHubCause(error) || error instanceof BountyRefused && error.reason === 'github-repository-missing') throw error;
+    return invalid('github-visibility-unreadable', `${PUBLIC_ONLY}; next: check gh access to the repository, then rerun the same command`);
+  }
   if (!isObject(info) || typeof info['full_name'] !== 'string' || info['full_name'].toLowerCase() !== repository.toLowerCase() || typeof info['private'] !== 'boolean' || info['visibility'] !== 'public' && info['visibility'] !== 'private' && info['visibility'] !== 'internal') return invalid('github-visibility-unreadable', `${PUBLIC_ONLY}; next: check gh access to the repository, then rerun the same command`);
   if (info['private'] !== false || info['visibility'] !== 'public') return invalid('github-private-repository', `${PUBLIC_ONLY}; next: ask the owner — only a public repository can be posted`);
   // Push access is checked before any branch push or issue (BT16 rule 9):
@@ -237,7 +329,7 @@ export function issueNumber(value: unknown, repository: string) {
 export function ensureLabel(root: string, repository: string): void {
   try { api(root, `repos/${repository}/labels/box-bounty`); return; }
   catch (error) {
-    if (!(error instanceof BountyRefused) || error.reason !== 'github-command-failed') throw error;
+    if (!(error instanceof BountyRefused) || error.reason !== 'github-repository-missing' && error.reason !== 'github-command-failed') throw error;
   }
   api(root, `repos/${repository}/labels`, { name: 'box-bounty' });
 }
