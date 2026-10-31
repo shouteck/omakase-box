@@ -41,12 +41,16 @@ The bounty suite gives the same answers on Linux as on Windows for BT51's tests 
 
 ## Result
 
-- CTO: <host / model>
-- Commit: `<SHA>`
-- Verify: `<summary line>`
-- Checks: the three questions answered · Level: ui-verified | test-verified | typecheck-only
+- CTO: Claude Code desktop / Claude Opus 5.5
+- Commit: `4df7e07`
+- Verify: `verify 4df7e07 PASS check=0 build=0 test:box-bounty=0 test:kitchen=0(selected 4 of 18 kitchen files) db=none 1243s`
+- Checks: the diff is three test files and this brief; no `packages/` change, no `BUDGET` number and no expected outcome moved. Verify passed on this commit. Would the checks catch a wrong fix: the new spy test failed with the guard removed (`standin.cjs` counted 1, expected 0). The hook fix has no such proof here: Windows runs a hook with or without the bit. · Level: test-verified on Windows only
 - Lenses: none ticked
-- Method: <playbook; each principle that changed a decision and what it changed>
+- Method: bug fix playbook. Fix Root Causes: fixed the spy and the hooks rather than raising the budget to 33, and the pattern grep found `answer.test.ts`.
 - Findings and limits:
-- Merged: `<merge SHA>` · Verify cost: `<line from node scripts/kitchen-stats.mjs --wave=BT51-ci>` · Resources removed: yes | <what remains and why>
-- Reflect: <what went wrong> -> <wave | station | kitchen>: <what it became, or "nothing">
+  - **Not proven on Linux.** Both causes come from reading the code and the failed run's log; this host cannot run Linux. The next off-machine run on master is the proof. If it is still red, the next wave is this fix again.
+  - `answer.test.ts`' must-not-fire `post-merge` hook could never fire on Linux, so that part of the check was empty there. It is now armed, and Linux may show a new result.
+  - The other hook writes in `bt7.test.ts` and `bt7-git-channels.test.ts` already set the bit.
+  - Verify took 1243 s on this host, with the bounty suite's load limits in BACKLOG.
+- Merged: see `git log --first-parent master` · Verify cost: recorded in the status commit's run of `kitchen-stats --wave=BT51-ci` · Resources removed: yes, nothing outside Git was created
+- Reflect: a kickoff read the off-machine run while it was still in progress, so the red surfaced after BT52's plan was approved -> wave: the plan is saved in `waves/BT52.md`. Linux-only test faults reach master unseen from this host -> kitchen: one inbox line.
