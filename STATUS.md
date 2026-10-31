@@ -1,13 +1,12 @@
 # Status
 
-Updated by the CTO on 31 October 2026, when PF4 closed.
+Updated by the CTO on 1 November 2026, when PF5 closed.
 
 ## Now
 
-- **PF5 is parked on `wave/PF5` (local, not pushed, not accepted):** code and new tests are committed; docs, bites, verify, the whole-loop run and the close are left, listed in the branch's `waves/PF5.md`. `START.md PF5` resumes it.
-- **PF4 is on master:** every rewarded bounty shows what is owed, recorded paid and confirmed received, each attributed; owners and solvers show counts on their pages, the feed, MCP and the board card. Local only, against the GitHub stand-in. See the [wave file](waves/PF4.md).
-- **Before any deploy (BACKLOG, Product):** no read has met real GitHub, including whether a squash merge reads as landed and how a private organisation member is reported; a refresh tick and the `owner_record` filter may exceed Workers Free's 10 ms CPU; sign-in has not met real GitHub OAuth. The owner's app steps are in `packages/box-platform/README.md`. All belong to PF6.
-- **Read the off-machine run at the next kickoff:** it covers PF4's merge.
+- **PF5 is on master:** a bounty reaches the board moments after `post`; the owner's pay message names the solver's accepted methods; `status` says what the board shows; no new command or credential. The address is empty, so every call is off, until PF6 sets it. Local only, against stand-ins. See the [wave file](waves/PF5.md).
+- **Before any deploy (BACKLOG, Product):** no read has met real GitHub, including whether a squash merge reads as landed and how a private organisation member is reported; a refresh tick, a hint's look and the `owner_record` filter may exceed Workers Free's 10 ms CPU; sign-in has not met real GitHub OAuth. The owner's app steps are in `packages/box-platform/README.md`. All belong to PF6.
+- **Read the off-machine run at the next kickoff:** it covers PF5's merge.
 - **Branches (owner, 31 October 2026):** work closes onto master. The cloud session branch `claude/serene-noether-m9qvs3` is left as it is.
 - **For the owner:**
   - the stray idle `node.exe` from BT44 (PID 16324), if it is still running;
