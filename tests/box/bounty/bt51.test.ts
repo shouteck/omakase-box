@@ -7,6 +7,7 @@ import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { answerGitHub, applyBounty, checkMergedSolutions, closeBounty, loadRecord, postBounty, setMergeNoticeListener } from '../../../packages/box-bounty/index.js';
+import { landedSinceCollected } from '../../../packages/box-bounty/close.js';
 import { fixture, type GithubFixture } from './github-fixture.js';
 import { CLI_DIST, git, rewriteRecordRaw, write } from './support.js';
 
@@ -36,6 +37,14 @@ const handMerge = (world: GithubFixture, head: string) => {
 };
 
 describe('a chosen solution shows as merged on GitHub', { timeout: 180000 }, () => {
+  it('a landing in the same second as the collection counts as after it: a commit date has whole seconds', () => {
+    const second = Date.parse('2026-11-01T00:00:10.000Z');
+    expect(landedSinceCollected(second, second + 999)).toBe(true);
+    expect(landedSinceCollected(second + 1000, second + 999)).toBe(true);
+    expect(landedSinceCollected(second - 1000, second + 999)).toBe(false);
+    expect(landedSinceCollected(Number.NaN, second)).toBe(false);
+  });
+
   it('apply: GitHub marks the pull request merged, then the bounty branch goes; never the default branch', () => posted(world => {
     const { repo, bare, id, pr } = world;
     pr('solver1');
