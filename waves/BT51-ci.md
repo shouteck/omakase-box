@@ -52,5 +52,5 @@ The bounty suite gives the same answers on Linux as on Windows for BT51's tests 
   - `answer.test.ts`' must-not-fire `post-merge` hook could never fire on Linux, so that part of the check was empty there. It is now armed, and Linux may show a new result.
   - The other hook writes in `bt7.test.ts` and `bt7-git-channels.test.ts` already set the bit.
   - Verify took 1243 s on this host, with the bounty suite's load limits in BACKLOG.
-- Merged: see `git log --first-parent master` · Verify cost: recorded in the status commit's run of `kitchen-stats --wave=BT51-ci` · Resources removed: yes, nothing outside Git was created
+- Merged: `0f107e4` · Verify cost: `verify: 1 runs, total 1243s` · Resources removed: yes, nothing outside Git was created
 - Reflect: a kickoff read the off-machine run while it was still in progress, so the red surfaced after BT52's plan was approved -> wave: the plan is saved in `waves/BT52.md`. Linux-only test faults reach master unseen from this host -> kitchen: one inbox line.
