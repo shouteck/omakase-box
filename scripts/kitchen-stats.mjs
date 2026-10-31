@@ -269,11 +269,18 @@ function git(root, args, options = {}) {
 
 // sha -> { at: commit time in ms, parents: [sha] } for every commit reachable
 // from any ref. Empty when root is not a repository; callers then report
-// missing, matching the old failed-command behaviour.
-function commitGraph(root) {
+// missing, matching the old failed-command behaviour. A graph too large for
+// the buffer is not "not a repository": it stops by name, so no page is drawn
+// from a graph that was never read (K15-ci, BT47).
+export const GRAPH_BUFFER_BYTES = 64 * 1024 * 1024;
+export const GRAPH_TOO_LARGE = 'commit-graph-over-buffer';
+export function commitGraph(root, maxBuffer = GRAPH_BUFFER_BYTES) {
   const nodes = new Map();
-  const text = git(root, ['log', '--all', '--format=%H %cI %P']);
-  if (text === null) return nodes;
+  gitProcesses += 1;
+  const run = spawnSync('git', ['-c', 'safe.directory=' + forwardSlash(root), 'log', '--all', '--format=%H %cI %P'], { cwd: root, encoding: 'utf8', windowsHide: true, maxBuffer });
+  if (run.error?.code === 'ENOBUFS') throw new Error(`${GRAPH_TOO_LARGE}: git log --all printed more than ${maxBuffer} bytes; raise GRAPH_BUFFER_BYTES in scripts/kitchen-stats.mjs`);
+  if (run.status !== 0) return nodes;
+  const text = run.stdout;
   for (const line of text.split('\n')) {
     const parts = line.trim().split(/\s+/);
     if (parts.length < 2 || !/^[0-9a-f]{40}$/.test(parts[0])) continue;
