@@ -39,12 +39,14 @@ Horizon: short
 
 ## Result
 
-- CTO: <host / model>
-- Commit: `<SHA>`
-- Verify: `<summary line>`
-- Checks: the three questions answered · Level: ui-verified | test-verified | typecheck-only
-- Lenses: <what was tried and what was found>
-- Method: <playbook; each principle that changed a decision and what it changed>
+- CTO: Claude Code desktop / Claude Opus 5.5
+- Commit: `981fdd7`
+- Verify: `verify 981fdd7 PASS check=0 build=0 test:box-bounty=0 test:kitchen=0(selected 4 of 18 kitchen files) db=none 1210s`
+- Checks: the diff is the one comparison and its test. Verify passed on this commit. The new test failed on the old formula (`expected false to be true`). · Level: test-verified on Windows only
+- Lenses: Security: BT51's stranger test passed unchanged. The rounding gives up one case: a landing in the same second as the collection, but before it, skips the "predates the pull request" check. That needs a stranger's pull request opened and collected within the second the owner's own commit was made, and it costs a wrongly marked pull request, not a merge. Accepted.
+- Method: bug fix playbook. Fix Root Causes: fixed the comparison rather than raising `apply`'s budget to 7, though the extra read was harmless.
 - Findings and limits:
-- Merged: `<merge SHA>` · Verify cost: `<line from node scripts/kitchen-stats.mjs --wave=BT51-ci2>` · Resources removed: yes | <what remains and why>
-- Reflect: <what went wrong> -> <wave | station | kitchen>: <what it became, or "nothing">
+  - **Not proven on Linux.** The cause is read from the code and two runs' counts (`gh` 6, then 7), not reproduced there. The next off-machine run is the proof.
+  - BT51-ci's Git fix held on Linux: `apply` measured Git 32 in run 41250885715. Its hook fix too: bt51 no longer fails there.
+- Merged: `<merge>` · Verify cost: `verify: 1 runs, total 1210s` · Resources removed: yes, nothing outside Git was created
+- Reflect: BT51-ci named the budget failure's cause and missed a second one hiding behind it, because a failing list stops at the first overage per command -> wave: nothing more; the Linux gap is already in BACKLOG.
