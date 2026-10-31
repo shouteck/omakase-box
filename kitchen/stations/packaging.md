@@ -2,12 +2,12 @@
 
 Selecting source for a Box, exporting it, proving it in a clean directory, submitting a patch from it, and the bounty tool's create → post → answer → apply journey on the owner repository. PLAN.md has the journey and what is settled.
 
-This card holds rules, not narratives — each trap names the wave that taught it; read that wave file for the story. The retired platform's cards and the C1 tracer section are history (`archive/box-platform-2026-10`, waves A0–D3.1, C1).
+This card holds rules, not narratives — each trap names the wave that taught it; read that wave file for the story.
 
 ## What this station knows
 
 - A Box is a plain folder with `box.json`, selected source and declared setup/check commands; a bounty folder is a Box of a new kind — reuse the Box's manifest, hashing, path handling and program launch. Reuse before writing: `packages/box-contracts`, `packages/analyzer`, `packages/evaluation/patch-validation`.
-- A2's `files` is the sole owner-source shipping authority; `proposeSelection` only suggests. The fixture design is `docs/box-v4/delegation/SUPPORTED-CASE.md` (`examples/private-shop`, requests A and B).
+- A2's `files` is the sole owner-source shipping authority; `proposeSelection` only suggests.
 - **Facts, never verdicts.** The tool says "the check you set now passes", never "this answer is correct". Reports always say what was not checked (BT8c).
 - **Every outcome is a named state with a next step**; an empty or ambiguous tool answer once cost a whole live trial.
 - **Mechanical work is the tool's; judgement is the agent's.** Hand-off-or-not, the task text, accept-or-not: those three are the agent's. **Discretion, not enforcement** — nothing requires the tool's use; how it is described decides it. Say what it does, when it is worth it, and when not (BT4).
@@ -50,20 +50,16 @@ This card holds rules, not narratives — each trap names the wave that taught i
 - **`check` never runs the bounty suite** — briefs name `test:box-bounty` and `test:kitchen`; only `verify --full` selects both. Plan the inner loop by file: `node scripts/suite.mjs box --suite bounty <file.test.ts>` (repo-relative path; BT21/BT22).
 - **Three GitHub stand-ins exist** (`tests/box/bounty/github-fixture.ts`, `bt7-ux-fixture.mjs`, `kitchen/demo/gh-standin.cjs`) — a response-shape change greps and fixes all three (BT16, K18).
 - **A declared setup must bootstrap from nothing** — a snapshot carries no `node_modules`; prove it in a copy with `.git`/`node_modules`/`dist` deleted (BT5). What setup creates, the solver must remove — `answer` counts install/build artifacts as `added` (recorded unfixed product decision, BT5).
-- **A scenario's missing capability must be unfetchable**, and a bounty is only viable where its check can pass on the owner's machine (BT5 rungs).
 - **Repo-local tool state:** `.box/bounties/` is inside the repository by design; the test `fingerprint` excludes `.box`. Since BT31 records live in `.box/local/box.db` (`node:sqlite` WAL, plain substring search, Node floor 22.13); call `closeStores()` before deleting a repo folder on Windows. **Never depend on an optional SQLite compile flag** (BT31-ci).
 - **Windows-only semantics are pinned host-only** by platform or capability probe so suites run off-machine (K10): junctions, `.cmd` launch, the `npm.cmd` recipe (A4), case-insensitive FS.
-- **Restricted host access can fail fixture setup before product assertions** (BT27 EPERM) — read diagnostics before calling it a regression.
 - K14 counts Git process starts: new checks ride the pin layer's single `git config` read; pre-check `.git/index` bytes in Node before spawning `ls-files`; K14 measures the **built `dist`** — rebuild before trusting a start count.
 - **A copy of a stranger's tree is a second boundary** — what may run there (info/attributes, hooks), which byte form lives there, what is checked on the way back; `git worktree remove` deletes before registration and fails on Windows while a process sits in the folder (BT7, parked).
 - **Verify outside state independently** (`gh api`, `git ls-remote`), never the tool's word; a long silent `gh` call is normal on this host (BT6 Part C). `undone` is terminal; closed-by-base-deletion reads as rejection (BT6a). `allowedDestinations` gates both directions.
 - **Fresh-reader journeys reuse `bt8b-fixtures.mjs`** (per-case repos, isolated settings, the exact SHA's built CLI); cold ones reuse `bt17-measure.mjs` (evidence card).
 - Name negative candidates by the actual source mutation — a cosmetic change is not a probe; a green alternative is not a wrong candidate. **A clean install proves nothing** — only a check that loads the code shows a dangling link (A0). **The silent fallback:** export never reaches back into the owner repository to fill a gap.
 - **A produced artifact is not evidence of what it claims** — rebuild from the current commit before recording or demoing (K16 stale dist; evidence card).
-- **Splitting a hub: outward calls decide the new modules' inbound edges**; count re-exports and inline type imports — the complete graph found 18 cycles where a scan found three (BT25/BT27).
 - **Parseable is not the promised wire format** — validate or normalize at the boundary; test malformed *and* parseable-but-nonconforming (BT35).
 - **The root `.gitignore` ignores any `data/` folder** (K43's sample world went uncommitted). **Verify in a clean worktree** needs the Playwright revision under its `.runtime/browsers`: copy from `%LOCALAPPDATA%/ms-playwright`, never download.
-- **Retirement inventories need document callers too** — check the roadmap, active briefs and contracts before removing a document (K29).
 
 ## Before merging
 
