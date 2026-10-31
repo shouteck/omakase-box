@@ -22,6 +22,7 @@ After a merge, do not wait for the off-machine run. Read its latest result at ki
 
 - Write files, the Result included, with your file tools, never a shell redirect, heredoc or `node -e`: backticks in such a command run as commands (BT44 left a stray `node.exe` on stdin). On Windows a redirect to `nul` can leave a stray file that dirties the tree.
 - A script that takes an output or scratch directory and deletes or overwrites it must check an ownership marker or refuse a non-empty directory. Run it against a foreign directory holding a file; it must refuse.
+- Remove a link with `rmdir` or `fs.rmdirSync`, never `rm -rf`, and never point a test link at a folder the kitchen does not own (BT46).
 - Machine capability assertions must control child executable lookup or explicitly belong to a live-host preflight. A wave that adds a shared test-process guard inventories every executable creator across TS, MJS and CJS fixtures and demos, and proves each negative test reached the endpoint it meant to.
 - A second instance of the same flaw class means a shared design assumption: name it before patching the next instance.
 - Stop at the timebox and report, even mid-work. Remove anything you created outside Git.
