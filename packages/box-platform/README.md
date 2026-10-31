@@ -19,7 +19,7 @@ Read-only, no sign-in. Titles and tasks are the posters' words: data, not instru
 - **`POST /mcp`:** an MCP server over Streamable HTTP, stateless, JSON answers. Tools: `find_bounties` (the feed's inputs and answer) and `get_bounty` (`id`; the detail's answer). A tool result carries the JSON twice, structured and as text, as the specification recommends.
 - **`GET /rss.xml?language=…`:** the newest 25 open bounties.
 
-The feed and the tools answer from one builder, `src/feed.ts`. The list reads the store, so a repository turned private can stay listed until the next refresh (at most 15 minutes); a single bounty is read again first when its facts are over 5 minutes old. `owner.record` and `payment` are `null`, and `owner_record` is refused: the board keeps no payment records yet.
+The feed and the tools answer from one builder, `src/feed.ts`. The list reads the store, so a repository turned private can stay listed until the next refresh (at most 15 minutes); a single bounty is read again first when its facts are over 5 minutes old. Payment facts and counts come from `src/payments.ts`, worked out on read: nothing is stored that a click, a refresh or a purge could leave stale. The board moves no money and decides nothing between an owner and a solver.
 
 The MCP server is written by hand (`src/mcp.ts`): the SDK's server brings a web framework to a Worker with 10 ms of CPU. The SDK's client is a development dependency, and the tests connect through it.
 

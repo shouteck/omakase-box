@@ -3,7 +3,13 @@
 import { createServer, type IncomingMessage, type Server } from 'node:http';
 import { renderFormat } from '../../box-bounty/format.js';
 
-export type StandinPull = { number: number; author: string; state: 'open' | 'closed'; merged_at?: string; created_at: string };
+export type StandinPull = {
+  number: number; author: string; state: 'open' | 'closed'; merged_at?: string; created_at: string;
+  /** GitHub's word for how the author relates to the repository. Absent: NONE. */
+  association?: string;
+  /** Is the head on the default branch? Absent: yes. Null: the compare API does not answer. */
+  landed?: boolean | null;
+};
 export type StandinEvent = Record<string, unknown>;
 export type StandinIssue = {
   id: string; repository: string; number: number; title: string; task: string; poster: string;
@@ -15,6 +21,7 @@ export type StandinIssue = {
 export type StandinRepository = { language: string | null; visibility: 'public' | 'private'; default_branch?: string };
 
 export const commitFor = (id: string): string => id.slice(3).padEnd(40, '0');
+const headOf = (pull: StandinPull): string => pull.number.toString(16).padStart(40, 'a');
 
 export function bodyOf(issue: StandinIssue): string {
   const value = { schemaVersion: 2 as const, kind: 'box-bounty' as const, id: issue.id, repository: issue.repository, workCommit: commitFor(issue.id), branch: `box-bounty/${issue.id}`, withChanges: false, createdAt: issue.createdAt, state: { kind: 'open' as const }, reward: { amount: issue.amount, currency: 'USD' as const }, terms: 'merged-solution-earns-whole' as const };
@@ -95,7 +102,13 @@ export class Standin {
     match = /^\/repos\/([^/]+\/[^/]+)\/pulls$/.exec(path);
     if (match) {
       const issue = this.issues.find(entry => entry.repository === match![1] && `box-bounty/${entry.id}` === query.get('base'));
-      return { status: 200, json: (issue?.pulls ?? []).map(pull => ({ number: pull.number, state: pull.state, merged_at: pull.merged_at ?? null, created_at: pull.created_at, user: { login: pull.author }, title: 'A SOLVER WROTE THIS TITLE' })) };
+      return { status: 200, json: (issue?.pulls ?? []).map(pull => ({ number: pull.number, state: pull.state, merged_at: pull.merged_at ?? null, created_at: pull.created_at, user: { login: pull.author }, author_association: pull.association ?? 'NONE', head: { sha: headOf(pull) }, title: 'A SOLVER WROTE THIS TITLE' })) };
+    }
+    match = /^\/repos\/([^/]+\/[^/]+)\/compare\/([a-f\d]{40})\.\.\.[^/]+$/.exec(path);
+    if (match) {
+      const pull = this.issues.filter(entry => entry.repository === match![1]).flatMap(entry => entry.pulls ?? []).find(entry => headOf(entry) === match![2]);
+      if (pull === undefined || pull.landed === null) return { status: 404 };
+      return { status: 200, json: { status: pull.landed === false ? 'diverged' : 'ahead' } };
     }
     match = /^\/repos\/([^/]+\/[^/]+)\/commits$/.exec(path);
     if (match) {

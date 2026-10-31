@@ -14,7 +14,7 @@ export const TOOLS = [
   {
     name: 'find_bounties',
     title: 'Find open bounties',
-    description: `Find open bounties on public GitHub repositories. Returns a short list, newest first unless sort is "reward". Each entry: id, the poster's title, stated reward in USD, repository and language, open solutions, age, and the branch to answer on. Call get_bounty with an id for the full task and how to answer. At most \`limit\` entries (default ${LIMIT_DEFAULT}, max ${LIMIT_MAX}); pass \`next_cursor\` back as \`cursor\` for more.`,
+    description: `Find open bounties on public GitHub repositories. Returns a short list, newest first unless sort is "reward". Each entry: id, the poster's title, stated reward in USD, the owner's payment counts, repository and language, open solutions, age, and the branch to answer on. Call get_bounty with an id for the full task and how to answer. At most \`limit\` entries (default ${LIMIT_DEFAULT}, max ${LIMIT_MAX}); pass \`next_cursor\` back as \`cursor\` for more.`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -23,6 +23,7 @@ export const TOOLS = [
         min_reward: { type: 'integer', minimum: 0, description: 'Smallest stated reward in whole USD.' },
         max_age_days: { type: 'integer', minimum: 0, description: 'Posted at most this many days ago.' },
         solutions: { type: 'string', enum: ['none', 'some'], description: '"none": no open pull request yet; "some": at least one.' },
+        owner_record: { type: 'string', enum: ['confirmed-payments', 'confirmed-none-late', 'no-history'], description: 'The owner\'s payment facts. "confirmed-payments": a solver confirmed receiving a payment from them. "confirmed-none-late": that, no payee says a recorded payment has not arrived, and nothing owed for more than 14 days. "no-history": no counted merge yet.' },
         approved_by: { type: 'string', enum: ['owner-this-bounty', 'owner-standing-rule'], description: 'Whether the owner approved posting this bounty itself, or it was posted under the owner\'s standing rule.' },
         query: { type: 'string', maxLength: 100, description: 'Words to find in titles or repository names.' },
         sort: { type: 'string', enum: ['newest', 'reward'] },
@@ -46,7 +47,7 @@ export const TOOLS = [
   {
     name: 'get_bounty',
     title: 'Read one bounty',
-    description: 'Read one bounty by id (bt- followed by 12 hex digits): the poster\'s task, marked as the poster\'s words; how to answer; how the reward is paid (directly by the owner, never through the board); its solutions; and its history. At most 40 KB. Works for open and closed bounties.',
+    description: 'Read one bounty by id (bt- followed by 12 hex digits): the poster\'s task, marked as the poster\'s words; how to answer; how the reward is paid (directly by the owner, never through the board); the payment facts, each attributed; its solutions; and its history. At most 40 KB. Works for open and closed bounties.',
     inputSchema: { type: 'object', properties: { id: { type: 'string', pattern: '^bt-[0-9a-f]{12}$' } }, required: ['id'], additionalProperties: false },
     annotations: ANNOTATIONS
   }

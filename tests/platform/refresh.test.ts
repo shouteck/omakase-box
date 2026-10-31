@@ -26,7 +26,7 @@ describe('finding bounties', () => {
     r.standin.issues.push(issue({ pulls: [{ number: 45, author: 'example-fern', state: 'open', created_at: new Date(NOW - MINUTE).toISOString() }] }));
     await refreshUntilDone(r);
     const { body } = await askJson(r, handle, '/api/board');
-    expect(body.bounties).toEqual([{ id: 'bt-aaaaaaaaaaaa', title: 'Skip no months', amount: 45, repository: 'example-tidepool/ledger', language: 'TypeScript', poster: 'example-mara', solutions_open: 1, age_days: 4 }]);
+    expect(body.bounties).toEqual([{ id: 'bt-aaaaaaaaaaaa', title: 'Skip no months', amount: 45, repository: 'example-tidepool/ledger', language: 'TypeScript', poster: 'example-mara', record: { has_history: false, merged: 0, recorded_paid: 0, confirmed_received: 0, from_solvers: 0, owed_now: 0, oldest_owed_days: 0, says_not_received: 0, median_days_to_record_paid: null }, solutions_open: 1, age_days: 4 }]);
     expect(body.open_total).toBe(1);
     expect(body.read_at).toBe(new Date(NOW).toISOString());
   });

@@ -383,7 +383,7 @@ describe('a disputed payment, end to end', () => {
     expect((await payment(owner)).receipt.says).toBe('not-received');
     expect(await seesSecret(stranger)).toBe(false);
     expect(await seesSecret(null)).toBe(false);
-    expect((await payment(stranger)).receipt).toBeNull();
+    expect((await payment(stranger)).receipt.says).toBe('not-received'); // public since PF4; the methods are not
     expect(await seesSecret(owner, STATE_IDS.waiting)).toBe(false);
     expect(await (await send(owner, `/api/solver/${PAYEE.login}`)).text()).not.toContain(SECRET_EMAIL);
     expect(await (await send(owner, `/bounties/${STATE_IDS.owed}.json`)).text()).not.toContain(SECRET_EMAIL);
@@ -439,8 +439,8 @@ describe('profiles', () => {
 
   it('a person the board has never heard of: facts empty, not an error, and nothing fetched', async () => {
     const before = r.standin.requests.length;
-    expect(await (await send(null, '/api/solver/example-nobody')).json()).toEqual({ login: 'example-nobody', methods: [], merged: [] });
-    expect(await (await send(null, '/api/owner/example-nobody')).json()).toEqual({ login: 'example-nobody', bounties: [] });
+    expect(await (await send(null, '/api/solver/example-nobody')).json()).toEqual({ login: 'example-nobody', record: { has_history: false, merged: 0, confirmed_received: 0 }, methods: [], merged: [] });
+    expect(await (await send(null, '/api/owner/example-nobody')).json()).toEqual({ login: 'example-nobody', record: { has_history: false, merged: 0, recorded_paid: 0, confirmed_received: 0, from_solvers: 0, owed_now: 0, oldest_owed_days: 0, says_not_received: 0, median_days_to_record_paid: null }, not_counted: [], bounties: [] });
     expect(r.standin.requests.length).toBe(before);
   });
 
