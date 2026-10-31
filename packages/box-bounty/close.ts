@@ -202,12 +202,15 @@ function readPull(root: string, publication: GitHubPublication, pr: number): { m
 // is older than the pull request, and the head was already on the default
 // branch on GitHub. A stranger cannot forge the first: that commit's date is
 // fixed by its id (BT51).
+// A commit date has whole seconds and the collected time has milliseconds, so
+// the second is what is compared (BT51-ci2).
+export const landedSinceCollected = (landed: number, collectedAt: number): boolean => landed >= Math.floor(collectedAt / 1000) * 1000;
 function landedBeforePull(root: string, publication: GitHubPublication, solution: { commit: string; pr: number; collectedAt?: string }, merge: string | undefined): boolean {
   const head = solution.commit;
   const landed = merge === undefined ? Number.NaN : Date.parse(gitOutcome(root, ['show', '-s', '--format=%cI', merge]).stdout.trim());
   // Landed after this machine collected the pull request: it existed by then,
   // so the answer is known without asking GitHub.
-  if (solution.collectedAt !== undefined && landed >= Date.parse(solution.collectedAt)) return false;
+  if (solution.collectedAt !== undefined && landedSinceCollected(landed, Date.parse(solution.collectedAt))) return false;
   if (!(landed < Date.parse(readPull(root, publication, solution.pr).createdAt))) return false;
   const info = api(root, `repos/${publication.repository}`);
   if (!isObject(info) || typeof info['default_branch'] !== 'string') return invalid('github-response-invalid', 'GitHub returned an unreadable repository; next: check gh and rerun the same command');
