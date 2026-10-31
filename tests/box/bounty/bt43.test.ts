@@ -9,7 +9,7 @@
 // and fails on any template that prints a known solver-derived field raw;
 // and the built CLI driven through a posted bounty whose pull request
 // carries the hostile lines.
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join, sep } from 'node:path';
@@ -21,6 +21,7 @@ import { fixture, sharedFixture } from './github-fixture.js';
 import type { GithubFixture } from './github-fixture.js';
 import { CLI_DIST, git, makeRepo, readRecordRaw, ROOT, runRoot, write, writeRecordRaw } from './support.js';
 
+const BOARD_STANDIN = join(ROOT, 'tests', 'box', 'bounty', 'board-standin.cjs');
 const box = (repo: string, args: readonly string[]) =>
   spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args, '--repo', repo], { encoding: 'utf8', env: process.env, timeout: 60000 });
 
@@ -318,7 +319,9 @@ const NOT_FOREIGN: readonly { readonly file: string; readonly text: string; read
   // work-in-progress lists print through showPath like every other path.
   { file: 'packages/box-bounty/post.ts', text: 'text.body', count: 1, why: 'the issue body the tool itself composes from the owner\'s task, printed by post --preview before anything is published' },
   { file: 'packages/box-bounty/git.ts', text: 'path', count: 1, why: 'gitBlobs builds `<commit>:<path>` object names for one cat-file batch read — a Git argument, never printed' },
-  { file: 'packages/box-bounty/hook.ts', text: 'paths', count: 1, why: 'the told-once key for a conflict set, written to .box/hook-told.json — never printed; the line beside it prints only the count' }
+  { file: 'packages/box-bounty/hook.ts', text: 'paths', count: 1, why: 'the told-once key for a conflict set, written to .box/hook-told.json — never printed; the line beside it prints only the count' },
+  { file: 'packages/box-bounty/pay.ts', text: 'method.shown', count: 1, why: 'PF5 methodWords, the one print of a solver\'s payment methods: `shown` was rendered when the board\'s answer was read (checkedAccepts: a link only in its kind\'s checked shape, anything else through quoteForeign), and every kept copy passes acceptsShape again before it prints (pf5.test.ts edits one on disk)' },
+  { file: 'packages/box-bounty/owner-text.ts', text: 'waiting.to', count: 1, why: 'a held post\'s destination, which the agent named; PF5\'s board fact `to` gave the walk the field name `to`, but this one is no stranger\'s' }
 ];
 
 describe('BT43 the parser walk over the shipped source', () => {
@@ -348,6 +351,8 @@ describe('BT43 the parser walk over the shipped source', () => {
   it('enumerates the renderer\'s callers — the look block, the comment block and the account names', () => {
     const where = found.callers.filter(caller => caller.file !== RENDERER_FILE).map(caller => `${caller.file} ${caller.text}`).sort();
     expect(where).toEqual([
+      'packages/box-bounty/board.ts solverAccount',
+      'packages/box-bounty/board.ts solverAccount',
       'packages/box-bounty/owner-text.ts solverAccount',
       'packages/box-bounty/owner.ts solverAccountOr',
       'packages/box-bounty/pay.ts solverAccount',
@@ -596,14 +601,34 @@ describe('BT43 the reading boundary on the built CLI', () => {
     expect(fields).toContainEqual({ field: 'bounties[].solutions[].author', source: 'solver' });
   }));
 
-  it('every status foreignFields path resolves to a key in a real --json document', () => world.run(() => {
-    // Two real documents between them hold every path: this open bounty
-    // (a pull request, a collected solution, the live merge read, comments)
-    // and an applied one whose close recorded a pay outcome.
+  it('every status foreignFields path resolves to a key in a real --json document', async () => {
+    // PF5's board facts appear only with a board set: a stand-in board answers for this bounty.
+    const folder = runRoot('bt43-board');
+    mkdirSync(folder, { recursive: true });
+    writeFileSync(join(folder, 'routes.json'), JSON.stringify({
+      [`/bounties/${id}.json`]: { status: 200, body: { bounty: { id, solutions: { total: 1 }, payment: { state: 'owed', owed: { to: 'solver1', amount: 5, since: AT }, solver_says: { by: 'solver1', word: 'received', at: AT } }, solution_list: [] } } },
+      '/api/solver/solver1': { status: 200, body: { methods: [{ kind: 'paypal', value: 'https://paypal.me/solver1' }], methods_more: 0 } }
+    }));
+    const server = spawn(process.execPath, [BOARD_STANDIN, folder], { stdio: ['ignore', 'pipe', 'inherit'] });
+    try {
+      const board = await new Promise<string>(done => server.stdout!.once('data', chunk => done(`http://127.0.0.1:${/listening (\d+)/.exec(String(chunk))![1]}`)));
+      world.run(() => everyPathResolves(board));
+    } finally { server.kill(); }
+  });
+  const everyPathResolves = (board: string): void => {
+    // Three real documents between them hold every path: this open bounty
+    // (a pull request, a collected solution, the live merge read, comments),
+    // an applied one whose close recorded a pay outcome, and this bounty
+    // again with the board set.
     const open = JSON.parse(box(repo, ['status', id, '--comments', '--json']).stdout) as unknown;
     const ended = makeRepo({ 'app.txt': 'seed\n' });
     hostileApplied(ended, { pay: true, reward: 5 });
     const applied = JSON.parse(inRepo(ended, ['status', '--json']).stdout) as unknown;
+    const settingsPath = join(world.scratch, 'settings', 'settings.json');
+    const before = readFileSync(settingsPath, 'utf8');
+    writeFileSync(settingsPath, JSON.stringify({ ...JSON.parse(before), board }));
+    let onBoard: unknown;
+    try { onBoard = JSON.parse(box(repo, ['status', id, '--json']).stdout); } finally { writeFileSync(settingsPath, before); }
     // A path resolves when its last key is present on an object it reaches:
     // `name[]` steps into every item of the array at `name`; a null on the
     // way reaches nothing.
@@ -619,12 +644,13 @@ describe('BT43 the reading boundary on the built CLI', () => {
       }
       return reached.length > 0;
     };
-    const unresolved = STATUS_FOREIGN_FIELDS.map(entry => entry.field).filter(field => !resolves(open, field) && !resolves(applied, field));
+    const unresolved = STATUS_FOREIGN_FIELDS.map(entry => entry.field).filter(field => !resolves(open, field) && !resolves(applied, field) && !resolves(onBoard, field));
     expect(unresolved).toEqual([]);
     // The resolver must be able to fail: a path the document does not hold.
     expect(resolves(open, 'bounties[].solutions[].authorName')).toBe(false);
     expect(resolves(applied, 'bounties[].github.pay.solver')).toBe(true);
-  }));
+    expect(resolves(onBoard, 'bounties[].board.accepts.methods[].shown')).toBe(true);
+  };
 });
 
 // ---- an account name read back from a stored record (correction 1) -------

@@ -32,6 +32,7 @@ import { refreshSharedMemory } from './chain.js';
 import type { BountyRecord } from './record.js';
 import { readDecision } from './settings.js';
 import { boundAmount } from './format.js';
+import { holdBoardCalls } from './board.js';
 import { payNotice } from './pay.js';
 
 // ---------------------------------------------------------------------------
@@ -165,6 +166,7 @@ export function runHook(repoRoot: string, slot: HookSlot, notices: readonly stri
   // instruction-refusal lines arrive DURING the record scan below, so they
   // are folded in only when the envelope is built, never copied at entry:
   // a bounty this run itself just closed still gets its line.
+  holdBoardCalls();
   const lines: string[] = [];
   const told = readTold(repoRoot);
   // State is written only when it changed or already exists — a silent run

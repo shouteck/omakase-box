@@ -90,6 +90,8 @@ export { classifySnapshot, createSnapshot, createSnapshotCommit } from './snapsh
 export type { Snapshot, SnapshotFile, SnapshotRemoval } from './snapshot.js';
 export { checkMergedSolutions, noticeMergedSolutions } from './merged.js';
 export { setMergeNoticeListener } from './notice.js';
+export { BOARD_DEFAULT, boardAddress, boardFact, boardLine, boardNotToldLine, boardTold, flushBoardHints, hintOf, holdBoardCalls, queueBoardHint, readBoardFacts, readPayAccepts } from './board.js';
+export type { BoardFact, BoardTold, Hint, HintEvent } from './board.js';
 export { parsePayTo, paymentOf, payToLine, payMessageLines, payNotice } from './pay.js';
 export type { PaymentState, PayOutcome, PayToFact } from './pay.js';
 export { GIT_LEAST } from './git.js';

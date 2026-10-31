@@ -76,6 +76,10 @@ export const LOOK_FOREIGN_FIELDS: readonly ForeignField[] = fields('solver', ['a
 export const STATUS_FOREIGN_FIELDS: readonly ForeignField[] = [
   ...fields('solver', [
     'bounties[].payment.solver',
+    'bounties[].board.to',
+    'bounties[].board.toOneOf',
+    'bounties[].board.solverBy',
+    'bounties[].board.accepts.methods[].shown',
     'bounties[].github.pullRequests[].author',
     'bounties[].github.pay.solver',
     'bounties[].solutions[].author',

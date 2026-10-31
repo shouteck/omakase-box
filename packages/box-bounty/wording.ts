@@ -9,6 +9,9 @@
 // kitchen/scenarios/bt4.md. If the comparative runs overturn the pick, the
 // fix is to swap the constants below — nothing else carries this wording.
 
+// What the tool tells the board (PF5), said wherever the setting is shown.
+export const BOARD_SENDS = 'after a post, a merge, a close or a paid record the tool sends it the repository, issue number, bounty id and event name, and nothing else; the board then reads GitHub';
+
 // --- Candidate A (picked — the comparative runs stood it): what / worth it / not worth it ---
 // States all three things an agent needs to choose — what the tool does, when
 // it is worth using and when it is not — without commanding a choice. See the

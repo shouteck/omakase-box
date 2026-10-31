@@ -541,6 +541,51 @@ stays private between owner and solver — nothing about it is ever posted to
 the issue. The tool records the owner's word and never checks, moves or
 enforces money.
 
+**The board.** When the owner has set the open bounty board's address
+(`config set board <address>`; empty, the default until the public board
+exists, means the tool makes no call to it at all), the tool does three
+things and needs no account or credential for any of them:
+
+- **It tells the board to look.** After a post, a recognised merge, a close
+  and `config set paid` (or its withdrawal), the tool sends `POST /api/hint`
+  with exactly four fields: the repository (`owner/name`), the issue number,
+  the bounty id and the event name (`posted`, `merged`, `closed`, `paid`).
+  Never a path, file, diff, task text, branch name or setting. The board
+  treats it as "read this issue now" and takes every fact from GitHub, so a
+  hint cannot change what the board shows. A hint that does not arrive is
+  kept in the local store and resent at the end of the next command, at most
+  ten a command, one per bounty (a look reads the whole bounty); `status`
+  says `the board has not been told yet: <reason>; next: any later command
+  sends it again`, and `post`, `apply`, `close` and `config`
+  print the same line on stderr when theirs did not arrive. The command
+  itself succeeds exactly as before.
+- **`status` says what the board shows.** For open posted bounties and the
+  five most recently merged rewarded ones, `status` reads
+  `/bounties/<id>.json` (at most five reads a command, stalest first, kept
+  five minutes) and prints one line each, attributed: `board: owed $N to
+  <solver> since <date>; accepts: …`, `board: recorded paid $N by <owner> on
+  <date>, the owner's word; not confirmed by <solver>`, `… confirmed received
+  by <solver> on <date>, the solver's word`, `… says not received`, `board:
+  not listed yet`, or `board: not reachable (<reason>); next: any command when
+  online`. `status --json` carries the same facts under each bounty's
+  `board`, and the document's `board` names the address and what is not yet
+  told.
+- **The pay message names how the solver accepts payment.** When a rewarded
+  bounty closes on a merge, the tool reads the solver's public profile on the
+  board once (`/api/solver/<login>`) and the owner's message lists the
+  methods there, plus how many more are shown only to the owner, signed in,
+  on the bounty's page. With none listed it falls back to the `pay-to:` link,
+  then to "ask the solver on the issue". If the board could not be read, the
+  message says so and names the solver's page. The methods are the solver's
+  word, shape-checked and never followed.
+
+Each call is one child process with an empty environment, a 2.5 second
+deadline per batch, no redirects and answers cut at 64 KB. A read sends
+only a bounty id or a login in the address. The awareness hook makes no
+board call. The board can be anyone's server, so every answer is checked
+field by field before it is kept, and the board's address is never taken
+from an answer.
+
 The solver forks the repository (or pushes a branch inside it), works from the
 bounty branch and opens a pull request against it in the same repository.
 Collect from the project's record:
@@ -724,6 +769,10 @@ The owner has three words:
   events). Only a merged bounty whose bound reward is above $0 answers it —
   anything else is `paid-nothing-owed`. It is the owner's word, recorded:
   nothing is checked, moved or enforced, and nothing is posted to the issue.
+- `config set board <address>` is the open bounty board the tool tells and
+  reads (see "The board" above): `https://` and a host, or `http://` on this
+  machine, with no path, query or credentials. `config set board ""` turns
+  every call off. Bare `config` shows it once set; `config --full` always.
 
 The agent is asked nothing about money. `create` and `post` take no amount
 flag — each money spelling is a named refusal (`reward-agent-set`) — and a

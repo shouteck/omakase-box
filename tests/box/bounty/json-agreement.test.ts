@@ -75,7 +75,8 @@ const LABELS: Record<string, Record<string, string | null>> = {
     'waiting actions': '/waiting',
     'owner/project': '/repositories/owner~1project',
     'records': '/records/tracked',
-    'legacy record files': '/records/tracked'
+    'legacy record files': '/records/tracked',
+    'board': '/board'
   }
 };
 const NOT_FACT: Record<string, Record<string, string>> = {

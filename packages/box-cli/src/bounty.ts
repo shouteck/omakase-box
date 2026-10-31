@@ -6,6 +6,7 @@
 import { lstatSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { actingOn, applyBounty, BountyRefused, BountyUsage, closeBounty, createBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, parseOptions, commandHelp, OPTIONS_NOTE, postBounty, readDecision, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, repoReward, requireRepository, resolveRepoRoot, setMergeNoticeListener, setInstructionNoticeListener, renderOverview, showPath, statusDocument, lookDocument, configDocument, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, hookDisclosure, hookHost, hookOff, hookOn, hookStatus, limitGitHubCalls, runHook } from '../../box-bounty/index.js';
+import { boardAddress, boardNotToldLine, flushBoardHints, readBoardFacts } from '../../box-bounty/index.js';
 import type { ParsedOptions } from '../../box-bounty/index.js';
 import { previewGitHub } from '../../box-bounty/index.js';
 import { escapeControls, exportLook, findDocument, lookBounty, solverBlock, SOLVER_WORDS, renderFind, renderResume, openRecords, endedContaining, readGitPinsOncePerProcess, boundAmount, payToLine, gitOutcome } from '../../box-bounty/index.js';
@@ -78,6 +79,18 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
   // close the bounty — the one line saying so belongs to whichever command
   // noticed, printed the moment it happens.
   setMergeNoticeListener(line => console.log(line));
+  // PF5: whatever this command changed, or an earlier one left unsent, goes to
+  // the board as the process ends, on every exit path. A hook has a time budget.
+  if (subcommand !== 'hook') {
+    const named = bountyArgs.indexOf('--repo');
+    process.once('exit', () => {
+      if (boardAddress() === '') return;
+      let root: string;
+      try { root = resolveRepoRoot(bountyArgs[named + 1] !== undefined && named >= 0 ? bountyArgs[named + 1]! : process.cwd(), subcommand ?? 'status'); } catch { return; }
+      const notTold = boardNotToldLine(flushBoardHints(root));
+      if (notTold !== null && ['post', 'apply', 'close', 'config'].includes(subcommand ?? '')) console.error(notTold);
+    });
+  }
   // BT18: every command reads its options through the one parser driven by
   // the table in box-bounty/args.ts — an option is understood or refused by
   // name; --help/-h anywhere answers with that command's usage, exit 0.
@@ -231,6 +244,8 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       const [id] = parsed.positionals;
       const root = resolveRepoRoot(repoPath(parsed), 'status');
       const since = parsed.values['--since'];
+      flushBoardHints(root);
+      readBoardFacts(root, id);
       if (parsed.switches.has('--json')) {
         // BT19: one document on standard output and nothing else. Everything
         // the text view prints — the acting-on line, the once-only notices,

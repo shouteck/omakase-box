@@ -15,6 +15,9 @@ import { checkInstructionSettingsWrite, readInstructions, writeInstructions } fr
 import { changePublishList, publishLists } from './never-ship.js';
 import { githubRemotes, repositoryAddress } from './repository.js';
 import { boundAmount } from './format.js';
+import { boardAddress } from './board.js';
+import { BOARD_SENDS } from './wording.js';
+import { boardAddressOf, saveSettings } from './settings.js';
 import { paymentOf } from './pay.js';
 import { sharePaid } from './chain.js';
 import { showPath } from './notice.js';
@@ -315,6 +318,9 @@ export function renderConfig(repoRoot: string | null, options?: { readonly full?
     lines.push(`  ${key}: ${state}; reward $${reward}${limit === null ? ', no limit set' : `, limit $${limit}`}; ${promise}; ${change}`);
     if (full) for (const previous of entry.changes) lines.push(`    history: ${previous.bounty ?? 'denied'} at ${previous.at}`);
   }
+  // Like all-projects: a board nobody set is not a setting on the bare surface.
+  const board = boardAddress();
+  if (full || settings.board !== undefined) lines.push(`board: ${board === '' ? 'off — the tool makes no call to it' : `${board} — ${BOARD_SENDS}`}; change: box bounty config set board <address>, or "" for off`);
   if (!full) lines.push('every setting, its history and the commands that change it: box bounty config --full');
   const rewardNotice = rewardNoticeLine();
   if (rewardNotice !== null) lines.push(rewardNotice);
@@ -365,6 +371,14 @@ export function changeConfig(repoRoot: string | null, verb: string, name: string
     if (repoRoot === null) throw new BountyRefused('config-value-invalid', 'paid records on a bounty in this checkout; nothing changed; next: run box bounty config inside the checkout');
     if (verb !== 'set' || (target !== undefined && target !== 'no')) throw new BountyRefused('config-value-invalid', `nothing changed; next: box bounty config set paid <bounty-id> records the solver was paid, or box bounty config set paid <bounty-id> no withdraws a mistaken record`);
     return recordPaid(repoRoot, value, target === 'no');
+  }
+  if (name === 'board') {
+    const address = boardAddressOf(value);
+    if (verb !== 'set' || address === null) throw new BountyRefused('config-value-invalid', 'the board is a web address with nothing after the host: https, or http on this machine; nothing changed; next: box bounty config set board <address>, or box bounty config set board "" turns it off');
+    saveSettings({ ...loadSettings(), board: address });
+    return address === ''
+      ? 'board: off — the tool makes no call to it; nothing else changes.'
+      : `board: ${address} — ${BOARD_SENDS}`;
   }
   if (name === 'reward' || name === 'reward-limit') {
     if (verb !== 'set') throw new BountyRefused('config-value-invalid', `nothing changed; next: box bounty config set ${name} <whole dollars> [owner/name]`);

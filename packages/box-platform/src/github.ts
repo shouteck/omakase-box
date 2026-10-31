@@ -25,6 +25,8 @@ export interface Env {
   readonly ASSETS?: { fetch(request: Request): Promise<Response> };
   /** Only the local stand-in sets this: pages then say the data is invented. */
   readonly SAMPLE?: boolean;
+  /** Work that outlives the answer (Workers' waitUntil). Absent: it is awaited. */
+  readonly defer?: (work: Promise<unknown>) => void;
 }
 
 /** The budget for this refresh is spent; the next one resumes. Not a failure. */

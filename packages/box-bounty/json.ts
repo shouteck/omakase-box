@@ -27,6 +27,7 @@ import { publishLists } from './never-ship.js';
 import { BountyRefused } from './errors.js';
 import { applicableAttempts,attemptsOf,baseCommitOf,isOpenStage,listRecords,loadRecord,persistRecord,trackedRecordFiles } from './record.js';
 import { promisedTotal } from './money.js';
+import { boardAddress,boardFact,boardTold } from './board.js';
 import { paymentOf } from './pay.js';
 import { bountyAge,endedNextStep,nextStep,notNext,staleReminderLines,validAt } from './render.js';
 import { sharedEnded,sharedOpen,sharedRead } from './store.js';
@@ -208,6 +209,9 @@ const bountyEntry = (repoRoot: string, record: BountyRecord, next: string | null
       solver: payment.solver,
       paidAt: payment.paidAt === null ? null : validAt(payment.paidAt)
     },
+    // What the board says (PF5): null with the board off or outside what
+    // status speaks about.
+    board: boardFact(repoRoot, record) as unknown as JsonObject | null,
     job: record.partOf ?? record.job?.file ?? null,
     resume: resumeEntry(record),
     waiting: record.waiting === undefined ? null : waitingEntry(record.waiting),
@@ -240,6 +244,7 @@ const corruptEntry = (file: string): JsonObject => ({
   baseCommit: null,
   reward: null,
   payment: null,
+  board: null,
   job: null,
   resume: null,
   waiting: null,
@@ -381,6 +386,8 @@ export function statusDocument(repoRoot: string, options: StatusDocumentOptions,
     // The `records:` line as a fact (BT28): whether `.box/bounties/` is
     // tracked in Git, and how many files — the warning's trigger.
     records: { tracked: trackedFiles > 0, trackedFiles },
+    // PF5: the board's address, and what it has not been told yet and why.
+    board: { address: boardAddress() === '' ? null : boardAddress(), notTold: boardTold(repoRoot).pending, reason: boardTold(repoRoot).reason },
     bounties,
     // BT43, additive: which fields hold a stranger's words, and whose.
     foreignFields: STATUS_FOREIGN_FIELDS
@@ -529,7 +536,9 @@ export function configDocument(repoRoot: string | null, notice: (line: string) =
     publishLists: lists,
     waiting,
     // The `records:` line as a fact (BT28) — null outside a checkout.
-    records: trackedFiles === null ? null : { tracked: trackedFiles > 0, trackedFiles }
+    records: trackedFiles === null ? null : { tracked: trackedFiles > 0, trackedFiles },
+    // PF5: the board's address; null when every call to it is off.
+    board: boardAddress() === '' ? null : boardAddress()
   };
 }
 

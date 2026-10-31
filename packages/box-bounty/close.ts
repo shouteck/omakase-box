@@ -1,4 +1,5 @@
 import { invalid,isObject,signedAccount,type GitHubPublication,publicationRef,remoteBranchSha,remoteGit,recoverIssue,api,login } from './gh.js';
+import { readPayAccepts } from './board.js';
 import { emitMergeNotice, showPath } from './notice.js';
 import { BountyRefused } from './errors.js';
 import { git } from './git.js';
@@ -112,7 +113,9 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
     // what the solver actually left there (BT11b). $0 and non-merged closes
     // record nothing.
     if (event.merge !== undefined && (boundAmount(record) ?? 0) > 0) {
-      publication.pay = readPay(root, publication, record, event);
+      const pay = readPay(root, publication, record, event);
+      const accepts = readPayAccepts(pay.solver);
+      publication.pay = accepts === undefined ? pay : { ...pay, accepts };
     }
     publication.pending = null;
     delete record.waiting; // the held outside close is done

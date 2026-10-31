@@ -3,6 +3,7 @@
 import { accountResponse } from './account.js';
 import { feedResponse, detailResponse, rssResponse, schemaResponse } from './feed.js';
 import type { Env } from './github.js';
+import { hintResponse } from './hint.js';
 import { mcpResponse } from './mcp.js';
 import { ownerRecords } from './payments.js';
 import { addOwnerRecord, DAY, filterOf, freshness, FROM_LISTED, OPEN_COUNT, OPEN_WHERE, readBounty, stateOf } from './query.js';
@@ -86,6 +87,7 @@ export async function handle(request: Request, env: Env): Promise<Response> {
   if (url.pathname === '/mcp') return mcpResponse(request, env, now);
   const account = await accountResponse(request, env, url, now);
   if (account !== null) return account;
+  if (url.pathname === '/api/hint' && request.method === 'POST') return hintResponse(request, env, now);
   if (request.method !== 'GET' && request.method !== 'HEAD') return json(405, { error: 'Read-only. Next: use GET.' });
   if (url.pathname === '/bounties.json') return feedResponse(request, env, now);
   if (url.pathname === '/bounties.schema.json') return schemaResponse(request);

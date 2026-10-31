@@ -18,6 +18,7 @@ import { issueComments,refreshGitHubFormat,refreshGitHubStatus } from './collect
 import { instructionNotices,syncInstructions } from './instructions.js';
 import { promisedTotal } from './money.js';
 import { ownerStatusLine,waitingSummary } from './owner-text.js';
+import { boardLine,boardNotToldLine,boardTold } from './board.js';
 import { paymentOf,payToLine } from './pay.js';
 import { applicableAttempts,attemptsOf,endedCount,endedRecords,isOpenStage,listRecords,loadRecord,openRecords,persistRecord,recordDir,retiredRoute,setOpenSurfacesSync,trackedRecordFiles } from './record.js';
 import { corruptFiles,endedContaining,metaKeys,sharedEnded,sharedEndedCount,sharedOpen,sharedRead } from './store.js';
@@ -495,6 +496,8 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
       }
       // Saved context follows the work it explains (BT14).
       lines.push(renderResume(record, '      ', options.full === true));
+      const board = boardLine(repoRoot, record);
+      if (board !== null) lines.push(`      ${board}`);
       // The github: facts are the long form's — reviews found agents never
       // used them in the short one.
       if (options.full && record.github !== undefined) lines.push(`      github: ${record.github.repository} ${record.github.branch} ${record.github.issue?.url ?? 'issue pending'} (${record.github.state}${record.github.kind !== 'history' ? ', snapshot-posted — from before the bounty became an issue on the code that is already there' : ''})${record.github.pending !== null ? `; ${record.github.pending}` : ''}`);
@@ -565,6 +568,8 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
     if (record.stage === 'applied' || record.stage === 'rejected' || record.stage === 'undone') return `${record.id} ${record.stage}${unasked}${finding}${paid} (job: ${record.partOf ?? record.job?.file ?? record.title})`;
     return `${record.id} ${record.stage}${unasked}${finding}${paid}`;
   };
+  const notTold = boardNotToldLine(boardTold(repoRoot));
+  if (notTold !== null) lines.push(notTold);
   if (endedTotal === 0) lines.push('ended: none');
   // Past the limit the compact view joins only the most recently ended —
   // `status --full` (and `status <id>`) keeps the whole list (BT28).
@@ -578,6 +583,8 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
   for (const entry of ended) {
     if (entry.record === null) continue;
     const detailed = options.id !== undefined || entry.record === lastEnded;
+    const board = boardLine(repoRoot, entry.record);
+    if (board !== null) lines.push(`  ${entry.record.id} ${board}`);
     if (detailed) {
       lines.push(renderResume(entry.record, '  ', options.full === true));
       const pay = entry.record.github?.pay;
