@@ -5,10 +5,11 @@ import { showPath } from './notice.js';
 import { loadSettings, saveSettings, settingsFile } from './settings.js';
 
 // Never-ship is the security boundary of a whole-repository bounty. The rules below
-// are built in and cannot be overridden in this wave. Each rule is evaluated on a
-// file's canonical path — realpath-resolved, forward slashes, lower-cased — never on
-// the spelling a candidate arrived under, so a case alias or a link or junction
-// inside the repository cannot slip a listed file past them. The manifest records
+// are built in and cannot be overridden in this wave. Each rule is evaluated on the
+// matching skeleton of a file's canonical path — realpath-resolved, forward slashes,
+// folded by matchingSkeleton — never on the spelling a candidate arrived under, so a
+// case alias, a look-alike spelling or a link or junction inside the repository
+// cannot slip a listed file past them. The manifest records
 // each rule and how many files it removed; removed file names appear only in the
 // local preview, never inside the bounty folder.
 //
@@ -18,8 +19,51 @@ import { loadSettings, saveSettings, settingsFile } from './settings.js';
 
 export interface NeverShipRule {
   readonly name: string;
-  readonly match: (canonicalLowerPath: string) => boolean;
+  readonly match: (canonicalPath: string) => boolean;
 }
+
+// Non-ASCII look-alikes of the letters in the rule words and credential names.
+// Deliberately small and named, not Unicode's confusables list: Cyrillic, Greek,
+// Armenian and IPA letters, and the dashes. Keys hold what is left after NFKC and
+// lower-casing, because callers may lower-case first, so a Greek capital is read
+// by its lower-case shape: capital Nu folds to v, not n. ASCII never folds to
+// ASCII (`.g1t` is not `.git`).
+export const CONFUSABLES: Readonly<Record<string, string>> = {
+  a: 'аαɑ',
+  b: 'вβ',
+  c: 'сςσ',
+  d: 'ԁ',
+  e: 'еε',
+  g: 'ɡց',
+  h: 'һнհ',
+  i: 'іιı',
+  j: 'јϳ',
+  k: 'кκ',
+  l: 'ӏ',
+  m: 'м',
+  n: 'ηո',
+  o: 'оοօ',
+  p: 'рρ',
+  r: 'г',
+  s: 'ѕ',
+  t: 'тτ',
+  u: 'υμս',
+  v: 'νѵ',
+  w: 'ԝ',
+  x: 'хχ',
+  y: 'уү',
+  z: 'ζ',
+  '-': '‐‒–—−'
+};
+const FOLD = new Map(Object.entries(CONFUSABLES).flatMap(([ascii, alikes]) => [...alikes].map(alike => [alike, ascii] as const)));
+
+// What a path is matched as: invisible characters gone, NFKC (width, ligatures,
+// composed or decomposed), lower-cased, the table folded. Only matching uses it;
+// the path kept and shown stays the real one.
+export const matchingSkeleton = (path: string): string =>
+  path.replace(/\p{Default_Ignorable_Code_Point}/gu, '').normalize('NFKC').toLowerCase()
+    .replaceAll('i̇', 'i') // lower-cased dotted capital I
+    .replace(/[^\x00-\x7f]/gu, alike => FOLD.get(alike) ?? alike);
 
 const segments = (path: string): string[] => path.split('/');
 const basename = (path: string): string => path.slice(path.lastIndexOf('/') + 1);
@@ -33,7 +77,9 @@ const KEY_EXTENSIONS = new Set(['key', 'pem', 'p12', 'pfx', 'jks', 'keystore', '
 const CERT_EXTENSIONS = new Set(['crt', 'cer', 'der', 'cert', 'p7b', 'p7c', 'asc']);
 const CREDENTIAL_NAMES = new Set(['.netrc', '.pgpass', '.htpasswd', '.git-credentials', '.npmrc', '.pypirc', '.dockercfg', '.yarnrc', '.yarnrc.yml']);
 
-export const BUILTIN_RULES: readonly NeverShipRule[] = [
+// The table as written, on an already-folded path. Everything else uses
+// BUILTIN_RULES; this is exported so a test can show the fold is what catches.
+export const UNFOLDED_RULES: readonly NeverShipRule[] = [
   { name: 'dot-git', match: path => segments(path).includes('.git') },
   // Dotfiles `.env`/`.envrc` (+ any `.<env>` extension) and env-file spellings like
   // `prod.env`: the basename ends with `.env`. `.env.example`-style suffixes still
@@ -63,6 +109,8 @@ export const BUILTIN_RULES: readonly NeverShipRule[] = [
   }
 ];
 
+export const BUILTIN_RULES: readonly NeverShipRule[] = UNFOLDED_RULES.map(rule => ({ name: rule.name, match: path => rule.match(matchingSkeleton(path)) }));
+
 // The owner's own list: `.boxignore` at the repository root, one pattern per line.
 // `#` starts a comment, blank lines are skipped. Gitignore-lite semantics, all
 // matches against the canonical path, case-folded:
@@ -91,9 +139,9 @@ function globToRegExp(pattern: string): RegExp {
 }
 
 function compilePattern(raw: string, line: number): RegExp {
-  // Fold case on the pattern side too: matches run against the lower-cased
-  // canonical path, so an un-folded pattern containing uppercase could never hit.
-  const pattern = raw.trim().toLowerCase();
+  // Fold the pattern side too: matches run against the path's skeleton, so an
+  // un-folded pattern containing uppercase could never hit.
+  const pattern = matchingSkeleton(raw.trim());
   if (pattern.startsWith('!')) throw new BountyRefused('invalid-boxignore', `${OWNER_LIST_FILE} line ${line}: '!' negation is not supported — never-ship rules can only remove files; next: remove the '!' negation on ${OWNER_LIST_FILE} line ${line}`);
   if (pattern.endsWith('/')) {
     const dir = pattern.slice(0, -1);
@@ -120,7 +168,7 @@ export function loadOwnerList(repoRoot: string): { readonly rule: NeverShipRule;
     patterns.push(trimmed);
   });
   if (compiled.length === 0) return null;
-  return { rule: { name: 'owner-list', match: path => compiled.some(regex => regex.test(path)) }, patterns };
+  return { rule: { name: 'owner-list', match: path => { const skeleton = matchingSkeleton(path); return compiled.some(regex => regex.test(skeleton)); } }, patterns };
 }
 
 // ---------------------------------------------------------------------------
@@ -141,13 +189,16 @@ export interface PublishLists { readonly never: readonly string[]; readonly safe
 
 const toPosix = (path: string): string => path.split('\\').join('/');
 
-// A listed path covers itself and anything below it. Matching folds case on
-// both sides, exactly like the rule table it joins.
-const listedUnder = (entries: readonly string[], path: string): boolean => {
-  const folded = path.toLowerCase();
-  return entries.some(entry => folded === entry.toLowerCase() || folded.startsWith(`${entry.toLowerCase()}/`));
+// A listed path covers itself and anything below it, folded on both sides.
+const listedUnder = (entries: readonly string[], path: string, fold: (text: string) => string): boolean => {
+  const folded = fold(path);
+  return entries.some(entry => folded === fold(entry) || folded.startsWith(`${fold(entry)}/`));
 };
-export const publishListed = (entries: readonly string[], path: string): boolean => listedUnder(entries, path);
+// The never list joins the rule table and folds like it.
+const neverListed = (entries: readonly string[], path: string): boolean => listedUnder(entries, path, matchingSkeleton);
+// The safe list is the scan's one exception, so it folds case only: a look-alike
+// of a safe path is a different file and gets no exception.
+export const publishListed = (entries: readonly string[], path: string): boolean => listedUnder(entries, path, text => text.toLowerCase());
 
 // A project file cannot claim the lists — they live in the owner's settings
 // only. The claim surfaces: files spelled like the lists, and settings-shaped
@@ -197,7 +248,7 @@ export function shipRules(repoRoot: string): readonly NeverShipRule[] {
   const ownerList = loadOwnerList(repoRoot);
   if (ownerList !== null) rules.push(ownerList.rule);
   const publish = publishLists(repoRoot);
-  if (publish.never.length > 0) rules.push({ name: 'owner-never-publish', match: path => listedUnder(publish.never, path) });
+  if (publish.never.length > 0) rules.push({ name: 'owner-never-publish', match: path => neverListed(publish.never, path) });
   return rules;
 }
 
@@ -253,7 +304,7 @@ export function changePublishList(repoRoot: string, which: 'never-publish' | 'sa
     const ownerList = loadOwnerList(repoRoot);
     const rules: NeverShipRule[] = [...BUILTIN_RULES, ...(ownerList === null ? [] : [ownerList.rule])];
     const existing = loadSettings().publishing?.[root]?.never ?? [];
-    if (existing.length > 0) rules.push({ name: 'owner-never-publish', match: path => listedUnder(existing, path) });
+    if (existing.length > 0) rules.push({ name: 'owner-never-publish', match: path => neverListed(existing, path) });
     const rule = rules.find(candidate => candidate.match(offset.toLowerCase()));
     if (rule !== undefined) throw new BountyRefused('publish-list-never-ship', `safe to publish ${listed} names a path the never-ship rule '${rule.name}' keeps out — the safe list cannot carry a never-ship path; nothing changed; next: remove ${listed} from the safe list — never-ship paths cannot be listed`);
   }
