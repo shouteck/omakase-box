@@ -57,7 +57,7 @@ export function gitProgram(): string {
 // commit: the same tree, parent, message and dates always give the same sha,
 // so the GitHub preview, the record and the push can never disagree about
 // which commit it is.
-export interface GitEnv { readonly GIT_INDEX_FILE?: string; readonly GIT_ATTR_SOURCE?: string; readonly GIT_AUTHOR_DATE?: string; readonly GIT_COMMITTER_DATE?: string }
+export interface GitEnv { readonly GIT_INDEX_FILE?: string; readonly GIT_ATTR_SOURCE?: string; readonly GIT_AUTHOR_DATE?: string; readonly GIT_COMMITTER_DATE?: string; readonly GIT_LITERAL_PATHSPECS?: string }
 
 export interface GitOutcome {
   readonly status: number | null;
@@ -455,8 +455,8 @@ export type RefWrite = { readonly delete: string } | { readonly update: string; 
 
 // A git call that reads its input from stdin — mktree's table and any other
 // plumbing whose operand is a stream. Same pin layer as every call above.
-export function gitStdin(repo: string, args: readonly string[], input: string | Buffer, env: GitEnv = {}): string {
-  const result = spawnSync(gitProgram(), [...safeArgs(repo, args, 'foreign'), ...args], {
+export function gitStdin(repo: string, args: readonly string[], input: string | Buffer, env: GitEnv = {}, content: GitContent = 'foreign'): string {
+  const result = spawnSync(gitProgram(), [...safeArgs(repo, args, content), ...args], {
     input,
     encoding: 'utf8',
     env: gitEnvironment(env),

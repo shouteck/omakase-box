@@ -12,6 +12,7 @@ import type { ScanHit } from './scan.js';
 import { showPath } from './notice.js';
 import { canonicalForNew, writeNewRecord } from './record.js';
 import { readDecision, repoReward, requireRepository } from './settings.js';
+import { readMany } from './read-many.js';
 import { createSnapshot } from './snapshot.js';
 import type { SnapshotFile, SnapshotRemoval } from './snapshot.js';
 
@@ -163,18 +164,19 @@ export function planBounty(options: CreateOptions): BountyPlan {
   // the head) is named as not scanned — a fact, never a hold; the owner's
   // never publish list is the way to keep such a file out.
   const publish = publishLists(repoRoot);
-  const found: ScanHit[] = [];
-  const scanBinary: string[] = [];
-  for (const file of files) {
-    try {
-      const bytes = readFileSync(join(repoRoot, ...file.path.split('/')));
-      if (looksBinary(bytes)) { scanBinary.push(file.path); continue; }
-      found.push(...scanText(file.path, bytes.toString('utf8')));
-    } catch {
-      // A file that cannot be read back ships by its recorded hash; the
-      // post scan reads the first-published bytes anyway.
-    }
-  }
+  // Files land in any order (BT46); each keeps its place, so the hits and the
+  // binary list read as they would from one pass over `files`.
+  const hitsByFile = new Map<number, readonly ScanHit[]>();
+  const binaryFiles = new Set<number>();
+  readMany(files.map(file => join(repoRoot, ...file.path.split('/'))), files.map(file => file.bytes), (index, bytes) => {
+    // A file that cannot be read back ships by its recorded hash; the post
+    // scan reads the first-published bytes anyway.
+    if (bytes === null) return;
+    if (looksBinary(bytes)) binaryFiles.add(index);
+    else hitsByFile.set(index, scanText(files[index]!.path, bytes.toString('utf8')));
+  });
+  const found: ScanHit[] = files.flatMap((_, index) => hitsByFile.get(index) ?? []);
+  const scanBinary = files.flatMap((file, index) => binaryFiles.has(index) ? [file.path] : []);
   const scanHits = found.filter(hit => !publishListed(publish.safe, hit.path));
   // The bounty's own text is read too (BT45) — the title as it will be
   // published, the why and the task. A field has no path, so the safe
