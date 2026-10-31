@@ -7,6 +7,9 @@ import { Facts, Section, Soft, Title, fmtDate, plural } from './ui.jsx';
 
 const BountyLine = ({ b, children }) => <li><a href={`/b/${b.id}/`}>{b.title}</a> <Soft as="span">{b.repository}{b.amount > 0 ? ` · $${b.amount}` : ''}{children}</Soft></li>;
 
+const STATE_WORDS = { owed: 'owed', 'owner-decides': 'owed, the owner decides to whom', recorded: 'recorded paid', confirmed: 'recorded paid, confirmed received', 'says-not-received': 'recorded paid, the solver says not received', 'merged-not-on-default': 'merged, not confirmed on the default branch' };
+const stateWords = b => `${STATE_WORDS[b.payment_state] ? ` · ${STATE_WORDS[b.payment_state]}` : ''}${b.not_counted ? ' · not counted' : ''}`;
+
 function Solver({ data }) {
   return (
     <>
@@ -39,7 +42,7 @@ function Owner({ data }) {
           <Facts rows={[
             ['Merged', `${data.record.merged}. Source: GitHub.`],
             ['Recorded paid', `${data.record.recorded_paid}. The owner's word.`],
-            ['Confirmed received', `${data.record.confirmed_received}, by ${plural(data.record.from_solvers, 'different solver')}. The solvers' word.`],
+            ['Confirmed received', `${data.record.confirmed_received}${data.record.from_solvers > 0 ? `, by ${plural(data.record.from_solvers, 'different solver')}` : ''}. The solvers' word.`],
             ['Says not received', `${data.record.says_not_received}. The solvers' word.`],
             ['Owed now', data.record.owed_now === 0 ? 'None.' : `${data.record.owed_now}, the oldest for ${plural(data.record.oldest_owed_days, 'day')}.`],
             data.record.median_days_to_record_paid === null ? null : ['Typical time to record paid', `${plural(data.record.median_days_to_record_paid, 'day')} after the merge.`]
@@ -52,7 +55,7 @@ function Owner({ data }) {
       </Section>
       {closed.length > 0 ? (
         <Section title="Closed bounties" id="closed">
-          <ul className="flex flex-col gap-2">{closed.map(b => <BountyLine key={b.id} b={b} />)}</ul>
+          <ul className="flex flex-col gap-2">{closed.map(b => <BountyLine key={b.id} b={b}>{stateWords(b)}</BountyLine>)}</ul>
         </Section>
       ) : null}
     </>

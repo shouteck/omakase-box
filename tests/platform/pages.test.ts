@@ -229,6 +229,7 @@ describe('the pages', () => {
     expect(await says(stranger)).toContain('Recorded paid by example-mara');
     await visit(stranger.page, '/owner/example-mara/');
     await expect.poll(() => says(stranger)).toContain('Says not received');
+    expect(await says(stranger)).toContain('recorded paid, the solver says not received');
 
     await payee.page.click('text=Confirm I received $45');
     await expect.poll(() => says(payee)).toContain('example-quill says it was received');

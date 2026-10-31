@@ -326,6 +326,8 @@ describe('on the real routes', () => {
     const wren = await owner('example-wren');
     expect(wren.record).toMatchObject({ has_history: false, merged: 0, recorded_paid: 0 });
     expect(wren.not_counted).toHaveLength(1);
+    expect(wren.bounties[0]).toMatchObject({ id: SELF, payment_state: 'recorded', not_counted: true });
+    expect((await owner(OWNER)).bounties.find((row: any) => row.id === ID)).toMatchObject({ payment_state: 'owed', not_counted: false });
     expect((await solver('example-wren')).record.merged).toBe(0);
     expect((await owner('example-sol')).not_counted[0]).toMatchObject({ solver: 'example-fern', because: 'GitHub lists them as collaborator of the repository' });
     expect((await solver('example-fern')).merged.find((row: any) => row.id === LATE).counted).toBe(false);

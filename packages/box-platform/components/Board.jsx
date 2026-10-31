@@ -50,7 +50,7 @@ function RecordLine({ record }) {
     `${record.merged} merged`,
     `${record.recorded_paid} paid by the owner's word`,
     `${record.confirmed_received} received by the solvers' word`,
-    record.owed_now > 0 && record.oldest_owed_days <= 14 ? `${record.owed_now} owed for ${plural(record.oldest_owed_days, 'day')}` : null
+    record.owed_now > 0 && record.oldest_owed_days <= 14 ? `${record.owed_now} owed, the oldest for ${plural(record.oldest_owed_days, 'day')}` : null
   ].filter(Boolean);
   return <>{first.length > 0 ? <span className="font-semibold">{first.join(' · ')} · </span> : null}{rest.join(' · ')}.</>;
 }

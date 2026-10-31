@@ -159,7 +159,7 @@ async function ownerProfile(env: Env, login: string, now: number): Promise<Respo
   const bounties = await env.DB.prepare(`SELECT b.id, b.title, b.amount, b.repository, b.issue_state FROM bounties b WHERE b.poster = ? COLLATE NOCASE ORDER BY b.created_at DESC, b.id LIMIT ?`).bind(login, LIST_MAX).all<ProfileRow>();
   const inputs = await loadPayments(env.DB, 'b.poster = ? COLLATE NOCASE', login);
   const states = new Map(inputs.map(input => [input.id, paymentOf(input)]));
-  const listed = bounties.results.map(row => ({ ...row, payment_state: states.get(row.id)?.state ?? null, counted: states.get(row.id)?.excluded_from_counts === null }));
+  const listed = bounties.results.map(row => ({ ...row, payment_state: states.get(row.id)?.state ?? null, not_counted: (states.get(row.id)?.excluded_from_counts ?? null) !== null }));
   return json(200, { login, record: ownerRecord(inputs, now), not_counted: notCountedOf(inputs), bounties: listed });
 }
 
