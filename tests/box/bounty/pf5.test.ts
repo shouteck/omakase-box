@@ -82,6 +82,15 @@ describe('the hint', () => {
     expect(metaKeys(repo, 'board_hint:')).toEqual([]);
   }));
 
+  it('a merge and a close in one command are one hint: the board reads the whole bounty on one look', () => fixture(({ repo, id, scratch }) => {
+    rewarded(scratch, board);
+    for (const event of ['merged', 'closed']) metaSet(repo, `board_hint:${id}:${event}`, JSON.stringify({ repository: 'owner/project', issue: 3, bounty: id, event }));
+    // The real board refuses a second look within a minute; a second hint would stay queued.
+    expect(flushBoardHints(repo)).toEqual({ pending: 0, reason: null });
+    expect(requests().length).toBe(1);
+    expect(metaKeys(repo, 'board_hint:')).toEqual([]);
+  }));
+
   it.each([
     ['a path for a repository', '../etc/passwd', 1, 'bt-0123456789ab', 'posted'],
     ['text for an issue', 'o/n', 'seven', 'bt-0123456789ab', 'posted'],
@@ -99,7 +108,7 @@ describe('the board unreachable or off', () => {
     expect(postBounty(repo, id, 'github').record.stage).toBe('posted');
     const told = flushBoardHints(repo);
     expect(told).toEqual({ pending: 1, reason: 'it could not be reached' });
-    const line = 'the board has not been told yet: it could not be reached; next: any command when online';
+    const line = 'the board has not been told yet: it could not be reached; next: any later command sends it again';
     expect(boardNotToldLine(told)).toBe(line);
     expect(renderStatus(repo)).toContain(line);
     rewarded(scratch, board);
@@ -401,7 +410,7 @@ describe('the CLI, end to end, with the board on', () => {
     rewarded(scratch, CLOSED_PORT);
     const post = cli(repo, ['post', id]);
     expect(post.status).toBe(0);
-    expect(post.stderr).toContain('the board has not been told yet: it could not be reached; next: any command when online');
+    expect(post.stderr).toContain('the board has not been told yet: it could not be reached; next: any later command sends it again');
     expect(boardTold(repo).pending).toBe(1);
     const off = cli(repo, ['config', 'set', 'board', '']);
     expect(off.status, off.stderr).toBe(0);

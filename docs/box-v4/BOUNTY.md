@@ -554,8 +554,9 @@ things and needs no account or credential for any of them:
   treats it as "read this issue now" and takes every fact from GitHub, so a
   hint cannot change what the board shows. A hint that does not arrive is
   kept in the local store and resent at the end of the next command, at most
-  ten a command; `status` says `the board has not been told yet: <reason>;
-  next: any command when online`, and `post`, `apply`, `close` and `config`
+  ten a command, one per bounty (a look reads the whole bounty); `status`
+  says `the board has not been told yet: <reason>; next: any later command
+  sends it again`, and `post`, `apply`, `close` and `config`
   print the same line on stderr when theirs did not arrive. The command
   itself succeeds exactly as before.
 - **`status` says what the board shows.** For open posted bounties and the

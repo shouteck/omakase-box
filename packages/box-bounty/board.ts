@@ -144,15 +144,18 @@ export function flushBoardHints(root: string): BoardTold {
       if (hint === null) { metaSet(root, key, null); return []; }
       return [{ key, hint }];
     });
-    if (sendable.length === 0) return boardTold(root);
-    const replies = boardCalls(sendable.map(({ hint }) => ({ path: '/api/hint', body: JSON.stringify(hint) })));
+    // One look reads the whole bounty, so one hint per bounty is enough: a
+    // second would only be refused as too soon and stay queued.
+    const once = sendable.filter(({ hint }, index) => sendable.findIndex(other => other.hint.bounty === hint.bounty) === index);
+    if (once.length === 0) return boardTold(root);
+    const replies = boardCalls(once.map(({ hint }) => ({ path: '/api/hint', body: JSON.stringify(hint) })));
     let reason: string | null = null;
-    sendable.forEach(({ key }, index) => {
+    once.forEach(({ hint }, index) => {
       const reply = replies[index]!;
       if ('failed' in reply) reason = reason ?? reply.failed;
       else if (reply.status === 429) reason = reason ?? 'it asked the tool to wait';
       else if (reply.status >= 500) reason = reason ?? `it answered ${reply.status}`;
-      else metaSet(root, key, null);
+      else for (const { key } of sendable) if (key.startsWith(`${HINT_PREFIX}${hint.bounty}:`)) metaSet(root, key, null);
     });
     metaSet(root, HINT_ERROR, reason);
   } catch { /* the board is never a reason a command fails */ }
@@ -160,7 +163,7 @@ export function flushBoardHints(root: string): BoardTold {
 }
 
 export const boardNotToldLine = (told: BoardTold): string | null =>
-  told.pending === 0 ? null : `the board has not been told yet: ${told.reason}; next: any command when online`;
+  told.pending === 0 ? null : `the board has not been told yet: ${told.reason}; next: any later command sends it again`;
 
 // ---- what the board says about a person ------------------------------------
 
