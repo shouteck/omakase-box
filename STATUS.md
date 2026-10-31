@@ -1,6 +1,6 @@
 # Status
 
-Updated by the CTO on 31 October 2026, when BT47 closed.
+Updated by the CTO on 31 October 2026, when BT46 closed.
 
 ## Now
 
@@ -8,7 +8,8 @@ Updated by the CTO on 31 October 2026, when BT47 closed.
 - **The off-machine run went red and is fixed:** BT48's packaging-card lines broke a size limit (`2b0e040`). BT48's own `bt43` test ran there and passed.
 - **BT50 is on master** (`7cc6e18`): a GitHub failure names its cause and next step, and reads retry once. Only the 404 and success shapes were met live; see the [wave file](waves/BT50.md).
 - **BT47 is on master** (`783a865`): the bt39 flake's cause found (a no-op in the test), the poster's own comments shown and labelled, the commit-graph buffer named, the Node floor pinned; see the [wave file](waves/BT47.md).
-- **Running now:** BT46 (owner's START message).
+- **BT46 is on master** (`e192133`): `create` medians went from 13.5 s to 5.5 s at 10k and 175 s to 66 s at 100k, with the shipped files unchanged. Both aims (5 s, 60 s) were narrowly missed; see the [wave file](waves/BT46.md).
+- **Read the off-machine run at the next kickoff:** BT46's worker has not yet run on Node 22.13 or Linux.
 - **Branches (owner, 31 October 2026):** work closes onto master. The cloud session branch `claude/serene-noether-m9qvs3` is left as it is.
 - **For the owner:**
   - the stray idle `node.exe` from BT44 (PID 16324), if it is still running;
