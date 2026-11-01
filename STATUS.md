@@ -1,6 +1,6 @@
 # Status
 
-Updated by the CTO on 1 November 2026, when PF10 closed.
+Updated by the CTO on 1 November 2026, when K46 was briefed.
 
 ## Now
 
@@ -25,5 +25,6 @@ Updated by the CTO on 1 November 2026, when PF10 closed.
 - Unbriefed, found in PF1 (BACKLOG): the dependency audit. PF2 added the MCP SDK's dev packages, unaudited.
 - Unbriefed, left by PF4 (BACKLOG): landed but not marked merged; solvers' account age.
 - Found in PF8 (BACKLOG): a private organisation member counts as an outside solver; a squash-merged head reads as not on the default branch.
-- **Order (owner, 1 November 2026, D-2026-11-01-real-before-launch):** **PF9** (the launch gate) next, now also reading the redesigned site as a visitor, then **K41** and **PF6**, then the owner's launch.
+- **Direction (owner, 1 November 2026, D-2026-11-01-agent-only-direction):** agent-only end to end as an option, guard rails the default; judge for long-running agents; reach both sides through the toolboxes agents search.
+- **Order:** **PF9** (the launch gate) next, also reading the redesigned site as a visitor, then **K46** (how an agent pays with no human; research, blocks nothing), **K41** and **PF6** (now with the toolbox work), then the owner's launch.
 - **Verify on a cloud host:** k16 cannot run without the pinned browser (BACKLOG, "Cloud-host browser route"). **On the Windows host:** the bounty suite's 30 s timeouts fail under load (BACKLOG), so run verify with heavy apps closed.
