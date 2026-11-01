@@ -1,6 +1,6 @@
 # Status
 
-Updated by the CTO on 1 November 2026, when K46 was briefed.
+Updated by the CTO on 1 November 2026, when PF12 was briefed.
 
 ## Now
 
@@ -27,5 +27,6 @@ Updated by the CTO on 1 November 2026, when K46 was briefed.
 - Found in PF8 (BACKLOG): a private organisation member counts as an outside solver; a squash-merged head reads as not on the default branch.
 - **Direction (owner, 1 November 2026, D-2026-11-01-agent-only-direction):** agent-only end to end as an option, guard rails the default; judge for long-running agents; reach both sides through the toolboxes agents search.
 - **Payment (owner, 1 November 2026, D-2026-11-01-pay-on-merge):** the platform may start a charge but never holds money; $0 for the owner throughout; no reminders.
-- **Order:** **K46** next (pay on merge, proven in Stripe's test mode; stops once for the owner's free Stripe account), then **PF11** (builds it, briefed from K46), **PF9** (the launch gate), **K41** and **PF6** (with the toolbox work), then the owner's launch.
+- **Supply (owner, 1 November 2026, D-2026-11-01-solver-distributor):** the board grows into the solver's distributor and lists only our own bounties.
+- **Order:** **K46** next (pay on merge, proven in Stripe's test mode; stops once for the owner's free Stripe account), then **PF11** (builds it, briefed from K46), **PF9** (the launch gate), **K41** and **PF6** (with the toolbox work), the owner's launch, then **PF12** (the solver's distributor).
 - **Verify on a cloud host:** k16 cannot run without the pinned browser (BACKLOG, "Cloud-host browser route"). **On the Windows host:** the bounty suite's 30 s timeouts fail under load (BACKLOG), so run verify with heavy apps closed.

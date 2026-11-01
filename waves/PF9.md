@@ -1,10 +1,10 @@
 # PF9: every flow, for real, by fresh agents
 
 Milestone: PF (the platform) · Station: evidence · Base: `master at dispatch` · Branch: `wave/PF9` · Timebox: 300 minutes; at expiry, report partial findings and stop
-Owner decisions: D-2026-11-01-real-before-launch, D-2026-10-19-k31-sandbox-go
+Owner decisions: D-2026-11-01-real-before-launch, D-2026-10-19-k31-sandbox-go, D-2026-11-01-pay-on-merge
 Horizon: long: start with `/plan` and keep the plan in this file
 
-**Brief.** Written by the CTO on 1 November 2026. **The launch gate.** Owner: making sure the product's functionality is fully covered matters more than further engineering. Nothing launches until this passes.
+**Brief.** Written by the CTO on 1 November 2026. **The launch gate. Runs after K46 and PF11.** Owner: making sure the product's functionality is fully covered matters more than further engineering. Nothing launches until this passes.
 
 ## Outcome
 
@@ -26,12 +26,13 @@ Each seat is a fresh session in a scratch folder, never a subagent, with its own
 | 8 | Solver, money | The bounty page, signed in | Confirm or dispute | Both words shown, attributed |
 | 9 | Owner, stopping | The tool and the site | Stop agents posting here; close one | `deny` holds; a bounty closes; nothing is left open |
 | 10 | Refusals | A task with a token, a private repository, a never-ship path | Try to post | Each held or refused with a true next step; nothing goes out |
+| 11 | Pay on merge, if PF11 built it | Stripe's test mode, a test card and a connected test solver | Turn it on and merge a solution | The test solver is paid in test mode, the board shows it, and a duplicate does not charge twice |
 
 Add a flow if the plan finds one PLAN.md's stages name and this table misses.
 
 ## Rewards in the sandbox
 
-Seats 7 and 8 need a stated reward. The owner approves this wave with a **$5 stated reward on sandbox bounties**, with the task saying "test bounty; solved by the project's own agents; no money moves". **No real money moves.** A "paid" recorded in the test is withdrawn before the wave closes, because it would be a false fact.
+Seats 7 and 8 need a stated reward. The owner approves this wave with a **$5 stated reward on sandbox bounties**, with the task saying "test bounty; solved by the project's own agents; no money moves". **No real money moves.** Seat 11 uses only Stripe's test mode and test cards; if K46 found a blocker, seat 11 tests what PF11 built instead. A "paid" recorded in the test is withdrawn before the wave closes, because it would be a false fact.
 
 ## Before launch: a clean board
 
@@ -46,7 +47,7 @@ Anything the test leaves must not look like activity on launch day. The sandbox'
 ## Done when
 
 - `node scripts/verify.mjs test:box-bounty test:platform test:kitchen` exits 0 on the final commit, with heavy apps closed.
-- All ten seats ran, or the Result says which did not and why. No seat is marked passed from a report alone: GitHub, the board and the logs back it.
+- All eleven seats ran, or the Result says which did not and why. No seat is marked passed from a report alone: GitHub, the board and the logs back it.
 - Open **blocks** and **misleads** findings: zero, or each named to the owner with one recommendation.
 - Sandbox issues and pull requests closed, scratch removed, the live board clean.
 
@@ -60,7 +61,7 @@ Anything the test leaves must not look like activity on launch day. The sandbox'
 
 - Investigation playbook, bug-fix for what it finds; principles: prove-it-works.
 - Seats are test subjects; the CTO runs them and checks the results itself. Fresh sessions may need the owner's turn to start, per the kitchen's participants note.
-- K44's stop signal stays: these agents are told to hand off, so this does not measure whether agents choose to. PF6's comparison does.
+- These agents are told to hand off, so this does not measure whether agents choose to, and today's sessions are no verdict on that (D-2026-11-01-agent-only-direction).
 
 ---
 

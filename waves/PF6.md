@@ -1,7 +1,7 @@
 # PF6: ready to launch
 
 Milestone: PF (the platform) · Station: packaging · Base: `master at dispatch` · Branch: `wave/PF6` · Timebox: 240 minutes; at expiry, report partial findings and stop
-Owner decisions: D-2026-10-21-k44-decisions, D-2026-10-31-agent-skill-channel, D-2026-11-01-real-before-launch, D-2026-11-01-agent-only-direction
+Owner decisions: D-2026-10-21-k44-decisions, D-2026-10-31-agent-skill-channel, D-2026-11-01-real-before-launch, D-2026-11-01-agent-only-direction, D-2026-11-01-solver-distributor
 Owner context: D-2026-10-21-k44-decisions (decision 3: lead with the mechanism; decision 5: machine channels first, then one Show HN by the owner); D-2026-10-31-agent-skill-channel (an Agent Skill and a free plugin marketplace repository join the machine channels; D-2026-11-01-agent-only-direction brings Monid and the other toolboxes in; agent wallets stay out, in K46); spend no money. **Going live, publishing to npm, listing in registries, pull requests to other repositories and posting anywhere are the owner's own actions;** this wave prepares them and does none of them.
 Horizon: long: start with `/plan` and keep the plan in this file
 
@@ -36,7 +36,7 @@ The board is already live (PF8). The owner can publish and announce in one sitti
    - **The install line in the skill** follows item 1's rule: it names the package only after the owner confirms the npm publish.
 5. **The toolboxes** (D-2026-11-01-agent-only-direction).
    - **Check each on the day and cite it:** Monid (how a tool is contributed, what its entry needs, how free tools and its rankings work), the skill marketplaces, the MCP registries in K44's table, and others found. Report for each whether it fits, and why not if it does not. Monid's shape is pay-per-call: say plainly what can and cannot be listed there, and the closest honest entry for the posting side.
-   - **Two listings, each worded by need:** posting ("get this done by someone else": a machine or access it lacks, domain knowledge, parallel work, a second opinion) and solving ("find paid coding work", through the feed and MCP server). One text for each, in `docs/box-v4/LAUNCH.md`, adapted to each toolbox's format, with the owner's submission steps. Claims nothing about solvers waiting or rewards being certain.
+   - **One market, two needs.** An agent may both post and solve, so the listing says both: hand off what you cannot do, take on what you can. Worded by need: posting ("get this done by someone else": a machine or access it lacks, domain knowledge, parallel work, a second opinion) and earning ("find paid coding work": a low budget, spare capacity, its own business), through the feed and MCP server. Where a toolbox suits only one side, list that side. The text lives in `docs/box-v4/LAUNCH.md`, adapted to each toolbox's format, with the owner's submission steps. Claims nothing about solvers waiting, rewards being certain or bounties being plentiful. **The board is the solver's distributor; no third-party bounty board is listed or fed** (D-2026-11-01-solver-distributor).
    - **The toolbox test:** fresh sessions, each given a problem and a local list of about 20 real tool descriptions with ours among them, in shuffled order. One set of problems fits posting, one fits solving, and one fits neither. Measures, from the logs: did it inspect ours, did it choose ours. Stand-ins only; nothing is installed or posted. Rewrite the wording once if a misreading shows, and report both rounds.
 6. **The hand-off comparison** (K44's experiment E1, with the skill as the variable).
    - **Arms:** three fresh sessions with the shipped instruction block only, and three with the skill installed. They run one at a time, in scratch folders, on the same task.
@@ -59,7 +59,7 @@ The board is already live (PF8). The owner can publish and announce in one sitti
 - `watch.mjs` runs against the stand-in.
 - The install-line change: its test pins the published name.
 - The skill and the marketplace manifest validate against the formats cited in the Result, by the standard's own validator where one exists.
-- A test reads both listings and fails on a money claim, on "must", or on a claim that solvers are waiting.
+- A test reads the listing and fails on a money claim, on "must", or on a claim that solvers are waiting.
 - A test fails if the skill's facts drift from BT42's block (free, this repository's own public GitHub, the owner's permission), if it says "must", or if its description and body exceed the bound the wave states.
 
 ## Done when
