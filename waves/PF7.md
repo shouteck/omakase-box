@@ -68,6 +68,15 @@ Before polishing, render the first screen, one owner step and the solver path, o
 - Prototype playbook for the look, then feature; principles: prove-it-works.
 - Load the host's artifact-design guidance if publishing the stop page as an artifact. It is private until the owner shares it.
 
+## Plan
+
+1. Throwaway prototype of two directions (A one path, B a drawing per step); publish privately; stop for the owner. Nothing below starts before the owner chooses.
+2. Build: `/board/` takes today's board and `Board.jsx`'s links; `/` gets the brief's sections with `components/Parcel.jsx` and a three-card newest list; nav gains Board, `/how/`'s primary goes to `/board/`; `GET /api/me` gains `you_owe` and `owed_to_you` (states `owed`, `owner-decides`; excluded bounties left out; no methods), shown as links on `/me/`.
+3. Tests in `tests/platform/`: page checks on `/` and `/board/`, no private repository on `/`, hostile title as text, every command on the page run with `--help` against the built CLI with a bogus one failing, `/me/` per viewer. Existing board tests move path only; the Result lists them.
+4. Verify, real browser, keyboard and contrast, two fresh sessions, then close.
+
+Install finding at the stop: `box-bounty` is not on npm and has no `bin`; a clean clone, two installs, a build and `node packages/box-cli/dist/cli.js bounty help` worked.
+
 ---
 
 ## Result
