@@ -17,6 +17,7 @@ export class StripeStandin {
   private server: Server | null = null;
   url = '';
 
+  expireRefused = false;
   /** Pages for a payment. Paying one is what the owner does on Stripe's page. */
   sessions = new Map<string, { id: string; url: string; account: string; status: string; payment_status: string; payment_intent: string | null; amount_total: number; bounty: string; methods: string | null; adaptive: string | null }>();
   payPage(id: string): Intent {
@@ -48,6 +49,7 @@ export class StripeStandin {
     }
     let match = /^\/v1\/checkout\/sessions\/(cs_[\w]+)\/expire$/.exec(path);
     if (match && method === 'POST') {
+      if (this.expireRefused) return { status: 400, json: { error: { message: 'Only open sessions can be expired.' } } };
       const session = this.sessions.get(match[1]!);
       if (session !== undefined) session.status = 'expired';
       return { status: 200, json: session ?? {} };

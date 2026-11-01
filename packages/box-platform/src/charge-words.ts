@@ -17,3 +17,11 @@ export const CHARGE_WORDS: Record<Exclude<ChargeState, 'looked'>, string> = {
   refunded: 'Stripe records this payment as refunded.',
   disputed: 'The card\'s bank is disputing this payment. The dispute is on the solver\'s Stripe account.'
 };
+
+/** Where the owner's click went through PayPal, the words that differ. */
+export const PAYPAL_WORDS: Partial<typeof CHARGE_WORDS> = {
+  'owner-paying': 'The owner opened PayPal\'s page. Nothing has been charged yet.',
+  paid: 'PayPal took the payment from the owner and paid the solver\'s own account. PayPal\'s fee comes out of the reward.',
+  refunded: 'PayPal records this payment as refunded or reversed.',
+  disputed: 'The payer is disputing this payment. The dispute is on the solver\'s PayPal account.'
+};

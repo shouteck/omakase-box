@@ -2,6 +2,8 @@
 // filtered here on the server. No unfiltered record ever leaves this file.
 import { accountResponse } from './account.js';
 import { applyEvent, payingIds } from './charge.js';
+import { applyPayPalEvent, authorTakesPayPal } from './paypal-pay.js';
+import { PayPalUnavailable, webhookHolds } from './paypal.js';
 import { signatureHolds } from './stripe.js';
 import { feedResponse, detailResponse, rssResponse, schemaResponse } from './feed.js';
 import type { Env } from './github.js';
@@ -79,6 +81,7 @@ async function bounty(env: Env, id: string, now: number): Promise<Response> {
       solutions: pulls.slice(0, SOLUTIONS_MAX).map(pull => ({ number: pull.number, author: pull.author, state: pull.state, opened_at: pull.opened_at, merged_at: pull.merged_at, url: `${base}/pull/${pull.number}` })),
       history,
       pays_on_merge: (await payingIds(env, [row.id])).has(row.id),
+      author_takes_paypal: await authorTakesPayPal(env, row.id),
       agents_welcome: true
     }
   });
@@ -95,6 +98,21 @@ async function webhook(request: Request, env: Env, now: number): Promise<Respons
   return json(200, { received: true });
 }
 
+/** PayPal telling the board what happened. Nothing is believed unless PayPal itself says its signature holds. Unavailable: PayPal sends it again. */
+async function paypalWebhook(request: Request, env: Env, now: number): Promise<Response> {
+  const body = await request.text();
+  try {
+    const event: unknown = JSON.parse(body);
+    if (!await webhookHolds(env, request.headers, body, now)) return json(400, { error: 'The signature does not hold. Nothing changed.' });
+    await applyPayPalEvent(env, event as Parameters<typeof applyPayPalEvent>[1], now);
+  } catch (error) {
+    if (error instanceof SyntaxError) return json(400, { error: 'That is not JSON. Nothing changed.' });
+    if (error instanceof PayPalUnavailable) return json(503, { error: 'PayPal could not be reached. Nothing changed.' });
+    throw error;
+  }
+  return json(200, { received: true });
+}
+
 /** Routes: the machine interface, the two data answers, the one shell for every bounty address, then the static export. */
 export async function handle(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
@@ -104,6 +122,7 @@ export async function handle(request: Request, env: Env): Promise<Response> {
   if (account !== null) return account;
   if (url.pathname === '/api/hint' && request.method === 'POST') return hintResponse(request, env, now);
   if (url.pathname === '/api/stripe/webhook' && request.method === 'POST') return webhook(request, env, now);
+  if (url.pathname === '/api/paypal/webhook' && request.method === 'POST') return paypalWebhook(request, env, now);
   if (request.method !== 'GET' && request.method !== 'HEAD') return json(405, { error: 'Read-only. Next: use GET.' });
   if (url.pathname === '/bounties.json') return feedResponse(request, env, now);
   if (url.pathname === '/bounties.schema.json') return schemaResponse(request);

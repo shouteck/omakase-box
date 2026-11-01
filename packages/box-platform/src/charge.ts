@@ -104,7 +104,7 @@ type DueRow = { id: string; amount: number; poster: string; poster_id: number; o
 const LOOK_AGAIN_MS = 300000; // A state that may change is looked at this often, never faster.
 
 /** Who can be paid here, by GitHub's facts and the account tied to the merged author's id. Shared by the machine and the owner's click. */
-async function payeeFacts(env: Env, id: string): Promise<Pick<ChargeFacts, 'landed' | 'solver' | 'recorded'>> {
+export async function payeeFacts(env: Env, id: string): Promise<Pick<ChargeFacts, 'landed' | 'solver' | 'recorded'>> {
   const db = env.DB;
   const landed = (await db.prepare(`SELECT number, author, author_id, merged_at, association, on_default FROM pull_requests WHERE bounty_id = ? AND state = 'merged' AND on_default = 1 ORDER BY number`).bind(id).all<Merged>()).results;
   const authorId = landed.length === 1 ? landed[0]!.author_id : null;
@@ -147,7 +147,7 @@ export async function settleCharges(env: Env): Promise<number> {
 
 async function saveCharge(env: Env, id: string, state: ChargeState, pull: Merged | null, account: string | null, card: string | null, intent: string | null, amount: number, now: number): Promise<void> {
   await env.DB.prepare(`INSERT INTO charges (bounty_id, state, pull_number, solver, account_id, amount, payment_method, payment_intent, at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT (bounty_id) DO UPDATE SET state = excluded.state, pull_number = excluded.pull_number, solver = excluded.solver, account_id = excluded.account_id, amount = excluded.amount, payment_method = excluded.payment_method, payment_intent = excluded.payment_intent, at = excluded.at`)
+    ON CONFLICT (bounty_id) DO UPDATE SET state = excluded.state, pull_number = excluded.pull_number, solver = excluded.solver, account_id = excluded.account_id, amount = excluded.amount, payment_method = excluded.payment_method, payment_intent = excluded.payment_intent, at = excluded.at, provider = NULL`)
     .bind(id, state, pull?.number ?? null, pull?.author ?? null, account, amount, card, intent, now).run();
 }
 
@@ -217,19 +217,20 @@ export async function authenticationPage(env: Env, id: string, origin: string, n
 
 // ---- the owner's own click (PF13) ---------------------------------------------
 
-export type PayFacts = Pick<ChargeFacts, 'amount' | 'poster' | 'landed' | 'solver' | 'recorded'> & { state: ChargeState | null };
+export type PayFacts = Pick<ChargeFacts, 'amount' | 'poster' | 'landed' | 'solver' | 'recorded'> & { state: ChargeState | null; provider?: 'Stripe' | 'PayPal' };
 export type PayDecision =
   | { act: 'open'; pull: Merged; account: string }
   /** `shown`: a fact the owner's page states without being asked. */
   | { act: 'refuse'; words: string; shown: boolean };
 
 /**
- * Whether the poster's click opens Stripe's page. The payee rule is pay on merge's. The limit is not here:
- * it guards a charge nobody is watching, and here a person sees the amount on Stripe's page. The order is the rule.
+ * Whether the poster's click opens the provider's page. The payee rule is pay on merge's. The limit is not here:
+ * it guards a charge nobody is watching, and here a person sees the amount on that page. The order is the rule.
  */
 export function decidePay(facts: PayFacts): PayDecision {
   const refuse = (words: string, shown = false): PayDecision => ({ act: 'refuse', words, shown });
-  if (facts.state !== null && SETTLED.includes(facts.state)) return refuse('Stripe already records a payment on this bounty. Nothing was charged.');
+  const provider = facts.provider ?? 'Stripe';
+  if (facts.state !== null && SETTLED.includes(facts.state)) return refuse('A provider already records a payment on this bounty. Nothing was charged.');
   if (facts.recorded) return refuse('A payment is already recorded on this bounty. Nothing was charged. Next: withdraw that record first.');
   if (facts.state === 'owner-must-authenticate') return refuse('This payment is waiting for the card to authenticate. Nothing was charged. Next: finish it on Stripe\'s page from this page.');
   if (facts.state === 'charging') return refuse('A charge has been started and has not finished. Nothing more was charged. Next: reload this page in a few minutes.');
@@ -238,18 +239,18 @@ export function decidePay(facts: PayFacts): PayDecision {
   const pull = facts.landed[0]!;
   const excluded = notCounted(pull, facts.poster);
   if (excluded !== null) return refuse(`Not paid from here: ${excluded.because}. Nothing was charged.`);
-  if (facts.solver === null) return refuse(`${pull.author} has not connected Stripe. Nothing was charged. Next: pay by a method they listed.`, true);
-  if (!facts.solver.ready) return refuse(`${pull.author} has not finished connecting Stripe. Nothing was charged. Next: pay by a method they listed.`, true);
+  if (facts.solver === null) return refuse(`${pull.author} has not connected ${provider}. Nothing was charged. Next: pay by a method they listed.`, true);
+  if (!facts.solver.ready) return refuse(`${pull.author} has not finished connecting ${provider}. Nothing was charged. Next: pay by a method they listed.`, true);
   return { act: 'open', pull, account: facts.solver.account_id };
 }
 
 const PAGE_MINUTES = 31; // Stripe's shortest life for a page is 30 minutes.
-type PayRow = { state: ChargeState; account_id: string | null; amount: number | null; payment_intent: string | null; at: number };
+type PayRow = { state: ChargeState; provider: string | null; account_id: string | null; amount: number | null; payment_intent: string | null; at: number };
 
 const payFacts = async (env: Env, id: string): Promise<{ facts: PayFacts; row: PayRow | null; poster_id: number | null } | null> => {
   const bounty = await env.DB.prepare('SELECT amount, poster, poster_id FROM bounties WHERE id = ?').bind(id).first<{ amount: number; poster: string; poster_id: number | null }>();
   if (bounty === null) return null;
-  const row = await env.DB.prepare('SELECT state, account_id, amount, payment_intent, at FROM charges WHERE bounty_id = ?').bind(id).first<PayRow>();
+  const row = await env.DB.prepare('SELECT state, provider, account_id, amount, payment_intent, at FROM charges WHERE bounty_id = ?').bind(id).first<PayRow>();
   return { facts: { amount: bounty.amount, poster: bounty.poster, ...await payeeFacts(env, id), state: row?.state ?? null }, row, poster_id: bounty.poster_id };
 };
 
@@ -266,7 +267,32 @@ const isPaid = (session: Record<string, unknown>): boolean => session['status'] 
 
 /** Stripe's page says it was paid, so the board's row does. The same words as the webhook, for when that one is late. */
 async function recordPage(env: Env, id: string, session: Record<string, unknown>, now: number): Promise<void> {
-  await env.DB.prepare(`UPDATE charges SET state = 'paid', payment_intent = ?, at = ? WHERE bounty_id = ? AND state = 'owner-paying'`).bind(typeof session['payment_intent'] === 'string' ? session['payment_intent'] : null, now, id).run();
+  await env.DB.prepare(`UPDATE charges SET state = 'paid', payment_intent = ?, at = ? WHERE bounty_id = ? AND state = 'owner-paying' AND provider IS NULL`).bind(typeof session['payment_intent'] === 'string' ? session['payment_intent'] : null, now, id).run();
+}
+
+/**
+ * The claim on a bounty's one live page. Whoever loses it uses the winner's time, so every click at once asks the provider
+ * for the same thing under the same key. Null: something else holds it, a charge or the other provider's page.
+ */
+export async function claimPage(env: Env, id: string, row: { at: number; state: string } | null, pull: Merged, account: string, amount: number, provider: 'paypal' | null, held: string | null, now: number): Promise<{ at: number } | null> {
+  const claimed = await env.DB.prepare(`INSERT INTO charges (bounty_id, state, pull_number, solver, account_id, amount, payment_intent, at, provider) VALUES (?, 'owner-paying', ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT (bounty_id) DO UPDATE SET state = 'owner-paying', pull_number = excluded.pull_number, solver = excluded.solver, account_id = excluded.account_id, amount = excluded.amount, payment_method = NULL, payment_intent = excluded.payment_intent, at = excluded.at, provider = excluded.provider
+    WHERE charges.at = ? AND charges.state = ? RETURNING at`).bind(id, pull.number, pull.author, account, amount, held, now, provider, row?.at ?? -1, row?.state ?? '').first<{ at: number }>();
+  if (claimed !== null) return claimed;
+  const winner = await env.DB.prepare(`SELECT at, provider FROM charges WHERE bounty_id = ? AND state = 'owner-paying'`).bind(id).first<{ at: number; provider: string | null }>();
+  return winner !== null && winner.provider === provider ? { at: winner.at } : null;
+}
+
+/** Before PayPal's page opens: a Stripe page still open could be paid as well, so it must go first. */
+export async function retireStripePage(env: Env, id: string, now: number): Promise<'paid' | 'gone' | 'failed'> {
+  const row = await env.DB.prepare(`SELECT account_id, payment_intent FROM charges WHERE bounty_id = ? AND state = 'owner-paying' AND provider IS NULL`).bind(id).first<{ account_id: string; payment_intent: string | null }>();
+  if (row === null || row.payment_intent?.startsWith('cs_') !== true) return 'gone';
+  const on = { account: row.account_id };
+  const read = await stripe(env, 'GET', `/v1/checkout/sessions/${row.payment_intent}`, undefined, on);
+  if (read.status === 200 && isPaid(read.json)) { await recordPage(env, id, read.json, now); return 'paid'; }
+  if (read.status === 200 && read.json['status'] === 'expired') return 'gone';
+  const expired = await stripe(env, 'POST', `/v1/checkout/sessions/${row.payment_intent}/expire`, {}, on);
+  return expired.status === 200 ? 'gone' : 'failed';
 }
 
 /**
@@ -296,22 +322,18 @@ export async function openPayPage(env: Env, id: string, origin: string, now: num
     return { paid: true };
   }
   if (first !== null) return { error: CHARGE_WORDS[first.state as 'solver-disconnected' | 'solver-not-ready'] };
-  // Whoever loses the claim uses the winner's time, so every click at once asks Stripe for the same thing under the same key.
-  const claimed = await env.DB.prepare(`INSERT INTO charges (bounty_id, state, pull_number, solver, account_id, amount, payment_intent, at) VALUES (?, 'owner-paying', ?, ?, ?, ?, ?, ?)
-    ON CONFLICT (bounty_id) DO UPDATE SET state = 'owner-paying', pull_number = excluded.pull_number, solver = excluded.solver, account_id = excluded.account_id, amount = excluded.amount, payment_method = NULL, payment_intent = excluded.payment_intent, at = excluded.at
-    WHERE charges.at = ? AND charges.state = ? RETURNING at`).bind(id, pull.number, pull.author, account, amount, held, now, row?.at ?? -1, row?.state ?? '').first<{ at: number }>();
-  const now_held = claimed ?? await env.DB.prepare(`SELECT at FROM charges WHERE bounty_id = ? AND state = 'owner-paying'`).bind(id).first<{ at: number }>();
+  const now_held = await claimPage(env, id, row, pull, account, amount, null, held, now);
   if (now_held === null) return { error: 'A charge has been started and has not finished. Nothing more was charged. Next: reload this page in a few minutes.' };
   const session = await stripe(env, 'POST', '/v1/checkout/sessions', { ...checkoutForm(id, amount, pull.number, origin), expires_at: String(Math.floor(now_held.at / 1000) + PAGE_MINUTES * 60) }, { account, idempotency: `pf13/${id}/pay/${held ?? 'first'}` });
   if (session.status !== 200 || typeof session.json['url'] !== 'string' || typeof session.json['id'] !== 'string') return { error: `${errorWords(session)} Nothing was charged.` };
-  await env.DB.prepare(`UPDATE charges SET payment_intent = ? WHERE bounty_id = ? AND state = 'owner-paying'`).bind(session.json['id'], id).run();
+  await env.DB.prepare(`UPDATE charges SET payment_intent = ? WHERE bounty_id = ? AND state = 'owner-paying' AND provider IS NULL`).bind(session.json['id'], id).run();
   return { url: session.json['url'] };
 }
 
 /** The poster back from Stripe's page, ahead of the webhook. Nothing to do for anyone else. */
 export async function readPayPage(env: Env, id: string, githubId: number, now: number): Promise<void> {
   if (!stripeOn(env)) return;
-  const row = await env.DB.prepare(`SELECT c.account_id, c.payment_intent FROM charges c JOIN bounties b ON b.id = c.bounty_id WHERE c.bounty_id = ? AND c.state = 'owner-paying' AND b.poster_id = ?`).bind(id, githubId).first<{ account_id: string; payment_intent: string | null }>();
+  const row = await env.DB.prepare(`SELECT c.account_id, c.payment_intent FROM charges c JOIN bounties b ON b.id = c.bounty_id WHERE c.bounty_id = ? AND c.state = 'owner-paying' AND c.provider IS NULL AND b.poster_id = ?`).bind(id, githubId).first<{ account_id: string; payment_intent: string | null }>();
   if (row === null || row.payment_intent === null) return;
   const read = await stripe(env, 'GET', `/v1/checkout/sessions/${row.payment_intent}`, undefined, { account: row.account_id });
   if (read.status === 200 && isPaid(read.json)) await recordPage(env, id, read.json, now);

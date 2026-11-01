@@ -78,7 +78,7 @@ describe('sign-in', () => {
     expect(asked.searchParams.get('state')).toMatch(/^[a-f\d]{64}$/);
 
     const me = await (await send(jar, '/api/me')).json() as any;
-    expect(me).toEqual({ signed_in: true, login: PAYEE.login, sponsors_page: `https://github.com/sponsors/${PAYEE.login}`, pay: { set_up: false }, methods: [], you_owe: [], owed_to_you: [expect.objectContaining({ id: STATE_IDS.owed, amount: 45, to: PAYEE.login })] });
+    expect(me).toEqual({ signed_in: true, login: PAYEE.login, sponsors_page: `https://github.com/sponsors/${PAYEE.login}`, pay: { set_up: false }, paypal: { set_up: false, connected: false }, methods: [], you_owe: [], owed_to_you: [expect.objectContaining({ id: STATE_IDS.owed, amount: 45, to: PAYEE.login })] });
 
     const token = r.standin.tokensIssued[0]!;
     expect(token.length).toBeGreaterThan(10);

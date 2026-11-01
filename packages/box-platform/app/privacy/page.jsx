@@ -18,6 +18,7 @@ export default function Page() {
           <li>The ways you accept payment, with who may see each one. Remove one and it is gone. An email or wallet address you list is stored because you listed it.</li>
           <li>Your answer about whether a recorded payment arrived, shown publicly as your word until you withdraw it.</li>
           <li>Your click recording a bounty you posted as paid, shown publicly as your word until you withdraw it.</li>
+          <li>If you connect PayPal, your PayPal account ID, and nothing else from PayPal: not your email or name. Your login token is used once, then discarded. Disconnect and the ID is gone.</li>
         </ul>
       </Section>
       <Section title="What it never does" id="never">
