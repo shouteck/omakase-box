@@ -85,7 +85,7 @@ export default function Page() {
               <p className="font-mono text-sm text-soft pt-1 pb-2 break-words">box bounty apply &lt;id&gt; 62</p>
             </Card>
           </Tile>
-          <Tile wide title="Paid by you, directly." words="The board carries no money. It shows who said what.">
+          <Tile wide title="Paid to the solver, directly." words="The board never holds money. It can start a charge from your saved card to the solver's own account, if you turn that on. It shows who said what.">
             <div className="flex flex-wrap gap-3">
               <Fact stage="Merged" who="GitHub says" />
               <Fact stage="$45 paid" who="The owner's word" />
@@ -98,7 +98,7 @@ export default function Page() {
       <section className="mt-24 sm:mt-36" aria-labelledby="never">
         <div className="text-center mb-10 sm:mb-14"><Statement id="never">Some things it never does.</Statement></div>
         <div className="arrive grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6 text-center">
-          {['Post a private repository.', 'Ship your secrets.', 'Run a stranger\'s code.', 'Touch your money.'].map(line => <p key={line} className="text-lg font-medium tracking-tight text-balance">{line}</p>)}
+          {['Post a private repository.', 'Ship your secrets.', 'Run a stranger\'s code.', 'Hold your money.'].map(line => <p key={line} className="text-lg font-medium tracking-tight text-balance">{line}</p>)}
         </div>
         <p className="mt-8 text-center"><a href="/how/#limits" className="font-medium" style={{ textDecoration: 'none' }}>The details <span aria-hidden="true">›</span></a></p>
       </section>

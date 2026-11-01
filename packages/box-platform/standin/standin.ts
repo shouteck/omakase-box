@@ -37,6 +37,7 @@ export class Standin {
   resetAt = 0;
   /** Who the next person signing in at the stand-in is; a test changes it. */
   signInAs: { id: number; login: string } = { id: 7001, login: 'example-quill' };
+  accountIds = new Map<string, number>([['example-quill', 7001]]);
   readonly oauthClientId = 'standin-client';
   readonly oauthClientSecret = 'standin-client-word';
   /** Every token handed out, so a test can look for them where they must not be. */
@@ -102,7 +103,7 @@ export class Standin {
     match = /^\/repos\/([^/]+\/[^/]+)\/pulls$/.exec(path);
     if (match) {
       const issue = this.issues.find(entry => entry.repository === match![1] && `box-bounty/${entry.id}` === query.get('base'));
-      return { status: 200, json: (issue?.pulls ?? []).map(pull => ({ number: pull.number, state: pull.state, merged_at: pull.merged_at ?? null, created_at: pull.created_at, user: { login: pull.author }, author_association: pull.association ?? 'NONE', head: { sha: headOf(pull) }, title: 'A SOLVER WROTE THIS TITLE' })) };
+      return { status: 200, json: (issue?.pulls ?? []).map(pull => ({ number: pull.number, state: pull.state, merged_at: pull.merged_at ?? null, created_at: pull.created_at, user: { login: pull.author, id: this.idOf(pull.author) }, author_association: pull.association ?? 'NONE', head: { sha: headOf(pull) }, title: 'A SOLVER WROTE THIS TITLE' })) };
     }
     match = /^\/repos\/([^/]+\/[^/]+)\/compare\/([a-f\d]{40})\.\.\.[^/]+$/.exec(path);
     if (match) {
@@ -135,8 +136,13 @@ export class Standin {
       html_url: `https://github.com/${issue.repository}/issues/${issue.number}`,
       repository_url: `https://api.github.com/repos/${issue.repository}`,
       number: issue.number, title: `[box bounty ${issue.id}] ${issue.title}`, body: issue.rawBody ?? bodyOf(issue),
-      state: issue.state ?? 'open', closed_at: issue.closedAt ?? null, user: { login: issue.poster }
+      state: issue.state ?? 'open', closed_at: issue.closedAt ?? null, user: { login: issue.poster, id: this.idOf(issue.poster) }
     };
+  }
+
+  /** GitHub's id for an account. A test sets one to give a login to someone new. */
+  private idOf(login: string): number {
+    return this.accountIds.get(login) ?? 9000 + [...login].reduce((sum, char) => sum + char.charCodeAt(0), 0);
   }
 
   async start(): Promise<string> {

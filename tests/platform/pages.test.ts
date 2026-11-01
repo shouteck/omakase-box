@@ -145,7 +145,7 @@ describe('the pages', () => {
     const solver = await fresh();
     await visit(solver.page, '/me/');
     await solver.page.click('[data-primary]');
-    await solver.page.waitForSelector('select[name=kind]');
+    await solver.page.waitForSelector('input[name=kind]');
     expect(await solver.page.locator('main').innerText()).toContain('Signed in as example-quill.');
     // A wrong shape is refused where it was typed, with its next step.
     await solver.page.fill('input[name=value]', 'https://evil.example/paypal');
@@ -155,7 +155,7 @@ describe('the pages', () => {
     await solver.page.click('button[data-primary]');
     await expect.poll(() => solver.page.locator('main').innerText()).toContain('Everyone, on my profile. Remove');
     // Choosing the email preselects "only an owner who owes me".
-    await solver.page.selectOption('select[name=kind]', 'wise-email');
+    await solver.page.check('input[name=kind][value=wise-email]');
     expect(await solver.page.isChecked('input[value=owner-only]')).toBe(true);
     await solver.page.fill('input[name=value]', secret);
     await solver.page.click('button[data-primary]');
@@ -178,7 +178,7 @@ describe('the pages', () => {
     const owner = await fresh();
     await visit(owner.page, '/me/');
     await owner.page.click('[data-primary]');
-    await owner.page.waitForSelector('select[name=kind]');
+    await owner.page.waitForSelector('input[name=kind]');
     await visit(owner.page, `/b/${STATE_IDS.owed}/`);
     await expect.poll(() => owner.page.locator('main').innerText()).toContain(secret);
     expect(await owner.page.locator('main').innerText()).toContain('Pay the author directly, by a method they listed.');
@@ -202,7 +202,7 @@ describe('the pages', () => {
       const person = await fresh();
       await visit(person.page, '/me/');
       await person.page.click('[data-primary]');
-      await person.page.waitForSelector('select[name=kind]');
+      await person.page.waitForSelector('input[name=kind]');
       await visit(person.page, `/b/${STATE_IDS.owed}/`);
       return person;
     };
@@ -251,7 +251,7 @@ describe('the pages', () => {
     await visit(page, '/');
     await expect.poll(() => page.locator('main ul li').count()).toBe(3);
     const text = await page.locator('main').innerText();
-    for (const phrase of ['Work your agent can\'t finish, finished.', 'goes out as a GitHub issue', 'come back as pull requests', 'never ships', 'Nothing a solver wrote is run', 'Post a private repository.', 'The board carries no money', 'Newest bounties', 'POST /mcp', 'GET /bounties.json']) expect(text).toContain(phrase);
+    for (const phrase of ['Work your agent can\'t finish, finished.', 'goes out as a GitHub issue', 'come back as pull requests', 'never ships', 'Nothing a solver wrote is run', 'Post a private repository.', 'The board never holds money', 'Newest bounties', 'POST /mcp', 'GET /bounties.json']) expect(text).toContain(phrase);
     // The picture is the real product in real text, and says it is an example.
     expect(await page.locator('main figure').innerText()).toContain('An example. Every name in it is invented');
     expect(await page.locator('[data-primary]').getAttribute('href')).toBe('/how/');
@@ -264,7 +264,7 @@ describe('the pages', () => {
     const { page, close } = await fresh();
     await visit(page, '/how/');
     const text = (await page.locator('main').textContent())!;
-    for (const phrase of ['Hand off work', 'Answer bounties', 'Nothing a solver wrote is run', 'a private repository is refused', 'never-ship files', 'anything else in it is too', 'The board carries no money', 'inside the new omakase-box folder', 'install nothing from this page', 'nothing here makes them pay', 'it asks you before each post and each merge', 'only the repository, the issue number, the bounty id and what happened']) expect(text).toContain(phrase);
+    for (const phrase of ['Hand off work', 'Answer bounties', 'Nothing a solver wrote is run', 'a private repository is refused', 'never-ship files', 'anything else in it is too', 'The board never holds money', 'inside the new omakase-box folder', 'install nothing from this page', 'nothing here makes them pay', 'it asks you before each post and each merge', 'only the repository, the issue number, the bounty id and what happened']) expect(text).toContain(phrase);
     expect(await page.locator('main ol > li').count()).toBe(10);
     expect(await page.locator('main a[href="#answer"]').count()).toBe(1);
     expect(await page.locator('#answer h2').innerText()).toBe('Answer bounties');
@@ -419,7 +419,7 @@ describe('the pages', () => {
       const person = await fresh();
       await visit(person.page, '/me/');
       await person.page.click('[data-primary]');
-      await person.page.waitForSelector('select[name=kind]');
+      await person.page.waitForSelector('input[name=kind]');
       return person;
     };
     const owner = await signedIn(7100, 'example-mara');

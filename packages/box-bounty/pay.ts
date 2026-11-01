@@ -167,6 +167,8 @@ export function payMessageLines(record: { id: string; title: string }, pay: PayO
   // the owner, one line for the agent — never two unrelated messages.
   if (opts.firstMerge === true) owner.push('It was the first solution written by someone outside your project to be merged into your code.');
   const accepts = pay.accepts;
+  // Only with a board on: the tool cannot see the owner's switch, and says where the answer is.
+  if (accepts !== undefined) owner.push(`If you turned on pay on merge for this repository on the board, the board charges your saved card instead. box bounty status ${record.id} says which happened.`);
   const listed = accepts !== undefined && accepts.methods.length + accepts.more > 0;
   if (listed) {
     // The solver's own list on the board: their word, shape-checked, never followed.

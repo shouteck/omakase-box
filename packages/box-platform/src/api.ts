@@ -1,6 +1,8 @@
 // What a browser may have: only facts about bounties on public repositories,
 // filtered here on the server. No unfiltered record ever leaves this file.
 import { accountResponse } from './account.js';
+import { applyEvent, payingIds } from './charge.js';
+import { signatureHolds } from './stripe.js';
 import { feedResponse, detailResponse, rssResponse, schemaResponse } from './feed.js';
 import type { Env } from './github.js';
 import { hintResponse } from './hint.js';
@@ -75,9 +77,22 @@ async function bounty(env: Env, id: string, now: number): Promise<Response> {
       branch: `box-bounty/${row.id}`,
       links: { issue: `${base}/issues/${row.issue_number}`, branch: `${base}/tree/box-bounty/${row.id}` },
       solutions: pulls.slice(0, SOLUTIONS_MAX).map(pull => ({ number: pull.number, author: pull.author, state: pull.state, opened_at: pull.opened_at, merged_at: pull.merged_at, url: `${base}/pull/${pull.number}` })),
-      history
+      history,
+      pays_on_merge: (await payingIds(env, [row.id])).has(row.id),
+      agents_welcome: true
     }
   });
+}
+
+/** Stripe telling the board what happened. Nothing is believed unless Stripe's signature holds. */
+async function webhook(request: Request, env: Env, now: number): Promise<Response> {
+  const body = await request.text();
+  if (env.STRIPE_WEBHOOK_SECRET === undefined || !await signatureHolds(env.STRIPE_WEBHOOK_SECRET, request.headers.get('stripe-signature'), body, now)) return json(400, { error: 'The signature does not hold. Nothing changed.' });
+  try { await applyEvent(env, JSON.parse(body) as Parameters<typeof applyEvent>[1], now); } catch (error) {
+    if (error instanceof SyntaxError) return json(400, { error: 'That is not JSON. Nothing changed.' });
+    throw error;
+  }
+  return json(200, { received: true });
 }
 
 /** Routes: the machine interface, the two data answers, the one shell for every bounty address, then the static export. */
@@ -88,6 +103,7 @@ export async function handle(request: Request, env: Env): Promise<Response> {
   const account = await accountResponse(request, env, url, now);
   if (account !== null) return account;
   if (url.pathname === '/api/hint' && request.method === 'POST') return hintResponse(request, env, now);
+  if (url.pathname === '/api/stripe/webhook' && request.method === 'POST') return webhook(request, env, now);
   if (request.method !== 'GET' && request.method !== 'HEAD') return json(405, { error: 'Read-only. Next: use GET.' });
   if (url.pathname === '/bounties.json') return feedResponse(request, env, now);
   if (url.pathname === '/bounties.schema.json') return schemaResponse(request);

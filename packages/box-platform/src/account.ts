@@ -1,6 +1,8 @@
 // Everything that knows who is asking: sign-in, sessions, profiles, and the one
 // answer that may carry an owner-only method. The feed, MCP and RSS never come here.
+import { authenticationPage } from './charge.js';
 import type { Env } from './github.js';
+import { errorWords, redact, stripe, stripeOn, StripeUnavailable } from './stripe.js';
 import { checkMethod, isLink, MAX_METHODS, type Method, parseStored, publicOnly } from './methods.js';
 import { type BountyPayment, emptyPayment, factsOf, landedOf, loadPayments, notCounted, notCountedOf, ownerRecord, paymentOf, solverRecord } from './payments.js';
 import { readBounty } from './query.js';
@@ -102,6 +104,7 @@ async function finishSignIn(request: Request, env: Env, url: URL, now: number): 
   // A login that changed hands: what the earlier holder published is not this person's.
   await db.prepare('DELETE FROM methods WHERE login = ? COLLATE NOCASE AND github_id != ?').bind(login, github_id).run();
   await db.prepare('UPDATE methods SET login = ? WHERE github_id = ?').bind(login, github_id).run();
+  // Stripe accounts, cards and switches hang on the GitHub id, so a login changing hands reaches none of them.
   await db.prepare('DELETE FROM sessions WHERE expires_at <= ?').bind(now).run();
   const token = randomToken();
   await db.prepare('INSERT INTO sessions (token_hash, github_id, login, expires_at) VALUES (?, ?, ?, ?)').bind(await hashOf(token), github_id, login, now + SESSION_DAYS * DAY_SECONDS * 1000).run();
@@ -217,7 +220,8 @@ async function paymentView(env: Env, id: string, viewer: Viewer | null, now: num
     receipt: facts.receipt,
     can_answer: role === 'payee' && facts.record !== null,
     can_record: role === 'owner' && facts.amount > 0 && facts.merged.length > 0 && facts.record === null,
-    can_withdraw: role === 'owner' && facts.record !== null
+    can_withdraw: role === 'owner' && facts.record !== null && (facts.record as { source?: string }).source !== 'stripe',
+    can_authenticate: role === 'owner' && input.charge?.state === 'owner-must-authenticate'
   });
 }
 
@@ -234,6 +238,7 @@ async function recordPaid(request: Request, env: Env, id: string, viewer: Viewer
   const save = (to: string | null, amount: number | null, withdrawn: number) => env.DB.prepare(`INSERT INTO paid_clicks (bounty_id, by_login, to_login, amount, withdrawn, at) VALUES (?, ?, ?, ?, ?, ?)
     ON CONFLICT (bounty_id) DO UPDATE SET by_login = excluded.by_login, to_login = excluded.to_login, amount = excluded.amount, withdrawn = excluded.withdrawn, at = excluded.at`)
     .bind(id, viewer.login, to, amount, withdrawn, at).run();
+  if ((facts.record as { source?: string } | null)?.source === 'stripe') return json(409, { error: 'Stripe made this payment, so there is no record of yours to change. Nothing changed.' });
   if (sent.withdraw === true) {
     if (facts.record !== null) {
       await save(null, null, 1);
@@ -269,6 +274,127 @@ async function answerReceipt(request: Request, env: Env, id: string, viewer: Vie
   return paymentView(env, id, viewer, now);
 }
 
+// ---- pay on merge: the solver's account, the owner's card, limit and switch (PF11) ----
+
+const NOT_SET_UP = { error: 'Pay on merge is not set up on this board. Nothing changed. Next: use the other ways to pay on this page.' };
+const COUNTRY = /^[A-Z]{2}$/;
+const REPOSITORY = /^[A-Za-z\d-]{1,39}\/[A-Za-z\d._-]{1,100}$/;
+const SWITCHES_MAX = 50;
+
+/** What this person has set up, for their own page only. Never an id of Stripe's. */
+async function payOf(env: Env, viewer: Viewer) {
+  if (!stripeOn(env)) return { set_up: false };
+  const solver = await env.DB.prepare('SELECT ready FROM stripe_accounts WHERE github_id = ?').bind(viewer.github_id).first<{ ready: number }>();
+  const owner = await env.DB.prepare('SELECT payment_method, card_label, limit_per_bounty FROM pay_settings WHERE github_id = ?').bind(viewer.github_id).first<{ payment_method: string | null; card_label: string | null; limit_per_bounty: number | null }>();
+  const on = (await env.DB.prepare('SELECT repository, on_at FROM pay_repositories WHERE github_id = ? ORDER BY repository').bind(viewer.github_id).all<{ repository: string; on_at: string }>()).results;
+  return { set_up: true, solver: { connected: solver !== null, ready: solver?.ready === 1 }, card: owner?.payment_method == null ? null : owner.card_label ?? 'a saved card', limit: owner?.limit_per_bounty ?? null, repositories: on };
+}
+
+/** The solver's "Connect Stripe": their own account, in the setup that costs the platform nothing, and Stripe's own page. */
+async function connectStripe(request: Request, env: Env, url: URL, viewer: Viewer): Promise<Response> {
+  const body = await readBody(request);
+  if ('refused' in body) return body.refused;
+  let held = await env.DB.prepare('SELECT account_id FROM stripe_accounts WHERE github_id = ?').bind(viewer.github_id).first<{ account_id: string }>();
+  if (held === null) {
+    const country = (body.value as { country?: unknown } | null)?.country;
+    if (typeof country !== 'string' || !COUNTRY.test(country)) return json(400, { error: 'Say which country your bank account is in. Next: choose it on the page.' });
+    const made = await stripe(env, 'POST', '/v1/accounts', {
+      country, 'controller[fees][payer]': 'account', 'controller[losses][payments]': 'stripe', 'controller[requirement_collection]': 'stripe', 'controller[stripe_dashboard][type]': 'full',
+      'capabilities[card_payments][requested]': 'true', 'capabilities[transfers][requested]': 'true', 'metadata[github_id]': String(viewer.github_id)
+    }, { idempotency: `pf11/connect/${viewer.github_id}/${country}` });
+    if (made.status !== 200 || typeof made.json['id'] !== 'string') return json(409, { error: `${errorWords(made)} Nothing changed. Next: list another way to be paid below.` });
+    held = { account_id: made.json['id'] };
+    await env.DB.prepare('INSERT INTO stripe_accounts (github_id, account_id) VALUES (?, ?)').bind(viewer.github_id, held.account_id).run();
+  }
+  const link = await stripe(env, 'POST', '/v1/account_links', { account: held.account_id, type: 'account_onboarding', refresh_url: `${url.origin}/me/`, return_url: `${url.origin}/me/` });
+  if (link.status !== 200 || typeof link.json['url'] !== 'string') return json(409, { error: `${errorWords(link)} Next: try again.` });
+  return json(200, { url: link.json['url'] });
+}
+
+/** Back from Stripe's page: read whether Stripe now says the account can take charges. */
+async function readReady(env: Env, viewer: Viewer): Promise<void> {
+  const held = await env.DB.prepare('SELECT account_id FROM stripe_accounts WHERE github_id = ?').bind(viewer.github_id).first<{ account_id: string }>();
+  if (held === null) return;
+  const about = await stripe(env, 'GET', `/v1/accounts/${held.account_id}`);
+  if (about.status === 200) await env.DB.prepare('UPDATE stripe_accounts SET ready = ? WHERE github_id = ?').bind(about.json['charges_enabled'] === true ? 1 : 0, viewer.github_id).run();
+}
+
+/** Saving a card happens on Stripe's page; the board only ever holds Stripe's id for it. */
+async function startCard(env: Env, url: URL, viewer: Viewer): Promise<Response> {
+  let held = await env.DB.prepare('SELECT customer_id FROM pay_settings WHERE github_id = ?').bind(viewer.github_id).first<{ customer_id: string }>();
+  if (held === null) {
+    const made = await stripe(env, 'POST', '/v1/customers', { 'metadata[github_id]': String(viewer.github_id) }, { idempotency: `pf11/customer/${viewer.github_id}` });
+    if (made.status !== 200 || typeof made.json['id'] !== 'string') return json(409, { error: `${errorWords(made)} Nothing changed. Next: try again.` });
+    held = { customer_id: made.json['id'] };
+    await env.DB.prepare('INSERT INTO pay_settings (github_id, customer_id) VALUES (?, ?)').bind(viewer.github_id, held.customer_id).run();
+  }
+  const session = await stripe(env, 'POST', '/v1/checkout/sessions', { mode: 'setup', customer: held.customer_id, 'payment_method_types[0]': 'card', success_url: `${url.origin}/me/?card={CHECKOUT_SESSION_ID}`, cancel_url: `${url.origin}/me/` });
+  if (session.status !== 200 || typeof session.json['url'] !== 'string') return json(409, { error: `${errorWords(session)} Nothing changed. Next: try again.` });
+  return json(200, { url: session.json['url'] });
+}
+
+/** Back from Stripe's page. The session must be this person's own customer's: an address can carry anyone's session id. */
+async function finishCard(request: Request, env: Env, viewer: Viewer): Promise<Response> {
+  const body = await readBody(request);
+  if ('refused' in body) return body.refused;
+  const session = (body.value as { session?: unknown } | null)?.session;
+  if (typeof session !== 'string' || !/^cs_[A-Za-z\d_]{1,200}$/.test(session)) return json(400, { error: 'That is not a Stripe session. Nothing changed. Next: save the card again.' });
+  const held = await env.DB.prepare('SELECT customer_id FROM pay_settings WHERE github_id = ?').bind(viewer.github_id).first<{ customer_id: string }>();
+  const read = await stripe(env, 'GET', `/v1/checkout/sessions/${session}?expand[]=setup_intent.payment_method`);
+  const intent = read.json['setup_intent'] as { payment_method?: { id?: unknown; card?: { brand?: unknown; last4?: unknown } } } | null | undefined;
+  const method = intent?.payment_method;
+  if (held === null || read.status !== 200 || read.json['customer'] !== held.customer_id || read.json['status'] !== 'complete' || typeof method?.id !== 'string') return json(409, { error: 'Stripe does not show a card saved by you in that session. Nothing changed. Next: save the card again.' });
+  const { brand, last4 } = method.card ?? {};
+  const label = typeof brand === 'string' && typeof last4 === 'string' && /^[a-z_ ]{1,20}$/.test(brand) && /^\d{4}$/.test(last4) ? `${brand} ending ${last4}` : null;
+  await env.DB.prepare('UPDATE pay_settings SET payment_method = ?, card_label = ? WHERE github_id = ?').bind(method.id, label, viewer.github_id).run();
+  return json(200, { pay: await payOf(env, viewer) });
+}
+
+/** The limit and the switch. Only this signed-in page can turn charging on (D-2026-11-01-pay-switch-on-board); removing the card turns everything off. */
+async function savePay(request: Request, env: Env, viewer: Viewer, now: number): Promise<Response> {
+  const body = await readBody(request);
+  if ('refused' in body) return body.refused;
+  const { limit, repositories, remove_card: removeCard } = (body.value ?? {}) as { limit?: unknown; repositories?: unknown; remove_card?: unknown };
+  const owner = await env.DB.prepare('SELECT payment_method FROM pay_settings WHERE github_id = ?').bind(viewer.github_id).first<{ payment_method: string | null }>();
+  if (removeCard === true) {
+    if (owner?.payment_method != null) await stripe(env, 'POST', `/v1/payment_methods/${owner.payment_method}/detach`, {});
+    await env.DB.batch([
+      env.DB.prepare('UPDATE pay_settings SET payment_method = NULL, card_label = NULL WHERE github_id = ?').bind(viewer.github_id),
+      env.DB.prepare('DELETE FROM pay_repositories WHERE github_id = ?').bind(viewer.github_id)
+    ]);
+    return json(200, { pay: await payOf(env, viewer) });
+  }
+  if (owner?.payment_method == null) return json(409, { error: 'Save a card first. Nothing changed. Next: save a card on this page.' });
+  if (!Number.isSafeInteger(limit) || (limit as number) < 1 || (limit as number) > 100000) return json(400, { error: 'The limit is whole dollars for one bounty. Nothing changed. Next: type a number.' });
+  if (!Array.isArray(repositories) || repositories.length > SWITCHES_MAX || !repositories.every(name => typeof name === 'string' && REPOSITORY.test(name))) return json(400, { error: `Name up to ${SWITCHES_MAX} repositories as owner/name. Nothing changed.` });
+  const on_at = new Date(now).toISOString();
+  const names = [...new Set((repositories as string[]).map(name => name.toLowerCase()))];
+  // A repository already on keeps its date, so saving the limit never reaches back further.
+  await env.DB.batch([
+    env.DB.prepare('UPDATE pay_settings SET limit_per_bounty = ? WHERE github_id = ?').bind(limit as number, viewer.github_id),
+    env.DB.prepare('DELETE FROM pay_repositories WHERE github_id = ? AND LOWER(repository) NOT IN (SELECT value FROM json_each(?))').bind(viewer.github_id, JSON.stringify(names)),
+    ...(repositories as string[]).map(name => env.DB.prepare('INSERT INTO pay_repositories (github_id, repository, on_at) VALUES (?, ?, ?) ON CONFLICT (github_id, repository) DO NOTHING').bind(viewer.github_id, name, on_at))
+  ]);
+  return json(200, { pay: await payOf(env, viewer) });
+}
+
+async function payRoute(request: Request, env: Env, url: URL, viewer: Viewer, now: number): Promise<Response> {
+  if (!stripeOn(env)) return json(409, NOT_SET_UP);
+  try {
+    switch (url.pathname) {
+      case '/api/me/stripe/connect': return await connectStripe(request, env, url, viewer);
+      case '/api/me/stripe/read': await readReady(env, viewer); return json(200, { pay: await payOf(env, viewer) });
+      case '/api/me/card': return await startCard(env, url, viewer);
+      case '/api/me/card/saved': return await finishCard(request, env, viewer);
+      default: return await savePay(request, env, viewer, now);
+    }
+  } catch (error) {
+    if (error instanceof StripeUnavailable) return json(503, { error: `${redact(error.message)}. Nothing was charged. Next: try again.` });
+    throw error;
+  }
+}
+const PAY_ROUTES = ['/api/me/stripe/connect', '/api/me/stripe/read', '/api/me/card', '/api/me/card/saved', '/api/me/pay'];
+
 const loginFrom = (text: string): string | null => {
   try { const login = decodeURIComponent(text); return LOGIN.test(login) && login.length <= 60 ? login : null; } catch { return null; }
 };
@@ -283,7 +409,13 @@ export async function accountResponse(request: Request, env: Env, url: URL, now:
   if (method === 'GET' && path === '/api/me') {
     const viewer = await viewerOf(request, env, now);
     if (viewer === null) return json(200, { signed_in: false });
-    return json(200, { signed_in: true, login: viewer.login, methods: (await methodsOfLogin(env, viewer.login)).map(shown), ...await debtsOf(env, viewer.login, now) });
+    return json(200, { signed_in: true, login: viewer.login, sponsors_page: `https://github.com/sponsors/${viewer.login}`, methods: (await methodsOfLogin(env, viewer.login)).map(shown), pay: await payOf(env, viewer), ...await debtsOf(env, viewer.login, now) });
+  }
+  if (method === 'POST' && PAY_ROUTES.includes(path)) {
+    const refusal = writeRefusal(request, url, true);
+    if (refusal !== null) return refusal;
+    const viewer = await viewerOf(request, env, now);
+    return viewer === null ? json(401, SIGN_IN_FIRST) : payRoute(request, env, url, viewer, now);
   }
   if (method === 'PUT' && path === '/api/me/methods') {
     const refusal = writeRefusal(request, url, true);
@@ -297,9 +429,25 @@ export async function accountResponse(request: Request, env: Env, url: URL, now:
     if (login === null) return json(404, { error: 'That is not a GitHub login. Next: check the address.' });
     return person[1] === 'solver' ? solverProfile(env, login) : ownerProfile(env, login, now);
   }
-  const payment = /^\/api\/b\/(bt-[a-f\d]{12})\/(payment|receipt|paid)$/.exec(path);
+  const payment = /^\/api\/b\/(bt-[a-f\d]{12})\/(payment|receipt|paid|authenticate)$/.exec(path);
   if (payment !== null) {
     const id = payment[1]!;
+    if (method === 'POST' && payment[2] === 'authenticate') {
+      const refusal = writeRefusal(request, url, true);
+      if (refusal !== null) return refusal;
+      const viewer = await viewerOf(request, env, now);
+      if (viewer === null) return json(401, SIGN_IN_FIRST);
+      const input = await paymentInput(env, id, now);
+      if (input === null) return json(404, NOT_ON_BOARD);
+      if (roleOf(factsOf(input), viewer.login) !== 'owner') return json(403, { error: 'Only the poster of this bounty can finish its payment. Nothing changed.' });
+      try {
+        const page = await authenticationPage(env, id, url.origin, now);
+        return 'error' in page ? json(409, page) : json(200, page);
+      } catch (error) {
+        if (error instanceof StripeUnavailable) return json(503, { error: `${redact(error.message)}. Nothing was charged. Next: try again.` });
+        throw error;
+      }
+    }
     if (method === 'GET' && payment[2] === 'payment') return paymentView(env, id, await viewerOf(request, env, now), now);
     if (method === 'POST' && payment[2] !== 'payment') {
       const refusal = writeRefusal(request, url, true);

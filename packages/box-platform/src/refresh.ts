@@ -60,11 +60,12 @@ function issueStatement(db: Db, listed: Listed, now: number): Statement | null {
   const format = readFormat(body);
   if (format.kind !== 'present') return null;
   const value = format.value;
-  return db.prepare(`INSERT INTO bounties (id, repository, issue_number, title, task, poster, issue_state, closed_at, amount, created_at, work_commit, seen_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT (id) DO UPDATE SET title = excluded.title, task = excluded.task, poster = excluded.poster, issue_state = excluded.issue_state, closed_at = excluded.closed_at, amount = excluded.amount, work_commit = excluded.work_commit, seen_at = excluded.seen_at`)
+  const posterId = (issue['user'] as Record<string, unknown>)['id'];
+  return db.prepare(`INSERT INTO bounties (id, repository, issue_number, title, task, poster, poster_id, issue_state, closed_at, amount, created_at, work_commit, seen_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT (id) DO UPDATE SET title = excluded.title, task = excluded.task, poster = excluded.poster, poster_id = excluded.poster_id, issue_state = excluded.issue_state, closed_at = excluded.closed_at, amount = excluded.amount, work_commit = excluded.work_commit, seen_at = excluded.seen_at`)
     .bind(value.id, listed.repository, issue['number'] as number, titleOf(issue['title'] as string, value.id), taskOf(body, format.start),
-      (issue['user'] as Record<string, string>)['login']!, issue['state'] === 'closed' ? 'closed' : 'open',
+      (issue['user'] as Record<string, string>)['login']!, Number.isSafeInteger(posterId) ? posterId as number : null, issue['state'] === 'closed' ? 'closed' : 'open',
       typeof issue['closed_at'] === 'string' ? issue['closed_at'] : null, value.reward.amount, value.createdAt, value.workCommit, now);
 }
 
@@ -153,10 +154,11 @@ async function readPullRequests(env: Env, github: GitHub, id: string, repository
     const association = typeof pull['author_association'] === 'string' && ASSOCIATIONS.has(pull['author_association']) ? pull['author_association'] : null;
     const head = record(pull['head']) && typeof pull['head']['sha'] === 'string' && /^[a-f\d]{40}$/.test(pull['head']['sha']) ? pull['head']['sha'] : null;
     // The association stays as first read after the merge: a later invitation does not rewrite history.
-    writes.push(env.DB.prepare(`INSERT INTO pull_requests (bounty_id, number, author, state, opened_at, merged_at, association, head_sha) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT (bounty_id, number) DO UPDATE SET author = excluded.author, state = excluded.state, merged_at = excluded.merged_at, head_sha = excluded.head_sha,
+    const authorId = pull['user']['id'];
+    writes.push(env.DB.prepare(`INSERT INTO pull_requests (bounty_id, number, author, author_id, state, opened_at, merged_at, association, head_sha) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT (bounty_id, number) DO UPDATE SET author = excluded.author, author_id = excluded.author_id, state = excluded.state, merged_at = excluded.merged_at, head_sha = excluded.head_sha,
         association = CASE WHEN pull_requests.merged_at IS NOT NULL THEN pull_requests.association ELSE excluded.association END`)
-      .bind(id, pull['number'] as number, author, merged !== null ? 'merged' : pull['state'] === 'closed' ? 'closed' : 'open', pull['created_at'], merged, association, head));
+      .bind(id, pull['number'] as number, author, Number.isSafeInteger(authorId) ? authorId as number : null, merged !== null ? 'merged' : pull['state'] === 'closed' ? 'closed' : 'open', pull['created_at'], merged, association, head));
   }
   await runAll(env.DB, writes);
   await readOnDefault(env, github, id, repository);

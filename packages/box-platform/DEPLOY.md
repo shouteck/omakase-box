@@ -43,7 +43,7 @@ Sign up at https://dash.cloudflare.com/sign-up with an email and a password, and
 ## 2. Log wrangler in
 
 ```bash
-node ../../scripts/pnpm.mjs exec wrangler login
+node node_modules/wrangler/bin/wrangler.js login
 ```
 
 A browser page asks you to allow wrangler; allow it. Wrangler keeps its login on this machine, so any program you run here as this user can deploy with it, including an agent you ask to redeploy or read logs.
@@ -51,23 +51,23 @@ A browser page asks you to allow wrangler; allow it. Wrangler keeps its login on
 ## 3. The database
 
 ```bash
-node ../../scripts/pnpm.mjs exec wrangler d1 create open-bounty-board
+node node_modules/wrangler/bin/wrangler.js d1 create open-bounty-board
 ```
 
 It prints a `database_id`, which is not a secret. If wrangler offers to add it to the config, answer no. Open `wrangler.toml` in this folder and replace the value of `database_id` with it, and commit that edit in your clone so a later deploy keeps it. Do this before step 4; otherwise the deploy reaches someone else's database id and fails. Then apply the schema:
 
 ```bash
-node ../../scripts/pnpm.mjs exec wrangler d1 execute open-bounty-board --remote --file schema.sql
+node node_modules/wrangler/bin/wrangler.js d1 execute open-bounty-board --remote --file schema.sql
 ```
 
 ## 4. Build and deploy
 
 ```bash
-node ../../scripts/pnpm.mjs run build
+node node_modules/next/dist/bin/next build
 ```
 
 ```bash
-node ../../scripts/pnpm.mjs exec wrangler deploy
+node node_modules/wrangler/bin/wrangler.js deploy
 ```
 
 If asked, choose a `workers.dev` subdomain. **It becomes part of the board's public address**, so pick a name you are happy to show. The command prints the address: `https://open-bounty-board.<your-subdomain>.workers.dev`. The steps below call it the board's address.
@@ -90,11 +90,11 @@ Register it. The page shows the Client ID. Press "Generate a new client secret" 
 Each command asks you to paste the value, and it goes straight to Cloudflare. Never paste it into a chat or a file. No redeploy is needed.
 
 ```bash
-node ../../scripts/pnpm.mjs exec wrangler secret put GITHUB_OAUTH_CLIENT_ID
+node node_modules/wrangler/bin/wrangler.js secret put GITHUB_OAUTH_CLIENT_ID
 ```
 
 ```bash
-node ../../scripts/pnpm.mjs exec wrangler secret put GITHUB_OAUTH_CLIENT_SECRET
+node node_modules/wrangler/bin/wrangler.js secret put GITHUB_OAUTH_CLIENT_SECRET
 ```
 
 To check: open the board's address followed by `/sign-in/` and sign in with GitHub. You come back signed in, and GitHub asks only for your public profile. If it fails, the usual causes are a callback address that differs from the board's, or the ID and secret swapped: correct the app's page, or run the two commands again.
@@ -114,25 +114,57 @@ At https://github.com/settings/personal-access-tokens/new, which makes a fine-gr
 Press "Generate token" and copy it; GitHub shows it only once. Do not use a classic token. This one cannot read a private repository, which is the point.
 
 ```bash
-node ../../scripts/pnpm.mjs exec wrangler secret put GITHUB_TOKEN
+node node_modules/wrangler/bin/wrangler.js secret put GITHUB_TOKEN
 ```
 
-Paste the token when asked. No redeploy is needed. To check: within about 15 minutes the board lists open bounties and `/bounties.json` shows `"stale":null`. **If it has an expiry date, the board stops updating when it passes** and shows what it last read. Before that date, make a new token and run this command again, or remove the secret to go back to unauthenticated reads: `node ../../scripts/pnpm.mjs exec wrangler secret delete GITHUB_TOKEN`.
+Paste the token when asked. No redeploy is needed. To check: within about 15 minutes the board lists open bounties and `/bounties.json` shows `"stale":null`. **If it has an expiry date, the board stops updating when it passes** and shows what it last read. Before that date, make a new token and run this command again, or remove the secret to go back to unauthenticated reads: `node node_modules/wrangler/bin/wrangler.js secret delete GITHUB_TOKEN`.
+
+## Updating a board deployed before pay on merge
+
+Once only, in this order, before deploying the new code. Skipping the first command breaks every refresh, because the new code writes columns the old database lacks.
+
+```bash
+node node_modules/wrangler/bin/wrangler.js d1 execute open-bounty-board --remote --file migrations/pf11.sql
+```
+
+```bash
+node node_modules/wrangler/bin/wrangler.js d1 execute open-bounty-board --remote --file schema.sql
+```
+
+Then build and deploy as in step 4.
+
+## Pay on merge (optional)
+
+Without a Stripe key the board works as before: its pages say pay on merge is not set up, and solvers are paid by hand. Turning it on takes real payments, so only you can do it, and it is only ever your own Stripe account:
+
+1. Finish your Stripe account's activation, and set up Connect so that merchants collect payments directly.
+2. In Stripe's dashboard, under Developers, add a webhook endpoint at `<your board's address>/api/stripe/webhook`. Listen to events on connected accounts: `account.updated`, `account.application.deauthorized`, `payment_intent.succeeded`, `checkout.session.completed`, `charge.refunded`, `charge.dispute.created`.
+3. Set both secrets, pasting each when asked:
+
+```bash
+node node_modules/wrangler/bin/wrangler.js secret put STRIPE_SECRET_KEY
+```
+
+```bash
+node node_modules/wrangler/bin/wrangler.js secret put STRIPE_WEBHOOK_SECRET
+```
+
+The secret key can charge any saved card to any connected account. The owner's limit and the payee are enforced by the board's code, not by Stripe, so whoever holds this key can bypass both. A restricted key limited to what the board calls lowers that risk.
 
 ## Undoing it
 
 The last command ends wrangler's Cloudflare login on this machine, for any other project too.
 
 ```bash
-node ../../scripts/pnpm.mjs exec wrangler delete
+node node_modules/wrangler/bin/wrangler.js delete
 ```
 
 ```bash
-node ../../scripts/pnpm.mjs exec wrangler d1 delete open-bounty-board
+node node_modules/wrangler/bin/wrangler.js d1 delete open-bounty-board
 ```
 
 ```bash
-node ../../scripts/pnpm.mjs exec wrangler logout
+node node_modules/wrangler/bin/wrangler.js logout
 ```
 
 On GitHub, delete the OAuth app at https://github.com/settings/developers and the token at https://github.com/settings/personal-access-tokens.

@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS bounties (
   title TEXT NOT NULL,
   task TEXT NOT NULL,
   poster TEXT NOT NULL,
+  poster_id INTEGER,
   issue_state TEXT NOT NULL,
   closed_at TEXT,
   amount INTEGER NOT NULL,
@@ -27,6 +28,7 @@ CREATE TABLE IF NOT EXISTS pull_requests (
   bounty_id TEXT NOT NULL,
   number INTEGER NOT NULL,
   author TEXT NOT NULL,
+  author_id INTEGER,
   state TEXT NOT NULL,
   opened_at TEXT NOT NULL,
   merged_at TEXT,
@@ -81,6 +83,41 @@ CREATE TABLE IF NOT EXISTS paid_clicks (
   withdrawn INTEGER NOT NULL,
   at TEXT NOT NULL
 );
+-- Pay on merge (PF11). Stripe holds the card and the money; the board holds only Stripe's ids.
+-- A solver's own account, tied to the GitHub id that connected it.
+CREATE TABLE IF NOT EXISTS stripe_accounts (
+  github_id INTEGER PRIMARY KEY,
+  account_id TEXT NOT NULL UNIQUE,
+  ready INTEGER NOT NULL DEFAULT 0
+);
+-- An owner's saved card and the most one bounty may charge it.
+CREATE TABLE IF NOT EXISTS pay_settings (
+  github_id INTEGER PRIMARY KEY,
+  customer_id TEXT NOT NULL,
+  payment_method TEXT,
+  card_label TEXT,
+  limit_per_bounty INTEGER
+);
+-- The owner's switch, per repository. A merge from before on_at is never charged.
+CREATE TABLE IF NOT EXISTS pay_repositories (
+  github_id INTEGER NOT NULL,
+  repository TEXT NOT NULL COLLATE NOCASE,
+  on_at TEXT NOT NULL,
+  PRIMARY KEY (github_id, repository)
+);
+-- One row per bounty: merged takes all, so a bounty is charged at most once.
+CREATE TABLE IF NOT EXISTS charges (
+  bounty_id TEXT PRIMARY KEY,
+  state TEXT NOT NULL,
+  pull_number INTEGER,
+  solver TEXT,
+  account_id TEXT,
+  amount INTEGER,
+  payment_method TEXT,
+  payment_intent TEXT,
+  at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS charges_intent ON charges (payment_intent);
 -- When a hint last moved this bounty's read earlier. Kept one minute; nothing else from a hint is kept.
 CREATE TABLE IF NOT EXISTS hints (
   bounty_id TEXT PRIMARY KEY,

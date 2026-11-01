@@ -5,6 +5,7 @@
 // A stranger can run a board, so every answer is checked before it is kept.
 
 import { spawnSync } from 'node:child_process';
+import { CHARGE_WORDS } from '../box-platform/src/charge-words.js';
 import { acceptsShape, checkedAccepts, methodWords, paymentOf, type PayAccepts } from './pay.js';
 import { isOpenStage, listRecords, type BountyRecord } from './record.js';
 import { loadSettings } from './settings.js';
@@ -198,7 +199,7 @@ export type BoardFact =
     readonly kind: 'listed'; readonly at: string; readonly page: string; readonly solutions: number; readonly payment: PaymentState;
     readonly amount: number | null; readonly to: string | null; readonly toOneOf: readonly string[]; readonly since: string | null; readonly pullRequest: number | null;
     readonly recordedBy: string | null; readonly recordedAt: string | null; readonly solverBy: string | null; readonly solverSays: string | null; readonly solverAt: string | null;
-    readonly accepts: PayAccepts | null;
+    readonly accepts: PayAccepts | null; readonly charge?: string | null; readonly stripe?: boolean;
   };
 
 const isObject = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -227,7 +228,10 @@ function factFrom(id: string, detail: Record<string, unknown>, at: string): Boar
     since: dayOr(owed['since']), pullRequest: isObject(pull) ? countOr(pull['number']) : null,
     recordedBy: loginOr(recorded['by']), recordedAt: dayOr(recorded['at']),
     solverBy: loginOr(says['by']), solverSays: says['word'] === 'received' || says['word'] === 'not-received' ? says['word'] : null, solverAt: dayOr(says['at']),
-    accepts: null
+    accepts: null,
+    // The tool's own words for a state it knows; anything else a board sends is left out.
+    charge: isObject(payment['charge']) && typeof payment['charge']['state'] === 'string' && Object.hasOwn(CHARGE_WORDS, payment['charge']['state']) ? payment['charge']['state'] : null,
+    stripe: recorded['source'] === 'stripe'
   };
 }
 
@@ -306,6 +310,14 @@ export function boardLine(root: string, record: BountyRecord): string | null {
   if (fact.kind === 'not-listed') return `board: not listed yet — it reads GitHub every 15 minutes; next: box bounty status ${record.id} later`;
   const name = (login: string | null): string => login === null ? 'an account whose name could not be read' : solverAccount(login);
   const record_it = record.shared === true ? '' : `; record it: box bounty config set paid ${record.id}`;
+  const words = (fact.charge ?? null) === null ? undefined : CHARGE_WORDS[fact.charge as keyof typeof CHARGE_WORDS];
+  const chargeLine = words === undefined ? '' : `; pay on merge: ${words}`;
+  if (fact.stripe === true) return `board: paid $${fact.amount ?? '?'} to ${name(fact.to)} through Stripe on ${day(fact.recordedAt)}, Stripe's word${chargeLine} · ${fact.page}`;
+  if (chargeLine !== '' && fact.payment !== 'confirmed') return `${boardCase(fact, name, record, record_it)}${chargeLine}`;
+  return boardCase(fact, name, record, record_it);
+}
+
+function boardCase(fact: Extract<BoardFact, { kind: 'listed' }>, name: (login: string | null) => string, record: BountyRecord, record_it: string): string {
   switch (fact.payment) {
     case 'owed': {
       const accepts = fact.accepts;
