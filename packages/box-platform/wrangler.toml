@@ -14,7 +14,7 @@ database_name = "open-bounty-board"
 database_id = "13c1a481-11a8-4cc4-bcaa-0c69a8b56000"
 
 [triggers]
-crons = ["*/15 * * * *"]
+crons = ["* * * * *"]
 
 [observability]
 enabled = true

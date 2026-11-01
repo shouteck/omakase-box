@@ -3,12 +3,13 @@
 // for the next refresh, which starts from the same stalest-first order.
 import { readFormat } from '../../box-bounty/format.js';
 import { BudgetSpent, type Env, GitHub, GitHubUnavailable, isPublicRepository, TICK_MINUTES } from './github.js';
-import { type Db, getMeta, log, purgeRepository, removeBounty, setMeta } from './store.js';
+import { type Db, getMetas, log, logStatements, metaStatement, purgeRepository, removeBounty, runAll, setMeta, type Statement } from './store.js';
 
 const SEARCH = '/search/issues?q=is%3Aissue%20is%3Apublic%20label%3Abox-bounty&per_page=100&sort=updated&order=desc';
 const SEARCH_PAGES = 10; // GitHub search answers at most 1,000 results.
 const REPOSITORY_STALE_MS = TICK_MINUTES * 60000;
 const DETAILS_STALE_MS = TICK_MINUTES * 60000;
+const SEARCH_EVERY_MS = TICK_MINUTES * 60000;
 const TITLE_MAX = 300;
 const TASK_MAX = 65536;
 
@@ -47,26 +48,36 @@ function readIssue(issue: unknown): Listed | { readonly refused: string; readonl
   return { id: format.value.id, repository: from, issue };
 }
 
-/** False when the issue may not hold this id. */
-async function storeIssue(db: Db, listed: Listed, now: number): Promise<boolean> {
+type Held = { id: string; repository: string; issue_number: number };
+
+/** The first issue to claim an id keeps it: a copy elsewhere cannot overwrite it. */
+const claimedElsewhere = (held: Held | undefined, listed: Listed): boolean =>
+  held !== undefined && (held.repository.toLowerCase() !== listed.repository.toLowerCase() || held.issue_number !== listed.issue['number']);
+
+function issueStatement(db: Db, listed: Listed, now: number): Statement | null {
   const { issue } = listed;
   const body = issue['body'] as string;
   const format = readFormat(body);
-  if (format.kind !== 'present') return false;
+  if (format.kind !== 'present') return null;
   const value = format.value;
-  // The first issue to claim an id keeps it: a copy elsewhere cannot overwrite it.
-  const held = await db.prepare('SELECT repository, issue_number FROM bounties WHERE id = ?').bind(value.id).first<{ repository: string; issue_number: number }>();
-  if (held !== null && (held.repository.toLowerCase() !== listed.repository.toLowerCase() || held.issue_number !== issue['number'])) {
-    await log(db, now, 'id-claimed-by-another-issue', issue['html_url'] as string);
-    return false;
-  }
-  await db.prepare(`INSERT INTO bounties (id, repository, issue_number, title, task, poster, issue_state, closed_at, amount, created_at, work_commit, seen_at)
+  return db.prepare(`INSERT INTO bounties (id, repository, issue_number, title, task, poster, issue_state, closed_at, amount, created_at, work_commit, seen_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT (id) DO UPDATE SET title = excluded.title, task = excluded.task, poster = excluded.poster, issue_state = excluded.issue_state, closed_at = excluded.closed_at, amount = excluded.amount, work_commit = excluded.work_commit, seen_at = excluded.seen_at`)
     .bind(value.id, listed.repository, issue['number'] as number, titleOf(issue['title'] as string, value.id), taskOf(body, format.start),
       (issue['user'] as Record<string, string>)['login']!, issue['state'] === 'closed' ? 'closed' : 'open',
-      typeof issue['closed_at'] === 'string' ? issue['closed_at'] : null, value.reward.amount, value.createdAt, value.workCommit, now)
-    .run();
+      typeof issue['closed_at'] === 'string' ? issue['closed_at'] : null, value.reward.amount, value.createdAt, value.workCommit, now);
+}
+
+/** False when the issue may not hold this id. */
+async function storeIssue(db: Db, listed: Listed, now: number): Promise<boolean> {
+  const held = await db.prepare('SELECT id, repository, issue_number FROM bounties WHERE id = ?').bind(listed.id).first<Held>();
+  if (claimedElsewhere(held ?? undefined, listed)) {
+    await log(db, now, 'id-claimed-by-another-issue', listed.issue['html_url'] as string);
+    return false;
+  }
+  const statement = issueStatement(db, listed, now);
+  if (statement === null) return false;
+  await statement.run();
   return true;
 }
 
@@ -94,16 +105,33 @@ async function search(env: Env, github: GitHub, now: number): Promise<{ readonly
     const answer = await github.get(`${SEARCH}&page=${page}`);
     if (answer.status !== 200 || !record(answer.json) || !Array.isArray(answer.json['items'])) throw new GitHubUnavailable(`GitHub's search answered ${answer.status}`);
     const items = answer.json['items'] as unknown[];
-    for (const item of items) {
-      const listed = readIssue(item);
-      if ('refused' in listed) { await log(db, now, listed.refused, listed.url); continue; }
-      const stored = known.get(listed.repository.toLowerCase())
-        ?? (await db.prepare('SELECT read_at FROM repositories WHERE name = ?').bind(listed.repository).first<{ read_at: number }>()) !== null;
-      // A repository not yet read holds its bounties back until it has been.
-      const isPublic = stored || await readRepository(env, github, listed.repository, now);
-      known.set(listed.repository.toLowerCase(), isPublic);
-      if (isPublic) await storeIssue(db, listed, now);
+    const read = items.map(readIssue);
+    const issues = read.filter((one): one is Listed => !('refused' in one));
+    const held = new Map<string, Held>();
+    if (issues.length > 0) {
+      const { results } = await db.prepare(`SELECT id, repository, issue_number FROM bounties WHERE id IN (${issues.map(() => '?').join()})`).bind(...issues.map(one => one.id)).all<Held>();
+      for (const row of results) held.set(row.id, row);
     }
+    const unread = [...new Set(issues.map(one => one.repository))].filter(name => !known.has(name.toLowerCase()));
+    if (unread.length > 0) {
+      const { results } = await db.prepare(`SELECT name FROM repositories WHERE name IN (${unread.map(() => '?').join()})`).bind(...unread).all<{ name: string }>();
+      for (const { name } of results) known.set(name.toLowerCase(), true);
+    }
+    const writes: Statement[] = [];
+    for (const listed of read) {
+      if ('refused' in listed) { writes.push(...logStatements(db, now, listed.refused, listed.url)); continue; }
+      // A repository not yet read holds its bounties back until it has been.
+      const isPublic = known.get(listed.repository.toLowerCase()) ?? await readRepository(env, github, listed.repository, now);
+      known.set(listed.repository.toLowerCase(), isPublic);
+      if (!isPublic) continue;
+      if (claimedElsewhere(held.get(listed.id), listed)) { writes.push(...logStatements(db, now, 'id-claimed-by-another-issue', listed.issue['html_url'] as string)); continue; }
+      const statement = issueStatement(db, listed, now);
+      if (statement === null) continue;
+      writes.push(statement);
+      // The same id later on this page meets this claim.
+      held.set(listed.id, { id: listed.id, repository: listed.repository, issue_number: listed.issue['number'] as number });
+    }
+    await runAll(db, writes);
     if (items.length < 100) { complete = answer.json['incomplete_results'] !== true; break; }
   }
   return { complete };
@@ -116,6 +144,7 @@ const ASSOCIATIONS = new Set(['COLLABORATOR', 'CONTRIBUTOR', 'FIRST_TIMER', 'FIR
 async function readPullRequests(env: Env, github: GitHub, id: string, repository: string): Promise<void> {
   const answer = await github.get(`/repos/${repository}/pulls?state=all&base=box-bounty/${id}&per_page=100`);
   if (answer.status !== 200 || !Array.isArray(answer.json)) return;
+  const writes: Statement[] = [];
   for (const pull of answer.json as unknown[]) {
     if (!record(pull) || !Number.isSafeInteger(pull['number']) || typeof pull['created_at'] !== 'string' || !record(pull['user'])) continue;
     const author = pull['user']['login'];
@@ -124,12 +153,12 @@ async function readPullRequests(env: Env, github: GitHub, id: string, repository
     const association = typeof pull['author_association'] === 'string' && ASSOCIATIONS.has(pull['author_association']) ? pull['author_association'] : null;
     const head = record(pull['head']) && typeof pull['head']['sha'] === 'string' && /^[a-f\d]{40}$/.test(pull['head']['sha']) ? pull['head']['sha'] : null;
     // The association stays as first read after the merge: a later invitation does not rewrite history.
-    await env.DB.prepare(`INSERT INTO pull_requests (bounty_id, number, author, state, opened_at, merged_at, association, head_sha) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    writes.push(env.DB.prepare(`INSERT INTO pull_requests (bounty_id, number, author, state, opened_at, merged_at, association, head_sha) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT (bounty_id, number) DO UPDATE SET author = excluded.author, state = excluded.state, merged_at = excluded.merged_at, head_sha = excluded.head_sha,
         association = CASE WHEN pull_requests.merged_at IS NOT NULL THEN pull_requests.association ELSE excluded.association END`)
-      .bind(id, pull['number'] as number, author, merged !== null ? 'merged' : pull['state'] === 'closed' ? 'closed' : 'open', pull['created_at'], merged, association, head)
-      .run();
+      .bind(id, pull['number'] as number, author, merged !== null ? 'merged' : pull['state'] === 'closed' ? 'closed' : 'open', pull['created_at'], merged, association, head));
   }
+  await runAll(env.DB, writes);
   await readOnDefault(env, github, id, repository);
 }
 
@@ -174,18 +203,24 @@ async function readEvents(env: Env, github: GitHub, id: string, repository: stri
   const db = env.DB;
   const commits = await github.get(`/repos/${repository}/commits?sha=refs/box-bounty/${id}&per_page=50`);
   if (commits.status !== 200 || !Array.isArray(commits.json)) return; // no chain: GitHub's facts still show
-  for (const commit of commits.json as unknown[]) {
-    if (!record(commit) || typeof commit['sha'] !== 'string' || !/^[a-f\d]{40}$/.test(commit['sha'])) continue;
-    const sha = commit['sha'];
-    if (await db.prepare('SELECT sha FROM events WHERE bounty_id = ? AND sha = ?').bind(id, sha).first() !== null) continue;
-    const blob = await github.get(`/repos/${repository}/contents/event.json?ref=${sha}`);
-    const content = record(blob.json) && typeof blob.json['content'] === 'string' ? blob.json['content'] : null;
-    // A commit that holds no valid event stays recorded with no type, so it costs one read only.
-    let event: ReturnType<typeof projectEvent> = null;
-    try { event = content === null ? null : projectEvent(decode(content)); } catch { event = null; }
-    await db.prepare('INSERT INTO events (bounty_id, sha, at, type, pull_request, amount, withdrawn, kind) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-      .bind(id, sha, event?.at ?? null, event?.type ?? null, event?.pull_request ?? null, event?.amount ?? null, event?.withdrawn ?? null, event?.kind ?? null).run();
-    if (event?.approved !== null && event?.approved !== undefined) await db.prepare('UPDATE bounties SET approved_by = ? WHERE id = ?').bind(event.approved, id).run();
+  const seen = new Set((await db.prepare('SELECT sha FROM events WHERE bounty_id = ?').bind(id).all<{ sha: string }>()).results.map(row => row.sha));
+  const writes: Statement[] = [];
+  try {
+    for (const commit of commits.json as unknown[]) {
+      if (!record(commit) || typeof commit['sha'] !== 'string' || !/^[a-f\d]{40}$/.test(commit['sha'])) continue;
+      const sha = commit['sha'];
+      if (seen.has(sha)) continue;
+      const blob = await github.get(`/repos/${repository}/contents/event.json?ref=${sha}`);
+      const content = record(blob.json) && typeof blob.json['content'] === 'string' ? blob.json['content'] : null;
+      // A commit that holds no valid event stays recorded with no type, so it costs one read only.
+      let event: ReturnType<typeof projectEvent> = null;
+      try { event = content === null ? null : projectEvent(decode(content)); } catch { event = null; }
+      writes.push(db.prepare('INSERT INTO events (bounty_id, sha, at, type, pull_request, amount, withdrawn, kind) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+        .bind(id, sha, event?.at ?? null, event?.type ?? null, event?.pull_request ?? null, event?.amount ?? null, event?.withdrawn ?? null, event?.kind ?? null));
+      if (event?.approved !== null && event?.approved !== undefined) writes.push(db.prepare('UPDATE bounties SET approved_by = ? WHERE id = ?').bind(event.approved, id));
+    }
+  } finally {
+    await runAll(db, writes);
   }
 }
 
@@ -225,6 +260,8 @@ export async function lookNow(env: Env, repository: string, number: number, id: 
     if (error instanceof BudgetSpent) return 'budget-spent';
     if (error instanceof GitHubUnavailable) return 'github-unavailable';
     throw error;
+  } finally {
+    await github.settle();
   }
 }
 
@@ -234,23 +271,31 @@ export async function refresh(env: Env): Promise<RefreshResult> {
   const db = env.DB;
   const now = env.now?.() ?? Date.now();
   const github = new GitHub(env, true);
+  let searched = false;
   try {
-    const { complete } = await search(env, github, now);
+    const meta = await getMetas(db, ['search_tried_at', 'search_complete_at']);
+    let completeAt = Number(meta.get('search_complete_at') ?? 0);
+    if (now - Number(meta.get('search_tried_at') ?? 0) >= SEARCH_EVERY_MS) {
+      await setMeta(db, 'search_tried_at', String(now));
+      const { complete } = await search(env, github, now);
+      searched = true;
+      if (complete) { completeAt = now; await setMeta(db, 'search_complete_at', String(now)); }
+    }
     const repositories = await db.prepare('SELECT name FROM repositories WHERE read_at <= ? ORDER BY read_at').bind(now - REPOSITORY_STALE_MS).all<{ name: string }>();
     for (const { name } of repositories.results) await readRepository(env, github, name, now);
     const due = await db.prepare('SELECT id, repository, issue_number, seen_at, issue_state FROM bounties WHERE details_read_at <= ? ORDER BY details_read_at, id')
       .bind(now - DETAILS_STALE_MS).all<{ id: string; repository: string; issue_number: number; seen_at: number; issue_state: string }>();
     for (const row of due.results) {
-      if (complete && row.issue_state === 'open' && row.seen_at < now && !await readIssueAgain(env, github, row.id, row.repository, row.issue_number, now)) continue;
+      if (row.issue_state === 'open' && row.seen_at < completeAt && !await readIssueAgain(env, github, row.id, row.repository, row.issue_number, now)) continue;
       await readPullRequests(env, github, row.id, row.repository);
       await readEvents(env, github, row.id, row.repository);
       await db.prepare('UPDATE bounties SET details_read_at = ? WHERE id = ?').bind(now, row.id).run();
     }
-    await markRead(db, now);
+    if (searched) await markRead(db, now);
     return { requests: github.used, state: 'done' };
   } catch (error) {
     if (error instanceof BudgetSpent) {
-      await markRead(db, now);
+      if (searched) await markRead(db, now);
       return { requests: github.used, state: 'budget-spent' };
     }
     if (error instanceof GitHubUnavailable) {
@@ -258,10 +303,12 @@ export async function refresh(env: Env): Promise<RefreshResult> {
       return { requests: github.used, state: 'github-unavailable', reason: error.message };
     }
     throw error;
+  } finally {
+    await github.settle();
   }
 }
 
+/** read_at says when the list was last read from GitHub; a run that only read details leaves it. */
 async function markRead(db: Db, now: number): Promise<void> {
-  await setMeta(db, 'read_at', String(now));
-  if (await getMeta(db, 'last_error') !== null) await setMeta(db, 'last_error', '');
+  await db.batch([metaStatement(db, 'read_at', String(now)), metaStatement(db, 'last_error', '')]);
 }

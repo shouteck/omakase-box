@@ -12,5 +12,19 @@ export function localDb(schemaFile: string, file = ':memory:'): Db & { close(): 
     first: async <T>() => (database.prepare(sql).get(...values) as T | undefined) ?? null,
     run: async () => database.prepare(sql).run(...values)
   });
-  return { prepare: sql => statement(sql, []), close: () => database.close() };
+  return {
+    prepare: sql => statement(sql, []),
+    // All or nothing, as D1's batch is.
+    batch: async statements => {
+      database.exec('BEGIN');
+      try {
+        for (const one of statements) await one.run();
+        database.exec('COMMIT');
+      } catch (error) {
+        database.exec('ROLLBACK');
+        throw error;
+      }
+    },
+    close: () => database.close()
+  };
 }

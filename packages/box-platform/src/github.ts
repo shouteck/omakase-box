@@ -1,8 +1,10 @@
 // Every read of GitHub goes through one budget. The numbers, stated:
-// unauthenticated GitHub allows 60 requests an hour, so a refresh every 15
-// minutes may spend 15. With a token GitHub allows 5,000 an hour, and a Workers
-// Free invocation allows 50 subrequests, so a refresh spends at most 45.
-import { type Db, getMeta, setMeta } from './store.js';
+// unauthenticated GitHub allows 60 requests an hour, so a refresh may spend 15.
+// With a token GitHub allows 5,000 an hour, and a Workers Free invocation allows
+// 50 subrequests, so a refresh spends at most 45. The deployed Worker runs every
+// minute and asks for less (tickReads): Workers Free allows 10 ms of CPU.
+import { getMetas, metaStatement, setMeta } from './store.js';
+import type { Db } from './store.js';
 
 export const TICK_MINUTES = 15;
 export const LIMITS = {
@@ -27,6 +29,8 @@ export interface Env {
   readonly SAMPLE?: boolean;
   /** Work that outlives the answer (Workers' waitUntil). Absent: it is awaited. */
   readonly defer?: (work: Promise<unknown>) => void;
+  /** Reads a refresh or a look may spend, when less than the stated budget. */
+  readonly tickReads?: number;
 }
 
 /** The budget for this refresh is spent; the next one resumes. Not a failure. */
@@ -40,31 +44,45 @@ const HOUR = 3600000;
 
 export class GitHub {
   private spent = 0;
+  private reserved = 0;
   private readonly base: string;
   private readonly limit: { readonly hour: number; readonly tick: number };
 
   constructor(private readonly env: Env, private readonly tickLimit: boolean) {
     this.base = env.GITHUB_API ?? 'https://api.github.com';
-    this.limit = env.GITHUB_TOKEN === undefined ? LIMITS.anonymous : LIMITS.token;
+    const limit = env.GITHUB_TOKEN === undefined ? LIMITS.anonymous : LIMITS.token;
+    this.limit = { hour: limit.hour, tick: Math.min(limit.tick, env.tickReads ?? limit.tick) };
   }
 
   get used(): number { return this.spent; }
 
   private now(): number { return this.env.now?.() ?? Date.now(); }
 
-  /** Counts first, so a request cut off mid-flight still counted against the hour. */
   private async take(): Promise<void> {
     if (this.tickLimit && this.spent >= this.limit.tick) throw new BudgetSpent();
-    const db = this.env.DB;
-    const pausedUntil = Number(await getMeta(db, 'paused_until') ?? 0);
-    if (pausedUntil > this.now()) throw new GitHubUnavailable(`GitHub's rate limit for this hour is used up`);
-    const hour = Math.floor(this.now() / HOUR);
-    const window = await getMeta(db, 'budget_hour');
-    const used = window === String(hour) ? Number(await getMeta(db, 'budget_used') ?? 0) : 0;
-    if (used >= this.limit.hour) throw new BudgetSpent();
-    await setMeta(db, 'budget_hour', String(hour));
-    await setMeta(db, 'budget_used', String(used + 1));
+    if (this.spent >= this.reserved) await this.reserve();
     this.spent += 1;
+  }
+
+  /** Counts first, so a run cut off mid-flight still counted against the hour: all a refresh may spend, in one write. settle() gives back the rest. */
+  private async reserve(): Promise<void> {
+    const db = this.env.DB;
+    const meta = await getMetas(db, ['paused_until', 'budget_hour', 'budget_used']);
+    if (Number(meta.get('paused_until') ?? 0) > this.now()) throw new GitHubUnavailable(`GitHub's rate limit for this hour is used up`);
+    const hour = String(Math.floor(this.now() / HOUR));
+    const used = meta.get('budget_hour') === hour ? Number(meta.get('budget_used') ?? 0) : 0;
+    const room = this.limit.hour - used;
+    if (room <= 0) throw new BudgetSpent();
+    const grant = Math.min(room, this.tickLimit ? this.limit.tick - this.spent : 1);
+    await db.batch([metaStatement(db, 'budget_hour', hour), metaStatement(db, 'budget_used', String(used + grant))]);
+    this.reserved += grant;
+  }
+
+  async settle(): Promise<void> {
+    const unspent = this.reserved - this.spent;
+    if (unspent <= 0) return;
+    this.reserved = this.spent;
+    await this.env.DB.prepare(`UPDATE meta SET value = CAST(MAX(0, CAST(value AS INTEGER) - ?) AS TEXT) WHERE key = 'budget_used'`).bind(unspent).run();
   }
 
   async get(path: string): Promise<Answer> {
