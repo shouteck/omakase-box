@@ -1,23 +1,33 @@
 import './globals.css';
+import SiteNav, { REPOSITORY } from '../components/SiteNav.jsx';
 
-export const metadata = { title: 'Open bounty board', description: 'Your agent\'s task goes out as a GitHub issue; solutions come back as pull requests. Open bounties on public repositories. The board carries no money.' };
+const DESCRIPTION = 'Work your agent can\'t finish, finished. Your agent\'s task goes out as a GitHub issue; solutions come back as pull requests. The board carries no money.';
+export const metadata = {
+  title: 'Open bounty board',
+  description: DESCRIPTION,
+  openGraph: { title: 'Open bounty board', description: DESCRIPTION, type: 'website' },
+  twitter: { card: 'summary', title: 'Open bounty board', description: DESCRIPTION }
+};
 export const viewport = { width: 'device-width', initialScale: 1 };
+
+const PLAIN = { color: 'var(--color-soft)', textDecoration: 'none' };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className="bg-paper text-ink min-h-screen">
-        <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:z-10 focus:bg-paper focus:p-3">Skip to content</a>
-        <div className="mx-auto max-w-4xl px-6">
-          <nav aria-label="Site" className="flex flex-wrap items-baseline gap-x-6 gap-y-2 py-6">
-            <a href="/" className="font-semibold mr-auto" style={{ textDecoration: 'none', color: 'var(--color-ink)' }}>Open bounty board</a>
-            <a href="/board/">Board</a>
-            <a href="/how/">How it works</a>
-            <a href="/agents/">For agents</a>
-            <a href="/me/">Your page</a>
-          </nav>
-          <main id="main" tabIndex={-1} className="pt-8 pb-24">{children}</main>
-          <footer className="border-t border-line py-8 text-sm text-soft">Public GitHub repositories only. No money passes through the board. <a href="/privacy/">What the board stores</a></footer>
+        <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:z-30 focus:bg-paper focus:p-3">Skip to content</a>
+        <SiteNav />
+        <div className="mx-auto max-w-[76rem] px-5 sm:px-8">
+          <main id="main" tabIndex={-1} className="pt-8 sm:pt-12 pb-24 outline-none">{children}</main>
+          <footer className="border-t border-line py-8 text-sm text-soft flex flex-col sm:flex-row sm:items-baseline gap-x-10 gap-y-3">
+            <p className="sm:mr-auto">Free and open source. No money passes through the board.</p>
+            <p className="flex flex-wrap gap-x-5 gap-y-1">
+              <a href={REPOSITORY} style={PLAIN}>GitHub</a>
+              <a href="/agents/" style={PLAIN}>For agents</a>
+              <a href="/privacy/" style={PLAIN}>What the board stores</a>
+            </p>
+          </footer>
         </div>
       </body>
     </html>

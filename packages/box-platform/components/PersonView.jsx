@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { MethodList } from './Methods.jsx';
 import { Facts, Section, Soft, Title, fmtDate, plural } from './ui.jsx';
 
-const BountyLine = ({ b, children }) => <li><a href={`/b/${b.id}/`}>{b.title}</a> <Soft as="span">{b.repository}{b.amount > 0 ? ` · $${b.amount}` : ''}{children}</Soft></li>;
+const BountyLine = ({ b, children }) => <li className="border-t border-line py-3 first:border-t-0 first:pt-0"><a href={`/b/${b.id}/`} className="break-words">{b.title}</a> <Soft as="span" className="block mt-0.5 break-words">{b.repository}{b.amount > 0 ? ` · $${b.amount}` : ''}{children}</Soft></li>;
 
 const STATE_WORDS = { owed: 'owed', 'owner-decides': 'owed, the owner decides to whom', recorded: 'recorded paid', confirmed: 'recorded paid, confirmed received', 'says-not-received': 'recorded paid, the solver says not received', 'merged-not-on-default': 'merged, not confirmed on the default branch' };
 const stateWords = b => `${STATE_WORDS[b.payment_state] ? ` · ${STATE_WORDS[b.payment_state]}` : ''}${b.not_counted ? ' · not counted' : ''}`;
@@ -24,7 +24,7 @@ function Solver({ data }) {
       </Section>
       {data.merged.length > 0 ? (
         <Section title="Merged solutions" id="merged">
-          <ul className="flex flex-col gap-2">{data.merged.map(b => <BountyLine key={b.id} b={b}> · merged {fmtDate(b.merged_at)}{b.counted ? '' : ' · not counted'}</BountyLine>)}</ul>
+          <ul className="flex flex-col">{data.merged.map(b => <BountyLine key={b.id} b={b}> · merged {fmtDate(b.merged_at)}{b.counted ? '' : ' · not counted'}</BountyLine>)}</ul>
         </Section>
       ) : null}
     </>
@@ -51,11 +51,11 @@ function Owner({ data }) {
         {data.not_counted.length > 0 ? <Soft className="mt-4 max-w-prose">Not counted: {data.not_counted.map(entry => `${entry.solver}, because ${entry.because}`).join('; ')}.</Soft> : null}
       </Section>
       <Section title="Open bounties" id="open">
-        {open.length === 0 ? <p>None open.</p> : <ul className="flex flex-col gap-2">{open.map(b => <BountyLine key={b.id} b={b} />)}</ul>}
+        {open.length === 0 ? <p>None open.</p> : <ul className="flex flex-col">{open.map(b => <BountyLine key={b.id} b={b} />)}</ul>}
       </Section>
       {closed.length > 0 ? (
         <Section title="Closed bounties" id="closed">
-          <ul className="flex flex-col gap-2">{closed.map(b => <BountyLine key={b.id} b={b}>{stateWords(b)}</BountyLine>)}</ul>
+          <ul className="flex flex-col">{closed.map(b => <BountyLine key={b.id} b={b}>{stateWords(b)}</BountyLine>)}</ul>
         </Section>
       ) : null}
     </>

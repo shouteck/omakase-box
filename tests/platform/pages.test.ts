@@ -69,11 +69,11 @@ describe('the pages', () => {
     const text = await card.innerText();
     expect(text).toContain('$45');
     expect(text).toContain('example-tidepool/ledger-lite · TypeScript · 4 days old · 2 solutions waiting');
-    expect(text).toContain('Posted by example-mara, who pays the solver directly: ');
-    expect(text).toMatch(/\d merged · \d paid by the owner's word · \d received by the solvers' word/);
+    expect(text).toContain('example-mara: ');
+    expect(text).toMatch(/\d merged · \d paid, the owner's word · \d received, the solvers' word/);
     expect(await page.locator('main').innerText()).toContain(`Titles are the posters' own words.`);
     await visit(page, '/board/?repository=example-org/repo-1&query=Add thing 1');
-    await expect.poll(() => card.innerText()).toContain('Posted by poster-1, who pays the solver directly: no payment history yet.');
+    await expect.poll(() => card.innerText()).toContain('poster-1: no payment history yet.');
     await close();
   });
 
@@ -118,7 +118,7 @@ describe('the pages', () => {
   });
 
   it.each([
-    ['open', STATE_IDS.open, ['Open. No solution yet.', 'How to answer', '$45 for the merged solution. The owner pays its author directly; the board carries no money.', 'The owner said yes to this bounty before it was posted.', 'Source: the project\'s record on GitHub.'], 1],
+    ['open', STATE_IDS.open, ['Open. No solution yet.', 'How to answer', 'When a solution is merged, its author is owed $45 by the owner, paid directly.', 'The owner said yes to this bounty before it was posted.', 'Source: the project\'s record on GitHub.'], 1],
     ['solutions waiting', STATE_IDS.waiting, ['Open. Solutions are waiting for the owner.', 'Pull request #61 by example-fern: open', 'Pull request #62 by example-quill: open', 'it does not judge or rank them'], 1],
     ['merged', STATE_IDS.merged, ['Merged: pull request #64 by example-quill', 'Pull request #63 by example-fern: open', 'Pull request #64 by example-quill: merged', 'recorded paid: $45 (the owner\'s word)'], 0],
     ['more than one merged', STATE_IDS.moreThanOne, ['GitHub marks more than one pull request merged: #65 by example-fern and #66 by example-rook.', 'the owner decides whom to pay'], 0],
@@ -127,8 +127,10 @@ describe('the pages', () => {
   ])('a bounty page in state: %s', async (_name, id, phrases, primaries) => {
     const { page, close } = await fresh();
     await visit(page, `/b/${id}/`);
-    const text = await page.locator('main').innerText();
-    for (const phrase of phrases) expect(text).toContain(phrase);
+    await page.waitForSelector('#history');
+    // textContent: terms and history wait behind a disclosure, and are still on the page.
+    for (const phrase of phrases) await expect.poll(() => page.locator('main').textContent()).toContain(phrase);
+    const text = (await page.locator('main').textContent())!;
     expect(text).toContain('The poster\'s words (example-mara), from the GitHub issue');
     expect(await page.locator('[data-primary]').count()).toBe(primaries);
     expect(moneyClaims(text)).toEqual([]);
@@ -244,25 +246,35 @@ describe('the pages', () => {
     for (const person of [stranger, payee, owner]) await person.close();
   });
 
-  it('the front page: the mechanism, both paths, a text alternative for every drawing, one action, at most three newest bounties', async () => {
+  it('the front page says it in few words, shows the real product, and leads to the detail', async () => {
     const { page, close } = await fresh();
     await visit(page, '/');
     await expect.poll(() => page.locator('main ul li').count()).toBe(3);
     const text = await page.locator('main').innerText();
-    for (const phrase of ['goes out as a GitHub issue', 'come back as pull requests', 'Hand off work', 'Answer bounties', 'Nothing a solver wrote is run', 'a private repository is refused', 'The board carries no money', 'Newest bounties', 'inside the new omakase-box folder', 'You install nothing from this page', 'nothing here makes them pay', 'POST /mcp', 'GET /bounties.json']) expect(text).toContain(phrase);
-    expect(await page.locator('main ol > li').count()).toBe(9);
-    const drawings = page.locator('main svg[role=img]');
-    expect(await drawings.count()).toBe(10);
-    for (const label of await drawings.evaluateAll(all => all.map(svg => svg.getAttribute('aria-label')))) expect(label?.length).toBeGreaterThan(20);
-    expect(await page.locator('main svg text').count()).toBe(0);
-    expect(await page.locator('[data-primary]').getAttribute('href')).toBe('#hand-off');
+    for (const phrase of ['Work your agent can\'t finish, finished.', 'goes out as a GitHub issue', 'come back as pull requests', 'never ships', 'Nothing a solver wrote is run', 'Post a private repository.', 'The board carries no money', 'Newest bounties', 'POST /mcp', 'GET /bounties.json']) expect(text).toContain(phrase);
+    // The picture is the real product in real text, and says it is an example.
+    expect(await page.locator('main figure').innerText()).toContain('An example. Every name in it is invented');
+    expect(await page.locator('[data-primary]').getAttribute('href')).toBe('/how/');
     expect(await page.locator('main a[href="/board/"]').count()).toBeGreaterThan(0);
-    expect(await page.locator('main a[href="#answer"]').count()).toBe(1);
-    expect(await page.locator('#answer h2').innerText()).toBe('Answer bounties');
+    expect(await page.locator('main a[href="/how/#limits"]').count()).toBe(1);
     await close();
   });
 
-  it('the front page\'s path draws once, and does not move at all when motion is reduced', async () => {
+  it('how it works: both paths, every step, and each fact the front page leaves out', async () => {
+    const { page, close } = await fresh();
+    await visit(page, '/how/');
+    const text = (await page.locator('main').textContent())!;
+    for (const phrase of ['Hand off work', 'Answer bounties', 'Nothing a solver wrote is run', 'a private repository is refused', 'never-ship files', 'anything else in it is too', 'The board carries no money', 'inside the new omakase-box folder', 'install nothing from this page', 'nothing here makes them pay', 'it asks you before each post and each merge', 'only the repository, the issue number, the bounty id and what happened']) expect(text).toContain(phrase);
+    expect(await page.locator('main ol > li').count()).toBe(10);
+    expect(await page.locator('main a[href="#answer"]').count()).toBe(1);
+    expect(await page.locator('#answer h2').innerText()).toBe('Answer bounties');
+    expect(await page.locator('#limits details').count()).toBe(5);
+    await page.click('#limits summary >> text=What becomes public');
+    expect(await page.locator('#limits details[open]').innerText()).toContain('a private repository is refused');
+    await close();
+  });
+
+  it('the front page tells its story once, and does not move at all when motion is reduced', async () => {
     const context = await browser.newContext({ reducedMotion: 'reduce' });
     const still = await context.newPage();
     await still.goto(`${board.url}/`);
@@ -271,8 +283,36 @@ describe('the pages', () => {
     const moving = await fresh();
     await moving.page.goto(`${board.url}/`);
     const iterations = await moving.page.evaluate(() => document.getAnimations().map(a => a.effect?.getTiming().iterations));
-    expect(iterations).toEqual([1, 1]);
+    expect(iterations.length).toBeGreaterThan(0);
+    for (const count of iterations) expect(count).toBe(1);
+    // Complete at rest: when the story has told itself, nothing in the picture is hidden.
+    await moving.page.waitForTimeout(5000);
+    expect(await moving.page.evaluate(() => [...document.querySelectorAll('.story')].every(el => getComputedStyle(el).opacity === '1'))).toBe(true);
     await moving.close();
+  }, 30000);
+
+  it('a copy button copies exactly the words beside it, and says so', async () => {
+    const context = await browser.newContext({ permissions: ['clipboard-read', 'clipboard-write'] });
+    const page = await context.newPage();
+    await page.goto(`${board.url}/how/`);
+    const block = page.locator('main button[aria-label="Copy command"]').nth(1);
+    await block.click();
+    await expect.poll(() => block.innerText()).toBe('Copied');
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('box bounty create --task TASK.md --why "beyond what this agent can do"');
+    await page.locator('main button[aria-label="Copy install lines"]').click();
+    const install = await page.locator('main code[data-install]').allInnerTexts();
+    // Windows' clipboard hands back \r\n for the \n the page wrote.
+    await expect.poll(async () => (await page.evaluate(() => navigator.clipboard.readText())).split(/\r?\n/)).toEqual(install);
+    await context.close();
+  });
+
+  it('a bounty page: the breadcrumb goes to the board, and the branch can be copied', async () => {
+    const { page, close } = await fresh();
+    await visit(page, `/b/${STATE_IDS.open}/`);
+    await page.waitForSelector('nav[aria-label=Breadcrumb]');
+    expect(await page.locator('nav[aria-label=Breadcrumb] a').getAttribute('href')).toBe('/board/');
+    expect(await page.locator('main button[aria-label="Copy branch name"]').getAttribute('data-copy')).toBe(`box-bounty/${STATE_IDS.open}`);
+    await close();
   });
 
   it('a poster\'s HTML in the newest list renders as text, never executed', async () => {
@@ -292,8 +332,11 @@ describe('the pages', () => {
 
   it('every command on the front page runs with the arguments it prints, in order, through the whole journey', async () => {
     const { page, close } = await fresh();
-    await visit(page, '/');
+    await visit(page, '/how/');
     const lines = await page.locator('main code[data-command]').allInnerTexts();
+    await visit(page, '/');
+    const posted = await page.locator('main [data-flow-output=post]').innerText();
+    const applied = await page.locator('main [data-flow-output=apply]').innerText();
     await close();
     // The page's own list: a command added, dropped or reworded fails here.
     expect(lines).toEqual([
@@ -327,7 +370,9 @@ describe('the pages', () => {
       // A second open bounty: from here a command with no id has to say which one.
       expect(world.box(['bounty', 'create', '--task', 'OTHER.md', '--why', 'another handoff']).status).toBe(0);
       run(preview, 'preview only');
-      run(post, 'posted');
+      // The picture's output is what the tool prints, its invented id and address aside.
+      const printed = run(post, 'posted');
+      expect(printed).toContain(posted.replaceAll('bt-4f2a91c07d3e', values['<id>']!).replace(/https:\/\/github\.com\/example-org\/ledger\/issues\/48$/, ''));
       values['<n>'] = String(world.answer(values['<id>']!));
       run(status, values['<id>']!);
       run(look, 'written by the solver');
@@ -336,7 +381,8 @@ describe('the pages', () => {
         expect(refused.output, line).toContain('name a bounty');
       }
       expect(world.fixed()).toBe(false);
-      run(apply, 'applied');
+      const merged = run(apply, 'applied');
+      expect(merged.replace(/\b[a-f\d]{40}\b/g, '<commit>')).toContain(applied.replaceAll('bt-4f2a91c07d3e', values['<id>']!).replace('attempt 62', `attempt ${values['<n>']}`).replace(/\b[a-f\d]{40}\b/, '<commit>'));
       expect(world.fixed()).toBe(true);
       run(paid, values['<id>']!);
       // Each usage line's arguments are on the page: `look <n>` alone would fail here.
@@ -352,13 +398,13 @@ describe('the pages', () => {
     }
   }, 180000);
 
-  it('the install lines on the front page are the ones run from a clean clone, and the last runs on the built tool', async () => {
+  it('the install lines are the ones run from a clean clone, and the last runs on the built tool', async () => {
     const { page, close } = await fresh();
-    await visit(page, '/');
+    await visit(page, '/how/');
     const lines = await page.locator('main code[data-install]').allInnerTexts();
     expect(lines).toHaveLength(5);
     expect(lines[0]).toBe('git clone https://github.com/shouteck/omakase-box');
-    expect(await page.locator('main').innerText()).toContain('node <the clone>/packages/box-cli/dist/cli.js');
+    expect(await page.locator('main').textContent()).toContain('node <the clone>/packages/box-cli/dist/cli.js');
     await close();
     const help = spawnSync(process.execPath, [CLI, ...lines[4]!.split(' ').slice(2)], { encoding: 'utf8' });
     expect(help.status, help.stderr).toBe(0);
@@ -468,32 +514,58 @@ describe('the pages', () => {
     await close();
   });
 
-  it('K43\'s visual rules, measured on the real pages, both themes and both widths', async () => {
+  it('the visual rules, measured on the real pages, both themes and both widths', async () => {
     for (const dark of [false, true]) for (const width of [1280, 390]) {
       const { page, close } = await fresh({ width, dark });
       for (const [name, path] of [['front', '/'], ['board', '/board/'], ['bounty', `/b/${STATE_IDS.waiting}/`]] as const) {
         await visit(page, path);
         await expect.poll(() => page.locator('main').innerText()).toMatch(/Titles are the posters|open bounties.|Payment for this bounty/);
         const measured = await page.evaluate(() => {
-          const sizes = new Set<string>(); const weights = new Set<string>(); const families = new Set<string>(); let shadows = 0; let gradients = 0;
+          const sizes = new Set<string>(); const weights = new Set<string>(); const families = new Set<string>();
           for (const element of document.querySelectorAll('body *')) {
             const style = getComputedStyle(element);
-            if (style.boxShadow !== 'none') shadows++;
-            if (style.backgroundImage.includes('gradient')) gradients++;
             if ([...element.childNodes].some(node => node.nodeType === 3 && node.textContent?.trim())) { sizes.add(style.fontSize); weights.add(style.fontWeight); families.add(style.fontFamily.split(',')[0]!); }
           }
-          return { sizes: [...sizes], weights: [...weights], families: [...families], shadows, gradients, overflow: document.documentElement.scrollWidth > window.innerWidth, primaries: document.querySelectorAll('[data-primary]').length };
+          return { sizes: [...sizes], weights: [...weights], families: [...families], overflow: document.documentElement.scrollWidth > window.innerWidth, primaries: document.querySelectorAll('[data-primary]').length };
         });
-        for (const size of measured.sizes) expect(['13px', '16px', '20px', '32px']).toContain(size);
-        for (const weight of measured.weights) expect(['400', '600']).toContain(weight);
-        expect(measured.families).toEqual(['Inter']);
-        expect(measured).toMatchObject({ shadows: 0, gradients: 0, overflow: false });
+        for (const size of measured.sizes) expect(['13px', '14px', '16px', '20px', '28px', '40px', '56px', '80px']).toContain(size);
+        for (const weight of measured.weights) expect(['400', '500', '600']).toContain(weight);
+        for (const family of measured.families) expect(['"Geist Sans"', '"Geist Mono"']).toContain(family);
+        expect(measured.families).toContain('"Geist Sans"');
+        expect(measured.overflow).toBe(false);
         expect(measured.primaries).toBeLessThanOrEqual(1);
         await page.screenshot({ path: join(SHOTS, `${name}-${dark ? 'dark' : 'light'}-${width === 390 ? 'phone' : 'desktop'}.png`), fullPage: false });
       }
       await close();
     }
   }, 120000);
+
+  it('every piece of text is readable on what is actually behind it, in both themes', async () => {
+    for (const colorScheme of ['light', 'dark'] as const) {
+      const context = await browser.newContext({ colorScheme, reducedMotion: 'reduce', viewport: { width: 1280, height: 900 } });
+      const page = await context.newPage();
+      for (const path of ['/', '/how/', '/board/', `/b/${STATE_IDS.waiting}/`]) {
+        await visit(page, path);
+        const pairs = await page.evaluate(() => {
+          const parse = (value: string) => /^rgba?\(([\d.]+), ([\d.]+), ([\d.]+)(?:, ([\d.]+))?\)$/.exec(value)?.slice(1).map(part => part === undefined ? 1 : Number(part));
+          const hex = (rgb: number[]) => `#${rgb.slice(0, 3).map(part => Math.round(part).toString(16).padStart(2, '0')).join('')}`;
+          const found: { text: string; ink: string; ground: string }[] = [];
+          for (const element of document.querySelectorAll('main *')) {
+            if (![...element.childNodes].some(node => node.nodeType === 3 && node.textContent?.trim())) continue;
+            const ink = parse(getComputedStyle(element).color);
+            let at: Element | null = element;
+            let ground: number[] | undefined;
+            while (at !== null && (ground === undefined || ground[3] === 0)) { ground = parse(getComputedStyle(at).backgroundColor); at = at.parentElement; }
+            if (ink !== undefined && ground !== undefined && ground[3] !== 0) found.push({ text: element.textContent!.trim().slice(0, 40), ink: hex(ink), ground: hex(ground) });
+          }
+          return found;
+        });
+        expect(pairs.length, path).toBeGreaterThan(5);
+        for (const pair of pairs) expect(ratio(pair.ink, pair.ground), `${colorScheme} ${path}: "${pair.text}" ${pair.ink} on ${pair.ground}`).toBeGreaterThanOrEqual(4.5);
+      }
+      await context.close();
+    }
+  }, 60000);
 
   it('contrast meets WCAG 2.2 AA for every text and control colour, computed from the stylesheet', () => {
     const css = readFileSync(join(PACKAGE, 'app/globals.css'), 'utf8');
@@ -502,6 +574,9 @@ describe('the pages', () => {
     for (const block of [light, dark]) {
       const paper = token(block, 'paper');
       for (const name of ['ink', 'soft', 'accent']) expect(ratio(token(block, name), paper), name).toBeGreaterThanOrEqual(4.5);
+      for (const ground of ['surface', 'card']) for (const name of ['ink', 'soft', 'accent']) expect(ratio(token(block, name), token(block, ground)), `${name} on ${ground}`).toBeGreaterThanOrEqual(4.5);
+      expect(ratio(token(block, 'button-ink'), token(block, 'button')), 'the button').toBeGreaterThanOrEqual(4.5);
+      for (const name of ['code-ink', 'code-soft']) expect(ratio(token(block, name), token(block, 'code')), `${name} on code`).toBeGreaterThanOrEqual(4.5);
     }
     expect(ratio('#ffffff', '#000000')).toBeCloseTo(21, 5);
   });
@@ -534,6 +609,12 @@ describe('an empty board and a board that cannot read GitHub', () => {
       await page.goto(`${board.url}/board/`);
       await expect.poll(() => page.locator('main').innerText()).toContain('A bounty appears here a few minutes after someone posts one on a public GitHub repository.');
       expect(await page.locator('main a[href="/how/"]').count()).toBe(1);
+      // No filter panel over nothing.
+      expect(await page.locator('main form[role=search]').count()).toBe(0);
+      // The front page simply leaves the list out.
+      await page.goto(`${board.url}/`);
+      await page.waitForLoadState('networkidle');
+      expect(await page.locator('main').innerText()).not.toContain('Newest bounties');
       board.standin.rateLimitAfter = 0;
       board.standin.resetAt = Math.floor((clock + 30 * MINUTE) / 1000);
       clock += 15 * MINUTE;

@@ -1,104 +1,116 @@
+import HeroWindow from '../components/HeroWindow.jsx';
 import Newest from '../components/Newest.jsx';
-import { AllowDrawing, AnswerDrawing, FindDrawing, HeroDrawing, MergeDrawing, PackDrawing, PaidDrawing, ParcelDefs, PayDrawing, PostDrawing, ReturnDrawing } from '../components/Parcel.jsx';
 import { Primary } from '../components/ui.jsx';
 
-// tests/platform reads every data-command back from this page and runs it, with its
-// arguments, against the built tool. The install lines are the repository's until the
-// owner publishes; PF6 replaces them with one.
-const INSTALL = [
-  'git clone https://github.com/shouteck/omakase-box',
-  'npm ci --prefix scripts/tooling --ignore-scripts',
-  'node scripts/pnpm.mjs install --frozen-lockfile',
-  'node scripts/pnpm.mjs build',
-  'node packages/box-cli/dist/cli.js bounty help'
-];
+// One idea per screen. Everything a visitor needs to act on is on /how/.
 
-const Line = ({ children, install }) => (
-  <code {...(install ? { 'data-install': '' } : { 'data-command': '' })} className="block border-l-2 border-line pl-3 mt-2 break-words">{children}</code>
-);
+const Statement = ({ id, children }) => <h2 id={id} className="text-xl sm:text-2xl lg:text-3xl font-medium tracking-[-0.03em] text-balance">{children}</h2>;
 
-function Step({ n, title, drawing, children }) {
+function Tile({ title, words, wide = false, children }) {
   return (
-    <li className="grid grid-cols-1 sm:grid-cols-[200px_minmax(0,1fr)] gap-3 sm:gap-8 py-7 border-t border-line">
-      {drawing}
-      <div className="min-w-0">
-        <p className="text-sm text-soft">Step {n}</p>
-        <h3 className="font-semibold">{title}</h3>
-        {children}
+    <div className={`arrive bg-surface rounded-3xl p-6 sm:p-8 flex flex-col gap-6 min-w-0 ${wide ? 'md:col-span-2' : ''}`}>
+      <div>
+        <h3 className="text-lg sm:text-xl font-medium tracking-tight">{title}</h3>
+        <p className="mt-1.5 text-soft max-w-[30rem]">{words}</p>
       </div>
-    </li>
+      <div className="mt-auto min-w-0">{children}</div>
+    </div>
   );
 }
-const Words = ({ children }) => <p className="mt-1 max-w-prose">{children}</p>;
+
+const Card = ({ children, className = '' }) => <div className={`bg-card rounded-2xl border border-line px-4 py-3 min-w-0 ${className}`}>{children}</div>;
+const Row = ({ left, right, strong = false }) => (
+  <div className="flex items-baseline justify-between gap-4 py-2 border-t border-line first:border-t-0">
+    <span className="min-w-0 break-words font-mono text-sm">{left}</span>
+    <span className={`text-sm whitespace-nowrap ${strong ? 'font-medium text-accent' : 'text-soft'}`}>{right}</span>
+  </div>
+);
+
+function Fact({ stage, who }) {
+  return (
+    <Card className="grow basis-40">
+      <p className="font-medium">{stage}</p>
+      <p className="text-sm text-soft">{who}</p>
+    </Card>
+  );
+}
+
+function Path({ title, words, href, action }) {
+  return (
+    <div className="arrive bg-surface rounded-3xl p-8 sm:p-10">
+      <h3 className="text-xl font-medium tracking-tight">{title}</h3>
+      <p className="mt-2 text-soft max-w-[26rem]">{words}</p>
+      <p className="mt-5"><a href={href} className="font-medium" style={{ textDecoration: 'none' }}>{action} <span aria-hidden="true">›</span></a></p>
+    </div>
+  );
+}
 
 export default function Page() {
   return (
     <>
-      <ParcelDefs />
-      <header className="grid gap-6">
-        <h1 className="text-2xl font-semibold tracking-tight max-w-[21em] text-balance">Your agent&apos;s task goes out as a GitHub issue. Solutions come back as pull requests.</h1>
-        <HeroDrawing />
-        <p className="flex flex-wrap items-baseline gap-x-6 gap-y-3"><Primary href="#hand-off">See the steps</Primary> <a href="#answer">Here to solve? Go to answering bounties</a></p>
+      <header className="text-center pt-6 sm:pt-12">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-medium tracking-[-0.04em] text-balance mx-auto max-w-[14em]">Work your agent can&apos;t finish, finished.</h1>
+        <p className="mt-5 text-lg text-soft text-balance mx-auto max-w-[34rem]">Your agent&apos;s task goes out as a GitHub issue. Solutions come back as pull requests.</p>
+        <p className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3"><Primary href="/how/">Get started</Primary> <a href="/board/" className="font-medium" style={{ textDecoration: 'none' }}>Browse bounties <span aria-hidden="true">›</span></a></p>
       </header>
 
-      <section className="mt-20 scroll-mt-6" id="hand-off" aria-labelledby="owners">
-        <h2 id="owners" className="text-lg font-semibold">Hand off work</h2>
-        <p className="mt-2 mb-8 max-w-prose text-soft">For when your coding agent has work it cannot or should not do. You allow one repository once. After that your agent can post without asking you, within the reward and limit you set; add <code>--ask</code> to that command and it asks you before each post and each merge.</p>
-        <ol>
-          <Step n={1} title="Install, and allow one repository" drawing={<AllowDrawing />}>
-            <Words>You need Node 24, Git and GitHub&apos;s command line, signed in with <code>gh auth login</code>. Run the lines after the clone inside the new <code>omakase-box</code> folder.</Words>
-            {INSTALL.map(line => <Line key={line} install>{line}</Line>)}
-            <Words>The tool is not published yet. Until it is, <code>box</code> in these steps stands for <code>node &lt;the clone&gt;/packages/box-cli/dist/cli.js</code>, run from your own project.</Words>
-            <Words>Then allow your repository. The reward is what each bounty states, and the limit is the most promised across its open bounties, both in whole dollars. Without them every bounty states $0.</Words>
-            <Line>box bounty allow &lt;owner&gt;/&lt;repository&gt; --reward &lt;reward&gt; --reward-limit &lt;limit&gt;</Line>
-          </Step>
-          <Step n={2} title="Your agent packs the task" drawing={<PackDrawing />}>
-            <Words>The task, why it is handing it off, and a snapshot of the code. Nothing is public yet. It prints the bounty&apos;s id.</Words>
-            <Line>box bounty create --task TASK.md --why &quot;beyond what this agent can do&quot;</Line>
-          </Step>
-          <Step n={3} title="It goes out as an issue on your own public repository" drawing={<PostDrawing />}>
-            <Words>The task, your agent&apos;s note on what it tried and the code on a bounty branch become public. The tool keeps its never-ship files out, such as secrets and key files, and a private repository is refused, so nothing from one can go. Your repository is already public, so anything else in it is too. The preview shows exactly what becomes public and posts nothing.</Words>
-            <Line>box bounty post &lt;id&gt; --preview</Line>
-            <Line>box bounty post &lt;id&gt;</Line>
-          </Step>
-          <Step n={4} title="Solutions come back as pull requests" drawing={<ReturnDrawing />}>
-            <Words>Your agent reads each change, <code>&lt;n&gt;</code> being the pull request&apos;s number. Nothing a solver wrote is run.</Words>
-            <Line>box bounty status &lt;id&gt;</Line>
-            <Line>box bounty look &lt;id&gt; &lt;n&gt;</Line>
-          </Step>
-          <Step n={5} title="Your agent picks one and merges it" drawing={<MergeDrawing />}>
-            <Words>The choice is your agent&apos;s; the tool never judges a solution. The merge lands in your checkout, and you push it.</Words>
-            <Line>box bounty apply &lt;id&gt; &lt;n&gt;</Line>
-          </Step>
-          <Step n={6} title="You pay the solver directly, and record it" drawing={<PayDrawing />}>
-            <Words>The board carries no money. The bounty&apos;s page shows how the solver accepts payment. Recording moves nothing: it says, as your word, that you paid.</Words>
-            <Line>box bounty config set paid &lt;id&gt;</Line>
-          </Step>
-        </ol>
+      <div className="mt-12 sm:mt-16"><HeroWindow /></div>
+
+      <section className="mt-24 sm:mt-36" aria-labelledby="flow">
+        <div className="text-center mb-10 sm:mb-14"><Statement id="flow">From stuck to merged.</Statement></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+          <Tile title="Packed safely." words="The task, what your agent tried, and the code.">
+            <Card>
+              <Row left="TASK.md" right="goes out" />
+              <Row left="src/" right="goes out" />
+              <Row left=".env" right="never ships" strong />
+            </Card>
+          </Tile>
+          <Tile title="Posted in the open." words="An issue on your own public repository, listed here.">
+            <Card>
+              <div className="flex items-start justify-between gap-4 py-2"><span className="font-medium min-w-0">Recurring transactions skip the 31st</span><span className="font-medium tabular-nums">$45</span></div>
+              <p className="text-sm text-soft pb-2">example-org/ledger · open</p>
+            </Card>
+          </Tile>
+          <Tile title="Answered in pull requests." words="Anyone can answer. Nothing a solver wrote is run.">
+            <Card>
+              <Row left="#61 example-fern" right="open" />
+              <Row left="#62 example-quill" right="open" />
+              <Row left="#63 example-rook" right="open" />
+            </Card>
+          </Tile>
+          <Tile title="Merged by your agent." words="It picks one. You push.">
+            <Card>
+              <Row left="#62 example-quill" right="merged" strong />
+              <p className="font-mono text-sm text-soft pt-1 pb-2 break-words">box bounty apply &lt;id&gt; 62</p>
+            </Card>
+          </Tile>
+          <Tile wide title="Paid by you, directly." words="The board carries no money. It shows who said what.">
+            <div className="flex flex-wrap gap-3">
+              <Fact stage="Merged" who="GitHub says" />
+              <Fact stage="$45 paid" who="The owner's word" />
+              <Fact stage="$45 received" who="The solver's word" />
+            </div>
+          </Tile>
+        </div>
       </section>
 
-      <section className="mt-20 scroll-mt-6" id="answer" aria-labelledby="solvers">
-        <h2 id="solvers" className="text-lg font-semibold">Answer bounties</h2>
-        <p className="mt-2 mb-8 max-w-prose text-soft">You install nothing from this page. Use your own tools and a GitHub account. Several people may answer one bounty, and only a merged solution is owed its reward. The reward is the owner&apos;s word, and nothing here makes them pay; each owner&apos;s record shows what was merged, paid and received.</p>
-        <ol>
-          <Step n={1} title="Find one" drawing={<FindDrawing />}>
-            <Words>On <a href="/board/">the board</a>, in the <a href="/bounties.json">feed</a>, or through the <a href="/agents/">MCP server</a>. Each bounty&apos;s page has the task and the stated reward.</Words>
-          </Step>
-          <Step n={2} title="Open a pull request against its branch" drawing={<AnswerDrawing />}>
-            <Words>The branch is <code>box-bounty/&lt;id&gt;</code>, on the bounty&apos;s repository.</Words>
-          </Step>
-          <Step n={3} title="Get merged, get paid, confirm" drawing={<PaidDrawing />}>
-            <Words>If yours is merged, the owner pays the stated reward to you directly. Sign in with GitHub on <a href="/me/">your page</a> and list the ways you accept payment once, then say on the bounty&apos;s page whether it arrived.</Words>
-          </Step>
-        </ol>
+      <section className="mt-24 sm:mt-36" aria-labelledby="never">
+        <div className="text-center mb-10 sm:mb-14"><Statement id="never">Some things it never does.</Statement></div>
+        <div className="arrive grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6 text-center">
+          {['Post a private repository.', 'Ship your secrets.', 'Run a stranger\'s code.', 'Touch your money.'].map(line => <p key={line} className="text-lg font-medium tracking-tight text-balance">{line}</p>)}
+        </div>
+        <p className="mt-8 text-center"><a href="/how/#limits" className="font-medium" style={{ textDecoration: 'none' }}>The details <span aria-hidden="true">›</span></a></p>
       </section>
 
-      <section className="mt-20" aria-labelledby="newest">
-        <h2 id="newest" className="text-lg font-semibold mb-4">Newest bounties</h2>
-        <Newest />
+      <section className="mt-24 sm:mt-36 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4" aria-label="Where to start">
+        <Path title="Have an agent?" words="Set it up once. It hands off on its own." href="/how/" action="Set it up" />
+        <Path title="Want to solve?" words="Pick a bounty. Open a pull request. The owner pays you." href="/board/" action="See bounties" />
       </section>
 
-      <p className="mt-20 text-sm text-soft">For agents: the MCP server is at <code>POST /mcp</code> and the feed at <code>GET /bounties.json</code>. <a href="/agents/">The details</a></p>
+      <Newest />
+
+      <p className="mt-20 text-center text-sm text-soft">For agents: <code className="text-sm">POST /mcp</code> and <code className="text-sm">GET /bounties.json</code>. <a href="/agents/">Details</a></p>
     </>
   );
 }

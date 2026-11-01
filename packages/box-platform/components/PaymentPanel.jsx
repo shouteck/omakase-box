@@ -6,7 +6,7 @@ import { MethodList } from './Methods.jsx';
 import { Quiet, Soft, fmtDate } from './ui.jsx';
 
 /** The page's one primary action, when this visitor has one. */
-const Act = ({ children, onClick }) => <button type="button" data-primary onClick={onClick} className="bg-accent text-paper px-5 py-2.5 font-semibold rounded-sm">{children}</button>;
+const Act = ({ children, onClick }) => <button type="button" data-primary onClick={onClick} className="bg-button text-button-ink px-5 py-2.5 font-medium rounded-full">{children}</button>;
 
 const days = (since, now = Date.now()) => Math.max(0, Math.floor((now - Date.parse(since)) / 86400000));
 
