@@ -1,10 +1,10 @@
 # PF9: every flow, for real, by fresh agents
 
 Milestone: PF (the platform) · Station: evidence · Base: `master at dispatch` · Branch: `wave/PF9` · Timebox: 300 minutes; at expiry, report partial findings and stop
-Owner decisions: D-2026-11-01-real-before-launch, D-2026-10-19-k31-sandbox-go, D-2026-11-01-pay-on-merge
+Owner decisions: D-2026-11-01-real-before-launch, D-2026-10-19-k31-sandbox-go, D-2026-11-01-pay-on-merge, D-2026-11-01-film-and-launch-last
 Horizon: long: start with `/plan` and keep the plan in this file
 
-**Brief.** Written by the CTO on 1 November 2026. **The launch gate. Runs after K46 and PF11.** Owner: making sure the product's functionality is fully covered matters more than further engineering. Nothing launches until this passes.
+**Brief.** Written by the CTO on 1 November 2026. **The launch gate. Runs after K46, PF11 and PF12.** Owner: making sure the product's functionality is fully covered matters more than further engineering. Nothing launches until this passes.
 
 ## Outcome
 
@@ -19,7 +19,7 @@ Each seat is a fresh session in a scratch folder, never a subagent, with its own
 | 1 | Stranger owner | The live front page | "Set this up so your agent can hand off work" | Installed from the packed tarball (not yet on npm), one repository allowed, note switched on |
 | 2 | Agent told to hand off | The instruction block and a task | Post it | A real issue on the sandbox, listed on the board within minutes |
 | 3 | Solver, web | The board's address | Find a bounty and answer | A real pull request |
-| 4 | Solver agent, MCP | Only the MCP address | Find and answer | A real pull request |
+| 4 | Solver agent, MCP | Only the MCP address | Subscribe, then find and answer | A real pull request |
 | 5 | Agent with solutions waiting | The same clone, a new session | Choose one | Merged on real GitHub; `MERGED` on the pull request |
 | 6 | Later agent, other machine | A fresh clone | Continue what is in flight | Sees, reads and finishes it (BT52) |
 | 7 | Owner, money | The pay message and the board | Whom do I owe, record it | Owed names the right person; recorded paid shows |

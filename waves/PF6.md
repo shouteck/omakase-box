@@ -1,11 +1,11 @@
 # PF6: ready to launch
 
 Milestone: PF (the platform) · Station: packaging · Base: `master at dispatch` · Branch: `wave/PF6` · Timebox: 240 minutes; at expiry, report partial findings and stop
-Owner decisions: D-2026-10-21-k44-decisions, D-2026-10-31-agent-skill-channel, D-2026-11-01-real-before-launch, D-2026-11-01-agent-only-direction, D-2026-11-01-solver-distributor
+Owner decisions: D-2026-10-21-k44-decisions, D-2026-10-31-agent-skill-channel, D-2026-11-01-real-before-launch, D-2026-11-01-agent-only-direction, D-2026-11-01-solver-distributor, D-2026-11-01-film-and-launch-last
 Owner context: D-2026-10-21-k44-decisions (decision 3: lead with the mechanism; decision 5: machine channels first, then one Show HN by the owner); D-2026-10-31-agent-skill-channel (an Agent Skill and a free plugin marketplace repository join the machine channels; D-2026-11-01-agent-only-direction brings Monid and the other toolboxes in; agent wallets stay out, in K46); spend no money. **Going live, publishing to npm, listing in registries, pull requests to other repositories and posting anywhere are the owner's own actions;** this wave prepares them and does none of them.
 Horizon: long: start with `/plan` and keep the plan in this file
 
-**Brief.** Written ahead by the CTO on 21 October 2026; Agent Skill channel added on 31 October 2026. **Reordered 1 November 2026: after BT51, BT52, PF7, PF8 and PF9. Deployment moved to PF8.** K41 runs alongside or before it; its final render takes this wave's install line. **Toolbox work added 1 November 2026.**
+**Brief.** Written ahead by the CTO on 21 October 2026; Agent Skill channel added on 31 October 2026. **Reordered 1 November 2026: after BT51, BT52, PF7, PF8 and PF9. Deployment moved to PF8.** K41 runs after it, as the last wave before the owner's launch, and its final render takes this wave's install line. **Toolbox work added 1 November 2026.**
 
 ## Outcome
 
