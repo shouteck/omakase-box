@@ -3,7 +3,6 @@
 import childProcess, { execFileSync, spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { syncBuiltinESMExports } from 'node:module';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -163,7 +162,7 @@ describe('the board unreachable or off', { timeout: 180000 }, () => {
     expect(boardAddress()).toBe('');
     // A fixture may build its own environment: settings kept elsewhere are enough.
     delete process.env['BOX_BOARD_DEFAULT'];
-    process.env['BOX_BOUNTY_SETTINGS_DIR'] = join(tmpdir(), 'kitchen-PF8-settings-absent');
+    process.env['BOX_BOUNTY_SETTINGS_DIR'] = 'settings-kept-elsewhere-absent';
     try {
       expect(boardAddress()).toBe('');
     } finally {
