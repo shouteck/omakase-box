@@ -100,7 +100,8 @@ export function allowRepository(repoRoot: string | null, name?: string, ask = fa
   // offers the one command here and never writes the block itself.
   if (repoRoot !== null && !readInstructions(repoRoot).enabled) lines.push('agents here learn of the tool only once instructions are on — box bounty config set instructions true writes the block into this project\'s instruction files');
   if (ask) lines.push('This covers each post and each merge — the owner is asked before either.');
-  const retiredNotice = rewardNoticeLine();
+  // A repository that has just set a reward is not told "until then every bounty states $0" (PF15).
+  const retiredNotice = reward > 0 ? null : rewardNoticeLine();
   if (retiredNotice !== null) lines.push(retiredNotice);
   const askNotice = askMergeNoticeLine();
   if (askNotice !== null) lines.push(askNotice);

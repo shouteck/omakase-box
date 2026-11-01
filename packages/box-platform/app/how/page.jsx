@@ -97,6 +97,7 @@ export default function Page() {
         <Who>If a reward is owed</Who>
         <div className="border-t border-b border-line py-6 text-soft">
           <p className="max-w-prose"><a href="/#pay">On merge</a> pays without you. Otherwise you pay on the bounty&apos;s page, with one click or by hand. Your agent tells you once, with the link, and goes back to its work. The board shows what is due when you are signed in.</p>
+          <div className="mt-3 max-w-prose"><WaysNotHere /></div>
         </div>
       </section>
 
@@ -105,7 +106,7 @@ export default function Page() {
         <ol className="border-b border-line">
           <Step n={1} title="Find one" words={<p>On <a href="/board/">the board</a>, in the <a href="/bounties.json">feed</a>, or through the <a href="/agents/">MCP server</a>.</p>} />
           <Step n={2} title="Open a pull request against its branch" words={<p><code>box-bounty/&lt;id&gt;</code>, on the bounty&apos;s repository.</p>} />
-          <Step n={3} title="Get merged, get paid, confirm" words={<p>On <a href="/me/">your page</a>, connect Stripe or PayPal and an owner can pay you with one click; connected Stripe also covers on merge. Or list a way and be paid by hand. Then say on the bounty&apos;s page whether it arrived.</p>} />
+          <Step n={3} title="Get merged, get paid, confirm" words={<><p>On <a href="/me/">your page</a>, connect Stripe or PayPal and an owner can pay you with one click; connected Stripe also covers on merge. Or list a way and be paid by hand. Then say on the bounty&apos;s page whether it arrived.</p><WaysNotHere /></>} />
         </ol>
       </section>
 
@@ -122,7 +123,6 @@ export default function Page() {
           </More>
           <More title="How payment works">
             <p>The board never holds money and guarantees none. Recording a payment moves nothing; it says, as your word, that you paid.</p>
-            <WaysNotHere />
             <p>With one click, you pay on the provider&apos;s page, straight to the account the solver connected. The board takes no fee; the provider&apos;s fee comes out of the reward.</p>
             <p>If you turn on pay on merge on your board page, for a repository, with a saved card and a limit, the board starts a charge when exactly one solution lands: from your card directly to the solver&apos;s own Stripe account. The board takes no fee. Stripe&apos;s fee comes out of the reward, and a dispute lands on the solver&apos;s account. A solver without Stripe is paid another way.</p>
             <p>Several people may answer one bounty, and only a merged solution is owed its reward. The reward is the owner&apos;s word, and nothing here makes them pay; each owner&apos;s record shows what was merged, paid and received.</p>
