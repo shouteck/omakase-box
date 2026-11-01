@@ -257,7 +257,11 @@ export async function lookNow(env: Env, repository: string, number: number, id: 
     await env.DB.prepare('UPDATE bounties SET details_read_at = ? WHERE id = ?').bind(now, id).run();
     return 'read';
   } catch (error) {
-    if (error instanceof BudgetSpent) return 'budget-spent';
+    if (error instanceof BudgetSpent) {
+      // What the look could not finish goes first in the next refresh, closed or not.
+      await env.DB.prepare('UPDATE bounties SET details_read_at = 0 WHERE id = ? AND repository = ?').bind(id, repository).run();
+      return 'budget-spent';
+    }
     if (error instanceof GitHubUnavailable) return 'github-unavailable';
     throw error;
   } finally {
@@ -283,8 +287,8 @@ export async function refresh(env: Env): Promise<RefreshResult> {
     }
     const repositories = await db.prepare('SELECT name FROM repositories WHERE read_at <= ? ORDER BY read_at').bind(now - REPOSITORY_STALE_MS).all<{ name: string }>();
     for (const { name } of repositories.results) await readRepository(env, github, name, now);
-    const due = await db.prepare('SELECT id, repository, issue_number, seen_at, issue_state FROM bounties WHERE details_read_at <= ? ORDER BY details_read_at, id')
-      .bind(now - DETAILS_STALE_MS).all<{ id: string; repository: string; issue_number: number; seen_at: number; issue_state: string }>();
+    const due = await db.prepare('SELECT id, repository, issue_number, seen_at, issue_state FROM bounties WHERE details_read_at <= ? AND (issue_state = \'open\' OR details_read_at <= ?) ORDER BY details_read_at, id')
+      .bind(now - DETAILS_STALE_MS, now - (env.closedStaleMs ?? DETAILS_STALE_MS)).all<{ id: string; repository: string; issue_number: number; seen_at: number; issue_state: string }>();
     for (const row of due.results) {
       if (row.issue_state === 'open' && row.seen_at < completeAt && !await readIssueAgain(env, github, row.id, row.repository, row.issue_number, now)) continue;
       await readPullRequests(env, github, row.id, row.repository);

@@ -72,7 +72,7 @@ node ../../scripts/pnpm.mjs exec wrangler deploy
 
 If asked, choose a `workers.dev` subdomain. **It becomes part of the board's public address**, so pick a name you are happy to show. The command prints the address: `https://open-bounty-board.<your-subdomain>.workers.dev`. The steps below call it the board's address.
 
-Open that address. The board now answers and reads GitHub every 15 minutes. Sign-in says it is not set up until step 6.
+Open that address. The board now answers and reads GitHub a little every minute. A new address can refuse secure connections for its first minute. Sign-in says it is not set up until step 6.
 
 ## 5. GitHub OAuth app
 
@@ -80,7 +80,7 @@ At https://github.com/settings/applications/new:
 
 - Application name: `Open bounty board`
 - Homepage URL: the board's address
-- Authorization callback URL: the board's address followed by `/auth/github/callback`
+- Authorization callback URL (GitHub may call it Redirect URI): the board's address followed by `/auth/github/callback`
 - Leave "Enable Device Flow" off.
 
 Register it. The page shows the Client ID. Press "Generate a new client secret" and keep that page open for the next step; GitHub shows the secret only once.
@@ -101,13 +101,13 @@ To check: open the board's address followed by `/sign-in/` and sign in with GitH
 
 ## 7. The GitHub read token (optional, recommended)
 
-Without a token the board shares GitHub's limit of 60 reads an hour with everything else on Cloudflare's addresses, and it may lag. With one it has 5,000 an hour.
+Without a token the board shares GitHub's limit of 60 reads an hour with everything else on Cloudflare's addresses. On its first real run GitHub stopped it after 5 reads, so expect it to lag badly. With a token it has 5,000 an hour.
 
 At https://github.com/settings/personal-access-tokens/new, which makes a fine-grained token:
 
 - Token name: `open-bounty-board`
 - Resource owner: your own account
-- Expiration: the longest offered
+- Expiration: No expiration, or the longest offered. It can only read public repositories.
 - Repository access: **Public repositories**
 - Permissions: add none.
 
@@ -117,7 +117,7 @@ Press "Generate token" and copy it; GitHub shows it only once. Do not use a clas
 node ../../scripts/pnpm.mjs exec wrangler secret put GITHUB_TOKEN
 ```
 
-Paste the token when asked. **When it expires the board stops updating** and shows its last facts. Before that date, make a new token and run this command again, or remove the secret to go back to unauthenticated reads: `node ../../scripts/pnpm.mjs exec wrangler secret delete GITHUB_TOKEN`.
+Paste the token when asked. **If it has an expiry date, the board stops updating when it passes** and shows its last facts. Before that date, make a new token and run this command again, or remove the secret to go back to unauthenticated reads: `node ../../scripts/pnpm.mjs exec wrangler secret delete GITHUB_TOKEN`.
 
 ## Undoing it
 

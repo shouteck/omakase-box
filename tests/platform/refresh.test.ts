@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { handle } from '../../packages/box-platform/src/api.js';
 import { LIMITS } from '../../packages/box-platform/src/github.js';
-import { refresh, taskOf, titleOf } from '../../packages/box-platform/src/refresh.js';
+import { lookNow, refresh, taskOf, titleOf } from '../../packages/box-platform/src/refresh.js';
 import type { Db, Statement } from '../../packages/box-platform/src/store.js';
 import { bodyOf, commitFor, type StandinIssue } from '../../packages/box-platform/standin/standin.js';
 import { askJson, MINUTE, NOW, refreshUntilDone, rig, type Rig } from './support.js';
@@ -255,6 +255,30 @@ describe('rate limits', () => {
       await refreshUntilDone(r);
       const used = await r.env.DB.prepare(`SELECT value FROM meta WHERE key = 'budget_used'`).first<{ value: string }>();
       expect(Number(used?.value)).toBe(r.standin.requests.length);
+    });
+
+    it('leaves a closed bounty alone until its longer wait, and an open one does not wait', async () => {
+      seed(2);
+      r.standin.issues[0]!.state = 'closed';
+      await refreshUntilDone(r);
+      const asked = () => r.standin.requests.filter(line => line.endsWith('/pulls')).length;
+      const before = asked();
+      r.clock.at += 16 * MINUTE;
+      await refresh({ ...r.env, closedStaleMs: 60 * MINUTE });
+      expect(asked() - before).toBe(1);
+      r.clock.at += 61 * MINUTE;
+      await refresh({ ...r.env, closedStaleMs: 60 * MINUTE });
+      expect(asked() - before).toBe(3);
+    });
+
+    it('a look stopped by the budget goes first in the next refresh, even when closed', async () => {
+      seed(2);
+      r.standin.issues[0]!.state = 'closed';
+      await refreshUntilDone(r);
+      const id = r.standin.issues[0]!.id;
+      expect(await lookNow({ ...r.env, tickReads: 2 }, 'example-tidepool/ledger', 1, id, r.clock.at)).toBe('budget-spent');
+      const row = await r.env.DB.prepare('SELECT details_read_at AS at FROM bounties WHERE id = ?').bind(id).first<{ at: number }>();
+      expect(row?.at).toBe(0);
     });
 
     it('keeps the events it read when the budget stops the walk', async () => {

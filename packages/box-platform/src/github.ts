@@ -31,6 +31,8 @@ export interface Env {
   readonly defer?: (work: Promise<unknown>) => void;
   /** Reads a refresh or a look may spend, when less than the stated budget. */
   readonly tickReads?: number;
+  /** How long a closed bounty's details may stand, when longer than an open one's. A hint reads it sooner. */
+  readonly closedStaleMs?: number;
 }
 
 /** The budget for this refresh is spent; the next one resumes. Not a failure. */
