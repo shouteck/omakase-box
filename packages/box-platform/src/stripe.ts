@@ -29,7 +29,8 @@ export async function stripe(env: StripeEnv, method: 'GET' | 'POST' | 'DELETE', 
       ...(form === undefined ? {} : { body: new URLSearchParams(form).toString() })
     });
   } catch { throw new StripeUnavailable('Stripe could not be reached'); }
-  if (response.status >= 500) throw new StripeUnavailable(`Stripe answered ${response.status}`);
+  // 409 is the same key still in flight and 429 is Stripe's rate limit: neither says anything about the card.
+  if (response.status >= 500 || response.status === 409 || response.status === 429) throw new StripeUnavailable(`Stripe answered ${response.status}`);
   try {
     const json: unknown = await response.json();
     return { status: response.status, json: json !== null && typeof json === 'object' ? json as Record<string, unknown> : {} };
@@ -44,6 +45,7 @@ export const errorCode = (answer: StripeAnswer): string | null => {
   const { code, decline_code: decline } = errorOf(answer);
   return typeof code === 'string' ? code : typeof decline === 'string' ? decline : null;
 };
+export const isCardError = (answer: StripeAnswer): boolean => errorOf(answer)['type'] === 'card_error';
 /** Stripe's words, safe to show. */
 export const errorWords = (answer: StripeAnswer): string => {
   const { message } = errorOf(answer);

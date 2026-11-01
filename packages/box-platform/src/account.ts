@@ -440,8 +440,13 @@ export async function accountResponse(request: Request, env: Env, url: URL, now:
       const input = await paymentInput(env, id, now);
       if (input === null) return json(404, NOT_ON_BOARD);
       if (roleOf(factsOf(input), viewer.login) !== 'owner') return json(403, { error: 'Only the poster of this bounty can finish its payment. Nothing changed.' });
-      const page = await authenticationPage(env, id, url.origin, now);
-      return 'error' in page ? json(409, page) : json(200, page);
+      try {
+        const page = await authenticationPage(env, id, url.origin, now);
+        return 'error' in page ? json(409, page) : json(200, page);
+      } catch (error) {
+        if (error instanceof StripeUnavailable) return json(503, { error: `${redact(error.message)}. Nothing was charged. Next: try again.` });
+        throw error;
+      }
     }
     if (method === 'GET' && payment[2] === 'payment') return paymentView(env, id, await viewerOf(request, env, now), now);
     if (method === 'POST' && payment[2] !== 'payment') {

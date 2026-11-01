@@ -1,9 +1,13 @@
 // Pay on merge (PF11), on the real routes and the real settle, against both stand-ins.
 // Every guard here is ours alone: Stripe would charge any account it is handed (K46).
 import { createHmac } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { DatabaseSync } from 'node:sqlite';
+import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { handle } from '../../packages/box-platform/src/api.js';
-import { settleCharges } from '../../packages/box-platform/src/charge.js';
+import { decide, settleCharges, type ChargeFacts } from '../../packages/box-platform/src/charge.js';
 import { redact } from '../../packages/box-platform/src/stripe.js';
 import { type StandinIssue } from '../../packages/box-platform/standin/standin.js';
 import { MINUTE, NOW, rig, type Rig, refreshUntilDone } from './support.js';
@@ -218,6 +222,7 @@ describe('never twice', () => {
     await merged();
     await Promise.all([settle(), settle(), settle()]);
     expect(s.charged()).toHaveLength(1);
+    expect(s.calls.filter(call => call.startsWith('POST /v1/payment_intents'))).toHaveLength(1); // The claim stops them before Stripe, not only Stripe's key.
   });
   it('after a crash and a lost row: the payment on the account answers', async () => {
     await ownerOn();
@@ -229,6 +234,17 @@ describe('never twice', () => {
     expect(s.charged()).toHaveLength(1);
     expect(await stateOf()).toBe('paid');
   });
+  it('after a lost row and a new card, so a new key: the payment on the account still answers', async () => {
+    await ownerOn();
+    await solverReady();
+    await merged();
+    await settle();
+    await env.DB.prepare('DELETE FROM charges').run();
+    await env.DB.prepare(`UPDATE pay_settings SET payment_method = 'pm_new' WHERE github_id = ?`).bind(OWNER_ID).run();
+    await settle();
+    expect(s.charged()).toHaveLength(1);
+    expect(await stateOf()).toBe('paid');
+  });
   it('a payment the solver made themself, naming this bounty, does not read as paid', async () => {
     await ownerOn();
     const account = await solverReady();
@@ -236,6 +252,23 @@ describe('never twice', () => {
     await merged();
     await settle();
     expect(s.charged(account).filter(intent => intent.application !== null)).toHaveLength(1);
+  });
+});
+
+describe('decide alone', () => {
+  const facts = (row: ChargeFacts['row']): ChargeFacts => ({
+    amount: 45, poster: OWNER, on_at: new Date(NOW).toISOString(), recorded: false, row,
+    landed: [{ number: 7, author: SOLVER, author_id: SOLVER_ID, merged_at: after, association: 'NONE', on_default: 1 }],
+    card: { payment_method: 'pm_saved', customer: 'cus_1', limit: 100 }, solver: { account_id: 'acct_1', ready: true }
+  });
+  const at = NOW + 10 * MINUTE;
+  it('charges when nothing stands in the way', () => expect(decide(facts(null), at).act).toBe('charge'));
+  for (const state of ['paid', 'refunded', 'disputed', 'owner-must-authenticate'] as const) {
+    it(`never charges from ${state}`, () => expect(decide(facts({ state, payment_method: 'pm_saved', at: at - 60 * MINUTE }), at).act).toBe('nothing'));
+  }
+  it('leaves a fresh claim alone and picks up a stale one', () => {
+    expect(decide(facts({ state: 'charging', payment_method: 'pm_saved', at: at - MINUTE }), at).act).toBe('nothing');
+    expect(decide(facts({ state: 'charging', payment_method: 'pm_saved', at: at - 10 * MINUTE }), at).act).toBe('charge');
   });
 });
 
@@ -273,6 +306,42 @@ describe('named states', () => {
     const page = await post(`/api/b/${ID}/authenticate`, token);
     expect(page.body.url).toContain('checkout.stripe.test');
   });
+  it('a refusal that is not about the card does not read as a decline', async () => {
+    await ownerOn();
+    await solverReady();
+    await merged();
+    s.card = 'refused';
+    await settle();
+    expect(await stateOf()).toBe('stripe-refused');
+    expect(s.charged()).toEqual([]);
+  });
+  for (const trouble of ['busy', 'limited'] as const) {
+    it(`${trouble}: says nothing about the card, and the next look pays once`, async () => {
+      await ownerOn();
+      await solverReady();
+      await merged();
+      s.card = trouble;
+      await settle();
+      expect(await stateOf()).toBe('charging');
+      s.card = 'ok';
+      r.clock.at += 10 * MINUTE;
+      await settle();
+      expect(await stateOf()).toBe('paid');
+      expect(s.charged()).toHaveLength(1);
+    });
+  }
+  it('Stripe down while the owner authenticates is a named answer, not a crash', async () => {
+    const token = await ownerOn();
+    await solverReady();
+    await merged();
+    s.card = 'authenticate';
+    await settle();
+    await s.stop();
+    const page = await post(`/api/b/${ID}/authenticate`, token);
+    expect(page.status).toBe(503);
+    expect(page.body.error).toContain('Nothing was charged');
+    await s.start();
+  });
   it('a solver who disconnected is named, with nothing charged', async () => {
     await ownerOn();
     const account = await solverReady();
@@ -290,6 +359,27 @@ describe('named states', () => {
     const refused = await post('/api/me/card', await signIn(OWNER_ID, OWNER));
     expect(refused.status).toBe(409);
     expect(refused.body.error).toContain('not set up');
+  });
+});
+
+describe('the live database', () => {
+  const here = dirname(fileURLToPath(import.meta.url));
+  const read = (name: string) => readFileSync(join(here, '../../packages/box-platform', name), 'utf8');
+  const columns = (db: DatabaseSync, table: string) => (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map(row => row.name).sort();
+  it('an existing board, migrated, has the same columns as a new one', () => {
+    const schema = read('schema.sql');
+    const old = schema.replace(/^\s*poster_id INTEGER,\r?\n/m, '').replace(/^\s*author_id INTEGER,\r?\n/m, '');
+    expect(old).not.toBe(schema);
+    const existing = new DatabaseSync(':memory:');
+    existing.exec(old);
+    expect(columns(existing, 'bounties')).not.toContain('poster_id');
+    existing.exec(read('migrations/pf11.sql'));
+    existing.exec(schema);
+    const fresh = new DatabaseSync(':memory:');
+    fresh.exec(schema);
+    for (const table of ['bounties', 'pull_requests', 'stripe_accounts', 'pay_settings', 'pay_repositories', 'charges']) expect(columns(existing, table)).toEqual(columns(fresh, table));
+    existing.close();
+    fresh.close();
   });
 });
 

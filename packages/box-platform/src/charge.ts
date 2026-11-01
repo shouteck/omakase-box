@@ -5,7 +5,7 @@
 import type { ChargeState } from './charge-words.js';
 import type { Env } from './github.js';
 import { notCounted, type MergedPull } from './payments.js';
-import { errorCode, errorWords, stripe, StripeUnavailable, stripeOn } from './stripe.js';
+import { errorCode, errorWords, isCardError, stripe, StripeUnavailable, stripeOn } from './stripe.js';
 
 /** Nothing can change these by trying again. Everything else is looked at again when its facts change. */
 const SETTLED: readonly ChargeState[] = ['paid', 'refunded', 'disputed'];
@@ -45,7 +45,7 @@ export function decide(facts: ChargeFacts, now: number): Decision {
   if (notCounted(pull, facts.poster) !== null) return { act: 'settle', state: 'not-counted', pull };
   if (facts.amount > card.limit) return { act: 'settle', state: 'refused-over-limit', pull };
   if (facts.solver === null || !facts.solver.ready) return { act: 'settle', state: 'solver-not-ready', pull };
-  if (row?.state === 'declined' && row.payment_method === card.payment_method) return { act: 'nothing' }; // The same card gives the same answer: a new card is a new attempt.
+  if ((row?.state === 'declined' || row?.state === 'stripe-refused') && row.payment_method === card.payment_method) return { act: 'nothing' }; // The same card gives the same answer: a new card is a new attempt.
   return { act: 'charge', pull, account: facts.solver.account_id, card };
 }
 
@@ -68,7 +68,7 @@ async function attempt(env: Env, bounty: string, amount: number, decision: Extra
   const key = keyOf(bounty, pull.number, card.payment_method);
   const clone = await stripe(env, 'POST', '/v1/payment_methods', { customer: card.customer, payment_method: card.payment_method }, { ...on, idempotency: `${key}/clone` });
   if (clone.status === 401 || clone.status === 403) return { state: 'solver-disconnected', payment_intent: null };
-  if (clone.status !== 200 || typeof clone.json['id'] !== 'string') return { state: 'declined', payment_intent: null };
+  if (clone.status !== 200 || typeof clone.json['id'] !== 'string') return { state: isCardError(clone) ? 'declined' : 'stripe-refused', payment_intent: null };
   const paid = await stripe(env, 'POST', '/v1/payment_intents', {
     amount: String(amount * 100), currency: 'usd', payment_method: clone.json['id'], confirm: 'true', off_session: 'true',
     'metadata[bounty]': bounty, 'metadata[pull_request]': String(pull.number)
@@ -77,7 +77,7 @@ async function attempt(env: Env, bounty: string, amount: number, decision: Extra
   if (paid.status === 401 || paid.status === 403) return { state: 'solver-disconnected', payment_intent: null };
   const error = paid.json['error'] as { payment_intent?: { id?: unknown } } | undefined;
   const intent = typeof error?.payment_intent?.id === 'string' ? error.payment_intent.id : null;
-  return { state: errorCode(paid) === 'authentication_required' ? 'owner-must-authenticate' : 'declined', payment_intent: intent };
+  return { state: !isCardError(paid) ? 'stripe-refused' : errorCode(paid) === 'authentication_required' ? 'owner-must-authenticate' : 'declined', payment_intent: intent };
 }
 
 const CHARGES_PER_RUN = 1; // Workers Free: a charge is five calls to Stripe, and this runs every minute.

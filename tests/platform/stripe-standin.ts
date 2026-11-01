@@ -9,7 +9,7 @@ export class StripeStandin {
   intents: Intent[] = [];
   calls: string[] = [];
   /** What the next charge does. */
-  card: 'ok' | 'declined' | 'authenticate' = 'ok';
+  card: 'ok' | 'declined' | 'authenticate' | 'refused' | 'busy' | 'limited' = 'ok';
   /** Words Stripe's error carries, for the redaction test. */
   errorText = 'Your card was declined.';
   private keys = new Map<string, unknown>();
@@ -45,10 +45,13 @@ export class StripeStandin {
     }
     if (method === 'POST' && path === '/v1/payment_methods') return { status: 200, json: { id: `pm_clone_${this.next++}` } };
     if (method === 'POST' && path === '/v1/payment_intents') {
-      if (this.card === 'declined') return error(402, 'card_declined');
+      if (this.card === 'declined') return error(402, 'card_declined', { type: 'card_error' });
+      if (this.card === 'refused') return { status: 400, json: { error: { type: 'invalid_request_error', message: 'Your account cannot currently make charges.' } } };
+      if (this.card === 'busy') return error(409, 'idempotency_key_in_use', { type: 'idempotency_error' });
+      if (this.card === 'limited') return error(429, 'rate_limit', { type: 'rate_limit_error' });
       const intent: Intent = { id: `pi_${this.next++}`, account: account!, amount: Number(form.get('amount')), status: this.card === 'ok' ? 'succeeded' : 'requires_payment_method', metadata: { bounty: form.get('metadata[bounty]') ?? '' }, application: 'ca_platform' };
       this.intents.push(intent);
-      return this.card === 'authenticate' ? error(402, 'authentication_required', { payment_intent: { id: intent.id } }) : { status: 200, json: intent };
+      return this.card === 'authenticate' ? error(402, 'authentication_required', { type: 'card_error', payment_intent: { id: intent.id } }) : { status: 200, json: intent };
     }
     if (method === 'POST' && /\/cancel$|\/detach$/.test(path)) return { status: 200, json: {} };
     return { status: 404, json: { error: { message: `no such route ${path}` } } };
@@ -67,7 +70,7 @@ export class StripeStandin {
       this.calls.push(`${request.method} ${url.pathname}${account === null ? '' : ` as ${account}`}`);
       const stored = typeof key === 'string' ? this.keys.get(key) : undefined;
       const answer = (stored ?? this.answer(request.method ?? 'GET', url.pathname, url.searchParams, new URLSearchParams(Buffer.concat(chunks).toString()), account)) as { status: number; json: unknown };
-      if (typeof key === 'string') this.keys.set(key, answer);
+      if (typeof key === 'string' && answer.status !== 409 && answer.status !== 429) this.keys.set(key, answer);
       response.writeHead(answer.status, { 'content-type': 'application/json' }).end(JSON.stringify(answer.json));
     });
     await new Promise<void>(done => this.server!.listen(0, '127.0.0.1', done));
