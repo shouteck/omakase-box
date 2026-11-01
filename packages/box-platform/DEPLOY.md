@@ -63,7 +63,7 @@ node node_modules/wrangler/bin/wrangler.js d1 execute open-bounty-board --remote
 ## 4. Build and deploy
 
 ```bash
-node ../../scripts/pnpm.mjs run build
+node node_modules/next/dist/bin/next build
 ```
 
 ```bash
