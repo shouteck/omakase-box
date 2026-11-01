@@ -78,7 +78,6 @@ describe('BT32 pass probes', { timeout: 120000 }, () => {
       mutate(r => { delete r['why']; });
       expectHeld('partOf', () => { mutate(r => { r['partOf'] = `job ${SECRET}` }); sharePosted(world.repo, record(), 'task'); });
       mutate(r => { delete r['partOf']; });
-      expectHeld('followup', () => { mutate(r => { r['resume'] = { kind: 'recorded', branch: 'main', commit: 'a'.repeat(40), changed: [], note: `resume ${SECRET}` } }); sharePosted(world.repo, record(), 'task'); });
       mutate(r => { r['resume'] = { kind: 'not-recorded' }; });
       expectHeld('reason', () => shareClosed(world.repo, record(), 'rejected', `because ${SECRET}`, false));
       // The real posted chain still stands untouched.
@@ -134,8 +133,9 @@ describe('BT32 pass probes', { timeout: 120000 }, () => {
         expect(surface, 'planted never-field text surfaced').not.toContain(MARKER);
       }
       expect(status).not.toContain(`probe ${ids.never}`);
-      // Import is ref-and-db only: worktree, index and branches unmoved.
-      expect(git(other, ['status', '--porcelain'])).toBe(clean);
+      // Import is ref-and-db only: worktree, index and branches unmoved. Since
+      // BT52 picking up the valid bounty also writes the tool's own `.box/`.
+      expect(git(other, ['status', '--porcelain']).split('\n').filter(line => line !== '' && !line.includes('.box/')).join('\n')).toBe(clean);
       expect(git(other, ['for-each-ref', '--format=%(refname)', 'refs/heads'])).toBe(branches);
     }); }
   });

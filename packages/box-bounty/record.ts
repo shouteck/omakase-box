@@ -20,7 +20,7 @@
 import { existsSync,readFileSync,realpathSync,statSync } from 'node:fs';
 import { basename,dirname,join,resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
-import { allRecords,listOpen,listEndedRecent,countEnded,readStored,sharedRead,writeStored,setStoreCodec } from './store.js';
+import { allRecords,listOpen,listEndedRecent,countEnded,readStored,writeStored,setStoreCodec } from './store.js';
 import { gitOutcome,gitRefsWrite } from './git.js';
 import { publishListed,publishLists } from './never-ship.js';
 import { payOutcomeShape,payToFactShape } from './pay.js';
@@ -37,6 +37,8 @@ let recordReadScan: ((repoRoot: string) => void) | undefined;
 let openSurfacesSync: ((repoRoot: string) => void) | undefined;
 export function setRecordReadScan(scan: (repoRoot: string) => void): void { recordReadScan = scan; }
 export function setOpenSurfacesSync(sync: (repoRoot: string) => void): void { openSurfacesSync = sync; }
+let sharedAdopter: ((repoRoot: string, id: string) => BountyRecord | null) | undefined;
+export function setSharedAdopter(adopter: (repoRoot: string, id: string) => BountyRecord | null): void { sharedAdopter = adopter; }
 const noticeMergedSolutions = (repoRoot: string): void => {
   if (recordReadScan === undefined) throw new Error('box-bounty wiring: reading a record runs the merged-solution scan — merged.js registers it at load; import the package index');
   recordReadScan(repoRoot);
@@ -319,6 +321,10 @@ export interface BountyRecord {
       (BT32) — a read-model marker: never stored in `records`, never
       writable, and readers skip its GitHub refresh. */
   readonly shared?: true;
+  /** Set when this record was rebuilt from a shared record and GitHub on a
+      machine that did not post it (BT52). It grants nothing: permission is
+      this machine's owner settings, read at each action. */
+  readonly adopted?: { readonly at: string };
 }
 
 export interface ListedBounty {
@@ -460,6 +466,7 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
   const printable = /^[\x21-\x7e]{1,120}$/; // printable ASCII, no space — the shape Git refnames share
   const safeBranch = (branch: string) => branch === '(detached HEAD)' || printable.test(branch) && !branch.includes('..');
   if (!/^bt-[a-f\d]{12}$/.test(record.id)) return null;
+  if (record.adopted !== undefined && (!object(record.adopted) || typeof record.adopted.at !== 'string' || !stamp.test(record.adopted.at))) return null;
   if (typeof record.createdAt !== 'string' || !stamp.test(record.createdAt)) return null;
   // partOf is one printable line of tool-written text (BT28) — anything else
   // is not a record this tool wrote.
@@ -616,12 +623,12 @@ export function loadRecord(repoRoot: string, id: string): BountyRecord {
   const stored = readStored(repoRoot, id);
   if (stored.state === 'missing') {
     // BT32: a chain another machine posted lands in the shared table — the
-    // id is known here but not a local record; acting on it is refused by name.
-    const shared = sharedRead(repoRoot, id);
-    if (shared !== null) {
-      const url = shared.github?.issue?.url;
-      throw new BountyRefused('shared-only', `this bounty was posted from another machine${url !== undefined && url !== '' ? `; its issue is ${url}` : ''}; next: act on it from that machine, or on GitHub`);
-    }
+    // id is known here but not yet a local record.
+    // BT52: it becomes a local record once GitHub agrees with it, or the
+    // adopter refuses by name.
+    if (sharedAdopter === undefined) throw new Error('box-bounty wiring: reading a shared record adopts it — adopt.js registers it at load; import the package index');
+    const adopted = sharedAdopter(repoRoot, id);
+    if (adopted !== null) return adopted;
     throw new BountyRefused('unknown-bounty', `no bounty ${id} — this project has no record for it; next: box bounty status lists the bounties this project knows`);
   }
   if (stored.record === null) {

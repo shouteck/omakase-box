@@ -39,6 +39,7 @@ export const DESCRIBE_LINES: readonly string[] = [
 
 // The pre-publish scan's limits, one line wherever a scan result is shown
 // before posting (BT45): `create` and `post --preview`.
+export const RESUME_STAYED = 'Any --resume note stayed on the machine that posted it.';
 export const SCAN_LIMIT_LINE = 'the scan reads text for the shapes listed in BOUNTY.md; binary files, base64, split lines and names that do not look like secrets are not covered.';
 
 // What stands in for a field the scan flagged, so the value is never printed.

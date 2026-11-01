@@ -1,4 +1,5 @@
 import { invalid,isObject,signedAccount,type GitHubPublication,publicationRef,remoteBranchSha,remoteGit,recoverIssue,api,login } from './gh.js';
+import { adoptedWithoutPermission } from './adopt.js';
 import { readPayAccepts } from './board.js';
 import { emitMergeNotice, showPath } from './notice.js';
 import { checkSolutionHistory } from './collect.js';
@@ -17,9 +18,16 @@ import { parsePayTo,type PayOutcome } from './pay.js';
 // this runs whatever the standing answer is; when the answer is not
 // 'allowed' and this run actually changed GitHub, one line says so through
 // the merge-notice listener.
-export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { answered?: boolean; decision?: DecisionRead }): void {
+export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { answered?: boolean; decision?: DecisionRead; authorised?: boolean }): void {
   const publication = record.github;
   if (publication === undefined) return;
+  // A bounty picked up from another machine writes nothing to GitHub until this
+  // machine's owner has given permission: a shared record grants none (BT52).
+  if (opts?.authorised !== true && publication.state !== 'closed' && adoptedWithoutPermission(root, record)) {
+    publication.pending = `github-decision-pending (owner-permission-needed): this machine's owner has given no permission for this repository, so GitHub was not touched; next: ask the owner — box bounty allow <owner/name>, then box bounty close ${record.id}`;
+    persistRecord(root, record);
+    return;
+  }
   // 'reject', 'withdraw' and 'undo' stay in the list for records written
   // while those commands existed; 'close' carries the same work now.
   const decisions = record.events.filter(entry => ['apply', 'reject', 'withdraw', 'undo', 'merged', 'close'].includes(entry.command ?? ''));

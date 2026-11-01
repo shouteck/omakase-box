@@ -9,7 +9,8 @@ import { attemptRefName,attemptsOf,isOpenStage,loadRecord,persistRecord,requireC
 import type { Attempt,BountyRecord } from './record.js';
 import { boundAmount,formatFact,formatFor } from './format.js';
 import { parsePayTo,payToLine,type PayToFact } from './pay.js';
-import { shareSolution } from './chain.js';
+import { shareSolution,syncChains } from './chain.js';
+import { adoptedWithoutPermission,settleFromChain } from './adopt.js';
 
 export function listGitHubAnswers(root: string, id: string, record = loadRecord(root, id), shown = true): string {
   if (record.github === undefined) return invalid('not-github-posted', `this bounty has no GitHub post; next: post it with box bounty post ${id}, or end it with box bounty close ${id}`);
@@ -89,6 +90,13 @@ export function refreshGitHubStatus(root: string, record: BountyRecord): void {
   try {
     const issue = api(root, `repos/${publication.repository}/issues/${publication.issue.number}`);
     if (!isObject(issue) || issue['state'] !== 'open' && issue['state'] !== 'closed') return invalid('github-response-invalid', 'GitHub returned an unreadable issue state; next: check gh and rerun the same command');
+    // A closed issue on an open record: it may have ended on another machine.
+    // The chain is asked now, past the once-a-minute limit (BT52).
+    if (issue['state'] === 'closed') {
+      syncChains(root, true);
+      settleFromChain(root, record, issue);
+      if (!isOpenStage(record.stage)) return;
+    }
     observeIssueFormat(record, publication, issue);
     const answers = listGitHubAnswers(root, record.id, record, false);
     const comments = issueComments(root, record, issue); // the issue read above — status asks GitHub for it once
@@ -385,7 +393,8 @@ function collectHistoryPullRequest(root: string, record: BountyRecord, publicati
   };
   record.attempts = [...attemptsOf(record), attempt];
   persistRecord(root, record);
-  // BT32: collecting a pull request is a shared chain milestone.
-  shareSolution(root, record, attempt);
+  // BT32: collecting a pull request is a shared chain milestone. A machine
+  // with no permission reads and pushes nothing to the remote (BT52).
+  if (!adoptedWithoutPermission(root, record)) shareSolution(root, record, attempt);
   return { record, outcome: 'answered' as const, attempt: n, report, ...(merge.kind === 'conflict' ? { conflicts: merge.paths } : {}) };
 }

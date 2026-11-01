@@ -20,6 +20,10 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 ## Product
 
+- **The chain's names collide with the bounty branch** (BT52, real sandbox, exists since BT32): the chain is `refs/box-bounty/<id>` and the branch `refs/heads/box-bounty/<id>`. `git fetch origin box-bounty/<id>` gets the chain, not the branch, and a pull request from that has "no history in common". The chain's tracking ref also takes `refs/remotes/origin/box-bounty/<id>`, so a clone's `origin/box-bounty/<id>` can show a commit holding only `event.json`; the fresh session in BT52 read that as the code to start from. Forks copy no chain refs, but a solver with a clone can hit this. Needs a wave: renaming the namespace must keep old chains readable. See [BT52](waves/BT52.md).
+- **`box bounty describe` says `open bounties: none` on a fresh clone** (BT52): it does not read the chain, while a later `box bounty` lists the bounty. See [BT52](waves/BT52.md).
+- **The posting machine's `apply` under a minute after another machine's merge** can merge locally too, then shows a named pending (BT52). Closing it costs a start on `apply`'s budget, the owner's call.
+
 - **Board, before any deploy (PF1, for PF6):** (a) no read has met real GitHub: the search query, `commits?sha=refs/box-bounty/<id>` and `contents/event.json?ref=` are unproven outside the stand-in; run them once in the sandbox. (b) A refresh tick averaged 39 ms CPU here with the stand-in and SQLite in the same process; Workers Free allows 10 ms, so measure it on Cloudflare and split the tick if it is over. (c) Unauthenticated capacity is about 6 bounties' details a tick (15 requests); past that, solution counts lag.
 - **Not built in PF4 (see [PF4](waves/PF4.md)):** the "landed but not marked merged" fact (a compare per open pull request on the anonymous budget); solvers' GitHub account age (one read per person); `/me/` "you owe" and "owed to you" sections; an optional `to` on the chain's `paid` event, so `config set paid` can settle a two-merge bounty: left unbuilt by PF5 too, since the brief did not ask for it and the chain's `paid` event has carried the amount only, never the solver, since BT36 (see [PF5](waves/PF5.md)).
 - **Board, before any deploy (PF4, for PF6):** does GitHub report a private organisation member as MEMBER to an unauthenticated read; does the compare API answer for a fork's head after a merge (a squash merge leaves the head off the default branch, so it would read as not landed). The `owner_record` filter reads every merged bounty on each request: measure it against Workers Free's CPU limit.
@@ -36,7 +40,6 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 
 
-- **K40 continuation/notification boundary** (see [K40](waves/K40.md), F9/P5): a fresh clone could read public bounty history but `look` refused `shared-only`, and its status did not observe the waiting PR; the hook did not surface an owed payment although apply prints an owner payment block. BT41 can clarify existing behavior in text, not add new cross-machine collection/apply, PR queries or payment notifications. Such behavior belongs in an owner-scoped wave/platform design, not an inferred documentation fix. The claimed absence of a revoke command was refuted by complete-material S5b.
 
 - **Remaining performance limits** (see [BT46](waves/BT46.md)): `create` medians on this host are 1.5 s at 1k, 5.5 s at 10k and 66 s at 100k, from five alternating runs. What remains at scale is per-file `realpath` and `stat`, `ls-tree`, and scanning on the main thread. Status changed-list regeneration still performs per-PR GitHub reads. These are not real-GitHub latency guarantees; future optimization needs isolated five-run comparisons.
 

@@ -2,6 +2,7 @@ import { showPath,NOTHING_RUN } from './notice.js';
 import { mkdirSync,mkdtempSync,readFileSync,rmSync,statSync,writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname,join } from 'node:path';
+import { syncBeforeAction } from './adopt.js';
 import { BountyRefused } from './errors.js';
 import { GitFailed,git,gitOutcome,mergeBase,ownerGitOutcome,unsafeOwnerCommands } from './git.js';
 import type { DryMerge } from './git.js';
@@ -159,11 +160,12 @@ export type ApplyTarget = number;
 // damage. With several attempts that could be applied, `apply` without a
 // number refuses and names them — the choice is the agent's.
 export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget, opts?: { readonly answered?: true }): ApplyResult {
+  syncBeforeAction(repoRoot, id);
   let record = loadRecord(repoRoot, id);
   requireCurrentDelivery(record);
   if (record.stage === 'applied' && record.github !== undefined) {
     syncGitHubDecision(repoRoot, record);
-    const event = [...record.events].reverse().find(entry => entry.command === 'apply' || entry.command === 'merged');
+    const event = [...record.events].reverse().find(entry => entry.command === 'apply' || entry.command === 'merged' || entry.command === 'shared');
     const retryPay = payNotice(record, boundAmount(record));
     return { record, outcome: 'applied', attempt: event?.attempt ?? 1, mergeCommit: event?.merge, ...(retryPay === null ? {} : { payMessage: retryPay }) };
   }
@@ -207,14 +209,17 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget, 
   // written there only by `box bounty allow`, after the bound state is
   // re-checked; nothing an agent passes, and nothing on the record file
   // inside this checkout, marks a merge approved.
+  // A bounty picked up from another machine has no earlier "yes" behind it
+  // here: with nothing written, the merge waits too (BT52).
   const mergeRead = readDecision(repoRoot);
-  if ((mergeRead.decision === 'ask' || mergeRead.decision === 'off') && opts?.answered !== true) {
+  const unpermitted = record.adopted !== undefined && mergeRead.decision === null;
+  if ((mergeRead.decision === 'ask' || mergeRead.decision === 'off' || unpermitted) && opts?.answered !== true) {
     const head = gitOutcome(repoRoot, ['rev-parse', 'HEAD']).stdout.trim();
     const bound = { n: attempt.n, commit: attempt.commit, head };
     const answer = readMergeAnswer(repoRoot, id);
     const carried = answer !== null && answer.n === bound.n && answer.commit === bound.commit && answer.head === bound.head;
     if (!carried) {
-      waitForOwner(repoRoot, record, { for: 'merge', reason: mergeRead.decision === 'ask' ? 'owner-ask' : 'owner-off', at: new Date().toISOString(), merge: bound });
+      waitForOwner(repoRoot, record, { for: 'merge', reason: mergeRead.decision === 'ask' ? 'owner-ask' : mergeRead.decision === 'off' ? 'owner-off' : 'owner-allow', at: new Date().toISOString(), merge: bound });
       throw new BountyRefused('merge-held', [`waiting for the owner: ${record.id} — ${waitingSummary(record)}`, ...mergeWaitLines(record, attempt), `next: pass the owner block on in its words; box bounty status ${record.id} shows when the answer lands`].join('\n'));
     }
   }
@@ -302,7 +307,8 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget, 
     // The bounty ended: every durability ref's work is done — the snapshot's
     // and all the other attempts'.
     dropDurabilityRefs(repoRoot, record);
-    syncGitHubDecision(repoRoot, record, { decision: mergeRead });
+    // Past the gate above, the owner's answer is the authority (BT52).
+    syncGitHubDecision(repoRoot, record, { decision: mergeRead, authorised: true });
     // BT32: the merge milestone is a shared chain event.
     shareMerged(repoRoot, record, attempt.n, mergeCommit, false);
     const notice = attempt.author !== undefined && attempt.author === record.github?.account ? null : recordFirstMerge(repoRoot, mergeCommit);

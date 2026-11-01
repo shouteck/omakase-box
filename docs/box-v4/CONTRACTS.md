@@ -160,7 +160,7 @@ A refusal is a `BountyRefused` (`errors.ts:5`) whose first argument is a stable 
 - M7. A corrupt or superseded record shape degrades to a named corrupt fact or migrates; a bad shared event is skipped (`record.ts` `asRecord`, `bt32.test.ts:192`).
 - M8. History is never rewritten — `events` appends (`record.ts` header).
 
-**Refusals.** `shared-only` (`chain.ts:785`, `record.ts:623` — a shared-memory record cannot be acted on), `unknown-bounty`, `record-corrupt`, `local-store-path-blocked` (`store.ts:92`).
+**Refusals.** `adopt.ts`: `shared-record-mismatch`, `shared-record-disputed`, `shared-issue-closed`, `shared-only` (it ended on another machine); `owner-permission-needed` (`commands.ts`); `unknown-bounty`, `record-corrupt`, `local-store-path-blocked` (`store.ts:92`).
 
 **Scale target.** 100,000 records — met locally (PLAN.md); `kitchen/memory/storage/benchmark.mjs` (K27).
 

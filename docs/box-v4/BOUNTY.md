@@ -138,11 +138,32 @@ When a posted bounty has had nothing new for 14 days the first `status` or `box
 bounty` to see it adds one line — that it has had no new solution, and that
 you can keep waiting or end it with `box bounty close <id> --reason
 "<why>"` — said once for that bounty and never repeated (at most three such
-lines per command, the oldest first). A bounty posted from another machine
-(shared bounty memory) gets the same once-said notice, but the line names
-where it can be ended — on the posting machine or on GitHub — because
-`close` here is refused `shared-only`. Nothing happens automatically: the
+lines per command, the oldest first). Nothing happens automatically: the
 tool never closes, expires or changes a bounty on its own.
+
+An open bounty posted from another machine (shared bounty memory) is picked up
+here by `status`, `look`, `apply` or `close`: the tool rebuilds a local record
+from the chain's `posted` event once GitHub's own issue agrees with it — number,
+marker, author, and the format block's commit and branch. Then every command
+works as on the posting machine, with the same refusals, scans and merge checks.
+Solutions are collected from pull requests again; the chain's word on them is not
+used. Permission comes from this machine's owner settings and a shared record
+grants none: with nothing written, or denied, `apply` waits for the owner, `close`
+refuses `owner-permission-needed`, and nothing is written to GitHub or the chain.
+`--resume` notes stay on the posting machine, and the output says so.
+
+Refusals: `shared-record-mismatch` (the record names another issue, commit,
+branch, repository or author), `shared-record-disputed` (the record says ended,
+the issue is open), `shared-issue-closed` (the issue is closed, the record does
+not say it ended), and `shared-only` (it ended on another machine). A bounty that
+will not bind stays read-only in `status`, with the reason on one line.
+
+Two machines: an ending counts here only while the issue is closed on GitHub, and
+then the local record takes it with no comment, no chain event and no merge. A
+machine that picked a bounty up asks the chain before every action. A posting
+machine asks at most once a minute, so if it runs `apply` within that minute of
+another machine's merge it can merge locally too; GitHub's branch check then
+leaves a named `pending`, and the chain joins both by its merge event.
 
 The compact `status`/`box bounty` views stay bounded as the record count
 grows: past five ended bounties only the five most recent are joined on the

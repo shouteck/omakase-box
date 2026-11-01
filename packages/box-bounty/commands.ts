@@ -7,6 +7,7 @@
 // brief's lower-level-module rule, since moving them here would have closed
 // a github.ts <-> commands.ts import cycle.)
 
+import { adoptedWithoutPermission,syncBeforeAction } from './adopt.js';
 import { BountyRefused } from './errors.js';
 import { boundAmount } from './format.js';
 import { postGitHub } from './post.js';
@@ -40,7 +41,11 @@ export function closeBounty(repoRoot: string, id: string, reason?: string): Clos
   if (reason !== undefined && text === '') {
     throw new BountyRefused('missing-reason', `close needs a nonempty reason or none; next: box bounty close ${id}, or box bounty close ${id} --reason "<why the bounty ended without a merge>"`);
   }
+  syncBeforeAction(repoRoot, id);
   const record = loadRecord(repoRoot, id);
+  if (isOpenStage(record.stage) && adoptedWithoutPermission(repoRoot, record)) {
+    throw new BountyRefused('owner-permission-needed', `${id} was posted from another machine, and this machine's owner has given no permission for this repository; a shared record grants none; nothing changed; next: ask the owner — box bounty allow <owner/name> gives it`);
+  }
   if (!isOpenStage(record.stage)) {
     if (record.github !== undefined) syncGitHubDecision(repoRoot, record);
     const retryPay = payNotice(record, boundAmount(record));

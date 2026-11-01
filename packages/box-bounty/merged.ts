@@ -20,6 +20,7 @@ import { gitOutcome,gitProgram } from './git.js';
 import { shipRules } from './never-ship.js';
 import { attemptsOf,baseCommitOf,dropDurabilityRefs,openRecords,setRecordReadScan,transitionTo } from './record.js';
 import type { Attempt,BountyRecord } from './record.js';
+import { adoptedWithoutPermission } from './adopt.js';
 import { syncGitHubDecision } from './close.js';
 import { emitMergeNotice as emit,showPath } from './notice.js';
 import { readDecision,recordFirstMerge } from './settings.js';
@@ -252,7 +253,7 @@ function closeOne(repoRoot: string, record: BountyRecord, branch: string, candid
   });
   dropDurabilityRefs(repoRoot, record);
   syncGitHubDecision(repoRoot, record, { decision });
-  shareMerged(repoRoot, record, candidate.attempt?.n, merge, unasked);
+  if (!adoptedWithoutPermission(repoRoot, record)) shareMerged(repoRoot, record, candidate.attempt?.n, merge, unasked);
   emit(`${record.id} — ${label} is merged on ${branch} at ${merge.slice(0, 12)} — the bounty is closed (recorded applied)`);
   if (record.github !== undefined) emit(`${record.id} — this merge counts for the solver once ${branch} is pushed to the default branch on GitHub; the tool never pushes it`);
   if (unasked) emit(`${record.id} — fact: the owner was not asked before this merge`);
