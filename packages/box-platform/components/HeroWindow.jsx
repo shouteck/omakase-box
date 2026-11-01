@@ -13,7 +13,7 @@ const Prompt = ({ children }) => <p><span className="text-code-soft" aria-hidden
 function Pull({ number, author, state, merged = false }) {
   return (
     <div className="flex items-center justify-between gap-3 py-3 border-t border-line">
-      <span className="min-w-0 break-words text-code"><span className="font-medium">#{number}</span> <span className="text-soft">by {author}</span></span>
+      <span className="min-w-0 break-words text-mono"><span className="font-medium">#{number}</span> <span className="text-soft">by {author}</span></span>
       <span className={`text-sm whitespace-nowrap ${merged ? 'font-medium text-accent' : 'text-soft'}`}>{state}</span>
     </div>
   );

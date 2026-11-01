@@ -1,4 +1,4 @@
-// The few primitives every page is built from. Sizes: text-sm, text-code, text-base,
+// The few primitives every page is built from. Sizes: text-sm, text-mono, text-base,
 // text-lg, text-xl, text-2xl, text-3xl, text-4xl only. Weights: 400, 500, 600 only.
 // Links are plain <a>: PLATFORM-UX section 8's static-export trap never arises.
 import Copy from './Copy.jsx';

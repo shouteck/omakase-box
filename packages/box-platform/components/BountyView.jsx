@@ -76,7 +76,7 @@ function View({ data }) {
           ) : null}
 
           <Section title="Payment for this bounty" id="payment">
-            <p className="max-w-prose mb-4">{payment(b)}</p>
+            {open && b.amount > 0 ? null : <p className="max-w-prose mb-4">{payment(b)}</p>}
             <PaymentPanel id={b.id} poster={b.poster} />
           </Section>
 

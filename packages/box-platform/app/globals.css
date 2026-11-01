@@ -12,8 +12,8 @@
   --font-mono: "Geist Mono", ui-monospace, monospace;
   --text-sm: 0.8125rem;   /* 13px: meta, sources */
   --text-sm--line-height: 1.25rem;
-  --text-code: 0.875rem;  /* 14px: code */
-  --text-code--line-height: 1.5rem;
+  --text-mono: 0.875rem;  /* 14px: code */
+  --text-mono--line-height: 1.5rem;
   --text-base: 1rem;      /* 16px: body */
   --text-base--line-height: 1.6rem;
   --text-lg: 1.25rem;     /* 20px: ledes, card titles */
@@ -72,7 +72,7 @@
   :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
   input, button, textarea, select { font: inherit; color: inherit; }
   button, summary { cursor: pointer; }
-  code, pre, kbd { font-family: var(--font-mono); font-size: var(--text-code); }
+  code, pre, kbd { font-family: var(--font-mono); font-size: var(--text-mono); }
   select {
     appearance: none;
     padding-right: 2rem;

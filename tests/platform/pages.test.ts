@@ -118,7 +118,7 @@ describe('the pages', () => {
   });
 
   it.each([
-    ['open', STATE_IDS.open, ['Open. No solution yet.', 'How to answer', '$45 for the merged solution, paid directly by the owner.', 'The owner said yes to this bounty before it was posted.', 'Source: the project\'s record on GitHub.'], 1],
+    ['open', STATE_IDS.open, ['Open. No solution yet.', 'How to answer', 'When a solution is merged, its author is owed $45 by the owner, paid directly.', 'The owner said yes to this bounty before it was posted.', 'Source: the project\'s record on GitHub.'], 1],
     ['solutions waiting', STATE_IDS.waiting, ['Open. Solutions are waiting for the owner.', 'Pull request #61 by example-fern: open', 'Pull request #62 by example-quill: open', 'it does not judge or rank them'], 1],
     ['merged', STATE_IDS.merged, ['Merged: pull request #64 by example-quill', 'Pull request #63 by example-fern: open', 'Pull request #64 by example-quill: merged', 'recorded paid: $45 (the owner\'s word)'], 0],
     ['more than one merged', STATE_IDS.moreThanOne, ['GitHub marks more than one pull request merged: #65 by example-fern and #66 by example-rook.', 'the owner decides whom to pay'], 0],
@@ -129,8 +129,8 @@ describe('the pages', () => {
     await visit(page, `/b/${id}/`);
     await page.waitForSelector('#history');
     // textContent: terms and history wait behind a disclosure, and are still on the page.
+    for (const phrase of phrases) await expect.poll(() => page.locator('main').textContent()).toContain(phrase);
     const text = (await page.locator('main').textContent())!;
-    for (const phrase of phrases) expect(text).toContain(phrase);
     expect(text).toContain('The poster\'s words (example-mara), from the GitHub issue');
     expect(await page.locator('[data-primary]').count()).toBe(primaries);
     expect(moneyClaims(text)).toEqual([]);
@@ -539,6 +539,33 @@ describe('the pages', () => {
       await close();
     }
   }, 120000);
+
+  it('every piece of text is readable on what is actually behind it, in both themes', async () => {
+    for (const colorScheme of ['light', 'dark'] as const) {
+      const context = await browser.newContext({ colorScheme, reducedMotion: 'reduce', viewport: { width: 1280, height: 900 } });
+      const page = await context.newPage();
+      for (const path of ['/', '/how/', '/board/', `/b/${STATE_IDS.waiting}/`]) {
+        await visit(page, path);
+        const pairs = await page.evaluate(() => {
+          const parse = (value: string) => /^rgba?\(([\d.]+), ([\d.]+), ([\d.]+)(?:, ([\d.]+))?\)$/.exec(value)?.slice(1).map(part => part === undefined ? 1 : Number(part));
+          const hex = (rgb: number[]) => `#${rgb.slice(0, 3).map(part => Math.round(part).toString(16).padStart(2, '0')).join('')}`;
+          const found: { text: string; ink: string; ground: string }[] = [];
+          for (const element of document.querySelectorAll('main *')) {
+            if (![...element.childNodes].some(node => node.nodeType === 3 && node.textContent?.trim())) continue;
+            const ink = parse(getComputedStyle(element).color);
+            let at: Element | null = element;
+            let ground: number[] | undefined;
+            while (at !== null && (ground === undefined || ground[3] === 0)) { ground = parse(getComputedStyle(at).backgroundColor); at = at.parentElement; }
+            if (ink !== undefined && ground !== undefined && ground[3] !== 0) found.push({ text: element.textContent!.trim().slice(0, 40), ink: hex(ink), ground: hex(ground) });
+          }
+          return found;
+        });
+        expect(pairs.length, path).toBeGreaterThan(5);
+        for (const pair of pairs) expect(ratio(pair.ink, pair.ground), `${colorScheme} ${path}: "${pair.text}" ${pair.ink} on ${pair.ground}`).toBeGreaterThanOrEqual(4.5);
+      }
+      await context.close();
+    }
+  }, 60000);
 
   it('contrast meets WCAG 2.2 AA for every text and control colour, computed from the stylesheet', () => {
     const css = readFileSync(join(PACKAGE, 'app/globals.css'), 'utf8');

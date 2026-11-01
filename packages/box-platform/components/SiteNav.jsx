@@ -9,7 +9,7 @@ export default function SiteNav() {
   const path = usePathname();
   return (
     <nav aria-label="Site" className="sticky top-0 z-20 bg-paper/80 backdrop-blur-xl">
-      <div className="mx-auto max-w-[76rem] px-5 sm:px-8 flex flex-wrap items-center gap-x-6 gap-y-1 py-3 text-code">
+      <div className="mx-auto max-w-[76rem] px-5 sm:px-8 flex flex-wrap items-center gap-x-6 gap-y-1 py-3 text-mono">
         <a href="/" className="font-semibold w-full sm:w-auto sm:mr-auto" style={{ ...PLAIN, color: 'var(--color-ink)' }}>Open bounty board</a>
         {LINKS.map(([href, label]) => {
           const here = path === href || path === href.slice(0, -1);
