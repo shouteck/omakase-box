@@ -1,5 +1,6 @@
 // "Look now" from the tool: no sign-in, identifiers only. A hint moves one read
 // earlier and carries no fact: everything stored comes from GitHub (lookNow).
+import { settleCharges } from './charge.js';
 import { type Env, LIMITS } from './github.js';
 import { lookNow } from './refresh.js';
 import { getMetas, metaStatement } from './store.js';
@@ -58,7 +59,8 @@ export async function hintResponse(request: Request, env: Env, now: number): Pro
   if (await db.prepare('SELECT at FROM hints WHERE bounty_id = ?').bind(hint.bounty).first() !== null) return LATER('This bounty was looked at in the last minute.');
   if (budgetHalfSpent(env, meta, now)) return LATER('The board is saving its GitHub reads this hour.');
   await db.prepare('INSERT INTO hints (bounty_id, at) VALUES (?, ?)').bind(hint.bounty, now).run();
-  const look = lookNow(env, hint.repository, hint.issue, hint.bounty, now);
+  // A merge the tool just told the board about is charged now, not at the next minute's run.
+  const look = lookNow(env, hint.repository, hint.issue, hint.bounty, now).then(async result => { await settleCharges(env); return result; });
   if (env.defer !== undefined) {
     env.defer(look);
     return answer(202, { looked: 'started' });

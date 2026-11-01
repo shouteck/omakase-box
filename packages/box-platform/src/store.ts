@@ -41,7 +41,7 @@ export async function log(db: Db, at: number, reason: string, issue: string | nu
   await db.batch(logStatements(db, at, reason, issue));
 }
 
-const BOUNTY_TABLES = ['pull_requests', 'events', 'receipts', 'paid_clicks'];
+const BOUNTY_TABLES = ['pull_requests', 'events', 'receipts', 'paid_clicks', 'charges'];
 
 /** Everything held about a repository that is no longer public. */
 export async function purgeRepository(db: Db, name: string): Promise<void> {

@@ -33,6 +33,11 @@ export interface Env {
   readonly tickReads?: number;
   /** How long a closed bounty's details may stand, when longer than an open one's. A hint reads it sooner. */
   readonly closedStaleMs?: number;
+  /** The platform's Stripe key and webhook secret (PF11). Absent: pay on merge says it is not set up. */
+  readonly STRIPE_SECRET_KEY?: string;
+  readonly STRIPE_WEBHOOK_SECRET?: string;
+  /** Only tests and the local stand-in set this. */
+  readonly STRIPE_API?: string;
 }
 
 /** The budget for this refresh is spent; the next one resumes. Not a failure. */
