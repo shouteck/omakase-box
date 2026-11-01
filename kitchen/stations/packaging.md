@@ -20,6 +20,9 @@ Each trap names the wave that taught it; that wave file has the story.
 - **Removing a capability means deleting it** with its tests listed in the Result — not a switch, not a bent assertion.
 - **A failed measurement must say nothing, not a wrong fact** — check the comment's promise on the empty/failure path, not only the happy one (`merged.ts`, BT13).
 
+- **A stand-in that accepts what the real service refuses hides the bug** (PF11): 287 green tests passed a Connect call Stripe refuses every time. When a real answer contradicts a stand-in, change the stand-in to refuse first and show the test failing.
+- **`CREATE TABLE IF NOT EXISTS` adds no column to a table that exists** (PF11): a schema change to a live table needs a migration and a test that upgrades the old shape.
+
 ## The security boundary
 
 - **Never-ship is the security boundary: the whole repository goes out.** Check each file's real path, fold case on both pattern and path, refuse links that leave the repository, never list removed files' names. Rule table: `packages/box-bounty/never-ship.ts`. The `secrets` rule matches any *segment* containing "secrets", basenames included.

@@ -1,6 +1,6 @@
 # Pay on merge: what K46 proved in Stripe's test mode
 
-Written by the CTO on 1 November 2026. **Update, 1 November 2026:** the owner's live account now shows Payments and Payouts active with no tasks due, which answers "the question for live" below as of that day. PF11 builds this (D-2026-11-01-pf11-reopened). Everything ran in the owner's Stripe sandbox with published test cards. No real money moved. Stripe's pages were read the same day.
+Written by the CTO on 1 November 2026. **Correction from PF11:** the platform-pays setup is not $0. Stripe bills those fees later, so the balance read 0 here and S$24.93 of test money landed on the sandbox platform afterwards. In the $0 setup the fee came out of the solver's balance. **Update, 1 November 2026:** the owner's live account now shows Payments and Payouts active with no tasks due, which answers "the question for live" below as of that day. PF11 builds this (D-2026-11-01-pf11-reopened). Everything ran in the owner's Stripe sandbox with published test cards. No real money moved. Stripe's pages were read the same day.
 
 ## The owner's page
 
