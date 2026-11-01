@@ -249,7 +249,7 @@ describe('the pages', () => {
     await visit(page, '/');
     await expect.poll(() => page.locator('main ul li').count()).toBe(3);
     const text = await page.locator('main').innerText();
-    for (const phrase of ['goes out as a GitHub issue', 'come back as pull requests', 'Hand off work', 'Answer bounties', 'Nothing a solver wrote is run', 'a private repository is refused', 'The board carries no money', 'Newest bounties', 'POST /mcp', 'GET /bounties.json']) expect(text).toContain(phrase);
+    for (const phrase of ['goes out as a GitHub issue', 'come back as pull requests', 'Hand off work', 'Answer bounties', 'Nothing a solver wrote is run', 'a private repository is refused', 'The board carries no money', 'Newest bounties', 'inside the new omakase-box folder', 'You install nothing from this page', 'nothing here makes them pay', 'POST /mcp', 'GET /bounties.json']) expect(text).toContain(phrase);
     expect(await page.locator('main ol > li').count()).toBe(9);
     const drawings = page.locator('main svg[role=img]');
     expect(await drawings.count()).toBe(10);
@@ -257,6 +257,8 @@ describe('the pages', () => {
     expect(await page.locator('main svg text').count()).toBe(0);
     expect(await page.locator('[data-primary]').getAttribute('href')).toBe('#hand-off');
     expect(await page.locator('main a[href="/board/"]').count()).toBeGreaterThan(0);
+    expect(await page.locator('main a[href="#answer"]').count()).toBe(1);
+    expect(await page.locator('#answer h2').innerText()).toBe('Answer bounties');
     await close();
   });
 
