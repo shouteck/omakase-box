@@ -1,16 +1,18 @@
 # Status
 
-Updated by the CTO on 1 November 2026, when the film and launch moved last.
+Updated by the CTO on 1 November 2026, when K46 closed.
 
 ## Now
 
-- **PF10 is on master and live: the redesigned site**, approved by the owner. One idea per screen, the real product as the picture, the detail on How it works. See the [wave file](waves/PF10.md). Its two fresh-visitor checks did not run; PF9's seats are the first fresh eyes.
-- **PF8 is on master: the board is live** at https://open-bounty-board.box-platform.workers.dev, at $0, reading real GitHub, with real sign-in. The CLI's default board is that address. A private repository stayed absent by list, direct id and hint. See the [wave file](waves/PF8.md).
+- **K46 is on master: pay on merge works in Stripe's test mode at a platform cost of $0.** See the [report](docs/box-v4/PAY-ON-MERGE.md). Two things are unproven: a charge on a fully activated account in the $0 setup, which needs a person to accept Stripe's terms; and whether Stripe accepts an unregistered individual as a live platform. If it wants a registration, that is S$115 and a named blocker.
+- **PF10 is live: the redesigned site.** Its two fresh-visitor checks did not run; PF9's seats are the first fresh eyes.
+- **PF8 is live: the board** at https://open-bounty-board.box-platform.workers.dev, at $0, reading real GitHub, with real sign-in. The CLI's default board is that address.
 - **CPU on Workers Free:** Cloudflare stopped no run, but a hint's look (median 17 ms) and the busiest refreshes (max 17) still pass 10 ms (BACKLOG). PF9 reads `exceededCpu` as it goes.
 - **For PF9:** a seat with its own `BOX_BOUNTY_SETTINGS_DIR` gets no default board; run `box bounty config set board <address>` there. Wrangler's login is on this machine, so the CTO can redeploy and read logs; `wrangler logout` ends that.
-- **Read the off-machine run at the next kickoff:** it covers PF10's merge. The last result, PF8's close, was green.
+- **Read the off-machine run at the next kickoff:** it covers K46's merge.
 - **Branches (owner, 31 October 2026):** work closes onto master. The cloud session branch `claude/serene-noether-m9qvs3` is left as it is.
 - **For the owner:**
+  - revoke the Stripe test key and remove `STRIPE_TEST_KEY` once PF11 no longer needs it; PF11 may reuse the sandbox;
   - delete the private `shouteck/kitchen-PF8-private`; its issue is closed and `gh` has no delete scope here;
   - the stray idle `node.exe` from BT44 (PID 16324), if it is still running;
   - the BT42 participant sessions and their `%TEMP%` folders; six empty `%TEMP%\kitchen-K43-*` folders;
@@ -28,5 +30,5 @@ Updated by the CTO on 1 November 2026, when the film and launch moved last.
 - **Direction (owner, 1 November 2026, D-2026-11-01-agent-only-direction):** agent-only end to end as an option, guard rails the default; judge for long-running agents; reach both sides through the toolboxes agents search.
 - **Payment (owner, 1 November 2026, D-2026-11-01-pay-on-merge):** the platform may start a charge but never holds money; $0 for the owner throughout; no reminders.
 - **Supply (owner, 1 November 2026, D-2026-11-01-solver-distributor):** the board grows into the solver's distributor and lists only our own bounties.
-- **Order:** **K46** next (pay on merge, proven in Stripe's test mode; stops once for the owner's free Stripe account), then **PF11** (builds it, briefed from K46), **PF12** (the solver's distributor), **PF9** (the launch gate), **PF6** (with the toolbox work), **K41** (the film, last, D-2026-11-01-film-and-launch-last), then the owner's launch.
+- **Order:** **PF11** next (brief it from K46's outline; opens with the two unproven checks), then **PF12** (the solver's distributor), **PF9** (the launch gate), **PF6** (with the toolbox work), **K41** (the film, last, D-2026-11-01-film-and-launch-last), then the owner's launch.
 - **Verify on a cloud host:** k16 cannot run without the pinned browser (BACKLOG, "Cloud-host browser route"). **On the Windows host:** the bounty suite's 30 s timeouts fail under load (BACKLOG), so run verify with heavy apps closed.
