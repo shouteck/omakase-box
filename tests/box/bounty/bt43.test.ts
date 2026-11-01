@@ -724,7 +724,7 @@ describe('BT43 a hostile account name stored on an applied record', () => {
         expect(run.status, `${args.join(' ')}: ${run.stderr}`).toBe(0);
         expectNoInjectedLine(run.stdout);
         // The name is still there, escaped, never stripped.
-        if (args.length > 0) expect(run.stdout).toContain(QUOTED_ACCOUNT);
+        if (args.length > 1) expect(run.stdout).toContain(QUOTED_ACCOUNT);
       }
     });
   }

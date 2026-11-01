@@ -70,7 +70,7 @@ export default function Page() {
               <Row left="#63 example-rook" right="open" />
             </Card>
           </Tile>
-          <Tile title="Merged by your agent." words="It picks one. You push.">
+          <Tile title="Merged by your agent." words="It picks one and merges it.">
             <Card>
               <Row left="#62 example-quill" right="merged" strong />
               <p className="font-mono text-sm text-soft pt-1 pb-2 break-words">box bounty apply &lt;id&gt; 62</p>

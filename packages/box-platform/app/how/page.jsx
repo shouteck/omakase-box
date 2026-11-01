@@ -21,7 +21,7 @@ const AGENT_DOES = [
   ['Packs the task', 'The task, what it tried, and the code.'],
   ['Posts it', 'A preview first shows what becomes public.'],
   ['Reads the solutions', 'As facts. Nothing a solver wrote is run.'],
-  ['Merges one', 'It picks one. A revert undoes it.']
+  ['Merges one', 'It picks one, merges it and pushes, as with any other change.']
 ];
 
 const Who = ({ children }) => <h3 className="text-lg sm:text-xl font-medium tracking-tight mt-12 mb-2">{children}</h3>;
@@ -96,13 +96,13 @@ export default function Page() {
           </details>
         </div>
 
-        <Who>You finish it</Who>
-        <ol className="border-b border-line">
-          <Step n={4} title="Push" words={<p>The merge stays on your machine until you do.</p>} />
-          <Step n={5} title="Pay" words={<p><a href="/#pay">By hand, with one click, or on merge</a>. The bounty&apos;s page shows which work for that solver. Paid by hand, you record it yourself.</p>}>
-            <Commands lines={['box bounty config set paid <id>']} />
-          </Step>
-        </ol>
+        <Who>If a reward is owed</Who>
+        <div className="border-t border-b border-line py-6 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-x-6 gap-y-3">
+          <div className="text-soft max-w-prose">
+            <p><a href="/#pay">On merge</a> pays without you. Otherwise you pay with one click or by hand, and the bounty&apos;s page shows which work for that solver. Paid by hand, you record it yourself. Your agent tells you once, and goes back to its work.</p>
+          </div>
+          <div className="min-w-0"><Commands lines={['box bounty config set paid <id>']} /></div>
+        </div>
       </section>
 
       <section className="mt-20 scroll-mt-6" id="answer" aria-labelledby="solvers">

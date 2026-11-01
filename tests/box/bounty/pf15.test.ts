@@ -137,9 +137,24 @@ describe('against a board', { timeout: 180000 }, () => {
     checkMergedSolutions(repo);
     routes({ [`/bounties/${id}.json`]: { status: 200, body: detail(id, { state: 'recorded', owed: { to: 'solver1', amount: 5 }, recorded_paid: { by: 'PayPal', at: '2026-10-16T00:00:00Z', source: 'paypal' }, charge: { state: 'paid', whose_word: 'the board\'s, from PayPal\'s answer' } }) } });
     readBoardFacts(repo);
-    const status = renderStatus(repo);
+    const status = renderStatus(repo, { id });
     expect(status).toContain('board: paid $5 to solver1 through PayPal on 2026-10-16, PayPal\'s word');
     expect(status).toContain('PayPal took the payment from the owner');
     expect(status).not.toContain('Stripe');
+  }));
+
+  it('an unasked status says nothing of an owed payment; asked about the bounty, it does', () => fixture(({ repo, id, scratch, pr }) => {
+    rewarded(scratch, board);
+    routes({});
+    postBounty(repo, id, 'github');
+    const sha = pr('solver1');
+    answerGitHub(repo, id, 1);
+    git(repo, ['merge', '--no-ff', '-X', 'theirs', '-m', 'agent merged the solution', sha]);
+    checkMergedSolutions(repo);
+    routes({ [`/bounties/${id}.json`]: { status: 200, body: detail(id, { state: 'owed', owed: { to: 'solver1', amount: 5, since: '2026-10-15T00:00:00Z' } }) } });
+    readBoardFacts(repo);
+    expect(renderStatus(repo)).not.toMatch(/owed|pay \$5/);
+    expect(renderStatus(repo, { id })).toContain('payment owed $5 to solver1');
+    expect(renderStatus(repo, { id })).toContain('board: owed $5 to solver1');
   }));
 });

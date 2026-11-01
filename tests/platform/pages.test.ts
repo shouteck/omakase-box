@@ -266,7 +266,9 @@ describe('the pages', () => {
     expect(how).not.toContain('Record $45 paid');
     expect(how).toContain('connected Stripe also covers on merge');
     // Only what the person does is numbered; the agent's commands are folded away.
-    expect(await page.locator('#hand-off > ol > li').count()).toBe(5);
+    expect(await page.locator('#hand-off > ol > li').count()).toBe(3);
+    expect(how).toContain('On merge pays without you.');
+    expect(how).toContain('merges it and pushes');
     expect(await page.locator('#hand-off details code[data-command]').count()).toBe(6);
     expect(await page.locator('#hand-off details').evaluate(element => (element as HTMLDetailsElement).open)).toBe(false);
     expect(await page.locator('main a[href="/#pay"]').count()).toBe(1);
@@ -284,8 +286,8 @@ describe('the pages', () => {
     await visit(page, '/how/');
     const text = (await page.locator('main').textContent())!;
     for (const phrase of ['Hand off work', 'Answer bounties', 'Nothing a solver wrote is run', 'a private repository is refused', 'never-ship files', 'anything else in it is too', 'The board never holds money', 'inside the new omakase-box folder', 'install nothing from this page', 'nothing here makes them pay', 'it asks you before each post and each merge', 'only the repository, the issue number, the bounty id and what happened']) expect(text).toContain(phrase);
-    // Five numbered for the owner, the agent's four, the solver's three.
-    expect(await page.locator('main ol > li').count()).toBe(12);
+    // Three numbered for the owner, the agent's four, the solver's three.
+    expect(await page.locator('main ol > li').count()).toBe(10);
     expect(await page.locator('main a[href="#answer"]').count()).toBe(1);
     expect(await page.locator('#answer h2').innerText()).toBe('Answer bounties');
     expect(await page.locator('#limits details').count()).toBe(5);
