@@ -42,21 +42,21 @@ This card holds rules, not narratives — each trap names the wave that taught i
 - **Junctions leave no git artifact** — where the note cannot know, report a change, never the all-clear (`waves/BT3b.md`).
 - **`rev-list --ancestry-path` is not "did it land"** — for a merge carried inside another merge it returns nothing; use binary search of the first-parent chain with `merge-base --is-ancestor` (BT7b-1).
 - **Read a merge without running one:** `git merge-tree --write-tree` (git ≥2.38) — clean exit, named conflicts, byte-untouched worktree.
-- **Git output over history needs an explicit buffer** — set `maxBuffer`, fail by name on read error (K15-ci ENOBUFS).
+- **Git output over history needs an explicit buffer** — set `maxBuffer`, fail by name on read error.
 - **A fixture that mints commits must make each distinct by construction** — one-second timestamp resolution deduped two solver PRs into the wrong merge (BT11b).
 - **Commit-creating git calls carry their own identity** — `-c user.name=`/`-c user.email=` inline or via `support.ts` `git()`; a raw call passed locally for weeks, failed hosted (BT32-ci). Fixture hosts carry the owner's `~/.gitconfig` — a resolve-only `git-lfs` stub must be on stripped PATHs (`github-fixture.ts` `withoutGh`).
 
 ## Fixtures, suites and journeys
 
 - **`check` never runs the bounty suite** — briefs name `test:box-bounty` and `test:kitchen`; only `verify --full` selects both. Plan the inner loop by file: `node scripts/suite.mjs box --suite bounty <file.test.ts>` (repo-relative path; BT21/BT22).
-- **A command printed for a person is run as printed** (PF7): `--help` recognised two lines that real state refuses. Read it from the page, fill its placeholders and run it in journey order (`tests/platform/commands.ts`).
+- **Run a printed command as printed** (PF7): `--help` passes lines that real state refuses; see `tests/platform/commands.ts`.
 - **Three GitHub stand-ins exist** (`tests/box/bounty/github-fixture.ts`, `bt7-ux-fixture.mjs`, `kitchen/demo/gh-standin.cjs`) — a response-shape change greps and fixes all three (BT16, K18).
 - **A declared setup must bootstrap from nothing** — a snapshot carries no `node_modules`; prove it in a copy with `.git`/`node_modules`/`dist` deleted (BT5). What setup creates, the solver must remove — `answer` counts install/build artifacts as `added` (recorded unfixed product decision, BT5).
 - **Repo-local tool state:** `.box/bounties/` is inside the repository by design; the test `fingerprint` excludes `.box`. Since BT31 records live in `.box/local/box.db` (`node:sqlite` WAL, plain substring search, Node floor 22.13); call `closeStores()` before deleting a repo folder on Windows. **Never depend on an optional SQLite compile flag** (BT31-ci).
 - **Windows-only semantics are pinned host-only** by platform or capability probe so suites run off-machine (K10): junctions, `.cmd` launch, the `npm.cmd` recipe (A4), case-insensitive FS.
 - K14 counts Git process starts: new checks ride the pin layer's single `git config` read; pre-check `.git/index` bytes in Node before spawning `ls-files`; K14 measures the **built `dist`** — rebuild before trusting a start count.
 - **A copy of a stranger's tree is a second boundary** — what may run there (info/attributes, hooks), which byte form lives there, what is checked on the way back; `git worktree remove` deletes before registration and fails on Windows while a process sits in the folder (BT7, parked).
-- **Verify outside state independently** (`gh api`, `git ls-remote`), never the tool's word; a long silent `gh` call is normal on this host (BT6 Part C). `undone` is terminal; closed-by-base-deletion reads as rejection (BT6a). `allowedDestinations` gates both directions.
+- **Verify outside state independently** (`gh api`, `git ls-remote`), never the tool's word. `undone` is terminal; closed-by-base-deletion reads as rejection (BT6a). `allowedDestinations` gates both directions.
 - **Fresh-reader journeys reuse `bt8b-fixtures.mjs`** (per-case repos, isolated settings, the exact SHA's built CLI); cold ones reuse `bt17-measure.mjs` (evidence card).
 - Name negative candidates by the actual source mutation — a cosmetic change is not a probe; a green alternative is not a wrong candidate. **A clean install proves nothing** — only a check that loads the code shows a dangling link (A0). **The silent fallback:** export never reaches back into the owner repository to fill a gap.
 - **A produced artifact is not evidence of what it claims** — rebuild from the current commit before recording or demoing (K16 stale dist; evidence card).
@@ -67,6 +67,5 @@ This card holds rules, not narratives — each trap names the wave that taught i
 
 - Run export and declared checks outside the repository; try poisoned/preseeded cache bytes before trusting a speedup (K6).
 - Confirm excluded modules are really absent; try each negative: omitted dependency, escaping path or link, unlisted input, edit outside editable paths, wrong base commit, altered agreement.
-- Record the share of owner source the package disclosed.
 - Verify any outside claim independently before repeating it.
 - **A walk over `packages/` meets build output** (PF1): `next build` writes `.ts`. Name its scope.
