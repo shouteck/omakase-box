@@ -119,6 +119,38 @@ node ../../scripts/pnpm.mjs exec wrangler secret put GITHUB_TOKEN
 
 Paste the token when asked. No redeploy is needed. To check: within about 15 minutes the board lists open bounties and `/bounties.json` shows `"stale":null`. **If it has an expiry date, the board stops updating when it passes** and shows what it last read. Before that date, make a new token and run this command again, or remove the secret to go back to unauthenticated reads: `node ../../scripts/pnpm.mjs exec wrangler secret delete GITHUB_TOKEN`.
 
+## Updating a board deployed before pay on merge
+
+Once only, in this order, before deploying the new code. Skipping the first command breaks every refresh, because the new code writes columns the old database lacks.
+
+```bash
+node ../../scripts/pnpm.mjs exec wrangler d1 execute open-bounty-board --remote --file migrations/pf11.sql
+```
+
+```bash
+node ../../scripts/pnpm.mjs exec wrangler d1 execute open-bounty-board --remote --file schema.sql
+```
+
+Then build and deploy as in step 4.
+
+## Pay on merge (optional)
+
+Without a Stripe key the board works as before: its pages say pay on merge is not set up, and solvers are paid by hand. Turning it on takes real payments, so only you can do it, and it is only ever your own Stripe account:
+
+1. Finish your Stripe account's activation, and set up Connect so that merchants collect payments directly.
+2. In Stripe's dashboard, under Developers, add a webhook endpoint at `<your board's address>/api/stripe/webhook`. Listen to events on connected accounts: `account.updated`, `account.application.deauthorized`, `payment_intent.succeeded`, `checkout.session.completed`, `charge.refunded`, `charge.dispute.created`.
+3. Set both secrets, pasting each when asked:
+
+```bash
+node ../../scripts/pnpm.mjs exec wrangler secret put STRIPE_SECRET_KEY
+```
+
+```bash
+node ../../scripts/pnpm.mjs exec wrangler secret put STRIPE_WEBHOOK_SECRET
+```
+
+The secret key can charge any saved card to any connected account. The owner's limit and the payee are enforced by the board's code, not by Stripe, so whoever holds this key can bypass both. A restricted key limited to what the board calls lowers that risk.
+
 ## Undoing it
 
 The last command ends wrangler's Cloudflare login on this machine, for any other project too.

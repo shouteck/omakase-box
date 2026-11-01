@@ -69,7 +69,7 @@ export default function PayOnMerge({ pay, setPay }) {
               <div><button type="button" data-primary className={BUTTON} style={INK} onClick={() => leave('/api/me/stripe/connect', { country })}>{pay.solver.connected ? 'Continue on Stripe\'s page' : 'Connect Stripe'}</button></div>
             </div>
           )}
-        <Soft className="mt-4 max-w-prose">Stripe treats you as a merchant and asks for identity and bank details on its own page; the board never sees them. Stripe&apos;s fee comes out of the reward: about $1.61 of $45 in the US in test mode, and more abroad. The card&apos;s bank can reverse a payment after the merge, and that dispute and its fee land on your account. Your country not listed? List another way to be paid below.</Soft>
+        <Soft className="mt-4 max-w-prose">Stripe treats you as a merchant and asks for identity and bank details on its own page; the board never sees them. Stripe&apos;s fee comes out of the reward: about $1.61 of $45 in the US, and more abroad. The card&apos;s bank can reverse a payment after the merge, and that dispute and its fee land on your account. Your country not listed? List another way to be paid below.</Soft>
       </Section>
 
       <Section title="Pay on merge" id="pay">

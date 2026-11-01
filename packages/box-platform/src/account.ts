@@ -300,7 +300,7 @@ async function connectStripe(request: Request, env: Env, url: URL, viewer: Viewe
     if (typeof country !== 'string' || !COUNTRY.test(country)) return json(400, { error: 'Say which country your bank account is in. Next: choose it on the page.' });
     const made = await stripe(env, 'POST', '/v1/accounts', {
       country, 'controller[fees][payer]': 'account', 'controller[losses][payments]': 'stripe', 'controller[requirement_collection]': 'stripe', 'controller[stripe_dashboard][type]': 'full',
-      'capabilities[card_payments][requested]': 'true', 'metadata[github_id]': String(viewer.github_id)
+      'capabilities[card_payments][requested]': 'true', 'capabilities[transfers][requested]': 'true', 'metadata[github_id]': String(viewer.github_id)
     }, { idempotency: `pf11/connect/${viewer.github_id}/${country}` });
     if (made.status !== 200 || typeof made.json['id'] !== 'string') return json(409, { error: `${errorWords(made)} Nothing changed. Next: list another way to be paid below.` });
     held = { account_id: made.json['id'] };

@@ -22,6 +22,8 @@ export class StripeStandin {
   private answer(method: string, path: string, query: URLSearchParams, form: URLSearchParams, account: string | null): { status: number; json: unknown } {
     const error = (status: number, code: string, extra: object = {}) => ({ status, json: { error: { code, message: this.errorText, ...extra } } });
     if (method === 'POST' && path === '/v1/accounts') {
+      // As Stripe answered in PF11's proof.
+      if (form.get('capabilities[card_payments][requested]') !== 'true' || form.get('capabilities[transfers][requested]') !== 'true') return { status: 400, json: { error: { type: 'invalid_request_error', message: 'Accounts do not currently support card_payments without transfers.' } } };
       const id = `acct_standin${this.next++}`;
       this.accounts.set(id, { charges_enabled: false });
       return { status: 200, json: { id } };
