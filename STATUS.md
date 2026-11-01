@@ -1,10 +1,11 @@
 # Status
 
-Updated by the CTO on 2 November 2026, when PF13 closed.
+Updated by the CTO on 2 November 2026, when PF14 closed.
 
 ## Now
 
-- **PF13 is on master, not on the live board: the owner pays a connected solver with one click, through Stripe and PayPal.** Stripe proven in test mode, PayPal in its sandbox, each end to end. A deploy is the owner's: `migrations/pf13.sql` first (DEPLOY.md). See the [wave file](waves/PF13.md).
+- **PF14 and PF13 are live, with no Stripe or PayPal key:** the terms page, "Run by omakase-box", and the one-click code, which says "not set up" until a key is set. Stripe proven in test mode, PayPal in its sandbox, each end to end. See [PF14](waves/PF14.md) and [PF13](waves/PF13.md).
+- **For the owner:** PayPal's live app, omakase-box, is created. Log in with PayPal is not yet saved, so its review has not started. Saving it, with the addresses in PF14's report, starts it.
 - **PayPal live is unproven:** real webhook delivery; Cloudflare's cron running the re-read; whether the Business account needs a registered business; whether PayPal's review accepts this use. Its review takes a few weeks, by its own page. Reach is unsettled for 11 of the 14 countries Stripe refused.
 - **For PF9:** read the CPU of `settlePayPal`, and run PayPal's connect on a deployed board.
 - **PF11 is live with no Stripe key.** Payment stays manual until the owner chooses to set a live key; real payments are the owner's.
