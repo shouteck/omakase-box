@@ -278,7 +278,8 @@ describe('the pages', () => {
     await expect.poll(() => block.innerText()).toBe('Copied');
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('box bounty create --task TASK.md --why "beyond what this agent can do"');
     await page.locator('main button[aria-label="Copy install lines"]').click();
-    expect((await page.evaluate(() => navigator.clipboard.readText())).split('\n')).toEqual(await page.locator('main code[data-install]').allInnerTexts());
+    const install = await page.locator('main code[data-install]').allInnerTexts();
+    await expect.poll(async () => (await page.evaluate(() => navigator.clipboard.readText())).split('\n')).toEqual(install);
     await context.close();
   });
 
