@@ -382,7 +382,7 @@ describe('the pages', () => {
       }
       expect(world.fixed()).toBe(false);
       const merged = run(apply, 'applied');
-      expect(merged.replace(/\b[a-f\d]{40}\b/, '<commit>')).toContain(applied.replaceAll('bt-4f2a91c07d3e', values['<id>']!).replace('attempt 62', `attempt ${values['<n>']}`).replace(/\b[a-f\d]{40}\b/, '<commit>'));
+      expect(merged.replace(/\b[a-f\d]{40}\b/g, '<commit>')).toContain(applied.replaceAll('bt-4f2a91c07d3e', values['<id>']!).replace('attempt 62', `attempt ${values['<n>']}`).replace(/\b[a-f\d]{40}\b/, '<commit>'));
       expect(world.fixed()).toBe(true);
       run(paid, values['<id>']!);
       // Each usage line's arguments are on the page: `look <n>` alone would fail here.
