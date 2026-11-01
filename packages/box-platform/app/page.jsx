@@ -6,9 +6,9 @@ import { Primary } from '../components/ui.jsx';
 
 const Statement = ({ id, children }) => <h2 id={id} className="text-xl sm:text-2xl lg:text-3xl font-medium tracking-[-0.03em] text-balance">{children}</h2>;
 
-function Tile({ id, title, words, wide = false, children }) {
+function Tile({ title, words, wide = false, children }) {
   return (
-    <div id={id} className={`arrive scroll-mt-[max(5rem,calc(50vh-10rem))] bg-surface rounded-3xl p-6 sm:p-8 flex flex-col gap-6 min-w-0 ${wide ? 'md:col-span-2' : ''}`}>
+    <div className={`arrive bg-surface rounded-3xl p-6 sm:p-8 flex flex-col gap-6 min-w-0 ${wide ? 'md:col-span-2' : ''}`}>
       <div>
         <h3 className="text-lg sm:text-xl font-medium tracking-tight">{title}</h3>
         <p className="mt-1.5 text-soft max-w-[30rem]">{words}</p>
@@ -76,7 +76,7 @@ export default function Page() {
               <p className="font-mono text-sm text-soft pt-1 pb-2 break-words">box bounty apply &lt;id&gt; 62</p>
             </Card>
           </Tile>
-          <Tile id="pay" wide title="Paid to the solver, three ways." words="The board never holds money. It shows who said what.">
+          <Tile wide title="Paid to the solver, three ways." words="The board never holds money. It shows who said what.">
             <WayCards />
           </Tile>
         </div>
@@ -87,7 +87,6 @@ export default function Page() {
         <div className="arrive grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6 text-center">
           {['Post a private repository.', 'Ship your secrets.', 'Run a stranger\'s code.', 'Hold your money.'].map(line => <p key={line} className="text-lg font-medium tracking-tight text-balance">{line}</p>)}
         </div>
-        <p className="mt-8 text-center"><a href="/how/#limits" className="font-medium" style={{ textDecoration: 'none' }}>The details <span aria-hidden="true">›</span></a></p>
       </section>
 
       <section className="mt-24 sm:mt-36 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4" aria-label="Where to start">

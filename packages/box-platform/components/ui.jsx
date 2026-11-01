@@ -70,8 +70,8 @@ export function Quiet({ children, onClick }) {
 export const Soft = ({ children, as: As = 'p', className = '' }) => <As className={`text-soft text-sm ${className}`}>{children}</As>;
 
 /**
- * Lines of code in a hairline panel, with one copy button for the whole block. On a
- * phone a long line scrolls, so a command still reads as one; wider, it wraps, so
+ * Lines of code in a hairline panel, with one copy button for the whole block. Long lines
+ * wrap at every width, so
  * none of it is hidden. `mark` names the data attribute a test reads the lines back through.
  */
 export function CodeBlock({ lines, mark, what = 'command', className = '' }) {
@@ -79,9 +79,33 @@ export function CodeBlock({ lines, mark, what = 'command', className = '' }) {
   return (
     <div className={`flex items-start gap-4 border border-line bg-surface rounded-xl px-4 py-2.5 min-w-0 ${className}`}>
       <div className="flex flex-col gap-1 min-w-0 grow overflow-x-auto" tabIndex={0} role="group" aria-label={what}>
-        {lines.map(line => <code key={line} {...attribute} className="block whitespace-pre sm:whitespace-pre-wrap sm:break-words">{line}</code>)}
+        {lines.map(line => <code key={line} {...attribute} className="block whitespace-pre-wrap break-words">{line}</code>)}
       </div>
       <Copy text={lines.join('\n')} what={what} />
+    </div>
+  );
+}
+
+/**
+ * A terminal window of commands, grouped by a comment line naming what they are for, with
+ * one copy button. Long lines wrap at every width, so nothing is hidden on a phone.
+ */
+export function CommandWindow({ groups, what, className = '' }) {
+  const text = groups.map(([title, lines]) => [`# ${title}`, ...lines].join('\n')).join('\n\n');
+  return (
+    <div className={`bg-code text-code-ink rounded-2xl px-5 py-4 min-w-0 ${className}`}>
+      <div className="flex items-center justify-between gap-4 mb-3 [&_button]:text-code-soft">
+        <div className="flex gap-1.5" aria-hidden="true"><i className="size-2.5 rounded-full bg-code-soft/40" /><i className="size-2.5 rounded-full bg-code-soft/40" /><i className="size-2.5 rounded-full bg-code-soft/40" /></div>
+        <Copy text={text} what={what} />
+      </div>
+      <div className="flex flex-col gap-4 text-sm font-mono">
+        {groups.map(([title, lines]) => (
+          <div key={title} data-group className="flex flex-col gap-1 min-w-0">
+            <p data-comment className="text-code-soft"># {title}</p>
+            {lines.map(line => <code key={line} data-command className="block text-sm whitespace-pre-wrap break-words">{line}</code>)}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
