@@ -43,6 +43,24 @@ The board runs on Cloudflare Workers Free at a `*.workers.dev` address at $0, re
 - Cloudflare's free terms forbid collecting card details on free properties; the board collects none, and stays that way.
 - K43's static-export trap: `__next.<segment>.__PAGE__.txt` needs its mapping on the real host.
 
+## Plan
+
+Agreed with the owner in plan mode, 1 November 2026.
+
+- **Found while planning, unmeasured:** D1 Free allows 50 queries an invocation; `GitHub.take()` makes up to 5 per read and `storeIssue` 2 per search item, and real search returns 27 sandbox issues. Anonymous reads share Cloudflare's addresses, so recommend a fine-grained, public-only token.
+1. `DEPLOY.md`, then a fresh-agent check of it (fresh session in a scratch folder, only that file), before the owner uses it.
+2. Owner steps one at a time. After `wrangler login` the CTO may run tail and D1 counts and redeploy fixes in this wave; it never reads wrangler's stored credentials.
+3. Measure as-is first: real ticks, CPU, queries, rate limits. Name the CPU source in the Result.
+4. Fix what is over, one cause at a time, test first (a counting `Db`, shown failing). The private rule stays ahead of every store.
+5. Measure after: tick, hint's look, `owner_record`, at least 10 runs each, median and spread, from Cloudflare. A temporary every-minute cron for the tick, then back to 15.
+6. BACKLOG against real GitHub: commits and contents reads; compare on merged and squash-merged fork PRs in public repositories; a private organisation member's association; one real sandbox post, hint and close.
+7. Private rule: the CTO creates private `kitchen-PF8-private` with one bounty-shaped issue (owner approved). Absent by list, direct id and after a hint. Close the issue at close; deleting the repository is the owner's step.
+8. Real sign-in and sign-out by the owner; the CTO checks session counts only, cookie flags and Origin refusals with curl.
+9. Live surfaces in a browser, with the console, including the `__next` trap.
+10. `BOARD_DEFAULT` in its own commit; verify; close.
+
+Any cost that is not $0 stops the wave.
+
 ---
 
 ## Result
