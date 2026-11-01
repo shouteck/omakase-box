@@ -1,6 +1,6 @@
 # Pay on merge: what K46 proved in Stripe's test mode
 
-Written by the CTO on 1 November 2026. Everything ran in the owner's Stripe sandbox with published test cards. No real money moved. Stripe's pages were read the same day.
+Written by the CTO on 1 November 2026. **Not being built for now: the owner chose manual payment (D-2026-11-01-manual-payment-for-now).** Everything ran in the owner's Stripe sandbox with published test cards. No real money moved. Stripe's pages were read the same day.
 
 ## The owner's page
 
