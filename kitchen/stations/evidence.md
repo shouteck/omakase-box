@@ -32,6 +32,8 @@ Measurements, comparisons and what the kitchen is allowed to claim. Runs through
 
 - **A vendor sandbox may not enforce what live does** (K46): Stripe's charged accounts that never accepted its terms. Read the object's own readiness field beside each success and report the two groups apart.
 
+- **A stand-in that accepts what the real service refuses hides the bug** (PF11): 287 green tests passed a Connect call Stripe always refuses. Make the stand-in refuse first, and see the test fail. A schema change to a live table needs a migration and an upgrade test.
+
 ## Before merging
 
 - Tick the measurement-fairness lens for any wave on this station.
