@@ -22,6 +22,8 @@ After a merge, do not wait for the off-machine run. Read its latest result at ki
 
 - Use absolute paths or `git -C`, never `cd`: a `cd` in a Bash call moves the desktop session's working directory (PF2).
 - Write files, the Result included, with your file tools, never a shell redirect, heredoc or `node -e`: backticks in such a command run as commands (BT44 left a stray `node.exe` on stdin). On Windows a redirect to `nul` can leave a stray file that dirties the tree. Commit from a message file (`git commit -F`): quotes in a PowerShell here-string can reach native `git` as separate arguments (PF3).
+- On Windows run `verify.mjs` from Git Bash: from PowerShell `cat` and `rm` are not on PATH, and 6 bounty tests fail in a way that reads as a flake (PF11).
+- A stand-in that accepts what the real service refuses hides the bug: prove a new call against the real service, in test mode, before trusting green tests (PF11).
 - Read `kitchen-stats`' exit code before merging; never chain the merge after it in one command (PF3).
 - A script that takes an output or scratch directory and deletes or overwrites it must check an ownership marker or refuse a non-empty directory. Run it against a foreign directory holding a file; it must refuse.
 - Remove a link with `rmdir` or `fs.rmdirSync`, never `rm -rf`, and never point a test link at a folder the kitchen does not own (BT46).
