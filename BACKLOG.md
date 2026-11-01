@@ -79,6 +79,10 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 - k6-scoped-tmp ownership/refusal remains on parked unmerged K7, not delivered on master. Keep the mandatory populated-foreign-path refusal requirement when resuming K7 items from BACKLOG.md.
 
+- **From PF15's fresh owner's agent:** `describe` says "no bounty history yet" while `status` lists bounties from another machine, and "continue the saved job" appears for one this machine never had (seen on the sandbox's shared memory). `allow`'s output reads as words for the owner though the owner has usually answered. The instruction block does not say the owner's reward amount, by BT42's rule that it stays the same everywhere.
+- **From PF15's fresh solver's agent:** "the owner owes you" in `how_to_get_paid` reads firmer than "nothing here makes them pay"; `/me/` does not say what can be listed before sign-in; the front page's example says "attempt 62" where everything else says pull request; the bounty page and `/me/` are blank without JavaScript.
+- **The payments-due notice's CPU** (PF15): a signed-in owner's every page reads their payments; PF9 reads it on the free plan.
+
 ## Kitchen and environment
 
 - Cloud-host browser route (from the inbox, 31 October 2026): a cloud Linux container has no Playwright Chromium at the pinned revision. BT43 dressed the host's 1194 as 1243 under `.runtime/`; BT45 could not (rule 5) and merged with k16 not run on the owner's word (D-2026-10-31-bt45-merge-on-ci). Decide once, by the owner or a K wave: a supported browser path for cloud hosts, or a k16 preflight that names the host gap.

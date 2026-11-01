@@ -70,3 +70,4 @@ Each trap names the wave that taught it; that wave file has the story.
 - Confirm excluded modules are really absent; try each negative: omitted dependency, escaping path or link, unlisted input, edit outside editable paths, wrong base commit, altered agreement.
 - Verify any outside claim independently before repeating it.
 - **A walk over `packages/` meets build output** (PF1): `next build` writes `.ts`. Name its scope.
+- **Run the printed setup for real before fresh agents do** (PF15): "instructions: on" wrote nothing with no file, and `box` did not exist; every test passed. A budget or word test that blocks a line is a design input: move the words, not the test (`bt17`, `bt42`).
