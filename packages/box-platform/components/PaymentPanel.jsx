@@ -25,8 +25,8 @@ function Facts({ view }) {
           : <p>Earned by {owed.to}: ${owed.amount}, for the merge on {fmtDate(owed.since)}. Source: GitHub records {owed.fact}.</p>}
       {recorded === null
         ? <p>Not recorded paid by {view.poster}. Not confirmed received by {owed.to ?? 'a solver'}.</p>
-        : recorded.source === 'stripe'
-          ? <p>Paid through Stripe on {fmtDate(recorded.at)}{recorded.amount === null ? '' : ` ($${recorded.amount})`}. Stripe&apos;s word.</p>
+        : recorded.source === 'stripe' || recorded.source === 'paypal'
+          ? <p>Paid through {recorded.by} on {fmtDate(recorded.at)}{recorded.amount === null ? '' : ` ($${recorded.amount})`}. {recorded.whose_word} word.</p>
           : <p>Recorded paid by {recorded.by} on {fmtDate(recorded.at)}{recorded.amount === null ? '' : ` ($${recorded.amount})`}. The owner&apos;s word, {recorded.source === 'board' ? 'from their click on the board' : 'from the project\'s record on GitHub'}. Recording moves no money.</p>}
       {p.charge?.words ? <p role="status">{p.charge.words}</p> : null}
       {recorded?.chosen_by_owner_from ? <p>{recorded.by} named {owed.to} when recording the payment. The owner&apos;s word.</p> : null}
@@ -78,10 +78,13 @@ export default function PaymentPanel({ id, poster }) {
   return (
     <div className="flex flex-col gap-4 max-w-prose">
       <Facts view={{ ...view, poster }} />
-      {view.can_pay ? (
+      {view.can_pay || view.can_pay_paypal ? (
         <div className="flex flex-col gap-2">
-          <div><Act onClick={() => toStripe('pay')}>Pay ${owed.amount}</Act></div>
-          <Soft>You pay on Stripe&apos;s page, straight to {view.payee}&apos;s own Stripe account. The board holds nothing. Stripe&apos;s fee comes out of the reward.</Soft>
+          <div className="flex flex-wrap gap-x-6 gap-y-2 items-center">
+            {view.can_pay ? <Act onClick={() => toStripe('pay')}>Pay ${owed.amount}</Act> : null}
+            {view.can_pay_paypal ? (view.can_pay ? <Quiet onClick={() => toStripe('pay-paypal')}>Pay ${owed.amount} with PayPal</Quiet> : <Act onClick={() => toStripe('pay-paypal')}>Pay ${owed.amount} with PayPal</Act>) : null}
+          </div>
+          <Soft>You pay on {view.can_pay && view.can_pay_paypal ? 'Stripe\'s or PayPal\'s page' : view.can_pay ? 'Stripe\'s page' : 'PayPal\'s page'}, straight to {view.payee}&apos;s own account. The board holds nothing. The provider&apos;s fee comes out of the reward.</Soft>
         </div>
       ) : null}
       {view.pay_note ? <Soft>{view.pay_note}</Soft> : null}
@@ -98,7 +101,7 @@ export default function PaymentPanel({ id, poster }) {
           {view.payee === null ? <p>Whom did you pay?</p> : null}
           <div className="flex flex-wrap gap-x-6 gap-y-2">
             {view.payees.map(payee => {
-              const Action = view.payees.length === 1 && !view.can_pay ? Act : Quiet;
+              const Action = view.payees.length === 1 && !view.can_pay && !view.can_pay_paypal ? Act : Quiet;
               return <Action key={payee.login} onClick={() => post('paid', { to: payee.login })}>Record ${owed.amount} paid to {payee.login}</Action>;
             })}
           </div>

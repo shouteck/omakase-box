@@ -1,7 +1,7 @@
 // What a bounty's payment facts are, and what they add up to (PLATFORM-UX section 5).
 // Every rule is here, computed on read, so no count outlives a click, a refresh or a
 // purge. Each fact says whose word it is; none of this says who is right.
-import { CHARGE_WORDS } from './charge-words.js';
+import { CHARGE_WORDS, PAYPAL_WORDS } from './charge-words.js';
 import type { Db } from './store.js';
 import { currentReceipt, type PaidEvent, payeeOf, type PaymentFacts, type Receipt, same, standingRecord } from './visibility.js';
 
@@ -10,9 +10,9 @@ const LATE_DAYS = 14; // What is shown first, and one filter value. Never a dead
 const LISTED_WITH_ACCESS: readonly string[] = ['OWNER', 'MEMBER', 'COLLABORATOR'];
 
 export type MergedPull = { number: number; author: string; merged_at: string; association: string | null; on_default: number | null };
-export type Paid = PaidEvent & { by: string; source: 'project-record' | 'board' | 'stripe' };
-/** What pay on merge did (charge.ts). Its own fact: Stripe's word, not the owner's. */
-export type ChargeFact = { state: string; at: string; solver: string | null };
+export type Paid = PaidEvent & { by: string; source: 'project-record' | 'board' | 'stripe' | 'paypal' };
+/** What a provider did (charge.ts, paypal-pay.ts). Its own fact: the provider's word, not the owner's. */
+export type ChargeFact = { state: string; at: string; solver: string | null; provider?: string | null };
 export type BountyPayment = {
   id: string; title: string; repository: string; amount: number; poster: string;
   pulls: readonly MergedPull[];
@@ -22,10 +22,10 @@ export type BountyPayment = {
   charge?: ChargeFact | null;
 };
 
-/** The standing word, or null. A charge Stripe made outranks anyone's word; a record that names no merged author, or none where several merged, settles nothing. */
+/** The standing word, or null. A charge a provider made outranks anyone's word; a record that names no merged author, or none where several merged, settles nothing. */
 function standing(input: BountyPayment, landed: readonly MergedPull[]): Paid | null {
   const charged = input.charge;
-  if (charged?.state === 'paid' && landed.some(pull => same(pull.author, charged.solver))) return { at: charged.at, amount: input.amount, withdrawn: 0, to: charged.solver, by: 'Stripe', source: 'stripe' };
+  if (charged?.state === 'paid' && landed.some(pull => same(pull.author, charged.solver))) return { at: charged.at, amount: input.amount, withdrawn: 0, to: charged.solver, ...(charged.provider === 'paypal' ? { by: 'PayPal', source: 'paypal' as const } : { by: 'Stripe', source: 'stripe' as const }) };
   const clicked = input.click === null ? [] : [input.click];
   const latest = standingRecord([...input.chain, ...clicked]);
   if (latest === null || landed.length === 0) return null;
@@ -60,7 +60,8 @@ export type PaymentState ='no-reward' | 'nothing-owed' | 'merged-not-on-default'
 export function paymentOf(input: BountyPayment) {
   const facts = factsOf(input);
   const landed = landedOf(input);
-  const charge = input.charge == null ? null : { state: input.charge.state, at: input.charge.at, words: CHARGE_WORDS[input.charge.state as keyof typeof CHARGE_WORDS] ?? null, whose_word: 'the board\'s, from Stripe\'s answer' as const };
+  const viaPayPal = input.charge?.provider === 'paypal';
+  const charge = input.charge == null ? null : { state: input.charge.state, at: input.charge.at, words: (viaPayPal ? PAYPAL_WORDS[input.charge.state as keyof typeof CHARGE_WORDS] : undefined) ?? CHARGE_WORDS[input.charge.state as keyof typeof CHARGE_WORDS] ?? null, whose_word: viaPayPal ? 'the board\'s, from PayPal\'s answer' as const : 'the board\'s, from Stripe\'s answer' as const };
   const none = { owed: null, recorded_paid: null, solver_says: null, excluded_from_counts: null, charge };
   if (input.amount === 0) return { state: 'no-reward' as PaymentState, ...none, note: 'No reward is stated, so nothing is owed.' };
   if (landed.length === 0) {
@@ -81,7 +82,7 @@ export function paymentOf(input: BountyPayment) {
   return {
     state, owed, charge,
     recorded_paid: record === null ? null : {
-      by: record.by, at: record.at, amount: record.amount, whose_word: record.source === 'stripe' ? 'Stripe\'s' as const : 'the owner\'s' as const, source: record.source,
+      by: record.by, at: record.at, amount: record.amount, whose_word: record.source === 'stripe' ? 'Stripe\'s' as const : record.source === 'paypal' ? 'PayPal\'s' as const : 'the owner\'s' as const, source: record.source,
       ...(landed.length > 1 ? { chosen_by_owner_from: shownOf(landed).map(pull => pull.author) } : {})
     },
     solver_says: receipt === null ? null : { by: receipt.payee, at: receipt.at, word: receipt.says, whose_word: 'the solver\'s' as const, source: 'board' as const },
@@ -153,9 +154,9 @@ export async function loadPayments(db: Db, where: string, ...values: readonly (s
   const chain = (await db.prepare(`SELECT bounty_id, at, amount, withdrawn FROM events WHERE type = 'paid' AND ${within}`).bind(...values).all<PaidEvent & { bounty_id: string }>()).results;
   const clicks = (await db.prepare(`SELECT bounty_id, by_login AS by, to_login AS "to", at, amount, withdrawn FROM paid_clicks WHERE ${within}`).bind(...values).all<PaidEvent & { bounty_id: string; by: string }>()).results;
   const receipts = (await db.prepare(`SELECT bounty_id, payee, says, record_at, at FROM receipts WHERE ${within}`).bind(...values).all<Receipt & { bounty_id: string; payee: string }>()).results;
-  const charges = (await db.prepare(`SELECT bounty_id, state, at, solver FROM charges WHERE state != 'looked' AND ${within}`).bind(...values).all<{ bounty_id: string; state: string; at: number; solver: string | null }>()).results;
+  const charges = (await db.prepare(`SELECT bounty_id, state, at, solver, provider FROM charges WHERE state != 'looked' AND ${within}`).bind(...values).all<{ bounty_id: string; state: string; at: number; solver: string | null; provider: string | null }>()).results;
   return rows.map(row => ({
-    charge: ((found = charges.find(entry => entry.bounty_id === row.id)) => found === undefined ? null : { state: found.state, at: new Date(found.at).toISOString(), solver: found.solver })(),
+    charge: ((found = charges.find(entry => entry.bounty_id === row.id)) => found === undefined ? null : { state: found.state, at: new Date(found.at).toISOString(), solver: found.solver, provider: found.provider })(),
     ...row,
     pulls: pulls.filter(pull => pull.bounty_id === row.id),
     chain: chain.filter(event => event.bounty_id === row.id),

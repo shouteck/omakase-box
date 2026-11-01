@@ -151,6 +151,30 @@ node node_modules/wrangler/bin/wrangler.js secret put STRIPE_WEBHOOK_SECRET
 
 The secret key can charge any saved card to any connected account. The owner's limit and the payee are enforced by the board's code, not by Stripe, so whoever holds this key can bypass both. A restricted key limited to what the board calls lowers that risk.
 
+## Paying through PayPal (optional)
+
+Without PayPal's keys the board works as before, and its pages say PayPal is not set up. Taking real payments is the owner's to turn on. The board holds nothing: the money goes straight to the account the merged author connected.
+
+1. For a board that already has a database, run `migrations/pf13.sql` once, then `schema.sql`, before deploying this code.
+2. Open a PayPal Business account, and create a live REST app on PayPal's developer dashboard.
+3. Turn on Log in with PayPal for the app, with the return URL `<your board's address>/auth/paypal/callback`, and only the PayPal account ID (payer ID) as the information requested. PayPal reviews a live app, which it says typically takes a few weeks, and asks for privacy policy and user agreement addresses.
+4. Add a webhook at `<your board's address>/api/paypal/webhook`, for `CHECKOUT.ORDER.APPROVED`, `PAYMENT.CAPTURE.REFUNDED`, `PAYMENT.CAPTURE.REVERSED` and `CUSTOMER.DISPUTE.CREATED`.
+5. Set the three secrets, pasting each when asked:
+
+```bash
+node node_modules/wrangler/bin/wrangler.js secret put PAYPAL_CLIENT_ID
+```
+
+```bash
+node node_modules/wrangler/bin/wrangler.js secret put PAYPAL_SECRET
+```
+
+```bash
+node node_modules/wrangler/bin/wrangler.js secret put PAYPAL_WEBHOOK_ID
+```
+
+Proven only in PayPal's sandbox. A refund made on the solver's own account sent the app no event there, so the board re-reads each paid capture; a dispute on that account may reach the board only as a later reversal.
+
 ## Undoing it
 
 The last command ends wrangler's Cloudflare login on this machine, for any other project too.

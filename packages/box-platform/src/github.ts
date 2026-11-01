@@ -3,6 +3,7 @@
 // With a token GitHub allows 5,000 an hour, and a Workers Free invocation allows
 // 50 subrequests, so a refresh spends at most 45. The deployed Worker runs every
 // minute and asks for less (tickReads): Workers Free allows 10 ms of CPU.
+import type { PayPalEnv } from './paypal.js';
 import { getMetas, metaStatement, setMeta } from './store.js';
 import type { Db } from './store.js';
 
@@ -12,7 +13,7 @@ export const LIMITS = {
   token: { hour: 5000, tick: 45 }
 } as const;
 
-export interface Env {
+export interface Env extends PayPalEnv {
   readonly DB: Db;
   readonly GITHUB_API?: string;
   /** Created by the owner later; none exists now. Absent means unauthenticated. */

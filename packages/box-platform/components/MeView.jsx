@@ -13,8 +13,8 @@ const FIELD = 'block w-full max-w-prose border border-soft bg-surface px-3 py-2 
 const stored = ({ kind, value, chain, visibility }) => ({ kind, value, chain, visibility });
 
 function Editor({ me, setMe }) {
-  const [kind, setKind] = useState('paypal');
-  const [visibility, setVisibility] = useState(DEFAULTS.paypal);
+  const [kind, setKind] = useState(me.paypal.set_up ? 'stripe' : 'paypal');
+  const [visibility, setVisibility] = useState('everyone');
   const [value, setValue] = useState('');
   const [chain, setChain] = useState('');
   const [message, setMessage] = useState(null);
@@ -55,7 +55,8 @@ function Editor({ me, setMe }) {
         <fieldset>
           <legend className="mb-2">Kind</legend>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-w-prose">
-            {Object.entries(LABELS).map(([name, label]) => (
+            {/* Once connecting works, a pasted PayPal.me is no longer offered. Links already saved stay, listed above, until their owner removes them. */}
+            {Object.entries(LABELS).filter(([name]) => name !== 'paypal' || !me.paypal.set_up).map(([name, label]) => (
               <label key={name} className={`flex items-center gap-2 border rounded-xl px-3 py-3 ${kind === name ? 'border-ink' : 'border-soft'}`}>
                 <input type="radio" name="kind" value={name} checked={kind === name} onChange={() => { setKind(name); setVisibility(DEFAULTS[name]); setValue(name === 'github-sponsors' ? me.sponsors_page : ''); setMessage(null); }} /> {label}
               </label>
@@ -83,6 +84,44 @@ function Editor({ me, setMe }) {
         <div><button type="submit" data-primary className="bg-button px-5 py-2.5 font-medium rounded-full" style={{ color: 'var(--color-button-ink)' }}>Save</button></div>
         {message ? <p role="status" ref={status} tabIndex={-1} className="max-w-prose">{message}</p> : null}
       </form>
+    </Section>
+  );
+}
+
+const PAYPAL_BACK = {
+  'try-again': 'PayPal\'s sign-in did not finish. Nothing was connected. Next: try again.',
+  refused: 'PayPal did not give the board an account ID. Nothing was connected. Next: try again, or list another way to be paid below.',
+  'not-set-up': 'PayPal is not set up on this board. Nothing was connected.'
+};
+
+/** Connecting PayPal: the login is on PayPal's own page, and the page says "connected", which is the fact. */
+function ConnectPayPal({ paypal, setPayPal }) {
+  const [message, setMessage] = useState(null);
+  useEffect(() => {
+    const back = new URLSearchParams(window.location.search).get('paypal');
+    if (back) { setMessage(PAYPAL_BACK[back] ?? null); window.history.replaceState(null, '', '/me/#paypal'); }
+  }, []);
+  const disconnect = async () => {
+    try {
+      const response = await fetch('/api/me/paypal/disconnect', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+      const body = await response.json();
+      if (response.ok) { setPayPal(body.paypal); setMessage('Disconnected. An order an owner already opened to you can no longer be started again.'); } else setMessage(body.error);
+    } catch {
+      setMessage('The board could not be reached. Nothing changed. Next: try again.');
+    }
+  };
+  return (
+    <Section title="Get paid through PayPal" id="paypal">
+      {!paypal.set_up
+        ? <p className="max-w-prose text-soft">PayPal is not set up on this board yet. Solvers are paid by the other ways on this page.</p>
+        : (
+          <div className="flex flex-col gap-4 max-w-prose">
+            <p>{paypal.connected ? 'Your PayPal account is connected. If your solution is the one merged, an owner can pay the reward to it with one click.' : 'Log in on PayPal\'s own page, and an owner can pay you there with one click.'}</p>
+            <div>{paypal.connected ? <Quiet onClick={disconnect}>Disconnect PayPal</Quiet> : <Primary href="/auth/paypal">Connect PayPal</Primary>}</div>
+            <Soft>The board keeps only your PayPal account ID; it does not ask PayPal for your email. PayPal&apos;s fee comes out of the reward, and depends on the countries involved: $2.74 of $45 in our test between two countries. A payer can dispute a payment after the merge, and PayPal can reverse it from your account. PayPal may not let accounts in every country receive payments; if yours cannot, list another way below.</Soft>
+          </div>
+        )}
+      {message ? <p role="status" className="mt-4 max-w-prose">{message}</p> : null}
     </Section>
   );
 }
@@ -135,6 +174,7 @@ export default function MeView() {
       <Debts title="You owe" id="you-owe" debts={me.you_owe} line={debt => `$${debt.amount} to ${toWhom(debt)}`} />
       <Debts title="Owed to you" id="owed-to-you" debts={me.owed_to_you} line={debt => (debt.to === null ? `$${debt.amount}, if the owner decides on you` : `$${debt.amount}`)} />
       <PayOnMerge pay={me.pay} setPay={pay => setMe(current => ({ ...current, pay }))} />
+      <ConnectPayPal paypal={me.paypal} setPayPal={paypal => setMe(current => ({ ...current, paypal }))} />
       <Editor me={me} setMe={setMe} />
       <Section title="Your public pages" id="public">
         <ul className="flex flex-col gap-2">

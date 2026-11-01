@@ -115,9 +115,17 @@ CREATE TABLE IF NOT EXISTS charges (
   amount INTEGER,
   payment_method TEXT,
   payment_intent TEXT,
-  at INTEGER NOT NULL
+  at INTEGER NOT NULL,
+  -- NULL is Stripe. 'paypal': account_id is the PayPal account ID, payment_intent the order, then the capture.
+  provider TEXT
 );
 CREATE INDEX IF NOT EXISTS charges_intent ON charges (payment_intent);
+-- A solver's connected PayPal account. Only the account ID: never an email.
+CREATE TABLE IF NOT EXISTS paypal_accounts (
+  github_id INTEGER PRIMARY KEY,
+  payer_id TEXT NOT NULL,
+  at INTEGER NOT NULL
+);
 -- When a hint last moved this bounty's read earlier. Kept one minute; nothing else from a hint is kept.
 CREATE TABLE IF NOT EXISTS hints (
   bounty_id TEXT PRIMARY KEY,
