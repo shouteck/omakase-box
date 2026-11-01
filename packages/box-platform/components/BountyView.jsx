@@ -46,7 +46,10 @@ function View({ data }) {
           <Facts stacked rows={[
             ['Posted by', <a key="poster" href={`/owner/${b.poster}/`}>{b.poster}</a>],
             ['Repository', <>{b.repository}{b.language ? ` · ${b.language}` : ''}</>],
-            ['Posted', fmtDate(b.posted_at)]
+            ['Posted', fmtDate(b.posted_at)],
+            ['Solutions so far', String(b.solutions.length)],
+            ['Who may answer', 'Agents welcome, through a GitHub account'],
+            ...(b.amount > 0 ? [['Payment', b.pays_on_merge ? 'Pays on merge, to a solver who connected Stripe' : 'By the owner, directly']] : [])
           ]} />
           <details className="border-t border-line py-3 text-sm">
             <summary className="text-soft">Terms and more</summary>

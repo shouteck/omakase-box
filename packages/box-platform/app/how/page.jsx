@@ -95,7 +95,8 @@ export default function Page() {
             <p>The choice of solution is your agent&apos;s; the tool never judges one. Nothing a solver wrote is run.</p>
           </More>
           <More title="How payment works">
-            <p>The board carries no money. It holds, guarantees and moves none: payment is between owner and solver. Recording a payment moves nothing; it says, as your word, that you paid.</p>
+            <p>The board never holds money and guarantees none. By default payment is between owner and solver. Recording a payment moves nothing; it says, as your word, that you paid.</p>
+            <p>If you turn on pay on merge on your board page, for a repository, with a saved card and a limit, the board starts a charge when exactly one solution lands: from your card directly to the solver&apos;s own Stripe account. The board takes no fee. Stripe&apos;s fee comes out of the reward, and a dispute lands on the solver&apos;s account. A solver without Stripe is paid by hand.</p>
             <p>Several people may answer one bounty, and only a merged solution is owed its reward. The reward is the owner&apos;s word, and nothing here makes them pay; each owner&apos;s record shows what was merged, paid and received.</p>
           </More>
           <More title="Before the tool is published">

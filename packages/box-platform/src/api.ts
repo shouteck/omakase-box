@@ -1,7 +1,7 @@
 // What a browser may have: only facts about bounties on public repositories,
 // filtered here on the server. No unfiltered record ever leaves this file.
 import { accountResponse } from './account.js';
-import { applyEvent } from './charge.js';
+import { applyEvent, payingIds } from './charge.js';
 import { signatureHolds } from './stripe.js';
 import { feedResponse, detailResponse, rssResponse, schemaResponse } from './feed.js';
 import type { Env } from './github.js';
@@ -77,7 +77,9 @@ async function bounty(env: Env, id: string, now: number): Promise<Response> {
       branch: `box-bounty/${row.id}`,
       links: { issue: `${base}/issues/${row.issue_number}`, branch: `${base}/tree/box-bounty/${row.id}` },
       solutions: pulls.slice(0, SOLUTIONS_MAX).map(pull => ({ number: pull.number, author: pull.author, state: pull.state, opened_at: pull.opened_at, merged_at: pull.merged_at, url: `${base}/pull/${pull.number}` })),
-      history
+      history,
+      pays_on_merge: (await payingIds(env, [row.id])).has(row.id),
+      agents_welcome: true
     }
   });
 }

@@ -323,6 +323,7 @@ export function renderConfig(repoRoot: string | null, options?: { readonly full?
   // A board the tool calls is always said; only "off, and nobody chose it" stays off the bare surface.
   const board = boardAddress();
   if (full || board !== '' || settings.board !== undefined) lines.push(`board: ${board === '' ? 'off — the tool makes no call to it' : `${board} — ${BOARD_SENDS}`}; change: box bounty config set board <address>, or "" for off`);
+  if (board !== '') lines.push(`pay on merge: only the owner's signed-in page at ${board}/me/ can turn it on or show it; this command cannot; each bounty's state: box bounty status`);
   if (!full) lines.push('every setting, its history and the commands that change it: box bounty config --full');
   const rewardNotice = rewardNoticeLine();
   if (rewardNotice !== null) lines.push(rewardNotice);

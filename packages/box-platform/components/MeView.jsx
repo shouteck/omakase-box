@@ -3,6 +3,7 @@
 // a bounty; it is how an owner who owes you finds a way to pay you.
 import { useEffect, useRef, useState } from 'react';
 import { LABELS, MethodLine } from './Methods.jsx';
+import PayOnMerge from './PayOnMerge.jsx';
 import { fmtDate, Primary, Quiet, Section, Soft, Title } from './ui.jsx';
 
 const EXAMPLES = { paypal: 'https://paypal.me/you', stripe: 'https://buy.stripe.com/…', 'github-sponsors': 'https://github.com/sponsors/you', 'wise-email': 'you@example.com', wallet: 'Your address' };
@@ -45,21 +46,26 @@ function Editor({ me, setMe }) {
           {me.methods.map((method, i) => (
             <li key={i}>
               <MethodLine method={method} />
-              <Soft>{CHOICES[method.visibility]}. <Quiet onClick={() => send(me.methods.filter((_, at) => at !== i).map(stored), 'Removed.')}>Remove</Quiet></Soft>
+              <Soft>{method.value === me.sponsors_page ? 'From your GitHub' : 'You typed this'}. {method.link ? <><a href={method.value} target="_blank" rel="nofollow noopener noreferrer">Check the link</a>. </> : null}{CHOICES[method.visibility]}. <Quiet onClick={() => send(me.methods.filter((_, at) => at !== i).map(stored), 'Removed.')}>Remove</Quiet></Soft>
             </li>
           ))}
         </ul>
       ) : null}
       <form onSubmit={add} className="flex flex-col gap-4">
-        <label className="flex flex-col gap-1">
-          <span>Kind</span>
-          <select name="kind" className={FIELD} value={kind} onChange={event => { setKind(event.target.value); setVisibility(DEFAULTS[event.target.value]); setMessage(null); }}>
-            {Object.entries(LABELS).map(([name, label]) => <option key={name} value={name}>{label}</option>)}
-          </select>
-        </label>
+        <fieldset>
+          <legend className="mb-2">Kind</legend>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-w-prose">
+            {Object.entries(LABELS).map(([name, label]) => (
+              <label key={name} className={`flex items-center gap-2 border rounded-xl px-3 py-3 ${kind === name ? 'border-ink' : 'border-soft'}`}>
+                <input type="radio" name="kind" value={name} checked={kind === name} onChange={() => { setKind(name); setVisibility(DEFAULTS[name]); setValue(name === 'github-sponsors' ? me.sponsors_page : ''); setMessage(null); }} /> {label}
+              </label>
+            ))}
+          </div>
+        </fieldset>
         <label className="flex flex-col gap-1">
           <span>{kind === 'wallet' ? 'Address' : 'Paste it here'}</span>
           <input name="value" className={FIELD} value={value} onChange={event => setValue(event.target.value)} placeholder={EXAMPLES[kind]} required autoComplete="off" />
+          {value !== '' && value === me.sponsors_page ? <Soft>From your GitHub. Check it exists before saving: <a href={value} target="_blank" rel="nofollow noopener noreferrer">open your Sponsors page</a>.</Soft> : null}
         </label>
         {kind === 'wallet' ? (
           <label className="flex flex-col gap-1">
@@ -128,6 +134,7 @@ export default function MeView() {
       <Title sub={`Signed in as ${me.login}.`}>Your page</Title>
       <Debts title="You owe" id="you-owe" debts={me.you_owe} line={debt => `$${debt.amount} to ${toWhom(debt)}`} />
       <Debts title="Owed to you" id="owed-to-you" debts={me.owed_to_you} line={debt => (debt.to === null ? `$${debt.amount}, if the owner decides on you` : `$${debt.amount}`)} />
+      <PayOnMerge pay={me.pay} setPay={pay => setMe(current => ({ ...current, pay }))} />
       <Editor me={me} setMe={setMe} />
       <Section title="Your public pages" id="public">
         <ul className="flex flex-col gap-2">

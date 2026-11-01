@@ -409,7 +409,7 @@ export async function accountResponse(request: Request, env: Env, url: URL, now:
   if (method === 'GET' && path === '/api/me') {
     const viewer = await viewerOf(request, env, now);
     if (viewer === null) return json(200, { signed_in: false });
-    return json(200, { signed_in: true, login: viewer.login, github_login_sponsors: `https://github.com/sponsors/${viewer.login}`, methods: (await methodsOfLogin(env, viewer.login)).map(shown), pay: await payOf(env, viewer), ...await debtsOf(env, viewer.login, now) });
+    return json(200, { signed_in: true, login: viewer.login, sponsors_page: `https://github.com/sponsors/${viewer.login}`, methods: (await methodsOfLogin(env, viewer.login)).map(shown), pay: await payOf(env, viewer), ...await debtsOf(env, viewer.login, now) });
   }
   if (method === 'POST' && PAY_ROUTES.includes(path)) {
     const refusal = writeRefusal(request, url, true);

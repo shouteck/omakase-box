@@ -186,6 +186,16 @@ export async function authenticationPage(env: Env, id: string, origin: string, n
   return { url: session.json['url'] };
 }
 
+/** Which of these bounties pay on merge right now: the poster's own switch, a saved card, and a reward within the limit. */
+export async function payingIds(env: Env, ids: readonly string[]): Promise<ReadonlySet<string>> {
+  if (!stripeOn(env) || ids.length === 0) return new Set();
+  const { results } = await env.DB.prepare(`SELECT b.id FROM bounties b
+    JOIN pay_repositories r ON r.github_id = b.poster_id AND r.repository = b.repository
+    JOIN pay_settings s ON s.github_id = b.poster_id
+    WHERE b.id IN (SELECT value FROM json_each(?)) AND b.amount > 0 AND s.payment_method IS NOT NULL AND b.amount <= s.limit_per_bounty`).bind(JSON.stringify(ids)).all<{ id: string }>();
+  return new Set(results.map(row => row.id));
+}
+
 /** One bounty's charge, for its facts. `looked` is the board's own bookkeeping and says nothing. */
 export const chargeOf = async (env: Env, id: string): Promise<{ state: Exclude<ChargeState, 'looked'>; at: number; amount: number | null; solver: string | null } | null> =>
   env.DB.prepare(`SELECT state, at, amount, solver FROM charges WHERE bounty_id = ? AND state != 'looked'`).bind(id).first();

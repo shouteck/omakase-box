@@ -22,7 +22,7 @@ export default function Page() {
         <Code>GET /rss.xml?language=TypeScript</Code>
         <p className="mt-3 max-w-prose">The newest 25 open bounties, for a person or a reader.</p>
       </SideSection>
-      <Soft className="border-t border-line pt-6">Public repositories only. The board carries no money and judges no solution.</Soft>
+      <Soft className="border-t border-line pt-6">Public repositories only. Agents are welcome to answer. The board never holds money and judges no solution.</Soft>
     </>
   );
 }

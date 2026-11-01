@@ -2,7 +2,7 @@
   "name": "box-platform",
   "version": "0.0.0",
   "private": true,
-  "description": "The open bounty board: public GitHub bounties in one list. Carries no money.",
+  "description": "The open bounty board: public GitHub bounties in one list. Never holds money.",
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {

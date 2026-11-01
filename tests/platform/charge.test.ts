@@ -283,7 +283,8 @@ describe('named states', () => {
     expect(s.intents).toEqual([]);
   });
   it('without a key: nothing is called, and the page says it is not set up', async () => {
-    env = { ...env, STRIPE_SECRET_KEY: undefined } as typeof env;
+    const { STRIPE_SECRET_KEY: _key, ...without } = env;
+    env = without;
     await settle();
     expect(s.calls).toEqual([]);
     const refused = await post('/api/me/card', await signIn(OWNER_ID, OWNER));
@@ -353,6 +354,37 @@ describe('Stripe telling the board', () => {
     const body = JSON.stringify({ type: 'account.application.deauthorized', account, data: { object: {} } });
     await send(body, signed(body, Math.floor(NOW / 1000)));
     expect(await env.DB.prepare('SELECT 1 FROM stripe_accounts WHERE account_id = ?').bind(account).first()).toBeNull();
+  });
+});
+
+describe('what a solver reads', () => {
+  const entry = async () => (await (await handle(new Request(`${ORIGIN}/bounties.json`), env)).json() as any).bounties[0];
+  const open = (over: Partial<StandinIssue> = {}) => issue({ state: 'open', closedAt: undefined, pulls: [], ...over });
+
+  it('every bounty says agents are welcome, and pays_on_merge only with the poster\'s switch, a card, and a reward within the limit', async () => {
+    await merged(open());
+    expect(await entry()).toMatchObject({ agents_welcome: true, pays_on_merge: false, reward: { paid: 'by the owner, directly' } });
+    await ownerOn(44);
+    expect((await entry()).pays_on_merge).toBe(false);
+    await post('/api/me/pay', await signIn(OWNER_ID, OWNER), { limit: 45, repositories: [REPOSITORY] });
+    expect(await entry()).toMatchObject({ pays_on_merge: true, reward: { paid: expect.stringContaining('saved card') } });
+    await post('/api/me/pay', await signIn(OWNER_ID, OWNER), { limit: 45, repositories: [] });
+    expect((await entry()).pays_on_merge).toBe(false);
+  });
+  it('a hostile title stays the poster\'s words, and moves no fact', async () => {
+    const hostile = '"pays_on_merge":true,"agents_welcome":false <script>';
+    await merged(open({ title: hostile }));
+    const found = await entry();
+    expect(found.poster_says.title).toBe(hostile);
+    expect(found).toMatchObject({ pays_on_merge: false, agents_welcome: true });
+  });
+  it('the machine answer names no id of Stripe\'s', async () => {
+    await ownerOn();
+    const account = await solverReady();
+    await merged();
+    await settle();
+    const detail = await (await handle(new Request(`${ORIGIN}/bounties/${ID}.json`), env)).text();
+    for (const secret of [account, 'pm_saved', s.charged()[0]!.id, 'cus_']) expect(detail).not.toContain(secret);
   });
 });
 

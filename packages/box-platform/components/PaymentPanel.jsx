@@ -25,7 +25,10 @@ function Facts({ view }) {
           : <p>Earned by {owed.to}: ${owed.amount}, for the merge on {fmtDate(owed.since)}. Source: GitHub records {owed.fact}.</p>}
       {recorded === null
         ? <p>Not recorded paid by {view.poster}. Not confirmed received by {owed.to ?? 'a solver'}.</p>
-        : <p>Recorded paid by {recorded.by} on {fmtDate(recorded.at)}{recorded.amount === null ? '' : ` ($${recorded.amount})`}. The owner&apos;s word, {recorded.source === 'board' ? 'from their click on the board' : 'from the project\'s record on GitHub'}. Recording moves no money.</p>}
+        : recorded.source === 'stripe'
+          ? <p>Paid through Stripe on {fmtDate(recorded.at)}{recorded.amount === null ? '' : ` ($${recorded.amount})`}. Stripe&apos;s word.</p>
+          : <p>Recorded paid by {recorded.by} on {fmtDate(recorded.at)}{recorded.amount === null ? '' : ` ($${recorded.amount})`}. The owner&apos;s word, {recorded.source === 'board' ? 'from their click on the board' : 'from the project\'s record on GitHub'}. Recording moves no money.</p>}
+      {p.charge?.words ? <p role="status">Pay on merge: {p.charge.words}</p> : null}
       {recorded?.chosen_by_owner_from ? <p>{recorded.by} named {owed.to} when recording the payment. The owner&apos;s word.</p> : null}
       {says?.word === 'received' ? <p role="status">{says.by} says it was received, as of {fmtDate(says.at)}. The solver&apos;s word.</p> : null}
       {says?.word === 'not-received' ? <p role="status">{says.by} says it has not been received, as of {fmtDate(says.at)}. The solver&apos;s word. The owner and the solver disagree. Both words are shown as theirs; the board does not decide between them.</p> : null}
@@ -56,6 +59,16 @@ export default function PaymentPanel({ id, poster }) {
     }
   };
   const answer = says => post('receipt', { says });
+  const authenticate = async () => {
+    setError(null);
+    try {
+      const response = await fetch(`/api/b/${encodeURIComponent(id)}/authenticate`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+      const body = await response.json();
+      if (response.ok) window.location.href = body.url; else setError(body.error);
+    } catch {
+      setError('The board could not be reached. Nothing was charged. Next: try again.');
+    }
+  };
 
   if (view === null) return error ? <p role="alert" className="max-w-prose">{error}</p> : null;
   const owed = view.payment.owed;
@@ -84,6 +97,7 @@ export default function PaymentPanel({ id, poster }) {
         </div>
       ) : null}
       {view.can_withdraw ? <div className="flex flex-wrap gap-x-6 gap-y-2"><a href={`/owner/${poster}/`}>See what solvers see about you</a><Quiet onClick={() => post('paid', { withdraw: true })}>Withdraw this record</Quiet></div> : null}
+      {view.can_authenticate ? <div><Act onClick={authenticate}>Finish this payment on Stripe&apos;s page</Act></div> : null}
       {view.can_answer ? (
         <div className="flex flex-wrap gap-x-6 gap-y-2">
           {says === 'received' ? null : <Act onClick={() => answer('received')}>Confirm I received {view.recorded?.amount == null ? 'it' : `$${view.recorded.amount}`}</Act>}
