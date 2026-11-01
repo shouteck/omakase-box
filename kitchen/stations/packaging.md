@@ -49,6 +49,7 @@ This card holds rules, not narratives — each trap names the wave that taught i
 ## Fixtures, suites and journeys
 
 - **`check` never runs the bounty suite** — briefs name `test:box-bounty` and `test:kitchen`; only `verify --full` selects both. Plan the inner loop by file: `node scripts/suite.mjs box --suite bounty <file.test.ts>` (repo-relative path; BT21/BT22).
+- **A command printed for a person is run as printed** (PF7): `--help` recognised two lines that real state refuses. Read it from the page, fill its placeholders and run it in journey order (`tests/platform/commands.ts`).
 - **Three GitHub stand-ins exist** (`tests/box/bounty/github-fixture.ts`, `bt7-ux-fixture.mjs`, `kitchen/demo/gh-standin.cjs`) — a response-shape change greps and fixes all three (BT16, K18).
 - **A declared setup must bootstrap from nothing** — a snapshot carries no `node_modules`; prove it in a copy with `.git`/`node_modules`/`dist` deleted (BT5). What setup creates, the solver must remove — `answer` counts install/build artifacts as `added` (recorded unfixed product decision, BT5).
 - **Repo-local tool state:** `.box/bounties/` is inside the repository by design; the test `fingerprint` excludes `.box`. Since BT31 records live in `.box/local/box.db` (`node:sqlite` WAL, plain substring search, Node floor 22.13); call `closeStores()` before deleting a repo folder on Windows. **Never depend on an optional SQLite compile flag** (BT31-ci).
