@@ -35,4 +35,4 @@ Who may see an owner-only payment method is decided in `src/visibility.ts` and n
 
 Tests: `node scripts/suite.mjs platform`.
 
-What runs where: `src/worker.ts` is the deployed form (Cloudflare Workers Free, static assets, D1); `src/local.ts` runs the same `handle()` and `refresh()` on node. Deployment is [DEPLOY.md](DEPLOY.md), and the owner's to run.
+What runs where: `src/worker.ts` is the deployed form (Cloudflare Workers Free, static assets, D1); `src/local.ts` runs the same `handle()` and `refresh()` on node. Deployment is [DEPLOY.md](DEPLOY.md), and the owner's to run. The deployed Worker runs every minute and spends two GitHub reads a run; it searches every 15 minutes, re-reads an open bounty after 15 minutes and a closed one after an hour, unless a hint asks sooner. Refresh numbers on Cloudflare are in [PF8](../../waves/PF8.md).

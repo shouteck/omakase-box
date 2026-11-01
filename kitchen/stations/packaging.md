@@ -63,6 +63,9 @@ This card holds rules, not narratives — each trap names the wave that taught i
 - **Parseable is not the promised wire format** — validate or normalize at the boundary; test malformed *and* parseable-but-nonconforming (BT35).
 - **The root `.gitignore` ignores any `data/` folder** (K43's sample world went uncommitted). **Verify in a clean worktree** needs the Playwright revision under its `.runtime/browsers`: copy from `%LOCALAPPDATA%/ms-playwright`, never download.
 
+- **A stand-in hides what a host charges for** (PF8): SQLite in-process made 100 database calls free; Workers Free charged about 0.5 ms each. Count calls with a wrapper and batch. Stand-ins also hid a shared rate limit: GitHub stopped the anonymous board after 5 reads.
+- **A default that names a live service reaches it from tests** (PF8): fixtures build their own environment, so an inherited off switch missed 15 calls. Key it on what every fixture sets (`BOX_BOUNTY_SETTINGS_DIR`), and read the live service's log during verify.
+
 ## Before merging
 
 - Run export and declared checks outside the repository; try poisoned/preseeded cache bytes before trusting a speedup (K6).
