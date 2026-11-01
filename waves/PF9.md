@@ -4,7 +4,7 @@ Milestone: PF (the platform) · Station: evidence · Base: `master at dispatch` 
 Owner decisions: D-2026-11-01-real-before-launch, D-2026-10-19-k31-sandbox-go, D-2026-11-01-pay-on-merge, D-2026-11-01-film-and-launch-last
 Horizon: long: start with `/plan` and keep the plan in this file
 
-**Brief.** Written by the CTO on 1 November 2026. **The launch gate. Runs after PF12.** Owner: making sure the product's functionality is fully covered matters more than further engineering. Nothing launches until this passes.
+**Brief.** Written by the CTO on 1 November 2026. **The launch gate. Runs after K46, PF11 and PF12.** Owner: making sure the product's functionality is fully covered matters more than further engineering. Nothing launches until this passes.
 
 ## Outcome
 
@@ -26,13 +26,13 @@ Each seat is a fresh session in a scratch folder, never a subagent, with its own
 | 8 | Solver, money | The bounty page, signed in | Confirm or dispute | Both words shown, attributed |
 | 9 | Owner, stopping | The tool and the site | Stop agents posting here; close one | `deny` holds; a bounty closes; nothing is left open |
 | 10 | Refusals | A task with a token, a private repository, a never-ship path | Try to post | Each held or refused with a true next step; nothing goes out |
-| 11 | Not run: PF11 is parked, so there is no pay on merge to test (D-2026-11-01-manual-payment-for-now) | | | |
+| 11 | Pay on merge, if PF11 built it | Stripe's test mode, a test card and a connected test solver | Turn it on and merge a solution | The test solver is paid in test mode, the board shows it, and a duplicate does not charge twice |
 
 Add a flow if the plan finds one PLAN.md's stages name and this table misses.
 
 ## Rewards in the sandbox
 
-Seats 7 and 8 need a stated reward. The owner approves this wave with a **$5 stated reward on sandbox bounties**, with the task saying "test bounty; solved by the project's own agents; no money moves". **No real money moves.** A "paid" recorded in the test is withdrawn before the wave closes, because it would be a false fact.
+Seats 7 and 8 need a stated reward. The owner approves this wave with a **$5 stated reward on sandbox bounties**, with the task saying "test bounty; solved by the project's own agents; no money moves". **No real money moves.** Seat 11 uses only Stripe's test mode and test cards. A "paid" recorded in the test is withdrawn before the wave closes, because it would be a false fact.
 
 ## Before launch: a clean board
 
