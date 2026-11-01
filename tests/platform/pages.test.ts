@@ -279,7 +279,8 @@ describe('the pages', () => {
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('box bounty create --task TASK.md --why "beyond what this agent can do"');
     await page.locator('main button[aria-label="Copy install lines"]').click();
     const install = await page.locator('main code[data-install]').allInnerTexts();
-    await expect.poll(async () => (await page.evaluate(() => navigator.clipboard.readText())).split('\n')).toEqual(install);
+    // Windows' clipboard hands back \r\n for the \n the page wrote.
+    await expect.poll(async () => (await page.evaluate(() => navigator.clipboard.readText())).split(/\r?\n/)).toEqual(install);
     await context.close();
   });
 
