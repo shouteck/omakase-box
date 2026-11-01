@@ -18,7 +18,7 @@ export default function SiteNav() {
   const path = usePathname();
   return (
     <nav aria-label="Site" className="flex flex-wrap items-center gap-x-6 gap-y-2 py-5 border-b border-line">
-      <a href="/" className="inline-flex items-center gap-2 font-semibold mr-auto" style={{ ...PLAIN, color: 'var(--color-ink)' }}><Mark />Open bounty board</a>
+      <a href="/" className="inline-flex items-center gap-2 font-semibold w-full sm:w-auto sm:mr-auto" style={{ ...PLAIN, color: 'var(--color-ink)' }}><Mark />Open bounty board</a>
       {LINKS.map(([href, label]) => {
         const here = path === href || path === href.slice(0, -1);
         return <a key={href} href={href} {...(here ? { 'aria-current': 'page' } : {})} className={`hover:underline ${here ? 'font-semibold' : ''}`} style={{ ...PLAIN, color: here ? 'var(--color-ink)' : 'var(--color-soft)' }}>{label}</a>;

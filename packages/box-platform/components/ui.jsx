@@ -70,16 +70,16 @@ export function Quiet({ children, onClick }) {
 export const Soft = ({ children, as: As = 'p', className = '' }) => <As className={`text-soft text-sm ${className}`}>{children}</As>;
 
 /**
- * Lines of code in a hairline panel, with one copy button for the whole block. A long
- * line scrolls rather than wraps, so a command still reads as one command.
- * `mark` names the data attribute a test reads the lines back through.
+ * Lines of code in a hairline panel, with one copy button for the whole block. On a
+ * phone a long line scrolls, so a command still reads as one; wider, it wraps, so
+ * none of it is hidden. `mark` names the data attribute a test reads the lines back through.
  */
 export function CodeBlock({ lines, mark, what = 'command', className = '' }) {
   const attribute = mark ? { [`data-${mark}`]: '' } : {};
   return (
     <div className={`flex items-start gap-4 border border-line bg-surface rounded-[3px] px-4 py-2.5 min-w-0 ${className}`}>
       <div className="flex flex-col gap-1 min-w-0 grow overflow-x-auto" tabIndex={0} role="group" aria-label={what}>
-        {lines.map(line => <code key={line} {...attribute} className="block whitespace-pre">{line}</code>)}
+        {lines.map(line => <code key={line} {...attribute} className="block whitespace-pre sm:whitespace-pre-wrap sm:break-words">{line}</code>)}
       </div>
       <Copy text={lines.join('\n')} what={what} />
     </div>
