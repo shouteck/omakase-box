@@ -11,8 +11,8 @@ import { loadSettings } from './settings.js';
 import { metaGet, metaKeys, metaSet, sharedEnded, sharedOpen } from './store.js';
 import { solverAccount } from './untrusted.js';
 
-/** The public deployment's address, set when it exists (PF6). Empty: off. */
-export const BOARD_DEFAULT = '';
+/** The public deployment's address. Settings choose another or none; test runs set BOX_BOARD_DEFAULT empty. */
+export const BOARD_DEFAULT = 'https://open-bounty-board.box-platform.workers.dev';
 
 const DEADLINE_MS = 2500;
 const ANSWER_BYTES_MAX = 65536;
@@ -30,7 +30,7 @@ let held = false;
 export function holdBoardCalls(): void { held = true; }
 
 export function boardAddress(): string {
-  try { return loadSettings().board ?? BOARD_DEFAULT; } catch { return ''; }
+  try { return loadSettings().board ?? process.env['BOX_BOARD_DEFAULT'] ?? BOARD_DEFAULT; } catch { return ''; }
 }
 const boardOn = (): boolean => !held && boardAddress() !== '';
 
