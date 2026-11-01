@@ -6,9 +6,9 @@ import { Primary } from '../components/ui.jsx';
 
 const Statement = ({ id, children }) => <h2 id={id} className="text-xl sm:text-2xl lg:text-3xl font-medium tracking-[-0.03em] text-balance">{children}</h2>;
 
-function Tile({ title, words, wide = false, children }) {
+function Tile({ id, title, words, wide = false, children }) {
   return (
-    <div className={`arrive bg-surface rounded-3xl p-6 sm:p-8 flex flex-col gap-6 min-w-0 ${wide ? 'md:col-span-2' : ''}`}>
+    <div id={id} className={`arrive scroll-mt-6 bg-surface rounded-3xl p-6 sm:p-8 flex flex-col gap-6 min-w-0 ${wide ? 'md:col-span-2' : ''}`}>
       <div>
         <h3 className="text-lg sm:text-xl font-medium tracking-tight">{title}</h3>
         <p className="mt-1.5 text-soft max-w-[30rem]">{words}</p>
@@ -76,7 +76,7 @@ export default function Page() {
               <p className="font-mono text-sm text-soft pt-1 pb-2 break-words">box bounty apply &lt;id&gt; 62</p>
             </Card>
           </Tile>
-          <Tile wide title="Paid to the solver, three ways." words="The board never holds money. It shows who said what.">
+          <Tile id="pay" wide title="Paid to the solver, three ways." words="The board never holds money. It shows who said what.">
             <WayCards />
           </Tile>
         </div>

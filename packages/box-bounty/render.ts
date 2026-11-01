@@ -663,7 +663,7 @@ export function renderHelp(): string {
     'nothing a solver wrote is ever run — checks were removed on 11 October 2026: a solution arrives as a',
     'numbered attempt, the report states facts about the change, and apply/close is always your call.',
     '',
-    boardAddress() === '' ? 'three ways to pay a reward: by hand, one click, on merge.' : `three ways to pay a reward: by hand, one click, on merge. The table: ${boardAddress()}/how/#pay`,
+    boardAddress() === '' ? 'three ways to pay a reward: by hand, one click, on merge.' : `three ways to pay a reward: by hand, one click, on merge. See ${boardAddress()}/#pay`,
     '',
     'what ends a bounty: apply, or close — or a solution merged onto the bounty\'s branch with your own',
     'Git, which the next bounty command recognises. A merge is one ordinary commit: git revert -m 1',

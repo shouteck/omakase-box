@@ -257,6 +257,16 @@ describe('the pages', () => {
     expect(text.match(/Not set up on this board yet./g)).toHaveLength(2);
     expect(text).toContain('Record $45 paid');
     expect(text).not.toContain('Pay $45');
+    expect(await page.locator('#pay').count()).toBe(1);
+    // How it works says the ways in its steps, once, and which this board does not have.
+    await visit(page, '/how/');
+    await expect.poll(() => page.locator('main').textContent()).toContain('One click and on merge are not set up on this board yet.');
+    const how = await page.locator('main').textContent();
+    expect(how).not.toContain('Three ways to pay');
+    expect(how).not.toContain('Record $45 paid');
+    expect(how).toContain('connected Stripe also covers on merge');
+    expect(await page.locator('main a[href="/#pay"]').count()).toBe(1);
+    await visit(page, '/');
     // The picture is the real product in real text, and says it is an example.
     expect(await page.locator('main figure').innerText()).toContain('An example. Every name in it is invented');
     expect(await page.locator('[data-primary]').getAttribute('href')).toBe('/how/');

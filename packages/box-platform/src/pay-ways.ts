@@ -7,10 +7,10 @@ export type WaysSetUp = { readonly by_hand: true; readonly one_click: readonly P
 
 export const NOT_SET_UP = 'not set up on this board yet';
 
-export const WAYS: readonly { readonly id: WayId; readonly name: string; readonly through: string; readonly solverNeeds: string; readonly afterMerge: string; readonly whoSays: string; readonly shows: string }[] = [
-  { id: 'by-hand', name: 'By hand', through: 'Wise, wallet, any listed way', solverNeeds: 'To list a way', afterMerge: 'You pay, then record it.', whoSays: 'The owner', shows: 'Record $45 paid' },
-  { id: 'one-click', name: 'One click', through: 'Stripe or PayPal', solverNeeds: 'A connected account', afterMerge: 'You click and pay on the provider\'s page.', whoSays: 'The provider', shows: 'Pay $45' },
-  { id: 'on-merge', name: 'On merge', through: 'Stripe', solverNeeds: 'Connected Stripe', afterMerge: 'You do nothing, after saving a card and limit once.', whoSays: 'The provider', shows: '$45 paid' }
+export const WAYS: readonly { readonly id: WayId; readonly name: string; readonly through: string; readonly afterMerge: string; readonly whoSays: string; readonly shows: string }[] = [
+  { id: 'by-hand', name: 'By hand', through: 'Wise, wallet, any listed way', afterMerge: 'You pay, then record it.', whoSays: 'The owner', shows: 'Record $45 paid' },
+  { id: 'one-click', name: 'One click', through: 'Stripe or PayPal', afterMerge: 'You click and pay on the provider\'s page.', whoSays: 'The provider', shows: 'Pay $45' },
+  { id: 'on-merge', name: 'On merge', through: 'Stripe', afterMerge: 'You do nothing, after saving a card and limit once.', whoSays: 'The provider', shows: '$45 paid' }
 ];
 
 /** Which ways this board's keys allow. By hand needs none. */

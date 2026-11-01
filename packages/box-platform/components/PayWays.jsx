@@ -5,8 +5,6 @@
 import { useEffect, useState } from 'react';
 import { isSetUp, NOT_SET_UP, WAYS } from '../src/pay-ways.ts';
 
-const lower = text => text[0].toLowerCase() + text.slice(1);
-
 function useWaysHere() {
   const [here, setHere] = useState(null);
   useEffect(() => {
@@ -30,22 +28,30 @@ function Moment({ way, here }) {
   return <div className="bg-card rounded-2xl border border-line px-4 py-3 min-h-[5rem] flex flex-col items-start justify-center">{body}</div>;
 }
 
-/** Equal cards, on the front page inside its tile; on How it works each is its own tile, with what the solver needs. */
-export function WayCards({ detail = false }) {
+/** Three equal cards, inside the front page's tile. */
+export function WayCards() {
   const here = useWaysHere();
   return (
-    <ul className={`grid grid-cols-1 md:grid-cols-3 ${detail ? 'gap-3 sm:gap-4' : 'gap-6 md:gap-4'}`}>
+    <ul className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-4">
       {WAYS.map(way => (
-        <li key={way.id} className={`min-w-0 flex flex-col gap-3 ${detail ? 'bg-surface rounded-3xl p-6' : ''}`}>
+        <li key={way.id} className="min-w-0 flex flex-col gap-3">
           <div>
             <h3 className="font-medium">{way.name}</h3>
             <p className="text-sm text-soft">{way.through}</p>
           </div>
           <Moment way={way} here={here} />
           <p className="text-sm">{way.afterMerge}</p>
-          {detail ? <p className="text-sm text-soft">Solver needs {lower(way.solverNeeds)}.</p> : null}
         </li>
       ))}
     </ul>
   );
+}
+
+/** How it works says the ways in its steps; this says which of them this board does not have. */
+export function WaysNotHere() {
+  const here = useWaysHere();
+  if (here === null) return null;
+  const names = WAYS.filter(way => !isSetUp(way.id, here)).map(way => way.name);
+  if (names.length === 0) return null;
+  return <p>{names.map((name, index) => (index === 0 ? name : name.toLowerCase())).join(' and ')} {names.length === 1 ? 'is' : 'are'} {NOT_SET_UP}.</p>;
 }
