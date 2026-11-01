@@ -112,7 +112,7 @@ describe('every normal output on the journey stays inside its budget', () => {
     box(repo, ['allow', 'owner/project', '--reward', '10', '--reward-limit', '30']);
     const first = box(repo, ['status']);
     const second = box(repo, ['status']);
-    expect(first.stdout).toContain('a promise in the owner\'s name, paid by hand');
+    expect(first.stdout).toContain('a promise in the owner\'s name, which they pay');
     expect(second.stdout).not.toContain('a promise in the owner\'s name');
     expect(second.stdout).toContain('states $10');
   }));

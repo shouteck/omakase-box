@@ -107,7 +107,7 @@ describe('status --json', () => {
     expect(box(repo, ['allow', 'owner/project', '--reward', '10', '--reward-limit', '30']).status).toBe(0);
     const saidRun = box(repo, ['status', '--json']);
     const said = document(saidRun);
-    expect(saidRun.stderr).toContain("a promise in the owner's name, paid by hand");
+    expect(saidRun.stderr).toContain("a promise in the owner's name, which they pay");
     const paid = bountyOf(said, id);
     // The owner object carries the reward line's other half — the promised
     // total against the limit — and the decision's own level and time.

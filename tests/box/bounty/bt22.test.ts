@@ -53,7 +53,7 @@ describe('the owner\'s settings file holds only the owner\'s choices', () => {
     // `box bounty` — the overview. The reward's said-once explanation belongs
     // to the first read that renders the reward line, and it lands in state.json.
     const overview = reads([]);
-    expect(overview.stdout).toContain('a promise in the owner\'s name, paid by hand');
+    expect(overview.stdout).toContain('a promise in the owner\'s name, which they pay');
   }));
 
   it('1: no command on the journey rewrites settings.json; the said-once records land in state.json — the collecting reads and where the bookkeeping lands', () => journey.run(() => {
@@ -84,7 +84,7 @@ describe('the owner\'s settings file holds only the owner\'s choices', () => {
     box(repo, ['allow', 'owner/project', '--reward', '10', '--reward-limit', '30']);
     const first = box(repo, ['status']);
     const second = box(repo, ['status']);
-    expect(first.stdout).toContain('a promise in the owner\'s name, paid by hand');
+    expect(first.stdout).toContain('a promise in the owner\'s name, which they pay');
     expect(second.stdout).not.toContain('a promise in the owner\'s name');
     expect(second.stdout).toContain('states $10');
   }));

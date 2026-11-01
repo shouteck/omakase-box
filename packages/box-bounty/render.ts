@@ -6,7 +6,7 @@
 
 import { existsSync,mkdirSync,readFileSync,writeFileSync } from 'node:fs';
 import { BountyRefused } from './errors.js';
-import { join } from 'node:path';
+import { basename,join,resolve } from 'node:path';
 import { foreignJson,quoteForeign,showPath } from './notice.js';
 import { hitPlace } from './scan.js';
 import { solverAccount,solverAccountOr,solverBlock } from './untrusted.js';
@@ -260,7 +260,7 @@ const historyJson = (event: StageEvent): string =>
 // the amount it was posted with.
 // The reward line says what money is in force and what is already promised —
 // money owed is a fact every call. The standing explanation of what a reward
-// is (a promise in the owner's name, paid by hand, set in box bounty config)
+// is (a promise in the owner's name, which they pay, set in box bounty config)
 // is said once per repository, recorded in the owner's settings, and lives in
 // help and describe (BT17). With no amount, nothing promised and no limit
 // there is nothing to say and the compact form stays silent.
@@ -271,7 +271,7 @@ function rewardStatusLine(repoRoot: string, open: readonly BountyRecord[], full:
   const stated = amount === 0 ? 'each new bounty states $0' : `each new bounty states $${amount}`;
   const counted = limit === null ? `open bounties here promise $${promised}` : `open bounties here promise $${promised} of a $${limit} limit — ${promised <= limit ? `$${limit - promised} left` : `$${promised - limit} over`}`;
   const once = !full && amount > 0 && saidOnce(repoRoot, 'reward-is-a-promise')
-    ? " — a promise in the owner's name, paid by hand; the owner sets it in box bounty config"
+    ? " — a promise in the owner's name, which they pay; the owner sets it in box bounty config"
     : '';
   return `reward: ${stated}${once}; ${counted}`;
 }
@@ -712,7 +712,10 @@ function seenAge(at: string): string {
 export function renderOverview(repoRoot: string): string {
   const decision = readDecision(repoRoot);
   const setUp = decision.decision !== null || decision.denied;
-  return ['box bounty can hand work to an outside solver; box bounty describe says when it is worth using.', ...(setUp ? [] : SETUP_LINES), renderStatus(repoRoot)].join('\n');
+  // Until the tool is published no `box` is on the path: say what it means here, from how this ran.
+  const ran = process.argv[1];
+  const means = !setUp && ran !== undefined && basename(ran) === 'cli.js' ? [`here, box means: node ${JSON.stringify(resolve(ran))}`] : [];
+  return ['box bounty can hand work to an outside solver; box bounty describe says when it is worth using.', ...(setUp ? [] : [...SETUP_LINES, ...means]), renderStatus(repoRoot)].join('\n');
 }
 
 // The write side of the surfaces: every record write re-renders them. The

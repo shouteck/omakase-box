@@ -346,7 +346,9 @@ export function changeConfig(repoRoot: string | null, verb: string, name: string
     if (name === 'instructions') {
       if (value !== 'true' && value !== 'false') throw new BountyRefused('config-value-invalid', 'nothing changed; next: box bounty config set instructions <true|false>');
       writeInstructions(repoRoot, { ...previous, enabled: value === 'true' });
-      return [`instructions: ${value === 'true' ? 'on' : 'off'}; owner's settings outside the repository. Existing blocks remain when off.`, ...syncInstructions(repoRoot, true)].join('\n');
+      // The tool never creates a host's file, so "on" with none would change nothing: said plainly (PF15).
+      const noFile = value === 'true' && discoverInstructions(repoRoot).length === 0 ? ['no instruction file in this project, so no block was written and later sessions will not know the tool; next: create the file your agent reads, such as AGENTS.md, then run box bounty config set instructions true again'] : [];
+      return [`instructions: ${value === 'true' ? 'on' : 'off'}; owner's settings outside the repository. Existing blocks remain when off.`, ...noFile, ...syncInstructions(repoRoot, true)].join('\n');
     }
     const file = checkInstructionFile(repoRoot, value);
     checkInstructionMarkers(file);

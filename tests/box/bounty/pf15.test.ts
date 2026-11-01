@@ -1,8 +1,8 @@
 // Every reader learns the three ways to pay (PF15), in the tool. The merge message is read for
 // each thing the board can say; `status` against a stand-in board, for PayPal's word.
-import { spawn, type ChildProcess } from 'node:child_process';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { answerGitHub, checkMergedSolutions, loadRecord, payMessageLines, postBounty, readBoardFacts, renderHelp, renderOverview, renderStatus } from '../../../packages/box-bounty/index.js';
@@ -10,7 +10,7 @@ import { checkedWays, payOutcomeShape, type PayOutcome } from '../../../packages
 import { readFormat } from '../../../packages/box-bounty/format.js';
 import { DESCRIBE_LINES, describeRewardLine } from '../../../packages/box-bounty/wording.js';
 import { fixture } from './github-fixture.js';
-import { git, runRoot } from './support.js';
+import { CLI_DIST, git, runRoot } from './support.js';
 
 const STANDIN = fileURLToPath(new URL('./board-standin.cjs', import.meta.url));
 const BOARD = 'https://board.example';
@@ -96,6 +96,30 @@ describe('setting up with only an install', { timeout: 120000 }, () => {
     expect(unset).toContain('With no answer nothing is promised');
     writeFileSync(path, JSON.stringify({ ...settings, repositories: { 'owner/project': { bounty: 'allowed', at: '2026-10-01T00:00:00.000Z', changes: [] } } }));
     expect(renderOverview(repo)).not.toContain('not set up');
+  }));
+});
+
+describe('the built tool, as an agent first meets it', { timeout: 120000 }, () => {
+  const run = (repo: string, scratch: string, args: string[]) => spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args], { cwd: repo, encoding: 'utf8', env: { ...process.env, BOX_BOUNTY_SETTINGS_DIR: join(scratch, 'settings') } });
+  const unset = (scratch: string) => {
+    const path = join(scratch, 'settings', 'settings.json');
+    const settings = JSON.parse(readFileSync(path, 'utf8'));
+    delete settings.default;
+    writeFileSync(path, JSON.stringify({ ...settings, repositories: {} }));
+  };
+  it('says what box means here, since no box is on the path', () => fixture(({ repo, scratch }) => {
+    unset(scratch);
+    expect(run(repo, scratch, []).stdout).toContain(`here, box means: node ${JSON.stringify(resolve(CLI_DIST))}`);
+  }));
+  it('instructions on with no instruction file says nothing was written and what to do', () => fixture(({ repo, scratch }) => {
+    for (const name of ['AGENTS.md', 'CLAUDE.md']) rmSync(join(repo, name), { force: true });
+    const none = run(repo, scratch, ['config', 'set', 'instructions', 'true']);
+    expect(none.stdout).toContain('no instruction file in this project, so no block was written');
+    expect(none.stdout).toContain('such as AGENTS.md');
+    writeFileSync(join(repo, 'AGENTS.md'), '# rules\n');
+    const some = run(repo, scratch, ['config', 'set', 'instructions', 'true']);
+    expect(some.stdout).not.toContain('no instruction file');
+    expect(readFileSync(join(repo, 'AGENTS.md'), 'utf8')).toContain('<!-- box-bounty -->');
   }));
 });
 
