@@ -43,7 +43,7 @@ export default function Page() {
 
       <section className="mt-20 scroll-mt-6" id="hand-off" aria-labelledby="owners">
         <h2 id="owners" className="text-lg font-semibold">Hand off work</h2>
-        <p className="mt-2 mb-8 max-w-prose text-soft">For when your coding agent has work it cannot or should not do. You allow one repository once. After that your agent can post without asking you, within the reward and limit you set; add <code>--ask</code> to that command and it asks you before each post.</p>
+        <p className="mt-2 mb-8 max-w-prose text-soft">For when your coding agent has work it cannot or should not do. You allow one repository once. After that your agent can post without asking you, within the reward and limit you set; add <code>--ask</code> to that command and it asks you before each post and each merge.</p>
         <ol>
           <Step n={1} title="Install, and allow one repository" drawing={<AllowDrawing />}>
             <Words>You need Node 24, Git and GitHub&apos;s command line, signed in with <code>gh auth login</code>. Run the lines after the clone inside the new <code>omakase-box</code> folder.</Words>
