@@ -3,6 +3,7 @@
 import childProcess, { execFileSync, spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { syncBuiltinESMExports } from 'node:module';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -160,11 +161,20 @@ describe('the board unreachable or off', { timeout: 180000 }, () => {
     expect(BOARD_DEFAULT).toBe('https://open-bounty-board.box-platform.workers.dev');
     expect(process.env['BOX_BOARD_DEFAULT']).toBe('');
     expect(boardAddress()).toBe('');
+    // A fixture may build its own environment: settings kept elsewhere are enough.
+    delete process.env['BOX_BOARD_DEFAULT'];
+    process.env['BOX_BOUNTY_SETTINGS_DIR'] = join(tmpdir(), 'kitchen-PF8-settings-absent');
+    try {
+      expect(boardAddress()).toBe('');
+    } finally {
+      process.env['BOX_BOARD_DEFAULT'] = '';
+      delete process.env['BOX_BOUNTY_SETTINGS_DIR'];
+    }
   });
 
   it('the bare config says the tool calls the default board, with what it sends', () => fixture(({ repo }) => {
     expect(renderConfig(repo)).not.toContain('board:');
-    delete process.env['BOX_BOARD_DEFAULT'];
+    process.env['BOX_BOARD_DEFAULT'] = BOARD_DEFAULT;
     try {
       expect(renderConfig(repo)).toContain(`board: ${BOARD_DEFAULT} — after a post, a merge, a close or a paid record the tool sends it the repository, issue number, bounty id and event name, and nothing else`);
     } finally {
