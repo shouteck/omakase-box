@@ -30,6 +30,8 @@ Measurements, comparisons and what the kitchen is allowed to claim. Runs through
 
 - **Convention and comparison waves need their own fixture checkout:** a `git init` plus two fake `github.com` remotes exercises repo-dependent commands against scratch settings (`BOX_BOUNTY_SETTINGS_DIR`) without touching the owner's. K20 needed this to see BT16's multi-remote paths. For scale measurements across N records (K25, BT29), record both lines and characters — a joined single line (`ended:`) stays 1 line while growing ~75 chars per record — seed N−1 `asRecord`-valid files plus one real CLI `create` so write-triggered surfaces (`OPEN`, instruction block) run without N process spawns, and include a posted-records mix (`github` + `attempts` populated, instant-fail `gh` shim on PATH) so branches gated on `record.github !== undefined` are measured.
 
+- **A vendor sandbox may not enforce what live does** (K46): Stripe's charged accounts that never accepted its terms. Read the object's own readiness field beside each success and report the two groups apart.
+
 ## Before merging
 
 - Tick the measurement-fairness lens for any wave on this station.
