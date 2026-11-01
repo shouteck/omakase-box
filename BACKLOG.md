@@ -4,6 +4,7 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 ## Kitchen tooling
 
+- **Deploy guide (PF10):** in Git Bash `node ../../scripts/pnpm.mjs exec wrangler deploy` (`packages/box-platform/DEPLOY.md`) failed with "wrangler not recognized"; `node node_modules/wrangler/bin/wrangler.js deploy` worked. Cause not traced; PF6 should recheck the guide's commands.
 - **From the K43 inbox (22 October 2026 kickoff):** (a) one command that runs the AGENTS.md + KITCHEN.md size rule and `brief-check` on every changed brief before a kitchen-document push (today two manual steps in `kitchen/roles/cto.md`); (b) verify runs made in a disposable worktree are lost when it is removed — let verify take a runs directory, or copy `.kitchen/runs/*` into the main checkout first, so kitchen-stats counts them (K43 lost four of seven).
 
 - **From the K45 pass** (see [K45](waves/K45.md)):
