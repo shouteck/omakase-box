@@ -449,7 +449,10 @@ describe('Stripe telling the board', () => {
 
 describe('what a solver reads', () => {
   const entry = async () => (await (await handle(new Request(`${ORIGIN}/bounties.json`), env)).json() as any).bounties[0];
-  const open = (over: Partial<StandinIssue> = {}) => issue({ state: 'open', closedAt: undefined, pulls: [], ...over });
+  const open = (over: Partial<StandinIssue> = {}): StandinIssue => {
+    const { closedAt: _closed, ...still } = issue({ state: 'open', pulls: [], ...over });
+    return still;
+  };
 
   it('every bounty says agents are welcome, and pays_on_merge only with the poster\'s switch, a card, and a reward within the limit', async () => {
     await merged(open());
