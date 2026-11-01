@@ -1,12 +1,11 @@
 # Station: Packaging
 
-Selecting source for a Box, exporting it, proving it in a clean directory, submitting a patch from it, and the bounty tool's create → post → answer → apply journey on the owner repository. PLAN.md has the journey and what is settled.
-
-This card holds rules, not narratives — each trap names the wave that taught it; read that wave file for the story.
+Selecting source for a Box, exporting it, proving it in a clean directory, submitting a patch from it, and the bounty tool's create → post → answer → apply journey on the owner repository.
+Each trap names the wave that taught it; that wave file has the story.
 
 ## What this station knows
 
-- A Box is a plain folder with `box.json`, selected source and declared setup/check commands; a bounty folder is a Box of a new kind — reuse the Box's manifest, hashing, path handling and program launch. Reuse before writing: `packages/box-contracts`, `packages/analyzer`, `packages/evaluation/patch-validation`.
+- A Box is a plain folder with `box.json`, selected source and declared setup/check commands; a bounty folder is a Box of a new kind — reuse the Box's manifest, hashing, path handling and program launch. Reuse before writing: `packages/box-contracts`.
 - A2's `files` is the sole owner-source shipping authority; `proposeSelection` only suggests.
 - **Facts, never verdicts.** The tool says "the check you set now passes", never "this answer is correct". Reports always say what was not checked (BT8c).
 - **Every outcome is a named state with a next step**; an empty or ambiguous tool answer once cost a whole live trial.
@@ -58,13 +57,12 @@ This card holds rules, not narratives — each trap names the wave that taught i
 - **A copy of a stranger's tree is a second boundary** — what may run there (info/attributes, hooks), which byte form lives there, what is checked on the way back; `git worktree remove` deletes before registration and fails on Windows while a process sits in the folder (BT7, parked).
 - **Verify outside state independently** (`gh api`, `git ls-remote`), never the tool's word. `undone` is terminal; closed-by-base-deletion reads as rejection (BT6a). `allowedDestinations` gates both directions.
 - **Fresh-reader journeys reuse `bt8b-fixtures.mjs`** (per-case repos, isolated settings, the exact SHA's built CLI); cold ones reuse `bt17-measure.mjs` (evidence card).
-- Name negative candidates by the actual source mutation — a cosmetic change is not a probe; a green alternative is not a wrong candidate. **A clean install proves nothing** — only a check that loads the code shows a dangling link (A0). **The silent fallback:** export never reaches back into the owner repository to fill a gap.
-- **A produced artifact is not evidence of what it claims** — rebuild from the current commit before recording or demoing (K16 stale dist; evidence card).
+- Name negative candidates by the actual source mutation — a cosmetic change is not a probe; a green alternative is not a wrong candidate. **A clean install proves nothing** — only a check that loads the code shows a dangling link (A0).- **A produced artifact is not evidence of what it claims** — rebuild from the current commit before recording or demoing (K16 stale dist; evidence card).
 - **Parseable is not the promised wire format** — validate or normalize at the boundary; test malformed *and* parseable-but-nonconforming (BT35).
 - **The root `.gitignore` ignores any `data/` folder** (K43's sample world went uncommitted). **Verify in a clean worktree** needs the Playwright revision under its `.runtime/browsers`: copy from `%LOCALAPPDATA%/ms-playwright`, never download.
 
-- **A stand-in hides what a host charges for** (PF8): SQLite in-process made 100 database calls free; Workers Free charged about 0.5 ms each. Count calls with a wrapper and batch. Stand-ins also hid a shared rate limit: GitHub stopped the anonymous board after 5 reads.
-- **A default that names a live service reaches it from tests** (PF8): fixtures build their own environment, so an inherited off switch missed 15 calls. Key it on what every fixture sets (`BOX_BOUNTY_SETTINGS_DIR`), and read the live service's log during verify.
+- **A stand-in hides what a host charges for** (PF8): count database calls with a wrapper, and batch.
+- **A default naming a live service reaches it from tests** (PF8): fixtures build their own environment; read its log during verify.
 
 ## Before merging
 
