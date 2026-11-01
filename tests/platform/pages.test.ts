@@ -1,13 +1,14 @@
 // The real pages in a real browser: the built export, served by the same
 // handle() the Worker runs, reading a GitHub stand-in over HTTP.
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type Browser, chromium, type Page } from '@playwright/test';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { type LocalBoard, startLocal } from '../../packages/box-platform/src/local.js';
 import { seed120, seedStates, STATE_IDS } from '../../packages/box-platform/standin/standin.js';
+import { CLI, journeyWorld, wordsOf } from './commands.js';
 import { MINUTE, NOW, SCHEMA } from './support.js';
 
 const PACKAGE = fileURLToPath(new URL('../../packages/box-platform/', import.meta.url));
@@ -62,7 +63,7 @@ describe('the pages', () => {
 
   it('the board lists the seeded bounties with their card facts, and says whose words the titles are', async () => {
     const { page, close } = await fresh();
-    await visit(page, '/?repository=example-tidepool/ledger-lite&query=Import');
+    await visit(page, '/board/?repository=example-tidepool/ledger-lite&query=Import');
     const card = page.locator('main ul li').first();
     await expect.poll(() => card.innerText()).toContain('Import fails on a BOM');
     const text = await card.innerText();
@@ -71,14 +72,14 @@ describe('the pages', () => {
     expect(text).toContain('Posted by example-mara, who pays the solver directly: ');
     expect(text).toMatch(/\d merged · \d paid by the owner's word · \d received by the solvers' word/);
     expect(await page.locator('main').innerText()).toContain(`Titles are the posters' own words.`);
-    await visit(page, '/?repository=example-org/repo-1&query=Add thing 1');
+    await visit(page, '/board/?repository=example-org/repo-1&query=Add thing 1');
     await expect.poll(() => card.innerText()).toContain('Posted by poster-1, who pays the solver directly: no payment history yet.');
     await close();
   });
 
   it('filters and paging work from the page, and the address keeps them', async () => {
     const { page, close } = await fresh();
-    await visit(page, '/');
+    await visit(page, '/board/');
     await expect.poll(() => page.locator('main').innerText()).toContain('open bounties.');
     await page.selectOption('select[name=language]', 'Rust');
     await page.waitForURL(/language=Rust/);
@@ -93,7 +94,7 @@ describe('the pages', () => {
 
   it('no match names its next step, and the step works', async () => {
     const { page, close } = await fresh();
-    await visit(page, '/?query=zzz-nothing');
+    await visit(page, '/board/?query=zzz-nothing');
     await expect.poll(() => page.locator('main').innerText()).toContain('No open bounty matches these filters.');
     await page.click('main >> text=clear the filters');
     await expect.poll(() => page.locator('main ul li').count()).toBe(20);
@@ -104,7 +105,7 @@ describe('the pages', () => {
     const { page, close } = await fresh();
     let dialog = false;
     page.on('dialog', d => { dialog = true; void d.dismiss(); });
-    for (const path of ['/?query=Hostile', `/b/${STATE_IDS.hostile}/`]) {
+    for (const path of ['/board/?query=Hostile', `/b/${STATE_IDS.hostile}/`]) {
       await visit(page, path);
       await expect.poll(() => page.locator('main').innerText()).toContain('<img src=x onerror=');
       expect(await page.locator('main img').count()).toBe(0);
@@ -243,6 +244,149 @@ describe('the pages', () => {
     for (const person of [stranger, payee, owner]) await person.close();
   });
 
+  it('the front page: the mechanism, both paths, a text alternative for every drawing, one action, at most three newest bounties', async () => {
+    const { page, close } = await fresh();
+    await visit(page, '/');
+    await expect.poll(() => page.locator('main ul li').count()).toBe(3);
+    const text = await page.locator('main').innerText();
+    for (const phrase of ['goes out as a GitHub issue', 'come back as pull requests', 'Hand off work', 'Answer bounties', 'Nothing a solver wrote is run', 'a private repository is refused', 'The board carries no money', 'Newest bounties', 'inside the new omakase-box folder', 'You install nothing from this page', 'nothing here makes them pay', 'POST /mcp', 'GET /bounties.json']) expect(text).toContain(phrase);
+    expect(await page.locator('main ol > li').count()).toBe(9);
+    const drawings = page.locator('main svg[role=img]');
+    expect(await drawings.count()).toBe(10);
+    for (const label of await drawings.evaluateAll(all => all.map(svg => svg.getAttribute('aria-label')))) expect(label?.length).toBeGreaterThan(20);
+    expect(await page.locator('main svg text').count()).toBe(0);
+    expect(await page.locator('[data-primary]').getAttribute('href')).toBe('#hand-off');
+    expect(await page.locator('main a[href="/board/"]').count()).toBeGreaterThan(0);
+    expect(await page.locator('main a[href="#answer"]').count()).toBe(1);
+    expect(await page.locator('#answer h2').innerText()).toBe('Answer bounties');
+    await close();
+  });
+
+  it('the front page\'s path draws once, and does not move at all when motion is reduced', async () => {
+    const context = await browser.newContext({ reducedMotion: 'reduce' });
+    const still = await context.newPage();
+    await still.goto(`${board.url}/`);
+    expect(await still.evaluate(() => document.getAnimations().length)).toBe(0);
+    await context.close();
+    const moving = await fresh();
+    await moving.page.goto(`${board.url}/`);
+    const iterations = await moving.page.evaluate(() => document.getAnimations().map(a => a.effect?.getTiming().iterations));
+    expect(iterations).toEqual([1, 1]);
+    await moving.close();
+  });
+
+  it('a poster\'s HTML in the newest list renders as text, never executed', async () => {
+    const { page, close } = await fresh();
+    await page.route('**/api/board', async route => {
+      const response = await route.fetch();
+      const body = await response.json() as { bounties: { title: string }[] };
+      body.bounties[0]!.title = '<img src=x onerror=window.__pwned=1>';
+      await route.fulfill({ response, json: body });
+    });
+    await visit(page, '/');
+    await expect.poll(() => page.locator('main ul').innerText()).toContain('<img src=x onerror=');
+    expect(await page.locator('main ul img').count()).toBe(0);
+    expect(await page.evaluate(() => (window as unknown as { __pwned?: number }).__pwned)).toBeUndefined();
+    await close();
+  });
+
+  it('every command on the front page runs with the arguments it prints, in order, through the whole journey', async () => {
+    const { page, close } = await fresh();
+    await visit(page, '/');
+    const lines = await page.locator('main code[data-command]').allInnerTexts();
+    await close();
+    // The page's own list: a command added, dropped or reworded fails here.
+    expect(lines).toEqual([
+      'box bounty allow <owner>/<repository> --reward <reward> --reward-limit <limit>',
+      'box bounty create --task TASK.md --why "beyond what this agent can do"',
+      'box bounty post <id> --preview',
+      'box bounty post <id>',
+      'box bounty status <id>',
+      'box bounty look <id> <n>',
+      'box bounty apply <id> <n>',
+      'box bounty config set paid <id>'
+    ]);
+    const world = journeyWorld();
+    try {
+      const fill = (line: string, values: Record<string, string>): string[] => {
+        const words = wordsOf(line);
+        expect(words.slice(0, 2)).toEqual(['box', 'bounty']);
+        return words.slice(1).map(word => Object.entries(values).reduce((out, [key, value]) => out.replaceAll(key, value), word));
+      };
+      const values: Record<string, string> = { '<owner>': 'owner', '<repository>': 'project', '<reward>': '10', '<limit>': '50' };
+      const run = (line: string, expected: string) => {
+        const { status, output } = world.box(fill(line, values));
+        expect(status, `${line}\n${output}`).toBe(0);
+        expect(output, line).not.toMatch(/^usage:/m);
+        expect(output, line).toContain(expected);
+        return output;
+      };
+      const [allow, create, preview, post, status, look, apply, paid] = lines as [string, string, string, string, string, string, string, string];
+      run(allow, 'owner/project');
+      values['<id>'] = /bt-[a-f\d]{12}/.exec(run(create, 'bt-'))![0];
+      // A second open bounty: from here a command with no id has to say which one.
+      expect(world.box(['bounty', 'create', '--task', 'OTHER.md', '--why', 'another handoff']).status).toBe(0);
+      run(preview, 'preview only');
+      run(post, 'posted');
+      values['<n>'] = String(world.answer(values['<id>']!));
+      run(status, values['<id>']!);
+      run(look, 'written by the solver');
+      for (const line of [look, apply]) {
+        const refused = world.box(fill(line.replace('<id> ', ''), values));
+        expect(refused.output, line).toContain('name a bounty');
+      }
+      expect(world.fixed()).toBe(false);
+      run(apply, 'applied');
+      expect(world.fixed()).toBe(true);
+      run(paid, values['<id>']!);
+      // Each usage line's arguments are on the page: `look <n>` alone would fail here.
+      for (const [line, command, names] of [[post, 'post', ['<id>']], [status, 'status', ['<id>']], [look, 'look', ['<id>', '<n>']], [apply, 'apply', ['<id>', '<n>']]] as const) {
+        const usage = /^usage: (.*)$/m.exec(world.box(['bounty', command, '--help']).output)![1]!;
+        for (const name of names) {
+          expect(usage).toContain(name);
+          expect(line, usage).toContain(name);
+        }
+      }
+    } finally {
+      world.close();
+    }
+  }, 180000);
+
+  it('the install lines on the front page are the ones run from a clean clone, and the last runs on the built tool', async () => {
+    const { page, close } = await fresh();
+    await visit(page, '/');
+    const lines = await page.locator('main code[data-install]').allInnerTexts();
+    expect(lines).toHaveLength(5);
+    expect(lines[0]).toBe('git clone https://github.com/shouteck/omakase-box');
+    expect(await page.locator('main').innerText()).toContain('node <the clone>/packages/box-cli/dist/cli.js');
+    await close();
+    const help = spawnSync(process.execPath, [CLI, ...lines[4]!.split(' ').slice(2)], { encoding: 'utf8' });
+    expect(help.status, help.stderr).toBe(0);
+    expect(help.stdout).toContain('the journey');
+    expect(lines[4]!.startsWith('node packages/box-cli/dist/cli.js ')).toBe(true);
+    for (const script of ['scripts/pnpm.mjs', 'scripts/tooling/package.json']) expect(existsSync(join(PACKAGE, '../..', script)), script).toBe(true);
+  });
+
+  it('your page: an owner sees what they owe and the solver what is owed to them, and each links to the bounty', async () => {
+    const signedIn = async (id: number, login: string) => {
+      board.standin.signInAs = { id, login };
+      const person = await fresh();
+      await visit(person.page, '/me/');
+      await person.page.click('[data-primary]');
+      await person.page.waitForSelector('select[name=kind]');
+      return person;
+    };
+    const owner = await signedIn(7100, 'example-mara');
+    const owes = await owner.page.locator('main').innerText();
+    expect(owes).toContain('You owe');
+    expect(owes).toMatch(/Duplicate rows after a retry\s+\$45 to example-quill, since /);
+    expect(await owner.page.locator(`main a[href="/b/${STATE_IDS.owed}/"]`).count()).toBe(1);
+    expect(await owner.page.locator('[data-primary]').count()).toBe(1);
+    const solver = await signedIn(7001, 'example-quill');
+    expect(await solver.page.locator('main').innerText()).toMatch(/Owed to you\s+Duplicate rows after a retry\s+\$45, since /);
+    for (const person of [owner, solver]) await person.close();
+  });
+
   it('the sign-in page says what it asks for, and an error code in the address shows fixed words only', async () => {
     const { page, close } = await fresh();
     await page.goto(`${board.url}/sign-in/?error=<script>window.__pwned=1</script>`);
@@ -265,7 +409,7 @@ describe('the pages', () => {
     const text = await page.locator('main').innerText();
     expect(text).toContain('Not on the board');
     expect(text).toContain('private repository (those are never listed)');
-    await visit(page, '/?query=PRIVATE');
+    await visit(page, '/board/?query=PRIVATE');
     await expect.poll(() => page.locator('main').innerText()).toContain('No open bounty matches');
     await visit(page, '/');
     await page.waitForTimeout(200);
@@ -287,7 +431,7 @@ describe('the pages', () => {
 
   it('every page\'s words stay clear of a money claim', async () => {
     const { page, close } = await fresh();
-    for (const path of ['/', '/how/', '/agents/', '/me/', '/sign-in/', '/privacy/', '/solver/example-quill/', '/owner/example-mara/', `/b/${STATE_IDS.merged}/`]) {
+    for (const path of ['/', '/board/', '/how/', '/agents/', '/me/', '/sign-in/', '/privacy/', '/solver/example-quill/', '/owner/example-mara/', `/b/${STATE_IDS.merged}/`]) {
       await visit(page, path);
       expect(moneyClaims(await page.locator('body').innerText()), path).toEqual([]);
     }
@@ -311,7 +455,7 @@ describe('the pages', () => {
 
   it('keyboard: skip link first, then the site name; a visible focus ring; a select reachable', async () => {
     const { page, close } = await fresh();
-    await visit(page, '/');
+    await visit(page, '/board/');
     await page.keyboard.press('Tab');
     expect(await page.evaluate(() => document.activeElement?.textContent)).toBe('Skip to content');
     await page.keyboard.press('Tab');
@@ -327,9 +471,9 @@ describe('the pages', () => {
   it('K43\'s visual rules, measured on the real pages, both themes and both widths', async () => {
     for (const dark of [false, true]) for (const width of [1280, 390]) {
       const { page, close } = await fresh({ width, dark });
-      for (const [name, path] of [['board', '/'], ['bounty', `/b/${STATE_IDS.waiting}/`]] as const) {
+      for (const [name, path] of [['front', '/'], ['board', '/board/'], ['bounty', `/b/${STATE_IDS.waiting}/`]] as const) {
         await visit(page, path);
-        await expect.poll(() => page.locator('main').innerText()).toMatch(/open bounties\.|Payment for this bounty/);
+        await expect.poll(() => page.locator('main').innerText()).toMatch(/Titles are the posters|open bounties.|Payment for this bounty/);
         const measured = await page.evaluate(() => {
           const sizes = new Set<string>(); const weights = new Set<string>(); const families = new Set<string>(); let shadows = 0; let gradients = 0;
           for (const element of document.querySelectorAll('body *')) {
@@ -373,7 +517,7 @@ describe('the pages', () => {
     clock += 6 * MINUTE;
     await visit(page, `/b/${entry.id}/`);
     expect(await page.locator('main').innerText()).toContain('Not on the board');
-    await visit(page, `/?repository=${repository}`);
+    await visit(page, `/board/?repository=${repository}`);
     await expect.poll(() => page.locator('main').innerText()).toContain('No open bounty matches');
     await close();
   });
@@ -387,14 +531,14 @@ describe('an empty board and a board that cannot read GitHub', () => {
     try {
       await board.refresh();
       const page = await browser.newPage();
-      await page.goto(`${board.url}/`);
+      await page.goto(`${board.url}/board/`);
       await expect.poll(() => page.locator('main').innerText()).toContain('A bounty appears here a few minutes after someone posts one on a public GitHub repository.');
       expect(await page.locator('main a[href="/how/"]').count()).toBe(1);
       board.standin.rateLimitAfter = 0;
       board.standin.resetAt = Math.floor((clock + 30 * MINUTE) / 1000);
       clock += 15 * MINUTE;
       await board.refresh();
-      await page.goto(`${board.url}/`);
+      await page.goto(`${board.url}/board/`);
       await expect.poll(() => page.locator('main').innerText()).toContain(`The board could not read GitHub after 12:00 UTC: GitHub's rate limit for this hour is used up. What you see is from 12:00 UTC. Nothing to do: the board tries again every 15 minutes.`);
     } finally {
       await browser.close();

@@ -78,7 +78,7 @@ describe('sign-in', () => {
     expect(asked.searchParams.get('state')).toMatch(/^[a-f\d]{64}$/);
 
     const me = await (await send(jar, '/api/me')).json() as any;
-    expect(me).toEqual({ signed_in: true, login: PAYEE.login, methods: [] });
+    expect(me).toEqual({ signed_in: true, login: PAYEE.login, methods: [], you_owe: [], owed_to_you: [expect.objectContaining({ id: STATE_IDS.owed, amount: 45, to: PAYEE.login })] });
 
     const token = r.standin.tokensIssued[0]!;
     expect(token.length).toBeGreaterThan(10);
@@ -301,6 +301,37 @@ describe('visibility, on the real routes', () => {
     expect(public_).toContain('find');
     expect(public_).not.toContain(SECRET_EMAIL);
     for (const who of [THIRD, OWNER, PAYEE]) expect(await everyPublicAnswer(await signIn(who))).not.toContain(SECRET_EMAIL);
+  });
+
+  it('your page\'s debts: the owner and the payee each see theirs, another account and signed out neither, and no method rides along', async () => {
+    const payeeJar = await signIn(PAYEE);
+    await saveQuill(payeeJar);
+    const owner = await (await send(await signIn(OWNER), '/api/me')).json() as any;
+    expect(owner.you_owe.map((debt: any) => [debt.id, debt.to, debt.amount])).toContainEqual([STATE_IDS.owed, PAYEE.login, 45]);
+    expect(owner.owed_to_you).toEqual([]);
+    expect(JSON.stringify(owner)).not.toContain(SECRET_EMAIL);
+    expect(JSON.stringify(owner)).not.toContain(PUBLIC_LINK);
+    const payee = await (await send(payeeJar, '/api/me')).json() as any;
+    expect(payee.owed_to_you.map((debt: any) => [debt.id, debt.to, debt.amount])).toContainEqual([STATE_IDS.owed, PAYEE.login, 45]);
+    expect(payee.you_owe).toEqual([]);
+    const third = await (await send(await signIn(THIRD), '/api/me')).json() as any;
+    expect(third.you_owe).toEqual([]);
+    expect(third.owed_to_you).toEqual([]);
+    expect(await (await send(null, '/api/me')).json()).toEqual({ signed_in: false });
+  });
+
+  it('your page\'s debts: a recorded payment leaves both lists, and a repository gone private leaves them', async () => {
+    const ownerJar = await signIn(OWNER);
+    const owed = async () => ((await (await send(ownerJar, '/api/me')).json() as any).you_owe as any[]).map(debt => debt.id);
+    expect(await owed()).toContain(STATE_IDS.owed);
+    expect((await write(ownerJar, `/api/b/${STATE_IDS.owed}/paid`, 'POST', {})).status).toBe(200);
+    expect(await owed()).not.toContain(STATE_IDS.owed);
+    expect((await write(ownerJar, `/api/b/${STATE_IDS.owed}/paid`, 'POST', { withdraw: true })).status).toBe(200);
+    expect(await owed()).toContain(STATE_IDS.owed);
+    const repository = r.standin.issues.find(issue => issue.id === STATE_IDS.owed)!.repository;
+    r.standin.repositories.get(repository)!.visibility = 'private';
+    r.clock.at += 6 * MINUTE;
+    expect(await owed()).not.toContain(STATE_IDS.owed);
   });
 
   it('owed: shown to that bounty\'s poster on that bounty, to nobody else, and never on another of their bounties', async () => {

@@ -8,7 +8,8 @@ const params = q => {
   for (const [key, value] of Object.entries(q)) if (value && value !== EMPTY[key]) out.set(key, value);
   return out;
 };
-const pageHref = (q, page) => { const p = params(q); if (page > 1) p.set('page', String(page)); const s = p.toString(); return s ? `/?${s}` : '/'; };
+const searchOf = (q, page) => { const p = params(q); if (page > 1) p.set('page', String(page)); const s = p.toString(); return s ? `?${s}` : ''; };
+const pageHref = (q, page) => `/board/${searchOf(q, page)}`;
 
 function Select({ label, name, value, onChange, options }) {
   return (
@@ -22,7 +23,7 @@ function Select({ label, name, value, onChange, options }) {
 }
 
 /** A board card, K43's three lines. The title is the poster's words, as text. */
-function Card({ b }) {
+export function Card({ b }) {
   return (
     <li className="border-t border-line py-6">
       <div className="flex items-baseline justify-between gap-6">
@@ -75,11 +76,10 @@ export default function Board() {
   useEffect(() => {
     if (!ready) return undefined;
     const ask = ++asked.current;
-    const href = pageHref(q, page);
     const timer = setTimeout(async () => {
-      window.history.replaceState(null, '', href);
+      window.history.replaceState(null, '', pageHref(q, page));
       try {
-        const response = await fetch(`/api/board${href.slice(1)}`);
+        const response = await fetch(`/api/board${searchOf(q, page)}`);
         const body = await response.json();
         if (ask !== asked.current) return;
         if (!response.ok) { setFailure(body.error); return; }

@@ -1,6 +1,6 @@
 import './globals.css';
 
-export const metadata = { title: 'Open bounty board', description: 'Open bounties on public GitHub repositories. The board carries no money.' };
+export const metadata = { title: 'Open bounty board', description: 'Your agent\'s task goes out as a GitHub issue; solutions come back as pull requests. Open bounties on public repositories. The board carries no money.' };
 export const viewport = { width: 'device-width', initialScale: 1 };
 
 export default function RootLayout({ children }) {
@@ -11,6 +11,7 @@ export default function RootLayout({ children }) {
         <div className="mx-auto max-w-4xl px-6">
           <nav aria-label="Site" className="flex flex-wrap items-baseline gap-x-6 gap-y-2 py-6">
             <a href="/" className="font-semibold mr-auto" style={{ textDecoration: 'none', color: 'var(--color-ink)' }}>Open bounty board</a>
+            <a href="/board/">Board</a>
             <a href="/how/">How it works</a>
             <a href="/agents/">For agents</a>
             <a href="/me/">Your page</a>

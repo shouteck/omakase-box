@@ -209,7 +209,7 @@ Muji's own explanation of its colour is the board's ground: "if you omit the ble
 2. **Colour:** ground `#f5f2ea` (unbleached paper), ink `#1d1b17`, a softer ink `#5c574d` for sources and meta (a strength of the ink, not a second hue), hairlines `#d9d3c6`, **one accent** `#234a7d` (ink blue) for links, focus and the one button. Dark: `#1a1916`, `#ebe6db`, `#a59e91`, `#3a3731`, accent `#9dbbe6`.
 3. **Contrast (WCAG 2.2 AA), computed:** light ink 15.4:1, soft 6.4:1, accent 8.0:1, button text 8.0:1; dark 14.1, 6.6, 8.9, 8.9. Form-control borders use the soft ink (6.4:1, above 1.4.11's 3:1); hairlines are decoration only (1.3:1).
 4. **Whitespace:** one column, at most 56rem wide, 64–96px between sections, cards separated by a hairline, never boxed.
-5. **No shadows, gradients, badges, pills, avatars or decorative icons; no motion** (transitions disabled). Measured: 0 shadows, 0 gradients.
+5. **No shadows, gradients, badges, pills, avatars or decorative icons; no motion** (transitions disabled), but for one exception the owner approved in PF7: the front page's dotted path draws itself once on load, off under `prefers-reduced-motion`. Measured: 0 shadows, 0 gradients.
 6. **One primary action per page** (a filled accent button); everything else is a link. Measured: no page has more than one.
 7. **Keyboard:** "Skip to content" is the first tab stop on every page, then the site name and navigation; native links, buttons and selects; a visible 2px accent focus ring. Responsive to 390px (phone screenshots).
 8. **Words:** facts, whose word each is, and the next step. Every sample page carries "Sample data. Every name here is invented and its links lead nowhere; nothing is a real record."

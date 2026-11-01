@@ -68,16 +68,32 @@ Before polishing, render the first screen, one owner step and the solver path, o
 - Prototype playbook for the look, then feature; principles: prove-it-works.
 - Load the host's artifact-design guidance if publishing the stop page as an artifact. It is private until the owner shares it.
 
+## Plan
+
+1. Throwaway prototype of two directions (A one path, B a drawing per step); publish privately; stop for the owner. Nothing below starts before the owner chooses.
+2. Build: `/board/` takes today's board and `Board.jsx`'s links; `/` gets the brief's sections with `components/Parcel.jsx` and a three-card newest list; nav gains Board, `/how/`'s primary goes to `/board/`; `GET /api/me` gains `you_owe` and `owed_to_you` (states `owed`, `owner-decides`; excluded bounties left out; no methods), shown as links on `/me/`.
+3. Tests in `tests/platform/`: page checks on `/` and `/board/`, no private repository on `/`, hostile title as text, every command on the page run with `--help` against the built CLI with a bogus one failing, `/me/` per viewer. Existing board tests move path only; the Result lists them.
+4. Verify, real browser, keyboard and contrast, two fresh sessions, then close.
+
+Install finding at the stop: `box-bounty` is not on npm and has no `bin`; a clean clone, two installs, a build and `node packages/box-cli/dist/cli.js bounty help` worked.
+
 ---
 
 ## Result
 
-- CTO: <host / model>
-- Commit: `<SHA>`
-- Verify: `<summary line>`
-- Checks: the three questions answered · Level: ui-verified | test-verified | typecheck-only
-- Lenses: <what was tried and what was found>
-- Method: <playbook; each principle that changed a decision and what it changed>
+- CTO: Claude Code desktop / Opus 5.5
+- Commit: `62ef5ca`
+- Verify: `verify 62ef5ca PASS check=0 build=0 test:platform=0 test:kitchen=0(selected 18 of 18 kitchen files) db=none 156s`
+- Owner's look (1 November 2026, at the stop): direction B; keep the out-and-back path at the top; the path may draw once; install is the five real lines plus what stands in for `box`; check every command's arguments, and `look` takes the id. The final drawings were redrawn after the stop to read as folded paper rather than a gift box; the owner has not seen that pass.
+- Checks: `git diff master...62ef5ca` is the brief's scope plus the rule 5 amendment for the approved motion. Verify passes on this commit. Would the checks catch a wrong implementation: removing the render-time read and the self-payee rule from the debts failed the debts test, restored. The journey test failed twice on the page's real text before any fix: `config set paid` on a $0 bounty (`paid-nothing-owed`) and `config set reward` before a limit (`reward-needs-limit`). Omitting the id from `look` or `apply` with two open bounties is refused, and the test asserts it. Level: ui-verified.
+- Changed tests: board tests in `pages.test.ts` moved from `/` to `/board/` with no expected fact changed. The visual-rule regex also accepts the front page's words. `account.test.ts`'s sign-in `toEqual` for `/api/me` gained `you_owe` and `owed_to_you`, as the brief adds them. New: `tests/platform/commands.ts`, the journey world.
+- Lenses: **Security:** a hostile title injected into the newest list renders as text, with no image and no script run. The private-byte and every-file checks cover the new pages. `/api/me` rows carry no method; another account and signed out see no debts; a repository gone private leaves the lists. **User experience:** real browser at 1280 and 390, light and dark, no overflow, no console errors. Keyboard order is skip link, site name, nav, primary, links. Contrast is the computed token check; the drawings add no new colour. Reduced motion has zero animations; otherwise two, each once.
+- Fresh-agent check: two fresh desktop sessions in scratch folders, given only the page. Both were right on what it does, what becomes public and their first step. Fixed from their readings: a link for solvers beside the primary, where the install lines run, examples of never-ship files, "snapshot" for "record", the agent may post without asking unless `--ask`, solvers install nothing, several may answer and only a merged one is owed, the reward is the owner's word, where to list payment methods. They read the page before these fixes; it was not re-read by fresh sessions afterwards.
+- Method: prototype, then feature playbook. No principle file was read, so none is cited.
 - Findings and limits:
-- Merged: `<merge SHA>` · Verify cost: `<line from node scripts/kitchen-stats.mjs --wave=PF7>` · Resources removed: yes | <what remains and why>
-- Reflect: <what went wrong> -> <wave | station | kitchen>: <what it became, or "nothing">
+  - **Install:** `box-bounty` is not on npm and has no `bin`. The five lines ran once from a clean clone. Only the last is run by a test; the others are compared to fixed text in the test's first line and existence of their scripts. PF6 replaces them.
+  - **Commands:** run in a stand-in world, not real GitHub. `--ask` ran once by hand with the reward flags, exit 0, and is not in the test. Selected verify can reuse the platform step when only `packages/box-bounty` changes; the off-machine `--full` run covers that.
+  - **Debts:** `you_owe` and `owed_to_you` list everything in `owed` and `owner-decides`, including bounties left out of the owner's counts, so a collaborator's debt still shows, matching the bounty page (the plan had said to leave them out). Each row does a render-time read, at most 50 per list, which adds to PF8's CPU question.
+  - **Old links:** `/?query=` addresses no longer filter anything; nothing is deployed, so none exist.
+- Merged: `<merge SHA>` · Verify cost: `<line>` · Resources removed: the install clone and `kitchen-PF7-ask`, yes; `%TEMP%\kitchen-PF7-owner` and `-solver` are held by the two participant sessions, left for the owner in STATUS.
+- Reflect: recognising a command would have passed two wrong lines; running the printed arguments through the journey caught them, as the owner asked -> station: card line added. A cascade-layer `!important` beat an unlayered one, found by the motion test -> wave: nothing more.

@@ -22,7 +22,7 @@ export default function Page() {
           <li>It is free for everyone, and open source.</li>
         </ul>
       </Section>
-      <div className="mt-12"><Primary href="/">See open bounties</Primary></div>
+      <div className="mt-12"><Primary href="/board/">See open bounties</Primary></div>
     </>
   );
 }
