@@ -1,10 +1,11 @@
 # Status
 
-Updated by the CTO on 1 November 2026, when K46 closed.
+Updated by the CTO on 1 November 2026, when PF11 was reopened.
 
 ## Now
 
-- **K46 is on master: pay on merge works in Stripe's test mode at a platform cost of $0.** See the [report](docs/box-v4/PAY-ON-MERGE.md). Two things are unproven: a charge on a fully activated account in the $0 setup, which needs a person to accept Stripe's terms; and whether Stripe accepts an unregistered individual as a live platform. If it wants a registration, that is S$115 and a named blocker.
+- **PF11 is reopened, not running (owner, D-2026-11-01-pf11-reopened).** The owner finished Stripe's identity check: the live account shows Payments and Payouts active with no tasks due. It starts on `START.md: PF11`, from the unfinished, unverified work on the local branch `wave/PF11` (`0aad943`), never deployed or merged. Payment stays manual until it is finished and tested in test mode. The live board has not changed.
+- **K46 is on master: pay on merge works in Stripe's test mode at a platform cost of $0.** See the [report](docs/box-v4/PAY-ON-MERGE.md). PF11 builds it.
 - **PF10 is live: the redesigned site.** Its two fresh-visitor checks did not run; PF9's seats are the first fresh eyes.
 - **PF8 is live: the board** at https://open-bounty-board.box-platform.workers.dev, at $0, reading real GitHub, with real sign-in. The CLI's default board is that address.
 - **CPU on Workers Free:** Cloudflare stopped no run, but a hint's look (median 17 ms) and the busiest refreshes (max 17) still pass 10 ms (BACKLOG). PF9 reads `exceededCpu` as it goes.
@@ -12,7 +13,7 @@ Updated by the CTO on 1 November 2026, when K46 closed.
 - **Read the off-machine run at the next kickoff:** it covers K46's merge.
 - **Branches (owner, 31 October 2026):** work closes onto master. The cloud session branch `claude/serene-noether-m9qvs3` is left as it is.
 - **For the owner:**
-  - revoke the Stripe test key and remove `STRIPE_TEST_KEY` once PF11 no longer needs it; PF11 may reuse the sandbox;
+  - keep the Stripe test key for PF11; revoke it and remove `STRIPE_TEST_KEY` when PF11 closes;
   - delete the private `shouteck/kitchen-PF8-private`; its issue is closed and `gh` has no delete scope here;
   - the stray idle `node.exe` from BT44 (PID 16324), if it is still running;
   - the BT42 participant sessions and their `%TEMP%` folders; six empty `%TEMP%\kitchen-K43-*` folders;
@@ -30,5 +31,5 @@ Updated by the CTO on 1 November 2026, when K46 closed.
 - **Direction (owner, 1 November 2026, D-2026-11-01-agent-only-direction):** agent-only end to end as an option, guard rails the default; judge for long-running agents; reach both sides through the toolboxes agents search.
 - **Payment (owner, 1 November 2026, D-2026-11-01-pay-on-merge):** the platform may start a charge but never holds money; $0 for the owner throughout; no reminders.
 - **Supply (owner, 1 November 2026, D-2026-11-01-solver-distributor):** the board grows into the solver's distributor and lists only our own bounties.
-- **Order:** **PF11** next (brief it from K46's outline; opens with the two unproven checks), then **PF12** (the solver's distributor), **PF9** (the launch gate), **PF6** (with the toolbox work), **K41** (the film, last, D-2026-11-01-film-and-launch-last), then the owner's launch.
+- **Order:** **PF11** next, then **PF12** (the solver's distributor), **PF9** (the launch gate), **PF6** (with the toolbox work), **K41** (the film, last, D-2026-11-01-film-and-launch-last), then the owner's launch.
 - **Verify on a cloud host:** k16 cannot run without the pinned browser (BACKLOG, "Cloud-host browser route"). **On the Windows host:** the bounty suite's 30 s timeouts fail under load (BACKLOG), so run verify with heavy apps closed.

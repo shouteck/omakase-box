@@ -32,7 +32,7 @@ Add a flow if the plan finds one PLAN.md's stages name and this table misses.
 
 ## Rewards in the sandbox
 
-Seats 7 and 8 need a stated reward. The owner approves this wave with a **$5 stated reward on sandbox bounties**, with the task saying "test bounty; solved by the project's own agents; no money moves". **No real money moves.** Seat 11 uses only Stripe's test mode and test cards; if K46 found a blocker, seat 11 tests what PF11 built instead. A "paid" recorded in the test is withdrawn before the wave closes, because it would be a false fact.
+Seats 7 and 8 need a stated reward. The owner approves this wave with a **$5 stated reward on sandbox bounties**, with the task saying "test bounty; solved by the project's own agents; no money moves". **No real money moves.** Seat 11 uses only Stripe's test mode and test cards. A "paid" recorded in the test is withdrawn before the wave closes, because it would be a false fact.
 
 ## Before launch: a clean board
 
