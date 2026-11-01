@@ -6,6 +6,7 @@ import { finishOrder, openPayPalPage, paypalOffer } from './paypal-pay.js';
 import { loginAddress, payerFrom, paypalOn, PayPalUnavailable } from './paypal.js';
 import { errorWords, redact, stripe, stripeOn, StripeUnavailable } from './stripe.js';
 import { checkMethod, isLink, MAX_METHODS, type Method, parseStored, publicOnly } from './methods.js';
+import { waysSetUp } from './pay-ways.js';
 import { type BountyPayment, emptyPayment, factsOf, landedOf, loadPayments, notCounted, notCountedOf, ownerRecord, paymentOf, solverRecord } from './payments.js';
 import { readBounty } from './query.js';
 import { LOGIN } from './refresh.js';
@@ -161,7 +162,14 @@ async function solverProfile(env: Env, login: string): Promise<Response> {
   const methods = await methodsOfLogin(env, login);
   const open = publicOnly(methods);
   // How many are held back, never what they are: the tool's owner message says where to see them.
-  return json(200, { login, record: solverRecord(login, inputs), methods: open.map(shown), methods_more: methods.length - open.length, merged: listed });
+  return json(200, { login, record: solverRecord(login, inputs), methods: open.map(shown), methods_more: methods.length - open.length, merged: listed, ways_set_up: waysSetUp({ stripe: stripeOn(env), paypal: paypalOn(env) }), takes: await takesOf(env, login) });
+}
+
+/** Whether someone who has answered a bounty has connected an account: two facts, no account detail. Null: the board knows no pull request of theirs, so it cannot say. */
+async function takesOf(env: Env, login: string): Promise<{ stripe: boolean; paypal: boolean } | null> {
+  const row = await env.DB.prepare(`SELECT (SELECT ready FROM stripe_accounts s WHERE s.github_id = p.author_id) AS stripe, (SELECT 1 FROM paypal_accounts a WHERE a.github_id = p.author_id) AS paypal
+    FROM pull_requests p WHERE p.author = ? COLLATE NOCASE AND p.author_id IS NOT NULL LIMIT 1`).bind(login).first<{ stripe: number | null; paypal: number | null }>();
+  return row === null ? null : { stripe: row.stripe === 1, paypal: row.paypal === 1 };
 }
 
 async function ownerProfile(env: Env, login: string, now: number): Promise<Response> {

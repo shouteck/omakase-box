@@ -49,7 +49,7 @@ export const WITHHELD = '(withheld — the scan flagged it; see the hit above)';
 // the amount is never hard-coded, so the text cannot outlive what is set.
 export const describeRewardLine = (amount: number): string => amount === 0
   ? 'Every bounty states a reward of $0 — no payment exists.'
-  : `Every bounty states a reward of $${amount} — a promise in the owner's name, paid by hand; posting an answer does not guarantee it.`;
+  : `Every bounty states a reward of $${amount} — a promise in the owner's name; posting an answer does not guarantee it. There are three ways to pay it: by hand, one click and on merge (box bounty help).`;
 
 // The name the published package answers to — provisional until the owner's
 // Part-B decision picks it for real (BT12). The artifact manifest carries

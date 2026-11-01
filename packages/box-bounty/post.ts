@@ -6,6 +6,7 @@ import { TOOL_VERSION } from './create.js';
 import { git } from './git.js';
 import { checkProjectClaims,shipRules } from './never-ship.js';
 import { allowedByFor,ownerGate,sameShown,waitForOwner } from './gate.js';
+import { boardAddress } from './board.js';
 import { sharePosted } from './chain.js';
 import { loadRecord,persistRecord,recordScanFinding,retiredRoute,settleScanFindings,transitionTo } from './record.js';
 import { assertPromiseRoom,rewardForPost,withPromiseLock } from './money.js';
@@ -105,8 +106,10 @@ function listingHistory(record: BountyRecord, repository: string, plan: GitHubPl
     '',
     `reward: $${reward}`,
     ...(reward > 0 ? [
-      'to ask for the reward, add one line to your pull request description — `pay-to:` followed by your Stripe payment link and nothing else, for example `pay-to: https://buy.stripe.com/test_0EXAMPLE00000000000000`.',
-      'payment is the poster\'s to make by hand — posting an answer does not guarantee it.'
+      boardAddress() === ''
+        ? 'to be paid: say how in your pull request description.'
+        : `to be paid: connect an account or list a way at ${boardAddress()}/me/, or say how in your pull request description.`,
+      'payment is the poster\'s to make — posting an answer does not guarantee it.'
     ] : []),
     'The merged solution earns the whole reward. Other solutions and parts used by hand earn nothing.',
     // The licence file's name and package.json's declared licence are read

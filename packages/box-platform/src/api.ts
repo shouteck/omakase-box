@@ -2,10 +2,11 @@
 // filtered here on the server. No unfiltered record ever leaves this file.
 import { accountResponse } from './account.js';
 import { applyEvent, payingIds } from './charge.js';
-import { applyPayPalEvent, authorTakesPayPal } from './paypal-pay.js';
+import { applyPayPalEvent, authorTakes } from './paypal-pay.js';
 import { PayPalUnavailable, webhookHolds } from './paypal.js';
+import { waysOfBounty } from './pay-ways.js';
 import { signatureHolds } from './stripe.js';
-import { feedResponse, detailResponse, rssResponse, schemaResponse } from './feed.js';
+import { feedResponse, detailResponse, rssResponse, schemaResponse, waysOn } from './feed.js';
 import type { Env } from './github.js';
 import { hintResponse } from './hint.js';
 import { mcpResponse } from './mcp.js';
@@ -60,6 +61,7 @@ async function bounty(env: Env, id: string, now: number): Promise<Response> {
   if (facts === null) return json(404, { error: NOT_ON_BOARD });
   const { row, pulls, history } = facts;
   const base = `https://github.com/${row.repository}`;
+  const paying = (await payingIds(env, [row.id])).has(row.id);
   return json(200, {
     ...await freshness(env),
     bounty: {
@@ -80,8 +82,9 @@ async function bounty(env: Env, id: string, now: number): Promise<Response> {
       links: { issue: `${base}/issues/${row.issue_number}`, branch: `${base}/tree/box-bounty/${row.id}` },
       solutions: pulls.slice(0, SOLUTIONS_MAX).map(pull => ({ number: pull.number, author: pull.author, state: pull.state, opened_at: pull.opened_at, merged_at: pull.merged_at, url: `${base}/pull/${pull.number}` })),
       history,
-      pays_on_merge: (await payingIds(env, [row.id])).has(row.id),
-      author_takes_paypal: await authorTakesPayPal(env, row.id),
+      pays_on_merge: paying,
+      how_it_pays: { ways: waysOfBounty(row.amount, waysOn(env), paying) },
+      ...await authorTakes(env, row.id),
       agents_welcome: true
     }
   });

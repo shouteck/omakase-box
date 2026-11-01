@@ -5,6 +5,7 @@
 // record.ts unchanged (BT25).
 
 import { existsSync,mkdirSync,readFileSync,writeFileSync } from 'node:fs';
+import { wayLines } from '../box-platform/src/pay-ways.js';
 import { BountyRefused } from './errors.js';
 import { join } from 'node:path';
 import { foreignJson,quoteForeign,showPath } from './notice.js';
@@ -662,6 +663,9 @@ export function renderHelp(): string {
     '',
     'nothing a solver wrote is ever run — checks were removed on 11 October 2026: a solution arrives as a',
     'numbered attempt, the report states facts about the change, and apply/close is always your call.',
+    '',
+    'three ways to pay a reward; the tool moves no money. A way with no key says not set up on the board:',
+    ...wayLines().map(line => `  ${line}`),
     '',
     'what ends a bounty: apply, or close — or a solution merged onto the bounty\'s branch with your own',
     'Git, which the next bounty command recognises. A merge is one ordinary commit: git revert -m 1',

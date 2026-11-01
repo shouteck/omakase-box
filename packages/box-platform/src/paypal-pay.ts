@@ -5,6 +5,7 @@ import { claimPage, decidePay, payeeFacts, retireStripePage } from './charge.js'
 import type { ChargeState } from './charge-words.js';
 import type { Env } from './github.js';
 import { issueOf, paypal, paypalOn } from './paypal.js';
+import { stripeOn } from './stripe.js';
 
 type Row = { state: string; provider: string | null; account_id: string | null; amount: number | null; payment_intent: string | null; at: number };
 type Order = Record<string, unknown>;
@@ -104,11 +105,12 @@ export async function paypalOffer(env: Env, id: string, githubId: number): Promi
 }
 
 /** For a machine: whether this bounty's one merged author can be paid through PayPal. Null: no one merged yet, or not one. A fact; no account detail. */
-export async function authorTakesPayPal(env: Env, id: string): Promise<boolean | null> {
-  const { landed } = await payeeFacts(env, id);
-  if (landed.length !== 1) return null;
-  if (!paypalOn(env) || landed[0]!.author_id === null) return false;
-  return await env.DB.prepare('SELECT 1 FROM paypal_accounts WHERE github_id = ?').bind(landed[0]!.author_id).first() !== null;
+export async function authorTakes(env: Env, id: string): Promise<{ author_takes_stripe: boolean | null; author_takes_paypal: boolean | null }> {
+  const { landed, solver } = await payeeFacts(env, id);
+  if (landed.length !== 1) return { author_takes_stripe: null, author_takes_paypal: null };
+  const author_takes_stripe = stripeOn(env) && solver?.ready === true;
+  if (!paypalOn(env) || landed[0]!.author_id === null) return { author_takes_stripe, author_takes_paypal: false };
+  return { author_takes_stripe, author_takes_paypal: await env.DB.prepare('SELECT 1 FROM paypal_accounts WHERE github_id = ?').bind(landed[0]!.author_id).first() !== null };
 }
 
 const SWEEP_MS = 6 * 3600000; // An owner who approved and closed the page is finished by the next run; after this, by their own next look.

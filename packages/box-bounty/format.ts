@@ -91,13 +91,14 @@ export function formatFor(record: BountyRecord, publication: Pick<GitHubPublicat
   // about to bind a reward passes it in, so a preview states what a post
   // would bind. A record already published keeps rendering the version the
   // posted body carries — pre-BT11a issues stay version 1, BT11a issues stay
-  // version 2 — and a new post emits version 3 only when it states a reward,
-  // since `payment` is the version-3 member. A GitHub publication whose
-  // posted body holds no block at all keeps version 1 (BT11a fix round).
+  // version 2, issues with `payment` stay version 3. A new post emits version
+  // 2, which carries any amount: `pay-to:` is no longer the one way to ask
+  // (PF15). A GitHub publication whose posted body holds no block at all
+  // keeps version 1 (BT11a fix round).
   const amount = stating ?? 0;
   const legacy = record.reward === undefined && record.github !== undefined;
   const posted = record.github !== undefined ? readFormat(record.github.body) : { kind: 'absent' as const };
-  const schemaVersion = posted.kind === 'present' ? posted.value.schemaVersion : legacy ? 1 : amount > 0 ? 3 : 2;
+  const schemaVersion = posted.kind === 'present' ? posted.value.schemaVersion : legacy ? 1 : 2;
   const format: BountyFormat = { schemaVersion, kind: 'box-bounty', id: record.id, repository: publication.repository, workCommit: publication.commit, branch: publication.branch, withChanges: (publication.pushed?.length ?? 0) > 0, createdAt: record.createdAt, state, reward: { amount, currency: 'USD' }, terms: 'merged-solution-earns-whole' };
   return schemaVersion === 3 ? { ...format, payment: { method: 'stripe-link', where: 'pull-request-description', prefix: 'pay-to:' } } : format;
 }
