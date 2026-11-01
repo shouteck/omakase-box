@@ -8,7 +8,7 @@ import { fmtDate, Primary, Quiet, Section, Soft, Title } from './ui.jsx';
 const EXAMPLES = { paypal: 'https://paypal.me/you', stripe: 'https://buy.stripe.com/…', 'github-sponsors': 'https://github.com/sponsors/you', 'wise-email': 'you@example.com', wallet: 'Your address' };
 const DEFAULTS = { paypal: 'everyone', stripe: 'everyone', 'github-sponsors': 'everyone', 'wise-email': 'owner-only', wallet: 'owner-only' };
 const CHOICES = { everyone: 'Everyone, on my profile', 'owner-only': 'Only an owner who owes me' };
-const FIELD = 'block w-full max-w-prose border border-line bg-paper px-3 py-2 rounded-sm';
+const FIELD = 'block w-full max-w-prose border border-soft bg-surface px-3 py-2 rounded-[3px]';
 const stored = ({ kind, value, chain, visibility }) => ({ kind, value, chain, visibility });
 
 function Editor({ me, setMe }) {
@@ -74,7 +74,7 @@ function Editor({ me, setMe }) {
           ))}
         </fieldset>
         <Soft className="max-w-prose">&quot;Only an owner who owes me&quot; shows it to one person: the poster of a bounty, on that bounty&apos;s page, while your merged solution is unpaid, or while you say a recorded payment has not arrived. Never on your profile, a feed or the MCP server.</Soft>
-        <div><button type="submit" data-primary className="bg-accent px-5 py-2.5 font-semibold rounded-sm" style={{ color: 'var(--color-paper)' }}>Save</button></div>
+        <div><button type="submit" data-primary className="bg-accent px-5 py-2.5 font-semibold rounded-[3px]" style={{ color: 'var(--color-paper)' }}>Save</button></div>
         {message ? <p role="status" ref={status} tabIndex={-1} className="max-w-prose">{message}</p> : null}
       </form>
     </Section>

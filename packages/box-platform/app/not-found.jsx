@@ -4,7 +4,7 @@ export default function NotFound() {
   return (
     <>
       <Title>Nothing at this address</Title>
-      <p>Next: <a href="/">search the board</a>.</p>
+      <p>Next: <a href="/board/">search the board</a>.</p>
     </>
   );
 }

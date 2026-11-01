@@ -22,14 +22,19 @@ export default function Newest() {
       <SampleNote data={data} />
       <Stale data={data} />
       {data.open_total === 0
-        ? <p className="border-t border-line pt-6">No open bounties on the board yet. A bounty appears here a few minutes after someone posts one on a public GitHub repository.</p>
+        ? (
+          <div className="border border-line bg-surface rounded-[3px] px-5 py-6">
+            <p className="font-semibold">No open bounties on the board yet.</p>
+            <p className="mt-1 text-soft max-w-prose">A bounty appears here a few minutes after someone posts one on a public GitHub repository.</p>
+          </div>
+        )
         : (
           <>
-            <p className="text-sm text-soft">Titles are the posters&apos; own words.</p>
-            <ul className="mt-2 border-b border-line">{data.bounties.slice(0, SHOWN).map(b => <Card key={b.id} b={b} />)}</ul>
+            <p className="text-sm text-soft mb-2">Titles are the posters&apos; own words.</p>
+            <ul className="border-b border-line max-sm:[&>li:nth-child(n+2)]:hidden">{data.bounties.slice(0, SHOWN).map(b => <Card key={b.id} b={b} />)}</ul>
+            <p className="mt-6"><a href="/board/">See all</a></p>
           </>
         )}
-      <p className="mt-6"><a href="/board/">See all</a></p>
     </>
   );
 }

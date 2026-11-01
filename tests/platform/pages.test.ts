@@ -249,11 +249,11 @@ describe('the pages', () => {
     await visit(page, '/');
     await expect.poll(() => page.locator('main ul li').count()).toBe(3);
     const text = await page.locator('main').innerText();
-    for (const phrase of ['goes out as a GitHub issue', 'come back as pull requests', 'Hand off work', 'Answer bounties', 'Nothing a solver wrote is run', 'a private repository is refused', 'The board carries no money', 'Newest bounties', 'inside the new omakase-box folder', 'You install nothing from this page', 'nothing here makes them pay', 'POST /mcp', 'GET /bounties.json']) expect(text).toContain(phrase);
+    for (const phrase of ['Work your agent can\'t finish, finished.', 'goes out as a GitHub issue', 'come back as pull requests', 'Hand off work', 'Answer bounties', 'Nothing a solver wrote is run', 'a private repository is refused', 'The board carries no money', 'Newest bounties', 'inside the new omakase-box folder', 'You install nothing from this page', 'nothing here makes them pay', 'POST /mcp', 'GET /bounties.json']) expect(text).toContain(phrase);
     expect(await page.locator('main ol > li').count()).toBe(9);
-    const drawings = page.locator('main svg[role=img]');
-    expect(await drawings.count()).toBe(10);
-    for (const label of await drawings.evaluateAll(all => all.map(svg => svg.getAttribute('aria-label')))) expect(label?.length).toBeGreaterThan(20);
+    // The picture is the real product in real text, and says it is an example.
+    expect(await page.locator('main figure').innerText()).toContain('An example. Every name in it is invented');
+    expect(await page.locator('main svg[role=img]').count()).toBe(0);
     expect(await page.locator('main svg text').count()).toBe(0);
     expect(await page.locator('[data-primary]').getAttribute('href')).toBe('#hand-off');
     expect(await page.locator('main a[href="/board/"]').count()).toBeGreaterThan(0);
@@ -262,17 +262,33 @@ describe('the pages', () => {
     await close();
   });
 
-  it('the front page\'s path draws once, and does not move at all when motion is reduced', async () => {
-    const context = await browser.newContext({ reducedMotion: 'reduce' });
-    const still = await context.newPage();
-    await still.goto(`${board.url}/`);
-    expect(await still.evaluate(() => document.getAnimations().length)).toBe(0);
+  it('nothing on the front page moves', async () => {
+    const { page, close } = await fresh();
+    await page.goto(`${board.url}/`);
+    expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
+    await close();
+  });
+
+  it('a copy button copies exactly the words beside it, and says so', async () => {
+    const context = await browser.newContext({ permissions: ['clipboard-read', 'clipboard-write'] });
+    const page = await context.newPage();
+    await page.goto(`${board.url}/`);
+    const block = page.locator('main button[aria-label="Copy command"]').nth(1);
+    await block.click();
+    await expect.poll(() => block.innerText()).toBe('Copied');
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('box bounty create --task TASK.md --why "beyond what this agent can do"');
+    await page.locator('main button[aria-label="Copy install lines"]').click();
+    expect((await page.evaluate(() => navigator.clipboard.readText())).split('\n')).toEqual(await page.locator('main code[data-install]').allInnerTexts());
     await context.close();
-    const moving = await fresh();
-    await moving.page.goto(`${board.url}/`);
-    const iterations = await moving.page.evaluate(() => document.getAnimations().map(a => a.effect?.getTiming().iterations));
-    expect(iterations).toEqual([1, 1]);
-    await moving.close();
+  });
+
+  it('a bounty page: the breadcrumb goes to the board, and the branch can be copied', async () => {
+    const { page, close } = await fresh();
+    await visit(page, `/b/${STATE_IDS.open}/`);
+    await page.waitForSelector('nav[aria-label=Breadcrumb]');
+    expect(await page.locator('nav[aria-label=Breadcrumb] a').getAttribute('href')).toBe('/board/');
+    expect(await page.locator('main button[aria-label="Copy branch name"]').getAttribute('data-copy')).toBe(`box-bounty/${STATE_IDS.open}`);
+    await close();
   });
 
   it('a poster\'s HTML in the newest list renders as text, never executed', async () => {
@@ -294,6 +310,7 @@ describe('the pages', () => {
     const { page, close } = await fresh();
     await visit(page, '/');
     const lines = await page.locator('main code[data-command]').allInnerTexts();
+    const example = await page.locator('main [data-flow-output]').allInnerTexts();
     await close();
     // The page's own list: a command added, dropped or reworded fails here.
     expect(lines).toEqual([
@@ -327,7 +344,13 @@ describe('the pages', () => {
       // A second open bounty: from here a command with no id has to say which one.
       expect(world.box(['bounty', 'create', '--task', 'OTHER.md', '--why', 'another handoff']).status).toBe(0);
       run(preview, 'preview only');
-      run(post, 'posted');
+      // The picture's output is what the tool prints, its invented id and address aside.
+      const printed = run(post, 'posted');
+      expect(example).toHaveLength(2);
+      for (const line of example) {
+        const real = line.replaceAll('bt-4f2a91c07d3e', values['<id>']!).replace(/https:\/\/github\.com\/example-org\/ledger\/issues\/48$/, '');
+        expect(printed, line).toContain(real);
+      }
       values['<n>'] = String(world.answer(values['<id>']!));
       run(status, values['<id>']!);
       run(look, 'written by the solver');
@@ -484,9 +507,10 @@ describe('the pages', () => {
           }
           return { sizes: [...sizes], weights: [...weights], families: [...families], shadows, gradients, overflow: document.documentElement.scrollWidth > window.innerWidth, primaries: document.querySelectorAll('[data-primary]').length };
         });
-        for (const size of measured.sizes) expect(['13px', '16px', '20px', '32px']).toContain(size);
+        for (const size of measured.sizes) expect(['13px', '14px', '16px', '20px', '28px', '36px', '56px']).toContain(size);
         for (const weight of measured.weights) expect(['400', '600']).toContain(weight);
-        expect(measured.families).toEqual(['Inter']);
+        for (const family of measured.families) expect(['Inter', '"JetBrains Mono"']).toContain(family);
+        expect(measured.families).toContain('Inter');
         expect(measured).toMatchObject({ shadows: 0, gradients: 0, overflow: false });
         expect(measured.primaries).toBeLessThanOrEqual(1);
         await page.screenshot({ path: join(SHOTS, `${name}-${dark ? 'dark' : 'light'}-${width === 390 ? 'phone' : 'desktop'}.png`), fullPage: false });
@@ -502,6 +526,8 @@ describe('the pages', () => {
     for (const block of [light, dark]) {
       const paper = token(block, 'paper');
       for (const name of ['ink', 'soft', 'accent']) expect(ratio(token(block, name), paper), name).toBeGreaterThanOrEqual(4.5);
+      for (const name of ['ink', 'soft', 'accent']) expect(ratio(token(block, name), token(block, 'surface')), `${name} on surface`).toBeGreaterThanOrEqual(4.5);
+      for (const name of ['code-ink', 'code-soft']) expect(ratio(token(block, name), token(block, 'code')), `${name} on code`).toBeGreaterThanOrEqual(4.5);
     }
     expect(ratio('#ffffff', '#000000')).toBeCloseTo(21, 5);
   });
@@ -534,6 +560,10 @@ describe('an empty board and a board that cannot read GitHub', () => {
       await page.goto(`${board.url}/board/`);
       await expect.poll(() => page.locator('main').innerText()).toContain('A bounty appears here a few minutes after someone posts one on a public GitHub repository.');
       expect(await page.locator('main a[href="/how/"]').count()).toBe(1);
+      // No filter panel over nothing.
+      expect(await page.locator('main form[role=search]').count()).toBe(0);
+      await page.goto(`${board.url}/`);
+      await expect.poll(() => page.locator('main').innerText()).toContain('No open bounties on the board yet.');
       board.standin.rateLimitAfter = 0;
       board.standin.resetAt = Math.floor((clock + 30 * MINUTE) / 1000);
       clock += 15 * MINUTE;

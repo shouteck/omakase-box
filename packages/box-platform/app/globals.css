@@ -1,62 +1,72 @@
 @import "tailwindcss";
 @import "@fontsource/inter/400.css";
 @import "@fontsource/inter/600.css";
+@import "@fontsource/jetbrains-mono/400.css";
 
 /* The whole visual language (PLATFORM-UX.md, "Visual rules"):
-   one family (Inter, OFL), two weights (400, 600), four sizes,
-   unbleached-paper ground, ink text, one accent (ink blue).
-   No shadows, gradients, badges or decorative icons. No motion, but for the
-   front page's path drawing itself once (owner, PF7). */
+   Inter for words, JetBrains Mono for code, two weights (400, 600), seven sizes,
+   unbleached-paper ground, ink text, one accent (ink blue), hairline panels.
+   No shadows, gradients, badges, decorative icons or motion. */
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
   --text-sm: 0.8125rem;   /* 13px: meta, sources */
   --text-sm--line-height: 1.25rem;
+  --text-code: 0.875rem;  /* 14px: code */
+  --text-code--line-height: 1.5rem;
   --text-base: 1rem;      /* 16px: body */
   --text-base--line-height: 1.6rem;
-  --text-lg: 1.25rem;     /* 20px: card titles, section heads */
+  --text-lg: 1.25rem;     /* 20px: card titles, ledes */
   --text-lg--line-height: 1.75rem;
-  --text-2xl: 2rem;       /* 32px: page title */
-  --text-2xl--line-height: 2.5rem;
+  --text-xl: 1.75rem;     /* 28px: section heads, the reward */
+  --text-xl--line-height: 2.25rem;
+  --text-2xl: 2.25rem;    /* 36px: page title */
+  --text-2xl--line-height: 2.75rem;
+  --text-3xl: 3.5rem;     /* 56px: the front page's one line */
+  --text-3xl--line-height: 3.875rem;
   --color-paper: #f5f2ea;
+  --color-surface: #fbf9f4;
   --color-ink: #1d1b17;
   --color-soft: #5c574d;
   --color-line: #d9d3c6;
   --color-accent: #234a7d;
+  --color-code: #1d1b17;
+  --color-code-ink: #ebe6db;
+  --color-code-soft: #a59e91;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --color-paper: #1a1916;
+    --color-surface: #22201c;
     --color-ink: #ebe6db;
     --color-soft: #a59e91;
     --color-line: #3a3731;
     --color-accent: #9dbbe6;
+    --color-code: #100f0d;
+    --color-code-ink: #ebe6db;
+    --color-code-soft: #a59e91;
   }
 }
 
 @layer base {
-  html { background: var(--color-paper); color: var(--color-ink); color-scheme: light dark; }
+  html { background: var(--color-paper); color: var(--color-ink); color-scheme: light dark; scroll-behavior: auto; }
   body { font-family: var(--font-sans); font-size: var(--text-base); line-height: var(--text-base--line-height); -webkit-font-smoothing: antialiased; }
   a { color: var(--color-accent); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
   a:hover { text-decoration-thickness: 2px; }
   :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
-  * { transition: none !important; }
-  *:not(.art-reveal) { animation: none !important; }
-  select, input, button, textarea { font: inherit; color: inherit; }
-  code, pre, kbd { font-family: inherit; }
-}
-
-/* The parcel and the path (components/Parcel.jsx). */
-.art-ink { fill: none; stroke: var(--color-ink); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-.art-sheet { fill: var(--color-paper); stroke: var(--color-ink); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-.art-string { fill: none; stroke: var(--color-accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-.art-knot { fill: var(--color-accent); }
-.art-dots { fill: none; stroke: var(--color-ink); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 0.1 8; }
-.art-reveal { fill: none; stroke: #fff; stroke-width: 14; }
-
-@keyframes art-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
-@media (prefers-reduced-motion: no-preference) {
-  .art-reveal { stroke-dasharray: 1; }
-  .art-reveal-out { animation: art-draw 1.1s ease-in-out both; }
-  .art-reveal-back { animation: art-draw 1.1s ease-in-out 1.1s both; }
+  * { transition: none !important; animation: none !important; }
+  input, button, textarea, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  code, pre, kbd { font-family: var(--font-mono); font-size: var(--text-code); }
+  select {
+    appearance: none;
+    padding-right: 2rem;
+    background-repeat: no-repeat;
+    background-position: right 0.625rem center;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%235c574d' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5'/%3E%3C/svg%3E");
+  }
+  @media (prefers-color-scheme: dark) {
+    select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23a59e91' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5'/%3E%3C/svg%3E"); }
+  }
 }
