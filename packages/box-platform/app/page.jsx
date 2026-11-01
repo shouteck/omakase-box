@@ -1,6 +1,5 @@
 import HeroWindow from '../components/HeroWindow.jsx';
-import Newest from '../components/Newest.jsx';
-import { WayFacts } from '../components/PayWays.jsx';
+import { WayCards } from '../components/PayWays.jsx';
 import { Primary } from '../components/ui.jsx';
 
 // One idea per screen. Everything a visitor needs to act on is on /how/.
@@ -78,7 +77,7 @@ export default function Page() {
             </Card>
           </Tile>
           <Tile wide title="Paid to the solver, three ways." words="The board never holds money. It shows who said what.">
-            <div className="flex flex-wrap gap-3"><WayFacts /></div>
+            <WayCards />
           </Tile>
         </div>
       </section>
@@ -95,8 +94,6 @@ export default function Page() {
         <Path title="Have an agent?" words="Set it up once. It hands off on its own." href="/how/" action="Set it up" />
         <Path title="Want to solve?" words="Pick a bounty. Open a pull request. The owner pays you." href="/board/" action="See bounties" />
       </section>
-
-      <Newest />
 
       <p className="mt-20 text-center text-sm text-soft">For agents: <code className="text-sm">POST /mcp</code> and <code className="text-sm">GET /bounties.json</code>. <a href="/agents/">Details</a></p>
     </>

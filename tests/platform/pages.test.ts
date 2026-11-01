@@ -249,9 +249,14 @@ describe('the pages', () => {
   it('the front page says it in few words, shows the real product, and leads to the detail', async () => {
     const { page, close } = await fresh();
     await visit(page, '/');
-    await expect.poll(() => page.locator('main ul li').count()).toBe(3);
+    await expect.poll(() => page.locator('main').innerText()).toContain('Not set up on this board yet.');
     const text = await page.locator('main').innerText();
-    for (const phrase of ['Work your agent can\'t finish, finished.', 'goes out as a GitHub issue', 'come back as pull requests', 'never ships', 'Nothing a solver wrote is run', 'Post a private repository.', 'The board never holds money', 'Newest bounties', 'POST /mcp', 'GET /bounties.json']) expect(text).toContain(phrase);
+    for (const phrase of ['Work your agent can\'t finish, finished.', 'goes out as a GitHub issue', 'come back as pull requests', 'never ships', 'Nothing a solver wrote is run', 'Post a private repository.', 'The board never holds money', 'By hand', 'One click', 'On merge', 'You pay, then record it.', 'POST /mcp', 'GET /bounties.json']) expect(text).toContain(phrase);
+    expect(text).not.toContain('Newest bounties');
+    // No key on this board: the two ways that need one say so, and by hand does not.
+    expect(text.match(/Not set up on this board yet./g)).toHaveLength(2);
+    expect(text).toContain('Record $45 paid');
+    expect(text).not.toContain('Pay $45');
     // The picture is the real product in real text, and says it is an example.
     expect(await page.locator('main figure').innerText()).toContain('An example. Every name in it is invented');
     expect(await page.locator('[data-primary]').getAttribute('href')).toBe('/how/');
@@ -315,7 +320,7 @@ describe('the pages', () => {
     await close();
   });
 
-  it('a poster\'s HTML in the newest list renders as text, never executed', async () => {
+  it('a poster\'s HTML in the list renders as text, never executed', async () => {
     const { page, close } = await fresh();
     await page.route('**/api/board', async route => {
       const response = await route.fetch();
@@ -323,7 +328,7 @@ describe('the pages', () => {
       body.bounties[0]!.title = '<img src=x onerror=window.__pwned=1>';
       await route.fulfill({ response, json: body });
     });
-    await visit(page, '/');
+    await visit(page, '/board/');
     await expect.poll(() => page.locator('main ul').innerText()).toContain('<img src=x onerror=');
     expect(await page.locator('main ul img').count()).toBe(0);
     expect(await page.evaluate(() => (window as unknown as { __pwned?: number }).__pwned)).toBeUndefined();
@@ -501,7 +506,7 @@ describe('the pages', () => {
 
   it('clicks through two pages with nothing answering 404', async () => {
     const { page, notFound, close } = await fresh();
-    await visit(page, '/');
+    await visit(page, '/board/');
     await page.click('main ul li a');
     await page.waitForURL(/\/b\/bt-/);
     await expect.poll(() => page.locator('main').innerText()).toContain('Payment for this bounty');
@@ -533,7 +538,7 @@ describe('the pages', () => {
       const { page, close } = await fresh({ width, dark });
       for (const [name, path] of [['front', '/'], ['board', '/board/'], ['bounty', `/b/${STATE_IDS.waiting}/`]] as const) {
         await visit(page, path);
-        await expect.poll(() => page.locator('main').innerText()).toMatch(/Titles are the posters|open bounties.|Payment for this bounty/);
+        await expect.poll(() => page.locator('main').innerText()).toMatch(/three ways|open bounties.|Payment for this bounty/);
         const measured = await page.evaluate(() => {
           const sizes = new Set<string>(); const weights = new Set<string>(); const families = new Set<string>();
           for (const element of document.querySelectorAll('body *')) {

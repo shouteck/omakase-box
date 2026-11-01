@@ -1,15 +1,11 @@
 'use client';
-// The three ways to pay, from the one source, saying what is true on this board. Until the
-// board has answered, or if it does not, nothing is claimed either way.
+// The three ways to pay, from the one source, saying what is true on this board. Each shows
+// the moment the owner sees, as the front page's other tiles do. Three equal cards: they are
+// ways, not levels. Until the board has answered, or if it does not, nothing is claimed either way.
 import { useEffect, useState } from 'react';
 import { isSetUp, NOT_SET_UP, WAYS } from '../src/pay-ways.ts';
 
-const SHORT = {
-  'by-hand': 'Any way the solver lists. You record it.',
-  'one-click': 'You pay on Stripe\'s or PayPal\'s page.',
-  'on-merge': 'Your saved card, once you turn it on.'
-};
-const COLUMNS = [['through', 'Through'], ['solverNeeds', 'Solver needs'], ['afterMerge', 'After the merge, the owner'], ['whoSays', 'Who says it was paid']];
+const lower = text => text[0].toLowerCase() + text.slice(1);
 
 function useWaysHere() {
   const [here, setHere] = useState(null);
@@ -21,44 +17,35 @@ function useWaysHere() {
   return here;
 }
 
-const Unset = ({ way, here }) => (here !== null && !isSetUp(way.id, here) ? <span className="block text-sm text-soft font-normal">{NOT_SET_UP[0].toUpperCase()}{NOT_SET_UP.slice(1)}.</span> : null);
-
-/** The front page's tile: one short line each. */
-export function WayFacts() {
-  const here = useWaysHere();
-  return WAYS.map(way => (
-    <div key={way.id} className="bg-card rounded-2xl border border-line px-4 py-3 min-w-0 grow basis-40">
-      <p className="font-medium">{way.name}</p>
-      <p className="text-sm text-soft">{SHORT[way.id]}</p>
-      <Unset way={way} here={here} />
-    </div>
-  ));
+/** The moment itself. A picture of a button, not one: nothing here can be clicked. */
+function Moment({ way, here }) {
+  const body = here !== null && !isSetUp(way.id, here)
+    ? <p className="text-sm text-soft">{NOT_SET_UP[0].toUpperCase()}{NOT_SET_UP.slice(1)}.</p>
+    : (
+      <>
+        <p className={way.id === 'one-click' ? 'inline-block rounded-full border border-line px-3 py-0.5 text-sm font-medium' : way.id === 'on-merge' ? 'text-sm font-medium text-accent' : 'text-sm font-medium'}>{way.shows}</p>
+        <p className="mt-1 text-sm text-soft">{way.whoSays}&apos;s word</p>
+      </>
+    );
+  return <div className="bg-card rounded-2xl border border-line px-4 py-3 min-h-[5rem] flex flex-col items-start justify-center">{body}</div>;
 }
 
-/** How it works: a table at desktop width; on a phone each way stacks, with its labels. */
-export function WayTable() {
+/** Equal cards, on the front page inside its tile; on How it works each is its own tile, with what the solver needs. */
+export function WayCards({ detail = false }) {
   const here = useWaysHere();
   return (
-    <table className="block md:table w-full text-left border-b border-line">
-      <thead className="hidden md:table-header-group">
-        <tr>
-          <th scope="col" className="py-3 pr-6 font-medium"><span className="sr-only">Way</span></th>
-          {COLUMNS.map(([key, label]) => <th key={key} scope="col" className="py-3 pr-6 font-medium text-sm text-soft align-bottom">{label}</th>)}
-        </tr>
-      </thead>
-      <tbody className="block md:table-row-group">
-        {WAYS.map(way => (
-          <tr key={way.id} className="block md:table-row border-t border-line py-4 md:py-0">
-            <th scope="row" className="block md:table-cell md:py-4 md:pr-6 font-medium align-top">{way.name}<Unset way={way} here={here} /></th>
-            {COLUMNS.map(([key, label]) => (
-              <td key={key} className="block md:table-cell mt-2 md:mt-0 md:py-4 md:pr-6 text-soft align-top">
-                <span className="block md:hidden text-sm">{label}</span>
-                <span className="text-ink md:text-soft">{way[key]}</span>
-              </td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <ul className={`grid grid-cols-1 md:grid-cols-3 ${detail ? 'gap-3 sm:gap-4' : 'gap-6 md:gap-4'}`}>
+      {WAYS.map(way => (
+        <li key={way.id} className={`min-w-0 flex flex-col gap-3 ${detail ? 'bg-surface rounded-3xl p-6' : ''}`}>
+          <div>
+            <h3 className="font-medium">{way.name}</h3>
+            <p className="text-sm text-soft">{way.through}</p>
+          </div>
+          <Moment way={way} here={here} />
+          <p className="text-sm">{way.afterMerge}</p>
+          {detail ? <p className="text-sm text-soft">Solver needs {lower(way.solverNeeds)}.</p> : null}
+        </li>
+      ))}
+    </ul>
   );
 }

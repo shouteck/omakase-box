@@ -1,4 +1,4 @@
-import { WayTable } from '../../components/PayWays.jsx';
+import { WayCards } from '../../components/PayWays.jsx';
 import { CodeBlock, Primary, Title } from '../../components/ui.jsx';
 
 export const metadata = { title: 'How it works, open bounty board' };
@@ -86,7 +86,7 @@ export default function Page() {
 
       <section className="mt-20 scroll-mt-6" id="pay" aria-labelledby="pay-title">
         <Heading id="pay-title">Three ways to pay</Heading>
-        <WayTable />
+        <WayCards detail />
       </section>
 
       <section className="mt-20 scroll-mt-6" id="limits" aria-labelledby="limits-title">
