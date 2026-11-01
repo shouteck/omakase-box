@@ -54,10 +54,10 @@ export default function PayOnMerge({ pay, setPay }) {
     <>
       <Section title="Get paid through Stripe" id="stripe">
         {pay.solver.ready
-          ? <p className="max-w-prose">Your Stripe account is connected. If an owner pays on merge and your solution is the one merged, the reward goes to your own account.</p>
+          ? <p className="max-w-prose">Your Stripe account is connected. If your solution is the one merged, an owner can pay the reward to your own account, with one click or by pay on merge.</p>
           : (
             <div className="flex flex-col gap-4 max-w-prose">
-              <p>{pay.solver.connected ? 'You have started connecting Stripe, and Stripe does not yet say your account can take payments.' : 'Connect your own Stripe account, and an owner who pays on merge pays you there.'}</p>
+              <p>{pay.solver.connected ? 'You have started connecting Stripe, and Stripe does not yet say your account can take payments.' : 'Connect your own Stripe account, and an owner can pay you there with one click or by pay on merge.'}</p>
               {pay.solver.connected ? null : (
                 <label className="flex flex-col gap-1">
                   <span>Country of your bank account</span>

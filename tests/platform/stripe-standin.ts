@@ -17,6 +17,16 @@ export class StripeStandin {
   private server: Server | null = null;
   url = '';
 
+  /** Pages for a payment. Paying one is what the owner does on Stripe's page. */
+  sessions = new Map<string, { id: string; url: string; account: string; status: string; payment_status: string; payment_intent: string | null; amount_total: number; bounty: string; methods: string | null; adaptive: string | null }>();
+  payPage(id: string): Intent {
+    const session = this.sessions.get(id)!;
+    const intent: Intent = { id: `pi_${this.next++}`, account: session.account, amount: session.amount_total, status: 'succeeded', metadata: { bounty: session.bounty }, application: 'ca_platform' };
+    this.intents.push(intent);
+    Object.assign(session, { status: 'complete', payment_status: 'paid', payment_intent: intent.id });
+    return intent;
+  }
+
   charged = (account?: string): Intent[] => this.intents.filter(intent => intent.status === 'succeeded' && (account === undefined || intent.account === account));
 
   private answer(method: string, path: string, query: URLSearchParams, form: URLSearchParams, account: string | null): { status: number; json: unknown } {
@@ -32,9 +42,18 @@ export class StripeStandin {
     if (method === 'POST' && path === '/v1/customers') return { status: 200, json: { id: `cus_${this.next++}` } };
     if (method === 'POST' && path === '/v1/checkout/sessions') {
       const id = `cs_test_${this.next++}`;
-      return { status: 200, json: { id, url: `https://checkout.stripe.test/${id}` } };
+      const url = `https://checkout.stripe.test/${id}`;
+      if (form.get('mode') === 'payment') this.sessions.set(id, { id, url, account: account!, status: 'open', payment_status: 'unpaid', payment_intent: null, amount_total: Number(form.get('line_items[0][price_data][unit_amount]')), bounty: form.get('payment_intent_data[metadata][bounty]') ?? '', methods: form.get('payment_method_types[0]'), adaptive: form.get('adaptive_pricing[enabled]') });
+      return { status: 200, json: { id, url } };
     }
-    let match = /^\/v1\/checkout\/sessions\/(cs_[\w]+)$/.exec(path);
+    let match = /^\/v1\/checkout\/sessions\/(cs_[\w]+)\/expire$/.exec(path);
+    if (match && method === 'POST') {
+      const session = this.sessions.get(match[1]!);
+      if (session !== undefined) session.status = 'expired';
+      return { status: 200, json: session ?? {} };
+    }
+    match = /^\/v1\/checkout\/sessions\/(cs_[\w]+)$/.exec(path);
+    if (match && this.sessions.has(match[1]!)) return { status: 200, json: this.sessions.get(match[1]!) };
     if (match) return { status: 200, json: { id: match[1], customer: this.sessionCustomer, status: 'complete', setup_intent: { payment_method: { id: 'pm_saved', card: { brand: 'visa', last4: '4242' } } } } };
     match = /^\/v1\/accounts\/(acct_\w+)$/.exec(path);
     if (match) {
