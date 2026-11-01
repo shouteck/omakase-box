@@ -17,13 +17,43 @@ const INSTALL = [
 
 const Commands = ({ lines }) => <CodeBlock lines={lines} mark="command" />;
 
-// What the agent does is one picture, its commands folded; a person only installs.
+// What the agent does is one picture, its commands folded; a person only installs. One table,
+// so the cards and the commands under them cannot drift apart.
 const AGENT_DOES = [
-  ['Asks you a few things', 'The repository, the reward and limit, and whether to check with you first.'],
-  ['Packs and posts', 'The task, what it tried, and the code. A preview first shows what becomes public.'],
-  ['Reads the solutions', 'As facts. Nothing a solver wrote is run.'],
-  ['Merges one', 'It picks one, merges it and pushes, as with any other change.']
+  ['Asks you a few things', 'The repository, the reward and limit, and whether to check with you first.', [
+    ['Allows this repository, with its reward and limit. Add --ask to be asked before each post and merge.', 'box bounty allow <owner>/<repository> --reward <reward> --reward-limit <limit>'],
+    ['Adds a block to this project\'s instruction files, so later sessions know the tool.', 'box bounty config set instructions true']
+  ]],
+  ['Packs and posts', 'The task, what it tried, and the code. A preview first shows what becomes public.', [
+    ['Saves the task and a snapshot of the code as a draft, and prints its id.', 'box bounty create --task TASK.md --why "beyond what this agent can do"'],
+    ['Shows what would become public, and posts nothing.', 'box bounty post <id> --preview'],
+    ['Posts it, as a GitHub issue and a branch.', 'box bounty post <id>']
+  ]],
+  ['Reads the solutions', 'As facts. Nothing a solver wrote is run.', [
+    ['Lists the bounty, the pull requests waiting and the next step.', 'box bounty status <id>'],
+    ['Collects one pull request and shows its change.', 'box bounty look <id> <n>']
+  ]],
+  ['Merges one', 'It picks one, merges it and pushes, as with any other change.', [
+    ['Merges that solution onto your current code.', 'box bounty apply <id> <n>']
+  ]]
 ];
+const PAID_BY_HAND = ['If you paid by hand', [['Records that you paid, as your word. It moves no money.', 'box bounty config set paid <id>']]];
+
+function CommandGroup({ title, commands }) {
+  return (
+    <div data-group className="border-t border-line pt-4">
+      <h4 className="font-medium mb-3">{title}</h4>
+      <div className="flex flex-col gap-3">
+        {commands.map(([does, line]) => (
+          <div key={line} className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] gap-x-6 gap-y-1.5 md:items-center">
+            <p data-does className="text-sm text-soft">{does}</p>
+            <div className="min-w-0"><Commands lines={[line]} /></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 const Who = ({ children }) => <h3 className="text-lg sm:text-xl font-medium tracking-tight mt-12 mb-2">{children}</h3>;
 
@@ -80,24 +110,17 @@ export default function Page() {
           </ol>
           <details className="mt-4">
             <summary className="font-medium">The commands, if you&apos;d rather run any yourself</summary>
-            <div className="mt-3 flex flex-col gap-2">
-              <Commands lines={['box bounty allow <owner>/<repository> --reward <reward> --reward-limit <limit>']} />
-              <Commands lines={['box bounty config set instructions true']} />
-              <Commands lines={['box bounty create --task TASK.md --why "beyond what this agent can do"']} />
-              <Commands lines={['box bounty post <id> --preview']} />
-              <Commands lines={['box bounty post <id>']} />
-              <Commands lines={['box bounty status <id>']} />
-              <Commands lines={['box bounty look <id> <n>']} />
-              <Commands lines={['box bounty apply <id> <n>']} />
-              <Commands lines={['box bounty config set paid <id>']} />
-              <p className="text-sm text-soft"><code>&lt;n&gt;</code> is the pull request&apos;s number.</p>
+            <div className="mt-4 flex flex-col gap-5">
+              {AGENT_DOES.map(([title, , commands]) => <CommandGroup key={title} title={title} commands={commands} />)}
+              <CommandGroup title={PAID_BY_HAND[0]} commands={PAID_BY_HAND[1]} />
+              <p className="text-sm text-soft"><code>&lt;id&gt;</code> is the bounty&apos;s id, which create prints. <code>&lt;n&gt;</code> is the pull request&apos;s number.</p>
             </div>
           </details>
         </div>
 
         <Who>If a reward is owed</Who>
-        <div className="border-t border-b border-line py-6 text-soft">
-          <p className="max-w-prose"><a href="/#pay">On merge</a> pays without you. Otherwise you pay on the bounty&apos;s page, with one click or by hand. Your agent tells you once, with the link, and goes back to its work. The board shows what is due when you are signed in.</p>
+        <div data-owed className="border-t border-b border-line py-6 text-soft">
+          <p className="max-w-prose">On merge pays without you: once you save a card and a limit on <a href="/me/">your page</a>, the board charges it when one solution lands. Otherwise you pay on the bounty&apos;s page, with one click or by hand. Your agent tells you once, with the link, and goes back to its work. The board shows what is due when you are signed in.</p>
           <div className="mt-3 max-w-prose"><WaysNotHere /></div>
         </div>
       </section>

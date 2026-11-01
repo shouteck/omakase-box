@@ -8,7 +8,7 @@ const Statement = ({ id, children }) => <h2 id={id} className="text-xl sm:text-2
 
 function Tile({ id, title, words, wide = false, children }) {
   return (
-    <div id={id} className={`arrive scroll-mt-6 bg-surface rounded-3xl p-6 sm:p-8 flex flex-col gap-6 min-w-0 ${wide ? 'md:col-span-2' : ''}`}>
+    <div id={id} className={`arrive scroll-mt-[max(5rem,calc(50vh-10rem))] bg-surface rounded-3xl p-6 sm:p-8 flex flex-col gap-6 min-w-0 ${wide ? 'md:col-span-2' : ''}`}>
       <div>
         <h3 className="text-lg sm:text-xl font-medium tracking-tight">{title}</h3>
         <p className="mt-1.5 text-soft max-w-[30rem]">{words}</p>

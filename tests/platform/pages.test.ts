@@ -268,12 +268,29 @@ describe('the pages', () => {
     expect(how).toContain('connected Stripe also covers on merge');
     // A person only installs: every other command is folded away.
     expect(await page.locator('#hand-off ol > li').count()).toBe(4);
-    expect(how).toContain('On merge pays without you.');
+    expect(how).toContain('On merge pays without you:');
     expect(how).toContain('merges it and pushes');
+    // Each command sits under the card it belongs to, saying what it does.
+    const groups = await page.locator('#hand-off details [data-group]').evaluateAll(elements => elements.map(element => ({
+      title: element.querySelector('h4')?.textContent,
+      commands: [...element.querySelectorAll('code[data-command]')].map(code => code.textContent!.split(' ').slice(0, 3).join(' ')),
+      said: element.querySelectorAll('[data-does]').length
+    })));
+    expect(groups).toEqual([
+      { title: 'Asks you a few things', commands: ['box bounty allow', 'box bounty config'], said: 2 },
+      { title: 'Packs and posts', commands: ['box bounty create', 'box bounty post', 'box bounty post'], said: 3 },
+      { title: 'Reads the solutions', commands: ['box bounty status', 'box bounty look'], said: 2 },
+      { title: 'Merges one', commands: ['box bounty apply'], said: 1 },
+      { title: 'If you paid by hand', commands: ['box bounty config'], said: 1 }
+    ]);
+    const cards = await page.locator('#hand-off ol > li p.font-medium').allTextContents();
+    expect(groups.slice(0, 4).map(group => group.title)).toEqual(cards);
+    // On merge is answered where it is read; the one link goes to where it is turned on.
+    const owed = page.locator('[data-owed]');
+    expect(await owed.locator('a').evaluateAll(links => links.map(link => link.getAttribute('href')))).toEqual(['/me/']);
     expect(await page.locator('#hand-off details code[data-command]').count()).toBe(9);
     expect(await page.locator('#hand-off code[data-command]').count()).toBe(9);
     expect(await page.locator('#hand-off details').evaluate(element => (element as HTMLDetailsElement).open)).toBe(false);
-    expect(await page.locator('main a[href="/#pay"]').count()).toBe(1);
     await visit(page, '/');
     // The picture is the real product in real text, and says it is an example.
     expect(await page.locator('main figure').innerText()).toContain('An example. Every name in it is invented');
@@ -296,6 +313,23 @@ describe('the pages', () => {
     await page.click('#limits summary >> text=What becomes public');
     expect(await page.locator('#limits details[open]').innerText()).toContain('a private repository is refused');
     await close();
+  });
+
+  it.each([[1280, 900, true], [390, 800, false]])('/#pay, which the tool links, lands clear of the menu at %i wide', async (width, height, centred) => {
+    const context = await browser.newContext({ reducedMotion: 'reduce', viewport: { width, height } });
+    const page = await context.newPage();
+    await page.goto(`${board.url}/#pay`);
+    await page.waitForLoadState('networkidle');
+    await expect.poll(() => page.evaluate(() => {
+      const tile = document.querySelector('#pay')!.getBoundingClientRect();
+      const menu = document.querySelector('nav[aria-label=Site]')!.getBoundingClientRect();
+      return tile.top >= menu.bottom && tile.top < window.innerHeight;
+    })).toBe(true);
+    if (centred) {
+      const middle = await page.evaluate(() => { const tile = document.querySelector('#pay')!.getBoundingClientRect(); return (tile.top + tile.bottom) / 2; });
+      expect(Math.abs(middle - height / 2)).toBeLessThan(100);
+    }
+    await context.close();
   });
 
   it('the front page tells its story once, and does not move at all when motion is reduced', async () => {
