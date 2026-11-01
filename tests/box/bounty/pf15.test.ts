@@ -25,7 +25,7 @@ describe('after a merge', () => {
   it('with no board: by hand, and it says so', () => {
     const text = message();
     expect(text).toContain('which you pay by hand');
-    expect(text).toContain('No board is set for this tool, so by hand is the only way it can name.');
+    expect(text).toContain('This tool reads no other way here, so by hand is the only one it can name.');
     expect(text).not.toMatch(/One click|pay on merge/);
   });
   it('with no key on the board: by hand, with no other way named', () => {
@@ -82,9 +82,9 @@ describe('a hostile board', () => {
 });
 
 describe('asked-for and unasked text', () => {
-  it('help carries the three ways', () => {
+  it('help names the three ways, within its budget', () => {
     const help = renderHelp();
-    for (const words of ['three ways to pay', 'By hand: through Wise, wallet, any listed way', 'One click: through Stripe or PayPal', 'On merge: through Stripe']) expect(help).toContain(words);
+    expect(help).toContain('three ways to pay a reward: by hand, one click, on merge.');
     expect(help).not.toMatch(/\blevels?\b|monid/i);
   });
   it('describe gains one sentence, only where a reward exists', () => {

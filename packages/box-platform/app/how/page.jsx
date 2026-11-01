@@ -1,3 +1,4 @@
+import { WayTable } from '../../components/PayWays.jsx';
 import { CodeBlock, Primary, Title } from '../../components/ui.jsx';
 
 export const metadata = { title: 'How it works, open bounty board' };
@@ -68,7 +69,7 @@ export default function Page() {
           <Step n={6} title="Your agent merges one" words={<p>Then you push.</p>}>
             <Commands lines={['box bounty apply <id> <n>']} />
           </Step>
-          <Step n={7} title="You pay, and record it" words={<p>The bounty&apos;s page shows how the solver accepts payment.</p>}>
+          <Step n={7} title="You pay" words={<p>One of <a href="#pay">three ways</a>; the bounty&apos;s page shows which work for that solver. Paid by hand, you record it yourself.</p>}>
             <Commands lines={['box bounty config set paid <id>']} />
           </Step>
         </ol>
@@ -79,8 +80,13 @@ export default function Page() {
         <ol className="border-b border-line">
           <Step n={1} title="Find one" words={<p>On <a href="/board/">the board</a>, in the <a href="/bounties.json">feed</a>, or through the <a href="/agents/">MCP server</a>.</p>} />
           <Step n={2} title="Open a pull request against its branch" words={<p><code>box-bounty/&lt;id&gt;</code>, on the bounty&apos;s repository.</p>} />
-          <Step n={3} title="Get merged, get paid, confirm" words={<p>List how you accept payment on <a href="/me/">your page</a>, then say on the bounty&apos;s page whether it arrived.</p>} />
+          <Step n={3} title="Get merged, get paid, confirm" words={<p>On <a href="/me/">your page</a>, connect an account or list how you accept payment; <a href="#pay">the ways to pay</a> say what each gives you. Then say on the bounty&apos;s page whether it arrived.</p>} />
         </ol>
+      </section>
+
+      <section className="mt-20 scroll-mt-6" id="pay" aria-labelledby="pay-title">
+        <Heading id="pay-title">Three ways to pay</Heading>
+        <WayTable />
       </section>
 
       <section className="mt-20 scroll-mt-6" id="limits" aria-labelledby="limits-title">
@@ -95,8 +101,9 @@ export default function Page() {
             <p>The choice of solution is your agent&apos;s; the tool never judges one. Nothing a solver wrote is run.</p>
           </More>
           <More title="How payment works">
-            <p>The board never holds money and guarantees none. By default payment is between owner and solver. Recording a payment moves nothing; it says, as your word, that you paid.</p>
-            <p>If you turn on pay on merge on your board page, for a repository, with a saved card and a limit, the board starts a charge when exactly one solution lands: from your card directly to the solver&apos;s own Stripe account. The board takes no fee. Stripe&apos;s fee comes out of the reward, and a dispute lands on the solver&apos;s account. A solver without Stripe is paid by hand.</p>
+            <p>The board never holds money and guarantees none. Recording a payment moves nothing; it says, as your word, that you paid.</p>
+            <p>With one click, you pay on the provider&apos;s page, straight to the account the solver connected. The board takes no fee; the provider&apos;s fee comes out of the reward.</p>
+            <p>If you turn on pay on merge on your board page, for a repository, with a saved card and a limit, the board starts a charge when exactly one solution lands: from your card directly to the solver&apos;s own Stripe account. The board takes no fee. Stripe&apos;s fee comes out of the reward, and a dispute lands on the solver&apos;s account. A solver without Stripe is paid another way.</p>
             <p>Several people may answer one bounty, and only a merged solution is owed its reward. The reward is the owner&apos;s word, and nothing here makes them pay; each owner&apos;s record shows what was merged, paid and received.</p>
           </More>
           <More title="Before the tool is published">

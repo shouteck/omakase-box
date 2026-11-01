@@ -73,8 +73,8 @@ describe('the format block, wrongly versioned', () => {
 
   it('a version-3 block whose payment member is off-shape is invalid', () => fixture(({ repo, id, scratch, state }) => {
     reward5(scratch);
-    postBounty(repo, id, 'github'); // $5 → version 3
-    const posted = state().issues[0]!.body;
+    postBounty(repo, id, 'github'); // $5; since PF15 a new post is version 2, so this reads a block as an older post carries it
+    const posted = state().issues[0]!.body.replace('"schemaVersion":2', '"schemaVersion":3').replace('"terms":"merged-solution-earns-whole"', '"terms":"merged-solution-earns-whole","payment":{"method":"stripe-link","where":"pull-request-description","prefix":"pay-to:"}');
     expect(readFormat(posted).kind).toBe('present');
     expect(readFormat(posted.replace('"method":"stripe-link"', '"method":"paypal"')).kind).toBe('invalid');
     expect(readFormat(posted.replace('"where":"pull-request-description"', '"where":"issue-comment"')).kind).toBe('invalid');

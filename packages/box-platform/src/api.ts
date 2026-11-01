@@ -133,6 +133,7 @@ export async function handle(request: Request, env: Env): Promise<Response> {
   const file = /^\/bounties\/([^/]+)\.json$/.exec(url.pathname);
   if (file !== null) return detailResponse(request, env, decodeURIComponent(file[1]!), now);
   if (url.pathname === '/api/board') return board(env, url, now);
+  if (url.pathname === '/api/ways') return json(200, waysOn(env));
   const detail = /^\/api\/b\/([^/]+)$/.exec(url.pathname);
   if (detail !== null) return bounty(env, decodeURIComponent(detail[1]!), now);
   if (url.pathname.startsWith('/api/')) return json(404, { error: 'No such address. Next: /api/board.' });

@@ -95,16 +95,14 @@ describe('the pay-to parser', () => {
 // The issue text — asks for the line only when a reward is stated.
 // ---------------------------------------------------------------------------
 
-it('the posted issue asks for pay-to only when the bounty states a reward', () => fixture(({ repo, id, scratch, state }) => {
+it('the posted issue asks how to be paid only when the bounty states a reward', () => fixture(({ repo, id, scratch, state }) => {
   reward5(scratch);
   postBounty(repo, id, 'github');
   const posted = state().issues[0]!.body;
-  expect(posted).toContain('pay-to:');
-  expect(posted).toContain('payment is the poster\'s to make by hand');
+  expect(posted).toContain('to be paid: say how in your pull request description.');
+  expect(posted).not.toContain('pay-to:');
+  expect(posted).toContain('payment is the poster\'s to make');
   expect(posted).toContain('posting an answer does not guarantee');
-  // The format block carries the machine-readable payment member at v3.
-  expect(posted).toContain('"schemaVersion":3');
-  expect(posted).toContain('"payment"');
   // The wording pin: nothing promises payment, timing or selection.
   expect(posted).not.toMatch(/\bwill (earn|receive|be paid|get paid)\b|\bgets? paid\b|\bwithin \d+ (hour|day|minute|week)s?\b|\balways paid\b/i);
 }, 'Repair app'));

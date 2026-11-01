@@ -204,7 +204,7 @@ export function payMessageLines(record: { id: string; title: string }, pay: PayO
   // A recorded first merge rides in this same block (BT14): one fact for
   // the owner, one line for the agent — never two unrelated messages.
   if (opts.firstMerge === true) owner.push('It was the first solution written by someone outside your project to be merged into your code.');
-  if (accepts === undefined) owner.push('No board is set for this tool, so by hand is the only way it can name.');
+  if (accepts === undefined) owner.push('This tool reads no other way here, so by hand is the only one it can name.');
   if (ways !== undefined && ways.oneClick.length > 0) owner.push(`One click: ${solver} has connected ${ways.oneClick.join(' and ')} on the board. You pay on the provider's page, from ${ways.board}/b/${record.id}/`);
   if (ways?.unknown === true) owner.push(`The board has not read a pull request from ${solver} yet, so it cannot say whether they connected an account. The bounty's page will: ${ways.board}/b/${record.id}/`);
   // Only with a board on: the tool cannot see the owner's switch, and says where the answer is.

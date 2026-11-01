@@ -1,5 +1,6 @@
 import HeroWindow from '../components/HeroWindow.jsx';
 import Newest from '../components/Newest.jsx';
+import { WayFacts } from '../components/PayWays.jsx';
 import { Primary } from '../components/ui.jsx';
 
 // One idea per screen. Everything a visitor needs to act on is on /how/.
@@ -25,15 +26,6 @@ const Row = ({ left, right, strong = false }) => (
     <span className={`text-sm whitespace-nowrap ${strong ? 'font-medium text-accent' : 'text-soft'}`}>{right}</span>
   </div>
 );
-
-function Fact({ stage, who }) {
-  return (
-    <Card className="grow basis-40">
-      <p className="font-medium">{stage}</p>
-      <p className="text-sm text-soft">{who}</p>
-    </Card>
-  );
-}
 
 function Path({ title, words, href, action }) {
   return (
@@ -85,12 +77,8 @@ export default function Page() {
               <p className="font-mono text-sm text-soft pt-1 pb-2 break-words">box bounty apply &lt;id&gt; 62</p>
             </Card>
           </Tile>
-          <Tile wide title="Paid to the solver, directly." words="The board never holds money. It can start a charge from your saved card to the solver's own account, if you turn that on. It shows who said what.">
-            <div className="flex flex-wrap gap-3">
-              <Fact stage="Merged" who="GitHub says" />
-              <Fact stage="$45 paid" who="The owner's word" />
-              <Fact stage="$45 received" who="The solver's word" />
-            </div>
+          <Tile wide title="Paid to the solver, three ways." words="The board never holds money. It shows who said what.">
+            <div className="flex flex-wrap gap-3"><WayFacts /></div>
           </Tile>
         </div>
       </section>

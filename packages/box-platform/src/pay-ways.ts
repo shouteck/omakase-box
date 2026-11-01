@@ -29,6 +29,3 @@ export const waysOfBounty = (amount: number, here: WaysSetUp, paysOnMerge: boole
   ...(here.one_click.length > 0 ? ['one-click' as const] : []),
   ...(here.on_merge && paysOnMerge ? ['on-merge' as const] : [])
 ];
-
-/** The lines of `box bounty help` and anywhere else plain text carries the table. */
-export const wayLines = (): string[] => WAYS.map(way => `${way.name}: through ${way.through}. The solver needs: ${way.solverNeeds.toLowerCase()}. After the merge, the owner: ${way.afterMerge.toLowerCase()}. Who says it was paid: ${way.whoSays.toLowerCase()}.`);

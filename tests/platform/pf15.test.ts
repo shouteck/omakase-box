@@ -2,7 +2,7 @@
 // profile with no key, a Stripe key and PayPal's. A way with no key must not read as open.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { handle } from '../../packages/box-platform/src/api.js';
-import { isSetUp, wayLines, WAYS, waysOfBounty, waysSetUp } from '../../packages/box-platform/src/pay-ways.js';
+import { isSetUp, WAYS, waysOfBounty, waysSetUp } from '../../packages/box-platform/src/pay-ways.js';
 import { idOf, type StandinIssue } from '../../packages/box-platform/standin/standin.js';
 import { MINUTE, NOW, refreshUntilDone, rig, type Rig } from './support.js';
 
@@ -24,8 +24,7 @@ describe('the one source', () => {
     expect(WAYS.map(way => way.name)).toEqual(['By hand', 'One click', 'On merge']);
     expect(WAYS.map(way => way.whoSays)).toEqual(['The owner', 'The provider', 'The provider']);
     expect(WAYS[2]!.through).toBe('Stripe');
-    const all = JSON.stringify(WAYS) + wayLines().join('\n');
-    expect(all).not.toMatch(/level|monid|balance/i);
+    expect(JSON.stringify(WAYS)).not.toMatch(/level|monid|balance/i);
   });
   it.each([
     ['no key', { stripe: false, paypal: false }, [], false],
