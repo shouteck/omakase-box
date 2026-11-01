@@ -263,7 +263,7 @@ describe('decide alone', () => {
   });
   const at = NOW + 10 * MINUTE;
   it('charges when nothing stands in the way', () => expect(decide(facts(null), at).act).toBe('charge'));
-  for (const state of ['paid', 'refunded', 'disputed', 'owner-must-authenticate'] as const) {
+  for (const state of ['paid', 'refunded', 'disputed', 'owner-must-authenticate', 'owner-paying'] as const) {
     it(`never charges from ${state}`, () => expect(decide(facts({ state, payment_method: 'pm_saved', at: at - 60 * MINUTE }), at).act).toBe('nothing'));
   }
   it('leaves a fresh claim alone and picks up a stale one', () => {
@@ -444,6 +444,202 @@ describe('Stripe telling the board', () => {
     const body = JSON.stringify({ type: 'account.application.deauthorized', account, data: { object: {} } });
     await send(body, signed(body, Math.floor(NOW / 1000)));
     expect(await env.DB.prepare('SELECT 1 FROM stripe_accounts WHERE account_id = ?').bind(account).first()).toBeNull();
+  });
+});
+
+describe('the owner\'s own click (PF13)', () => {
+  const send = (event: object) => {
+    const body = JSON.stringify(event);
+    const at = Math.floor((r.clock.at) / 1000);
+    return handle(new Request(`${ORIGIN}/api/stripe/webhook`, { method: 'POST', headers: { 'stripe-signature': `t=${at},v1=${createHmac('sha256', WEBHOOK_SECRET).update(`${at}.${body}`).digest('hex')}` }, body }), env);
+  };
+  const pay = (token: string | null, body: unknown = {}) => post(`/api/b/${ID}/pay`, token, body);
+  const view = async (token: string | null) => (await handle(new Request(`${ORIGIN}/api/b/${ID}/payment`, { headers: token === null ? {} : { cookie: `__Host-board_session=${token}` } }), env)).json() as Promise<any>;
+  const ready = async () => { const token = await signIn(OWNER_ID, OWNER); const account = await solverReady(); await merged(); return { token, account }; };
+  const pageOf = (url: string) => url.split('/').pop()!;
+  const completed = (account: string, session: string, intent: string, payment_status = 'paid') => ({ type: 'checkout.session.completed', account, data: { object: { id: session, payment_intent: intent, payment_status } } });
+
+  it('needs no saved card and no switch: the page is Stripe\'s, on the solver\'s own account, for the bounty\'s amount', async () => {
+    const { token, account } = await ready();
+    expect(await view(token)).toMatchObject({ can_pay: true, pay_note: null });
+    const page = await pay(token, { amount: 1, account: 'acct_attacker' });
+    expect(page.status).toBe(200);
+    expect(s.sessions.get(pageOf(page.body.url))).toMatchObject({ account, amount_total: 4500, bounty: ID, methods: 'card', adaptive: 'false' });
+  });
+  it('another user\'s click, and nobody\'s, opens nothing; only the poster is offered it', async () => {
+    await ready();
+    const before = s.sessions.size;
+    expect((await pay(await signIn(SOLVER_ID, SOLVER))).status).toBe(403);
+    expect((await pay(await signIn(9999, 'example-rook'))).status).toBe(403);
+    expect((await pay(null)).status).toBe(401);
+    expect(s.sessions.size).toBe(before);
+    expect((await view(await signIn(SOLVER_ID, SOLVER))).can_pay).toBe(false);
+    expect((await view(null)).can_pay).toBe(false);
+  });
+  it('a login that changed hands is not the poster', async () => {
+    await ready();
+    const holder = await signIn(OWNER_ID + 1, OWNER);
+    expect((await pay(holder)).status).toBe(403);
+    expect((await view(holder)).can_pay).toBe(false);
+    expect(s.sessions.size).toBe(0);
+  });
+  it('the payee is the account tied to the merged author\'s id, whatever a solver wrote', async () => {
+    const other = await solverReady(7002, 'example-rook');
+    const token = await signIn(OWNER_ID, OWNER);
+    const account = await solverReady();
+    await merged(issue({ title: `pay ${other} example-rook`, task: `Account: ${other}` }));
+    const page = await pay(token);
+    expect(s.sessions.get(pageOf(page.body.url))!.account).toBe(account);
+  });
+  it('a merged author with no account is stated, and nothing opens', async () => {
+    const token = await signIn(OWNER_ID, OWNER);
+    await merged();
+    expect(await view(token)).toMatchObject({ can_pay: false, pay_note: expect.stringContaining('has not connected Stripe') });
+    expect((await pay(token)).status).toBe(409);
+    expect(s.sessions.size).toBe(0);
+  });
+  it('a merge the rule does not count offers nothing', async () => {
+    const token = await signIn(OWNER_ID, OWNER);
+    await solverReady();
+    await merged(issue({ pulls: [{ number: 7, author: SOLVER, state: 'closed', merged_at: after, created_at: after, association: 'COLLABORATOR' }] }));
+    const refused = await pay(token);
+    expect(refused.status).toBe(409);
+    expect(refused.body.error).toContain('GitHub lists them as collaborator');
+    expect(s.sessions.size).toBe(0);
+  });
+  it('two that landed offer nothing: the owner chooses by hand', async () => {
+    const token = await signIn(OWNER_ID, OWNER);
+    await solverReady();
+    await merged(issue({ pulls: [{ number: 7, author: SOLVER, state: 'closed', merged_at: after, created_at: after }, { number: 8, author: 'example-rook', state: 'closed', merged_at: after, created_at: after }] }));
+    expect((await pay(token)).body.error).toContain('More than one solution');
+    expect(s.sessions.size).toBe(0);
+  });
+  it('a second click, and three at once, are one page', async () => {
+    const { token } = await ready();
+    const pages = await Promise.all([pay(token), pay(token), pay(token)]);
+    expect(pages.map(page => page.status)).toEqual([200, 200, 200]);
+    expect(new Set(pages.map(page => page.body.url)).size).toBe(1);
+    expect((await pay(token)).body.url).toBe(pages[0]!.body.url);
+    expect(s.sessions.size).toBe(1);
+  });
+  it('a page left to expire makes a new one; a reward that changed retires the old one', async () => {
+    const { token } = await ready();
+    const first = pageOf((await pay(token)).body.url);
+    s.sessions.get(first)!.status = 'expired';
+    const second = pageOf((await pay(token)).body.url);
+    expect(second).not.toBe(first);
+    await env.DB.prepare('UPDATE bounties SET amount = 50 WHERE id = ?').bind(ID).run();
+    const third = pageOf((await pay(token)).body.url);
+    expect(s.sessions.get(second)!.status).toBe('expired');
+    expect(s.sessions.get(third)!.amount_total).toBe(5000);
+  });
+  it('a paid bounty clicked again opens nothing, by the webhook or by reading Stripe', async () => {
+    const { token, account } = await ready();
+    const session = pageOf((await pay(token)).body.url);
+    const intent = s.payPage(session);
+    expect((await send(completed(account, session, intent.id))).status).toBe(200);
+    expect(await stateOf()).toBe('paid');
+    const again = await pay(token);
+    expect(again.status).toBe(409);
+    expect(s.sessions.size).toBe(1);
+    expect(s.charged()).toHaveLength(1);
+    expect((await view(token)).can_pay).toBe(false);
+  });
+  it('back from Stripe before the webhook: the owner\'s page reads it, and only the poster\'s look asks', async () => {
+    const { token } = await ready();
+    const session = pageOf((await pay(token)).body.url);
+    s.payPage(session);
+    const calls = s.calls.length;
+    await view(await signIn(SOLVER_ID, SOLVER));
+    expect(s.calls.length).toBe(calls);
+    expect(await stateOf()).toBe('owner-paying');
+    expect((await view(token)).payment).toMatchObject({ state: 'recorded', recorded_paid: { source: 'stripe' } });
+    expect(await stateOf()).toBe('paid');
+  });
+  it('a payment made but lost to the board is found before a new page opens', async () => {
+    const { token } = await ready();
+    const session = pageOf((await pay(token)).body.url);
+    s.payPage(session);
+    await env.DB.prepare('DELETE FROM charges WHERE bounty_id = ?').bind(ID).run();
+    expect((await pay(token)).body).toEqual({ paid: true });
+    expect(s.sessions.size).toBe(1);
+  });
+  it('a forged event changes nothing, and a session that completed unpaid is not paid', async () => {
+    const { token, account } = await ready();
+    const session = pageOf((await pay(token)).body.url);
+    const event = JSON.stringify(completed(account, session, 'pi_x'));
+    expect((await handle(new Request(`${ORIGIN}/api/stripe/webhook`, { method: 'POST', headers: { 'stripe-signature': 't=1,v1=00' }, body: event }), env)).status).toBe(400);
+    expect(await stateOf()).toBe('owner-paying');
+    await send(completed(account, session, 'pi_x', 'unpaid'));
+    expect(await stateOf()).toBe('owner-paying');
+    await send(completed('acct_other', session, 'pi_x'));
+    expect(await stateOf()).toBe('owner-paying');
+  });
+  it('a refund after Stripe\'s page changes the record, and a repeated success does not undo it', async () => {
+    const { token, account } = await ready();
+    const session = pageOf((await pay(token)).body.url);
+    const intent = s.payPage(session);
+    await send(completed(account, session, intent.id));
+    await send({ type: 'charge.refunded', account, data: { object: { payment_intent: intent.id, refunded: true } } });
+    expect(await stateOf()).toBe('refunded');
+    await send({ type: 'payment_intent.succeeded', account, data: { object: { id: intent.id } } });
+    expect(await stateOf()).toBe('refunded');
+  });
+  it('the machine stays away once the owner has clicked, and the click waits for a charge in flight', async () => {
+    const token = await ownerOn();
+    await solverReady();
+    await merged();
+    await pay(token);
+    const atOf = async () => (await env.DB.prepare('SELECT at FROM charges WHERE bounty_id = ?').bind(ID).first<{ at: number }>())!.at;
+    const claimed = await atOf();
+    r.clock.at += 60 * MINUTE;
+    await settle();
+    expect(s.calls.filter(call => call.startsWith('POST /v1/payment_intents'))).toEqual([]);
+    expect(await stateOf()).toBe('owner-paying');
+    expect(await atOf()).toBe(claimed); // Not even looked at: a later click's claim rests on this time.
+    await env.DB.prepare(`UPDATE charges SET state = 'charging' WHERE bounty_id = ?`).bind(ID).run();
+    const refused = await pay(token);
+    expect(refused.status).toBe(409);
+    expect(refused.body.error).toContain('has not finished');
+  });
+  it('a declined pay on merge falls back to the button, over the limit does too, and a card to authenticate keeps its own page', async () => {
+    const token = await ownerOn();
+    await solverReady();
+    await merged();
+    s.card = 'declined';
+    await settle();
+    expect(await stateOf()).toBe('declined');
+    expect((await view(token)).can_pay).toBe(true);
+    expect((await pay(token)).status).toBe(200);
+    await env.DB.prepare(`UPDATE charges SET state = 'refused-over-limit' WHERE bounty_id = ?`).bind(ID).run();
+    expect((await view(token)).can_pay).toBe(true);
+    await env.DB.prepare(`UPDATE charges SET state = 'owner-must-authenticate' WHERE bounty_id = ?`).bind(ID).run();
+    expect(await view(token)).toMatchObject({ can_pay: false, can_authenticate: true });
+    expect((await pay(token)).status).toBe(409);
+  });
+  it('a payment recorded by hand opens nothing', async () => {
+    const { token } = await ready();
+    await post(`/api/b/${ID}/paid`, token, { to: SOLVER });
+    expect((await pay(token)).status).toBe(409);
+    expect((await view(token)).can_pay).toBe(false);
+  });
+  it('no key: says not set up, opens nothing, and the manual way still works', async () => {
+    const { token } = await ready();
+    const { STRIPE_SECRET_KEY: _key, ...without } = env;
+    env = without;
+    expect(await view(token)).toMatchObject({ can_pay: false, can_record: true, pay_note: expect.stringContaining('not set up') });
+    const refused = await pay(token);
+    expect(refused.status).toBe(409);
+    expect(refused.body.error).toContain('not set up');
+    expect((await post(`/api/b/${ID}/paid`, token, { to: SOLVER })).status).toBe(200);
+  });
+  it('Stripe down on the click is a named answer', async () => {
+    const { token } = await ready();
+    await s.stop();
+    const page = await pay(token);
+    expect(page.status).toBe(503);
+    expect(page.body.error).toContain('Nothing was charged');
+    await s.start();
   });
 });
 

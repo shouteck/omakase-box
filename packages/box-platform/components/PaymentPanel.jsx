@@ -28,7 +28,7 @@ function Facts({ view }) {
         : recorded.source === 'stripe'
           ? <p>Paid through Stripe on {fmtDate(recorded.at)}{recorded.amount === null ? '' : ` ($${recorded.amount})`}. Stripe&apos;s word.</p>
           : <p>Recorded paid by {recorded.by} on {fmtDate(recorded.at)}{recorded.amount === null ? '' : ` ($${recorded.amount})`}. The owner&apos;s word, {recorded.source === 'board' ? 'from their click on the board' : 'from the project\'s record on GitHub'}. Recording moves no money.</p>}
-      {p.charge?.words ? <p role="status">Pay on merge: {p.charge.words}</p> : null}
+      {p.charge?.words ? <p role="status">{p.charge.words}</p> : null}
       {recorded?.chosen_by_owner_from ? <p>{recorded.by} named {owed.to} when recording the payment. The owner&apos;s word.</p> : null}
       {says?.word === 'received' ? <p role="status">{says.by} says it was received, as of {fmtDate(says.at)}. The solver&apos;s word.</p> : null}
       {says?.word === 'not-received' ? <p role="status">{says.by} says it has not been received, as of {fmtDate(says.at)}. The solver&apos;s word. The owner and the solver disagree. Both words are shown as theirs; the board does not decide between them.</p> : null}
@@ -59,12 +59,14 @@ export default function PaymentPanel({ id, poster }) {
     }
   };
   const answer = says => post('receipt', { says });
-  const authenticate = async () => {
+  const toStripe = async path => {
     setError(null);
     try {
-      const response = await fetch(`/api/b/${encodeURIComponent(id)}/authenticate`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+      const response = await fetch(`/api/b/${encodeURIComponent(id)}/${path}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
       const body = await response.json();
-      if (response.ok) window.location.href = body.url; else setError(body.error);
+      if (!response.ok) setError(body.error);
+      else if (body.url) window.location.href = body.url;
+      else window.location.reload();
     } catch {
       setError('The board could not be reached. Nothing was charged. Next: try again.');
     }
@@ -76,6 +78,13 @@ export default function PaymentPanel({ id, poster }) {
   return (
     <div className="flex flex-col gap-4 max-w-prose">
       <Facts view={{ ...view, poster }} />
+      {view.can_pay ? (
+        <div className="flex flex-col gap-2">
+          <div><Act onClick={() => toStripe('pay')}>Pay ${owed.amount}</Act></div>
+          <Soft>You pay on Stripe&apos;s page, straight to {view.payee}&apos;s own Stripe account. The board holds nothing. Stripe&apos;s fee comes out of the reward.</Soft>
+        </div>
+      ) : null}
+      {view.pay_note ? <Soft>{view.pay_note}</Soft> : null}
       {view.payees.length > 0 && view.role === 'owner' ? <p>{view.recorded ? 'For reference, the methods they listed.' : 'Pay the author directly, by a method they listed.'}</p> : null}
       {view.payees.map(payee => (
         <div key={payee.login}>
@@ -89,7 +98,7 @@ export default function PaymentPanel({ id, poster }) {
           {view.payee === null ? <p>Whom did you pay?</p> : null}
           <div className="flex flex-wrap gap-x-6 gap-y-2">
             {view.payees.map(payee => {
-              const Action = view.payees.length === 1 ? Act : Quiet;
+              const Action = view.payees.length === 1 && !view.can_pay ? Act : Quiet;
               return <Action key={payee.login} onClick={() => post('paid', { to: payee.login })}>Record ${owed.amount} paid to {payee.login}</Action>;
             })}
           </div>
@@ -97,7 +106,7 @@ export default function PaymentPanel({ id, poster }) {
         </div>
       ) : null}
       {view.can_withdraw ? <div className="flex flex-wrap gap-x-6 gap-y-2"><a href={`/owner/${poster}/`}>See what solvers see about you</a><Quiet onClick={() => post('paid', { withdraw: true })}>Withdraw this record</Quiet></div> : null}
-      {view.can_authenticate ? <div><Act onClick={authenticate}>Finish this payment on Stripe&apos;s page</Act></div> : null}
+      {view.can_authenticate ? <div><Act onClick={() => toStripe('authenticate')}>Finish this payment on Stripe&apos;s page</Act></div> : null}
       {view.can_answer ? (
         <div className="flex flex-wrap gap-x-6 gap-y-2">
           {says === 'received' ? null : <Act onClick={() => answer('received')}>Confirm I received {view.recorded?.amount == null ? 'it' : `$${view.recorded.amount}`}</Act>}

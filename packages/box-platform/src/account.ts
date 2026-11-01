@@ -1,6 +1,6 @@
 // Everything that knows who is asking: sign-in, sessions, profiles, and the one
 // answer that may carry an owner-only method. The feed, MCP and RSS never come here.
-import { authenticationPage } from './charge.js';
+import { authenticationPage, openPayPage, payOffer, readPayPage } from './charge.js';
 import type { Env } from './github.js';
 import { errorWords, redact, stripe, stripeOn, StripeUnavailable } from './stripe.js';
 import { checkMethod, isLink, MAX_METHODS, type Method, parseStored, publicOnly } from './methods.js';
@@ -201,6 +201,10 @@ const NOT_ON_BOARD = { error: 'This bounty is not on the board. Next: search the
 
 /** The public payment facts, and every merged author's methods as this viewer may see them. */
 async function paymentView(env: Env, id: string, viewer: Viewer | null, now: number): Promise<Response> {
+  if (viewer !== null) {
+    // Stripe not answering leaves the page as it stands; the webhook still comes.
+    try { await readPayPage(env, id, viewer.github_id, now); } catch (error) { if (!(error instanceof StripeUnavailable)) throw error; }
+  }
   const input = await paymentInput(env, id, now);
   if (input === null) return json(404, NOT_ON_BOARD);
   const facts = factsOf(input);
@@ -221,7 +225,8 @@ async function paymentView(env: Env, id: string, viewer: Viewer | null, now: num
     can_answer: role === 'payee' && facts.record !== null,
     can_record: role === 'owner' && facts.amount > 0 && facts.merged.length > 0 && facts.record === null,
     can_withdraw: role === 'owner' && facts.record !== null && (facts.record as { source?: string }).source !== 'stripe',
-    can_authenticate: role === 'owner' && input.charge?.state === 'owner-must-authenticate'
+    can_authenticate: role === 'owner' && input.charge?.state === 'owner-must-authenticate',
+    ...(role === 'owner' ? await payOffer(env, id, viewer!.github_id) : { can_pay: false, pay_note: null })
   });
 }
 
@@ -429,19 +434,22 @@ export async function accountResponse(request: Request, env: Env, url: URL, now:
     if (login === null) return json(404, { error: 'That is not a GitHub login. Next: check the address.' });
     return person[1] === 'solver' ? solverProfile(env, login) : ownerProfile(env, login, now);
   }
-  const payment = /^\/api\/b\/(bt-[a-f\d]{12})\/(payment|receipt|paid|authenticate)$/.exec(path);
+  const payment = /^\/api\/b\/(bt-[a-f\d]{12})\/(payment|receipt|paid|authenticate|pay)$/.exec(path);
   if (payment !== null) {
     const id = payment[1]!;
-    if (method === 'POST' && payment[2] === 'authenticate') {
+    if (method === 'POST' && (payment[2] === 'authenticate' || payment[2] === 'pay')) {
       const refusal = writeRefusal(request, url, true);
       if (refusal !== null) return refusal;
       const viewer = await viewerOf(request, env, now);
       if (viewer === null) return json(401, SIGN_IN_FIRST);
       const input = await paymentInput(env, id, now);
       if (input === null) return json(404, NOT_ON_BOARD);
-      if (roleOf(factsOf(input), viewer.login) !== 'owner') return json(403, { error: 'Only the poster of this bounty can finish its payment. Nothing changed.' });
+      // The GitHub id, not the login: a login can change hands, and this spends money.
+      const poster = await env.DB.prepare('SELECT poster_id FROM bounties WHERE id = ?').bind(id).first<{ poster_id: number | null }>();
+      if (roleOf(factsOf(input), viewer.login) !== 'owner' || poster?.poster_id !== viewer.github_id) return json(403, { error: 'Only the poster of this bounty can pay from this page. Nothing changed.' });
+      if (!stripeOn(env)) return json(409, { error: 'Paying through Stripe is not set up on this board. Nothing changed. Next: use the other ways to pay on this page.' });
       try {
-        const page = await authenticationPage(env, id, url.origin, now);
+        const page = payment[2] === 'pay' ? await openPayPage(env, id, url.origin, now) : await authenticationPage(env, id, url.origin, now);
         return 'error' in page ? json(409, page) : json(200, page);
       } catch (error) {
         if (error instanceof StripeUnavailable) return json(503, { error: `${redact(error.message)}. Nothing was charged. Next: try again.` });
