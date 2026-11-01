@@ -6,7 +6,7 @@ import { syncBuiltinESMExports } from 'node:module';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { answerGitHub, boardNotToldLine, boardTold, changeConfig, checkMergedSolutions, createBounty, flushBoardHints, hintOf, loadRecord, metaKeys, metaSet, postBounty, readBoardFacts, renderConfig, renderStatus, setMergeNoticeListener } from '../../../packages/box-bounty/index.js';
+import { answerGitHub, BOARD_DEFAULT, boardAddress, boardNotToldLine, boardTold, changeConfig, checkMergedSolutions, createBounty, flushBoardHints, hintOf, loadRecord, metaKeys, metaSet, postBounty, readBoardFacts, renderConfig, renderStatus, setMergeNoticeListener } from '../../../packages/box-bounty/index.js';
 import { fixture, sharedPostedFixture } from './github-fixture.js';
 import { CLI_DIST, git, rewriteRecordRaw, runRoot, write } from './support.js';
 
@@ -154,6 +154,31 @@ describe('the board unreachable or off', { timeout: 180000 }, () => {
     expect(requests()).toEqual([]);
     expect(metaKeys(repo, 'board_hint:')).toEqual([]);
     expect(loadRecord(repo, id).github!.pay!.accepts).toBeUndefined();
+  }));
+
+  it('the default is the live board, and no test run may reach it', () => {
+    expect(BOARD_DEFAULT).toBe('https://open-bounty-board.box-platform.workers.dev');
+    expect(process.env['BOX_BOARD_DEFAULT']).toBe('');
+    expect(boardAddress()).toBe('');
+    // A fixture may build its own environment: settings kept elsewhere are enough.
+    delete process.env['BOX_BOARD_DEFAULT'];
+    process.env['BOX_BOUNTY_SETTINGS_DIR'] = 'settings-kept-elsewhere-absent';
+    try {
+      expect(boardAddress()).toBe('');
+    } finally {
+      process.env['BOX_BOARD_DEFAULT'] = '';
+      delete process.env['BOX_BOUNTY_SETTINGS_DIR'];
+    }
+  });
+
+  it('the bare config says the tool calls the default board, with what it sends', () => fixture(({ repo }) => {
+    expect(renderConfig(repo)).not.toContain('board:');
+    process.env['BOX_BOARD_DEFAULT'] = BOARD_DEFAULT;
+    try {
+      expect(renderConfig(repo)).toContain(`board: ${BOARD_DEFAULT} — after a post, a merge, a close or a paid record the tool sends it the repository, issue number, bounty id and event name, and nothing else`);
+    } finally {
+      process.env['BOX_BOARD_DEFAULT'] = '';
+    }
   }));
 
   it('the setting takes only a bare address, and config shows it', () => fixture(({ repo, scratch }) => {

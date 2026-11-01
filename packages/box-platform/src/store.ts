@@ -8,34 +8,53 @@ export interface Statement {
 }
 export interface Db {
   prepare(sql: string): Statement;
+  /** Several statements in one call. On Workers Free each call costs CPU, whatever it carries. */
+  batch(statements: readonly Statement[]): Promise<unknown>;
 }
+
+/** A batch of nothing is refused by D1. */
+export const runAll = async (db: Db, statements: readonly Statement[]): Promise<void> => {
+  if (statements.length > 0) await db.batch(statements);
+};
 
 export async function getMeta(db: Db, key: string): Promise<string | null> {
   return (await db.prepare('SELECT value FROM meta WHERE key = ?').bind(key).first<{ value: string }>())?.value ?? null;
 }
+export const metaStatement = (db: Db, key: string, value: string): Statement =>
+  db.prepare('INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value').bind(key, value);
 export async function setMeta(db: Db, key: string, value: string): Promise<void> {
-  await db.prepare('INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value').bind(key, value).run();
+  await metaStatement(db, key, value).run();
+}
+/** Several keys in one call; a missing key is absent from the map. */
+export async function getMetas(db: Db, keys: readonly string[]): Promise<Map<string, string>> {
+  const { results } = await db.prepare(`SELECT key, value FROM meta WHERE key IN (${keys.map(() => '?').join()})`).bind(...keys).all<{ key: string; value: string }>();
+  return new Map(results.map(row => [row.key, row.value]));
 }
 
 const LOG_KEEP = 500;
 /** The platform's own log. Never served. A private drop passes no issue: it names nothing. */
+export const logStatements = (db: Db, at: number, reason: string, issue: string | null): Statement[] => [
+  db.prepare('INSERT INTO log (at, reason, issue) VALUES (?, ?, ?)').bind(at, reason, issue),
+  db.prepare('DELETE FROM log WHERE rowid <= (SELECT MAX(rowid) FROM log) - ?').bind(LOG_KEEP)
+];
 export async function log(db: Db, at: number, reason: string, issue: string | null): Promise<void> {
-  await db.prepare('INSERT INTO log (at, reason, issue) VALUES (?, ?, ?)').bind(at, reason, issue).run();
-  await db.prepare('DELETE FROM log WHERE rowid <= (SELECT MAX(rowid) FROM log) - ?').bind(LOG_KEEP).run();
+  await db.batch(logStatements(db, at, reason, issue));
 }
 
 const BOUNTY_TABLES = ['pull_requests', 'events', 'receipts', 'paid_clicks'];
 
 /** Everything held about a repository that is no longer public. */
 export async function purgeRepository(db: Db, name: string): Promise<void> {
-  for (const table of BOUNTY_TABLES) {
-    await db.prepare(`DELETE FROM ${table} WHERE bounty_id IN (SELECT id FROM bounties WHERE repository = ?)`).bind(name).run();
-  }
-  await db.prepare('DELETE FROM bounties WHERE repository = ?').bind(name).run();
-  await db.prepare('DELETE FROM repositories WHERE name = ?').bind(name).run();
+  await db.batch([
+    ...BOUNTY_TABLES.map(table => db.prepare(`DELETE FROM ${table} WHERE bounty_id IN (SELECT id FROM bounties WHERE repository = ?)`).bind(name)),
+    db.prepare('DELETE FROM bounties WHERE repository = ?').bind(name),
+    db.prepare('DELETE FROM repositories WHERE name = ?').bind(name)
+  ]);
 }
 
 export async function removeBounty(db: Db, id: string): Promise<void> {
-  for (const table of BOUNTY_TABLES) await db.prepare(`DELETE FROM ${table} WHERE bounty_id = ?`).bind(id).run();
-  await db.prepare('DELETE FROM bounties WHERE id = ?').bind(id).run();
+  await db.batch([
+    ...BOUNTY_TABLES.map(table => db.prepare(`DELETE FROM ${table} WHERE bounty_id = ?`).bind(id)),
+    db.prepare('DELETE FROM bounties WHERE id = ?').bind(id)
+  ]);
 }

@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { handle } from '../../packages/box-platform/src/api.js';
 import { LIMITS } from '../../packages/box-platform/src/github.js';
-import { refresh, taskOf, titleOf } from '../../packages/box-platform/src/refresh.js';
+import { lookNow, refresh, taskOf, titleOf } from '../../packages/box-platform/src/refresh.js';
+import type { Db, Statement } from '../../packages/box-platform/src/store.js';
 import { bodyOf, commitFor, type StandinIssue } from '../../packages/box-platform/standin/standin.js';
 import { askJson, MINUTE, NOW, refreshUntilDone, rig, type Rig } from './support.js';
 
@@ -211,6 +212,84 @@ describe('rate limits', () => {
     expect((await refresh(tokened.env)).requests).toBe(LIMITS.token.tick);
     expect(LIMITS.token.tick).toBeLessThanOrEqual(50);
     await tokened.close();
+  });
+
+  describe('database calls in one run (Workers Free: each call costs CPU)', () => {
+    /** Counts every call that reaches the database; a batch is one. */
+    const counted = (env: Rig['env']) => {
+      const calls = { n: 0 };
+      const wrap = (one: Statement): Statement => ({
+        bind: (...values) => wrap(one.bind(...values)),
+        all: () => { calls.n += 1; return one.all(); },
+        first: () => { calls.n += 1; return one.first(); },
+        run: () => { calls.n += 1; return one.run(); }
+      });
+      const DB: Db = { prepare: sql => wrap(env.DB.prepare(sql)), batch: async statements => { const after = calls.n + 1; await env.DB.batch(statements); calls.n = after; } };
+      return { calls, env: { ...env, DB } };
+    };
+
+    it('a search over 25 stored bounties stays few, whatever the page holds', async () => {
+      seed(25);
+      await refreshUntilDone(r);
+      r.clock.at += 15 * MINUTE;
+      const { calls, env } = counted({ ...r.env, tickReads: 1 });
+      expect(await refresh(env)).toEqual({ requests: 1, state: 'budget-spent' });
+      expect(calls.n).toBeLessThanOrEqual(10);
+    });
+
+    it('a run with nothing due asks GitHub nothing and leaves read_at alone', async () => {
+      seed(3);
+      await refreshUntilDone(r);
+      const before = (await askJson(r, handle, '/api/board')).body.read_at;
+      r.clock.at += MINUTE;
+      const asked = r.standin.requests.length;
+      const { calls, env } = counted(r.env);
+      expect(await refresh(env)).toEqual({ requests: 0, state: 'done' });
+      expect(r.standin.requests.length).toBe(asked);
+      expect(calls.n).toBeLessThanOrEqual(4);
+      expect((await askJson(r, handle, '/api/board')).body.read_at).toBe(before);
+    });
+
+    it('gives back what a run reserved and did not spend', async () => {
+      seed(1);
+      await refreshUntilDone(r);
+      const used = await r.env.DB.prepare(`SELECT value FROM meta WHERE key = 'budget_used'`).first<{ value: string }>();
+      expect(Number(used?.value)).toBe(r.standin.requests.length);
+    });
+
+    it('leaves a closed bounty alone until its longer wait, and an open one does not wait', async () => {
+      seed(2);
+      r.standin.issues[0]!.state = 'closed';
+      await refreshUntilDone(r);
+      const asked = () => r.standin.requests.filter(line => line.endsWith('/pulls')).length;
+      const before = asked();
+      r.clock.at += 16 * MINUTE;
+      await refresh({ ...r.env, closedStaleMs: 60 * MINUTE });
+      expect(asked() - before).toBe(1);
+      r.clock.at += 61 * MINUTE;
+      await refresh({ ...r.env, closedStaleMs: 60 * MINUTE });
+      expect(asked() - before).toBe(3);
+    });
+
+    it('a look stopped by the budget goes first in the next refresh, even when closed', async () => {
+      seed(2);
+      r.standin.issues[0]!.state = 'closed';
+      await refreshUntilDone(r);
+      const id = r.standin.issues[0]!.id;
+      expect(await lookNow({ ...r.env, tickReads: 2 }, 'example-tidepool/ledger', 1, id, r.clock.at)).toBe('budget-spent');
+      const row = await r.env.DB.prepare('SELECT details_read_at AS at FROM bounties WHERE id = ?').bind(id).first<{ at: number }>();
+      expect(row?.at).toBe(0);
+    });
+
+    it('keeps the events it read when the budget stops the walk', async () => {
+      r.standin.repositories.set('example-tidepool/ledger', { language: 'Go', visibility: 'public' });
+      const events = Array.from({ length: 8 }, (_, i) => ({ v: 1, type: 'solution', at: new Date(NOW + i).toISOString() }));
+      r.standin.issues.push(issue({ id: 'bt-000000000001', number: 1, pulls: [], events }));
+      const small = { ...r.env, tickReads: 6 };
+      await refresh(small);
+      const stored = await r.env.DB.prepare('SELECT COUNT(*) AS n FROM events').first<{ n: number }>();
+      expect(stored?.n).toBeGreaterThan(0);
+    });
   });
 
   it('when GitHub says the limit is used up: says so, keeps what it read, waits for the reset, then resumes', async () => {
