@@ -166,6 +166,27 @@ async function ownerProfile(env: Env, login: string, now: number): Promise<Respo
   return json(200, { login, record: ownerRecord(inputs, now), not_counted: notCountedOf(inputs), bounties: listed });
 }
 
+const OWING = new Set(['owed', 'owner-decides']);
+
+/** What the signed-in person owes and is owed, by the same facts as each bounty's page. Whom, how much, since when; never a method. Read at render, so a repository gone private leaves. */
+async function debtsOf(env: Env, login: string, now: number) {
+  const lists = async (where: string, mine: (input: BountyPayment, payment: ReturnType<typeof paymentOf>) => boolean) => {
+    const rows: { id: string; title: string; amount: number; since: string; to: string | null; to_one_of?: readonly string[] }[] = [];
+    for (const input of await loadPayments(env.DB, where, login)) {
+      const payment = paymentOf(input);
+      if (!OWING.has(payment.state) || payment.owed === null || !mine(input, payment) || rows.length >= LIST_MAX) continue;
+      if (await readBounty(env, input.id, now) === null) continue;
+      const { to, amount, since } = payment.owed;
+      rows.push({ id: input.id, title: input.title, amount, since, to, ...('to_one_of' in payment.owed ? { to_one_of: payment.owed.to_one_of } : {}) });
+    }
+    return rows;
+  };
+  return {
+    you_owe: await lists('b.poster = ? COLLATE NOCASE', (_input, payment) => !same(payment.owed!.to, login)),
+    owed_to_you: await lists(`EXISTS (SELECT 1 FROM pull_requests p WHERE p.bounty_id = b.id AND p.state = 'merged' AND p.author = ? COLLATE NOCASE)`, (input, payment) => !same(input.poster, login) && landedOf(input).some(pull => same(pull.author, login)) && (payment.owed!.to === null || same(payment.owed!.to, login)))
+  };
+}
+
 async function paymentInput(env: Env, id: string, now: number): Promise<BountyPayment | null> {
   const read = await readBounty(env, id, now);
   if (read === null) return null;
@@ -262,7 +283,7 @@ export async function accountResponse(request: Request, env: Env, url: URL, now:
   if (method === 'GET' && path === '/api/me') {
     const viewer = await viewerOf(request, env, now);
     if (viewer === null) return json(200, { signed_in: false });
-    return json(200, { signed_in: true, login: viewer.login, methods: (await methodsOfLogin(env, viewer.login)).map(shown) });
+    return json(200, { signed_in: true, login: viewer.login, methods: (await methodsOfLogin(env, viewer.login)).map(shown), ...await debtsOf(env, viewer.login, now) });
   }
   if (method === 'PUT' && path === '/api/me/methods') {
     const refusal = writeRefusal(request, url, true);

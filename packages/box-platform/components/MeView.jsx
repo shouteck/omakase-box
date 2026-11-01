@@ -3,7 +3,7 @@
 // a bounty; it is how an owner who owes you finds a way to pay you.
 import { useEffect, useRef, useState } from 'react';
 import { LABELS, MethodLine } from './Methods.jsx';
-import { Primary, Quiet, Section, Soft, Title } from './ui.jsx';
+import { fmtDate, Primary, Quiet, Section, Soft, Title } from './ui.jsx';
 
 const EXAMPLES = { paypal: 'https://paypal.me/you', stripe: 'https://buy.stripe.com/…', 'github-sponsors': 'https://github.com/sponsors/you', 'wise-email': 'you@example.com', wallet: 'Your address' };
 const DEFAULTS = { paypal: 'everyone', stripe: 'everyone', 'github-sponsors': 'everyone', 'wise-email': 'owner-only', wallet: 'owner-only' };
@@ -81,6 +81,27 @@ function Editor({ me, setMe }) {
   );
 }
 
+/** One debt: how much, whom, since when, and the bounty's page. The title is the poster's words, as text. */
+function Debt({ debt, line }) {
+  return (
+    <li className="border-t border-line py-4">
+      <a href={`/b/${debt.id}/`} className="break-words">{debt.title}</a>
+      <p className="mt-1">{line(debt)}, since {fmtDate(debt.since)}.</p>
+    </li>
+  );
+}
+const toWhom = debt => debt.to ?? `one of ${(debt.to_one_of ?? []).join(' or ')}; you decide whom`;
+
+function Debts({ title, id, debts, line }) {
+  return (
+    <Section title={title} id={id}>
+      {debts.length === 0
+        ? <p className="text-soft">Nothing right now.</p>
+        : <ul>{debts.map(debt => <Debt key={debt.id} debt={debt} line={line} />)}</ul>}
+    </Section>
+  );
+}
+
 export default function MeView() {
   const [me, setMe] = useState(null);
   const [failed, setFailed] = useState(false);
@@ -105,6 +126,8 @@ export default function MeView() {
   return (
     <>
       <Title sub={`Signed in as ${me.login}.`}>Your page</Title>
+      <Debts title="You owe" id="you-owe" debts={me.you_owe} line={debt => `$${debt.amount} to ${toWhom(debt)}`} />
+      <Debts title="Owed to you" id="owed-to-you" debts={me.owed_to_you} line={debt => (debt.to === null ? `$${debt.amount}, if the owner decides on you` : `$${debt.amount}`)} />
       <Editor me={me} setMe={setMe} />
       <Section title="Your public pages" id="public">
         <ul className="flex flex-col gap-2">
