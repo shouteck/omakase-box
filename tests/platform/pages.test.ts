@@ -443,7 +443,21 @@ describe('the pages', () => {
     await page.goto(`${board.url}/sign-in/?error=try-again`);
     await expect.poll(() => page.locator('main [role=alert]').innerText()).toContain('Next: sign in again.');
     await visit(page, '/privacy/');
-    expect(await page.locator('main').innerText()).toContain('It never asks for your email address');
+    const privacy = await page.locator('main').innerText();
+    expect(privacy).toContain('It never asks for your email address');
+    for (const stored of ['your Stripe account ID', 'customer and card IDs', 'the provider\'s payment IDs', 'your PayPal account ID']) expect(privacy).toContain(stored);
+    await close();
+  });
+
+  it('the footer names who runs the board and reaches the terms, which say it holds no money', async () => {
+    const { page, notFound, close } = await fresh();
+    await visit(page, '/board/');
+    expect(await page.locator('footer').innerText()).toContain('Run by omakase-box');
+    await page.click('footer >> text=Terms');
+    await page.waitForURL(/\/terms\//);
+    const terms = await page.locator('main').innerText();
+    for (const phrase of ['run by omakase-box', 'never holds money', 'does not guarantee that anyone pays', 'Refunds, disputes and reversals', 'no warranty']) expect(terms).toContain(phrase);
+    expect(notFound).toEqual([]);
     await close();
   });
 
@@ -477,7 +491,7 @@ describe('the pages', () => {
 
   it('every page\'s words stay clear of a money claim', async () => {
     const { page, close } = await fresh();
-    for (const path of ['/', '/board/', '/how/', '/agents/', '/me/', '/sign-in/', '/privacy/', '/solver/example-quill/', '/owner/example-mara/', `/b/${STATE_IDS.merged}/`]) {
+    for (const path of ['/', '/board/', '/how/', '/agents/', '/me/', '/sign-in/', '/privacy/', '/terms/', '/solver/example-quill/', '/owner/example-mara/', `/b/${STATE_IDS.merged}/`]) {
       await visit(page, path);
       expect(moneyClaims(await page.locator('body').innerText()), path).toEqual([]);
     }
