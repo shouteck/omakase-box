@@ -60,7 +60,7 @@ export const WITHHELD = '(withheld — the scan flagged it; see the hit above)';
 // The money side of `describe`, generated from the owner's setting (BT11a) —
 // the amount is never hard-coded, so the text cannot outlive what is set.
 export const describeRewardLine = (amount: number): string => amount === 0
-  ? 'Every bounty states a reward of $0 — no payment exists.'
+  ? 'Every bounty states a reward of $0 — nothing promised.'
   : `Every bounty states a reward of $${amount} — a promise in the owner's name; posting an answer does not guarantee it. There are three ways to pay it: by hand, one click and on merge (box bounty help).`;
 
 // The name the published package answers to — provisional until the owner's
@@ -71,7 +71,7 @@ export const INSTALL_PACKAGE = 'box-bounty';
 
 export const RULES_LINES: readonly string[] = [
   'box bounty can hand a task you cannot or should not do to an outside solver',
-  'and bring solutions back as facts. Posting is free and goes only to this',
+  'and bring solutions back as facts. Posting is free apart from any reward the owner set, and goes only to this',
   'repository\'s own public GitHub, as an issue; the owner\'s standing permission',
   'applies (`box bounty config` shows it). `box bounty describe` says when it',
   'beats doing the work yourself. Using it is always your call.'

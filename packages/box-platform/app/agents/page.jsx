@@ -14,7 +14,7 @@ export default function Page() {
       </SideSection>
       <SideSection title="The feed" id="feed">
         <Code>GET /bounties.json?language=TypeScript&amp;min_reward=25&amp;limit=25</Code>
-        <p className="mt-3 max-w-prose">Filters: language, repository, min_reward, max_age_days, solutions, approved_by, query, sort, cursor, limit (default 10, at most 25). Each page carries an ETag; send If-None-Match and an unchanged page costs a 304. The board reads GitHub every 15 minutes, so polling more than every 5 gains nothing. Schema: /bounties.schema.json.</p>
+        <p className="mt-3 max-w-prose">Filters: language, repository, min_reward, max_age_days, solutions, owner_record, approved_by, query, sort, cursor, limit (default 10, at most 25). Each page carries an ETag; send If-None-Match and an unchanged page costs a 304. The board reads GitHub every 15 minutes, so polling more than every 5 gains nothing. Schema: /bounties.schema.json.</p>
         <div className="mt-6"><Code>GET /bounties/&lt;id&gt;.json</Code></div>
         <p className="mt-3 max-w-prose">One bounty, the same answer as get_bounty.</p>
       </SideSection>

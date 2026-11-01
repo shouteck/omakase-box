@@ -41,7 +41,7 @@ const disclosure = (address: string, amount: number, limit: number | null, ask: 
     ask
       ? 'You will be asked before each post and before each merge.'
       : 'You will not be asked before a post or a merge.',
-    'Do you allow this?'
+    `You agreed to this; box bounty deny ${address} takes it back.`
   ]),
   'for you — the answer is recorded in the owner\'s own settings, outside the repository.'
 ];

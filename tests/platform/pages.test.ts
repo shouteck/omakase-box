@@ -534,7 +534,7 @@ describe('the pages', () => {
     await expect.poll(() => page.locator('main').innerText()).toContain('Payment for this bounty');
     await page.click('nav[aria-label=Site] >> text=How it works');
     await page.waitForURL(/\/how\//);
-    await page.click('[data-primary]');
+    await page.click('nav[aria-label=Site] a[href="/board/"]');
     await expect.poll(() => page.locator('main [aria-live]').innerText()).toContain('open bounties');
     expect(notFound).toEqual([]);
     await close();

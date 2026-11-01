@@ -1,5 +1,5 @@
 import { WaysNotHere } from '../../components/PayWays.jsx';
-import { CodeBlock, Primary, Title } from '../../components/ui.jsx';
+import { CodeBlock, Title } from '../../components/ui.jsx';
 
 export const metadata = { title: 'How it works, open bounty board' };
 
@@ -137,7 +137,6 @@ export default function Page() {
         </div>
       </section>
 
-      <div className="mt-14"><Primary href="/board/">See open bounties</Primary></div>
     </>
   );
 }

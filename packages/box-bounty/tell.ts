@@ -31,7 +31,7 @@ export function renderDescribe(repoRoot: string | null): string {
   });
   lines.push('the facts for choosing, from this project\'s records:');
   lines.push(amount === 0
-    ? '  cost: GitHub posting is public and free; every bounty states a reward of $0. No payment exists. A draft is free; preparing and judging solutions takes your time.'
+    ? '  cost: GitHub posting is public and free; every bounty states a reward of $0. Nothing promised. A draft is free; preparing and judging solutions takes your time.'
     : `  cost: GitHub posting is public and free; every bounty states a reward of $${amount} — the owner pays it, and posting an answer does not guarantee it. A draft is free; preparing and judging solutions takes your time.`);
   if (posted.length === 0) lines.push('  expected wait: unknown; no bounty history yet. Nobody is known to be watching these issues yet.');
   else lines.push(`  expected wait: ${waits.length === 0 ? 'no solution wait recorded yet' : `${Math.min(...waits).toFixed(1)} to ${Math.max(...waits).toFixed(1)} hours from posting to the first solution recorded, across ${waits.length} bounty/bounties`}; ${merged.length} of ${ended.length} ended posted bounties had a solution merged. Past waits do not predict the next answer.`);

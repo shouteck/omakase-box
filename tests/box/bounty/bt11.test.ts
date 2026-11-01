@@ -350,7 +350,7 @@ describe('BT11a — the public side and the words around it', () => {
   it('describe generates its money sentence from the setting', () => {
     const repo = makeRepo({ 'TASK.md': 'task\n' });
     ownerSays(repo, 'allowed');
-    expect(renderDescribe(repo)).toContain('a reward of $0 — no payment exists');
+    expect(renderDescribe(repo)).toContain('a reward of $0 — nothing promised');
     changeConfig(repo, 'set', 'reward-limit', '40');
     changeConfig(repo, 'set', 'reward', '7');
     const text = renderDescribe(repo);
