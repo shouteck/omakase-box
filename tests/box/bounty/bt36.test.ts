@@ -65,16 +65,17 @@ const paidEvents = (repo: string, rid: string) =>
   (JSON.parse(readRecordRaw(repo, rid)) as { events: Record<string, unknown>[] }).events.filter(event => event['stage'] === 'paid');
 
 describe('a merged bounty with a reward reads owed until the owner records paid', () => {
-  it('status names whom is owed and the `box bounty` overview counts it', () => {
+  it('status <id> names whom is owed; the `box bounty` overview and an unasked status say nothing of it (PF15)', () => {
     const repo = makeRepo({ 'app.txt': 'seed\n' });
     const rid = applied(repo, 1);
-    const status = box(repo, ['status']);
+    const status = box(repo, ['status', rid]);
     expect(status.status).toBe(0);
     expect(status.stdout).toContain('payment: owed $5 to solver (at the link they supplied)');
     expect(status.stdout).toContain(`box bounty config set paid ${rid}`);
     const overview = box(repo, []);
     expect(overview.status).toBe(0);
-    expect(overview.stdout).toContain('1 payment(s) owed — box bounty status shows whom');
+    expect(overview.stdout).not.toMatch(/owed/);
+    expect(box(repo, ['status']).stdout).not.toMatch(/owed/);
   });
 
   it('config set paid records the owner\'s word — amount from the bound reward, by owner — and the owed lines turn paid', () => {
@@ -108,7 +109,7 @@ describe('a merged bounty with a reward reads owed until the owner records paid'
     expect(paid).toHaveLength(2);
     expect(paid[1]).toMatchObject({ stage: 'paid', amount: 5, by: 'owner', withdrawn: true });
     expect(box(repo, ['status', rid]).stdout).toContain('payment: owed $5');
-    expect(box(repo, []).stdout).toContain('1 payment(s) owed');
+    expect(box(repo, []).stdout).not.toMatch(/owed/);
   });
 
   it('a $0 reward or a bounty never merged refuses paid-nothing-owed and changes nothing; `no` on nothing recorded refuses too', () => {
@@ -176,7 +177,7 @@ describe('the shared part carries the paid fact — and nothing else of the owne
       answerGitHub(world.repo, world.id, 1);
       const result = applyBounty(world.repo, world.id, 1);
       expect(result.outcome).toBe('applied');
-      expect(renderStatus(world.repo)).toContain('payment: owed $5');
+      expect(renderStatus(world.repo, { id: world.id })).toContain('payment: owed $5');
 
       const callsBefore = world.state().calls.length;
       const commentsBefore = world.state().comments.length;
@@ -202,7 +203,7 @@ describe('the shared part carries the paid fact — and nothing else of the owne
       expect(shared?.stage).toBe('applied');
       expect(shared?.events.some(event => event.stage === 'paid' && event.amount === 5 && event.by === 'owner')).toBe(true);
       expect(paymentOf(shared!)?.paidAt).not.toBeNull();
-      expect(renderStatus(other)).toContain('paid $5');
+      expect(renderStatus(other, { id: world.id })).toContain('paid $5');
 
       // And the withdrawal travels the same way: owed again on both.
       expect(changeConfig(world.repo, 'set', 'paid', world.id, undefined, 'no')).toContain('withdrawn');
@@ -210,8 +211,7 @@ describe('the shared part carries the paid fact — and nothing else of the owne
       const withdrawn = sharedRead(other, world.id);
       expect(withdrawn?.events.some(event => event.stage === 'paid' && event.withdrawn === true)).toBe(true);
       expect(paymentOf(withdrawn!)?.paidAt).toBeNull();
-      expect(renderStatus(other)).toContain('payment: owed $5');
-      expect(renderStatus(other)).toContain('1 payment(s) owed');
+      expect(renderStatus(other, { id: world.id })).toContain('payment: owed $5');
     }); }
   });
 });

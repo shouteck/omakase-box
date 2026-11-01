@@ -6,6 +6,7 @@ import { finishOrder, openPayPalPage, paypalOffer } from './paypal-pay.js';
 import { loginAddress, payerFrom, paypalOn, PayPalUnavailable } from './paypal.js';
 import { errorWords, redact, stripe, stripeOn, StripeUnavailable } from './stripe.js';
 import { checkMethod, isLink, MAX_METHODS, type Method, parseStored, publicOnly } from './methods.js';
+import { waysSetUp } from './pay-ways.js';
 import { type BountyPayment, emptyPayment, factsOf, landedOf, loadPayments, notCounted, notCountedOf, ownerRecord, paymentOf, solverRecord } from './payments.js';
 import { readBounty } from './query.js';
 import { LOGIN } from './refresh.js';
@@ -161,7 +162,14 @@ async function solverProfile(env: Env, login: string): Promise<Response> {
   const methods = await methodsOfLogin(env, login);
   const open = publicOnly(methods);
   // How many are held back, never what they are: the tool's owner message says where to see them.
-  return json(200, { login, record: solverRecord(login, inputs), methods: open.map(shown), methods_more: methods.length - open.length, merged: listed });
+  return json(200, { login, record: solverRecord(login, inputs), methods: open.map(shown), methods_more: methods.length - open.length, merged: listed, ways_set_up: waysSetUp({ stripe: stripeOn(env), paypal: paypalOn(env) }), takes: await takesOf(env, login) });
+}
+
+/** Whether someone who has answered a bounty has connected an account: two facts, no account detail. Null: the board knows no pull request of theirs, so it cannot say. */
+async function takesOf(env: Env, login: string): Promise<{ stripe: boolean; paypal: boolean } | null> {
+  const row = await env.DB.prepare(`SELECT (SELECT ready FROM stripe_accounts s WHERE s.github_id = p.author_id) AS stripe, (SELECT 1 FROM paypal_accounts a WHERE a.github_id = p.author_id) AS paypal
+    FROM pull_requests p WHERE p.author = ? COLLATE NOCASE AND p.author_id IS NOT NULL LIMIT 1`).bind(login).first<{ stripe: number | null; paypal: number | null }>();
+  return row === null ? null : { stripe: row.stripe === 1, paypal: row.paypal === 1 };
 }
 
 async function ownerProfile(env: Env, login: string, now: number): Promise<Response> {
@@ -176,20 +184,24 @@ const OWING = new Set(['owed', 'owner-decides']);
 const byProvider = (record: unknown): boolean => ['stripe', 'paypal'].includes((record as { source?: string } | null)?.source ?? '');
 
 /** What the signed-in person owes and is owed, by the same facts as each bounty's page. Whom, how much, since when; never a method. Read at render, so a repository gone private leaves. */
+async function debtRows(env: Env, login: string, now: number, where: string, mine: (input: BountyPayment, payment: ReturnType<typeof paymentOf>) => boolean) {
+  const rows: { id: string; title: string; amount: number; since: string; to: string | null; to_one_of?: readonly string[] }[] = [];
+  for (const input of await loadPayments(env.DB, where, login)) {
+    const payment = paymentOf(input);
+    if (!OWING.has(payment.state) || payment.owed === null || !mine(input, payment) || rows.length >= LIST_MAX) continue;
+    if (await readBounty(env, input.id, now) === null) continue;
+    const { to, amount, since } = payment.owed;
+    rows.push({ id: input.id, title: input.title, amount, since, to, ...('to_one_of' in payment.owed ? { to_one_of: payment.owed.to_one_of } : {}) });
+  }
+  return rows;
+}
+
+const youOwe = (env: Env, login: string, now: number) => debtRows(env, login, now, 'b.poster = ? COLLATE NOCASE', (_input, payment) => !same(payment.owed!.to, login));
+
 async function debtsOf(env: Env, login: string, now: number) {
-  const lists = async (where: string, mine: (input: BountyPayment, payment: ReturnType<typeof paymentOf>) => boolean) => {
-    const rows: { id: string; title: string; amount: number; since: string; to: string | null; to_one_of?: readonly string[] }[] = [];
-    for (const input of await loadPayments(env.DB, where, login)) {
-      const payment = paymentOf(input);
-      if (!OWING.has(payment.state) || payment.owed === null || !mine(input, payment) || rows.length >= LIST_MAX) continue;
-      if (await readBounty(env, input.id, now) === null) continue;
-      const { to, amount, since } = payment.owed;
-      rows.push({ id: input.id, title: input.title, amount, since, to, ...('to_one_of' in payment.owed ? { to_one_of: payment.owed.to_one_of } : {}) });
-    }
-    return rows;
-  };
+  const lists = (where: string, mine: (input: BountyPayment, payment: ReturnType<typeof paymentOf>) => boolean) => debtRows(env, login, now, where, mine);
   return {
-    you_owe: await lists('b.poster = ? COLLATE NOCASE', (_input, payment) => !same(payment.owed!.to, login)),
+    you_owe: await youOwe(env, login, now),
     owed_to_you: await lists(`EXISTS (SELECT 1 FROM pull_requests p WHERE p.bounty_id = b.id AND p.state = 'merged' AND p.author = ? COLLATE NOCASE)`, (input, payment) => !same(input.poster, login) && landedOf(input).some(pull => same(pull.author, login)) && (payment.owed!.to === null || same(payment.owed!.to, login)))
   };
 }
@@ -462,6 +474,10 @@ export async function accountResponse(request: Request, env: Env, url: URL, now:
     if (viewer === null) return json(401, SIGN_IN_FIRST);
     await env.DB.prepare('DELETE FROM paypal_accounts WHERE github_id = ?').bind(viewer.github_id).run();
     return json(200, { paypal: await paypalOf(env, viewer) });
+  }
+  if (method === 'GET' && path === '/api/me/due') {
+    const viewer = await viewerOf(request, env, now);
+    return json(200, { due: viewer === null ? 0 : (await youOwe(env, viewer.login, now)).length });
   }
   if (method === 'GET' && path === '/api/me') {
     const viewer = await viewerOf(request, env, now);

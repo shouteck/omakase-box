@@ -5,8 +5,8 @@
 // A stranger can run a board, so every answer is checked before it is kept.
 
 import { spawnSync } from 'node:child_process';
-import { CHARGE_WORDS } from '../box-platform/src/charge-words.js';
-import { acceptsShape, checkedAccepts, methodWords, paymentOf, type PayAccepts } from './pay.js';
+import { CHARGE_WORDS, PAYPAL_WORDS } from '../box-platform/src/charge-words.js';
+import { acceptsShape, checkedAccepts, checkedWays, methodWords, paymentOf, type PayAccepts } from './pay.js';
 import { isOpenStage, listRecords, type BountyRecord } from './record.js';
 import { loadSettings } from './settings.js';
 import { metaGet, metaKeys, metaSet, sharedEnded, sharedOpen } from './store.js';
@@ -175,7 +175,10 @@ const pagePath = (id: string): string => `/b/${id}/`;
 
 function acceptsFrom(reply: Reply): PayAccepts | null {
   const profile = jsonOf(reply);
-  return profile === null ? null : checkedAccepts(profile['methods'], profile['methods_more']);
+  if (profile === null) return null;
+  const accepts = checkedAccepts(profile['methods'], profile['methods_more']);
+  const ways = checkedWays(profile['ways_set_up'], profile['takes'], boardAddress());
+  return accepts === null || ways === undefined ? accepts : { ...accepts, ways };
 }
 
 // The pay message's read, once, at close. Null: the board is off, and today's
@@ -199,7 +202,7 @@ export type BoardFact =
     readonly kind: 'listed'; readonly at: string; readonly page: string; readonly solutions: number; readonly payment: PaymentState;
     readonly amount: number | null; readonly to: string | null; readonly toOneOf: readonly string[]; readonly since: string | null; readonly pullRequest: number | null;
     readonly recordedBy: string | null; readonly recordedAt: string | null; readonly solverBy: string | null; readonly solverSays: string | null; readonly solverAt: string | null;
-    readonly accepts: PayAccepts | null; readonly charge?: string | null; readonly stripe?: boolean;
+    readonly accepts: PayAccepts | null; readonly charge?: string | null; readonly stripe?: boolean; readonly paypal?: boolean; readonly paypalCharge?: boolean;
   };
 
 const isObject = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -231,7 +234,9 @@ function factFrom(id: string, detail: Record<string, unknown>, at: string): Boar
     accepts: null,
     // The tool's own words for a state it knows; anything else a board sends is left out.
     charge: isObject(payment['charge']) && typeof payment['charge']['state'] === 'string' && Object.hasOwn(CHARGE_WORDS, payment['charge']['state']) ? payment['charge']['state'] : null,
-    stripe: recorded['source'] === 'stripe'
+    stripe: recorded['source'] === 'stripe',
+    paypal: recorded['source'] === 'paypal',
+    paypalCharge: isObject(payment['charge']) && payment['charge']['whose_word'] === 'the board\'s, from PayPal\'s answer'
   };
 }
 
@@ -310,9 +315,11 @@ export function boardLine(root: string, record: BountyRecord): string | null {
   if (fact.kind === 'not-listed') return `board: not listed yet — it reads GitHub every 15 minutes; next: box bounty status ${record.id} later`;
   const name = (login: string | null): string => login === null ? 'an account whose name could not be read' : solverAccount(login);
   const record_it = record.shared === true ? '' : `; record it: box bounty config set paid ${record.id}`;
-  const words = (fact.charge ?? null) === null ? undefined : CHARGE_WORDS[fact.charge as keyof typeof CHARGE_WORDS];
-  const chargeLine = words === undefined ? '' : `; pay on merge: ${words}`;
-  if (fact.stripe === true) return `board: paid $${fact.amount ?? '?'} to ${name(fact.to)} through Stripe on ${day(fact.recordedAt)}, Stripe's word${chargeLine} · ${fact.page}`;
+  const state = fact.charge as keyof typeof CHARGE_WORDS | null | undefined;
+  const words = (state ?? null) === null ? undefined : (fact.paypalCharge === true ? PAYPAL_WORDS[state!] : undefined) ?? CHARGE_WORDS[state!];
+  const chargeLine = words === undefined ? '' : `; payment: ${words}`;
+  const provider = fact.stripe === true ? 'Stripe' : fact.paypal === true ? 'PayPal' : null;
+  if (provider !== null) return `board: paid $${fact.amount ?? '?'} to ${name(fact.to)} through ${provider} on ${day(fact.recordedAt)}, ${provider}'s word${chargeLine} · ${fact.page}`;
   if (chargeLine !== '' && fact.payment !== 'confirmed') return `${boardCase(fact, name, record, record_it)}${chargeLine}`;
   return boardCase(fact, name, record, record_it);
 }

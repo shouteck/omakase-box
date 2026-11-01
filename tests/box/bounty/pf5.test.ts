@@ -377,7 +377,7 @@ describe('status', { timeout: 180000 }, () => {
       [`/bounties/${id}.json`]: { status: 200, body: detail(id, payment, [{ number: 1, author: 'solver1', merged_at: '2026-10-15T00:00:00Z' }]) }
     });
     readBoardFacts(repo);
-    expect(renderStatus(repo)).toContain(expected);
+    expect(renderStatus(repo, { id })).toContain(expected);
   }));
 
   it('asks at most five reads per command and speaks of a stated number of merged bounties', { timeout: 120000 }, () => fixture(({ repo, id, scratch }) => {

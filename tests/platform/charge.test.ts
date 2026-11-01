@@ -652,7 +652,7 @@ describe('what a solver reads', () => {
 
   it('every bounty says agents are welcome, and pays_on_merge only with the poster\'s switch, a card, and a reward within the limit', async () => {
     await merged(open());
-    expect(await entry()).toMatchObject({ agents_welcome: true, pays_on_merge: false, reward: { paid: 'by the owner, directly' } });
+    expect(await entry()).toMatchObject({ agents_welcome: true, pays_on_merge: false, reward: { paid: 'by hand, by the owner; one click, by the owner, through Stripe' } });
     await ownerOn(44);
     expect((await entry()).pays_on_merge).toBe(false);
     await post('/api/me/pay', await signIn(OWNER_ID, OWNER), { limit: 45, repositories: [REPOSITORY] });

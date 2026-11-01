@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 // Box CLI:
 //   bounty create --task <file|-> --why "<one line>" [--title "<one line>"] [--repo <path>]
 //   bounty help

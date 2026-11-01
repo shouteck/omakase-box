@@ -7,6 +7,7 @@
 // on a merge.
 
 import { KINDS, isLink } from '../box-platform/src/methods.js';
+import type { Provider } from '../box-platform/src/pay-ways.js';
 import { boundAmount } from './format.js';
 import { quoteForeign, showPath } from './notice.js';
 import type { BountyRecord } from './record.js';
@@ -43,8 +44,41 @@ export interface PayAccepts {
   readonly methods: readonly { readonly kind: string; readonly label: string; readonly shown: string }[];
   readonly more: number;
   readonly unreadAt?: string;
+  /** Which other ways the board says work for this solver (PF15). Absent: a board or a kept copy from before it. */
+  readonly ways?: PayWays;
+}
+export interface PayWays {
+  readonly oneClick: readonly Provider[];
+  readonly onMerge: boolean;
+  /** The board knows no pull request of theirs yet, so it could not say. */
+  readonly unknown: boolean;
+  readonly board: string;
 }
 const METHODS_SHOWN = 10;
+const BOARD_ADDRESS = /^https?:\/\/[^\s"]+$/;
+const isProvider = (value: unknown): value is Provider => value === 'Stripe' || value === 'PayPal';
+
+// The board's answer on the other ways: only named facts, turned into the tool's own words later.
+export function checkedWays(setUp: unknown, takes: unknown, board: string): PayWays | undefined {
+  if (setUp === null || typeof setUp !== 'object') return undefined;
+  const { one_click: oneClick, on_merge: onMerge } = setUp as Record<string, unknown>;
+  if (!Array.isArray(oneClick) || typeof onMerge !== 'boolean') return undefined;
+  const here = oneClick.filter(isProvider);
+  const said = takes !== null && typeof takes === 'object' ? takes as Record<string, unknown> : null;
+  const stripe = said?.['stripe'] === true;
+  return {
+    oneClick: here.filter(provider => (provider === 'Stripe' ? stripe : said?.['paypal'] === true)),
+    onMerge: onMerge && stripe,
+    unknown: said === null && (here.length > 0 || onMerge),
+    board
+  };
+}
+
+function waysShape(value: unknown): value is PayWays {
+  if (value === null || typeof value !== 'object') return false;
+  const { oneClick, onMerge, unknown, board } = value as Record<string, unknown>;
+  return Array.isArray(oneClick) && oneClick.every(isProvider) && typeof onMerge === 'boolean' && typeof unknown === 'boolean' && typeof board === 'string' && BOARD_ADDRESS.test(board);
+}
 const OWN_KIND = (kind: unknown): kind is string => typeof kind === 'string' && Object.hasOwn(KINDS, kind);
 
 // The board's answer, or a stored copy of it: only a known kind, in that
@@ -67,8 +101,8 @@ export const methodWords = (accepts: PayAccepts): string[] => accepts.methods.ma
 
 export function acceptsShape(value: unknown): value is PayAccepts {
   if (value === null || typeof value !== 'object') return false;
-  const { methods, more, unreadAt } = value as Record<string, unknown>;
-  if (!Array.isArray(methods) || !Number.isSafeInteger(more) || (more as number) < 0 || !(unreadAt === undefined || typeof unreadAt === 'string' && /^https?:\/\/[^\s"]+$/.test(unreadAt))) return false;
+  const { methods, more, unreadAt, ways } = value as Record<string, unknown>;
+  if (!Array.isArray(methods) || !Number.isSafeInteger(more) || (more as number) < 0 || !(unreadAt === undefined || typeof unreadAt === 'string' && BOARD_ADDRESS.test(unreadAt)) || !(ways === undefined || waysShape(ways))) return false;
   return methods.every(entry => {
     if (entry === null || typeof entry !== 'object') return false;
     const { kind, label, shown } = entry as Record<string, unknown>;
@@ -159,16 +193,24 @@ export function payMessageLines(record: { id: string; title: string }, pay: PayO
   // The names are read back from the record, which another machine's chain
   // or the local store may have filled: printed through the renderer (BT43).
   const solver = solverAccountOr(pay.solver, 'an account whose name could not be read');
+  const accepts = pay.accepts;
+  const ways = accepts?.ways;
+  // By hand unless the board says another way works for this solver, or might.
+  const handOnly = ways === undefined || (ways.oneClick.length === 0 && !ways.onMerge && !ways.unknown);
   const owner = [
     `The bounty "${record.title}" ended with a solution merged into your code — it was written by ${solver}.`,
-    `The bounty stated $${opts.amount}, which you pay by hand — the tool never moves money.`
+    handOnly ? `The bounty stated $${opts.amount}, which you pay by hand — the tool never moves money.` : `The bounty stated $${opts.amount} — the tool never moves money.`
   ];
   // A recorded first merge rides in this same block (BT14): one fact for
   // the owner, one line for the agent — never two unrelated messages.
   if (opts.firstMerge === true) owner.push('It was the first solution written by someone outside your project to be merged into your code.');
-  const accepts = pay.accepts;
+  if (accepts === undefined) owner.push('This tool reads no other way here, so by hand is the only one it can name.');
+  if (ways !== undefined && ways.oneClick.length > 0) owner.push(`One click: ${solver} has connected ${ways.oneClick.join(' and ')} on the board. You pay on the provider's page.`);
+  if (ways?.unknown === true) owner.push(`The board has not read a pull request from ${solver} yet, so it cannot say whether they connected an account. The bounty's page will.`);
+  // The one place an owner acts, with no command to type. The address was checked when it was read.
+  if (ways !== undefined) owner.push(`Pay it or record it on the bounty's page: ${ways.board}/b/${record.id}/`);
   // Only with a board on: the tool cannot see the owner's switch, and says where the answer is.
-  if (accepts !== undefined) owner.push(`If you turned on pay on merge for this repository on the board, the board charges your saved card instead. box bounty status ${record.id} says which happened.`);
+  if (accepts !== undefined && (ways === undefined || ways.onMerge)) owner.push(`If you turned on pay on merge for this repository on the board, the board charges your saved card instead. box bounty status ${record.id} says which happened.`);
   const listed = accepts !== undefined && accepts.methods.length + accepts.more > 0;
   if (listed) {
     // The solver's own list on the board: their word, shape-checked, never followed.
@@ -195,7 +237,7 @@ export function payMessageLines(record: { id: string; title: string }, pay: PayO
     `  bounty: "${record.title}" — ${record.id}${opts.issueUrl !== null ? `; issue ${opts.issueUrl}` : ''}`,
     `  merged solution: ${prUrl !== null ? `pull request ${prUrl} from` : 'a returned folder collected from'} GitHub account ${solver}`,
     `  merged in: ${opts.merge ?? 'the recorded merge'}`,
-    `  reward: $${opts.amount} — the amount from the owner's setting, to be paid by hand; the tool cannot know the amount a link asks for`,
+    `  reward: $${opts.amount} — the amount from the owner's setting${handOnly ? ', to be paid by hand' : ''}; the tool cannot know the amount a link asks for`,
     ...(opts.firstMerge === true ? ['  first outside solution merged in this repository — this notice is recorded once'] : [])
   ];
   return lines;

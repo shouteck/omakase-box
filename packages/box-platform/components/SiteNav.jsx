@@ -1,5 +1,6 @@
 'use client';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 const LINKS = [['/board/', 'Board'], ['/how/', 'How it works'], ['/agents/', 'For agents'], ['/me/', 'Your page']];
 export const REPOSITORY = 'https://github.com/shouteck/omakase-box';
@@ -7,6 +8,13 @@ const PLAIN = { textDecoration: 'none' };
 
 export default function SiteNav() {
   const path = usePathname();
+  const [due, setDue] = useState(0);
+  // A fact for whoever is signed in and owes something. It waits here; nobody is sent anything.
+  useEffect(() => {
+    fetch('/api/me/due').then(async response => {
+      if (response.ok) setDue((await response.json()).due);
+    }).catch(() => undefined);
+  }, []);
   return (
     <nav aria-label="Site" className="sticky top-0 z-20 bg-paper/80 backdrop-blur-xl">
       <div className="mx-auto max-w-[76rem] px-5 sm:px-8 flex flex-wrap items-center gap-x-6 gap-y-1 py-3 text-mono">
@@ -16,6 +24,7 @@ export default function SiteNav() {
           return <a key={href} href={href} {...(here ? { 'aria-current': 'page' } : {})} className={href === '/agents/' ? 'hidden sm:inline' : ''} style={{ ...PLAIN, color: here ? 'var(--color-ink)' : 'var(--color-soft)' }}>{label}</a>;
         })}
         <a href={REPOSITORY} className="hidden sm:inline" style={{ ...PLAIN, color: 'var(--color-soft)' }}>GitHub</a>
+        {due > 0 ? <a href="/me/#you-owe" className="font-medium" style={{ ...PLAIN, color: 'var(--color-accent)' }}>{due} {due === 1 ? 'payment' : 'payments'} due</a> : null}
       </div>
     </nav>
   );

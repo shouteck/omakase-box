@@ -37,7 +37,7 @@ export function firstUseBlock(repoRoot: string): string[] {
     'A bounty asks people outside the project to fix something, and it is posted publicly on GitHub.',
     'It is posted under your GitHub account. Your answer covers this repository only.',
     'A solution your agent chooses is merged into your code.',
-    `Each bounty states what it pays — ${amount === 0 ? '$0 unless you set an amount, so nothing is promised now' : `$${amount}, a promise in your name that you pay by hand`}.`,
+    `Each bounty states what it pays — ${amount === 0 ? '$0 unless you set an amount, so nothing is promised now' : `$${amount}, a promise in your name that you pay`}.`,
     'You can allow this, or you can ask to be asked each time.',
     'If you allow it, you will not be asked before a post or a merge.',
     'If you ask each time, you will be asked before each post and before each merge.',
@@ -57,7 +57,7 @@ export function ownerWaitLines(repoRoot: string, record: BountyRecord, read: Dec
     return [
       ...ownerBlock([
         `A bounty named "${record.title}" is ready to post publicly on GitHub under your account.`,
-        `Each bounty on this repository states $${amount}, a promise in your name that you pay by hand.`,
+        `Each bounty on this repository states $${amount}, a promise in your name that you pay.`,
         `The owner ${read.decision === 'ask' ? 'asked to be asked each time' : 'turned the permission off'} — may this one ${target === 'github' || target === undefined ? 'be posted' : 'be delivered'}? A yes or no is enough.`
       ]),
       `for you — the owner answers this one with: box bounty allow ${id}`

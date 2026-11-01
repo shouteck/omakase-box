@@ -37,6 +37,18 @@ export const DESCRIBE_LINES: readonly string[] = [
   'prints the few lines to put to them. box bounty help shows the journey.'
 ];
 
+// What `box bounty` says while a repository is not set up, so that installing is
+// all a person has to do (PF15). It leaves as soon as the owner's answer is written.
+// The three questions are the owner's; everything else here is the agent's.
+export const SETUP_LINES: readonly string[] = [
+  'not set up for this repository yet. To the agent reading this, in the project you work in, not the tool\'s own clone:',
+  '  1. run gh auth status; if it is not signed in, the owner runs gh auth login, which you cannot finish alone.',
+  '  2. ask the owner: may bounties from this repository go public under your GitHub account, with a solution I choose merged into your code? What reward does each state, a promise you pay, and at most how much promised at once, in whole dollars? Should I ask you before each post and each merge?',
+  '  3. run box bounty allow <owner>/<repository> --reward <reward> --reward-limit <limit>, adding --ask if they want to be asked; then box bounty config set instructions true, which adds one marked block to this project\'s instruction files so later sessions know the tool, and says so if there are none. Tell them what it did.',
+  'the answers are the owner\'s to give, unless they leave them to you. With no answer nothing is promised and nothing is posted.',
+  'a person reading this: tell your agent to run box bounty.'
+];
+
 // The pre-publish scan's limits, one line wherever a scan result is shown
 // before posting (BT45): `create` and `post --preview`.
 export const RESUME_STAYED = 'Any --resume note stayed on the machine that posted it.';
@@ -48,8 +60,8 @@ export const WITHHELD = '(withheld — the scan flagged it; see the hit above)';
 // The money side of `describe`, generated from the owner's setting (BT11a) —
 // the amount is never hard-coded, so the text cannot outlive what is set.
 export const describeRewardLine = (amount: number): string => amount === 0
-  ? 'Every bounty states a reward of $0 — no payment exists.'
-  : `Every bounty states a reward of $${amount} — a promise in the owner's name, paid by hand; posting an answer does not guarantee it.`;
+  ? 'Every bounty states a reward of $0 — nothing promised.'
+  : `Every bounty states a reward of $${amount} — a promise in the owner's name; posting an answer does not guarantee it. There are three ways to pay it: by hand, one click and on merge (box bounty help).`;
 
 // The name the published package answers to — provisional until the owner's
 // Part-B decision picks it for real (BT12). The artifact manifest carries
@@ -59,7 +71,7 @@ export const INSTALL_PACKAGE = 'box-bounty';
 
 export const RULES_LINES: readonly string[] = [
   'box bounty can hand a task you cannot or should not do to an outside solver',
-  'and bring solutions back as facts. Posting is free and goes only to this',
+  'and bring solutions back as facts. Posting is free apart from any reward the owner set, and goes only to this',
   'repository\'s own public GitHub, as an issue; the owner\'s standing permission',
   'applies (`box bounty config` shows it). `box bounty describe` says when it',
   'beats doing the work yourself. Using it is always your call.'

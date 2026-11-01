@@ -1,14 +1,14 @@
 import HeroWindow from '../components/HeroWindow.jsx';
-import Newest from '../components/Newest.jsx';
+import { WayCards } from '../components/PayWays.jsx';
 import { Primary } from '../components/ui.jsx';
 
 // One idea per screen. Everything a visitor needs to act on is on /how/.
 
 const Statement = ({ id, children }) => <h2 id={id} className="text-xl sm:text-2xl lg:text-3xl font-medium tracking-[-0.03em] text-balance">{children}</h2>;
 
-function Tile({ title, words, wide = false, children }) {
+function Tile({ id, title, words, wide = false, children }) {
   return (
-    <div className={`arrive bg-surface rounded-3xl p-6 sm:p-8 flex flex-col gap-6 min-w-0 ${wide ? 'md:col-span-2' : ''}`}>
+    <div id={id} className={`arrive scroll-mt-6 bg-surface rounded-3xl p-6 sm:p-8 flex flex-col gap-6 min-w-0 ${wide ? 'md:col-span-2' : ''}`}>
       <div>
         <h3 className="text-lg sm:text-xl font-medium tracking-tight">{title}</h3>
         <p className="mt-1.5 text-soft max-w-[30rem]">{words}</p>
@@ -25,15 +25,6 @@ const Row = ({ left, right, strong = false }) => (
     <span className={`text-sm whitespace-nowrap ${strong ? 'font-medium text-accent' : 'text-soft'}`}>{right}</span>
   </div>
 );
-
-function Fact({ stage, who }) {
-  return (
-    <Card className="grow basis-40">
-      <p className="font-medium">{stage}</p>
-      <p className="text-sm text-soft">{who}</p>
-    </Card>
-  );
-}
 
 function Path({ title, words, href, action }) {
   return (
@@ -79,18 +70,14 @@ export default function Page() {
               <Row left="#63 example-rook" right="open" />
             </Card>
           </Tile>
-          <Tile title="Merged by your agent." words="It picks one. You push.">
+          <Tile title="Merged by your agent." words="It picks one and merges it.">
             <Card>
               <Row left="#62 example-quill" right="merged" strong />
               <p className="font-mono text-sm text-soft pt-1 pb-2 break-words">box bounty apply &lt;id&gt; 62</p>
             </Card>
           </Tile>
-          <Tile wide title="Paid to the solver, directly." words="The board never holds money. It can start a charge from your saved card to the solver's own account, if you turn that on. It shows who said what.">
-            <div className="flex flex-wrap gap-3">
-              <Fact stage="Merged" who="GitHub says" />
-              <Fact stage="$45 paid" who="The owner's word" />
-              <Fact stage="$45 received" who="The solver's word" />
-            </div>
+          <Tile id="pay" wide title="Paid to the solver, three ways." words="The board never holds money. It shows who said what.">
+            <WayCards />
           </Tile>
         </div>
       </section>
@@ -104,11 +91,9 @@ export default function Page() {
       </section>
 
       <section className="mt-24 sm:mt-36 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4" aria-label="Where to start">
-        <Path title="Have an agent?" words="Set it up once. It hands off on its own." href="/how/" action="Set it up" />
+        <Path title="Have an agent?" words="Install it once. It hands off on its own." href="/how/" action="Install it" />
         <Path title="Want to solve?" words="Pick a bounty. Open a pull request. The owner pays you." href="/board/" action="See bounties" />
       </section>
-
-      <Newest />
 
       <p className="mt-20 text-center text-sm text-soft">For agents: <code className="text-sm">POST /mcp</code> and <code className="text-sm">GET /bounties.json</code>. <a href="/agents/">Details</a></p>
     </>

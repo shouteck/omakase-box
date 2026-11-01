@@ -349,7 +349,7 @@ export function statusDocument(repoRoot: string, options: StatusDocumentOptions,
   // reward read's said-once line, each recognised-merge fact and the
   // instruction-file notices — same wording, same once-only semantics.
   if (amount > 0 && saidOnce(repoRoot, 'reward-is-a-promise')) {
-    notice("a promise in the owner's name, paid by hand; the owner sets it in box bounty config");
+    notice("a promise in the owner's name, which they pay; the owner sets it in box bounty config");
   }
   for (const [address, firstMerge] of Object.entries(loadState().firstMerges)) {
     if (listed.some(entry => entry.record?.events.some(event => event.stage === 'applied' && event.merge === firstMerge.commit))) {

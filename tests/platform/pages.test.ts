@@ -1,8 +1,9 @@
 // The real pages in a real browser: the built export, served by the same
 // handle() the Worker runs, reading a GitHub stand-in over HTTP.
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { delimiter, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type Browser, chromium, type Page } from '@playwright/test';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -249,9 +250,31 @@ describe('the pages', () => {
   it('the front page says it in few words, shows the real product, and leads to the detail', async () => {
     const { page, close } = await fresh();
     await visit(page, '/');
-    await expect.poll(() => page.locator('main ul li').count()).toBe(3);
+    await expect.poll(() => page.locator('main').innerText()).toContain('Not set up on this board yet.');
     const text = await page.locator('main').innerText();
-    for (const phrase of ['Work your agent can\'t finish, finished.', 'goes out as a GitHub issue', 'come back as pull requests', 'never ships', 'Nothing a solver wrote is run', 'Post a private repository.', 'The board never holds money', 'Newest bounties', 'POST /mcp', 'GET /bounties.json']) expect(text).toContain(phrase);
+    for (const phrase of ['Work your agent can\'t finish, finished.', 'goes out as a GitHub issue', 'come back as pull requests', 'never ships', 'Nothing a solver wrote is run', 'Post a private repository.', 'The board never holds money', 'By hand', 'One click', 'On merge', 'You pay, then record it.', 'POST /mcp', 'GET /bounties.json']) expect(text).toContain(phrase);
+    expect(text).not.toContain('Newest bounties');
+    // No key on this board: the two ways that need one say so, and by hand does not.
+    expect(text.match(/Not set up on this board yet./g)).toHaveLength(2);
+    expect(text).toContain('Record $45 paid');
+    expect(text).not.toContain('Pay $45');
+    expect(await page.locator('#pay').count()).toBe(1);
+    // How it works says the ways in its steps, once, and which this board does not have.
+    await visit(page, '/how/');
+    await expect.poll(() => page.locator('main').textContent()).toContain('One click and on merge are not set up on this board yet.');
+    const how = await page.locator('main').textContent();
+    expect(how).not.toContain('Three ways to pay');
+    expect(how).not.toContain('Record $45 paid');
+    expect(how).toContain('connected Stripe also covers on merge');
+    // A person only installs: every other command is folded away.
+    expect(await page.locator('#hand-off ol > li').count()).toBe(4);
+    expect(how).toContain('On merge pays without you.');
+    expect(how).toContain('merges it and pushes');
+    expect(await page.locator('#hand-off details code[data-command]').count()).toBe(9);
+    expect(await page.locator('#hand-off code[data-command]').count()).toBe(9);
+    expect(await page.locator('#hand-off details').evaluate(element => (element as HTMLDetailsElement).open)).toBe(false);
+    expect(await page.locator('main a[href="/#pay"]').count()).toBe(1);
+    await visit(page, '/');
     // The picture is the real product in real text, and says it is an example.
     expect(await page.locator('main figure').innerText()).toContain('An example. Every name in it is invented');
     expect(await page.locator('[data-primary]').getAttribute('href')).toBe('/how/');
@@ -265,7 +288,8 @@ describe('the pages', () => {
     await visit(page, '/how/');
     const text = (await page.locator('main').textContent())!;
     for (const phrase of ['Hand off work', 'Answer bounties', 'Nothing a solver wrote is run', 'a private repository is refused', 'never-ship files', 'anything else in it is too', 'The board never holds money', 'inside the new omakase-box folder', 'install nothing from this page', 'nothing here makes them pay', 'it asks you before each post and each merge', 'only the repository, the issue number, the bounty id and what happened']) expect(text).toContain(phrase);
-    expect(await page.locator('main ol > li').count()).toBe(10);
+    // The agent's four, the solver's three.
+    expect(await page.locator('main ol > li').count()).toBe(7);
     expect(await page.locator('main a[href="#answer"]').count()).toBe(1);
     expect(await page.locator('#answer h2').innerText()).toBe('Answer bounties');
     expect(await page.locator('#limits details').count()).toBe(5);
@@ -295,10 +319,11 @@ describe('the pages', () => {
     const context = await browser.newContext({ permissions: ['clipboard-read', 'clipboard-write'] });
     const page = await context.newPage();
     await page.goto(`${board.url}/how/`);
+    await page.click('#hand-off details summary');
     const block = page.locator('main button[aria-label="Copy command"]').nth(1);
     await block.click();
     await expect.poll(() => block.innerText()).toBe('Copied');
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('box bounty create --task TASK.md --why "beyond what this agent can do"');
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('box bounty config set instructions true');
     await page.locator('main button[aria-label="Copy install lines"]').click();
     const install = await page.locator('main code[data-install]').allInnerTexts();
     // Windows' clipboard hands back \r\n for the \n the page wrote.
@@ -315,7 +340,7 @@ describe('the pages', () => {
     await close();
   });
 
-  it('a poster\'s HTML in the newest list renders as text, never executed', async () => {
+  it('a poster\'s HTML in the list renders as text, never executed', async () => {
     const { page, close } = await fresh();
     await page.route('**/api/board', async route => {
       const response = await route.fetch();
@@ -323,7 +348,7 @@ describe('the pages', () => {
       body.bounties[0]!.title = '<img src=x onerror=window.__pwned=1>';
       await route.fulfill({ response, json: body });
     });
-    await visit(page, '/');
+    await visit(page, '/board/');
     await expect.poll(() => page.locator('main ul').innerText()).toContain('<img src=x onerror=');
     expect(await page.locator('main ul img').count()).toBe(0);
     expect(await page.evaluate(() => (window as unknown as { __pwned?: number }).__pwned)).toBeUndefined();
@@ -333,7 +358,8 @@ describe('the pages', () => {
   it('every command on the front page runs with the arguments it prints, in order, through the whole journey', async () => {
     const { page, close } = await fresh();
     await visit(page, '/how/');
-    const lines = await page.locator('main code[data-command]').allInnerTexts();
+    // Text, not what shows: the agent's commands are folded until someone opens them.
+    const lines = await page.locator('main code[data-command]').allTextContents();
     await visit(page, '/');
     const posted = await page.locator('main [data-flow-output=post]').innerText();
     const applied = await page.locator('main [data-flow-output=apply]').innerText();
@@ -341,6 +367,7 @@ describe('the pages', () => {
     // The page's own list: a command added, dropped or reworded fails here.
     expect(lines).toEqual([
       'box bounty allow <owner>/<repository> --reward <reward> --reward-limit <limit>',
+      'box bounty config set instructions true',
       'box bounty create --task TASK.md --why "beyond what this agent can do"',
       'box bounty post <id> --preview',
       'box bounty post <id>',
@@ -364,8 +391,9 @@ describe('the pages', () => {
         expect(output, line).toContain(expected);
         return output;
       };
-      const [allow, create, preview, post, status, look, apply, paid] = lines as [string, string, string, string, string, string, string, string];
+      const [allow, instructions, create, preview, post, status, look, apply, paid] = lines as [string, string, string, string, string, string, string, string, string];
       run(allow, 'owner/project');
+      run(instructions, 'instructions: on');
       values['<id>'] = /bt-[a-f\d]{12}/.exec(run(create, 'bt-'))![0];
       // A second open bounty: from here a command with no id has to say which one.
       expect(world.box(['bounty', 'create', '--task', 'OTHER.md', '--why', 'another handoff']).status).toBe(0);
@@ -402,16 +430,29 @@ describe('the pages', () => {
     const { page, close } = await fresh();
     await visit(page, '/how/');
     const lines = await page.locator('main code[data-install]').allInnerTexts();
-    expect(lines).toHaveLength(5);
+    expect(lines).toHaveLength(6);
     expect(lines[0]).toBe('git clone https://github.com/shouteck/omakase-box');
+    expect(lines[5]).toBe('box bounty');
     expect(await page.locator('main').textContent()).toContain('node <the clone>/packages/box-cli/dist/cli.js');
     await close();
-    const help = spawnSync(process.execPath, [CLI, ...lines[4]!.split(' ').slice(2)], { encoding: 'utf8' });
-    expect(help.status, help.stderr).toBe(0);
-    expect(help.stdout).toContain('the journey');
-    expect(lines[4]!.startsWith('node packages/box-cli/dist/cli.js ')).toBe(true);
-    for (const script of ['scripts/pnpm.mjs', 'scripts/tooling/package.json']) expect(existsSync(join(PACKAGE, '../..', script)), script).toBe(true);
-  });
+    const clone = join(PACKAGE, '../..');
+    for (const script of ['scripts/pnpm.mjs', 'scripts/tooling/package.json']) expect(existsSync(join(clone, script)), script).toBe(true);
+    // The printed install line, into a throwaway prefix: it makes a real `box`, and this machine's own commands are untouched.
+    const prefix = mkdtempSync(join(tmpdir(), 'kitchen-PF15-prefix-'));
+    const env = { ...process.env, npm_config_prefix: prefix, PATH: [prefix, join(prefix, 'bin'), process.env['PATH']].join(delimiter) };
+    const run = (line: string, cwd: string) => spawnSync(line, { cwd, env, shell: true, encoding: 'utf8', timeout: 120000 });
+    try {
+      const installed = run(`${lines[4]!} --no-audit --no-fund`, clone);
+      expect(installed.status, installed.stderr).toBe(0);
+      const box = run('box bounty help', prefix);
+      expect(box.status, box.stderr).toBe(0);
+      expect(box.stdout).toContain('the journey');
+    } finally {
+      // npm removes its own link first, so deleting the folder cannot follow it into the clone (BT46).
+      run('npm uninstall -g @private-task/box-cli --no-audit --no-fund', clone);
+      rmSync(prefix, { recursive: true, force: true });
+    }
+  }, 180000);
 
   it('your page: an owner sees what they owe and the solver what is owed to them, and each links to the bounty', async () => {
     const signedIn = async (id: number, login: string) => {
@@ -501,13 +542,13 @@ describe('the pages', () => {
 
   it('clicks through two pages with nothing answering 404', async () => {
     const { page, notFound, close } = await fresh();
-    await visit(page, '/');
+    await visit(page, '/board/');
     await page.click('main ul li a');
     await page.waitForURL(/\/b\/bt-/);
     await expect.poll(() => page.locator('main').innerText()).toContain('Payment for this bounty');
     await page.click('nav[aria-label=Site] >> text=How it works');
     await page.waitForURL(/\/how\//);
-    await page.click('[data-primary]');
+    await page.click('nav[aria-label=Site] a[href="/board/"]');
     await expect.poll(() => page.locator('main [aria-live]').innerText()).toContain('open bounties');
     expect(notFound).toEqual([]);
     await close();
@@ -533,7 +574,7 @@ describe('the pages', () => {
       const { page, close } = await fresh({ width, dark });
       for (const [name, path] of [['front', '/'], ['board', '/board/'], ['bounty', `/b/${STATE_IDS.waiting}/`]] as const) {
         await visit(page, path);
-        await expect.poll(() => page.locator('main').innerText()).toMatch(/Titles are the posters|open bounties.|Payment for this bounty/);
+        await expect.poll(() => page.locator('main').innerText()).toMatch(/three ways|open bounties.|Payment for this bounty/);
         const measured = await page.evaluate(() => {
           const sizes = new Set<string>(); const weights = new Set<string>(); const families = new Set<string>();
           for (const element of document.querySelectorAll('body *')) {

@@ -37,11 +37,11 @@ const disclosure = (address: string, amount: number, limit: number | null, ask: 
     'Your answer covers this repository only. A solution your agent chooses is merged into your code.',
     amount === 0
       ? `Each bounty on ${address} states $0 — no payment is promised.`
-      : `Each bounty on ${address} promises $${amount}, which you pay by hand — at most $${limit} promised across its open bounties at once.`,
+      : `Each bounty on ${address} promises $${amount}, which you pay — at most $${limit} promised across its open bounties at once.`,
     ask
       ? 'You will be asked before each post and before each merge.'
       : 'You will not be asked before a post or a merge.',
-    'Do you allow this?'
+    `You agreed to this; box bounty deny ${address} takes it back.`
   ]),
   'for you — the answer is recorded in the owner\'s own settings, outside the repository.'
 ];
@@ -95,12 +95,13 @@ export function allowRepository(repoRoot: string | null, name?: string, ask = fa
       currentAddress = repositoryIdentity(repoRoot);
     } catch { /* named addresses work outside this checkout */ }
   }
-  const lines = [...(emitDisclosure === undefined ? wordsForOwner : []), `${ask ? 'ask me each time' : 'allowed'}: ${address} — written to the owner's settings.`, reward === 0 ? `bounties on ${address} state $0 — no payment is promised; set one with box bounty config set reward <whole dollars> ${address}` : `bounties on ${address} state $${reward} — a promise you pay by hand; at most $${limit} promised open at once`];
+  const lines = [...(emitDisclosure === undefined ? wordsForOwner : []), `${ask ? 'ask me each time' : 'allowed'}: ${address} — written to the owner's settings.`, reward === 0 ? `bounties on ${address} state $0 — no payment is promised; set one with box bounty config set reward <whole dollars> ${address}` : `bounties on ${address} state $${reward} — a promise you pay; at most $${limit} promised open at once`];
   // Instructions stay off unless the owner turns them on (BT41): the tool
   // offers the one command here and never writes the block itself.
   if (repoRoot !== null && !readInstructions(repoRoot).enabled) lines.push('agents here learn of the tool only once instructions are on — box bounty config set instructions true writes the block into this project\'s instruction files');
   if (ask) lines.push('This covers each post and each merge — the owner is asked before either.');
-  const retiredNotice = rewardNoticeLine();
+  // A repository that has just set a reward is not told "until then every bounty states $0" (PF15).
+  const retiredNotice = reward > 0 ? null : rewardNoticeLine();
   if (retiredNotice !== null) lines.push(retiredNotice);
   const askNotice = askMergeNoticeLine();
   if (askNotice !== null) lines.push(askNotice);
@@ -346,7 +347,9 @@ export function changeConfig(repoRoot: string | null, verb: string, name: string
     if (name === 'instructions') {
       if (value !== 'true' && value !== 'false') throw new BountyRefused('config-value-invalid', 'nothing changed; next: box bounty config set instructions <true|false>');
       writeInstructions(repoRoot, { ...previous, enabled: value === 'true' });
-      return [`instructions: ${value === 'true' ? 'on' : 'off'}; owner's settings outside the repository. Existing blocks remain when off.`, ...syncInstructions(repoRoot, true)].join('\n');
+      // The tool never creates a host's file, so "on" with none would change nothing: said plainly (PF15).
+      const noFile = value === 'true' && discoverInstructions(repoRoot).length === 0 ? ['no instruction file in this project, so no block was written and later sessions will not know the tool; next: create the file your agent reads, such as AGENTS.md, then run box bounty config set instructions true again'] : [];
+      return [`instructions: ${value === 'true' ? 'on' : 'off'}; owner's settings outside the repository. Existing blocks remain when off.`, ...noFile, ...syncInstructions(repoRoot, true)].join('\n');
     }
     const file = checkInstructionFile(repoRoot, value);
     checkInstructionMarkers(file);
@@ -412,7 +415,7 @@ export function changeConfig(repoRoot: string | null, verb: string, name: string
       const written = writeMoney(address, { reward: amount });
       if (firstNaming) saveState({ ...loadState(), rewardPromiseSaid: written.at });
       lines.push(`${address} reward: $${amount}, written ${written.at} to ${settingsFile()} — each bounty posted on ${address} now states it; other repositories are unchanged.`);
-      if (firstNaming) lines.push('A bounty reward is a promise, made in your name, that you pay by hand — the tool never moves money.');
+      if (firstNaming) lines.push('A bounty reward is a promise, made in your name, that you pay — the tool never moves money.');
     } else {
       const reward = entry.reward?.amount ?? 0;
       if (amount < reward) throw new BountyRefused('limit-below-reward', `${address}'s reward is $${reward} — the limit on what its open bounties may promise cannot be set below it; nothing changed; next: box bounty config set reward-limit <whole dollars> ${address} at or above the $${reward} reward`);

@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { WAYS } from '../src/pay-ways.ts';
 import PaymentPanel from './PaymentPanel.jsx';
 import { CodeBlock, Facts, Primary, SampleNote, Section, Soft, Stale, TheirWords, Title, fmtDate } from './ui.jsx';
 
@@ -49,7 +50,7 @@ function View({ data }) {
             ['Posted', fmtDate(b.posted_at)],
             ['Solutions so far', String(b.solutions.length)],
             ['Who may answer', 'Agents welcome, through a GitHub account'],
-            ...(b.amount > 0 ? [['Payment', b.pays_on_merge ? 'Pays on merge, to a solver who connected Stripe' : 'By the owner, directly']] : [])
+            ...(b.amount > 0 ? [['Payment', WAYS.filter(way => b.how_it_pays.ways.includes(way.id)).map(way => way.name).join(', ')]] : [])
           ]} />
           <details className="border-t border-line py-3 text-sm">
             <summary className="text-soft">Terms and more</summary>

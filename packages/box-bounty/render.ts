@@ -6,7 +6,7 @@
 
 import { existsSync,mkdirSync,readFileSync,writeFileSync } from 'node:fs';
 import { BountyRefused } from './errors.js';
-import { join } from 'node:path';
+import { basename,join,resolve } from 'node:path';
 import { foreignJson,quoteForeign,showPath } from './notice.js';
 import { hitPlace } from './scan.js';
 import { solverAccount,solverAccountOr,solverBlock } from './untrusted.js';
@@ -18,14 +18,14 @@ import { issueComments,refreshGitHubFormat,refreshGitHubStatus } from './collect
 import { instructionNotices,syncInstructions } from './instructions.js';
 import { promisedTotal } from './money.js';
 import { ownerStatusLine,waitingSummary } from './owner-text.js';
-import { boardLine,boardNotToldLine,boardTold } from './board.js';
+import { boardAddress,boardLine,boardNotToldLine,boardTold } from './board.js';
 import { paymentOf,payToLine } from './pay.js';
 import { applicableAttempts,attemptsOf,endedCount,endedRecords,isOpenStage,listRecords,loadRecord,openRecords,persistRecord,recordDir,retiredRoute,setOpenSurfacesSync,trackedRecordFiles } from './record.js';
 import { corruptFiles,endedContaining,metaKeys,sharedEnded,sharedEndedCount,sharedOpen,sharedRead } from './store.js';
 import { refreshSharedMemory } from './chain.js';
 import { adoptOpenShared } from './adopt.js';
-import { RESUME_STAYED } from './wording.js';
-import { askMergeNoticeLine,loadState,localFirstMergeLine,repoReward,rewardNoticeLine,saidOnce } from './settings.js';
+import { RESUME_STAYED,SETUP_LINES } from './wording.js';
+import { askMergeNoticeLine,loadState,localFirstMergeLine,readDecision,repoReward,rewardNoticeLine,saidOnce } from './settings.js';
 import type { AttemptOutcome,BountyRecord,ListedBounty,StageEvent } from './record.js';
 
 // The saved job context, under the bounty it belongs to: `indent` places it
@@ -260,7 +260,7 @@ const historyJson = (event: StageEvent): string =>
 // the amount it was posted with.
 // The reward line says what money is in force and what is already promised —
 // money owed is a fact every call. The standing explanation of what a reward
-// is (a promise in the owner's name, paid by hand, set in box bounty config)
+// is (a promise in the owner's name, which they pay, set in box bounty config)
 // is said once per repository, recorded in the owner's settings, and lives in
 // help and describe (BT17). With no amount, nothing promised and no limit
 // there is nothing to say and the compact form stays silent.
@@ -271,7 +271,7 @@ function rewardStatusLine(repoRoot: string, open: readonly BountyRecord[], full:
   const stated = amount === 0 ? 'each new bounty states $0' : `each new bounty states $${amount}`;
   const counted = limit === null ? `open bounties here promise $${promised}` : `open bounties here promise $${promised} of a $${limit} limit — ${promised <= limit ? `$${limit - promised} left` : `$${promised - limit} over`}`;
   const once = !full && amount > 0 && saidOnce(repoRoot, 'reward-is-a-promise')
-    ? " — a promise in the owner's name, paid by hand; the owner sets it in box bounty config"
+    ? " — a promise in the owner's name, which they pay; the owner sets it in box bounty config"
     : '';
   return `reward: ${stated}${once}; ${counted}`;
 }
@@ -388,15 +388,6 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
   if (owner !== null) lines.push(owner);
   const reward = rewardStatusLine(repoRoot, open.map(entry => entry.record!), options.full === true);
   if (reward !== null) lines.push(reward);
-  // Owed payments are a fact needing attention (BT36): merged bounties
-  // whose bound reward no `paid` event settles, counted across the local
-  // records and the shared memory — one line, only while something is owed.
-  // The bounded view never materialises every ended record, so the count
-  // asks the store for ended rows carrying a reward, the same scan shape
-  // the `pending` sweep above runs.
-  const owed = [...endedContaining(repoRoot, '"reward"'), ...sharedEnded(repoRoot)]
-    .filter(candidate => { const payment = paymentOf(candidate); return payment !== null && payment.paidAt === null; });
-  if (owed.length > 0) lines.push(`${owed.length} payment(s) owed — box bounty status shows whom`);
   const rewardNotice = rewardNoticeLine();
   if (rewardNotice !== null) lines.push(rewardNotice);
   const askNotice = askMergeNoticeLine();
@@ -555,17 +546,19 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
       if (options.full) for (const event of record.events) lines.push(`      history: ${historyJson(event)}`);
     }
   }
+  const asked = options.id !== undefined || options.full === true;
   const endedItem = (entry: ListedBounty): string => {
     const record = entry.record!;
     // A bounty that once flagged secret-shaped content keeps the fact on this
     // line, so the compact list still tells the owner to look — the finding
     // itself prints on the detail below (or under status <id> / --full).
     const finding = (record.scanFindings ?? []).length > 0 ? ' — scan finding recorded' : '';
-    // A merged bounty whose reward still stands owed — or was recorded
-    // paid — says so on the line (BT36); the detail below names whom.
+    // Asked about, a merged bounty says on the line whether its reward stands
+    // owed or was recorded paid; the detail below names whom. Unasked it says
+    // nothing: an agent is never reminded of an owner's payment (PF15).
     const pay = record.github?.pay;
     const payment = paymentOf(record);
-    const paid = payment !== null
+    const paid = !asked ? '' : payment !== null
       ? payment.paidAt === null
         ? `; payment owed $${payment.amount} to ${solverAccountOr(payment.solver, 'the solver')}`
         : `; paid $${payment.amount} on ${validAt(payment.paidAt)?.slice(0, 10) ?? 'an unrecorded date'}`
@@ -593,7 +586,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
   for (const entry of ended) {
     if (entry.record === null) continue;
     const detailed = options.id !== undefined || entry.record === lastEnded;
-    const board = boardLine(repoRoot, entry.record);
+    const board = asked ? boardLine(repoRoot, entry.record) : null;
     if (board !== null) lines.push(`  ${entry.record.id} ${board}`);
     if (detailed) {
       lines.push(renderResume(entry.record, '  ', options.full === true));
@@ -603,7 +596,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
       // state; paid names the date the owner recorded it (BT36). A bounty
       // posted from another machine is recorded on that machine — the
       // shared row is read-only here, so no `config set paid` is quoted.
-      if (payment !== null) {
+      if (asked && payment !== null) {
         const solver = solverAccountOr(payment.solver, 'the solver');
         const link = payment.link === 'recorded' ? 'at the link they supplied'
           : payment.link === 'none' ? 'no recognised payment link was given'
@@ -611,7 +604,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
         lines.push(payment.paidAt === null
           ? `  payment: owed $${payment.amount} to ${solver} (${link})${entry.record.shared === true ? ' — recording happens on the machine that posted this bounty' : ` — the owner records it: box bounty config set paid ${entry.record.id}`}`
           : `  payment: paid $${payment.amount} on ${validAt(payment.paidAt)?.slice(0, 10) ?? 'an unrecorded date'} — the owner's word, recorded`);
-      } else if (pay !== undefined) {
+      } else if (asked && pay !== undefined) {
         lines.push(`  pay: ${pay.pr !== null ? `pull request ${pay.pr}` : 'the returned folder'}${pay.solver !== null ? ` by ${solverAccount(pay.solver)}` : ''} was merged — pay $${boundAmount(entry.record) ?? '?'} to ${solverAccountOr(pay.solver, 'the solver')}${pay.link !== null ? ' at the link they supplied' : ' — no recognised payment link was given'} — a record, not a reminder`);
       }
       // The finding stays visible after the bounty ends — the owner learns a
@@ -662,6 +655,8 @@ export function renderHelp(): string {
     '',
     'nothing a solver wrote is ever run — checks were removed on 11 October 2026: a solution arrives as a',
     'numbered attempt, the report states facts about the change, and apply/close is always your call.',
+    '',
+    boardAddress() === '' ? 'three ways to pay a reward: by hand, one click, on merge.' : `three ways to pay a reward: by hand, one click, on merge. See ${boardAddress()}/#pay`,
     '',
     'what ends a bounty: apply, or close — or a solution merged onto the bounty\'s branch with your own',
     'Git, which the next bounty command recognises. A merge is one ordinary commit: git revert -m 1',
@@ -715,7 +710,12 @@ function seenAge(at: string): string {
 }
 
 export function renderOverview(repoRoot: string): string {
-  return ['box bounty can hand work to an outside solver; box bounty describe says when it is worth using.', renderStatus(repoRoot)].join('\n');
+  const decision = readDecision(repoRoot);
+  const setUp = decision.decision !== null || decision.denied;
+  // Until the tool is published no `box` is on the path: say what it means here, from how this ran.
+  const ran = process.argv[1];
+  const means = !setUp && ran !== undefined && basename(ran) === 'cli.js' ? [`if box is not found here, use: node ${JSON.stringify(resolve(ran))}`] : [];
+  return ['box bounty can hand work to an outside solver; box bounty describe says when it is worth using.', ...(setUp ? [] : [...SETUP_LINES, ...means]), renderStatus(repoRoot)].join('\n');
 }
 
 // The write side of the surfaces: every record write re-renders them. The

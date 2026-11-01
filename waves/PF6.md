@@ -7,6 +7,8 @@ Horizon: long: start with `/plan` and keep the plan in this file
 
 **Brief.** Written ahead by the CTO on 21 October 2026; Agent Skill channel added on 31 October 2026. **Reordered 1 November 2026: after BT51, BT52, PF7, PF8 and PF9. Deployment moved to PF8.** K41 runs after it, as the last wave before the owner's launch, and its final render takes this wave's install line. **Toolbox work added 1 November 2026.**
 
+**Moved, 2 November 2026:** items 1 and 2 (the install line's return and the npm package) moved to [PF16](PF16.md), which ships one-line installs first. Keep them here only as far as PF16 leaves them unfinished.
+
 ## Outcome
 
 Everything the owner needs to launch at $0 is ready and checked:

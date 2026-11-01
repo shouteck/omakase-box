@@ -48,7 +48,7 @@ describe('BT11c — each repository carries its own reward and limit', () => {
     expect(changeConfig(repo, 'set', 'reward-limit', '30')).toContain('reward limit: $30');
     // The first amount above $0 gets the plain-words statement — once ever.
     const first = changeConfig(repo, 'set', 'reward', '5');
-    expect(first).toContain('a promise, made in your name, that you pay by hand');
+    expect(first).toContain('a promise, made in your name, that you pay');
     expect(changeConfig(repo, 'set', 'reward', '6')).not.toContain('promise, made in your name');
     refused(() => changeConfig(repo, 'set', 'reward-limit', '4'), 'limit-below-reward');
     refused(() => changeConfig(repo, 'set', 'reward', '50'), 'reward-needs-limit');
@@ -62,7 +62,7 @@ describe('BT11c — each repository carries its own reward and limit', () => {
     const paid = cli(repo, ['bounty', 'allow', '--reward', '10', '--reward-limit', '30']);
     expect(paid.status).toBe(0);
     expect(paid.stdout).toContain('owner/shop');
-    expect(paid.stdout).toContain('promises $10, which you pay by hand');
+    expect(paid.stdout).toContain('promises $10, which you pay');
     expect(repoReward(repo)).toEqual({ amount: 10, limit: 30 });
     // A limit below the reward is a named refusal — and, after deny cleared
     // the money, a reward above $0 with no limit to hold it is one too.
@@ -324,11 +324,11 @@ describe('BT11a — the public side and the words around it', () => {
     postBounty(repo, id, 'github');
     const body = state().issues[0]!.body;
     expect(body).toContain('reward: $25');
-    expect(body).toContain('payment is the poster\'s to make by hand — posting an answer does not guarantee it.');
+    expect(body).toContain('payment is the poster\'s to make — posting an answer does not guarantee it.');
     const read = readFormat(body);
     if (read.kind !== 'present') throw new Error('format missing');
-    // v3 since BT11b: a rewarded post's block carries the payment member.
-    expect(read.value.schemaVersion).toBe(3);
+    // v2 since PF15: a new rewarded post's block no longer names one way to ask for payment.
+    expect(read.value.schemaVersion).toBe(2);
     expect(read.value.reward).toEqual({ amount: 25, currency: 'USD' });
     expect(loadRecord(repo, id).reward).toEqual({ amount: 25 });
   }));
@@ -350,13 +350,13 @@ describe('BT11a — the public side and the words around it', () => {
   it('describe generates its money sentence from the setting', () => {
     const repo = makeRepo({ 'TASK.md': 'task\n' });
     ownerSays(repo, 'allowed');
-    expect(renderDescribe(repo)).toContain('a reward of $0 — no payment exists');
+    expect(renderDescribe(repo)).toContain('a reward of $0 — nothing promised');
     changeConfig(repo, 'set', 'reward-limit', '40');
     changeConfig(repo, 'set', 'reward', '7');
     const text = renderDescribe(repo);
-    expect(text).toContain('a reward of $7 — a promise in the owner\'s name, paid by hand');
+    expect(text).toContain('a reward of $7 — a promise in the owner\'s name; posting an answer does not guarantee it. There are three ways to pay it');
     expect(text).toContain('posting an answer does not guarantee it');
-    expect(text).toContain('every bounty states a reward of $7 — the owner pays it by hand');
+    expect(text).toContain('every bounty states a reward of $7 — the owner pays it');
   });
 
   it('the first-use message carries the reward fact as a fourth fact', () => {
@@ -393,7 +393,7 @@ describe('BT11a — the public side and the words around it', () => {
     expect(run.stdout).toContain('config set reward');
     const paid = cli(repo, ['bounty', 'allow', '--reward', '5', '--reward-limit', '20']);
     expect(paid.status).toBe(0);
-    expect(paid.stdout).toContain('promises $5, which you pay by hand');
+    expect(paid.stdout).toContain('promises $5, which you pay');
     expect(paid.stdout).toContain('at most $20 promised across its open bounties at once');
   });
 });
@@ -416,7 +416,7 @@ describe('BT11a fix round — the record file is never a render source', () => {
     const read = readFormat(body);
     if (read.kind !== 'present') throw new Error('format missing');
     // v3 since BT11b: a rewarded post's block carries the payment member.
-    expect(read.value.schemaVersion).toBe(3);
+    expect(read.value.schemaVersion).toBe(2);
     expect(read.value.reward).toEqual({ amount: 50, currency: 'USD' });
     expect(read.value.state).toEqual({ kind: 'closed-none' });
   }));
