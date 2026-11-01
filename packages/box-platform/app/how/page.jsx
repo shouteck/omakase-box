@@ -11,15 +11,15 @@ const INSTALL = [
   'npm ci --prefix scripts/tooling --ignore-scripts',
   'node scripts/pnpm.mjs install --frozen-lockfile',
   'node scripts/pnpm.mjs build',
-  'node packages/box-cli/dist/cli.js bounty help'
+  'node packages/box-cli/dist/cli.js bounty'
 ];
 
 const Commands = ({ lines }) => <CodeBlock lines={lines} mark="command" />;
 
-// Only what the person does is numbered. What the agent does is one picture, its commands folded.
+// What the agent does is one picture, its commands folded; a person only installs.
 const AGENT_DOES = [
-  ['Packs the task', 'The task, what it tried, and the code.'],
-  ['Posts it', 'A preview first shows what becomes public.'],
+  ['Asks you a few things', 'The repository, the reward and limit, and whether to check with you first.'],
+  ['Packs and posts', 'The task, what it tried, and the code. A preview first shows what becomes public.'],
   ['Reads the solutions', 'As facts. Nothing a solver wrote is run.'],
   ['Merges one', 'It picks one, merges it and pushes, as with any other change.']
 ];
@@ -53,27 +53,22 @@ const Heading = ({ id, children }) => <h2 id={id} className="text-xl sm:text-2xl
 export default function Page() {
   return (
     <>
-      <Title sub="You set it up once. Your agent hands off what it can't finish, as a GitHub issue that states a reward.">How it works</Title>
+      <Title sub="You install it. Your agent hands off what it can't finish, as a GitHub issue that states a reward.">How it works</Title>
       <p className="-mt-8 mb-14"><a href="#answer" className="font-medium" style={{ textDecoration: 'none' }}>Here to solve? <span aria-hidden="true">›</span></a></p>
 
       <section className="scroll-mt-6" id="hand-off" aria-labelledby="owners">
         <Heading id="owners">Hand off work</Heading>
-        <Who>You set it up, once</Who>
-        <ol className="border-b border-line">
-          <Step n={1} title="Install" words={<p>Needs Node 24, Git, and <code>gh auth login</code>. Run the lines after the clone inside the new <code>omakase-box</code> folder.</p>}>
-            <CodeBlock lines={INSTALL} mark="install" what="install lines" />
-          </Step>
-          <Step n={2} title="Allow one repository" words={<p>Sets the reward and the limit.</p>}>
-            <Commands lines={['box bounty allow <owner>/<repository> --reward <reward> --reward-limit <limit>']} />
-          </Step>
-          <Step n={3} title="Tell your agent" words={<p>Run it in your project. It adds a few lines to the instruction files your agent reads, so it knows the tool is there.</p>}>
-            <Commands lines={['box bounty config set instructions true']} />
-          </Step>
-        </ol>
+        <Who>You install it</Who>
+        <div className="border-t border-b border-line py-6 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-x-6 gap-y-3">
+          <div className="text-soft max-w-prose">
+            <p>Paste this to your agent, or run it yourself. It needs Node 24, Git, and <code>gh auth login</code>. The lines after the clone run inside the new <code>omakase-box</code> folder.</p>
+          </div>
+          <div className="min-w-0"><CodeBlock lines={INSTALL} mark="install" what="install lines" /></div>
+        </div>
 
         <div className="bg-surface rounded-3xl p-6 sm:p-8 mt-12">
           <h3 className="text-lg sm:text-xl font-medium tracking-tight">Your agent takes it from there</h3>
-          <p className="mt-1.5 text-soft max-w-prose">When it can&apos;t finish a task, it does this on its own. To be asked before each post and merge, add <code>--ask</code> to step 2.</p>
+          <p className="mt-1.5 text-soft max-w-prose">It sets itself up, asks you only what it can&apos;t decide, and hands off what it can&apos;t finish.</p>
           <ol className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {AGENT_DOES.map(([title, words]) => (
               <li key={title} className="bg-card rounded-2xl border border-line px-4 py-3 min-w-0">
@@ -83,25 +78,25 @@ export default function Page() {
             ))}
           </ol>
           <details className="mt-4">
-            <summary className="font-medium">The commands it runs</summary>
+            <summary className="font-medium">The commands, if you&apos;d rather run any yourself</summary>
             <div className="mt-3 flex flex-col gap-2">
+              <Commands lines={['box bounty allow <owner>/<repository> --reward <reward> --reward-limit <limit>']} />
+              <Commands lines={['box bounty config set instructions true']} />
               <Commands lines={['box bounty create --task TASK.md --why "beyond what this agent can do"']} />
               <Commands lines={['box bounty post <id> --preview']} />
               <Commands lines={['box bounty post <id>']} />
               <Commands lines={['box bounty status <id>']} />
               <Commands lines={['box bounty look <id> <n>']} />
               <Commands lines={['box bounty apply <id> <n>']} />
+              <Commands lines={['box bounty config set paid <id>']} />
               <p className="text-sm text-soft"><code>&lt;n&gt;</code> is the pull request&apos;s number.</p>
             </div>
           </details>
         </div>
 
         <Who>If a reward is owed</Who>
-        <div className="border-t border-b border-line py-6 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-x-6 gap-y-3">
-          <div className="text-soft max-w-prose">
-            <p><a href="/#pay">On merge</a> pays without you. Otherwise you pay with one click or by hand, and the bounty&apos;s page shows which work for that solver. Paid by hand, you record it yourself. Your agent tells you once, and goes back to its work.</p>
-          </div>
-          <div className="min-w-0"><Commands lines={['box bounty config set paid <id>']} /></div>
+        <div className="border-t border-b border-line py-6 text-soft">
+          <p className="max-w-prose"><a href="/#pay">On merge</a> pays without you. Otherwise you pay on the bounty&apos;s page, with one click or by hand. Your agent tells you once, with the link, and goes back to its work. The board shows what is due when you are signed in.</p>
         </div>
       </section>
 
@@ -121,7 +116,7 @@ export default function Page() {
             <p>The task, your agent&apos;s note on what it tried and the code on a bounty branch. The tool keeps its never-ship files out, such as secrets and key files, and a private repository is refused, so nothing from one can go. Your repository is already public, so anything else in it is too.</p>
           </More>
           <More title="Who decides what">
-            <p>You allow one repository once. After that your agent can post without asking you, within the reward and limit you set; add <code>--ask</code> to that command and it asks you before each post and each merge.</p>
+            <p>You answer once, when your agent asks: this repository, the reward and the limit. After that it can post without asking you, within what you set. Tell it you want to be asked, and it asks you before each post and each merge.</p>
             <p>The reward is what each bounty states, and the limit is the most promised across its open bounties, both in whole dollars. Without them every bounty states $0.</p>
             <p>The choice of solution is your agent&apos;s; the tool never judges one. Nothing a solver wrote is run.</p>
           </More>

@@ -37,6 +37,18 @@ export const DESCRIBE_LINES: readonly string[] = [
   'prints the few lines to put to them. box bounty help shows the journey.'
 ];
 
+// What `box bounty` says while a repository is not set up, so that installing is
+// all a person has to do (PF15). It leaves as soon as the owner's answer is written.
+// The three questions are the owner's; everything else here is the agent's.
+export const SETUP_LINES: readonly string[] = [
+  'not set up for this repository yet. To the agent reading this, in the project you work in, not the tool\'s own clone:',
+  '  1. run gh auth status; if it is not signed in, the owner runs gh auth login, which you cannot finish alone.',
+  '  2. ask the owner: may bounties from this repository go public under your GitHub account? What reward does each state, and at most how much promised at once, in whole dollars? Should I ask you before each post and each merge?',
+  '  3. run box bounty allow <owner>/<repository> --reward <reward> --reward-limit <limit>, adding --ask if they want to be asked; then box bounty config set instructions true, which adds one marked block to this project\'s instruction files so later sessions know the tool. Tell them it did.',
+  'the answers are the owner\'s to give, unless they leave them to you. With no answer nothing is promised and nothing is posted.',
+  'a person reading this: tell your agent to run box bounty.'
+];
+
 // The pre-publish scan's limits, one line wherever a scan result is shown
 // before posting (BT45): `create` and `post --preview`.
 export const RESUME_STAYED = 'Any --resume note stayed on the machine that posted it.';

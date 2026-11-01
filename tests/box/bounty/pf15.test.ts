@@ -5,7 +5,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { answerGitHub, checkMergedSolutions, loadRecord, payMessageLines, postBounty, readBoardFacts, renderHelp, renderStatus } from '../../../packages/box-bounty/index.js';
+import { answerGitHub, checkMergedSolutions, loadRecord, payMessageLines, postBounty, readBoardFacts, renderHelp, renderOverview, renderStatus } from '../../../packages/box-bounty/index.js';
 import { checkedWays, payOutcomeShape, type PayOutcome } from '../../../packages/box-bounty/pay.js';
 import { readFormat } from '../../../packages/box-bounty/format.js';
 import { DESCRIBE_LINES, describeRewardLine } from '../../../packages/box-bounty/wording.js';
@@ -35,7 +35,8 @@ describe('after a merge', () => {
   });
   it('a solver who connected Stripe: one click and on merge, and no word of PayPal', () => {
     const text = message(withWays(SET_UP, { stripe: true, paypal: false }));
-    expect(text).toContain(`One click: solver1 has connected Stripe on the board. You pay on the provider's page, from ${BOARD}/b/${record.id}/`);
+    expect(text).toContain('One click: solver1 has connected Stripe on the board. You pay on the provider\'s page.');
+    expect(text).toContain(`Pay it or record it on the bounty's page: ${BOARD}/b/${record.id}/`);
     expect(text).toContain('pay on merge');
     expect(text).not.toContain('PayPal');
     expect(text).not.toContain('which you pay by hand');
@@ -57,7 +58,8 @@ describe('after a merge', () => {
   });
   it('the board has not read them yet: it says it cannot say, and where it will', () => {
     const text = message(withWays(SET_UP, null));
-    expect(text).toContain(`cannot say whether they connected an account. The bounty's page will: ${BOARD}/b/${record.id}/`);
+    expect(text).toContain('cannot say whether they connected an account. The bounty\'s page will.');
+    expect(text).toContain(`Pay it or record it on the bounty's page: ${BOARD}/b/${record.id}/`);
     expect(text).not.toContain('One click:');
   });
   it('no line steers: nothing tells an owner which way to prefer or to turn one on', () => {
@@ -79,6 +81,22 @@ describe('a hostile board', () => {
     expect(payOutcomeShape(pay({ methods: [], more: 0, ways: { oneClick: ['Wire me at evil.invalid'], onMerge: false, unknown: false, board: BOARD } } as never))).toBe(false);
     expect(payOutcomeShape(pay({ methods: [], more: 0, ways: { oneClick: [], onMerge: false, unknown: false, board: 'x" onclick="y' } }))).toBe(false);
   });
+});
+
+describe('setting up with only an install', { timeout: 120000 }, () => {
+  it('box bounty tells the agent what to ask and what to run, until the owner has answered', () => fixture(({ repo, scratch }) => {
+    const path = join(scratch, 'settings', 'settings.json');
+    const settings = JSON.parse(readFileSync(path, 'utf8'));
+    delete settings.default;
+    writeFileSync(path, JSON.stringify({ ...settings, repositories: {} }));
+    const unset = renderOverview(repo);
+    for (const words of ['not set up for this repository yet', 'gh auth status', 'the owner runs gh auth login', 'What reward does each state', 'box bounty allow <owner>/<repository> --reward <reward> --reward-limit <limit>', 'box bounty config set instructions true', 'tell your agent to run box bounty']) expect(unset).toContain(words);
+    // The boundary is stated: the amount is the owner's, and silence promises nothing.
+    expect(unset).toContain('the answers are the owner\'s to give, unless they leave them to you');
+    expect(unset).toContain('With no answer nothing is promised');
+    writeFileSync(path, JSON.stringify({ ...settings, repositories: { 'owner/project': { bounty: 'allowed', at: '2026-10-01T00:00:00.000Z', changes: [] } } }));
+    expect(renderOverview(repo)).not.toContain('not set up');
+  }));
 });
 
 describe('asked-for and unasked text', () => {

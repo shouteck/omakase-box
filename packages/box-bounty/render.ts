@@ -24,8 +24,8 @@ import { applicableAttempts,attemptsOf,endedCount,endedRecords,isOpenStage,listR
 import { corruptFiles,endedContaining,metaKeys,sharedEnded,sharedEndedCount,sharedOpen,sharedRead } from './store.js';
 import { refreshSharedMemory } from './chain.js';
 import { adoptOpenShared } from './adopt.js';
-import { RESUME_STAYED } from './wording.js';
-import { askMergeNoticeLine,loadState,localFirstMergeLine,repoReward,rewardNoticeLine,saidOnce } from './settings.js';
+import { RESUME_STAYED,SETUP_LINES } from './wording.js';
+import { askMergeNoticeLine,loadState,localFirstMergeLine,readDecision,repoReward,rewardNoticeLine,saidOnce } from './settings.js';
 import type { AttemptOutcome,BountyRecord,ListedBounty,StageEvent } from './record.js';
 
 // The saved job context, under the bounty it belongs to: `indent` places it
@@ -710,7 +710,9 @@ function seenAge(at: string): string {
 }
 
 export function renderOverview(repoRoot: string): string {
-  return ['box bounty can hand work to an outside solver; box bounty describe says when it is worth using.', renderStatus(repoRoot)].join('\n');
+  const decision = readDecision(repoRoot);
+  const setUp = decision.decision !== null || decision.denied;
+  return ['box bounty can hand work to an outside solver; box bounty describe says when it is worth using.', ...(setUp ? [] : SETUP_LINES), renderStatus(repoRoot)].join('\n');
 }
 
 // The write side of the surfaces: every record write re-renders them. The

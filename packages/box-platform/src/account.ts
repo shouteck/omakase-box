@@ -184,20 +184,24 @@ const OWING = new Set(['owed', 'owner-decides']);
 const byProvider = (record: unknown): boolean => ['stripe', 'paypal'].includes((record as { source?: string } | null)?.source ?? '');
 
 /** What the signed-in person owes and is owed, by the same facts as each bounty's page. Whom, how much, since when; never a method. Read at render, so a repository gone private leaves. */
+async function debtRows(env: Env, login: string, now: number, where: string, mine: (input: BountyPayment, payment: ReturnType<typeof paymentOf>) => boolean) {
+  const rows: { id: string; title: string; amount: number; since: string; to: string | null; to_one_of?: readonly string[] }[] = [];
+  for (const input of await loadPayments(env.DB, where, login)) {
+    const payment = paymentOf(input);
+    if (!OWING.has(payment.state) || payment.owed === null || !mine(input, payment) || rows.length >= LIST_MAX) continue;
+    if (await readBounty(env, input.id, now) === null) continue;
+    const { to, amount, since } = payment.owed;
+    rows.push({ id: input.id, title: input.title, amount, since, to, ...('to_one_of' in payment.owed ? { to_one_of: payment.owed.to_one_of } : {}) });
+  }
+  return rows;
+}
+
+const youOwe = (env: Env, login: string, now: number) => debtRows(env, login, now, 'b.poster = ? COLLATE NOCASE', (_input, payment) => !same(payment.owed!.to, login));
+
 async function debtsOf(env: Env, login: string, now: number) {
-  const lists = async (where: string, mine: (input: BountyPayment, payment: ReturnType<typeof paymentOf>) => boolean) => {
-    const rows: { id: string; title: string; amount: number; since: string; to: string | null; to_one_of?: readonly string[] }[] = [];
-    for (const input of await loadPayments(env.DB, where, login)) {
-      const payment = paymentOf(input);
-      if (!OWING.has(payment.state) || payment.owed === null || !mine(input, payment) || rows.length >= LIST_MAX) continue;
-      if (await readBounty(env, input.id, now) === null) continue;
-      const { to, amount, since } = payment.owed;
-      rows.push({ id: input.id, title: input.title, amount, since, to, ...('to_one_of' in payment.owed ? { to_one_of: payment.owed.to_one_of } : {}) });
-    }
-    return rows;
-  };
+  const lists = (where: string, mine: (input: BountyPayment, payment: ReturnType<typeof paymentOf>) => boolean) => debtRows(env, login, now, where, mine);
   return {
-    you_owe: await lists('b.poster = ? COLLATE NOCASE', (_input, payment) => !same(payment.owed!.to, login)),
+    you_owe: await youOwe(env, login, now),
     owed_to_you: await lists(`EXISTS (SELECT 1 FROM pull_requests p WHERE p.bounty_id = b.id AND p.state = 'merged' AND p.author = ? COLLATE NOCASE)`, (input, payment) => !same(input.poster, login) && landedOf(input).some(pull => same(pull.author, login)) && (payment.owed!.to === null || same(payment.owed!.to, login)))
   };
 }
@@ -470,6 +474,10 @@ export async function accountResponse(request: Request, env: Env, url: URL, now:
     if (viewer === null) return json(401, SIGN_IN_FIRST);
     await env.DB.prepare('DELETE FROM paypal_accounts WHERE github_id = ?').bind(viewer.github_id).run();
     return json(200, { paypal: await paypalOf(env, viewer) });
+  }
+  if (method === 'GET' && path === '/api/me/due') {
+    const viewer = await viewerOf(request, env, now);
+    return json(200, { due: viewer === null ? 0 : (await youOwe(env, viewer.login, now)).length });
   }
   if (method === 'GET' && path === '/api/me') {
     const viewer = await viewerOf(request, env, now);

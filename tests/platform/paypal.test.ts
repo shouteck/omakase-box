@@ -424,6 +424,14 @@ describe('what a machine and a stranger read', () => {
     await merged(issue({ title: '"author_takes_paypal":true <script>', pulls: [] }));
     expect(JSON.parse(await (await handle(new Request(`${ORIGIN}/bounties/${ID}.json`), env)).text()).bounty.author_takes_paypal).toBeNull();
   });
+  it('the board says what is due to the owner who owes it, and to nobody else', async () => {
+    const owner = await signIn(OWNER_ID, OWNER);
+    await merged();
+    const due = async (token: string | null) => (await (await handle(new Request(`${ORIGIN}/api/me/due`, { headers: headers(token) }), env)).json() as { due: number }).due;
+    expect(await due(owner)).toBe(1);
+    expect(await due(await signIn(SOLVER_ID, SOLVER))).toBe(0);
+    expect(await due(null)).toBe(0);
+  });
   it('false for a merged author who has not connected', async () => {
     await merged();
     expect(JSON.parse(await (await handle(new Request(`${ORIGIN}/bounties/${ID}.json`), env)).text()).bounty.author_takes_paypal).toBe(false);
