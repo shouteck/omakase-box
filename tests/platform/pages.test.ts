@@ -265,6 +265,10 @@ describe('the pages', () => {
     expect(how).not.toContain('Three ways to pay');
     expect(how).not.toContain('Record $45 paid');
     expect(how).toContain('connected Stripe also covers on merge');
+    // Only what the person does is numbered; the agent's commands are folded away.
+    expect(await page.locator('#hand-off > ol > li').count()).toBe(5);
+    expect(await page.locator('#hand-off details code[data-command]').count()).toBe(6);
+    expect(await page.locator('#hand-off details').evaluate(element => (element as HTMLDetailsElement).open)).toBe(false);
     expect(await page.locator('main a[href="/#pay"]').count()).toBe(1);
     await visit(page, '/');
     // The picture is the real product in real text, and says it is an example.
@@ -280,7 +284,8 @@ describe('the pages', () => {
     await visit(page, '/how/');
     const text = (await page.locator('main').textContent())!;
     for (const phrase of ['Hand off work', 'Answer bounties', 'Nothing a solver wrote is run', 'a private repository is refused', 'never-ship files', 'anything else in it is too', 'The board never holds money', 'inside the new omakase-box folder', 'install nothing from this page', 'nothing here makes them pay', 'it asks you before each post and each merge', 'only the repository, the issue number, the bounty id and what happened']) expect(text).toContain(phrase);
-    expect(await page.locator('main ol > li').count()).toBe(10);
+    // Five numbered for the owner, the agent's four, the solver's three.
+    expect(await page.locator('main ol > li').count()).toBe(12);
     expect(await page.locator('main a[href="#answer"]').count()).toBe(1);
     expect(await page.locator('#answer h2').innerText()).toBe('Answer bounties');
     expect(await page.locator('#limits details').count()).toBe(5);
@@ -313,7 +318,7 @@ describe('the pages', () => {
     const block = page.locator('main button[aria-label="Copy command"]').nth(1);
     await block.click();
     await expect.poll(() => block.innerText()).toBe('Copied');
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('box bounty create --task TASK.md --why "beyond what this agent can do"');
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('box bounty config set instructions true');
     await page.locator('main button[aria-label="Copy install lines"]').click();
     const install = await page.locator('main code[data-install]').allInnerTexts();
     // Windows' clipboard hands back \r\n for the \n the page wrote.
@@ -348,7 +353,8 @@ describe('the pages', () => {
   it('every command on the front page runs with the arguments it prints, in order, through the whole journey', async () => {
     const { page, close } = await fresh();
     await visit(page, '/how/');
-    const lines = await page.locator('main code[data-command]').allInnerTexts();
+    // Text, not what shows: the agent's commands are folded until someone opens them.
+    const lines = await page.locator('main code[data-command]').allTextContents();
     await visit(page, '/');
     const posted = await page.locator('main [data-flow-output=post]').innerText();
     const applied = await page.locator('main [data-flow-output=apply]').innerText();
@@ -356,6 +362,7 @@ describe('the pages', () => {
     // The page's own list: a command added, dropped or reworded fails here.
     expect(lines).toEqual([
       'box bounty allow <owner>/<repository> --reward <reward> --reward-limit <limit>',
+      'box bounty config set instructions true',
       'box bounty create --task TASK.md --why "beyond what this agent can do"',
       'box bounty post <id> --preview',
       'box bounty post <id>',
@@ -379,8 +386,9 @@ describe('the pages', () => {
         expect(output, line).toContain(expected);
         return output;
       };
-      const [allow, create, preview, post, status, look, apply, paid] = lines as [string, string, string, string, string, string, string, string];
+      const [allow, instructions, create, preview, post, status, look, apply, paid] = lines as [string, string, string, string, string, string, string, string, string];
       run(allow, 'owner/project');
+      run(instructions, 'instructions: on');
       values['<id>'] = /bt-[a-f\d]{12}/.exec(run(create, 'bt-'))![0];
       // A second open bounty: from here a command with no id has to say which one.
       expect(world.box(['bounty', 'create', '--task', 'OTHER.md', '--why', 'another handoff']).status).toBe(0);

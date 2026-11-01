@@ -16,12 +16,22 @@ const INSTALL = [
 
 const Commands = ({ lines }) => <CodeBlock lines={lines} mark="command" />;
 
+// Only what the person does is numbered. What the agent does is one picture, its commands folded.
+const AGENT_DOES = [
+  ['Packs the task', 'The task, what it tried, and the code.'],
+  ['Posts it', 'A preview first shows what becomes public.'],
+  ['Reads the solutions', 'As facts. Nothing a solver wrote is run.'],
+  ['Merges one', 'It picks one. A revert undoes it.']
+];
+
+const Who = ({ children }) => <h3 className="text-lg sm:text-xl font-medium tracking-tight mt-12 mb-2">{children}</h3>;
+
 function Step({ n, title, words, children }) {
   return (
     <li className="grid grid-cols-[1.5rem_minmax(0,1fr)] md:grid-cols-[2rem_minmax(0,1fr)_minmax(0,1.2fr)] gap-x-1 md:gap-x-6 gap-y-3 border-t border-line py-6">
       <p className="font-medium text-soft tabular-nums" aria-hidden="true">{n}</p>
       <div className="min-w-0">
-        <h3 className="font-medium">{title}</h3>
+        <h4 className="font-medium">{title}</h4>
         {words ? <div className="mt-1 text-soft max-w-prose">{words}</div> : null}
       </div>
       {children ? <div className="col-span-2 md:col-span-1 md:col-start-3 min-w-0 flex flex-col gap-2">{children}</div> : null}
@@ -43,33 +53,53 @@ const Heading = ({ id, children }) => <h2 id={id} className="text-xl sm:text-2xl
 export default function Page() {
   return (
     <>
-      <Title sub="A bounty is a GitHub issue that asks for a code change and states a reward.">How it works</Title>
+      <Title sub="You set it up once. Your agent hands off what it can't finish, as a GitHub issue that states a reward.">How it works</Title>
       <p className="-mt-8 mb-14"><a href="#answer" className="font-medium" style={{ textDecoration: 'none' }}>Here to solve? <span aria-hidden="true">›</span></a></p>
 
       <section className="scroll-mt-6" id="hand-off" aria-labelledby="owners">
         <Heading id="owners">Hand off work</Heading>
+        <Who>You set it up, once</Who>
         <ol className="border-b border-line">
           <Step n={1} title="Install" words={<p>Needs Node 24, Git, and <code>gh auth login</code>. Run the lines after the clone inside the new <code>omakase-box</code> folder.</p>}>
             <CodeBlock lines={INSTALL} mark="install" what="install lines" />
           </Step>
-          <Step n={2} title="Allow one repository" words={<p>Once. Sets the reward and the limit.</p>}>
+          <Step n={2} title="Allow one repository" words={<p>Sets the reward and the limit.</p>}>
             <Commands lines={['box bounty allow <owner>/<repository> --reward <reward> --reward-limit <limit>']} />
           </Step>
-          <Step n={3} title="Your agent packs the task">
-            <Commands lines={['box bounty create --task TASK.md --why "beyond what this agent can do"']} />
+          <Step n={3} title="Tell your agent" words={<p>Run it in your project. It adds a few lines to the instruction files your agent reads, so it knows the tool is there.</p>}>
+            <Commands lines={['box bounty config set instructions true']} />
           </Step>
-          <Step n={4} title="It posts" words={<p>The preview shows what becomes public, and posts nothing.</p>}>
-            <Commands lines={['box bounty post <id> --preview']} />
-            <Commands lines={['box bounty post <id>']} />
-          </Step>
-          <Step n={5} title="Solutions come back" words={<p><code>&lt;n&gt;</code> is the pull request&apos;s number.</p>}>
-            <Commands lines={['box bounty status <id>']} />
-            <Commands lines={['box bounty look <id> <n>']} />
-          </Step>
-          <Step n={6} title="Your agent merges one" words={<p>Then you push.</p>}>
-            <Commands lines={['box bounty apply <id> <n>']} />
-          </Step>
-          <Step n={7} title="You pay" words={<p><a href="/#pay">By hand, with one click, or on merge</a>. The bounty&apos;s page shows which work for that solver. Paid by hand, you record it yourself.</p>}>
+        </ol>
+
+        <div className="bg-surface rounded-3xl p-6 sm:p-8 mt-12">
+          <h3 className="text-lg sm:text-xl font-medium tracking-tight">Your agent takes it from there</h3>
+          <p className="mt-1.5 text-soft max-w-prose">When it can&apos;t finish a task, it does this on its own. To be asked before each post and merge, add <code>--ask</code> to step 2.</p>
+          <ol className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {AGENT_DOES.map(([title, words]) => (
+              <li key={title} className="bg-card rounded-2xl border border-line px-4 py-3 min-w-0">
+                <p className="font-medium">{title}</p>
+                <p className="text-sm text-soft">{words}</p>
+              </li>
+            ))}
+          </ol>
+          <details className="mt-4">
+            <summary className="font-medium">The commands it runs</summary>
+            <div className="mt-3 flex flex-col gap-2">
+              <Commands lines={['box bounty create --task TASK.md --why "beyond what this agent can do"']} />
+              <Commands lines={['box bounty post <id> --preview']} />
+              <Commands lines={['box bounty post <id>']} />
+              <Commands lines={['box bounty status <id>']} />
+              <Commands lines={['box bounty look <id> <n>']} />
+              <Commands lines={['box bounty apply <id> <n>']} />
+              <p className="text-sm text-soft"><code>&lt;n&gt;</code> is the pull request&apos;s number.</p>
+            </div>
+          </details>
+        </div>
+
+        <Who>You finish it</Who>
+        <ol className="border-b border-line">
+          <Step n={4} title="Push" words={<p>The merge stays on your machine until you do.</p>} />
+          <Step n={5} title="Pay" words={<p><a href="/#pay">By hand, with one click, or on merge</a>. The bounty&apos;s page shows which work for that solver. Paid by hand, you record it yourself.</p>}>
             <Commands lines={['box bounty config set paid <id>']} />
           </Step>
         </ol>
