@@ -1,13 +1,13 @@
 // The few primitives every page is built from. Sizes: text-sm, text-code, text-base,
-// text-lg, text-xl, text-2xl, text-3xl only. Weights: normal and semibold only.
+// text-lg, text-xl, text-2xl, text-3xl, text-4xl only. Weights: 400, 500, 600 only.
 // Links are plain <a>: PLATFORM-UX section 8's static-export trap never arises.
 import Copy from './Copy.jsx';
 
 export function Title({ children, sub }) {
   return (
     <header className="mb-12">
-      <h1 className="text-2xl font-semibold tracking-tight break-words text-balance">{children}</h1>
-      {sub ? <p className="mt-4 text-lg text-soft max-w-[40rem]">{sub}</p> : null}
+      <h1 className="text-xl sm:text-2xl font-medium tracking-[-0.03em] break-words text-balance">{children}</h1>
+      {sub ? <p className="mt-4 text-lg text-soft max-w-[36rem]">{sub}</p> : null}
     </header>
   );
 }
@@ -15,7 +15,7 @@ export function Title({ children, sub }) {
 export function Section({ title, children, id }) {
   return (
     <section className="mt-14 first-of-type:mt-0" aria-labelledby={id}>
-      <h2 id={id} className="text-lg font-semibold mb-4">{title}</h2>
+      <h2 id={id} className="text-lg font-medium tracking-tight mb-4">{title}</h2>
       {children}
     </section>
   );
@@ -25,7 +25,7 @@ export function Section({ title, children, id }) {
 export function SideSection({ title, children, id }) {
   return (
     <section className="grid grid-cols-1 md:grid-cols-[14rem_minmax(0,1fr)] gap-x-10 gap-y-4 border-t border-line py-10" aria-labelledby={id}>
-      <h2 id={id} className="text-lg font-semibold">{title}</h2>
+      <h2 id={id} className="text-lg font-medium tracking-tight">{title}</h2>
       <div className="min-w-0">{children}</div>
     </section>
   );
@@ -59,7 +59,7 @@ export function Facts({ rows, stacked = false }) {
 
 /** The one primary action of a page. */
 export function Primary({ children, href }) {
-  return <a href={href} data-primary className="inline-block bg-accent text-paper px-5 py-2.5 font-semibold rounded-[3px] text-center" style={{ textDecoration: 'none', color: 'var(--color-paper)' }}>{children}</a>;
+  return <a href={href} data-primary className="inline-block bg-button px-5 py-2.5 font-medium rounded-full text-center" style={{ textDecoration: 'none', color: 'var(--color-button-ink)' }}>{children}</a>;
 }
 
 /** Any other action looks like a link. */
@@ -77,7 +77,7 @@ export const Soft = ({ children, as: As = 'p', className = '' }) => <As classNam
 export function CodeBlock({ lines, mark, what = 'command', className = '' }) {
   const attribute = mark ? { [`data-${mark}`]: '' } : {};
   return (
-    <div className={`flex items-start gap-4 border border-line bg-surface rounded-[3px] px-4 py-2.5 min-w-0 ${className}`}>
+    <div className={`flex items-start gap-4 border border-line bg-surface rounded-xl px-4 py-2.5 min-w-0 ${className}`}>
       <div className="flex flex-col gap-1 min-w-0 grow overflow-x-auto" tabIndex={0} role="group" aria-label={what}>
         {lines.map(line => <code key={line} {...attribute} className="block whitespace-pre sm:whitespace-pre-wrap sm:break-words">{line}</code>)}
       </div>
@@ -89,7 +89,7 @@ export function CodeBlock({ lines, mark, what = 'command', className = '' }) {
 /** Text that is not ours: shown as a quotation, with whose words it is. Never parsed, never linked. */
 export function TheirWords({ who, children }) {
   return (
-    <figure className="border border-line bg-surface rounded-[3px] px-5 py-4">
+    <figure className="border border-line bg-surface rounded-xl px-5 py-4">
       <figcaption className="text-soft text-sm mb-2">{who}</figcaption>
       <blockquote className="whitespace-pre-wrap break-words max-w-prose">{children}</blockquote>
     </figure>

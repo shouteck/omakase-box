@@ -205,13 +205,13 @@ Muji's own explanation of its colour is the board's ground: "if you omit the ble
 
 ### 7.2 The rules
 
-**Revised by the owner on 1 November 2026 (PF10, D-2026-11-01-site-redesign):** rules 1, 2, 4 and 5 below are the current ones. The site shows the real product in real text, not drawings.
+**Revised by the owner on 1 November 2026 (PF10, D-2026-11-01-site-redesign):** rules 1, 2, 4 and 5 below are the current ones. One idea per screen, few words, detail behind a link or a disclosure, and the real product in real text as the picture.
 
-1. **Two families:** Inter (SIL Open Font Licence 1.1, `@fontsource/inter`) for words and JetBrains Mono (OFL, `@fontsource/jetbrains-mono`) for code. **Two weights:** 400, 600. **Seven sizes:** 13, 14, 16, 20, 28, 36, 56px.
-2. **Colour:** ground `#f5f2ea` (unbleached paper), surface `#fbf9f4` for panels, ink `#1d1b17`, a softer ink `#5c574d` for sources and meta (a strength of the ink, not a second hue), hairlines `#d9d3c6`, **one accent** `#234a7d` (ink blue) for links, focus and the one button, and an ink code ground `#1d1b17` for the one terminal. Dark: `#1a1916`, surface `#22201c`, `#ebe6db`, `#a59e91`, `#3a3731`, accent `#9dbbe6`, code ground `#100f0d`.
+1. **Two families:** Geist Sans and Geist Mono (SIL Open Font Licence 1.1, `@fontsource/geist-sans`, `@fontsource/geist-mono`). **Three weights:** 400, 500, 600. **Eight sizes:** 13, 14, 16, 20, 28, 40, 56, 80px.
+2. **Colour:** the tokens in `app/globals.css`: near-white ground, a warm surface for tiles, white cards, ink, a softer ink, hairlines, **one accent** (a deep blue) for links and focus. The primary button is an ink pill. Light and dark.
 3. **Contrast (WCAG 2.2 AA), computed:** light ink 15.4:1, soft 6.4:1, accent 8.0:1, button text 8.0:1; dark 14.1, 6.6, 8.9, 8.9. Form-control borders use the soft ink (6.4:1, above 1.4.11's 3:1); hairlines are decoration only (1.3:1).
-4. **Whitespace:** at most 68rem wide, 64–96px between sections. Lists are separated by a hairline; code, examples and a bounty's summary sit in hairline panels. Navigation is plain ink; underlines are for links in running text.
-5. **No shadows, gradients, badges, pills, avatars or decorative icons; no motion** (transitions and animations disabled). Measured: 0 shadows, 0 gradients, 0 animations.
+4. **Space:** at most 76rem wide, 96–144px between front-page sections. Tiles and panels have generous radii; lists are separated by a hairline. Navigation is plain and sticky; underlines are for links in running text.
+5. **Restraint:** the only shadow and gradient are the front page's picture and its soft sky. No badges, avatars or decorative icons. **Motion:** the picture tells its story once and sections rise as they arrive; nothing moves under `prefers-reduced-motion`, and at rest everything is complete.
 6. **One primary action per page** (a filled accent button); everything else is a link. Measured: no page has more than one.
 7. **Keyboard:** "Skip to content" is the first tab stop on every page, then the site name and navigation; native links, buttons and selects; a visible 2px accent focus ring. Responsive to 390px (phone screenshots).
 8. **Words:** facts, whose word each is, and the next step. Every sample page carries "Sample data. Every name here is invented and its links lead nowhere; nothing is a real record."

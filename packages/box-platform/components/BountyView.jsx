@@ -23,7 +23,7 @@ function stateSentence(b) {
 function payment(b) {
   if (b.amount === 0) return 'No reward is stated, so nothing is owed.';
   if (b.state === 'closed-none') return 'Closed without a merge. Nothing is owed.';
-  const line = `$${b.amount} for the merged solution. The owner pays its author directly; the board carries no money.`;
+  const line = `$${b.amount} for the merged solution, paid directly by the owner.`;
   if (b.state === 'merged-more-than-one') return `${line} The terms pay one merged solution, so the owner decides whom to pay.`;
   return line;
 }
@@ -39,18 +39,23 @@ function View({ data }) {
       <Soft className="-mt-9 mb-10">The title is the poster&apos;s own words.</Soft>
       <Stale data={data} />
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_22rem] gap-x-12 gap-y-10 items-start">
-        <aside className="lg:col-start-2 lg:row-start-1 lg:sticky lg:top-6 border border-line bg-surface rounded-[3px] px-5 pt-5 pb-2" aria-label="Summary">
+        <aside className="lg:col-start-2 lg:row-start-1 lg:sticky lg:top-6 bg-surface rounded-3xl px-6 pt-6 pb-3" aria-label="Summary">
           <p className="text-sm text-soft">Stated reward</p>
-          <p className={b.amount > 0 ? 'text-xl font-semibold tabular-nums' : 'text-lg font-semibold'}>{b.amount > 0 ? `$${b.amount}` : 'No reward'}</p>
+          <p className={b.amount > 0 ? 'text-xl font-medium tracking-tight tabular-nums' : 'text-lg font-medium'}>{b.amount > 0 ? `$${b.amount}` : 'No reward'}</p>
           {open ? <div className="mt-4 mb-5"><Primary href={b.links.branch}>Open the bounty branch on GitHub</Primary></div> : <div className="mb-5" />}
           <Facts stacked rows={[
             ['Posted by', <a key="poster" href={`/owner/${b.poster}/`}>{b.poster}</a>],
             ['Repository', <>{b.repository}{b.language ? ` · ${b.language}` : ''}</>],
-            ['Posted', fmtDate(b.posted_at)],
-            ['Posting approved', b.approved_by ? APPROVED[b.approved_by] : 'The project\'s record does not say.'],
-            ['Terms', 'The merged solution earns the whole reward. Other solutions and parts used by hand earn nothing.'],
-            ['Read from GitHub', data.read_at ? `${fmtDate(data.read_at)}, ${data.read_at.slice(11, 16)} UTC` : 'Not yet']
+            ['Posted', fmtDate(b.posted_at)]
           ]} />
+          <details className="border-t border-line py-3 text-sm">
+            <summary className="text-soft">Terms and more</summary>
+            <div className="mt-2"><Facts stacked rows={[
+              ['Terms', 'The merged solution earns the whole reward. Other solutions and parts used by hand earn nothing.'],
+              ['Posting approved', b.approved_by ? APPROVED[b.approved_by] : 'The project\'s record does not say.'],
+              ['Read from GitHub', data.read_at ? `${fmtDate(data.read_at)}, ${data.read_at.slice(11, 16)} UTC` : 'Not yet']
+            ]} /></div>
+          </details>
         </aside>
 
         <div className="lg:col-start-1 lg:row-start-1 min-w-0">
@@ -84,11 +89,12 @@ function View({ data }) {
             <Soft className="mt-3">The board lists them; it does not judge or rank them.</Soft>
           </Section>
 
-          <Section title="History" id="history">
-            <ul className="flex flex-col gap-2">
+          <details className="mt-14 border-t border-line pt-4" id="history">
+            <summary className="font-medium">History</summary>
+            <ul className="mt-3 flex flex-col gap-2 text-soft">
               {b.history.map((line, i) => <li key={i}>{fmtDate(line.at)}: {line.event}. <Soft as="span">Source: {SOURCE[line.source]}.</Soft></li>)}
             </ul>
-          </Section>
+          </details>
         </div>
       </div>
     </>

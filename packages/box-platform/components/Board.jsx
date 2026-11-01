@@ -15,7 +15,7 @@ function Select({ label, name, value, onChange, options }) {
   return (
     <label className="flex flex-col gap-1 text-sm text-soft">
       {label}
-      <select name={name} value={value} onChange={e => onChange(name, e.target.value)} className="border border-soft bg-surface text-ink text-base pl-3 py-2 rounded-[3px] min-w-0 w-full">
+      <select name={name} value={value} onChange={e => onChange(name, e.target.value)} className="border border-soft bg-surface text-ink text-base pl-3 py-2 rounded-xl min-w-0 w-full">
         {options.map(([v, t]) => <option key={v} value={v}>{t}</option>)}
       </select>
     </label>
@@ -27,14 +27,14 @@ export function Card({ b }) {
   return (
     <li className="border-t border-line py-5 grid grid-cols-[minmax(0,1fr)_auto] gap-x-8">
       <div className="min-w-0">
-        <a href={`/b/${b.id}/`} className="text-lg font-semibold no-underline hover:underline focus-visible:underline break-words" style={{ color: 'var(--color-ink)' }}>{b.title}</a>
+        <a href={`/b/${b.id}/`} className="text-lg font-medium tracking-tight hover:underline break-words" style={{ color: 'var(--color-ink)', textDecoration: 'none' }}>{b.title}</a>
         <p className="mt-1 text-sm text-soft break-words">
           {[b.repository, b.language, b.age_days === 0 ? 'posted today' : `${plural(b.age_days, 'day')} old`, b.solutions_open ? `${plural(b.solutions_open, 'solution')} waiting` : 'no solutions yet'].filter(Boolean).join(' · ')}
         </p>
-        <p className="mt-1 text-sm text-soft break-words">Posted by {b.poster}{b.amount > 0 ? ', who pays the solver directly' : ''}: <RecordLine record={b.record} /></p>
+        <p className="text-sm text-soft break-words">{b.poster}: <RecordLine record={b.record} /></p>
       </div>
       {b.amount > 0
-        ? <p className="text-xl font-semibold tabular-nums whitespace-nowrap text-right">${b.amount}</p>
+        ? <p className="text-lg font-medium tabular-nums whitespace-nowrap text-right">${b.amount}</p>
         : <p className="text-sm text-soft whitespace-nowrap text-right pt-1">No reward</p>}
     </li>
   );
@@ -49,8 +49,8 @@ function RecordLine({ record }) {
   ].filter(Boolean);
   const rest = [
     `${record.merged} merged`,
-    `${record.recorded_paid} paid by the owner's word`,
-    `${record.confirmed_received} received by the solvers' word`,
+    `${record.recorded_paid} paid, the owner's word`,
+    `${record.confirmed_received} received, the solvers' word`,
     record.owed_now > 0 && record.oldest_owed_days <= 14 ? `${record.owed_now} owed, the oldest for ${plural(record.oldest_owed_days, 'day')}` : null
   ].filter(Boolean);
   return <>{first.length > 0 ? <span className="font-semibold">{first.join(' · ')} · </span> : null}{rest.join(' · ')}.</>;
@@ -103,7 +103,7 @@ export default function Board() {
         <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,3fr)_minmax(0,1fr)] gap-4">
           <label className="flex flex-col gap-1 text-sm text-soft">
             Search
-            <input type="search" maxLength={100} value={q.query} onChange={e => set('query', e.target.value)} placeholder="Words in a title or repository" className="border border-soft bg-surface text-ink text-base px-3 py-2 rounded-[3px] placeholder:text-soft" />
+            <input type="search" maxLength={100} value={q.query} onChange={e => set('query', e.target.value)} placeholder="Words in a title or repository" className="border border-soft bg-surface text-ink text-base px-3 py-2 rounded-xl placeholder:text-soft" />
           </label>
           <Select label="Sort" name="sort" value={q.sort} onChange={set} options={[['newest', 'Newest first'], ['reward', 'Highest reward first']]} />
         </div>
@@ -136,7 +136,7 @@ export default function Board() {
             </p>
           ) : null}
           {data.open_total === 0 ? (
-            <div className="border border-line bg-surface rounded-[3px] px-5 py-6" aria-live="polite">
+            <div className="border border-line bg-surface rounded-xl px-5 py-6" aria-live="polite">
               <p className="font-semibold">No open bounties on the board yet.</p>
               <p className="mt-1 text-soft max-w-prose">A bounty appears here a few minutes after someone posts one on a public GitHub repository. <a href="/how/">How it works</a></p>
             </div>
