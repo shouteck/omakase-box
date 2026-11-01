@@ -107,9 +107,9 @@ describe('the built tool, as an agent first meets it', { timeout: 120000 }, () =
     delete settings.default;
     writeFileSync(path, JSON.stringify({ ...settings, repositories: {} }));
   };
-  it('says what box means here, since no box is on the path', () => fixture(({ repo, scratch }) => {
+  it('says what to run if box is not found', () => fixture(({ repo, scratch }) => {
     unset(scratch);
-    expect(run(repo, scratch, []).stdout).toContain(`here, box means: node ${JSON.stringify(resolve(CLI_DIST))}`);
+    expect(run(repo, scratch, []).stdout).toContain(`if box is not found here, use: node ${JSON.stringify(resolve(CLI_DIST))}`);
   }));
   it('instructions on with no instruction file says nothing was written and what to do', () => fixture(({ repo, scratch }) => {
     for (const name of ['AGENTS.md', 'CLAUDE.md']) rmSync(join(repo, name), { force: true });

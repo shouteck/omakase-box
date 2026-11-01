@@ -3,5 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "bin": { "box": "dist/cli.js" },
   "dependencies": { "zod": "4.6.5" }
 }

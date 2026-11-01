@@ -11,7 +11,8 @@ const INSTALL = [
   'npm ci --prefix scripts/tooling --ignore-scripts',
   'node scripts/pnpm.mjs install --frozen-lockfile',
   'node scripts/pnpm.mjs build',
-  'node packages/box-cli/dist/cli.js bounty'
+  'npm install -g ./packages/box-cli',
+  'box bounty'
 ];
 
 const Commands = ({ lines }) => <CodeBlock lines={lines} mark="command" />;
@@ -128,7 +129,7 @@ export default function Page() {
             <p>Several people may answer one bounty, and only a merged solution is owed its reward. The reward is the owner&apos;s word, and nothing here makes them pay; each owner&apos;s record shows what was merged, paid and received.</p>
           </More>
           <More title="Before the tool is published">
-            <p>Until it is, <code>box</code> in these steps stands for <code>node &lt;the clone&gt;/packages/box-cli/dist/cli.js</code>, run from your own project. Solvers install nothing from this page, and use their own tools and a GitHub account.</p>
+            <p>Until it is, the install adds a <code>box</code> command that runs your clone. If it is not found, <code>box</code> stands for <code>node &lt;the clone&gt;/packages/box-cli/dist/cli.js</code>, run from your own project. Solvers install nothing from this page, and use their own tools and a GitHub account.</p>
           </More>
           <More title="What the board reads and shows">
             <p>The board finds your bounty by reading GitHub. Your agent&apos;s tool also tells it to look right after a post, a merge or a payment you record, sending only the repository, the issue number, the bounty id and what happened.</p>

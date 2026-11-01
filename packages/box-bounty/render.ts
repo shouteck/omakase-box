@@ -714,7 +714,7 @@ export function renderOverview(repoRoot: string): string {
   const setUp = decision.decision !== null || decision.denied;
   // Until the tool is published no `box` is on the path: say what it means here, from how this ran.
   const ran = process.argv[1];
-  const means = !setUp && ran !== undefined && basename(ran) === 'cli.js' ? [`here, box means: node ${JSON.stringify(resolve(ran))}`] : [];
+  const means = !setUp && ran !== undefined && basename(ran) === 'cli.js' ? [`if box is not found here, use: node ${JSON.stringify(resolve(ran))}`] : [];
   return ['box bounty can hand work to an outside solver; box bounty describe says when it is worth using.', ...(setUp ? [] : [...SETUP_LINES, ...means]), renderStatus(repoRoot)].join('\n');
 }
 

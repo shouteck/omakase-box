@@ -1,8 +1,9 @@
 // The real pages in a real browser: the built export, served by the same
 // handle() the Worker runs, reading a GitHub stand-in over HTTP.
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { delimiter, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type Browser, chromium, type Page } from '@playwright/test';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -429,16 +430,29 @@ describe('the pages', () => {
     const { page, close } = await fresh();
     await visit(page, '/how/');
     const lines = await page.locator('main code[data-install]').allInnerTexts();
-    expect(lines).toHaveLength(5);
+    expect(lines).toHaveLength(6);
     expect(lines[0]).toBe('git clone https://github.com/shouteck/omakase-box');
+    expect(lines[5]).toBe('box bounty');
     expect(await page.locator('main').textContent()).toContain('node <the clone>/packages/box-cli/dist/cli.js');
     await close();
-    const help = spawnSync(process.execPath, [CLI, ...lines[4]!.split(' ').slice(2)], { encoding: 'utf8' });
-    expect(help.status, help.stderr).toBe(0);
-    expect(help.stdout).toContain('box bounty can hand work');
-    expect(lines[4]!.startsWith('node packages/box-cli/dist/cli.js ')).toBe(true);
-    for (const script of ['scripts/pnpm.mjs', 'scripts/tooling/package.json']) expect(existsSync(join(PACKAGE, '../..', script)), script).toBe(true);
-  });
+    const clone = join(PACKAGE, '../..');
+    for (const script of ['scripts/pnpm.mjs', 'scripts/tooling/package.json']) expect(existsSync(join(clone, script)), script).toBe(true);
+    // The printed install line, into a throwaway prefix: it makes a real `box`, and this machine's own commands are untouched.
+    const prefix = mkdtempSync(join(tmpdir(), 'kitchen-PF15-prefix-'));
+    const env = { ...process.env, npm_config_prefix: prefix, PATH: [prefix, join(prefix, 'bin'), process.env['PATH']].join(delimiter) };
+    const run = (line: string, cwd: string) => spawnSync(line, { cwd, env, shell: true, encoding: 'utf8', timeout: 120000 });
+    try {
+      const installed = run(`${lines[4]!} --no-audit --no-fund`, clone);
+      expect(installed.status, installed.stderr).toBe(0);
+      const box = run('box bounty help', prefix);
+      expect(box.status, box.stderr).toBe(0);
+      expect(box.stdout).toContain('the journey');
+    } finally {
+      // npm removes its own link first, so deleting the folder cannot follow it into the clone (BT46).
+      run('npm uninstall -g @private-task/box-cli --no-audit --no-fund', clone);
+      rmSync(prefix, { recursive: true, force: true });
+    }
+  }, 180000);
 
   it('your page: an owner sees what they owe and the solver what is owed to them, and each links to the bounty', async () => {
     const signedIn = async (id: number, login: string) => {
