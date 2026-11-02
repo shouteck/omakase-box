@@ -8,7 +8,7 @@ import { errorWords, redact, stripe, stripeOn, StripeUnavailable } from './strip
 import { checkMethod, isLink, MAX_METHODS, type Method, parseStored, publicOnly } from './methods.js';
 import { waysSetUp } from './pay-ways.js';
 import { type BountyPayment, emptyPayment, factsOf, landedOf, loadPayments, notCounted, notCountedOf, ownerRecord, paymentOf, solverRecord } from './payments.js';
-import { readBounty } from './query.js';
+import { FROM_LISTED, readBounty, stateOf } from './query.js';
 import { LOGIN } from './refresh.js';
 import { ownerOnlyAllowed, payeeOf, roleOf, same } from './visibility.js';
 
@@ -204,6 +204,56 @@ async function debtsOf(env: Env, login: string, now: number) {
     you_owe: await youOwe(env, login, now),
     owed_to_you: await lists(`EXISTS (SELECT 1 FROM pull_requests p WHERE p.bounty_id = b.id AND p.state = 'merged' AND p.author = ? COLLATE NOCASE)`, (input, payment) => !same(input.poster, login) && landedOf(input).some(pull => same(pull.author, login)) && (payment.owed!.to === null || same(payment.owed!.to, login)))
   };
+}
+
+const OWN_MAX = 200;
+// A charge that failed on the card: the owner's card, so the owner's to fix. Said in red on their page.
+const CARD_FAILED = new Set(['declined', 'stripe-refused', 'owner-must-authenticate']);
+type OwnRow = { id: string; title: string; repository: string; issue_number: number; issue_state: string; amount: number; created_at: string; solutions: number };
+
+/** How a recorded payment was made, in the words of whoever made it (PF21). A Stripe charge with a saved card is pay on merge. */
+const paidBy = (source: string, savedCard: boolean): string =>
+  source === 'stripe' ? (savedCard ? 'Pay on merge' : 'Stripe, one click') : source === 'paypal' ? 'PayPal, one click' : 'Recorded by you';
+
+/**
+ * Every bounty GitHub says this person opened (the issue's author id, never a typed name), newest first, each in the
+ * stage its facts put it (PF21): waiting, solutions, due, paid or closed. Due holds only what waits on the owner: a bounty
+ * pay on merge pays goes from merged to paid, and is due only when the charge did not go through. Listed repositories only.
+ */
+async function bountiesOf(env: Env, viewer: Viewer, now: number) {
+  const read = (await env.DB.prepare(`SELECT b.id, b.title, b.repository, b.issue_number, b.issue_state, b.amount, b.created_at,
+      (SELECT COUNT(*) FROM pull_requests p WHERE p.bounty_id = b.id) AS solutions
+    ${FROM_LISTED} WHERE b.poster_id = ? ORDER BY b.created_at DESC, b.id LIMIT ?`).bind(viewer.github_id, OWN_MAX + 1).all<OwnRow>()).results;
+  // The private rule at render, once per repository: one gone private leaves with all its bounties, as the debts do.
+  const gone = new Set<string>();
+  for (const repository of new Set(read.map(row => row.repository.toLowerCase()))) {
+    if (await readBounty(env, read.find(row => row.repository.toLowerCase() === repository)!.id, now) === null) gone.add(repository);
+  }
+  const rows = read.filter(row => !gone.has(row.repository.toLowerCase()));
+  const pulls = (await env.DB.prepare('SELECT p.bounty_id, p.state FROM pull_requests p JOIN bounties b ON b.id = p.bounty_id WHERE b.poster_id = ?').bind(viewer.github_id).all<{ bounty_id: string; state: string }>()).results;
+  const inputs = new Map((await loadPayments(env.DB, 'b.poster_id = ?', viewer.github_id)).map(input => [input.id, input]));
+  const savedCard = new Set((await env.DB.prepare('SELECT c.bounty_id FROM charges c JOIN bounties b ON b.id = c.bounty_id WHERE b.poster_id = ? AND c.payment_method IS NOT NULL').bind(viewer.github_id).all<{ bounty_id: string }>()).results.map(row => row.bounty_id));
+  const payOn = new Set((await env.DB.prepare('SELECT repository FROM pay_repositories WHERE github_id = ?').bind(viewer.github_id).all<{ repository: string }>()).results.map(row => row.repository.toLowerCase()));
+  const list = rows.slice(0, OWN_MAX).map(row => {
+    const base = { id: row.id, title: row.title, repository: row.repository, issue_number: row.issue_number, created_at: row.created_at, reward: row.amount, solutions: row.solutions };
+    const input = inputs.get(row.id);
+    if (input === undefined) {
+      const state = stateOf(row.issue_state, pulls.filter(pull => pull.bounty_id === row.id));
+      return { ...base, stage: state === 'closed-none' ? 'closed' : state === 'solutions-waiting' ? 'solutions' : 'waiting' };
+    }
+    const payment = paymentOf(input);
+    const charge = payment.charge !== null && payment.charge.state !== 'looked' ? payment.charge : null;
+    if (payment.state === 'owed' || payment.state === 'owner-decides') {
+      const note = charge?.words ?? (payment.state === 'owner-decides' ? 'More than one solution was merged. You choose whom to pay.' : payOn.has(row.repository.toLowerCase()) ? null : 'Pay on merge is off for this repository.');
+      return { ...base, stage: 'due', merged: payment.owed!.to, merged_one_of: payment.owed!.to === null ? (payment.owed as { to_one_of?: readonly string[] }).to_one_of ?? [] : undefined, note, card_failed: charge !== null && CARD_FAILED.has(charge.state), payable: charge?.state !== 'charging' };
+    }
+    if (payment.state === 'recorded' || payment.state === 'confirmed' || payment.state === 'says-not-received') {
+      return { ...base, stage: 'paid', merged: payment.owed!.to, paid_by: paidBy(payment.recorded_paid!.source, savedCard.has(row.id)), note: payment.state === 'says-not-received' ? 'The solver says it has not arrived.' : null };
+    }
+    if (payment.state === 'no-reward') return { ...base, stage: 'paid', merged: landedOf(input)[0]?.author ?? null, paid_by: null, note: 'No reward was stated.' };
+    return { ...base, stage: 'solutions', note: payment.state === 'merged-not-on-default' ? 'Merged. The board has not yet confirmed it on the default branch.' : null };
+  });
+  return { list, more: read.length > OWN_MAX };
 }
 
 async function paymentInput(env: Env, id: string, now: number): Promise<BountyPayment | null> {
@@ -504,7 +554,7 @@ export async function accountResponse(request: Request, env: Env, url: URL, now:
   if (method === 'GET' && path === '/api/me') {
     const viewer = await viewerOf(request, env, now);
     if (viewer === null) return json(200, { signed_in: false });
-    return json(200, { signed_in: true, login: viewer.login, sponsors_page: `https://github.com/sponsors/${viewer.login}`, methods: (await methodsOfLogin(env, viewer.login)).map(shown), pay: await payOf(env, viewer), paypal: await paypalOf(env, viewer), ...await debtsOf(env, viewer.login, now) });
+    return json(200, { signed_in: true, login: viewer.login, sponsors_page: `https://github.com/sponsors/${viewer.login}`, methods: (await methodsOfLogin(env, viewer.login)).map(shown), pay: await payOf(env, viewer), paypal: await paypalOf(env, viewer), ...await debtsOf(env, viewer.login, now), bounties: await bountiesOf(env, viewer, now) });
   }
   if (method === 'POST' && PAY_ROUTES.includes(path)) {
     const refusal = writeRefusal(request, url, true);

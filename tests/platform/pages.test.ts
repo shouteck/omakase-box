@@ -51,7 +51,8 @@ describe('the pages', () => {
   beforeAll(async () => {
     const built = spawnSync(process.execPath, [join(PACKAGE, 'node_modules/next/dist/bin/next'), 'build'], { cwd: PACKAGE, encoding: 'utf8', env: { ...process.env, NEXT_TELEMETRY_DISABLED: '1' } });
     if (built.status !== 0) throw new Error(`next build failed:\n${built.stdout}\n${built.stderr}`);
-    board = await startLocal({ schema: SCHEMA, out: OUT, now: () => clock, seed: standin => { seedStates(standin, NOW); seed120(standin, NOW); } });
+    // The owner signs in as GitHub id 7100 throughout, so the board reads their bounties with that id (PF21).
+    board = await startLocal({ schema: SCHEMA, out: OUT, now: () => clock, seed: standin => { standin.accountIds.set('example-mara', 7100); seedStates(standin, NOW); seed120(standin, NOW); } });
     for (let tick = 0; tick < 40; tick++) {
       await board.refresh();
       await board.env.DB.prepare(`DELETE FROM meta WHERE key LIKE 'budget_%'`).run();
@@ -335,7 +336,7 @@ describe('the pages', () => {
   // PF19: Your page in each state, read from the real page with /api/me as the board would answer it.
   describe('your page, by role', () => {
     const debt = (id: string, title: string, amount: number, to: string | null, from: string) => ({ id, title, amount, since: new Date(NOW - 2 * 86400000).toISOString(), to, from });
-    const base = { signed_in: true, sponsors_page: 'https://github.com/sponsors/example-rook', methods: [], paypal: { set_up: false, connected: false }, you_owe: [], owed_to_you: [] };
+    const base = { signed_in: true, sponsors_page: 'https://github.com/sponsors/example-rook', methods: [], paypal: { set_up: false, connected: false }, you_owe: [], owed_to_you: [], bounties: { list: [], more: false } };
     const pay = (over: object = {}) => ({ set_up: true, solver: { connected: false, ready: false }, card: null, limit: null, repositories: [], ...over });
     const open = async (me: object, path = '/me/', width = 1280) => {
       const view = await fresh({ width });
@@ -345,14 +346,17 @@ describe('the pages', () => {
       await view.page.waitForSelector('[role=tablist]');
       return view;
     };
-    const selected = (page: Page) => page.locator('[role=tab][aria-selected=true]').innerText();
+    const selected = (page: Page) => page.locator('[aria-label="Your role"] [role=tab][aria-selected=true]').innerText();
 
     it('an owner: what they owe, and pay on merge per repository; nothing about ways an owner need not set up', async () => {
-      const { page, close } = await open({ ...base, login: 'example-mara', you_owe: [debt(STATE_IDS.owed, 'Pay me', 45, 'example-quill', 'example-mara')], pay: pay({ card: 'visa ending 3155', repositories: [{ repository: 'example-org/ledger', on_at: new Date(NOW).toISOString(), limit: 100 }, { repository: 'example-org/lite', on_at: new Date(NOW).toISOString(), limit: 50 }] }) });
+      const owed = { id: STATE_IDS.owed, title: 'Pay me', repository: 'example-org/ledger', issue_number: 4, created_at: new Date(NOW - 2 * 86400000).toISOString(), reward: 45, solutions: 1, stage: 'due', merged: 'example-quill', note: null, card_failed: false, payable: true };
+      const { page, close } = await open({ ...base, login: 'example-mara', you_owe: [debt(STATE_IDS.owed, 'Pay me', 45, 'example-quill', 'example-mara')], bounties: { list: [owed], more: false }, pay: pay({ card: 'visa ending 3155', repositories: [{ repository: 'example-org/ledger', on_at: new Date(NOW).toISOString(), limit: 100 }, { repository: 'example-org/lite', on_at: new Date(NOW).toISOString(), limit: 50 }] }) });
       expect(await selected(page)).toContain('Owner');
       expect(await page.locator('h1').innerText()).toBe('Owner');
       const text = await page.locator('main').innerText();
-      expect(await page.locator('[data-figure]').innerText()).toMatch(/You owe\s+\$45/);
+      // PF21: what is owed is the Payment due stage, chosen when the page opens (it was the "You owe" figure).
+      expect(await page.locator('[data-stage-tab][aria-selected=true]').innerText()).toMatch(/^Payment due\s+1\s+\$45$/);
+      expect(await page.locator(`tr[data-bounty="${STATE_IDS.owed}"]`).innerText()).toMatch(/Merged · example-quill\s+\$45\s+Pay \$45/);
       expect(await page.locator('table[aria-label="Repositories on pay on merge"] tbody tr').allInnerTexts()).toEqual([expect.stringMatching(/example-org\/ledger\s+\$100/), expect.stringMatching(/example-org\/lite\s+\$50/)]);
       for (const absent of ['By hand', 'One click', 'Owed to you']) expect(text, absent).not.toContain(absent);
       expect(moneyClaims(text)).toEqual([]);
@@ -384,7 +388,7 @@ describe('the pages', () => {
       const { page, close } = await open(both);
       expect(await selected(page)).toContain('Owner');
       expect(await page.locator('[role=tab]:has-text("Solver") [data-waiting]').innerText()).toBe('1');
-      await page.locator('[role=tab][aria-selected=true]').focus();
+      await page.locator('[aria-label="Your role"] [role=tab][aria-selected=true]').focus();
       await page.keyboard.press('ArrowRight');
       expect(await selected(page)).toContain('Solver');
       expect(await page.evaluate(() => document.activeElement?.textContent)).toContain('Solver');
@@ -656,17 +660,57 @@ describe('the pages', () => {
       await person.page.waitForSelector('[role=tablist]');
       return person;
     };
-    // PF19: each role's side opens on what is owed, as a figure and a table.
+    // PF21: the owner's side opens on the stage waiting on them, Payment due, where what they owe is paid from.
     const owner = await signedIn(7100, 'example-mara');
-    const owes = await owner.page.locator('main').innerText();
-    expect(owes).toContain('You owe');
-    expect(await owner.page.locator('[role=tab][aria-selected=true]').innerText()).toContain('Owner');
-    expect(await owner.page.locator('table[aria-label="To pay"] tbody tr').filter({ hasText: 'Duplicate rows after a retry' }).innerText()).toMatch(/example-quill\s+\$45\s+\d+ \w+ \d{4}\s+Pay \$45/);
-    expect(await owner.page.locator(`table[aria-label="To pay"] a[href="/b/${STATE_IDS.owed}/"]`).count()).toBe(2);
+    expect(await owner.page.locator('[role=tablist][aria-label="Your role"] [role=tab][aria-selected=true]').innerText()).toContain('Owner');
+    expect(await owner.page.locator('[data-stage-tab][aria-selected=true]').innerText()).toMatch(/^Payment due\s+2\s+\$90$/);
+    const owed = owner.page.locator(`tr[data-bounty="${STATE_IDS.owed}"]`);
+    expect(await owed.innerText()).toMatch(/Duplicate rows after a retry\s+example-tidepool\/ledger-lite #55 · \d+ days? ago\s+Payment due\s+Pay on merge is off for this repository\.\s+\$45\s+Pay \$45/);
+    expect(await owed.locator(`a[href="/b/${STATE_IDS.owed}/"]`).count()).toBe(1);
+    expect(await owed.locator(`a[href="/b/${STATE_IDS.owed}/#payment"]`).innerText()).toBe('Pay $45');
     const solver = await signedIn(7001, 'example-quill');
     expect(await solver.page.locator('[role=tab][aria-selected=true]').innerText()).toContain('Solver');
     expect(await solver.page.locator('table[aria-label="Coming to you"] tbody tr').filter({ hasText: 'Duplicate rows after a retry' }).innerText()).toMatch(/example-mara\s+\$45\s+\d+ \w+ \d{4}\s+Open/);
     for (const person of [owner, solver]) await person.close();
+  });
+
+  it('your bounties: the stages choose the list, every row has the same shape, and only the owner\'s own bounties are there', async () => {
+    board.standin.signInAs = { id: 7100, login: 'example-mara' };
+    const { page, close } = await fresh();
+    await visit(page, '/me/');
+    await page.click('[data-primary]');
+    await page.waitForSelector('[data-stage-tab]');
+    const stages = await page.locator('[data-stage-tab]').allInnerTexts();
+    expect(stages.map(text => text.replace(/\s+/g, ' ').trim())).toEqual(['Waiting for solutions 3 $90', 'Solutions in 1 $45', 'Payment due 2 $90', 'Paid 1 $45']);
+    expect(await page.locator('[data-stage-tab="due"] [data-waiting-dot]').count()).toBe(1);
+    const shown = async () => page.locator('tr[data-bounty]').evaluateAll(rows => rows.map(row => `${(row as HTMLElement).dataset['stage']} ${(row.querySelector('a') as HTMLElement).innerText}`));
+    await page.click('[data-stage-tab="paid"]');
+    expect(await shown()).toEqual(['paid Totals round the wrong way']);
+    expect(await page.locator(`tr[data-bounty="${STATE_IDS.merged}"] [data-detail]`).innerText()).toBe('example-quill · Recorded by you');
+    expect(await page.locator(`tr[data-bounty="${STATE_IDS.merged}"] [data-detail] a`).getAttribute('href')).toBe('/solver/example-quill/');
+    // The arrow keys move along the stages, as a tab list does.
+    await page.focus('[data-stage-tab="paid"]');
+    await page.keyboard.press('ArrowLeft');
+    expect(await page.locator('[data-stage-tab][aria-selected=true]').getAttribute('data-stage-tab')).toBe('due');
+    await page.click('[data-view="all"]');
+    const all = await shown();
+    expect(all).toHaveLength(8);
+    // Every bounty on the page is one example-mara opened; none of the 120 other posters' bounties is.
+    expect(all.every(entry => !entry.includes('example-org'))).toBe(true);
+    expect(await page.locator('tr[data-bounty]').evaluateAll(rows => rows.every(row => row.querySelectorAll('td').length === 4))).toBe(true);
+    await page.click('[data-view="closed"]');
+    expect(await shown()).toEqual(['closed Export to a format nobody uses']);
+    await close();
+    // A person who posted nothing is told how bounties arrive.
+    board.standin.signInAs = { id: 7001, login: 'example-quill' };
+    const quill = await fresh();
+    await visit(quill.page, '/me/');
+    await quill.page.click('[data-primary]');
+    // Something is owed to them, so the solver's side opens; the owner's side is one click away.
+    await quill.page.click('[aria-label="Your role"] [role=tab]:has-text("Owner")');
+    await quill.page.waitForSelector('[data-no-bounties]');
+    expect(await quill.page.locator('[data-no-bounties]').innerText()).toContain('box bounty post');
+    await quill.close();
   });
 
   it('the sign-in page says what it asks for, and an error code in the address shows fixed words only', async () => {
