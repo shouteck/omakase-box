@@ -4,11 +4,10 @@ Updated by the CTO on 3 November 2026, when PF18 merged.
 
 ## Now
 
-- **PF18 is merged, not live** (`1720138`): Stripe ready on the board, test mode run for real across every flow, solver accounts through Accounts v2 on the full secret key with a Cloudflare-only access policy, the three ways shown as your part after a merge. No real payment made, by the owner's decision. See [PF18](waves/PF18.md).
+- **PF18's code is live with no Stripe key,** deployed on the owner's word on 3 November 2026 (Worker version `36945f44`): `/api/ways` reads no Stripe, an unsigned webhook gets 400, How it works offers by hand only. Merged as `1720138`: Stripe ready on the board, test mode run for real across every flow, solver accounts through Accounts v2 on the full secret key with a Cloudflare-only access policy, the three ways shown as your part after a merge. No real payment made, by the owner's decision. See [PF18](waves/PF18.md).
 - **For the owner, to go live (each the owner's alone; the CTO never sees a key):**
-  1. Say the word on the deploy.
-  2. In live Stripe: Connect set up; the access policy (ASN `13335`) on the secret key; the webhook at `/api/stripe/webhook` with its six events; then `wrangler secret put` for `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`. All in `packages/box-platform/DEPLOY.md`.
-  3. Then the CTO checks, paying nothing: `/api/ways` reads Stripe; an unsigned webhook is refused; Connect and saving a card reach Stripe's pages, stopped before anything is submitted; the logs hold no key.
+  1. In live Stripe: Connect set up; the access policy (ASN `13335`) on the secret key; the webhook at `/api/stripe/webhook` with its six events; then `wrangler secret put` for `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`. All in `packages/box-platform/DEPLOY.md`.
+  2. Then the CTO checks, paying nothing: `/api/ways` reads Stripe; an unsigned webhook is refused; Connect and saving a card reach Stripe's pages, stopped before anything is submitted; the logs hold no key.
 - **Optional for the owner:** ask Stripe's support whether a restricted key can get Write on Accounts v2; if so, swap the secret.
 - **PF16, PF17, PF15 are live** (Worker `bac9a44a`, `5a246140`, `d014ce4d`): the install `npx -y omakase-box setup`, `omakase-box@0.1.3` on npm; one command window; the three ways in the tool, feed, MCP and front page. **PF14, PF13, PF11 are live with no key:** one click and on merge say "not set up".
 - **PayPal's review:** Log in with PayPal saved on the live app, omakase-box, on 2 November 2026; the answer is awaited. No PayPal key until it passes. PayPal live is unproven (real webhook delivery; Cloudflare's cron re-read; whether the Business account needs a registered business).
@@ -25,7 +24,7 @@ Updated by the CTO on 3 November 2026, when PF18 merged.
 
 ## Next
 
-- **Decision for the owner:** the deploy's word and the live steps above.
+- **Decision for the owner:** the live Stripe steps above.
 - **Order:** PF18 live, **PF19** (the signed-in page redesign, owner, 2 November 2026; unbriefed; references are big companies' design systems), **PF12** (the solver's distributor; linking a solver's existing Stripe account is a question for it), **PF9** (the launch gate), **PF6**, **K41** (the film, last), then the owner's launch.
 - **The next tool release:** the guide inside the package gains the PowerShell line (`npx.cmd`, `box.cmd`); a new version goes to npm by the owner, and to GitHub by a `v*` tag.
 - **A wave for later, not briefed:** fewer words, more showing, across the site, before PF9.
