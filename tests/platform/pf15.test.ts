@@ -2,7 +2,7 @@
 // profile with no key, a Stripe key and PayPal's. A way with no key must not read as open.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { handle } from '../../packages/box-platform/src/api.js';
-import { isSetUp, WAYS, waysOfBounty, waysSetUp } from '../../packages/box-platform/src/pay-ways.js';
+import { isSetUp, STRIPE_COUNTRIES, STRIPE_REACH, WAYS, waysOfBounty, waysSetUp } from '../../packages/box-platform/src/pay-ways.js';
 import { idOf, type StandinIssue } from '../../packages/box-platform/standin/standin.js';
 import { MINUTE, NOW, refreshUntilDone, rig, type Rig } from './support.js';
 
@@ -80,6 +80,24 @@ describe('what a machine reads', () => {
     const both = (await read(`/bounties/${ID}.json`, KEYS.both)).bounty.how_to_get_paid.join(' ');
     expect(both).toContain('Connecting Stripe or PayPal');
     expect(both).toContain('pay on merge pays you with no click');
+  });
+
+  // PF18: a solver's agent learns who Stripe can pay before it does the work, on a board with Stripe, and nowhere else.
+  it('the feed\'s country list is the one source, and its words name only what this board has', async () => {
+    const stripe = await read('/bounties.json', KEYS.stripe);
+    expect(stripe.legend.stripe_countries).toBe(`${STRIPE_REACH} Supported: ${STRIPE_COUNTRIES.join(', ')}.`);
+    expect(stripe.legend.money).toContain('on Stripe\'s page');
+    expect(stripe.legend.money).not.toContain('PayPal');
+    const detail = (await read(`/bounties/${ID}.json`, KEYS.stripe)).bounty.how_to_get_paid.join(' ');
+    expect(detail).toContain(STRIPE_REACH);
+    expect(detail).toContain('stripe_countries');
+    for (const [keys, words] of [[KEYS.none, 'on a provider\'s page'], [KEYS.paypal, 'on PayPal\'s page']] as const) {
+      const feed = await read('/bounties.json', keys);
+      expect(feed.legend.stripe_countries).toBeUndefined();
+      expect(feed.legend.money).toContain(words);
+      expect((await read(`/bounties/${ID}.json`, keys)).bounty.how_to_get_paid.join(' ')).not.toContain(STRIPE_REACH);
+    }
+    expect((await read('/bounties.json', KEYS.both)).legend.money).toContain('on Stripe\'s or PayPal\'s page');
   });
 
   it('the profile says nothing it cannot know about a stranger, and holds no account detail', async () => {

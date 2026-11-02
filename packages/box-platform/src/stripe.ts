@@ -3,7 +3,10 @@
 
 export type StripeEnv = { readonly STRIPE_SECRET_KEY?: string; readonly STRIPE_WEBHOOK_SECRET?: string; readonly STRIPE_API?: string };
 export type StripeAnswer = { readonly status: number; readonly json: Record<string, unknown> };
-type Options = { readonly account?: string; readonly idempotency?: string };
+type Options = { readonly account?: string; readonly idempotency?: string; readonly json?: object };
+
+/** A v2 call must name its version. Stable, and proven in PF18. */
+const V2_VERSION = '2026-10-28.endive';
 
 /** Stripe could not be reached or read. Named; what was asked may or may not have happened. */
 export class StripeUnavailable extends Error {}
@@ -23,18 +26,24 @@ export async function stripe(env: StripeEnv, method: 'GET' | 'POST' | 'DELETE', 
       headers: {
         authorization: `Bearer ${env.STRIPE_SECRET_KEY}`,
         ...(form === undefined ? {} : { 'content-type': 'application/x-www-form-urlencoded' }),
+        ...(options.json === undefined ? {} : { 'content-type': 'application/json', 'stripe-version': V2_VERSION }),
         ...(options.account === undefined ? {} : { 'stripe-account': options.account }),
         ...(options.idempotency === undefined ? {} : { 'idempotency-key': options.idempotency })
       },
-      ...(form === undefined ? {} : { body: new URLSearchParams(form).toString() })
+      ...(form === undefined ? {} : { body: new URLSearchParams(form).toString() }),
+      ...(options.json === undefined ? {} : { body: JSON.stringify(options.json) })
     });
   } catch { throw new StripeUnavailable('Stripe could not be reached'); }
   // 409 is the same key still in flight and 429 is Stripe's rate limit: neither says anything about the card.
   if (response.status >= 500 || response.status === 409 || response.status === 429) throw new StripeUnavailable(`Stripe answered ${response.status}`);
+  let answer: StripeAnswer;
   try {
     const json: unknown = await response.json();
-    return { status: response.status, json: json !== null && typeof json === 'object' ? json as Record<string, unknown> : {} };
+    answer = { status: response.status, json: json !== null && typeof json === 'object' ? json as Record<string, unknown> : {} };
   } catch { throw new StripeUnavailable('Stripe sent an answer that could not be read'); }
+  // The board's own key, wrong or short of a permission: says nothing about the solver or the card (PF18). A gone account is 403 account_invalid.
+  if (response.status === 401 || errorCode(answer) === 'more_permissions_required') throw new StripeUnavailable('Stripe refused this board\'s key');
+  return answer;
 }
 
 const errorOf = (answer: StripeAnswer): Record<string, unknown> => {

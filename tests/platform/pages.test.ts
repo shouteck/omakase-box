@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { type Browser, chromium, type Page } from '@playwright/test';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { type LocalBoard, startLocal } from '../../packages/box-platform/src/local.js';
+import { STRIPE_COUNTRIES } from '../../packages/box-platform/src/pay-ways.js';
 import { seed120, seedStates, STATE_IDS } from '../../packages/box-platform/standin/standin.js';
 import { CLI, journeyWorld, wordsOf } from './commands.js';
 import { MINUTE, NOW, SCHEMA } from './support.js';
@@ -252,19 +253,19 @@ describe('the pages', () => {
     await visit(page, '/');
     await expect.poll(() => page.locator('main').innerText()).toContain('Not set up on this board yet.');
     const text = await page.locator('main').innerText();
-    for (const phrase of ['Work your agent can\'t finish, finished.', 'goes out as a GitHub issue', 'come back as pull requests', 'never ships', 'Nothing a solver wrote is run', 'Post a private repository.', 'The board never holds money', 'By hand', 'One click', 'On merge', 'You pay, then record it.', 'POST /mcp', 'GET /bounties.json']) expect(text).toContain(phrase);
+    for (const phrase of ['Work your agent can\'t finish, finished.', 'goes out as a GitHub issue', 'come back as pull requests', 'never ships', 'Nothing a solver wrote is run', 'Post a private repository.', 'The board never holds money', 'By hand', 'One click', 'On merge', 'You pay through a link they listed', 'POST /mcp', 'GET /bounties.json']) expect(text).toContain(phrase);
     expect(text).not.toContain('Newest bounties');
     // No key on this board: the two ways that need one say so, and by hand does not.
     expect(text.match(/Not set up on this board yet./g)).toHaveLength(2);
-    expect(text).toContain('Record $45 paid');
-    expect(text).not.toContain('Pay $45');
+    expect(text).toContain('You pay yourself'); // PF18, the owner: the cards show your part, not a button's words.
+    expect(text).not.toContain('One click for you');
     // How it works says the ways in its steps, once, and which this board does not have.
     await visit(page, '/how/');
     await expect.poll(() => page.locator('main').textContent()).toContain('One click and on merge are not set up on this board yet.');
     const how = await page.locator('main').textContent();
     expect(how).not.toContain('Three ways to pay');
-    expect(how).not.toContain('Record $45 paid');
-    expect(how).toContain('connected Stripe also covers on merge');
+    expect(how).not.toContain('You pay yourself');
+    expect(how).toContain('On your page, list a way and be paid by hand.'); // This board has no key. PF18: the words follow what it has.
     // A person only installs: every other command is folded away.
     expect(await page.locator('#hand-off ol > li').count()).toBe(4);
     expect(how).toContain('On merge pays without you:');
@@ -298,16 +299,56 @@ describe('the pages', () => {
     await close();
   });
 
+  // PF18: the real pages, each reading what the board says it has. Made fixed, the words fail here.
+  it.each([
+    ['no key', [], false, { through: 'A payment provider', connect: 'On your page, list a way and be paid by hand.', absent: ['Stripe or', 'connect Stripe', 'connect PayPal', 'a bank account in a supported country'] }],
+    ['Stripe only', ['Stripe'], true, { through: 'Stripe', connect: 'connect Stripe and an owner can pay you with one click or on merge.', absent: ['PayPal'] }],
+    ['PayPal only', ['PayPal'], false, { through: 'PayPal', connect: 'connect PayPal and an owner can pay you with one click.', absent: ['connect Stripe', 'a bank account in a supported country'] }],
+    ['both', ['Stripe', 'PayPal'], true, { through: 'Stripe or PayPal', connect: 'connect Stripe or PayPal and an owner can pay you with one click; connected Stripe also covers on merge.', absent: [] }]
+  ])('with %s, the card and How it works name what this board has', async (_name, one_click, on_merge, want) => {
+    const { page, close } = await fresh();
+    await page.route('**/api/ways', route => route.fulfill({ json: { by_hand: true, one_click, on_merge } }));
+    await visit(page, '/');
+    const oneClick = page.locator('main li', { has: page.locator('h3', { hasText: /^One click$/ }) });
+    await expect.poll(() => oneClick.locator('p').first().innerText()).toBe(want.through);
+    if (one_click.length === 0) await expect.poll(() => oneClick.innerText()).toContain('Not set up on this board yet');
+    const front = await page.locator('main').innerText();
+    expect(front.includes('One click for you')).toBe(one_click.length > 0);
+    expect(front.includes('Nothing for you')).toBe(on_merge);
+    expect(moneyClaims(front)).toEqual([]);
+    await visit(page, '/how/');
+    const step = page.locator('main li', { has: page.locator('h4', { hasText: 'Get merged, get paid, confirm' }) });
+    await expect.poll(() => step.textContent()).toContain(want.connect);
+    await expect.poll(async () => await page.locator('[data-stripe-reach]').count()).toBe(on_merge ? 1 : 0);
+    const how = (await page.locator('main').textContent())!;
+    for (const word of want.absent) expect(how, word).not.toContain(word);
+    expect(moneyClaims(how)).toEqual([]);
+    await close();
+  });
+
+  it('the picker comes from the one source', async () => {
+    const { page, close } = await fresh();
+    await page.route('**/api/ways', route => route.fulfill({ json: { by_hand: true, one_click: ['Stripe'], on_merge: true } }));
+    await page.route('**/api/me', route => route.fulfill({ json: { signed_in: true, login: 'example-quill', sponsors_page: 'https://github.com/sponsors/example-quill', methods: [], pay: { set_up: true, solver: { connected: false, ready: false }, card: null, limit: null, repositories: [] }, paypal: { set_up: false, connected: false }, you_owe: [], owed_to_you: [] } }));
+    await visit(page, '/me/');
+    // The browser's own names: Node's say "Hong Kong SAR China".
+    const names = await page.evaluate(codes => codes.map(code => new Intl.DisplayNames(['en'], { type: 'region' }).of(code)!), [...STRIPE_COUNTRIES]);
+    await page.locator('select[name=country]').waitFor();
+    const picker = await page.locator('select[name=country] option').allTextContents();
+    expect(picker).toEqual(names);
+    await close();
+  });
+
   it('how it works: both paths, every step, and each fact the front page leaves out', async () => {
     const { page, close } = await fresh();
     await visit(page, '/how/');
     const text = (await page.locator('main').textContent())!;
-    for (const phrase of ['Hand off work', 'Answer bounties', 'Nothing a solver wrote is run', 'a private repository is refused', 'never-ship files', 'anything else in it is too', 'The board never holds money', 'inside the new omakase-box folder', 'install nothing from this page', 'nothing here makes them pay', 'it asks you before each post and each merge', 'only the repository, the issue number, the bounty id and what happened']) expect(text).toContain(phrase);
+    for (const phrase of ['Hand off work', 'Answer bounties', 'Nothing a solver wrote is run', 'a private repository is refused', 'never-ship files', 'anything else in it is too', 'The board never holds money', 'install nothing from this page', 'nothing here makes them pay', 'it asks you before each post and each merge', 'only the repository, the issue number, the bounty id and what happened']) expect(text).toContain(phrase);
     // The agent's four, the solver's three.
     expect(await page.locator('main ol > li').count()).toBe(7);
     expect(await page.locator('main a[href="#answer"]').count()).toBe(1);
     expect(await page.locator('#answer h2').innerText()).toBe('Answer bounties');
-    expect(await page.locator('#limits details').count()).toBe(5);
+    expect(await page.locator('#limits details').count()).toBe(4); // PF18, the owner: building from source moved to the README.
     await page.click('#limits summary >> text=What becomes public');
     expect(await page.locator('#limits details[open]').innerText()).toContain('a private repository is refused');
     await close();
@@ -444,9 +485,9 @@ describe('the pages', () => {
     const { page, close } = await fresh();
     await visit(page, '/how/');
     const install = await page.locator('main code[data-install]').allInnerTexts();
-    const lines = await page.locator('main code[data-source]').allTextContents();
     await close();
     const clone = join(PACKAGE, '../..');
+    const lines = /## Build it from source[\s\S]*?```bash\r?\n([\s\S]*?)```/.exec(readFileSync(join(clone, 'README.md'), 'utf8'))![1]!.trim().split(/\r?\n/);
     // The page, the release job and the guide inside the package name one address.
     expect(install).toEqual(['npx -y omakase-box setup']);
     expect(readFileSync(join(clone, 'FIRST-FIVE-MINUTES.md'), 'utf8')).toContain(install[0]!);

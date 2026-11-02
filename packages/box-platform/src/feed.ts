@@ -3,7 +3,7 @@
 // text is only ever under poster_says.
 import { payingIds } from './charge.js';
 import type { Env } from './github.js';
-import { type WayId, waysOfBounty, waysSetUp, type WaysSetUp } from './pay-ways.js';
+import { pageWords, STRIPE_COUNTRIES, STRIPE_REACH, type WayId, waysOfBounty, waysSetUp, type WaysSetUp } from './pay-ways.js';
 import { authorTakes } from './paypal-pay.js';
 import { paypalOn } from './paypal.js';
 import { emptyPayment, loadPayments, type OwnerRecord, ownerRecords, paymentOf } from './payments.js';
@@ -20,7 +20,7 @@ const TASK_JSON_BYTES_MAX = 12_000;
 const SOLUTIONS_MAX = 50;
 const FEED_INPUTS = ['language', 'repository', 'min_reward', 'max_age_days', 'solutions', 'owner_record', 'approved_by', 'query', 'sort', 'cursor', 'limit'];
 
-export const MONEY = 'The board never holds money. There are three ways to pay. By hand: the owner pays the merged solution\'s author directly and records it. One click: the owner pays on Stripe\'s or PayPal\'s page, to the author\'s own connected account. On merge: where pays_on_merge is true and the author has connected Stripe, the board starts a charge from the owner\'s saved card to the author\'s own Stripe account. how_it_pays says which can apply to a bounty; ways_set_up says which this board has.';
+const moneyWords = (here: WaysSetUp): string => `The board never holds money. There are three ways to pay. By hand: the owner pays the merged solution's author directly and records it. One click: the owner pays on ${pageWords(here)}, to the author's own connected account. On merge: where pays_on_merge is true and the author has connected Stripe, the board starts a charge from the owner's saved card to the author's own Stripe account. how_it_pays says which can apply to a bounty; ways_set_up says which this board has.`;
 export const waysOn = (env: Env): WaysSetUp => waysSetUp({ stripe: stripeOn(env), paypal: paypalOn(env) });
 /** One statement of how a bounty pays, built from the ways it can use. */
 const paidWords = (ways: readonly WayId[], here: WaysSetUp): string => {
@@ -30,7 +30,6 @@ const paidWords = (ways: readonly WayId[], here: WaysSetUp): string => {
 };
 const ABOUT = `Open bounties on public GitHub repositories. Filters: language, repository, min_reward, max_age_days, solutions (none, some), owner_record (confirmed-payments, confirmed-none-late, no-history), approved_by (owner-this-bounty, owner-standing-rule), query, sort (newest, reward), cursor, limit (default ${LIMIT_DEFAULT}, max ${LIMIT_MAX}). Full bounty: links.detail. Schema: /bounties.schema.json. Polling more than every 5 minutes gains nothing; send If-None-Match.`;
 const LEGEND = {
-  money: MONEY,
   agents_welcome: 'True on every bounty: an agent may answer one like anyone else, through a GitHub account. The board does not ask who or what wrote a solution.',
   author_takes_stripe: 'In a detail: true when the one merged author has a connected Stripe account that can take payments, so the owner can pay them there with one click; false when they have not, or Stripe is not set up here; null when nobody, or more than one, has merged. A fact; no account detail.',
   author_takes_paypal: 'In a detail: true when the one merged author has connected PayPal on this board, so the owner can pay them there with one click; false when they have not, or PayPal is not set up here; null when nobody, or more than one, has merged. A fact; no account detail.',
@@ -129,7 +128,7 @@ export async function findBounties(env: Env, q: URLSearchParams, now: number, or
   const paying = await payingIds(env, shown.map(row => row.id));
   const here = waysOn(env);
   return {
-    board: 'Open bounty board', about: ABOUT, legend: env.SAMPLE ? { sample_data: SAMPLE_NOTE, ...LEGEND } : LEGEND, ...await facts(env), ways_set_up: here, filters_applied, limit, count: total,
+    board: 'Open bounty board', about: ABOUT, legend: { ...(env.SAMPLE ? { sample_data: SAMPLE_NOTE } : {}), money: moneyWords(here), ...LEGEND, ...(here.on_merge ? { stripe_countries: `${STRIPE_REACH} Supported: ${STRIPE_COUNTRIES.join(', ')}.` } : {}) }, ...await facts(env), ways_set_up: here, filters_applied, limit, count: total,
     next_cursor: rows.length > limit && last !== undefined ? toCursor(sort, last) : null,
     bounties: shown.map(row => entryOf(row, records.get(row.poster.toLowerCase())!, row.open_pulls > 0 ? 'solutions-waiting' : 'open', row.open_pulls, row.all_pulls, origin, now, paying.has(row.id), here))
   };
@@ -174,6 +173,7 @@ export async function bountyDetail(env: Env, id: string, now: number, origin: st
           ? `If your pull request is the one merged and you have connected Stripe at ${origin}/me/, the board starts a charge of $${row.amount} from the owner's saved card to your own Stripe account; Stripe's fee comes out of it, and a dispute lands on your account. Without Stripe, the owner owes you $${row.amount} and pays you directly. The board never holds or guarantees money.`
           : `If your pull request is the one merged, the owner owes you $${row.amount} and pays you directly. The board never holds or guarantees money.`,
         ...(here.one_click.length > 0 ? [`Connecting ${here.one_click.join(' or ')} at ${origin}/me/ lets the owner pay you with one click, on the provider's page${here.on_merge ? '; with Stripe connected, a bounty on pay on merge pays you with no click' : ''}. Otherwise the owner pays you by a way you listed.`] : []),
+        ...(here.on_merge ? [`${STRIPE_REACH} The countries are stripe_countries in the legend at ${origin}/bounties.json.`] : []),
         `Once the owner records it paid, say on the bounty's page (${origin}/b/${row.id}/, signed in) whether it arrived. That is your word, and you can withdraw it.`
       ] : ['No reward is stated, so nothing is owed if your pull request is merged.'],
       payment,

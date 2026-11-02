@@ -30,15 +30,21 @@ export class StripeStandin {
 
   charged = (account?: string): Intent[] => this.intents.filter(intent => intent.status === 'succeeded' && (account === undefined || intent.account === account));
 
+  /** Refuses what Stripe refuses, and what would make this setup cost the platform: Stripe must collect the fees and carry the losses. */
+  private accountV2(body: string, version: unknown): { status: number; json: unknown } {
+    const refuse = (message: string) => ({ status: 400, json: { error: { type: 'invalid_request_error', message } } });
+    if (typeof version !== 'string' || version === '') return refuse('You did not provide an API version.');
+    const asked = JSON.parse(body) as { dashboard?: string; identity?: { country?: string }; configuration?: { merchant?: { capabilities?: { card_payments?: { requested?: boolean } } } }; defaults?: { responsibilities?: { fees_collector?: string; losses_collector?: string } } };
+    if (asked.dashboard !== 'full' || asked.configuration?.merchant?.capabilities?.card_payments?.requested !== true || asked.defaults?.responsibilities?.fees_collector !== 'stripe' || asked.defaults.responsibilities.losses_collector !== 'stripe' || typeof asked.identity?.country !== 'string') return refuse('This setup would not be the one that costs the platform nothing.');
+    const id = `acct_standin${this.next++}`;
+    this.accounts.set(id, { charges_enabled: false });
+    return { status: 200, json: { id } };
+  }
+
   private answer(method: string, path: string, query: URLSearchParams, form: URLSearchParams, account: string | null): { status: number; json: unknown } {
     const error = (status: number, code: string, extra: object = {}) => ({ status, json: { error: { code, message: this.errorText, ...extra } } });
-    if (method === 'POST' && path === '/v1/accounts') {
-      // As Stripe answered in PF11's proof.
-      if (form.get('capabilities[card_payments][requested]') !== 'true' || form.get('capabilities[transfers][requested]') !== 'true') return { status: 400, json: { error: { type: 'invalid_request_error', message: 'Accounts do not currently support card_payments without transfers.' } } };
-      const id = `acct_standin${this.next++}`;
-      this.accounts.set(id, { charges_enabled: false });
-      return { status: 200, json: { id } };
-    }
+    // As Stripe answered a new platform in PF18's proof.
+    if (method === 'POST' && path === '/v1/accounts') return { status: 400, json: { error: { type: 'invalid_request_error', message: 'Stripe no longer recommends Accounts v1 for new Connect integrations.' } } };
     if (method === 'POST' && path === '/v1/account_links') return { status: 200, json: { url: `https://connect.stripe.test/${form.get('account')}` } };
     if (method === 'POST' && path === '/v1/customers') return { status: 200, json: { id: `cus_${this.next++}` } };
     if (method === 'POST' && path === '/v1/checkout/sessions') {
@@ -92,7 +98,8 @@ export class StripeStandin {
       const account = typeof request.headers['stripe-account'] === 'string' ? request.headers['stripe-account'] : null;
       this.calls.push(`${request.method} ${url.pathname}${account === null ? '' : ` as ${account}`}`);
       const stored = typeof key === 'string' ? this.keys.get(key) : undefined;
-      const answer = (stored ?? this.answer(request.method ?? 'GET', url.pathname, url.searchParams, new URLSearchParams(Buffer.concat(chunks).toString()), account)) as { status: number; json: unknown };
+      const body = Buffer.concat(chunks).toString();
+      const answer = (stored ?? (url.pathname === '/v2/core/accounts' ? this.accountV2(body, request.headers['stripe-version']) : this.answer(request.method ?? 'GET', url.pathname, url.searchParams, new URLSearchParams(body), account))) as { status: number; json: unknown };
       if (typeof key === 'string' && answer.status !== 409 && answer.status !== 429) this.keys.set(key, answer);
       response.writeHead(answer.status, { 'content-type': 'application/json' }).end(JSON.stringify(answer.json));
     });

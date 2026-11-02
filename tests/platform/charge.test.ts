@@ -342,6 +342,27 @@ describe('named states', () => {
     expect(page.body.error).toContain('Nothing was charged');
     await s.start();
   });
+  // PF18, Stripe's real answers: a bad key is 401 and a key short of a permission is 403 more_permissions_required; a gone account is 403 account_invalid.
+  it.each([
+    ['a wrong or revoked key', 401, { error: { type: 'invalid_request_error', message: 'Invalid API Key provided' } }],
+    ['a key short of a permission', 403, { error: { type: 'invalid_request_error', code: 'more_permissions_required', message: 'Permission denied.' } }]
+  ])('%s does not blame the solver, and is tried again once the key is right', async (_name, status, body) => {
+    await ownerOn();
+    await solverReady();
+    await merged();
+    const real = env.STRIPE_API;
+    env = { ...env, STRIPE_API: 'https://refusing.test' } as typeof env;
+    const fetched = globalThis.fetch;
+    globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => String(input instanceof Request ? input.url : input).startsWith('https://refusing.test') ? new Response(JSON.stringify(body), { status }) : fetched(input, init)) as typeof fetch;
+    try { await settle(); } finally { globalThis.fetch = fetched; }
+    expect(await stateOf()).toBe('charging');
+    expect(s.intents).toEqual([]);
+    env = { ...env, STRIPE_API: real } as typeof env;
+    await env.DB.prepare('UPDATE charges SET at = ? WHERE bounty_id = ?').bind(NOW - 10 * MINUTE, ID).run();
+    await settle();
+    expect(await stateOf()).toBe('paid');
+  });
+
   it('a solver who disconnected is named, with nothing charged', async () => {
     await ownerOn();
     const account = await solverReady();

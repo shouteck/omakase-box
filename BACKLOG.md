@@ -21,6 +21,14 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 ## Product
 
+- **From PF18** (see [PF18](waves/PF18.md)):
+  - a paid bounty's page still says "Next: ask on pull request #n how they want to be paid" (`account.ts`, the payee's `next`);
+  - the bounty page's button says "Record $45 paid" while the front page's card no longer names recording;
+  - a solver's existing Stripe account cannot be linked: each solver gets a new one (Stripe's OAuth is v1 and not recommended for new platforms); a question for PF12;
+  - the board holds the full secret key because a restricted key cannot create a v2 account; move to a restricted key if Stripe offers Write on Accounts v2;
+  - not run on v2: paying the authentication page in the browser (proven on v1); a solver disconnecting from their own dashboard.
+- **The signed-in page needs a redesign (owner, 2 November 2026):** one column of equal sections; owner and solver mixed; sign-out at the bottom. References: big companies' design systems (Primer, Polaris, Stripe's patterns), never Upwork or Algora. A wave, PF19, unbriefed.
+
 - **The chain's names collide with the bounty branch** (BT52, real sandbox, exists since BT32): the chain is `refs/box-bounty/<id>` and the branch `refs/heads/box-bounty/<id>`. `git fetch origin box-bounty/<id>` gets the chain, not the branch, and a pull request from that has "no history in common". The chain's tracking ref also takes `refs/remotes/origin/box-bounty/<id>`, so a clone's `origin/box-bounty/<id>` can show a commit holding only `event.json`; the fresh session in BT52 read that as the code to start from. Forks copy no chain refs, but a solver with a clone can hit this. Needs a wave: renaming the namespace must keep old chains readable. See [BT52](waves/BT52.md).
 - **`box bounty describe` says `open bounties: none` on a fresh clone** (BT52): it does not read the chain, while a later `box bounty` lists the bounty. See [BT52](waves/BT52.md).
 - **The posting machine's `apply` under a minute after another machine's merge** can merge locally too, then shows a named pending (BT52). Closing it costs a start on `apply`'s budget, the owner's call.
