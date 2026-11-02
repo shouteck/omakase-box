@@ -1,7 +1,8 @@
 'use client';
 // Your bounties (PF21): every bounty the owner's agents posted, in the four stages a bounty moves through.
 // The stages are figures that choose the list below (Catalyst's overview, Geist's tabs); the list is one shape in every
-// view: the bounty, where it stands with the one fact that matters there, the reward, and Pay where payment is due.
+// view: the bounty, where it stands with the one fact that matters there, and the reward. The title opens the bounty,
+// where it is paid: no second button to the same page (GitHub's and Stripe's lists act from the item's own page).
 // One ink and its greys; the accent only where something waits on the owner, red only for the owner's card failing.
 import { useRef, useState } from 'react';
 
@@ -47,7 +48,6 @@ function Detail({ b }) {
 }
 
 function Row({ b, now }) {
-  const due = b.stage === 'due';
   return (
     <tr data-bounty={b.id} data-stage={b.stage} className="block sm:table-row border-b border-line py-3.5 sm:py-0">
       <td className="block sm:table-cell sm:py-4 sm:pr-3 align-middle">
@@ -58,10 +58,7 @@ function Row({ b, now }) {
         <span className="inline-flex items-center gap-2 text-soft whitespace-nowrap"><Glyph stage={b.stage} />{NAMES[b.stage]}</span>
         <span data-detail className={`block text-sm pl-6 ${b.card_failed ? 'text-[var(--color-danger)]' : 'text-soft'}`}><Detail b={b} /></span>
       </td>
-      <td className="hidden sm:table-cell sm:py-4 sm:px-3 text-right tabular-nums align-middle">${b.reward}</td>
-      <td className={`${due ? 'block' : 'hidden'} sm:table-cell sm:py-4 sm:pl-3 text-right align-middle pt-2 sm:pt-4`}>
-        {due && b.payable ? <a href={`/b/${b.id}/#payment`} className="inline-block text-sm rounded-lg px-3 py-1.5 bg-button font-medium whitespace-nowrap" style={{ color: 'var(--color-button-ink)', textDecoration: 'none' }}>Pay ${b.reward}</a> : null}
-      </td>
+      <td className="hidden sm:table-cell sm:py-4 sm:pl-3 text-right tabular-nums align-middle">${b.reward}</td>
     </tr>
   );
 }
@@ -129,7 +126,7 @@ export default function Bounties({ bounties, now = Date.now() }) {
         ? <p data-none className="mt-3 border-t border-line py-8 text-center text-sm text-soft">None at this stage.</p>
         : (
           <table aria-label={stage ? stage.name : 'Your bounties'} className="w-full mt-3 text-[0.9375rem] border-collapse">
-            <thead className="hidden sm:table-header-group"><tr className="text-sm text-soft text-left border-b border-line"><th scope="col" className="font-normal py-2.5 pr-3">Bounty</th><th scope="col" className="font-normal py-2.5 px-3">Stage</th><th scope="col" className="font-normal py-2.5 px-3 text-right">Reward</th><th scope="col" className="py-2.5 pl-3"><span className="sr-only">Pay</span></th></tr></thead>
+            <thead className="hidden sm:table-header-group"><tr className="text-sm text-soft text-left border-b border-line"><th scope="col" className="font-normal py-2.5 pr-3">Bounty</th><th scope="col" className="font-normal py-2.5 px-3">Stage</th><th scope="col" className="font-normal py-2.5 pl-3 text-right">Reward</th></tr></thead>
             <tbody className="border-t border-line sm:border-t-0">{rows.map(b => <Row key={b.id} b={b} now={now} />)}</tbody>
           </table>
         )}

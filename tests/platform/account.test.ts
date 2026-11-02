@@ -514,7 +514,7 @@ describe('your bounties (PF21)', () => {
     expect(list.get(STATE_IDS.open)).toMatchObject({ stage: 'waiting', solutions: 0, reward: 45, repository: 'example-tidepool/ledger-lite', issue_number: 48 });
     expect(list.get(STATE_IDS.waiting)).toMatchObject({ stage: 'solutions', solutions: 2 });
     expect(list.get(STATE_IDS.closed)).toMatchObject({ stage: 'closed' });
-    expect(list.get(STATE_IDS.owed)).toMatchObject({ stage: 'due', merged: PAYEE.login, payable: true, card_failed: false, note: 'Pay on merge is off for this repository.' });
+    expect(list.get(STATE_IDS.owed)).toMatchObject({ stage: 'due', merged: PAYEE.login, card_failed: false, note: 'Pay on merge is off for this repository.' });
     expect(list.get(STATE_IDS.moreThanOne)).toMatchObject({ stage: 'due', merged: null, merged_one_of: ['example-fern', 'example-rook'], note: 'More than one solution was merged. You choose whom to pay.' });
     expect(list.get(STATE_IDS.merged)).toMatchObject({ stage: 'paid', merged: PAYEE.login, paid_by: 'Recorded by you' });
     expect(list.has(STATE_IDS.private)).toBe(false);
@@ -551,9 +551,9 @@ describe('your bounties (PF21)', () => {
       ON CONFLICT (bounty_id) DO UPDATE SET state = excluded.state, payment_method = excluded.payment_method`).bind(STATE_IDS.owed, state, PAYEE.login, method, r.clock.at).run();
     const owed = async () => byId(await listed(jar)).get(STATE_IDS.owed);
     await charge('declined', 'pm_saved');
-    expect(await owed()).toMatchObject({ stage: 'due', card_failed: true, payable: true, note: 'The card was declined. Nothing was charged.' });
+    expect(await owed()).toMatchObject({ stage: 'due', card_failed: true, note: 'The card was declined. Nothing was charged.' });
     await charge('charging', 'pm_saved');
-    expect(await owed()).toMatchObject({ stage: 'due', card_failed: false, payable: false, note: 'A charge has been started and has not finished.' });
+    expect(await owed()).toMatchObject({ stage: 'due', card_failed: false, note: 'A charge has been started and has not finished.' });
     await charge('paid', 'pm_saved');
     expect(await owed()).toMatchObject({ stage: 'paid', paid_by: 'Pay on merge', merged: PAYEE.login });
     await charge('paid', null);

@@ -349,14 +349,14 @@ describe('the pages', () => {
     const selected = (page: Page) => page.locator('[aria-label="Your role"] [role=tab][aria-selected=true]').innerText();
 
     it('an owner: what they owe, and pay on merge per repository; nothing about ways an owner need not set up', async () => {
-      const owed = { id: STATE_IDS.owed, title: 'Pay me', repository: 'example-org/ledger', issue_number: 4, created_at: new Date(NOW - 2 * 86400000).toISOString(), reward: 45, solutions: 1, stage: 'due', merged: 'example-quill', note: null, card_failed: false, payable: true };
+      const owed = { id: STATE_IDS.owed, title: 'Pay me', repository: 'example-org/ledger', issue_number: 4, created_at: new Date(NOW - 2 * 86400000).toISOString(), reward: 45, solutions: 1, stage: 'due', merged: 'example-quill', note: null, card_failed: false };
       const { page, close } = await open({ ...base, login: 'example-mara', you_owe: [debt(STATE_IDS.owed, 'Pay me', 45, 'example-quill', 'example-mara')], bounties: { list: [owed], more: false }, pay: pay({ card: 'visa ending 3155', repositories: [{ repository: 'example-org/ledger', on_at: new Date(NOW).toISOString(), limit: 100 }, { repository: 'example-org/lite', on_at: new Date(NOW).toISOString(), limit: 50 }] }) });
       expect(await selected(page)).toContain('Owner');
       expect(await page.locator('h1').innerText()).toBe('Owner');
       const text = await page.locator('main').innerText();
       // PF21: what is owed is the Payment due stage, chosen when the page opens (it was the "You owe" figure).
       expect(await page.locator('[data-stage-tab][aria-selected=true]').innerText()).toMatch(/^Payment due\s+1\s+\$45$/);
-      expect(await page.locator(`tr[data-bounty="${STATE_IDS.owed}"]`).innerText()).toMatch(/Merged · example-quill\s+\$45\s+Pay \$45/);
+      expect(await page.locator(`tr[data-bounty="${STATE_IDS.owed}"]`).innerText()).toMatch(/Merged · example-quill\s+\$45$/);
       expect(await page.locator('table[aria-label="Repositories on pay on merge"] tbody tr').allInnerTexts()).toEqual([expect.stringMatching(/example-org\/ledger\s+\$100/), expect.stringMatching(/example-org\/lite\s+\$50/)]);
       for (const absent of ['By hand', 'One click', 'Owed to you']) expect(text, absent).not.toContain(absent);
       expect(moneyClaims(text)).toEqual([]);
@@ -665,9 +665,10 @@ describe('the pages', () => {
     expect(await owner.page.locator('[role=tablist][aria-label="Your role"] [role=tab][aria-selected=true]').innerText()).toContain('Owner');
     expect(await owner.page.locator('[data-stage-tab][aria-selected=true]').innerText()).toMatch(/^Payment due\s+2\s+\$90$/);
     const owed = owner.page.locator(`tr[data-bounty="${STATE_IDS.owed}"]`);
-    expect(await owed.innerText()).toMatch(/Duplicate rows after a retry\s+example-tidepool\/ledger-lite #55 · \d+ days? ago\s+Payment due\s+Pay on merge is off for this repository\.\s+\$45\s+Pay \$45/);
+    expect(await owed.innerText()).toMatch(/Duplicate rows after a retry\s+example-tidepool\/ledger-lite #55 · \d+ days? ago\s+Payment due\s+Pay on merge is off for this repository\.\s+\$45$/);
     expect(await owed.locator(`a[href="/b/${STATE_IDS.owed}/"]`).count()).toBe(1);
-    expect(await owed.locator(`a[href="/b/${STATE_IDS.owed}/#payment"]`).innerText()).toBe('Pay $45');
+    // The title is the one way in: no Pay button that leads to the same page.
+    expect(await owed.locator('a').evaluateAll(links => links.map(link => link.getAttribute('href')))).toEqual([`/b/${STATE_IDS.owed}/`]);
     const solver = await signedIn(7001, 'example-quill');
     expect(await solver.page.locator('[role=tab][aria-selected=true]').innerText()).toContain('Solver');
     expect(await solver.page.locator('table[aria-label="Coming to you"] tbody tr').filter({ hasText: 'Duplicate rows after a retry' }).innerText()).toMatch(/example-mara\s+\$45\s+\d+ \w+ \d{4}\s+Open/);
@@ -697,7 +698,7 @@ describe('the pages', () => {
     expect(all).toHaveLength(8);
     // Every bounty on the page is one example-mara opened; none of the 120 other posters' bounties is.
     expect(all.every(entry => !entry.includes('example-org'))).toBe(true);
-    expect(await page.locator('tr[data-bounty]').evaluateAll(rows => rows.every(row => row.querySelectorAll('td').length === 4))).toBe(true);
+    expect(await page.locator('tr[data-bounty]').evaluateAll(rows => rows.every(row => row.querySelectorAll('td').length === 3))).toBe(true);
     await page.click('[data-view="closed"]');
     expect(await shown()).toEqual(['closed Export to a format nobody uses']);
     await close();

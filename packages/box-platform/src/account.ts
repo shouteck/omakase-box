@@ -245,7 +245,7 @@ async function bountiesOf(env: Env, viewer: Viewer, now: number) {
     const charge = payment.charge !== null && payment.charge.state !== 'looked' ? payment.charge : null;
     if (payment.state === 'owed' || payment.state === 'owner-decides') {
       const note = charge?.words ?? (payment.state === 'owner-decides' ? 'More than one solution was merged. You choose whom to pay.' : payOn.has(row.repository.toLowerCase()) ? null : 'Pay on merge is off for this repository.');
-      return { ...base, stage: 'due', merged: payment.owed!.to, merged_one_of: payment.owed!.to === null ? (payment.owed as { to_one_of?: readonly string[] }).to_one_of ?? [] : undefined, note, card_failed: charge !== null && CARD_FAILED.has(charge.state), payable: charge?.state !== 'charging' };
+      return { ...base, stage: 'due', merged: payment.owed!.to, merged_one_of: payment.owed!.to === null ? (payment.owed as { to_one_of?: readonly string[] }).to_one_of ?? [] : undefined, note, card_failed: charge !== null && CARD_FAILED.has(charge.state) };
     }
     if (payment.state === 'recorded' || payment.state === 'confirmed' || payment.state === 'says-not-received') {
       return { ...base, stage: 'paid', merged: payment.owed!.to, paid_by: paidBy(payment.recorded_paid!.source, savedCard.has(row.id)), note: payment.state === 'says-not-received' ? 'The solver says it has not arrived.' : null };
