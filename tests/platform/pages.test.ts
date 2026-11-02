@@ -442,16 +442,22 @@ describe('the pages', () => {
     }
   }, 180000);
 
-  it('the install lines are the ones run from a clean clone, and the last runs on the built tool', async () => {
+  it('the install line names what the release attaches, and the source lines give a real box', async () => {
     const { page, close } = await fresh();
     await visit(page, '/how/');
-    const lines = await page.locator('main code[data-install]').allInnerTexts();
+    const install = await page.locator('main code[data-install]').allInnerTexts();
+    const lines = await page.locator('main code[data-source]').allTextContents();
+    await close();
+    const clone = join(PACKAGE, '../..');
+    // The page, the release job and the guide inside the package name one address.
+    expect(install).toEqual(['npm install -g https://github.com/shouteck/omakase-box/releases/latest/download/box-bounty.tgz', 'box bounty']);
+    const asset = /releases\/latest\/download\/(\S+)$/.exec(install[0]!)![1]!;
+    const job = readFileSync(join(clone, '.github/workflows/release.yml'), 'utf8');
+    expect(job).toContain(`gh release create "$GITHUB_REF_NAME" ${asset} `);
+    expect(readFileSync(join(clone, 'FIRST-FIVE-MINUTES.md'), 'utf8')).toContain(install[0]!);
     expect(lines).toHaveLength(6);
     expect(lines[0]).toBe('git clone https://github.com/shouteck/omakase-box');
     expect(lines[5]).toBe('box bounty');
-    expect(await page.locator('main').textContent()).toContain('node <the clone>/packages/box-cli/dist/cli.js');
-    await close();
-    const clone = join(PACKAGE, '../..');
     for (const script of ['scripts/pnpm.mjs', 'scripts/tooling/package.json']) expect(existsSync(join(clone, script)), script).toBe(true);
     // The printed install line, into a throwaway prefix: it makes a real `box`, and this machine's own commands are untouched.
     const prefix = mkdtempSync(join(tmpdir(), 'kitchen-PF15-prefix-'));

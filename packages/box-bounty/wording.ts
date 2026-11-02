@@ -41,7 +41,7 @@ export const DESCRIBE_LINES: readonly string[] = [
 // all a person has to do (PF15). It leaves as soon as the owner's answer is written.
 // The three questions are the owner's; everything else here is the agent's.
 export const SETUP_LINES: readonly string[] = [
-  'not set up for this repository yet. To the agent reading this, in the project you work in, not the tool\'s own clone:',
+  'not set up for this repository yet. To the agent reading this, in the project you work in:',
   '  1. run gh auth status; if it is not signed in, the owner runs gh auth login, which you cannot finish alone.',
   '  2. ask the owner: may bounties from this repository go public under your GitHub account, with a solution I choose merged into your code? What reward does each state, a promise you pay, and at most how much promised at once, in whole dollars? Should I ask you before each post and each merge?',
   '  3. run box bounty allow <owner>/<repository> --reward <reward> --reward-limit <limit>, adding --ask if they want to be asked; then box bounty config set instructions true, which adds one marked block to this project\'s instruction files so later sessions know the tool, and says so if there are none. Tell them what it did.',

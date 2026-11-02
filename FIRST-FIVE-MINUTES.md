@@ -16,18 +16,12 @@ Node 22.13 or later, Git 2.40 or later, and the GitHub command line `gh` 2.0 or
 later are required; the tool checks all three at start and says what is missing
 and where to get it.
 
-Run it once, with nothing installed:
+Install it so `box` is a command, then run it in your project:
 
-    npx box-bounty bounty help
+    npm install -g https://github.com/shouteck/omakase-box/releases/latest/download/box-bounty.tgz
+    box bounty
 
-Or install it so `box` is a command:
-
-    npm install -g box-bounty
-    box bounty help
-
-(`box-bounty` is the package's provisional name, pending the owner's publish
-decision.) `npx` and npm run in the project folder and read its npm settings
-and `node_modules`, so run the tool only in projects you trust. Node is from
+The tool reads the project it runs in, so run it only in projects you trust. Node is from
 <https://nodejs.org>, Git from <https://git-scm.com>, `gh` from
 <https://cli.github.com>. Sign in to GitHub once:
 
