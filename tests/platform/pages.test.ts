@@ -275,7 +275,7 @@ describe('the pages', () => {
       commands: [...element.querySelectorAll('code[data-command]')].map(code => code.textContent!.split(' ').slice(0, 3).join(' '))
     })));
     expect(groups).toEqual([
-      { title: '# Asks you a few things', commands: ['box bounty allow', 'box bounty config'] },
+      { title: '# Asks you a few things', commands: ['box bounty allow'] },
       { title: '# Packs and posts', commands: ['box bounty create', 'box bounty post', 'box bounty post'] },
       { title: '# Reads the solutions', commands: ['box bounty status', 'box bounty look'] },
       { title: '# Merges one', commands: ['box bounty apply'] }
@@ -286,8 +286,8 @@ describe('the pages', () => {
     expect(await page.locator('#hand-off a').count()).toBe(0);
     expect(await page.locator('#answer a').count()).toBe(0);
     expect(how).toContain('/bounties.json');
-    expect(await page.locator('#hand-off details code[data-command]').count()).toBe(8);
-    expect(await page.locator('#hand-off code[data-command]').count()).toBe(8);
+    expect(await page.locator('#hand-off details code[data-command]').count()).toBe(7);
+    expect(await page.locator('#hand-off code[data-command]').count()).toBe(7);
     expect(await page.locator('#hand-off details').evaluate(element => (element as HTMLDetailsElement).open)).toBe(false);
     await visit(page, '/');
     // The picture is the real product in real text, and says it is an example.
@@ -339,8 +339,8 @@ describe('the pages', () => {
     await block.click();
     await expect.poll(() => block.innerText()).toBe('Copied');
     const copied = await page.evaluate(() => navigator.clipboard.readText());
-    for (const line of ['# Packs and posts', 'box bounty config set instructions true', 'box bounty apply <id> <n>']) expect(copied).toContain(line);
-    await page.locator('main button[aria-label="Copy install lines"]').click();
+    for (const line of ['# Packs and posts', 'box bounty allow <owner>/<repository>', 'box bounty apply <id> <n>']) expect(copied).toContain(line);
+    await page.locator('main button[aria-label="Copy install line"]').click();
     const install = await page.locator('main code[data-install]').allInnerTexts();
     // Windows' clipboard hands back \r\n for the \n the page wrote.
     await expect.poll(async () => (await page.evaluate(() => navigator.clipboard.readText())).split(/\r?\n/)).toEqual(install);
@@ -383,7 +383,6 @@ describe('the pages', () => {
     // The page's own list: a command added, dropped or reworded fails here.
     expect(lines).toEqual([
       'box bounty allow <owner>/<repository> --reward <reward> --reward-limit <limit>',
-      'box bounty config set instructions true',
       'box bounty create --task TASK.md --why "beyond what this agent can do"',
       'box bounty post <id> --preview',
       'box bounty post <id>',
@@ -406,10 +405,9 @@ describe('the pages', () => {
         expect(output, line).toContain(expected);
         return output;
       };
-      const [allow, instructions, create, preview, post, status, look, apply] = lines as [string, string, string, string, string, string, string, string];
+      const [allow, create, preview, post, status, look, apply] = lines as [string, string, string, string, string, string, string];
       const paid = 'box bounty config set paid <id>'; // Off the page, since paying is on the bounty's page; the tool still prints it.
       run(allow, 'owner/project');
-      run(instructions, 'instructions: on');
       values['<id>'] = /bt-[a-f\d]{12}/.exec(run(create, 'bt-'))![0];
       // A second open bounty: from here a command with no id has to say which one.
       expect(world.box(['bounty', 'create', '--task', 'OTHER.md', '--why', 'another handoff']).status).toBe(0);
@@ -442,16 +440,22 @@ describe('the pages', () => {
     }
   }, 180000);
 
-  it('the install lines are the ones run from a clean clone, and the last runs on the built tool', async () => {
+  it('the install line names what the release attaches, and the source lines give a real box', async () => {
     const { page, close } = await fresh();
     await visit(page, '/how/');
-    const lines = await page.locator('main code[data-install]').allInnerTexts();
+    const install = await page.locator('main code[data-install]').allInnerTexts();
+    const lines = await page.locator('main code[data-source]').allTextContents();
+    await close();
+    const clone = join(PACKAGE, '../..');
+    // The page, the release job and the guide inside the package name one address.
+    expect(install).toEqual(['npx -y --package=https://github.com/shouteck/omakase-box/releases/latest/download/box-bounty.tgz box setup']);
+    const asset = /releases\/latest\/download\/(\S+) box setup$/.exec(install[0]!)![1]!;
+    const job = readFileSync(join(clone, '.github/workflows/release.yml'), 'utf8');
+    expect(job).toContain(`gh release create "$GITHUB_REF_NAME" ${asset} `);
+    expect(readFileSync(join(clone, 'FIRST-FIVE-MINUTES.md'), 'utf8')).toContain(install[0]!);
     expect(lines).toHaveLength(6);
     expect(lines[0]).toBe('git clone https://github.com/shouteck/omakase-box');
     expect(lines[5]).toBe('box bounty');
-    expect(await page.locator('main').textContent()).toContain('node <the clone>/packages/box-cli/dist/cli.js');
-    await close();
-    const clone = join(PACKAGE, '../..');
     for (const script of ['scripts/pnpm.mjs', 'scripts/tooling/package.json']) expect(existsSync(join(clone, script)), script).toBe(true);
     // The printed install line, into a throwaway prefix: it makes a real `box`, and this machine's own commands are untouched.
     const prefix = mkdtempSync(join(tmpdir(), 'kitchen-PF15-prefix-'));

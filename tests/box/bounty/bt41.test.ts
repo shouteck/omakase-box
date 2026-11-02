@@ -46,7 +46,7 @@ describe('BT41 — a stranger reads what the tool does', () => {
     const repo = makeRepo({ 'app.txt': 'seed\n' });
     const off = box(repo, ['allow', 'owner/project']);
     expect(off.status, off.stderr).toBe(0);
-    expect(off.stdout).toContain('agents here learn of the tool only once instructions are on');
+    expect(off.stdout).toContain('an agent box setup does not cover learns of the tool only once instructions are on');
     expect(off.stdout).toContain('box bounty config set instructions true');
     expect(box(repo, ['config']).stdout).toContain('instructions: off');
 

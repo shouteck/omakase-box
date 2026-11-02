@@ -1,0 +1,49 @@
+# One-line install (PF16): a `v*` tag builds the package on GitHub's machine from that commit,
+# runs the packaging tests, and only then creates the release, so `latest` cannot move to a
+# package that failed. The asset's name is fixed, because the site's install line names it.
+# No secret beyond the token GitHub gives this job; npm is the owner's own (docs/box-v4/PUBLISH.md).
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      # Pinned to a full commit SHA, never a moving tag: v7.1.0.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: .node-version
+
+      - name: Install repository-local pnpm
+        run: npm ci --prefix scripts/tooling --ignore-scripts
+
+      - name: Install dependencies (frozen lockfile)
+        run: node scripts/pnpm.mjs install --frozen-lockfile
+
+      - name: Build the package
+        run: node packages/box-cli/pack.mjs
+
+      - name: The tag names this package's version
+        run: |
+          version=$(node -p "require('./packages/box-cli/dist-package/package/package.json').version")
+          test "$GITHUB_REF_NAME" = "v$version" || { echo "tag $GITHUB_REF_NAME is not v$version"; exit 1; }
+
+      - name: Packaging and install tests
+        run: node scripts/suite.mjs box --suite bounty tests/box/bounty/bt12-install.test.ts tests/box/bounty/bt12-package.test.ts
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(node -p "require('./packages/box-cli/dist-package/package/package.json').version")
+          cp "packages/box-cli/dist-package/box-bounty-$version.tgz" box-bounty.tgz
+          gh release create "$GITHUB_REF_NAME" box-bounty.tgz --verify-tag --title "$GITHUB_REF_NAME" --notes "Install: npm install -g https://github.com/$GITHUB_REPOSITORY/releases/latest/download/box-bounty.tgz"
