@@ -132,6 +132,21 @@ describe('one install command on an empty machine', () => {
     expect(npxCmd.stdout).toContain('the journey');
   }, 120000);
 
+  it('the site\'s one line: npx runs box setup, which leaves a real box and a skill behind', () => {
+    const away = join(root, 'setup-home');
+    const installed = join(away, 'prefix');
+    mkdirSync(join(away, '.claude'), { recursive: true });
+    const setupEnv = { ...env, HOME: away, USERPROFILE: away, npm_config_prefix: installed, BOX_SETUP_PACKAGE: tarball };
+    const setup = process.platform === 'win32'
+      ? spawnSync('cmd.exe', ['/d', '/s', '/c', 'npx', '-y', '--package', tarball, 'box', 'setup'], { cwd: root, encoding: 'utf8', env: setupEnv })
+      : spawnSync('npx', ['-y', '--package', tarball, 'box', 'setup'], { cwd: root, encoding: 'utf8', env: setupEnv });
+    expect(setup.status, `${setup.stdout}\n${setup.stderr}`).toBe(0);
+    expect(setup.stdout).toContain('box: installed on this machine.');
+    expect(existsSync(join(away, '.claude', 'skills', 'omakase-box', 'SKILL.md'))).toBe(true);
+    const bin = process.platform === 'win32' ? join(installed, 'box.cmd') : join(installed, 'bin', 'box');
+    expect(existsSync(bin), bin).toBe(true);
+  }, 120000);
+
   it('runs the whole $0 bounty journey against stand-ins', () => {
     const repo = join(root, 'project');
     mkdirSync(repo, { recursive: true });

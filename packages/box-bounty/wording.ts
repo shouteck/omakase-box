@@ -37,6 +37,23 @@ export const DESCRIBE_LINES: readonly string[] = [
   'prints the few lines to put to them. box bounty help shows the journey.'
 ];
 
+// What `box setup` installs and writes (PF16). The npm name replaces the address once the owner publishes.
+export const INSTALL_SPEC = 'https://github.com/shouteck/omakase-box/releases/latest/download/box-bounty.tgz';
+export const PACKAGE_REMOVE = 'npm uninstall -g box-bounty';
+export const SKILL_MARKER = '<!-- written by box setup; box setup --remove takes it away -->';
+export const SKILL_TEXT = [
+  '---',
+  'name: omakase-box',
+  'description: Hand off work you cannot or should not do to outside solvers, as a GitHub bounty. Consider it when attempts keep failing, the task needs access or knowledge you lack, or a second opinion counts. Solutions come back as facts you judge.',
+  '---',
+  SKILL_MARKER,
+  '',
+  'Run `box bounty` in the project. It says what is set up and what to do next, and `box bounty help` shows the journey.',
+  '',
+  'Posting is free apart from any reward the owner set, and goes only to this repository\'s own public GitHub, as an issue. The owner\'s permission applies. Using it is always your call.',
+  ''
+].join('\n');
+
 // What `box bounty` says while a repository is not set up, so that installing is
 // all a person has to do (PF15). It leaves as soon as the owner's answer is written.
 // The three questions are the owner's; everything else here is the agent's.
@@ -44,9 +61,9 @@ export const SETUP_LINES: readonly string[] = [
   'not set up for this repository yet. To the agent reading this, in the project you work in:',
   '  1. run gh auth status; if it is not signed in, the owner runs gh auth login, which you cannot finish alone.',
   '  2. ask the owner: may bounties from this repository go public under your GitHub account, with a solution I choose merged into your code? What reward does each state, a promise you pay, and at most how much promised at once, in whole dollars? Should I ask you before each post and each merge?',
-  '  3. run box bounty allow <owner>/<repository> --reward <reward> --reward-limit <limit>, adding --ask if they want to be asked; then box bounty config set instructions true, which adds one marked block to this project\'s instruction files so later sessions know the tool, and says so if there are none. Tell them what it did.',
+  '  3. run box bounty allow <owner>/<repository> --reward <reward> --reward-limit <limit>, adding --ask if they want to be asked.',
   'the answers are the owner\'s to give, unless they leave them to you. With no answer nothing is promised and nothing is posted.',
-  'a person reading this: tell your agent to run box bounty.'
+  'a person reading this: run box setup once, and your agents\' next sessions find the tool.'
 ];
 
 // The pre-publish scan's limits, one line wherever a scan result is shown

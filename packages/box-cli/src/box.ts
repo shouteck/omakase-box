@@ -2,13 +2,14 @@
 // The published `box` command (BT12): the bounty tool alone, bundled into
 // one file. The kitchen build (src/cli.ts) carries the same dispatch.
 import './node-check.js';
-import { BOUNTY_COMMANDS } from '../../box-bounty/index.js';
+import { BOUNTY_COMMANDS, runSetup, runSetupRemove } from '../../box-bounty/index.js';
 import { runBounty } from './bounty.js';
 import { version } from './version.js';
 
 const HELP_LINES = [
   ...(['create', 'help', 'describe', 'status', 'post', 'look', 'apply', 'close'] as const)
     .map((name, index) => `${index === 0 ? 'usage: ' : '       '}${BOUNTY_COMMANDS[name]!.usage}`),
+  '       box setup [--remove] — put box on this machine and a skill where agents look',
   '       box bounty allow|deny|config — the owner\'s settings',
   '       <id> may be left out when exactly one bounty can take the command'
 ];
@@ -26,6 +27,10 @@ if (command === '--help' || command === '-h' || command === 'help') {
 }
 if (command === '--version') {
   console.log(version());
+  process.exit(0);
+}
+if (command === 'setup') {
+  for (const line of rest[0] === '--remove' ? runSetupRemove() : runSetup()) console.log(line);
   process.exit(0);
 }
 if (command === 'bounty') {
