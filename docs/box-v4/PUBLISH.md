@@ -15,7 +15,7 @@ node packages/box-cli/pack.mjs
 ```
 
 ```bash
-npm publish packages/box-cli/dist-package/omakase-box-0.1.1.tgz --access public
+npm publish packages/box-cli/dist-package/omakase-box-0.1.2.tgz --access public
 ```
 
 ## After it

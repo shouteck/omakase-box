@@ -7,10 +7,12 @@ import { existsSync, lstatSync, mkdirSync, readFileSync, rmdirSync, unlinkSync, 
 import { homedir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import { SKILL_TARGETS } from './instructions.js';
-import { showPath } from './notice.js';
 import { INSTALL_SPEC, PACKAGE_REMOVE, SKILL_MARKER, SKILL_TEXT } from './wording.js';
 
 const SKILL = 'omakase-box';
+
+// Fixed text from this file, the way the hosts' own docs write it: nothing from outside, and no username to paste into a chat.
+const shown = (target: typeof SKILL_TARGETS[number]): string => `~/${target.skills.join('/')}/${SKILL}`;
 
 const found = (home: string, target: typeof SKILL_TARGETS[number]): boolean => target.homes.some(name => existsSync(join(home, name)));
 
@@ -50,10 +52,10 @@ export function runSetup(): string[] {
   const targets = SKILL_TARGETS.filter(target => found(home, target));
   for (const target of targets) {
     const folder = join(home, ...target.skills, SKILL);
-    if (holder(folder) === 'foreign') { lines.push(`${target.names}: ${showPath(folder)} is not ours, so it was left as it is; nothing written.`); continue; }
+    if (holder(folder) === 'foreign') { lines.push(`${target.names}: ${shown(target)} is not ours, so it was left as it is; nothing written.`); continue; }
     mkdirSync(folder, { recursive: true });
     writeFileSync(join(folder, 'SKILL.md'), SKILL_TEXT);
-    lines.push(`${target.names}: wrote ${showPath(join(folder, 'SKILL.md'))}, nothing else.`);
+    lines.push(`${target.names}: wrote ${shown(target)}/SKILL.md, nothing else.`);
   }
   if (targets.length === 0) lines.push('no agent found in its usual place, so no skill was written; next: inside a project, box bounty config set instructions true adds a block to its instruction files.');
   else lines.push('your next agent session finds the tool. It asks you what it cannot decide.');
@@ -67,10 +69,10 @@ export function runSetupRemove(): string[] {
     const folder = join(home, ...target.skills, SKILL);
     const state = holder(folder);
     if (state === 'none') return [];
-    if (state === 'foreign') return [`${target.names}: ${showPath(folder)} is not ours, so it was left as it is.`];
+    if (state === 'foreign') return [`${target.names}: ${shown(target)} is not ours, so it was left as it is.`];
     unlinkSync(join(folder, 'SKILL.md'));
     rmdirSync(folder);
-    return [`${target.names}: removed ${showPath(folder)}.`];
+    return [`${target.names}: removed ${shown(target)}.`];
   });
   return [...(lines.length === 0 ? ['no skill of ours was found; nothing changed.'] : lines), `box itself stays; next: ${PACKAGE_REMOVE} takes it off this machine.`];
 }

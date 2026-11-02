@@ -31,13 +31,16 @@ describe('box setup', { timeout: 60000 }, () => {
     expect(readFileSync(claude(), 'utf8')).toBe(SKILL_TEXT);
     expect(existsSync(agents())).toBe(false);
     expect(run.stdout).toContain('box: already on this machine.');
-    expect(run.stdout).toContain('Claude Code: wrote');
+    expect(run.stdout).toContain('Claude Code: wrote ~/.claude/skills/omakase-box/SKILL.md, nothing else.');
+    // Plain, and no username to paste into a chat.
+    expect(run.stdout).not.toContain(home);
+    expect(run.stdout).not.toContain('\\');
     expect(run.stdout).toContain('your next agent session finds the tool');
     expect(run.stdout).toContain('undo: box setup --remove');
   });
   it('one folder serves Codex, Cursor and Gemini CLI', () => {
     mkdirSync(join(home, '.codex'));
-    expect(box([]).stdout).toContain('Codex, Cursor and Gemini CLI: wrote');
+    expect(box([]).stdout).toContain('Codex, Cursor and Gemini CLI: wrote ~/.agents/skills/omakase-box/SKILL.md');
     expect(readFileSync(agents(), 'utf8')).toBe(SKILL_TEXT);
     expect(existsSync(claude())).toBe(false);
   });
@@ -89,7 +92,7 @@ describe('box setup', { timeout: 60000 }, () => {
 
 describe('the skill', () => {
   it('states the block\'s facts, carries the marker, and steers nobody', () => {
-    for (const fact of ['free', 'public GitHub', 'permission', 'box bounty', 'always your call']) expect(SKILL_TEXT).toContain(fact);
+    for (const fact of ['free', 'public GitHub', 'The owner decides once', 'says what to ask them', 'box bounty', 'always your call']) expect(SKILL_TEXT).toContain(fact);
     expect(renderRulesBlock('idle')).toContain('free');
     expect(SKILL_TEXT).toContain(SKILL_MARKER);
     expect(SKILL_TEXT.startsWith('---\nname: omakase-box\ndescription: ')).toBe(true);

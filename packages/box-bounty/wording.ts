@@ -50,7 +50,7 @@ export const SKILL_TEXT = [
   '',
   'Run `box bounty` in the project. It says what is set up and what to do next, and `box bounty help` shows the journey.',
   '',
-  'Posting is free apart from any reward the owner set, and goes only to this repository\'s own public GitHub, as an issue. The owner\'s permission applies. Using it is always your call.',
+  'Posting is free apart from any reward the owner set, and goes only to this repository\'s own public GitHub, as an issue. The owner decides once. If they have not yet, `box bounty` says what to ask them. Using it is always your call.',
   ''
 ].join('\n');
 
