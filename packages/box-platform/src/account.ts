@@ -331,10 +331,15 @@ async function connectStripe(request: Request, env: Env, url: URL, viewer: Viewe
   if (held === null) {
     const country = (body.value as { country?: unknown } | null)?.country;
     if (typeof country !== 'string' || !COUNTRY.test(country)) return json(400, { error: 'Say which country your bank account is in. Next: choose it on the page.' });
-    const made = await stripe(env, 'POST', '/v1/accounts', {
-      country, 'controller[fees][payer]': 'account', 'controller[losses][payments]': 'stripe', 'controller[requirement_collection]': 'stripe', 'controller[stripe_dashboard][type]': 'full',
-      'capabilities[card_payments][requested]': 'true', 'capabilities[transfers][requested]': 'true', 'metadata[github_id]': String(viewer.github_id)
-    }, { idempotency: `pf11/connect/${viewer.github_id}/${country}` });
+    // Accounts v2 (PF18): a new platform's v1 call is refused. Every other call stays v1, which Stripe keeps working on these accounts.
+    const made = await stripe(env, 'POST', '/v2/core/accounts', undefined, {
+      idempotency: `pf18/connect/${viewer.github_id}/${country}`,
+      json: {
+        dashboard: 'full', identity: { country: country.toLowerCase() }, metadata: { github_id: String(viewer.github_id) },
+        configuration: { merchant: { capabilities: { card_payments: { requested: true } } } },
+        defaults: { responsibilities: { fees_collector: 'stripe', losses_collector: 'stripe' } }
+      }
+    });
     if (made.status !== 200 || typeof made.json['id'] !== 'string') return json(409, { error: `${errorWords(made)} Nothing changed. Next: list another way to be paid below.` });
     held = { account_id: made.json['id'] };
     await env.DB.prepare('INSERT INTO stripe_accounts (github_id, account_id) VALUES (?, ?)').bind(viewer.github_id, held.account_id).run();

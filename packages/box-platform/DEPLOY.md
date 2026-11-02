@@ -137,7 +137,7 @@ Then build and deploy as in step 4.
 
 Without a Stripe key the board works as before: its pages say pay on merge is not set up, and solvers are paid by hand. Turning it on takes real payments, so only you can do it, and it is only ever your own Stripe account:
 
-1. Finish your Stripe account's activation, and set up Connect so that merchants collect payments directly.
+1. Finish your Stripe account's activation, and set up Connect so that merchants collect payments directly. A new platform has Accounts v1 off, and the board does not need it on.
 2. In Stripe's dashboard, under Developers, add a webhook endpoint at `<your board's address>/api/stripe/webhook`. Listen to events on connected accounts: `account.updated`, `account.application.deauthorized`, `payment_intent.succeeded`, `checkout.session.completed`, `charge.refunded`, `charge.dispute.created`.
 3. Set both secrets, pasting each when asked:
 
@@ -149,19 +149,15 @@ node node_modules/wrangler/bin/wrangler.js secret put STRIPE_SECRET_KEY
 node node_modules/wrangler/bin/wrangler.js secret put STRIPE_WEBHOOK_SECRET
 ```
 
-The key can charge any saved card to any connected account. The owner's limit and the payee are enforced by the board's code, not by Stripe, so whoever holds this key can bypass both. Use a restricted key, limited to what the board calls: at https://dashboard.stripe.com/apikeys press "Create restricted key" and set these, leaving everything else at None. Stripe's page gives each permission a second setting for connected accounts.
+This is your full secret key (`sk_live_...`), from https://dashboard.stripe.com/apikeys. The board creates each solver's account through Stripe's Accounts v2, and a restricted key cannot: Stripe's page offers it only None or Read there (PF18).
 
-| Permission | On your own account | On connected accounts | What the board does with it |
-|---|---|---|---|
-| Accounts | Write | None | Starts a solver's account; reads whether it can take payments |
-| Account Links | Write | None | Opens Stripe's page for a solver |
-| Customers | Write | None | Holds the owner's saved card |
-| Checkout Sessions | Write | Write | Stripe's page to save a card, and to pay |
-| Setup Intents | Read | None | Reads which card was saved |
-| Payment Methods | Write | Write | Removes a saved card; copies it to the solver's account |
-| Payment Intents | None | Write | Charges on merge; finds a payment already made; cancels a stopped one |
+**That makes this key the one thing to guard.** It can do anything on your Stripe account, including refunds and payouts, and it can charge any saved card to any connected account. The owner's limit and the payee are enforced by the board's code, not by Stripe, so whoever holds this key can bypass both. Paste it only at the command above, never in a chat or a file. If it may have leaked, roll it in Stripe's dashboard at once, then set the new one. To turn Stripe off on the board, remove the secret; its pages go back to saying it is not set up:
 
-A permission that is missing fails only when its call runs. Proven against test mode: see PF18.
+```bash
+node node_modules/wrangler/bin/wrangler.js secret delete STRIPE_SECRET_KEY
+```
+
+Move to a restricted key if Stripe offers one with Write on Accounts v2. These are the other calls it would need, proven on v2 accounts in test mode: Account Links, Customers and Payment Methods, Write; Setup Intents, Read; on connected accounts, Checkout Sessions, Payment Methods and Payment Intents, Write.
 
 ## Paying through PayPal (optional)
 
