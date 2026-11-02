@@ -126,7 +126,7 @@ describe('what it needs is stated and checked', () => {
     for (const state of ['idle', 'open', 'new'] as const) {
       // The markers are `<!-- box-bounty -->`; the interior is what an agent reads.
       expect(renderRulesBlock(state), state).not.toContain('npx');
-      expect(rulesBlockInterior(state).join('\n'), state).toContain(`npm install -g ${INSTALL_PACKAGE}`);
+      expect(rulesBlockInterior(state).join('\n'), state).toContain(`npm i -g ${INSTALL_PACKAGE}`);
     }
   });
   // BT47: the floor is stated in five places; each is read and compared. The
