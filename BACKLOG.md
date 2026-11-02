@@ -83,6 +83,8 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 - **From PF15's fresh solver's agent:** "the owner owes you" in `how_to_get_paid` reads firmer than "nothing here makes them pay"; `/me/` does not say what can be listed before sign-in; the front page's example says "attempt 62" where everything else says pull request; the bounty page and `/me/` are blank without JavaScript.
 - **The payments-due notice's CPU** (PF15): a signed-in owner's every page reads their payments; PF9 reads it on the free plan.
 
+- **From PF16's fresh agents:** `status` says "create one" before a repository is set up; "shared bounty memory not refreshed" does not say whether it matters; the account in `gh` differing from the repository's owner is not mentioned. `npx` installs only for a person: an agent in auto mode may refuse it, so Monid's route matters for agents (PF6).
+
 ## Kitchen and environment
 
 - Cloud-host browser route (from the inbox, 31 October 2026): a cloud Linux container has no Playwright Chromium at the pinned revision. BT43 dressed the host's 1194 as 1243 under `.runtime/`; BT45 could not (rule 5) and merged with k16 not run on the owner's word (D-2026-10-31-bt45-merge-on-ci). Decide once, by the owner or a K wave: a supported browser path for cloud hosts, or a k16 preflight that names the host gap.
