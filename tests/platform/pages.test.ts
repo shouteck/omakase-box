@@ -450,7 +450,7 @@ describe('the pages', () => {
     await close();
     const clone = join(PACKAGE, '../..');
     // The page and the guide inside the package name one package.
-    expect(install).toEqual(['npm install -g box-bounty', 'box bounty']);
+    expect(install).toEqual(['npm install -g omakase-box', 'box bounty']);
     expect(readFileSync(join(clone, 'FIRST-FIVE-MINUTES.md'), 'utf8')).toContain(install[0]!);
     expect(lines).toHaveLength(6);
     expect(lines[0]).toBe('git clone https://github.com/shouteck/omakase-box');

@@ -18,7 +18,7 @@ and where to get it.
 
 Install it so `box` is a command, then run it in your project:
 
-    npm install -g box-bounty
+    npm install -g omakase-box
     box bounty
 
 The tool reads the project it runs in, so run it only in projects you trust. Node is from

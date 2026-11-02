@@ -6,7 +6,7 @@ export const metadata = { title: 'How it works, open bounty board' };
 // tests/platform reads every data-command back from this page and runs it, with its
 // arguments, against the built tool. The install line is the package the owner published.
 const INSTALL = [
-  'npm install -g box-bounty',
+  'npm install -g omakase-box',
   'box bounty'
 ];
 const FROM_SOURCE = [

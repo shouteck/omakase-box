@@ -29,7 +29,7 @@ const PKG = join(OUT, 'package');
 const NODE_MINIMUM = /NODE_MINIMUM = '([^']+)'/.exec(readFileSync(join(HERE, 'src', 'node-check.ts'), 'utf8'))?.[1];
 if (NODE_MINIMUM === undefined) { console.error('pack: could not read NODE_MINIMUM from src/node-check.ts'); process.exit(1); }
 const MANIFEST = {
-  name: 'box-bounty',
+  name: 'omakase-box',
   version: '0.1.0',
   description: 'box bounty — an agent hands a task to outside solvers: the task and what it tried, as a GitHub issue on the repository; solutions return as facts the agent judges. Nothing a solver wrote is ever run.',
   type: 'module',
@@ -64,7 +64,7 @@ const run = (program, argv) => process.platform === 'win32'
   : spawnSync(program, argv, { cwd: PKG, encoding: 'utf8' });
 const pack = run('npm', ['pack', '--pack-destination', OUT]);
 if (pack.status !== 0) { console.error(`npm pack failed:\n${pack.stdout}${pack.stderr}`); process.exit(1); }
-const tarball = join(OUT, `box-bounty-${MANIFEST.version}.tgz`);
+const tarball = join(OUT, `omakase-box-${MANIFEST.version}.tgz`);
 // The artifact's contents are the staging folder's — the manifest's `files`
 // list is the allow-list, and npm adds only package.json/README/LICENSE,
 // which are all already staged.
