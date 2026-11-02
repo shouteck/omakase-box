@@ -4,7 +4,7 @@ Updated by the CTO on 2 November 2026, when PF16 closed.
 
 ## Now
 
-- **PF16 is merged and NOT live:** one command to install, `box setup`, from the GitHub release `v0.1.3`. The live site still shows the six lines. **The owner publishes `omakase-box` first** (`docs/box-v4/PUBLISH.md`, the package built for them); then `wave/PF16-npm` merges and the site, on the owner's word, shows `npx -y omakase-box setup`. See [PF16](waves/PF16.md).
+- **PF16 is live,** deployed on the owner's word on 2 November 2026 (Worker version `bac9a44a`): the install is `npx -y omakase-box setup`. `omakase-box@0.1.3` is on npm under the owner's account, published by the owner; the GitHub release `v0.1.3` stands behind it. See [PF16](waves/PF16.md).
 - **PF17 is live,** deployed on the owner's word on 2 November 2026 (Worker version `5a246140`): one command window on How it works, fewer links, no `/#pay`. See [PF17](waves/PF17.md).
 - **PF15 is live,** deployed on the owner's word on 2 November 2026 (Worker version `d014ce4d`). The live board reads `one_click: []`, `on_merge: false` and shows no open bounties yet. See [PF15](waves/PF15.md).
 - **On the board and master:** the three ways to pay in the tool, feed, MCP and front page; How it works where installing is the only human step; setup text in `box bounty`; a payments-due notice on the board; an unasked `status` says nothing of what is owed; `box` a real command from the install.
@@ -29,7 +29,8 @@ Updated by the CTO on 2 November 2026, when PF16 closed.
 
 ## Next
 
-- **Decision for the owner:** publish `omakase-box`, then deploy; say "go" on PF18.
+- **Decision for the owner:** say "go" on PF18.
+- **The next tool release:** the guide inside the package gains the PowerShell line (`npx.cmd`, `box.cmd`); the page carries none, by the owner's word. A new version goes to npm by the owner, and to GitHub by a `v*` tag.
 - **Order:** **PF18** (Stripe live on the board, robust test mode, who Stripe cannot pay; brief awaits "go"), **PF12** (the solver's distributor), **PF9** (the launch gate), **PF6** (with the toolbox work), **K41** (the film, last, D-2026-11-01-film-and-launch-last), then the owner's launch.
 - **A wave for later, not briefed:** fewer words, more showing, across the site, before PF9.
 - Unbriefed, found in BT48 (BACKLOG): `rmSync` leaves non-ASCII names on Windows, which may leave a solver's file behind after a refused `apply`.
