@@ -90,7 +90,7 @@ describe('setting up with only an install', { timeout: 120000 }, () => {
     delete settings.default;
     writeFileSync(path, JSON.stringify({ ...settings, repositories: {} }));
     const unset = renderOverview(repo);
-    for (const words of ['not set up for this repository yet', 'gh auth status', 'the owner runs gh auth login', 'What reward does each state', 'box bounty allow <owner>/<repository> --reward <reward> --reward-limit <limit>', 'run box setup once']) expect(unset).toContain(words);
+    for (const words of ['not set up for this repository yet', 'gh auth status', 'the owner runs gh auth login', 'What reward does each state', 'box bounty allow <owner>/<repository> --reward <reward> --reward-limit <limit>', 'so that their yes names it', 'give the owner that exact command to run themselves', 'run box setup once']) expect(unset).toContain(words);
     // The boundary is stated: the amount is the owner's, and silence promises nothing.
     expect(unset).toContain('the answers are the owner\'s to give, unless they leave them to you');
     expect(unset).toContain('With no answer nothing is promised');
