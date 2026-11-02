@@ -30,6 +30,7 @@ After a merge, do not wait for the off-machine run. Read its latest result at ki
 - Remove a link with `rmdir` or `fs.rmdirSync`, never `rm -rf`, and never point a test link at a folder the kitchen does not own (BT46).
 - Machine capability assertions must control child executable lookup or explicitly belong to a live-host preflight. A wave that adds a shared test-process guard inventories every executable creator across TS, MJS and CJS fixtures and demos, and proves each negative test reached the endpoint it meant to.
 - A second instance of the same flaw class means a shared design assumption: name it before patching the next instance.
+- The page tests rebuild the site: after breaking a guard to show a test failing, rebuild from the clean source before any screenshot (PF19 shot a broken build).
 - Stop at the timebox and report, even mid-work. Remove anything you created outside Git.
 - Participants in a fresh-agent check run as fresh sessions in scratch folders, never as subagents, so AGENTS.md cannot prime them. The blind taster is the same: paste `roles/recipient.md` and give it only the Box folder. These are test subjects; do not delegate the wave's implementation or its checks to another agent.
 
