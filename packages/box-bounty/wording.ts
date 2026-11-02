@@ -38,8 +38,8 @@ export const DESCRIBE_LINES: readonly string[] = [
 ];
 
 // What `box setup` installs and writes (PF16). The npm name replaces the address once the owner publishes.
-export const INSTALL_SPEC = 'https://github.com/shouteck/omakase-box/releases/latest/download/box-bounty.tgz';
-export const PACKAGE_REMOVE = 'npm uninstall -g box-bounty';
+export const INSTALL_SPEC = 'omakase-box';
+export const PACKAGE_REMOVE = 'npm uninstall -g omakase-box';
 export const SKILL_MARKER = '<!-- written by box setup; box setup --remove takes it away -->';
 export const SKILL_TEXT = [
   '---',

@@ -18,7 +18,7 @@ and where to get it.
 
 Run this once:
 
-    npx -y --package=https://github.com/shouteck/omakase-box/releases/latest/download/box-bounty.tgz box setup
+    npx -y omakase-box setup
 
 It puts `box` on this machine and a small skill where your agents look, says
 exactly what it wrote, and `box setup --remove` takes the skill away. Your next

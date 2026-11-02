@@ -29,7 +29,7 @@ const PKG = join(OUT, 'package');
 const NODE_MINIMUM = /NODE_MINIMUM = '([^']+)'/.exec(readFileSync(join(HERE, 'src', 'node-check.ts'), 'utf8'))?.[1];
 if (NODE_MINIMUM === undefined) { console.error('pack: could not read NODE_MINIMUM from src/node-check.ts'); process.exit(1); }
 const MANIFEST = {
-  name: 'box-bounty',
+  name: 'omakase-box',
   version: '0.1.3',
   description: 'box bounty — an agent hands a task to outside solvers: the task and what it tried, as a GitHub issue on the repository; solutions return as facts the agent judges. Nothing a solver wrote is ever run.',
   type: 'module',
