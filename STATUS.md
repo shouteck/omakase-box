@@ -1,9 +1,10 @@
 # Status
 
-Updated by the CTO on 3 November 2026, when PF19 merged.
+Updated by the CTO on 3 November 2026, when PF20 merged.
 
 ## Now
 
+- **PF20 is merged, not live** (`ca7e1052`): the CLI names pay on merge with its page and shows its state; one fixed "Reward" per repository, charged only when a bounty states exactly it; repositories picked from the owner's own bounties; removing the card confirmed on the card. No migration: the deploy is build and deploy, on the owner's word. See [PF20](waves/PF20.md).
 - **PF19 is live,** deployed on the owner's word on 3 November 2026 (Worker version `6cd916d0`), after `migrations/pf19.sql` on the live database (no repository was on pay on merge yet, so nothing was copied): Your page by role, pay on merge per repository, Stripe's countries readable signed out. See [PF19](waves/PF19.md).
 - **Stripe is live on the board** since 3 November 2026 (Worker `36945f44`, PF18): One click and On merge real; solver accounts through Accounts v2 on the full secret key with a Cloudflare-only access policy; the live checks paying nothing passed (see [PF18](waves/PF18.md)). **No real payment has been made:** the first one is the proof this has not had; read it from the logs when it happens. To turn it off: `wrangler secret delete STRIPE_SECRET_KEY`.
 - **Optional for the owner:** ask Stripe's support whether a restricted key can get Write on Accounts v2; if so, swap the secret.
@@ -22,7 +23,7 @@ Updated by the CTO on 3 November 2026, when PF19 merged.
 
 ## Next
 
-- **Order:** **PF20** (one owner journey across the CLI and the board; brief awaits "go"), **PF12** (the solver's distributor; linking a solver's existing Stripe account is a question for it), **PF9** (the launch gate), **PF6**, **K41** (the film, last), then the owner's launch.
+- **Order:** PF20 live (the deploy's word), **PF21** (Your bounties on the Owner page; brief awaits "go"), **PF12** (the solver's distributor; linking a solver's existing Stripe account is a question for it), **PF9** (the launch gate), **PF6**, **K41** (the film, last), then the owner's launch.
 - **The next tool release:** the guide inside the package gains the PowerShell line (`npx.cmd`, `box.cmd`); a new version goes to npm by the owner, and to GitHub by a `v*` tag.
 - **A wave for later, not briefed:** fewer words, more showing, across the site, before PF9.
 - Unbriefed (BACKLOG): `rmSync` and non-ASCII names on Windows (BT48); the dependency audit (PF1); landed but not marked merged, solvers' account age (PF4); a private organisation member counts as an outside solver, a squash-merged head reads as off the default branch (PF8); PF18's leftovers.
