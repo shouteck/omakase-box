@@ -146,9 +146,13 @@ const BADGE = { ok: 'bg-[var(--color-ok-bg)] text-[var(--color-ok)]', wait: 'bg-
 export const Badge = ({ tone = 'off', children }) => <span data-badge={tone} className={`text-sm px-2.5 py-0.5 rounded-full whitespace-nowrap ${BADGE[tone]}`}>{children}</span>;
 
 /** A button on a row; the primary one is filled. */
-export const Button = ({ primary = false, onClick, children, type = 'button' }) => (
-  <button type={type} onClick={onClick} className={`text-sm rounded-full px-3.5 py-1.5 border whitespace-nowrap ${primary ? 'bg-button border-[var(--color-button)] font-medium' : 'bg-card border-line'}`} style={primary ? { color: 'var(--color-button-ink)' } : undefined}>{children}</button>
-);
+/** A button on a row; the primary one is filled. `danger` marks the one that removes something: outlined red, or filled red when primary (PF20). */
+export const Button = ({ primary = false, danger = false, onClick, children, type = 'button' }) => {
+  const look = danger
+    ? (primary ? 'border-[var(--color-danger)] bg-[var(--color-danger)] font-medium' : 'bg-card border-[var(--color-danger)] text-[var(--color-danger)]')
+    : (primary ? 'bg-button border-[var(--color-button)] font-medium' : 'bg-card border-line');
+  return <button type={type} onClick={onClick} data-danger={danger || undefined} className={`text-sm rounded-full px-3.5 py-1.5 border whitespace-nowrap ${look}`} style={primary ? { color: danger ? 'var(--color-danger-ink)' : 'var(--color-button-ink)' } : undefined}>{children}</button>;
+};
 
 /** Why a space is empty, when it fills, and the one next step. */
 export const Empty = ({ title, why, action }) => (

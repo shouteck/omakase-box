@@ -157,7 +157,7 @@ function Owner({ me, setMe }) {
             `$${debt.amount}`, fmtDate(debt.since),
             <a key="p" href={`/b/${debt.id}/`} className="inline-block text-sm rounded-full px-3.5 py-1.5 bg-button font-medium" style={{ color: 'var(--color-button-ink)', textDecoration: 'none' }}>Pay ${debt.amount}</a>
           ])} />}
-      <Heading id="pay" note="Your saved card pays when a solution lands, up to the repository's limit.">Pay on merge</Heading>
+      <Heading id="pay" note="Each merged bounty here is paid its reward from your saved card.">Pay on merge</Heading>
       <PayOnMergeOwner pay={me.pay} setPay={pay => setMe(current => ({ ...current, pay }))} />
     </>
   );

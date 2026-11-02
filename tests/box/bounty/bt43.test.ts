@@ -309,6 +309,7 @@ const scan = (): { raw: Finding[]; callers: Finding[]; prefixFiles: string[]; sp
 // cannot hide behind an old entry. Anything new fails until it is rendered
 // or listed here with a reason the review accepts.
 const NOT_FOREIGN: readonly { readonly file: string; readonly text: string; readonly count: number; readonly why: string }[] = [
+  { file: 'packages/box-bounty/board.ts', text: 'repository', count: 4, why: 'PF20\'s pay-on-merge lines: the owner\'s own settings key, checked as an address when allow wrote it; the board\'s answer is read only when its repository equals that key, and the logins it sends pass the login shape before printing' },
   { file: 'packages/box-bounty/collect.ts', text: 'author', count: 1, why: 'the collection report\'s from: line — the name passed gh.ts login(), GitHub\'s login shape, at the GitHub boundary just before; it cannot carry a space, quote or control' },
   { file: 'packages/box-bounty/answer.ts', text: 'author', count: 1, why: 'renderAttemptReport has no caller left in the package (folder delivery was retired) — dead code, reported to the head chef, not this wave\'s file' },
   { file: 'packages/box-bounty/answer.ts', text: 'counts.added', count: 1, why: 'a number of added lines, not a path — in the dead renderAttemptReport' },

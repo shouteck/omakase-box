@@ -190,6 +190,33 @@ export function readPayAccepts(solver: string | null): PayAccepts | undefined {
   return acceptsFrom(boardCalls([{ path: `/api/solver/${encodeURIComponent(solver)}` }])[0]!) ?? { methods: [], more: 0, unreadAt: page };
 }
 
+// ---- pay on merge, as the board reports it (PF20) ----------------------------
+
+const PAY_ON_MERGE_SHOWN = 10;
+
+// The one step only the owner's signed-in page takes: its state, as the board
+// says it, and the page. This tool reads it and never changes it.
+export function payOnMergeLines(repositories: readonly string[]): string[] {
+  const board = boardAddress();
+  if (board === '' || repositories.length === 0) return [];
+  const page = `${board}/me/#pay`;
+  const shown = repositories.slice(0, PAY_ON_MERGE_SHOWN);
+  const cannot = 'this tool cannot change it';
+  const replies = held ? shown.map((): Reply => ({ failed: 'not read in this command' })) : boardCalls(shown.map(repository => ({ path: `/api/pay-on-merge?repository=${encodeURIComponent(repository)}` })));
+  return shown.map((repository, index) => {
+    const reply = replies[index]!;
+    const answer = jsonOf(reply);
+    if (answer === null || answer['repository'] !== repository || typeof answer['set_up'] !== 'boolean' || !Array.isArray(answer['on_for'])) {
+      return `pay on merge on ${repository}: not read (${'failed' in reply ? reply.failed : reply.status !== 200 ? `the board answered ${reply.status}` : 'its answer was unreadable'}); see or turn it on at ${page}; ${cannot}`;
+    }
+    if (answer['set_up'] === false) return `pay on merge on ${repository}: not set up on this board; owners pay by hand or with one click`;
+    const on = (answer['on_for'] as unknown[]).filter((login): login is string => typeof login === 'string' && LOGIN.test(login));
+    return on.length === 0
+      ? `pay on merge on ${repository}: off — only your signed-in page turns it on, with a saved card and the reward each bounty is paid: ${page}; ${cannot}`
+      : `pay on merge on ${repository}: on for ${on.join(', ')} — when one solution lands, the board charges the saved card the reward approved there; change it at ${page}; ${cannot}`;
+  });
+}
+
 // ---- what the board says about a bounty -------------------------------------
 
 const PAYMENT_STATES = ['no-reward', 'nothing-owed', 'merged-not-on-default', 'owed', 'owner-decides', 'recorded', 'confirmed', 'says-not-received'] as const;

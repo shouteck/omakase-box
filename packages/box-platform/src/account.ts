@@ -322,7 +322,17 @@ async function payOf(env: Env, viewer: Viewer) {
   const owner = await env.DB.prepare('SELECT payment_method, card_label, limit_per_bounty FROM pay_settings WHERE github_id = ?').bind(viewer.github_id).first<{ payment_method: string | null; card_label: string | null; limit_per_bounty: number | null }>();
   // Each repository's own limit (PF19); a row from before PF19's migration falls back to the owner's one limit.
   const on = (await env.DB.prepare('SELECT r.repository, r.on_at, COALESCE(r.limit_per_bounty, s.limit_per_bounty) AS "limit" FROM pay_repositories r LEFT JOIN pay_settings s ON s.github_id = r.github_id WHERE r.github_id = ? ORDER BY r.repository').bind(viewer.github_id).all<{ repository: string; on_at: string; limit: number | null }>()).results;
-  return { set_up: true, solver: { connected: solver !== null, ready: solver?.ready === 1 }, card: owner?.payment_method == null ? null : owner.card_label ?? 'a saved card', limit: owner?.limit_per_bounty ?? null, repositories: on };
+  // The repositories pay on merge can act on: where GitHub says this person opened bounty issues (PF20). Nothing typed,
+  // so nothing to verify by hand. Each with its open bounties and the reward its latest bounty states.
+  const mine = (await env.DB.prepare(`SELECT b.repository, SUM(CASE WHEN b.issue_state = 'open' THEN 1 ELSE 0 END) AS open,
+      (SELECT x.amount FROM bounties x WHERE x.poster_id = b.poster_id AND x.repository = b.repository ORDER BY x.created_at DESC LIMIT 1) AS reward
+    FROM bounties b WHERE b.poster_id = ? GROUP BY b.repository ORDER BY open DESC, b.repository LIMIT 50`).bind(viewer.github_id).all<{ repository: string; open: number; reward: number }>()).results;
+  const openIn = new Map(mine.map(entry => [entry.repository.toLowerCase(), entry.open]));
+  return {
+    set_up: true, solver: { connected: solver !== null, ready: solver?.ready === 1 }, card: owner?.payment_method == null ? null : owner.card_label ?? 'a saved card', limit: owner?.limit_per_bounty ?? null,
+    repositories: on.map(entry => ({ ...entry, open: openIn.get(entry.repository.toLowerCase()) ?? 0 })),
+    yours: mine.map(entry => ({ repository: entry.repository, open: entry.open, reward: entry.reward }))
+  };
 }
 
 /** The solver's "Connect Stripe": their own account, in the setup that costs the platform nothing, and Stripe's own page. */

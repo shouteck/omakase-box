@@ -43,7 +43,8 @@ export function decide(facts: ChargeFacts, now: number): Decision {
   const pull = facts.landed[0]!;
   if (Date.parse(pull.merged_at) < Date.parse(facts.on_at)) return { act: 'nothing' }; // Turning it on never charges an old merge.
   if (notCounted(pull, facts.poster) !== null) return { act: 'settle', state: 'not-counted', pull };
-  if (facts.amount > card.limit) return { act: 'settle', state: 'refused-over-limit', pull };
+  // One fixed amount (PF20, the owner): the reward approved for this repository. Any other waits for the owner.
+  if (facts.amount !== card.limit) return { act: 'settle', state: 'refused-over-limit', pull };
   if (facts.solver === null || !facts.solver.ready) return { act: 'settle', state: 'solver-not-ready', pull };
   if ((row?.state === 'declined' || row?.state === 'stripe-refused') && row.payment_method === card.payment_method) return { act: 'nothing' }; // The same card gives the same answer: a new card is a new attempt.
   return { act: 'charge', pull, account: facts.solver.account_id, card };
@@ -339,14 +340,28 @@ export async function readPayPage(env: Env, id: string, githubId: number, now: n
   if (read.status === 200 && isPaid(read.json)) await recordPage(env, id, read.json, now);
 }
 
-/** Which of these bounties pay on merge right now: the poster's own switch, a saved card, and a reward within the limit. */
+/** Which of these bounties pay on merge right now: the poster's own switch, a saved card, and the reward approved for its repository. */
 export async function payingIds(env: Env, ids: readonly string[]): Promise<ReadonlySet<string>> {
   if (!stripeOn(env) || ids.length === 0) return new Set();
   const { results } = await env.DB.prepare(`SELECT b.id FROM bounties b
     JOIN pay_repositories r ON r.github_id = b.poster_id AND r.repository = b.repository
     JOIN pay_settings s ON s.github_id = b.poster_id
-    WHERE b.id IN (SELECT value FROM json_each(?)) AND b.amount > 0 AND s.payment_method IS NOT NULL AND b.amount <= COALESCE(r.limit_per_bounty, s.limit_per_bounty)`).bind(JSON.stringify(ids)).all<{ id: string }>();
+    WHERE b.id IN (SELECT value FROM json_each(?)) AND b.amount > 0 AND s.payment_method IS NOT NULL AND b.amount = COALESCE(r.limit_per_bounty, s.limit_per_bounty)`).bind(JSON.stringify(ids)).all<{ id: string }>();
   return new Set(results.map(row => row.id));
+}
+
+/**
+ * Whose bounties on one repository pay on merge (PF20): the owner's tool reads it to name the one step only the
+ * signed-in page takes. Logins only, as each bounty's pays_on_merge already shows: no card, no amount, no account.
+ */
+export async function payOnMergeOf(env: Env, repository: string): Promise<{ repository: string; set_up: boolean; on_for: string[] }> {
+  if (!stripeOn(env)) return { repository, set_up: false, on_for: [] };
+  const { results } = await env.DB.prepare(`SELECT COALESCE(
+      (SELECT login FROM sessions WHERE github_id = r.github_id ORDER BY expires_at DESC LIMIT 1),
+      (SELECT poster FROM bounties WHERE poster_id = r.github_id ORDER BY created_at DESC LIMIT 1)) AS login
+    FROM pay_repositories r JOIN pay_settings s ON s.github_id = r.github_id
+    WHERE r.repository = ? AND s.payment_method IS NOT NULL ORDER BY r.on_at LIMIT 10`).bind(repository).all<{ login: string | null }>();
+  return { repository, set_up: true, on_for: results.map(row => row.login).filter((login): login is string => login !== null) };
 }
 
 /** One bounty's charge, for its facts. `looked` is the board's own bookkeeping and says nothing. */
