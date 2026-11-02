@@ -3,7 +3,7 @@
 // the moment the owner sees, as the front page's other tiles do. Three equal cards: they are
 // ways, not levels. Until the board has answered, or if it does not, nothing is claimed either way.
 import { useEffect, useState } from 'react';
-import { connectWords, isSetUp, NOT_SET_UP, pageWords, STRIPE_REACH, throughHere, WAYS } from '../src/pay-ways.ts';
+import { connectWords, countryName, isSetUp, NOT_SET_UP, pageWords, STRIPE_COUNTRIES, STRIPE_REACH, throughHere, WAYS } from '../src/pay-ways.ts';
 
 function useWaysHere() {
   const [here, setHere] = useState(null);
@@ -62,6 +62,21 @@ export function WayCards() {
 export function ConnectWords() {
   const here = useWaysHere();
   return <p>{connectWords(here)} Then say on the bounty&apos;s page whether it arrived.</p>;
+}
+
+/** The country list itself, readable signed out: How it works links here (PF19). Nothing where this board has no Stripe. */
+export function StripeCountries() {
+  const here = useWaysHere();
+  if (!here?.on_merge) return null;
+  return (
+    <details id="stripe" data-stripe-countries className="border-t border-b border-line py-4">
+      <summary className="font-medium">Where Stripe can pay a solver</summary>
+      <div className="mt-2 pl-[1.1em] text-soft flex flex-col gap-3">
+        <p>{STRIPE_REACH}</p>
+        <p>{STRIPE_COUNTRIES.map(countryName).sort((a, b) => a.localeCompare(b)).join(', ')}.</p>
+      </div>
+    </details>
+  );
 }
 
 /** Who Stripe can pay: the rule, where a reader decides. The country list is on the page where a solver connects. */

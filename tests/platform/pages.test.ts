@@ -147,20 +147,25 @@ describe('the pages', () => {
     const solver = await fresh();
     await visit(solver.page, '/me/');
     await solver.page.click('[data-primary]');
-    await solver.page.waitForSelector('input[name=kind]');
-    expect(await solver.page.locator('main').innerText()).toContain('Signed in as example-quill.');
+    await solver.page.waitForSelector('[role=tablist]');
+    expect(await solver.page.locator('[data-account] summary').getAttribute('aria-label')).toBe('Account: example-quill');
+    // PF19: adding a way to be paid is a dialog on the solver's side.
+    await solver.page.click('button[role=tab]:has-text("Solver")');
+    await solver.page.click('text=+ Add a way to be paid');
+    await solver.page.waitForSelector('dialog[open] input[name=kind]');
     // A wrong shape is refused where it was typed, with its next step.
     await solver.page.fill('input[name=value]', 'https://evil.example/paypal');
-    await solver.page.click('button[data-primary]');
-    await expect.poll(() => solver.page.locator('[role=status]').innerText()).toBe('That is not a PayPal.me. Next: paste a link that starts with https://paypal.me/');
+    await solver.page.click('dialog button[type=submit]');
+    await expect.poll(() => solver.page.locator('dialog [role=status]').innerText()).toBe('That is not a PayPal.me. Next: paste a link that starts with https://paypal.me/');
     await solver.page.fill('input[name=value]', 'https://paypal.me/examplequill');
-    await solver.page.click('button[data-primary]');
-    await expect.poll(() => solver.page.locator('main').innerText()).toContain('Everyone, on my profile. Remove');
+    await solver.page.click('dialog button[type=submit]');
+    await expect.poll(() => solver.page.locator('main').innerText()).toContain('https://paypal.me/examplequill · Seen by: Everyone');
     // Choosing the email preselects "only an owner who owes me".
-    await solver.page.check('input[name=kind][value=wise-email]');
+    await solver.page.click('text=+ Add a way to be paid');
+    await solver.page.check('dialog[open] input[name=kind][value=wise-email]');
     expect(await solver.page.isChecked('input[value=owner-only]')).toBe(true);
     await solver.page.fill('input[name=value]', secret);
-    await solver.page.click('button[data-primary]');
+    await solver.page.click('dialog button[type=submit]');
     await expect.poll(() => solver.page.locator('main').innerText()).toContain(secret);
 
     const bodies: string[] = [];
@@ -180,7 +185,7 @@ describe('the pages', () => {
     const owner = await fresh();
     await visit(owner.page, '/me/');
     await owner.page.click('[data-primary]');
-    await owner.page.waitForSelector('input[name=kind]');
+    await owner.page.waitForSelector('[role=tablist]');
     await visit(owner.page, `/b/${STATE_IDS.owed}/`);
     await expect.poll(() => owner.page.locator('main').innerText()).toContain(secret);
     expect(await owner.page.locator('main').innerText()).toContain('Pay the author directly, by a method they listed.');
@@ -192,6 +197,7 @@ describe('the pages', () => {
     await owner.close();
 
     // Sign-out from the page: the owner-only method is gone for that browser.
+    await solver.page.click('[data-account] summary');
     await solver.page.click('text=Sign out');
     await expect.poll(() => solver.page.locator('[data-primary]').innerText()).toBe('Sign in with GitHub');
     expect(await solver.page.locator('main').innerText()).not.toContain(secret);
@@ -204,7 +210,7 @@ describe('the pages', () => {
       const person = await fresh();
       await visit(person.page, '/me/');
       await person.page.click('[data-primary]');
-      await person.page.waitForSelector('input[name=kind]');
+      await person.page.waitForSelector('[role=tablist]');
       await visit(person.page, `/b/${STATE_IDS.owed}/`);
       return person;
     };
@@ -214,14 +220,14 @@ describe('the pages', () => {
     await expect.poll(() => says(stranger)).toContain('Owed to example-quill: $45, since');
     expect(await says(stranger)).toContain('Source: GitHub records pull request #68 merged.');
     expect(await says(stranger)).toContain('Not recorded paid by example-mara.');
-    expect(await says(stranger)).not.toContain('Record $45');
+    expect(await says(stranger)).not.toContain('Mark $45');
 
     const payee = await signedIn(7001, 'example-quill');
     await expect.poll(() => says(payee)).toContain('Owed to example-quill');
-    expect(await says(payee)).not.toContain('Record $45');
+    expect(await says(payee)).not.toContain('Mark $45');
 
     const owner = await signedIn(7100, 'example-mara');
-    await owner.page.click('text=Record $45 paid to example-quill');
+    await owner.page.click('text=Mark $45 paid to example-quill');
     await expect.poll(() => says(owner)).toContain('Recorded paid by example-mara on');
     expect(await says(owner)).toContain('The owner\'s word, from their click on the board. Recording moves no money.');
     expect(await says(owner)).toContain('Earned by example-quill: $45');
@@ -324,6 +330,88 @@ describe('the pages', () => {
     for (const word of want.absent) expect(how, word).not.toContain(word);
     expect(moneyClaims(how)).toEqual([]);
     await close();
+  });
+
+  // PF19: Your page in each state, read from the real page with /api/me as the board would answer it.
+  describe('your page, by role', () => {
+    const debt = (id: string, title: string, amount: number, to: string | null, from: string) => ({ id, title, amount, since: new Date(NOW - 2 * 86400000).toISOString(), to, from });
+    const base = { signed_in: true, sponsors_page: 'https://github.com/sponsors/example-rook', methods: [], paypal: { set_up: false, connected: false }, you_owe: [], owed_to_you: [] };
+    const pay = (over: object = {}) => ({ set_up: true, solver: { connected: false, ready: false }, card: null, limit: null, repositories: [], ...over });
+    const open = async (me: object, path = '/me/', width = 1280) => {
+      const view = await fresh({ width });
+      await view.page.route('**/api/ways', route => route.fulfill({ json: { by_hand: true, one_click: ['Stripe'], on_merge: true } }));
+      await view.page.route('**/api/me', route => route.fulfill({ json: me }));
+      await view.page.goto(`${board.url}${path}`);
+      await view.page.waitForSelector('[role=tablist]');
+      return view;
+    };
+    const selected = (page: Page) => page.locator('[role=tab][aria-selected=true]').innerText();
+
+    it('an owner: what they owe, and pay on merge per repository; nothing about ways an owner need not set up', async () => {
+      const { page, close } = await open({ ...base, login: 'example-mara', you_owe: [debt(STATE_IDS.owed, 'Pay me', 45, 'example-quill', 'example-mara')], pay: pay({ card: 'visa ending 3155', repositories: [{ repository: 'example-org/ledger', on_at: new Date(NOW).toISOString(), limit: 100 }, { repository: 'example-org/lite', on_at: new Date(NOW).toISOString(), limit: 50 }] }) });
+      expect(await selected(page)).toContain('Owner');
+      expect(await page.locator('h1').innerText()).toBe('Owner');
+      const text = await page.locator('main').innerText();
+      expect(await page.locator('[data-figure]').innerText()).toMatch(/You owe\s+\$45/);
+      expect(await page.locator('table[aria-label="Repositories on pay on merge"] tbody tr').allInnerTexts()).toEqual([expect.stringMatching(/example-org\/ledger\s+\$100/), expect.stringMatching(/example-org\/lite\s+\$50/)]);
+      for (const absent of ['By hand', 'One click', 'Owed to you']) expect(text, absent).not.toContain(absent);
+      expect(moneyClaims(text)).toEqual([]);
+      await close();
+    });
+
+    it.each([
+      ['connected', { connected: true, ready: true }, 'Connected', 'ok', 'Ready'],
+      ['checking', { connected: true, ready: false }, 'Stripe is checking your details', 'wait', 'Needs Stripe'],
+      ['not connected', { connected: false, ready: false }, 'Not connected', 'off', 'Needs Stripe']
+    ])('a solver whose Stripe is %s: each status follows what the board says', async (_name, solver, badge, tone, onMerge) => {
+      const { page, close } = await open({ ...base, login: 'example-quill', owed_to_you: [debt(STATE_IDS.owed, 'Pay me', 60, 'example-quill', 'example-mara')], methods: [{ kind: 'github-sponsors', value: 'https://github.com/sponsors/example-quill', visibility: 'everyone', link: true }], pay: pay({ solver }) });
+      expect(await selected(page)).toContain('Solver');
+      expect(await page.locator('h1').innerText()).toBe('Solver');
+      const stripe = page.locator('#stripe');
+      expect(await stripe.locator('[data-badge]').innerText()).toBe(badge);
+      expect(await stripe.locator('[data-badge]').getAttribute('data-badge')).toBe(tone);
+      const text = await page.locator('main').innerText();
+      expect(await page.locator('[data-figure]').innerText()).toMatch(/Owed to you\s+\$60/);
+      expect(text).toContain(onMerge);
+      expect(text).toContain('https://github.com/sponsors/example-quill · Seen by: Everyone');
+      expect(text).not.toContain('You owe');
+      expect(moneyClaims(text)).toEqual([]);
+      await close();
+    });
+
+    it('both roles: the one owing opens, the other shows its count, and arrows switch', async () => {
+      const both = { ...base, login: 'example-rook', you_owe: [debt(STATE_IDS.owed, 'Pay me', 30, 'example-fern', 'example-rook')], owed_to_you: [debt(STATE_IDS.merged, 'Paid to me', 45, 'example-rook', 'example-mara')], pay: pay() };
+      const { page, close } = await open(both);
+      expect(await selected(page)).toContain('Owner');
+      expect(await page.locator('[role=tab]:has-text("Solver") [data-waiting]').innerText()).toBe('1');
+      await page.locator('[role=tab][aria-selected=true]').focus();
+      await page.keyboard.press('ArrowRight');
+      expect(await selected(page)).toContain('Solver');
+      expect(await page.evaluate(() => document.activeElement?.textContent)).toContain('Solver');
+      await close();
+      // The address names a side: back from Stripe, the solver's side opens even with something owed.
+      const back = await open(both, '/me/#stripe');
+      expect(await selected(back.page)).toContain('Solver');
+      await back.close();
+    });
+
+    it('the account menu holds the public profile and sign-out; the add dialog opens and closes by keyboard; a phone holds it all', async () => {
+      const me = { ...base, login: 'example-quill', pay: pay() };
+      const { page, close } = await open(me);
+      expect(await page.locator('main').innerText()).not.toContain('Sign out');
+      await page.click('[data-account] summary');
+      expect(await page.locator('[data-account] [role=menu]').innerText()).toMatch(/Your public profile as a solver[\s\S]*Sign out/);
+      await page.keyboard.press('Escape');
+      await page.locator('button:has-text("+ Add a way to be paid")').focus();
+      await page.keyboard.press('Enter');
+      await page.waitForSelector('dialog[open]');
+      await page.keyboard.press('Escape');
+      await expect.poll(() => page.locator('dialog[open]').count()).toBe(0);
+      await close();
+      const phone = await open(me, '/me/', 390);
+      expect(await phone.page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+      await phone.close();
+    });
   });
 
   it('the picker comes from the one source', async () => {
@@ -518,17 +606,19 @@ describe('the pages', () => {
       const person = await fresh();
       await visit(person.page, '/me/');
       await person.page.click('[data-primary]');
-      await person.page.waitForSelector('input[name=kind]');
+      await person.page.waitForSelector('[role=tablist]');
       return person;
     };
+    // PF19: each role's side opens on what is owed, as a figure and a table.
     const owner = await signedIn(7100, 'example-mara');
     const owes = await owner.page.locator('main').innerText();
     expect(owes).toContain('You owe');
-    expect(owes).toMatch(/Duplicate rows after a retry\s+\$45 to example-quill, since /);
-    expect(await owner.page.locator(`main a[href="/b/${STATE_IDS.owed}/"]`).count()).toBe(1);
-    expect(await owner.page.locator('[data-primary]').count()).toBe(1);
+    expect(await owner.page.locator('[role=tab][aria-selected=true]').innerText()).toContain('Owner');
+    expect(await owner.page.locator('table[aria-label="To pay"] tbody tr').filter({ hasText: 'Duplicate rows after a retry' }).innerText()).toMatch(/example-quill\s+\$45\s+\d+ \w+ \d{4}\s+Pay \$45/);
+    expect(await owner.page.locator(`table[aria-label="To pay"] a[href="/b/${STATE_IDS.owed}/"]`).count()).toBe(2);
     const solver = await signedIn(7001, 'example-quill');
-    expect(await solver.page.locator('main').innerText()).toMatch(/Owed to you\s+Duplicate rows after a retry\s+\$45, since /);
+    expect(await solver.page.locator('[role=tab][aria-selected=true]').innerText()).toContain('Solver');
+    expect(await solver.page.locator('table[aria-label="Coming to you"] tbody tr').filter({ hasText: 'Duplicate rows after a retry' }).innerText()).toMatch(/example-mara\s+\$45\s+\d+ \w+ \d{4}\s+Open/);
     for (const person of [owner, solver]) await person.close();
   });
 

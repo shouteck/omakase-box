@@ -1,27 +1,24 @@
 'use client';
-// Connecting Stripe, and the owner's card, limit and switch. All of it is signed-in only:
-// this page is the one place charging can be turned on. The card itself is typed on Stripe's page.
+// Stripe on Your page (PF19): the solver's connection, a row with its status; the owner's pay on merge,
+// one card and a table of repositories, each with its own limit. Signed-in only: this page is the one place
+// charging can be turned on. The card itself is typed on Stripe's page.
 import { useEffect, useRef, useState } from 'react';
 import { countryName, STRIPE_COUNTRIES } from '../src/pay-ways.ts';
-import { Quiet, Section, Soft } from './ui.jsx';
+import Dialog from './Dialog.jsx';
+import { Badge, Button, Empty, Row, Rows, Table } from './ui.jsx';
 
-const FIELD = 'block w-full max-w-prose border border-soft bg-surface px-3 py-2 rounded-xl';
-const BUTTON = 'bg-button px-5 py-2.5 font-medium rounded-full';
-const INK = { color: 'var(--color-button-ink)' };
+const FIELD = 'block w-full border border-line bg-surface px-3 py-2 rounded-xl';
+const fmtDay = iso => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 
-export default function PayOnMerge({ pay, setPay }) {
-  const [country, setCountry] = useState('US');
-  const [limit, setLimit] = useState(pay.limit ?? '');
-  const [names, setNames] = useState((pay.repositories ?? []).map(entry => entry.repository).join('\n'));
+/** A call to the board's pay routes; the answer's `pay` replaces the page's. */
+function usePayCall(setPay) {
   const [message, setMessage] = useState(null);
-  const status = useRef(null);
-
   const call = async (path, body = {}) => {
     setMessage(null);
     try {
       const response = await fetch(path, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
       const answer = await response.json();
-      if (!response.ok) { setMessage(answer.error); status.current?.focus(); return null; }
+      if (!response.ok) { setMessage(answer.error); return null; }
       if (answer.pay) setPay(answer.pay);
       return answer;
     } catch {
@@ -30,69 +27,122 @@ export default function PayOnMerge({ pay, setPay }) {
     }
   };
   const leave = async (path, body) => { const answer = await call(path, body); if (answer?.url) window.location.href = answer.url; };
+  return { call, leave, message };
+}
 
-  // Back from Stripe's page: a saved card names its session; otherwise read whether Stripe now says the account is ready.
+const Said = ({ message }) => (message ? <p role="status" className="mt-3 max-w-prose">{message}</p> : null);
+
+/** The solver's Stripe row, under One click. Back from Stripe's page, it reads whether Stripe now says the account is ready. */
+export function StripeRow({ pay, setPay }) {
+  const [country, setCountry] = useState('US');
+  const { call, leave, message } = usePayCall(setPay);
   useEffect(() => {
-    if (!pay.set_up) return;
-    const session = new URLSearchParams(window.location.search).get('card');
-    if (session) { call('/api/me/card/saved', { session }).then(() => window.history.replaceState(null, '', '/me/')); return; }
-    if (pay.solver?.connected && !pay.solver.ready) call('/api/me/stripe/read');
+    if (pay.set_up && pay.solver?.connected && !pay.solver.ready) call('/api/me/stripe/read');
   // Once, on arrival.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  if (!pay.set_up) return <Section title="Pay on merge" id="pay"><p className="max-w-prose text-soft">Pay on merge is not set up on this board yet. Solvers are paid directly, by the ways they list below.</p></Section>;
-
-  const save = event => {
-    event.preventDefault();
-    return call('/api/me/pay', { limit: Number(limit), repositories: names.split(/\s+/).filter(Boolean) }).then(answer => { if (answer) setMessage('Saved.'); });
-  };
-
+  if (!pay.set_up) return <Row icon="S" tone="stripe" title="Stripe" detail="Not set up on this board yet." />;
+  const { connected, ready } = pay.solver;
+  const status = ready ? <Badge tone="ok">Connected</Badge> : connected ? <Badge tone="wait">Stripe is checking your details</Badge> : <Badge>Not connected</Badge>;
   return (
     <>
-      <Section title="Get paid through Stripe" id="stripe">
-        {pay.solver.ready
-          ? <p className="max-w-prose">Your Stripe account is connected. If your solution is the one merged, an owner can pay the reward to your own account, with one click or by pay on merge.</p>
-          : (
-            <div className="flex flex-col gap-4 max-w-prose">
-              <p>{pay.solver.connected ? 'You have started connecting Stripe, and Stripe does not yet say your account can take payments.' : 'Connect your own Stripe account, and an owner can pay you there with one click or by pay on merge.'}</p>
-              {pay.solver.connected ? null : (
-                <label className="flex flex-col gap-1">
-                  <span>Country of your bank account</span>
-                  <select name="country" className={FIELD} value={country} onChange={event => setCountry(event.target.value)}>
-                    {STRIPE_COUNTRIES.map(code => <option key={code} value={code}>{countryName(code)}</option>)}
-                  </select>
-                </label>
-              )}
-              <div><button type="button" data-primary className={BUTTON} style={INK} onClick={() => leave('/api/me/stripe/connect', { country })}>{pay.solver.connected ? 'Continue on Stripe\'s page' : 'Connect Stripe'}</button></div>
-            </div>
-          )}
-        <Soft className="mt-4 max-w-prose">Stripe treats you as a merchant and asks for identity and bank details on its own page; the board never sees them. Stripe&apos;s fee comes out of the reward: about $1.61 of $45 in the US, and more abroad. The card&apos;s bank can reverse a payment after the merge, and that dispute and its fee land on your account. Your country not listed? List another way to be paid below.</Soft>
-      </Section>
+      <Row icon="S" tone="stripe" title="Stripe" id="stripe"
+        detail={ready ? 'Your own Stripe account. Stripe\'s fee comes out of the reward.' : connected ? 'Owners can pay you once Stripe has checked your details.' : 'Your own Stripe account, for a bank account in a supported country. Stripe\'s fee comes out of the reward.'}
+        actions={<>{status}{ready ? null : (
+          <>
+            {connected ? null : (
+              <label className="sr-only" htmlFor="country">Country of your bank account</label>
+            )}
+            {connected ? null : (
+              <select id="country" name="country" className="border border-line bg-surface rounded-full px-3 py-1 text-sm" value={country} onChange={event => setCountry(event.target.value)}>
+                {STRIPE_COUNTRIES.map(code => <option key={code} value={code}>{countryName(code)}</option>)}
+              </select>
+            )}
+            <Button primary={!connected} onClick={() => leave('/api/me/stripe/connect', { country })}>{connected ? 'Continue on Stripe' : 'Connect'}</Button>
+          </>
+        )}</>}
+      />
+      <Said message={message} />
+    </>
+  );
+}
 
-      <Section title="Pay on merge" id="pay">
-        <p className="max-w-prose mb-4">Off by default. Turn it on for a repository, and when exactly one solution to your bounty there lands, the board starts a charge from your card to the solver&apos;s own Stripe account. It never holds the money and takes no fee. It never charges for a merge from before you turned it on.</p>
-        <div className="flex flex-wrap gap-x-6 gap-y-2 items-baseline mb-6">
-          {pay.card ? <p>Saved card: {pay.card}.</p> : <p>No card saved.</p>}
-          <button type="button" className={pay.card ? 'underline' : BUTTON} style={pay.card ? undefined : INK} onClick={() => leave('/api/me/card')}>{pay.card ? 'Replace it on Stripe\'s page' : 'Save a card on Stripe\'s page'}</button>
-          {pay.card ? <Quiet onClick={() => call('/api/me/pay', { remove_card: true }).then(() => setNames(''))}>Remove the card and turn everything off</Quiet> : null}
-        </div>
-        {pay.card ? (
-          <form onSubmit={save} className="flex flex-col gap-4">
-            <label className="flex flex-col gap-1">
-              <span>The most one bounty may charge, in whole dollars</span>
-              <input name="limit" type="number" min="1" className={FIELD} value={limit} onChange={event => setLimit(event.target.value)} required />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span>Repositories it is on for, one per line, as owner/name</span>
-              <textarea name="repositories" rows={3} className={FIELD} value={names} onChange={event => setNames(event.target.value)} />
-            </label>
-            <Soft className="max-w-prose">Only this page can turn it on: your agent and the command line cannot. If a card asks you to authenticate at merge, nothing is charged, and the bounty&apos;s page offers you Stripe&apos;s page to finish it.</Soft>
-            <div><button type="submit" className={BUTTON} style={INK}>Save</button></div>
-          </form>
-        ) : null}
-        {message ? <p role="status" ref={status} tabIndex={-1} className="mt-4 max-w-prose">{message}</p> : null}
-      </Section>
+/** Add or change one repository's limit. The whole list goes back, so nothing else moves. */
+function RepositoryDialog({ open, onClose, editing, repositories, save }) {
+  const [name, setName] = useState('');
+  const [limit, setLimit] = useState('');
+  useEffect(() => { if (open) { setName(editing?.repository ?? ''); setLimit(editing?.limit ?? ''); } }, [open, editing]);
+  const submit = async event => {
+    event.preventDefault();
+    const others = repositories.filter(entry => entry.repository.toLowerCase() !== (editing?.repository ?? name).toLowerCase());
+    if (await save([...others, { repository: editing?.repository ?? name.trim(), limit: Number(limit) }])) onClose();
+  };
+  return (
+    <Dialog open={open} onClose={onClose} title={editing ? `Limit for ${editing.repository}` : 'Add a repository'} onSubmit={submit} submit={editing ? 'Save' : 'Turn on'}>
+      {editing ? null : (
+        <label className="flex flex-col gap-1">
+          <span>Repository</span>
+          <input name="repository" className={FIELD} value={name} onChange={event => setName(event.target.value)} placeholder="owner/name" required autoComplete="off" />
+        </label>
+      )}
+      <label className="flex flex-col gap-1">
+        <span>Limit per bounty, in whole dollars</span>
+        <input name="limit" type="number" min="1" className={FIELD} value={limit} onChange={event => setLimit(event.target.value)} required />
+      </label>
+      <p className="text-sm text-soft">When exactly one solution to your bounty there lands, the board starts a charge from your card to the solver&apos;s own Stripe account, up to this limit. A merge from before you turned it on is never charged.</p>
+    </Dialog>
+  );
+}
+
+/** The owner's pay on merge: one card, then each repository with its own limit. Off by default. */
+export function PayOnMergeOwner({ pay, setPay }) {
+  const { call, leave, message } = usePayCall(setPay);
+  const [dialog, setDialog] = useState(null);
+  const done = useRef(false);
+  // Back from Stripe's page: a saved card names its session.
+  useEffect(() => {
+    if (!pay.set_up || done.current) return;
+    done.current = true;
+    const session = new URLSearchParams(window.location.search).get('card');
+    if (session) call('/api/me/card/saved', { session }).then(() => window.history.replaceState(null, '', '/me/#pay'));
+  // Once, on arrival.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  if (!pay.set_up) return <Empty title="Pay on merge is not set up on this board yet." why="Pay each solver from the bounty's page." />;
+  const repositories = (pay.repositories ?? []).map(entry => ({ repository: entry.repository, limit: entry.limit, on_at: entry.on_at }));
+  const save = async list => (await call('/api/me/pay', { repositories: list.map(({ repository, limit }) => ({ repository, limit })) })) !== null;
+  if (!pay.card) {
+    return (
+      <>
+        <Empty title="Pay on merge is off." why="Save a card, then choose repositories and a limit for each." action={<Button primary onClick={() => leave('/api/me/card')}>Save a card on Stripe&apos;s page</Button>} />
+        <Said message={message} />
+      </>
+    );
+  }
+  return (
+    <>
+      <Rows>
+        <Row icon="▭" tone="card" title={pay.card} detail="Pays for every repository below. Saved on Stripe's page; the board never sees the number." actions={<Button onClick={() => leave('/api/me/card')}>Replace</Button>} />
+      </Rows>
+      <div className="mt-3">
+        {repositories.length === 0
+          ? <Empty title="No repository is on." why="Add one, and merged solutions there pay themselves." />
+          : (
+            <Table label="Repositories on pay on merge" head={['Repository', ['Limit per bounty', 'r'], 'On since', '']}
+              rows={repositories.map(entry => [
+                <span key="n" className="break-all">{entry.repository}</span>,
+                `$${entry.limit}`,
+                fmtDay(entry.on_at),
+                <span key="a" className="inline-flex gap-2"><Button onClick={() => setDialog(entry)}>Edit</Button><Button onClick={() => save(repositories.filter(other => other !== entry))}>Turn off</Button></span>
+              ])} />
+          )}
+      </div>
+      <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 items-center">
+        <Button onClick={() => setDialog('new')}>+ Add a repository</Button>
+        <button type="button" className="text-sm text-soft underline underline-offset-[3px]" onClick={() => call('/api/me/pay', { remove_card: true })}>Remove the card and turn pay on merge off</button>
+      </div>
+      <Said message={message} />
+      <RepositoryDialog open={dialog !== null} onClose={() => setDialog(null)} editing={dialog === 'new' ? null : dialog} repositories={repositories} save={save} />
     </>
   );
 }

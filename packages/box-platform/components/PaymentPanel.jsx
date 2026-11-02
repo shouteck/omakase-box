@@ -102,7 +102,7 @@ export default function PaymentPanel({ id, poster }) {
           <div className="flex flex-wrap gap-x-6 gap-y-2">
             {view.payees.map(payee => {
               const Action = view.payees.length === 1 && !view.can_pay && !view.can_pay_paypal ? Act : Quiet;
-              return <Action key={payee.login} onClick={() => post('paid', { to: payee.login })}>Record ${owed.amount} paid to {payee.login}</Action>;
+              return <Action key={payee.login} onClick={() => post('paid', { to: payee.login })}>Mark ${owed.amount} paid to {payee.login}</Action>;
             })}
           </div>
           <Soft>Same as running <code>box bounty config set paid {id}</code>. Recording moves no money.</Soft>

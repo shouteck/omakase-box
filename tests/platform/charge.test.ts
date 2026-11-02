@@ -118,6 +118,27 @@ describe('nothing is charged', () => {
     expect(await stateOf()).toBe('refused-over-limit');
     expect(s.calls.filter(call => call.startsWith('POST /v1/payment_intents'))).toEqual([]);
   });
+  // PF19, the owner: a limit per repository. The bounty's own repository's limit decides, never another's.
+  it.each([
+    ['its repository\'s limit is under the reward', 44, 100, 'refused-over-limit', 0],
+    ['its repository\'s limit covers the reward', 45, 10, 'paid', 1]
+  ])('a limit per repository: when %s', async (_name, here, elsewhere, state, charged) => {
+    const token = await ownerOn();
+    expect((await post('/api/me/pay', token, { repositories: [{ repository: REPOSITORY, limit: here }, { repository: 'example-org/other', limit: elsewhere }] })).status).toBe(200);
+    const pay = (await (await handle(new Request(`${ORIGIN}/api/me`, { headers: { cookie: `__Host-board_session=${token}` } }), env)).json() as { pay: { repositories: { repository: string; limit: number }[] } }).pay;
+    expect(pay.repositories.map(entry => [entry.repository, entry.limit])).toEqual([['example-org/ledger', here], ['example-org/other', elsewhere]]);
+    await solverReady();
+    await merged();
+    await settle();
+    expect(await stateOf()).toBe(state);
+    expect(s.charged()).toHaveLength(charged);
+  });
+  it('a repository saved with no limit of its own is refused, and nothing changes', async () => {
+    const token = await ownerOn();
+    const answer = await post('/api/me/pay', token, { repositories: [{ repository: REPOSITORY }] });
+    expect(answer.status).toBe(400);
+    expect(answer.body.error).toContain('Nothing changed');
+  });
   it('when the poster is the solver, or GitHub lists them with access', async () => {
     await ownerOn();
     await solverReady(OWNER_ID, OWNER);
@@ -399,6 +420,23 @@ describe('the live database', () => {
     const fresh = new DatabaseSync(':memory:');
     fresh.exec(schema);
     for (const table of ['bounties', 'pull_requests', 'stripe_accounts', 'pay_settings', 'pay_repositories', 'charges']) expect(columns(existing, table)).toEqual(columns(fresh, table));
+    existing.close();
+    fresh.close();
+  });
+  it('a board from before PF19, migrated: each repository already on takes its owner\'s one limit', () => {
+    const schema = read('schema.sql');
+    const old = schema.replace(/^\s*limit_per_bounty INTEGER,\r?\n/m, '');
+    expect(old).not.toBe(schema);
+    const existing = new DatabaseSync(':memory:');
+    existing.exec(old);
+    existing.exec(`INSERT INTO pay_settings (github_id, customer_id, payment_method, limit_per_bounty) VALUES (1, 'cus_1', 'pm_1', 80), (2, 'cus_2', 'pm_2', 20)`);
+    existing.exec(`INSERT INTO pay_repositories (github_id, repository, on_at) VALUES (1, 'a/one', '2026-11-01'), (1, 'a/two', '2026-11-01'), (2, 'b/one', '2026-11-01')`);
+    existing.exec(read('migrations/pf19.sql'));
+    existing.exec(schema);
+    expect(existing.prepare('SELECT repository, limit_per_bounty FROM pay_repositories ORDER BY repository').all().map(row => [row['repository'], row['limit_per_bounty']])).toEqual([['a/one', 80], ['a/two', 80], ['b/one', 20]]);
+    const fresh = new DatabaseSync(':memory:');
+    fresh.exec(schema);
+    expect(columns(existing, 'pay_repositories')).toEqual(columns(fresh, 'pay_repositories'));
     existing.close();
     fresh.close();
   });

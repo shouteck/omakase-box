@@ -185,13 +185,13 @@ const byProvider = (record: unknown): boolean => ['stripe', 'paypal'].includes((
 
 /** What the signed-in person owes and is owed, by the same facts as each bounty's page. Whom, how much, since when; never a method. Read at render, so a repository gone private leaves. */
 async function debtRows(env: Env, login: string, now: number, where: string, mine: (input: BountyPayment, payment: ReturnType<typeof paymentOf>) => boolean) {
-  const rows: { id: string; title: string; amount: number; since: string; to: string | null; to_one_of?: readonly string[] }[] = [];
+  const rows: { id: string; title: string; amount: number; since: string; to: string | null; from: string; to_one_of?: readonly string[] }[] = [];
   for (const input of await loadPayments(env.DB, where, login)) {
     const payment = paymentOf(input);
     if (!OWING.has(payment.state) || payment.owed === null || !mine(input, payment) || rows.length >= LIST_MAX) continue;
     if (await readBounty(env, input.id, now) === null) continue;
     const { to, amount, since } = payment.owed;
-    rows.push({ id: input.id, title: input.title, amount, since, to, ...('to_one_of' in payment.owed ? { to_one_of: payment.owed.to_one_of } : {}) });
+    rows.push({ id: input.id, title: input.title, amount, since, to, from: input.poster, ...('to_one_of' in payment.owed ? { to_one_of: payment.owed.to_one_of } : {}) });
   }
   return rows;
 }
@@ -242,7 +242,8 @@ async function paymentView(env: Env, id: string, viewer: Viewer | null, now: num
   const payees = facts.amount > 0 ? await Promise.all(facts.merged.map(async ({ author, number }) => {
     const all = await methodsOfLogin(env, author);
     const methods = (author === payee && ownerOnlyAllowed(facts, login) ? all : publicOnly(all)).map(shown);
-    return { login: author, methods, next: methods.length === 0 ? ask(author, number) : null };
+    // Once a payment is recorded, asking how to be paid is no longer the next step (PF19).
+    return { login: author, methods, next: methods.length === 0 && facts.record === null ? ask(author, number) : null };
   })) : [];
   return json(200, {
     viewer: login, role, payee, payees,
@@ -319,7 +320,8 @@ async function payOf(env: Env, viewer: Viewer) {
   if (!stripeOn(env)) return { set_up: false };
   const solver = await env.DB.prepare('SELECT ready FROM stripe_accounts WHERE github_id = ?').bind(viewer.github_id).first<{ ready: number }>();
   const owner = await env.DB.prepare('SELECT payment_method, card_label, limit_per_bounty FROM pay_settings WHERE github_id = ?').bind(viewer.github_id).first<{ payment_method: string | null; card_label: string | null; limit_per_bounty: number | null }>();
-  const on = (await env.DB.prepare('SELECT repository, on_at FROM pay_repositories WHERE github_id = ? ORDER BY repository').bind(viewer.github_id).all<{ repository: string; on_at: string }>()).results;
+  // Each repository's own limit (PF19); a row from before PF19's migration falls back to the owner's one limit.
+  const on = (await env.DB.prepare('SELECT r.repository, r.on_at, COALESCE(r.limit_per_bounty, s.limit_per_bounty) AS "limit" FROM pay_repositories r LEFT JOIN pay_settings s ON s.github_id = r.github_id WHERE r.github_id = ? ORDER BY r.repository').bind(viewer.github_id).all<{ repository: string; on_at: string; limit: number | null }>()).results;
   return { set_up: true, solver: { connected: solver !== null, ready: solver?.ready === 1 }, card: owner?.payment_method == null ? null : owner.card_label ?? 'a saved card', limit: owner?.limit_per_bounty ?? null, repositories: on };
 }
 
@@ -403,15 +405,20 @@ async function savePay(request: Request, env: Env, viewer: Viewer, now: number):
     return json(200, { pay: await payOf(env, viewer) });
   }
   if (owner?.payment_method == null) return json(409, { error: 'Save a card first. Nothing changed. Next: save a card on this page.' });
-  if (!Number.isSafeInteger(limit) || (limit as number) < 1 || (limit as number) > 100000) return json(400, { error: 'The limit is whole dollars for one bounty. Nothing changed. Next: type a number.' });
-  if (!Array.isArray(repositories) || repositories.length > SWITCHES_MAX || !repositories.every(name => typeof name === 'string' && REPOSITORY.test(name))) return json(400, { error: `Name up to ${SWITCHES_MAX} repositories as owner/name. Nothing changed.` });
+  // Each repository with its own limit (PF19). The older form, one limit for a list of names, still works: it gives each the same limit.
+  if (!Array.isArray(repositories) || repositories.length > SWITCHES_MAX) return json(400, { error: `Name up to ${SWITCHES_MAX} repositories as owner/name. Nothing changed.` });
+  const entries = (repositories as unknown[]).map(entry => typeof entry === 'string' ? { repository: entry, limit } : (entry ?? {}) as { repository?: unknown; limit?: unknown });
+  const isLimit = (value: unknown): value is number => Number.isSafeInteger(value) && (value as number) >= 1 && (value as number) <= 100000;
+  if (limit !== undefined && !isLimit(limit)) return json(400, { error: 'The limit is whole dollars for one bounty. Nothing changed. Next: type a number.' });
+  if (!entries.every(entry => typeof entry.repository === 'string' && REPOSITORY.test(entry.repository))) return json(400, { error: `Name up to ${SWITCHES_MAX} repositories as owner/name. Nothing changed.` });
+  if (!entries.every(entry => isLimit(entry.limit))) return json(400, { error: 'Each repository needs its limit, in whole dollars for one bounty. Nothing changed. Next: type a number.' });
   const on_at = new Date(now).toISOString();
-  const names = [...new Set((repositories as string[]).map(name => name.toLowerCase()))];
-  // A repository already on keeps its date, so saving the limit never reaches back further.
+  const names = [...new Set(entries.map(entry => (entry.repository as string).toLowerCase()))];
+  // A repository already on keeps its date, so changing its limit never reaches back further.
   await env.DB.batch([
-    env.DB.prepare('UPDATE pay_settings SET limit_per_bounty = ? WHERE github_id = ?').bind(limit as number, viewer.github_id),
+    ...(isLimit(limit) ? [env.DB.prepare('UPDATE pay_settings SET limit_per_bounty = ? WHERE github_id = ?').bind(limit, viewer.github_id)] : []),
     env.DB.prepare('DELETE FROM pay_repositories WHERE github_id = ? AND LOWER(repository) NOT IN (SELECT value FROM json_each(?))').bind(viewer.github_id, JSON.stringify(names)),
-    ...(repositories as string[]).map(name => env.DB.prepare('INSERT INTO pay_repositories (github_id, repository, on_at) VALUES (?, ?, ?) ON CONFLICT (github_id, repository) DO NOTHING').bind(viewer.github_id, name, on_at))
+    ...entries.map(entry => env.DB.prepare('INSERT INTO pay_repositories (github_id, repository, on_at, limit_per_bounty) VALUES (?, ?, ?, ?) ON CONFLICT (github_id, repository) DO UPDATE SET limit_per_bounty = excluded.limit_per_bounty').bind(viewer.github_id, entry.repository as string, on_at, entry.limit as number))
   ]);
   return json(200, { pay: await payOf(env, viewer) });
 }
