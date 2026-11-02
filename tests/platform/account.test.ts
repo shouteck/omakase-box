@@ -358,6 +358,16 @@ describe('visibility, on the real routes', () => {
     for (const id of [STATE_IDS.owed, STATE_IDS.closed]) expect(await seesSecret(other, id)).toBe(false);
   });
 
+  // PF18's leftover, fixed in PF19: once a payment is recorded, asking how to be paid is no longer the next step.
+  it('a recorded payment drops the next step of asking how the payee wants to be paid', async () => {
+    const owner = await signIn(OWNER);
+    expect((await payment(owner)).payees[0].next).toMatch(/^Next: ask on pull request #\d+ how example-quill wants to be paid\.$/);
+    expect((await write(owner, `/api/b/${STATE_IDS.owed}/paid`, 'POST', { to: 'example-quill' })).status).toBe(200);
+    const after = await payment(owner);
+    expect(after.recorded).not.toBeNull();
+    expect(after.payees[0].next).toBeNull();
+  });
+
   it('more than one merged: public methods only, for each author, even to the owner, with the next step for one with none', async () => {
     await saveQuill(await signIn({ id: 7400, login: 'example-fern' }));
     const owner = await signIn(OWNER);

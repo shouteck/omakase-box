@@ -89,12 +89,12 @@ async function attempt(env: Env, bounty: string, amount: number, decision: Extra
 const CHARGES_PER_RUN = 1; // Workers Free: a charge is five calls to Stripe, and this runs every minute.
 
 /** Only merged, rewarded bounties whose poster's GitHub id has switched this repository on. */
-const DUE = `SELECT b.id, b.amount, b.poster, b.poster_id, r.on_at, s.customer_id, s.payment_method, s.limit_per_bounty
+const DUE = `SELECT b.id, b.amount, b.poster, b.poster_id, r.on_at, s.customer_id, s.payment_method, COALESCE(r.limit_per_bounty, s.limit_per_bounty) AS limit_per_bounty
   FROM bounties b
   JOIN pay_repositories r ON r.github_id = b.poster_id AND r.repository = b.repository
   JOIN pay_settings s ON s.github_id = b.poster_id
   LEFT JOIN charges c ON c.bounty_id = b.id
-  WHERE b.amount > 0 AND s.payment_method IS NOT NULL AND s.limit_per_bounty IS NOT NULL
+  WHERE b.amount > 0 AND s.payment_method IS NOT NULL AND COALESCE(r.limit_per_bounty, s.limit_per_bounty) IS NOT NULL
     AND EXISTS (SELECT 1 FROM pull_requests p WHERE p.bounty_id = b.id AND p.state = 'merged' AND p.on_default = 1)
     AND (c.state IS NULL OR c.state NOT IN ('paid', 'refunded', 'disputed', 'owner-must-authenticate', 'owner-paying'))
     AND (c.at IS NULL OR c.at <= ?)
@@ -345,7 +345,7 @@ export async function payingIds(env: Env, ids: readonly string[]): Promise<Reado
   const { results } = await env.DB.prepare(`SELECT b.id FROM bounties b
     JOIN pay_repositories r ON r.github_id = b.poster_id AND r.repository = b.repository
     JOIN pay_settings s ON s.github_id = b.poster_id
-    WHERE b.id IN (SELECT value FROM json_each(?)) AND b.amount > 0 AND s.payment_method IS NOT NULL AND b.amount <= s.limit_per_bounty`).bind(JSON.stringify(ids)).all<{ id: string }>();
+    WHERE b.id IN (SELECT value FROM json_each(?)) AND b.amount > 0 AND s.payment_method IS NOT NULL AND b.amount <= COALESCE(r.limit_per_bounty, s.limit_per_bounty)`).bind(JSON.stringify(ids)).all<{ id: string }>();
   return new Set(results.map(row => row.id));
 }
 

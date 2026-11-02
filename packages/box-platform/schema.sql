@@ -98,11 +98,12 @@ CREATE TABLE IF NOT EXISTS pay_settings (
   card_label TEXT,
   limit_per_bounty INTEGER
 );
--- The owner's switch, per repository. A merge from before on_at is never charged.
+-- The owner's switch, per repository, with its own limit (PF19). A merge from before on_at is never charged.
 CREATE TABLE IF NOT EXISTS pay_repositories (
   github_id INTEGER NOT NULL,
   repository TEXT NOT NULL COLLATE NOCASE,
   on_at TEXT NOT NULL,
+  limit_per_bounty INTEGER,
   PRIMARY KEY (github_id, repository)
 );
 -- One row per bounty: merged takes all, so a bounty is charged at most once.
