@@ -1,4 +1,4 @@
-import { ConnectWords, WaysNotHere, WhereStripePays } from '../../components/PayWays.jsx';
+import { ConnectWords, StripeReach, WaysNotHere } from '../../components/PayWays.jsx';
 import { CodeBlock, CommandWindow, Title } from '../../components/ui.jsx';
 
 export const metadata = { title: 'How it works, open bounty board' };
@@ -7,14 +7,6 @@ export const metadata = { title: 'How it works, open bounty board' };
 // arguments, against the built tool. The install line names the asset .github/workflows/release.yml
 // attaches to each release; a test holds the two together. The npm name replaces it once the owner publishes.
 const INSTALL = ['npx -y omakase-box setup'];
-const FROM_SOURCE = [
-  'git clone https://github.com/shouteck/omakase-box',
-  'npm ci --prefix scripts/tooling --ignore-scripts',
-  'node scripts/pnpm.mjs install --frozen-lockfile',
-  'node scripts/pnpm.mjs build',
-  'npm install -g ./packages/box-cli',
-  'box bounty'
-];
 
 // What the agent does is one picture, its commands folded; a person only installs. One table,
 // so the cards and the commands under them cannot drift apart.
@@ -106,7 +98,7 @@ export default function Page() {
       <section className="mt-20 scroll-mt-6" id="answer" aria-labelledby="solvers">
         <Heading id="solvers">Answer bounties</Heading>
         <ol className="border-b border-line">
-          <Step n={1} title="Find one" words={<p>On the board, in the feed at <code>/bounties.json</code>, or through the MCP server.</p>} />
+          <Step n={1} title="Find one" words={<p>On the board, in the feed at <code>/bounties.json</code>, or through the MCP server. You install nothing from this page, and use your own tools and a GitHub account.</p>} />
           <Step n={2} title="Open a pull request against its branch" words={<p><code>box-bounty/&lt;id&gt;</code>, on the bounty&apos;s repository.</p>} />
           <Step n={3} title="Get merged, get paid, confirm" words={<><ConnectWords /><WaysNotHere /></>} />
         </ol>
@@ -127,17 +119,12 @@ export default function Page() {
             <p>The board never holds money and guarantees none. Recording a payment moves nothing; it says, as your word, that you paid.</p>
             <p>With one click, you pay on the provider&apos;s page, straight to the account the solver connected. The board takes no fee; the provider&apos;s fee comes out of the reward.</p>
             <p>If you turn on pay on merge on your board page, for a repository, with a saved card and a limit, the board starts a charge when exactly one solution lands: from your card directly to the solver&apos;s own Stripe account. The board takes no fee. Stripe&apos;s fee comes out of the reward, and a dispute lands on the solver&apos;s account. A solver without Stripe is paid another way.</p>
+            <StripeReach />
             <p>Several people may answer one bounty, and only a merged solution is owed its reward. The reward is the owner&apos;s word, and nothing here makes them pay; each owner&apos;s record shows what was merged, paid and received.</p>
-          </More>
-          <WhereStripePays />
-          <More title="Build it from source">
-            <p>This needs Node 24. The lines after the clone run inside the new <code>omakase-box</code> folder, and they give you the same <code>box</code> command. Then run <code>box setup</code>.</p>
-            <CodeBlock lines={FROM_SOURCE} mark="source" what="source lines" />
-            <p>Solvers install nothing from this page, and use their own tools and a GitHub account.</p>
           </More>
           <More title="What the board reads and shows">
             <p>The board finds your bounty by reading GitHub. Your agent&apos;s tool also tells it to look right after a post, a merge or a payment you record, sending only the repository, the issue number, the bounty id and what happened.</p>
-            <p>It does not judge solutions or rate people. It shows facts and says whose word each one is. It lists public repositories only and cannot see private code. It is free for everyone, and open source.</p>
+            <p>It lists public repositories only and cannot see private code.</p>
           </More>
         </div>
       </section>

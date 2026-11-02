@@ -7,10 +7,11 @@ export type WaysSetUp = { readonly by_hand: true; readonly one_click: readonly P
 
 export const NOT_SET_UP = 'not set up on this board yet';
 
-export const WAYS: readonly { readonly id: WayId; readonly name: string; readonly through: string; readonly afterMerge: string; readonly whoSays: string; readonly shows: string }[] = [
-  { id: 'by-hand', name: 'By hand', through: 'Wise, wallet, any listed way', afterMerge: 'You pay, then record it.', whoSays: 'The owner', shows: 'Record $45 paid' },
-  { id: 'one-click', name: 'One click', through: 'A payment provider', afterMerge: 'You click and pay on the provider\'s page.', whoSays: 'The provider', shows: 'Pay $45' },
-  { id: 'on-merge', name: 'On merge', through: 'Stripe', afterMerge: 'You do nothing, after saving a card and limit once.', whoSays: 'The provider', shows: '$45 paid' }
+export type Step = { readonly you: boolean; readonly words: string };
+export const WAYS: readonly { readonly id: WayId; readonly name: string; readonly through: string; readonly yourPart: string; readonly steps: readonly Step[]; readonly whoSays: string }[] = [
+  { id: 'by-hand', name: 'By hand', through: 'Wise, wallet or another way they list', yourPart: 'Two steps for you', steps: [{ you: true, words: 'You pay through a link they listed' }, { you: true, words: 'You mark it paid' }], whoSays: 'The owner' },
+  { id: 'one-click', name: 'One click', through: 'A payment provider', yourPart: 'One click for you', steps: [{ you: true, words: 'You click Pay, on the provider\'s page' }], whoSays: 'The provider' },
+  { id: 'on-merge', name: 'On merge', through: 'Stripe', yourPart: 'Nothing for you', steps: [{ you: false, words: 'The card you saved is charged, up to your limit' }], whoSays: 'The provider' }
 ];
 
 /** Which ways this board's keys allow. By hand needs none. */

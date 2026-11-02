@@ -36,6 +36,19 @@ Open the project in Claude Code, Devin, Cursor or Codex and give the agent:
 
 It reads the status, continues the approved milestone or presents the next proposal, and waits for your "Approve" only at milestone boundaries.
 
+## Build it from source
+
+This needs Node 24. The lines after the clone run inside the new `omakase-box` folder, and they give you the same `box` command as the install. Then run `box setup`.
+
+```bash
+git clone https://github.com/shouteck/omakase-box
+npm ci --prefix scripts/tooling --ignore-scripts
+node scripts/pnpm.mjs install --frozen-lockfile
+node scripts/pnpm.mjs build
+npm install -g ./packages/box-cli
+box bounty
+```
+
 ## Development
 
     npm ci --prefix scripts/tooling --ignore-scripts
