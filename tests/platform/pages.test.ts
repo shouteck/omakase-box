@@ -257,14 +257,14 @@ describe('the pages', () => {
     expect(text).not.toContain('Newest bounties');
     // No key on this board: the two ways that need one say so, and by hand does not.
     expect(text.match(/Not set up on this board yet./g)).toHaveLength(2);
-    expect(text).toContain('You mark it paid'); // PF18, the owner: the cards show your part, not a button's words.
+    expect(text).toContain('You pay yourself'); // PF18, the owner: the cards show your part, not a button's words.
     expect(text).not.toContain('One click for you');
     // How it works says the ways in its steps, once, and which this board does not have.
     await visit(page, '/how/');
     await expect.poll(() => page.locator('main').textContent()).toContain('One click and on merge are not set up on this board yet.');
     const how = await page.locator('main').textContent();
     expect(how).not.toContain('Three ways to pay');
-    expect(how).not.toContain('You mark it paid');
+    expect(how).not.toContain('You pay yourself');
     expect(how).toContain('On your page, list a way and be paid by hand.'); // This board has no key. PF18: the words follow what it has.
     // A person only installs: every other command is folded away.
     expect(await page.locator('#hand-off ol > li').count()).toBe(4);
