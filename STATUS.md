@@ -4,7 +4,7 @@ Updated by the CTO on 2 November 2026, when PF17 closed.
 
 ## Now
 
-- **PF17 is merged and NOT live:** one command window on How it works, fewer links, no `/#pay`. The board shows PF15's site until the owner says to deploy. See [PF17](waves/PF17.md).
+- **PF17 is live,** deployed on the owner's word on 2 November 2026 (Worker version `5a246140`): one command window on How it works, fewer links, no `/#pay`. See [PF17](waves/PF17.md).
 - **PF15 is live,** deployed on the owner's word on 2 November 2026 (Worker version `d014ce4d`). The live board reads `one_click: []`, `on_merge: false` and shows no open bounties yet. See [PF15](waves/PF15.md).
 - **On the board and master:** the three ways to pay in the tool, feed, MCP and front page; How it works where installing is the only human step; setup text in `box bounty`; a payments-due notice on the board; an unasked `status` says nothing of what is owed; `box` a real command from the install.
 - **PF14 and PF13 are live, with no Stripe or PayPal key:** the one-click code says "not set up" until a key is set. Stripe proven in test mode, PayPal in its sandbox, each end to end.
@@ -28,7 +28,7 @@ Updated by the CTO on 2 November 2026, when PF17 closed.
 
 ## Next
 
-- **Decision for the owner:** deploy PF17, and say "go" on PF16.
+- **Decision for the owner:** say "go" on PF16.
 - **Order:** **PF16** (one line to install: a GitHub release, npm ready for the owner; brief awaits "go"), **PF12** (the solver's distributor), **PF9** (the launch gate), **PF6** (with the toolbox work), **K41** (the film, last, D-2026-11-01-film-and-launch-last), then the owner's launch.
 - **A wave for later, not briefed:** fewer words, more showing, across the site, before PF9.
 - Unbriefed, found in BT48 (BACKLOG): `rmSync` leaves non-ASCII names on Windows, which may leave a solver's file behind after a refused `apply`.
