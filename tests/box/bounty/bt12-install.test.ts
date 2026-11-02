@@ -202,9 +202,9 @@ ${applied.stderr}`).toBe(0);
 ${closed.stderr}`).toBe(0);
     expect(closed.stdout).toContain('rejected');
 
-    const remove = npm(['uninstall', '-g', '--prefix', prefix, 'box-bounty']);
+    const remove = npm(['uninstall', '-g', '--prefix', prefix, 'omakase-box']);
     expect(remove.status).toBe(0);
-    expect(existsSync(join(prefix, 'node_modules', 'box-bounty'))).toBe(false);
+    expect(existsSync(join(prefix, 'node_modules', 'omakase-box'))).toBe(false);
     expect(recordIds(repo).length).toBeGreaterThan(0);
     expect(existsSync(join(env['BOX_BOUNTY_SETTINGS_DIR']!, 'settings.json'))).toBe(true);
   }, 280000);

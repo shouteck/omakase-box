@@ -3,7 +3,7 @@
 // tool and nothing else — no export/submit/verify/trace, no dependencies to
 // resolve at install — plus the licence files, the first-five-minutes page
 // as README, and a manifest with no install-time scripts. Then `npm pack`
-// it into <out>/box-bounty-<version>.tgz — the exact bytes `npm publish`
+// it into <out>/omakase-box-<version>.tgz — the exact bytes `npm publish`
 // would send, never published by this script.
 //
 //   node packages/box-cli/pack.mjs [--out <dir>]
