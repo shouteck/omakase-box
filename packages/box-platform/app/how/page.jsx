@@ -1,4 +1,4 @@
-import { WaysNotHere } from '../../components/PayWays.jsx';
+import { ConnectWords, WaysNotHere, WhereStripePays } from '../../components/PayWays.jsx';
 import { CodeBlock, CommandWindow, Title } from '../../components/ui.jsx';
 
 export const metadata = { title: 'How it works, open bounty board' };
@@ -108,7 +108,7 @@ export default function Page() {
         <ol className="border-b border-line">
           <Step n={1} title="Find one" words={<p>On the board, in the feed at <code>/bounties.json</code>, or through the MCP server.</p>} />
           <Step n={2} title="Open a pull request against its branch" words={<p><code>box-bounty/&lt;id&gt;</code>, on the bounty&apos;s repository.</p>} />
-          <Step n={3} title="Get merged, get paid, confirm" words={<><p>On your page, connect Stripe or PayPal and an owner can pay you with one click; connected Stripe also covers on merge. Or list a way and be paid by hand. Then say on the bounty&apos;s page whether it arrived.</p><WaysNotHere /></>} />
+          <Step n={3} title="Get merged, get paid, confirm" words={<><ConnectWords /><WaysNotHere /></>} />
         </ol>
       </section>
 
@@ -129,6 +129,7 @@ export default function Page() {
             <p>If you turn on pay on merge on your board page, for a repository, with a saved card and a limit, the board starts a charge when exactly one solution lands: from your card directly to the solver&apos;s own Stripe account. The board takes no fee. Stripe&apos;s fee comes out of the reward, and a dispute lands on the solver&apos;s account. A solver without Stripe is paid another way.</p>
             <p>Several people may answer one bounty, and only a merged solution is owed its reward. The reward is the owner&apos;s word, and nothing here makes them pay; each owner&apos;s record shows what was merged, paid and received.</p>
           </More>
+          <WhereStripePays />
           <More title="Build it from source">
             <p>This needs Node 24. The lines after the clone run inside the new <code>omakase-box</code> folder, and they give you the same <code>box</code> command. Then run <code>box setup</code>.</p>
             <CodeBlock lines={FROM_SOURCE} mark="source" what="source lines" />

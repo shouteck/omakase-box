@@ -2,14 +2,12 @@
 // Connecting Stripe, and the owner's card, limit and switch. All of it is signed-in only:
 // this page is the one place charging can be turned on. The card itself is typed on Stripe's page.
 import { useEffect, useRef, useState } from 'react';
+import { countryName, STRIPE_COUNTRIES } from '../src/pay-ways.ts';
 import { Quiet, Section, Soft } from './ui.jsx';
 
-// K46: the countries a test account in this setup could be created and charged in. Finishing Stripe's page there is Stripe's to decide.
-const COUNTRIES = ['AE', 'AT', 'AU', 'BE', 'BG', 'BR', 'CA', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GI', 'GR', 'HK', 'HR', 'HU', 'IE', 'IT', 'JP', 'LI', 'LT', 'LU', 'LV', 'MT', 'MX', 'MY', 'NL', 'NO', 'NZ', 'PL', 'PT', 'RO', 'SE', 'SG', 'SI', 'SK', 'TH', 'US'];
 const FIELD = 'block w-full max-w-prose border border-soft bg-surface px-3 py-2 rounded-xl';
 const BUTTON = 'bg-button px-5 py-2.5 font-medium rounded-full';
 const INK = { color: 'var(--color-button-ink)' };
-const countryName = code => { try { return new Intl.DisplayNames(['en'], { type: 'region' }).of(code); } catch { return code; } };
 
 export default function PayOnMerge({ pay, setPay }) {
   const [country, setCountry] = useState('US');
@@ -62,7 +60,7 @@ export default function PayOnMerge({ pay, setPay }) {
                 <label className="flex flex-col gap-1">
                   <span>Country of your bank account</span>
                   <select name="country" className={FIELD} value={country} onChange={event => setCountry(event.target.value)}>
-                    {COUNTRIES.map(code => <option key={code} value={code}>{countryName(code)}</option>)}
+                    {STRIPE_COUNTRIES.map(code => <option key={code} value={code}>{countryName(code)}</option>)}
                   </select>
                 </label>
               )}

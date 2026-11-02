@@ -149,7 +149,19 @@ node node_modules/wrangler/bin/wrangler.js secret put STRIPE_SECRET_KEY
 node node_modules/wrangler/bin/wrangler.js secret put STRIPE_WEBHOOK_SECRET
 ```
 
-The secret key can charge any saved card to any connected account. The owner's limit and the payee are enforced by the board's code, not by Stripe, so whoever holds this key can bypass both. A restricted key limited to what the board calls lowers that risk.
+The key can charge any saved card to any connected account. The owner's limit and the payee are enforced by the board's code, not by Stripe, so whoever holds this key can bypass both. Use a restricted key, limited to what the board calls: at https://dashboard.stripe.com/apikeys press "Create restricted key" and set these, leaving everything else at None. Stripe's page gives each permission a second setting for connected accounts.
+
+| Permission | On your own account | On connected accounts | What the board does with it |
+|---|---|---|---|
+| Accounts | Write | None | Starts a solver's account; reads whether it can take payments |
+| Account Links | Write | None | Opens Stripe's page for a solver |
+| Customers | Write | None | Holds the owner's saved card |
+| Checkout Sessions | Write | Write | Stripe's page to save a card, and to pay |
+| Setup Intents | Read | None | Reads which card was saved |
+| Payment Methods | Write | Write | Removes a saved card; copies it to the solver's account |
+| Payment Intents | None | Write | Charges on merge; finds a payment already made; cancels a stopped one |
+
+A permission that is missing fails only when its call runs. Proven against test mode: see PF18.
 
 ## Paying through PayPal (optional)
 
