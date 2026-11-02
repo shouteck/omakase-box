@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import { Button } from './ui.jsx';
 
 export default /** A dialog with a form: titled, primary action on the right, Escape closes it, full screen on a phone (Primer). */
-function Dialog({ open, onClose, title, onSubmit, submit, children }) {
+function Dialog({ open, onClose, title, onSubmit, submit, danger = false, children }) {
   const ref = useRef(null);
   useEffect(() => {
     const dialog = ref.current;
@@ -17,7 +17,7 @@ function Dialog({ open, onClose, title, onSubmit, submit, children }) {
       <form onSubmit={onSubmit} className="flex flex-col max-sm:h-full">
         <header className="flex justify-between items-center px-5 py-4 border-b border-line"><h2 className="font-medium">{title}</h2><button type="button" aria-label="Close" className="text-soft" onClick={onClose}>✕</button></header>
         <div className="px-5 py-4 flex flex-col gap-4 flex-1 overflow-auto">{children}</div>
-        <footer className="flex justify-end gap-2 px-5 py-3.5 border-t border-line"><Button onClick={onClose}>Cancel</Button><Button primary type="submit">{submit}</Button></footer>
+        <footer className="flex justify-end gap-2 px-5 py-3.5 border-t border-line"><Button onClick={onClose}>Cancel</Button><Button primary danger={danger} type="submit">{submit}</Button></footer>
       </form>
     </dialog>
   );

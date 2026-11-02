@@ -403,7 +403,7 @@ describe('the pages', () => {
       const section = async () => { const text = await page.locator('main').innerText(); return text.slice(text.indexOf('Pay on merge')); };
       expect(await page.locator('table[aria-label="Repositories on pay on merge"] th').allInnerTexts()).toEqual(['Repository', 'Reward', 'Open bounties', 'On since', '']);
       expect(await section()).not.toMatch(/limit|charge up to/i);
-      await page.click('text=+ Turn on a repository');
+      await page.click('text=+ Add a repository');
       const dialog = page.locator('dialog[open]');
       expect(await dialog.locator('input[name=repository]').evaluateAll(inputs => inputs.map(input => [(input as HTMLInputElement).type, (input as HTMLInputElement).value]))).toEqual([['radio', 'example-org/lite']]);
       expect(await dialog.innerText()).toContain('1 open · $75');
@@ -412,10 +412,33 @@ describe('the pages', () => {
       await close();
     });
 
+    // PF20, the owner: removing the card is the page's one destructive action, so it sits on the card and is said in full first.
+    it('removing the card asks first, names what stops, and Cancel changes nothing', async () => {
+      const card = { card: 'visa ending 3155', repositories: [{ repository: 'example-org/ledger', on_at: new Date(NOW).toISOString(), limit: 45, open: 2 }, { repository: 'example-org/lite', on_at: new Date(NOW).toISOString(), limit: 75, open: 1 }], yours: [] };
+      const { page, close } = await open({ ...base, login: 'example-mara', pay: pay(card) }, '/me/#pay');
+      const sent: unknown[] = [];
+      await page.route('**/api/me/pay', route => { sent.push(route.request().postDataJSON()); return route.fulfill({ json: { pay: pay({ card: null, repositories: [], yours: [] }) } }); });
+      expect(await page.locator('main').innerText()).not.toContain('turn pay on merge off');
+      const remove = page.getByRole('button', { name: 'Remove', exact: true });
+      expect(await remove.count()).toBe(1);
+      expect(await remove.getAttribute('data-danger')).toBe('true');
+      await remove.click();
+      const dialog = page.locator('dialog[open]');
+      expect(await dialog.locator('h2').innerText()).toBe('Remove your card?');
+      expect(await dialog.locator('[data-removing]').innerText()).toMatch(/Pay on merge stops for all 2 repositories\.\s+visa ending 3155 is removed from Stripe; the board can no longer charge it\.\s+Payments already made do not change\. You can still pay any bounty from its page\./);
+      await dialog.locator('button:has-text("Cancel")').click();
+      await expect.poll(() => page.locator('dialog[open]').count()).toBe(0);
+      expect(sent).toEqual([]);
+      await remove.click();
+      await page.locator('dialog[open] button[type=submit]').click();
+      await expect.poll(() => sent).toEqual([{ remove_card: true }]);
+      await close();
+    });
+
     it('with no bounties posted, pay on merge says to post one first, and offers nothing to type', async () => {
       const { page, close } = await open({ ...base, login: 'example-mara', pay: pay({ card: 'visa ending 3155', repositories: [], yours: [] }) }, '/me/#pay');
       expect(await page.locator('main').innerText()).toMatch(/No repositories yet\.\s+Pay on merge works on repositories where you have posted a bounty\. Post one with your agent \(box bounty\), and it appears here to turn on\./);
-      expect(await page.locator('text=+ Turn on a repository').count()).toBe(0);
+      expect(await page.locator('text=+ Add a repository').count()).toBe(0);
       await close();
     });
 

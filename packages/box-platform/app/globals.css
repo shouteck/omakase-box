@@ -45,6 +45,8 @@
   --color-wait: #7a5a00;
   --color-wait-bg: #f6eccd;
   --color-off-bg: #eeede8;
+  --color-danger: #b42318;
+  --color-danger-ink: #ffffff;
   --shadow-window: 0 1px 2px rgb(27 27 24 / 0.06), 0 24px 60px -16px rgb(29 54 90 / 0.28);
 }
 
@@ -69,6 +71,8 @@
     --color-wait: #e8c870;
     --color-wait-bg: #3a321a;
     --color-off-bg: #2a2a27;
+    --color-danger: #f97066;
+    --color-danger-ink: #111110;
     --shadow-window: 0 1px 2px rgb(0 0 0 / 0.4), 0 24px 60px -16px rgb(0 0 0 / 0.7);
   }
 }

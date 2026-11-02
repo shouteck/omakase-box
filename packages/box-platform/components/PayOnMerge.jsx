@@ -87,7 +87,7 @@ function RepositoryDialog({ open, onClose, editing, repositories, yours, save })
     if (await save([...others, { repository: chosen, limit: Number(reward) }])) onClose();
   };
   return (
-    <Dialog open={open} onClose={onClose} title={editing ? `Reward on ${editing.repository}` : 'Turn on a repository'} onSubmit={submit} submit={editing ? 'Save' : 'Turn on'}>
+    <Dialog open={open} onClose={onClose} title={editing ? `Reward on ${editing.repository}` : 'Add a repository'} onSubmit={submit} submit={editing ? 'Save' : 'Add'}>
       {editing ? null : (
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-1">Your repositories with bounties</legend>
@@ -113,6 +113,7 @@ function RepositoryDialog({ open, onClose, editing, repositories, yours, save })
 export function PayOnMergeOwner({ pay, setPay }) {
   const { call, leave, message } = usePayCall(setPay);
   const [dialog, setDialog] = useState(null);
+  const [removing, setRemoving] = useState(false);
   const done = useRef(false);
   // Back from Stripe's page: a saved card names its session.
   useEffect(() => {
@@ -139,7 +140,7 @@ export function PayOnMergeOwner({ pay, setPay }) {
   return (
     <>
       <Rows>
-        <Row icon="▭" tone="card" title={pay.card} detail="Pays for every repository below. Saved on Stripe's page; the board never sees the number." actions={<Button onClick={() => leave('/api/me/card')}>Replace</Button>} />
+        <Row icon="▭" tone="card" title={pay.card} detail="Pays for every repository below. Saved on Stripe's page; the board never sees the number." actions={<><Button onClick={() => leave('/api/me/card')}>Replace</Button><Button danger onClick={() => setRemoving(true)}>Remove</Button></>} />
       </Rows>
       <div className="mt-3">
         {repositories.length > 0 ? (
@@ -156,10 +157,18 @@ export function PayOnMergeOwner({ pay, setPay }) {
           : <Empty title="No repository is on." why="Turn one of yours on, and merged solutions there pay themselves." />}
       </div>
       <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 items-center">
-        {more ? <Button onClick={() => setDialog('new')}>+ Turn on a repository</Button> : null}
-        <button type="button" className="text-sm text-soft underline underline-offset-[3px]" onClick={() => call('/api/me/pay', { remove_card: true })}>Remove the card and turn pay on merge off</button>
+        {more ? <Button onClick={() => setDialog('new')}>+ Add a repository</Button> : null}
       </div>
       <Said message={message} />
+      {/* Removing the card is the page's one destructive action: beside the card, and said in full before it happens (PF20, the owner). */}
+      <Dialog open={removing} onClose={() => setRemoving(false)} title="Remove your card?" danger submit="Remove card"
+        onSubmit={async event => { event.preventDefault(); if (await call('/api/me/pay', { remove_card: true }) !== null) setRemoving(false); }}>
+        <ul data-removing className="flex flex-col gap-2 list-disc pl-5">
+          <li>{repositories.length === 0 ? 'Pay on merge stops.' : `Pay on merge stops for ${repositories.length === 1 ? 'your 1 repository' : `all ${repositories.length} repositories`}.`}</li>
+          <li>{pay.card} is removed from Stripe; the board can no longer charge it.</li>
+          <li>Payments already made do not change. You can still pay any bounty from its page.</li>
+        </ul>
+      </Dialog>
       <RepositoryDialog open={dialog !== null} onClose={() => setDialog(null)} editing={dialog === 'new' ? null : dialog} repositories={repositories} yours={yours} save={save} />
     </>
   );
