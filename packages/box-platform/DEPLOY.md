@@ -157,6 +157,8 @@ This is your full secret key (`sk_live_...`), from https://dashboard.stripe.com/
 node node_modules/wrangler/bin/wrangler.js secret delete STRIPE_SECRET_KEY
 ```
 
+**Before you set it, limit where it works.** At https://dashboard.stripe.com/api-access-policies create a policy, type **Advanced**, allowing only ASN `13335` (Cloudflare). Then on the API keys page, on this key's **⋯** menu, choose **Manage access policy** and select it. Stripe then refuses the key from anywhere but Cloudflare and notifies you of each refused request; the board keeps working (proven in a sandbox, PF18). It does not stop someone running code on Cloudflare too, so it narrows the risk and does not remove it. Look at the key's request logs now and then (**⋯**, **View request logs**).
+
 Move to a restricted key if Stripe offers one with Write on Accounts v2. These are the other calls it would need, proven on v2 accounts in test mode: Account Links, Customers and Payment Methods, Write; Setup Intents, Read; on connected accounts, Checkout Sessions, Payment Methods and Payment Intents, Write.
 
 ## Paying through PayPal (optional)
