@@ -449,11 +449,8 @@ describe('the pages', () => {
     const lines = await page.locator('main code[data-source]').allTextContents();
     await close();
     const clone = join(PACKAGE, '../..');
-    // The page, the release job and the guide inside the package name one address.
-    expect(install).toEqual(['npm install -g https://github.com/shouteck/omakase-box/releases/latest/download/box-bounty.tgz', 'box bounty']);
-    const asset = /releases\/latest\/download\/(\S+)$/.exec(install[0]!)![1]!;
-    const job = readFileSync(join(clone, '.github/workflows/release.yml'), 'utf8');
-    expect(job).toContain(`gh release create "$GITHUB_REF_NAME" ${asset} `);
+    // The page and the guide inside the package name one package.
+    expect(install).toEqual(['npm install -g box-bounty', 'box bounty']);
     expect(readFileSync(join(clone, 'FIRST-FIVE-MINUTES.md'), 'utf8')).toContain(install[0]!);
     expect(lines).toHaveLength(6);
     expect(lines[0]).toBe('git clone https://github.com/shouteck/omakase-box');

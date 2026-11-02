@@ -4,10 +4,9 @@ import { CodeBlock, CommandWindow, Title } from '../../components/ui.jsx';
 export const metadata = { title: 'How it works, open bounty board' };
 
 // tests/platform reads every data-command back from this page and runs it, with its
-// arguments, against the built tool. The install line names the asset .github/workflows/release.yml
-// attaches to each release; a test holds the two together. The npm name replaces it once the owner publishes.
+// arguments, against the built tool. The install line is the package the owner published.
 const INSTALL = [
-  'npm install -g https://github.com/shouteck/omakase-box/releases/latest/download/box-bounty.tgz',
+  'npm install -g box-bounty',
   'box bounty'
 ];
 const FROM_SOURCE = [
