@@ -90,7 +90,7 @@ describe('setting up with only an install', { timeout: 120000 }, () => {
     delete settings.default;
     writeFileSync(path, JSON.stringify({ ...settings, repositories: {} }));
     const unset = renderOverview(repo);
-    for (const words of ['not set up for this repository yet', 'gh auth status', 'the owner runs gh auth login', 'What reward does each state', 'box bounty allow <owner>/<repository> --reward <reward> --reward-limit <limit>', 'box bounty config set instructions true', 'tell your agent to run box bounty']) expect(unset).toContain(words);
+    for (const words of ['not set up for this repository yet', 'gh auth status', 'the owner runs gh auth login', 'What reward does each state', 'box bounty allow <owner>/<repository> --reward <reward> --reward-limit <limit>', 'so that their yes names it', 'give the owner that exact command to run themselves', 'run box setup once']) expect(unset).toContain(words);
     // The boundary is stated: the amount is the owner's, and silence promises nothing.
     expect(unset).toContain('the answers are the owner\'s to give, unless they leave them to you');
     expect(unset).toContain('With no answer nothing is promised');
@@ -107,6 +107,15 @@ describe('the built tool, as an agent first meets it', { timeout: 120000 }, () =
     delete settings.default;
     writeFileSync(path, JSON.stringify({ ...settings, repositories: {} }));
   };
+  it('a reward just set is never followed by "every bounty states $0", on allow or in config', () => fixture(({ repo, scratch }) => {
+    unset(scratch);
+    const allowed = run(repo, scratch, ['allow', 'owner/project', '--reward', '5', '--reward-limit', '20']);
+    expect(allowed.status, allowed.stderr).toBe(0);
+    expect(allowed.stdout).toContain('state $5');
+    const config = run(repo, scratch, ['config']);
+    expect(config.stdout).toContain('reward $5');
+    expect(allowed.stdout + config.stdout).not.toContain('every bounty states $0');
+  }));
   it('says what to run if box is not found', () => fixture(({ repo, scratch }) => {
     unset(scratch);
     expect(run(repo, scratch, []).stdout).toContain(`if box is not found here, use: node ${JSON.stringify(resolve(CLI_DIST))}`);

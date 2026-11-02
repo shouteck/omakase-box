@@ -16,10 +16,13 @@ Node 22.13 or later, Git 2.40 or later, and the GitHub command line `gh` 2.0 or
 later are required; the tool checks all three at start and says what is missing
 and where to get it.
 
-Install it so `box` is a command, then run it in your project:
+Run this once:
 
-    npm install -g omakase-box
-    box bounty
+    npx -y --package=https://github.com/shouteck/omakase-box/releases/latest/download/box-bounty.tgz box setup
+
+It puts `box` on this machine and a small skill where your agents look, says
+exactly what it wrote, and `box setup --remove` takes the skill away. Your next
+agent session finds the tool. Run `box bounty` in a project to see where things stand.
 
 The tool reads the project it runs in, so run it only in projects you trust. Node is from
 <https://nodejs.org>, Git from <https://git-scm.com>, `gh` from
@@ -29,10 +32,10 @@ The tool reads the project it runs in, so run it only in projects you trust. Nod
 
 The tool uses that sign-in; it never sees, stores or asks for a credential.
 
-## Let your agents know
+## Agents that read neither skills folder
 
-Agents learn the tool exists only if it is in the instructions they read. To
-write it there, run this inside the project:
+`box setup` covers Claude Code, Codex, Cursor and Gemini CLI. For any other agent,
+write the tool into the instructions it reads, inside the project:
 
     box bounty config set instructions true
 

@@ -2,31 +2,21 @@
 
 The owner's own action. The kitchen prepares this and does not publish, claim or reserve a name.
 
-## Choose the name
+## The name
 
-Checked with `npm view <name>` on 2 November 2026. "Free" means npm answered that it has no such package, today; anyone can take it first, and npm can refuse a name too close to another.
-
-| Name | State |
-|---|---|
-| `box-bounty` | Free. The name the package already carries. |
-| `omakase-box` | Free. Matches the name the owner uses outwardly. |
-| `openbounty` | Free. Matches the board's title. |
-
-The command stays `box` whichever name is chosen.
+**`omakase-box`** (owner, 2 November 2026). `npm view omakase-box` found no such package that day. That reserves nothing: anyone can take it first, and npm can refuse a name too close to another. The command stays `box`.
 
 ## Publish
 
-Sign in to npm once with your own account (`npm login`). Then, from a clone of this repository at the release's tag, with dependencies installed:
+Sign in to npm once with your own account (`npm login`). Then, from a clone of this repository on the branch `wave/PF16-npm`, which carries the name, with dependencies installed:
 
 ```bash
 node packages/box-cli/pack.mjs
 ```
 
 ```bash
-npm publish packages/box-cli/dist-package/box-bounty-0.1.0.tgz --access public
+npm publish packages/box-cli/dist-package/omakase-box-0.1.3.tgz --access public
 ```
-
-Any name other than `box-bounty` means changing `MANIFEST.name` in `packages/box-cli/pack.mjs` and `INSTALL_PACKAGE` in `packages/box-bounty/wording.ts` first; say which, and the CTO does it.
 
 ## After it
 

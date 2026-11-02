@@ -15,7 +15,7 @@
 // Thin shell over packages/box-bounty: argument parsing and exit codes live
 // here; every bounty behaviour lives in the library.
 import './node-check.js';
-import { BOUNTY_COMMANDS } from '../../box-bounty/index.js';
+import { BOUNTY_COMMANDS, runSetup, runSetupRemove } from '../../box-bounty/index.js';
 import { runBounty } from './bounty.js';
 import { version } from './version.js';
 
@@ -26,6 +26,7 @@ import { version } from './version.js';
 const HELP_LINES = [
   ...(['create', 'help', 'describe', 'status', 'post', 'look', 'apply', 'close'] as const)
     .map((name, index) => `${index === 0 ? 'usage: ' : '       '}${BOUNTY_COMMANDS[name]!.usage}`),
+  '       box setup [--remove] — put box on this machine and a skill where agents look',
   '       box bounty allow|deny|config — the owner\'s settings',
   '       <id> may be left out when exactly one bounty can take the command'
 ];
@@ -54,6 +55,10 @@ const REMOVED = ['export', 'submit', 'verify', 'trace'];
 if (command !== undefined && REMOVED.includes(command)) {
   console.error(`box ${command}: command-removed — this command belonged to the older Box platform, retired on 18 October 2026; box bounty is the product`);
   process.exit(2);
+}
+if (command === 'setup') {
+  for (const line of rest[0] === '--remove' ? runSetupRemove() : runSetup()) console.log(line);
+  process.exit(0);
 }
 if (command === 'bounty') {
   await runBounty(rest, { usage, version });
