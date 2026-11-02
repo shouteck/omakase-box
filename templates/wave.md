@@ -39,7 +39,7 @@ Tick the ones that apply. The CTO answers every ticked one in the Result.
 
 ## Notes
 
-Decisions already made, interfaces to reuse, traps. Keep it short; link instead of pasting. A wave with a real-GitHub step names the sandbox (`kitchen/sandbox.md`); a step that needs the owner as a test subject is not written. A change to a command, an option or what a command prints names the established tool it follows (`gh`, `git`, `npm`, `direnv` or another), or says why it departs from it (owner, 14 October 2026); check the claim before merging.
+Decisions already made, interfaces to reuse, traps. Keep it short; link instead of pasting. A wave with a real-GitHub step names the sandbox (`kitchen/sandbox.md`); a step that needs the owner as a test subject is not written. A change to a command, an option or what a command prints names the established tool it follows (`gh`, `git`, `npm`, `direnv` or another), or says why it departs from it (owner, 14 October 2026); check the claim before merging. A product question about how something should work: read what established tools do before proposing, not after the owner asks (PF15, PF16, PF17).
 
 ---
 
