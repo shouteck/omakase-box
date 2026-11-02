@@ -226,7 +226,7 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
       '--reward-limit': { ...AMOUNT, help: 'the most promised across this repository\'s open bounties, in whole dollars' },
       '--repo': REPO
     },
-    switches: { '--ask': { help: 'the tool asks before each post rather than posting freely' } }
+    switches: { '--ask': { help: 'the tool asks before each post and each merge' } }
   },
   deny: {
     label: 'box bounty deny', usage: 'box bounty deny [owner/name] [--repo <path>]',

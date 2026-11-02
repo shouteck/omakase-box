@@ -107,6 +107,15 @@ describe('the built tool, as an agent first meets it', { timeout: 120000 }, () =
     delete settings.default;
     writeFileSync(path, JSON.stringify({ ...settings, repositories: {} }));
   };
+  it('a reward just set is never followed by "every bounty states $0", on allow or in config', () => fixture(({ repo, scratch }) => {
+    unset(scratch);
+    const allowed = run(repo, scratch, ['allow', 'owner/project', '--reward', '5', '--reward-limit', '20']);
+    expect(allowed.status, allowed.stderr).toBe(0);
+    expect(allowed.stdout).toContain('state $5');
+    const config = run(repo, scratch, ['config']);
+    expect(config.stdout).toContain('reward $5');
+    expect(allowed.stdout + config.stdout).not.toContain('every bounty states $0');
+  }));
   it('says what to run if box is not found', () => fixture(({ repo, scratch }) => {
     unset(scratch);
     expect(run(repo, scratch, []).stdout).toContain(`if box is not found here, use: node ${JSON.stringify(resolve(CLI_DIST))}`);

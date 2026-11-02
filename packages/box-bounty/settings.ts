@@ -605,6 +605,7 @@ export function rewardNoticeLine(): string | null {
   }
   if (state.rewardNoticeAt !== undefined) return null;
   if (settings.default === undefined && Object.keys(settings.repositories).length === 0) return null;
+  if (Object.values(settings.repositories).some(entry => entry.reward !== undefined)) return null;
   saveState({ ...state, rewardNoticeAt: at });
   return `each repository can state its own reward — the owner sets it inside its checkout or by name: box bounty config set reward <whole dollars> [owner/name]. Until then every bounty states $0 (noted ${at})`;
 }
