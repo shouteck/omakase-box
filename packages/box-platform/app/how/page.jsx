@@ -6,7 +6,7 @@ export const metadata = { title: 'How it works, open bounty board' };
 // tests/platform reads every data-command back from this page and runs it, with its
 // arguments, against the built tool. The install line names the asset .github/workflows/release.yml
 // attaches to each release; a test holds the two together. The npm name replaces it once the owner publishes.
-const INSTALL = ['npx -y --package=https://github.com/shouteck/omakase-box/releases/latest/download/box-bounty.tgz box setup'];
+const INSTALL = ['npx -y omakase-box setup'];
 const FROM_SOURCE = [
   'git clone https://github.com/shouteck/omakase-box',
   'npm ci --prefix scripts/tooling --ignore-scripts',

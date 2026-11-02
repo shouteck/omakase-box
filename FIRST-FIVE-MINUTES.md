@@ -18,7 +18,10 @@ and where to get it.
 
 Run this once:
 
-    npx -y --package=https://github.com/shouteck/omakase-box/releases/latest/download/box-bounty.tgz box setup
+    npx -y omakase-box setup
+
+If Windows PowerShell says running scripts is disabled, use `npx.cmd` in place of
+`npx`, and `box.cmd` in place of `box`. You need not change the policy.
 
 It puts `box` on this machine and a small skill where your agents look, says
 exactly what it wrote, and `box setup --remove` takes the skill away. Your next

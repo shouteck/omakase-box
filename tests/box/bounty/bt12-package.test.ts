@@ -121,12 +121,12 @@ describe('the artifact carries no secrets and no machine paths', () => {
 describe('what it needs is stated and checked', () => {
   it('pins the manifest name, and the notice names no unpublished package', () => {
     expect(manifest()['name']).toBe(INSTALL_PACKAGE);
-    // Held until the owner publishes the name (Part B): an unpublished name
+    // Merged only after the owner published the name (PF16): an unpublished name
     // in an instruction an agent executes can be claimed by anyone first.
     for (const state of ['idle', 'open', 'new'] as const) {
       // The markers are `<!-- box-bounty -->`; the interior is what an agent reads.
       expect(renderRulesBlock(state), state).not.toContain('npx');
-      expect(rulesBlockInterior(state).join('\n'), state).not.toContain(INSTALL_PACKAGE);
+      expect(rulesBlockInterior(state).join('\n'), state).toContain(`npm i -g ${INSTALL_PACKAGE}`);
     }
   });
   // BT47: the floor is stated in five places; each is read and compared. The

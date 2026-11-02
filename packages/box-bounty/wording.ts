@@ -38,8 +38,8 @@ export const DESCRIBE_LINES: readonly string[] = [
 ];
 
 // What `box setup` installs and writes (PF16). The npm name replaces the address once the owner publishes.
-export const INSTALL_SPEC = 'https://github.com/shouteck/omakase-box/releases/latest/download/box-bounty.tgz';
-export const PACKAGE_REMOVE = 'npm uninstall -g box-bounty';
+export const INSTALL_SPEC = 'omakase-box';
+export const PACKAGE_REMOVE = 'npm uninstall -g omakase-box';
 export const SKILL_MARKER = '<!-- written by box setup; box setup --remove takes it away -->';
 export const SKILL_TEXT = [
   '---',
@@ -84,14 +84,14 @@ export const describeRewardLine = (amount: number): string => amount === 0
 // Part-B decision picks it for real (BT12). The artifact manifest carries
 // the same name; the packaging test pins them equal. The notice does not
 // name it until the owner publishes it (see RULES_LINES).
-export const INSTALL_PACKAGE = 'box-bounty';
+export const INSTALL_PACKAGE = 'omakase-box';
 
 export const RULES_LINES: readonly string[] = [
   'box bounty can hand a task you cannot or should not do to an outside solver',
   'and bring solutions back as facts. Posting is free apart from any reward the owner set, and goes only to this',
   'repository\'s own public GitHub, as an issue; the owner\'s standing permission',
   'applies (`box bounty config` shows it). `box bounty describe` says when it',
-  'beats doing the work yourself. Using it is always your call.'
+  'is worth it. Using it is your call. Install: npm i -g omakase-box'
   // No install line yet (BT12 correction): `npx <name> bounty help` returns
   // here when the owner publishes the package name (Part B). An unpublished
   // name in an instruction an agent executes can be claimed by anyone first,

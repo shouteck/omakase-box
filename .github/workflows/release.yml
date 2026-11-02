@@ -45,5 +45,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           version=$(node -p "require('./packages/box-cli/dist-package/package/package.json').version")
-          cp "packages/box-cli/dist-package/box-bounty-$version.tgz" box-bounty.tgz
+          cp "packages/box-cli/dist-package/omakase-box-$version.tgz" box-bounty.tgz
           gh release create "$GITHUB_REF_NAME" box-bounty.tgz --verify-tag --title "$GITHUB_REF_NAME" --notes "Install: npm install -g https://github.com/$GITHUB_REPOSITORY/releases/latest/download/box-bounty.tgz"
