@@ -74,6 +74,7 @@ export default function Page() {
         <div className="border-t border-b border-line py-6 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-x-6 gap-y-3">
           <div className="text-soft max-w-prose">
             <p>Run this once in your terminal. It needs Node 22.13 or later, Git, and <code>gh auth login</code>. Your next agent session finds the tool.</p>
+            <p className="mt-2 text-sm">If Windows PowerShell says running scripts is disabled, use <code>npx.cmd</code> in place of <code>npx</code>.</p>
           </div>
           <div className="min-w-0"><CodeBlock lines={INSTALL} mark="install" what="install line" /></div>
         </div>

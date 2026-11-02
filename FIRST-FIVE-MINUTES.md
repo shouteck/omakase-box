@@ -20,6 +20,9 @@ Run this once:
 
     npx -y omakase-box setup
 
+If Windows PowerShell says running scripts is disabled, use `npx.cmd` in place of
+`npx`, and `box.cmd` in place of `box`. You need not change the policy.
+
 It puts `box` on this machine and a small skill where your agents look, says
 exactly what it wrote, and `box setup --remove` takes the skill away. Your next
 agent session finds the tool. Run `box bounty` in a project to see where things stand.

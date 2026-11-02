@@ -2,6 +2,7 @@
 // handle() the Worker runs, reading a GitHub stand-in over HTTP.
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -450,6 +451,8 @@ describe('the pages', () => {
     // The page, the release job and the guide inside the package name one address.
     expect(install).toEqual(['npx -y omakase-box setup']);
     expect(readFileSync(join(clone, 'FIRST-FIVE-MINUTES.md'), 'utf8')).toContain(install[0]!);
+    // PowerShell's default policy blocks npx.ps1, so the page names the way through.
+    expect((await readFile(join(clone, 'packages/box-platform/out/how/index.html'), 'utf8'))).toContain('npx.cmd');
     expect(lines).toHaveLength(6);
     expect(lines[0]).toBe('git clone https://github.com/shouteck/omakase-box');
     expect(lines[5]).toBe('box bounty');
