@@ -6,20 +6,13 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, lstatSync, mkdirSync, readFileSync, rmdirSync, unlinkSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { delimiter, join } from 'node:path';
+import { SKILL_TARGETS } from './instructions.js';
 import { showPath } from './notice.js';
 import { INSTALL_SPEC, PACKAGE_REMOVE, SKILL_MARKER, SKILL_TEXT } from './wording.js';
 
 const SKILL = 'omakase-box';
 
-// Each host's documented user-level skills folder, read on 2 November 2026. Cursor, Gemini CLI
-// and Codex all read ~/.agents/skills, so one folder serves them.
-const TARGETS = [
-  { names: 'Claude Code', home: '.claude', skills: ['.claude', 'skills'] },
-  { names: 'Codex, Cursor and Gemini CLI', home: ['.codex', '.cursor', '.gemini', '.agents'], skills: ['.agents', 'skills'] }
-] as const;
-
-const found = (home: string, target: typeof TARGETS[number]): boolean =>
-  (typeof target.home === 'string' ? [target.home] : target.home).some(name => existsSync(join(home, name)));
+const found = (home: string, target: typeof SKILL_TARGETS[number]): boolean => target.homes.some(name => existsSync(join(home, name)));
 
 // A `box` from npx's own cache is gone with the cache, so it does not count as installed.
 function boxOnPath(): boolean {
@@ -54,7 +47,7 @@ function holder(folder: string): 'none' | 'ours' | 'foreign' {
 export function runSetup(): string[] {
   const home = homedir();
   const lines = [installBox()];
-  const targets = TARGETS.filter(target => found(home, target));
+  const targets = SKILL_TARGETS.filter(target => found(home, target));
   for (const target of targets) {
     const folder = join(home, ...target.skills, SKILL);
     if (holder(folder) === 'foreign') { lines.push(`${target.names}: ${showPath(folder)} is not ours, so it was left as it is; nothing written.`); continue; }
@@ -70,7 +63,7 @@ export function runSetup(): string[] {
 
 export function runSetupRemove(): string[] {
   const home = homedir();
-  const lines = TARGETS.flatMap(target => {
+  const lines = SKILL_TARGETS.flatMap(target => {
     const folder = join(home, ...target.skills, SKILL);
     const state = holder(folder);
     if (state === 'none') return [];

@@ -19,6 +19,13 @@ export const INSTRUCTION_HOSTS = [
   { host: 'GitHub Copilot', files: ['.github/copilot-instructions.md'], directory: null, imports: 'none' }
 ] as const;
 
+// Each host's documented user-level skills folder, read on 2 November 2026, for `box setup`.
+// Cursor, Gemini CLI and Codex all read ~/.agents/skills, so one folder serves them.
+export const SKILL_TARGETS = [
+  { names: 'Claude Code', homes: ['.claude'], skills: ['.claude', 'skills'] },
+  { names: 'Codex, Cursor and Gemini CLI', homes: ['.codex', '.cursor', '.gemini', '.agents'], skills: ['.agents', 'skills'] }
+] as const;
+
 export interface InstructionFile { readonly path: string; readonly refusal?: string }
 const folded = (path: string) => path.replaceAll('\\', '/').toLowerCase();
 
