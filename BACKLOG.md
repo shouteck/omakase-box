@@ -27,6 +27,7 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
   - a solver's existing Stripe account cannot be linked: each solver gets a new one (Stripe's OAuth is v1 and not recommended for new platforms); a question for PF12;
   - the board holds the full secret key because a restricted key cannot create a v2 account; move to a restricted key if Stripe offers Write on Accounts v2;
   - not run on v2: paying the authentication page in the browser (proven on v1); a solver disconnecting from their own dashboard.
+- **The CLI's pay-on-merge line does not say a repository appears on the page only after a bounty there is posted** (PF20's fresh agent). The page says it; the CLI could too.
 - **Review every underlined link and action across the site (owner, 3 November 2026):** an action with a real consequence must not look like a plain link (PF20 moved removing the card to a confirmed button). With it, one researched pattern for every destructive confirmation, from big companies' own pages (owner, 3 November 2026: the card dialog works but could be done better). Part of the "fewer words, more showing" pass before PF9.
 - **The signed-in page needs a redesign (owner, 2 November 2026):** briefed as [PF19](waves/PF19.md).
 
