@@ -199,8 +199,8 @@ describe('pay on merge, as the board reports it', { timeout: 180000 }, () => {
   const PATH = '/api/pay-on-merge?repository=owner%2Fproject';
   const answer = (body: unknown, status = 200) => routes({ [PATH]: { status, body } });
   const cases: [string, () => void, RegExp][] = [
-    ['on', () => answer({ repository: 'owner/project', set_up: true, on_for: ['owner'] }), /pay on merge on owner\/project: on for owner — the board charges the saved card when one solution lands, up to the "charge up to" set there; change it at http:\/\/127\.0\.0\.1:\d+\/me\/#pay; this tool cannot change it/],
-    ['off', () => answer({ repository: 'owner/project', set_up: true, on_for: [] }), /pay on merge on owner\/project: off — only your signed-in page turns it on, with a saved card and how much each bounty may charge: http:\/\/127\.0\.0\.1:\d+\/me\/#pay; this tool cannot change it/],
+    ['on', () => answer({ repository: 'owner/project', set_up: true, on_for: ['owner'] }), /pay on merge on owner\/project: on for owner — when one solution lands, the board charges the saved card the reward approved there; change it at http:\/\/127\.0\.0\.1:\d+\/me\/#pay; this tool cannot change it/],
+    ['off', () => answer({ repository: 'owner/project', set_up: true, on_for: [] }), /pay on merge on owner\/project: off — only your signed-in page turns it on, with a saved card and the reward each bounty is paid: http:\/\/127\.0\.0\.1:\d+\/me\/#pay; this tool cannot change it/],
     ['not set up', () => answer({ repository: 'owner/project', set_up: false, on_for: [] }), /pay on merge on owner\/project: not set up on this board; owners pay by hand or with one click/],
     ['an old board', () => answer({ error: 'no' }, 404), /pay on merge on owner\/project: not read \(the board answered 404\); see or turn it on at http:\/\/127\.0\.0\.1:\d+\/me\/#pay; this tool cannot change it/],
     ['an answer for another repository', () => answer({ repository: 'other/thing', set_up: true, on_for: ['owner'] }), /pay on merge on owner\/project: not read \(its answer was unreadable\)/]

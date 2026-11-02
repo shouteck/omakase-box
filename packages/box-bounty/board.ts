@@ -212,8 +212,8 @@ export function payOnMergeLines(repositories: readonly string[]): string[] {
     if (answer['set_up'] === false) return `pay on merge on ${repository}: not set up on this board; owners pay by hand or with one click`;
     const on = (answer['on_for'] as unknown[]).filter((login): login is string => typeof login === 'string' && LOGIN.test(login));
     return on.length === 0
-      ? `pay on merge on ${repository}: off — only your signed-in page turns it on, with a saved card and how much each bounty may charge: ${page}; ${cannot}`
-      : `pay on merge on ${repository}: on for ${on.join(', ')} — the board charges the saved card when one solution lands, up to the "charge up to" set there; change it at ${page}; ${cannot}`;
+      ? `pay on merge on ${repository}: off — only your signed-in page turns it on, with a saved card and the reward each bounty is paid: ${page}; ${cannot}`
+      : `pay on merge on ${repository}: on for ${on.join(', ')} — when one solution lands, the board charges the saved card the reward approved there; change it at ${page}; ${cannot}`;
   });
 }
 

@@ -395,23 +395,27 @@ describe('the pages', () => {
       await back.close();
     });
 
-    // PF20: the board's amount is "Charge up to", never a "limit", which is the tool's word for the most promised across open bounties.
-    it('pay on merge says "Charge up to", never "limit"; a new repository starts from its largest open reward', async () => {
-      const { page, close } = await open({ ...base, login: 'example-mara', pay: pay({ card: 'visa ending 3155', repositories: [{ repository: 'example-org/ledger', on_at: new Date(NOW).toISOString(), limit: 100 }] }) }, '/me/#pay');
-      await page.route('**/bounties.json?repository=example-org%2Flite*', route => route.fulfill({ json: { bounties: [{ amount: 30 }, { amount: 75 }, { amount: 0 }] } }));
-      const section = async () => (await page.locator('main').innerText()).slice((await page.locator('main').innerText()).indexOf('Pay on merge'));
-      expect(await section()).toContain('Charge up to');
-      expect(await section()).not.toMatch(/limit/i);
-      await page.click('text=+ Add a repository');
-      await page.fill('dialog[open] input[name=repository]', 'example-org/lite');
-      await expect.poll(() => page.inputValue('dialog[open] input[name=limit]')).toBe('75');
-      expect(await page.locator('dialog[open] [data-from]').innerText()).toBe('Filled in from the largest reward on its 2 open bounties. Change it if you like.');
-      expect(await page.locator('dialog[open]').innerText()).not.toMatch(/limit/i);
-      // A typed amount is the owner's: the board does not overwrite it.
-      await page.fill('dialog[open] input[name=limit]', '20');
-      await page.fill('dialog[open] input[name=repository]', 'example-org/lite ');
-      await page.waitForTimeout(600);
-      expect(await page.inputValue('dialog[open] input[name=limit]')).toBe('20');
+    // PF20, the owner: one fixed amount called "Reward" (never "limit", the tool's word for its budget), and repositories
+    // picked from the owner's own bounties, nothing typed.
+    it('pay on merge says "Reward"; only your repositories with bounties are offered, each starting from its reward', async () => {
+      const yours = [{ repository: 'example-org/ledger', open: 2, reward: 45 }, { repository: 'example-org/lite', open: 1, reward: 75 }];
+      const { page, close } = await open({ ...base, login: 'example-mara', pay: pay({ card: 'visa ending 3155', repositories: [{ repository: 'example-org/ledger', on_at: new Date(NOW).toISOString(), limit: 45, open: 2 }], yours }) }, '/me/#pay');
+      const section = async () => { const text = await page.locator('main').innerText(); return text.slice(text.indexOf('Pay on merge')); };
+      expect(await page.locator('table[aria-label="Repositories on pay on merge"] th').allInnerTexts()).toEqual(['Repository', 'Reward', 'Open bounties', 'On since', '']);
+      expect(await section()).not.toMatch(/limit|charge up to/i);
+      await page.click('text=+ Turn on a repository');
+      const dialog = page.locator('dialog[open]');
+      expect(await dialog.locator('input[name=repository]').evaluateAll(inputs => inputs.map(input => [(input as HTMLInputElement).type, (input as HTMLInputElement).value]))).toEqual([['radio', 'example-org/lite']]);
+      expect(await dialog.innerText()).toContain('1 open · $75');
+      expect(await page.inputValue('dialog[open] input[name=reward]')).toBe('75');
+      expect(await dialog.innerText()).not.toMatch(/limit/i);
+      await close();
+    });
+
+    it('with no bounties posted, pay on merge says to post one first, and offers nothing to type', async () => {
+      const { page, close } = await open({ ...base, login: 'example-mara', pay: pay({ card: 'visa ending 3155', repositories: [], yours: [] }) }, '/me/#pay');
+      expect(await page.locator('main').innerText()).toMatch(/No repositories yet\.\s+Pay on merge works on repositories where you have posted a bounty\. Post one with your agent \(box bounty\), and it appears here to turn on\./);
+      expect(await page.locator('text=+ Turn on a repository').count()).toBe(0);
       await close();
     });
 

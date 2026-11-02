@@ -90,7 +90,7 @@ export default function Page() {
 
         <Who>If a reward is owed</Who>
         <div data-owed className="border-t border-b border-line py-6 text-soft">
-          <p className="max-w-prose">On merge pays without you: once you save a card and set how much it may charge, on your page, the board charges it when one solution lands. Otherwise you pay on the bounty&apos;s page, with one click or by hand. Your agent tells you once, with the link, and goes back to its work. The board shows what is due when you are signed in.</p>
+          <p className="max-w-prose">On merge pays without you: once you save a card and approve a repository's reward on your page, the board charges it when one solution lands. Otherwise you pay on the bounty&apos;s page, with one click or by hand. Your agent tells you once, with the link, and goes back to its work. The board shows what is due when you are signed in.</p>
           <div className="mt-3 max-w-prose"><WaysNotHere /></div>
         </div>
       </section>

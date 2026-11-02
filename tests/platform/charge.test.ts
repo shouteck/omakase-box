@@ -44,8 +44,8 @@ const post = async (path: string, token: string | null, body: unknown = {}) => {
 };
 const stateOf = async (id = ID) => (await env.DB.prepare('SELECT state FROM charges WHERE bounty_id = ?').bind(id).first<{ state: string }>())?.state ?? null;
 
-/** The owner saves a card through the routes, sets a limit, and turns the repository on. */
-async function ownerOn(limit = 100, repositories: string[] = [REPOSITORY]): Promise<string> {
+/** The owner saves a card through the routes, approves the reward the bounty states ($45), and turns the repository on. */
+async function ownerOn(limit = 45, repositories: string[] = [REPOSITORY]): Promise<string> {
   const token = await signIn(OWNER_ID, OWNER);
   expect((await post('/api/me/card', token)).status).toBe(200);
   s.sessionCustomer = (await env.DB.prepare('SELECT customer_id FROM pay_settings WHERE github_id = ?').bind(OWNER_ID).first<{ customer_id: string }>())!.customer_id;
@@ -133,6 +133,32 @@ describe('nothing is charged', () => {
     expect(await stateOf()).toBe(state);
     expect(s.charged()).toHaveLength(charged);
   });
+  // PF20, the owner: one fixed amount, the reward. A bounty is charged only when its stated reward is the one approved here.
+  it.each([
+    ['equal', 45, 'paid', 1],
+    ['the bounty states less', 50, 'refused-over-limit', 0],
+    ['the bounty states more', 40, 'refused-over-limit', 0]
+  ])('the approved reward and the bounty\'s: %s', async (_name, approved, state, charged) => {
+    await ownerOn(approved);
+    await solverReady();
+    await merged();
+    await settle();
+    expect(await stateOf()).toBe(state);
+    expect(s.charged()).toHaveLength(charged);
+  });
+
+  // PF20: the repositories offered are those where GitHub says this person opened bounty issues; another poster's are not theirs.
+  it('your page offers only the repositories where you posted bounties, each with its open count and reward', async () => {
+    const token = await ownerOn();
+    // Another poster's bounty, really on the board: its repository is public and its poster has a GitHub id.
+    r.standin.repositories.set('example-org/other', { language: 'TypeScript', visibility: 'public' });
+    r.standin.accountIds.set('example-someone', 9100);
+    await merged(issue(), issue({ id: 'bt-00000000000b', number: 2, repository: 'example-org/other', poster: 'example-someone', amount: 90 }));
+    expect(await env.DB.prepare('SELECT poster_id FROM bounties WHERE id = ?').bind('bt-00000000000b').first()).toEqual({ poster_id: 9100 });
+    const me = await (await handle(new Request(`${ORIGIN}/api/me`, { headers: { cookie: `__Host-board_session=${token}` } }), env)).json() as { pay: { yours: unknown[] } };
+    expect(me.pay.yours).toEqual([{ repository: REPOSITORY, open: expect.any(Number), reward: 45 }]);
+  });
+
   // PF20: the owner's tool reads this to name the one step only the signed-in page takes. Logins only.
   it('the public answer says whose bounties on a repository pay on merge, and nothing about the card or the amount', async () => {
     const read = async (repository: string, keys: object = {}) => {
@@ -298,7 +324,7 @@ describe('decide alone', () => {
   const facts = (row: ChargeFacts['row']): ChargeFacts => ({
     amount: 45, poster: OWNER, on_at: new Date(NOW).toISOString(), recorded: false, row,
     landed: [{ number: 7, author: SOLVER, author_id: SOLVER_ID, merged_at: after, association: 'NONE', on_default: 1 }],
-    card: { payment_method: 'pm_saved', customer: 'cus_1', limit: 100 }, solver: { account_id: 'acct_1', ready: true }
+    card: { payment_method: 'pm_saved', customer: 'cus_1', limit: 45 }, solver: { account_id: 'acct_1', ready: true }
   });
   const at = NOW + 10 * MINUTE;
   it('charges when nothing stands in the way', () => expect(decide(facts(null), at).act).toBe('charge'));
