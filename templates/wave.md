@@ -25,6 +25,7 @@ What will be true when this is done, as something a person can observe or a comm
 - <if a check covers every user-facing hit of something, name the mechanical pattern and the expected count, not a sample list; a sample invites a reasoned skip (BT41)>
 - <if this wave removes, skips or speeds up a check: first write the test that proves a real break is still caught, then make the change>
 - <if the design relies on a provider's event: make the event happen for real first; PayPal's refund on the solver's account sent none (PF13)>
+- <if a provider call is new: prove it on the account that goes live (its sandbox), not an older test account; an older Stripe sandbox accepted what the owner's account refuses (PF18)>
 - <if the owner approves a page's looks: screenshots are full pages with the sticky menu static; section shots read as a cut-off site (PF17)>
 - <if the wave changes a page: read the running page as its user before the first candidate; PF3 and PF4 found wording faults only there, after verify passed>
 - <if a brief sets a timing target for a command (seconds, runs), derive it from a measured run or a declared map (e.g. the `// reads:` headers), never from the head chef's estimate of which files read what (K45)>
