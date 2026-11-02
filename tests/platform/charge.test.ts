@@ -133,6 +133,24 @@ describe('nothing is charged', () => {
     expect(await stateOf()).toBe(state);
     expect(s.charged()).toHaveLength(charged);
   });
+  // PF20: the owner's tool reads this to name the one step only the signed-in page takes. Logins only.
+  it('the public answer says whose bounties on a repository pay on merge, and nothing about the card or the amount', async () => {
+    const read = async (repository: string, keys: object = {}) => {
+      const response = await handle(new Request(`${ORIGIN}/api/pay-on-merge?repository=${encodeURIComponent(repository)}`), { ...env, ...keys });
+      return { status: response.status, body: await response.json() as any };
+    };
+    expect((await read(REPOSITORY)).body).toEqual({ repository: REPOSITORY, set_up: true, on_for: [] });
+    const token = await ownerOn(45);
+    const on = await read(REPOSITORY);
+    expect(on.body).toEqual({ repository: REPOSITORY, set_up: true, on_for: [OWNER] });
+    expect(JSON.stringify(on.body)).not.toMatch(/pm_|cus_|visa|45|limit/i);
+    expect((await read('example-org/other')).body.on_for).toEqual([]);
+    // Removing the card turns it off for every repository.
+    expect((await post('/api/me/pay', token, { remove_card: true })).status).toBe(200);
+    expect((await read(REPOSITORY)).body.on_for).toEqual([]);
+    expect((await read(REPOSITORY, { STRIPE_SECRET_KEY: '' })).body).toEqual({ repository: REPOSITORY, set_up: false, on_for: [] });
+    for (const bad of ['', 'no-slash', '../../etc', 'a/b/c', `${'x'.repeat(40)}/y`]) expect((await read(bad)).status, bad).toBe(400);
+  });
   it('a repository saved with no limit of its own is refused, and nothing changes', async () => {
     const token = await ownerOn();
     const answer = await post('/api/me/pay', token, { repositories: [{ repository: REPOSITORY }] });

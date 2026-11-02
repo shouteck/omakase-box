@@ -349,6 +349,20 @@ export async function payingIds(env: Env, ids: readonly string[]): Promise<Reado
   return new Set(results.map(row => row.id));
 }
 
+/**
+ * Whose bounties on one repository pay on merge (PF20): the owner's tool reads it to name the one step only the
+ * signed-in page takes. Logins only, as each bounty's pays_on_merge already shows: no card, no amount, no account.
+ */
+export async function payOnMergeOf(env: Env, repository: string): Promise<{ repository: string; set_up: boolean; on_for: string[] }> {
+  if (!stripeOn(env)) return { repository, set_up: false, on_for: [] };
+  const { results } = await env.DB.prepare(`SELECT COALESCE(
+      (SELECT login FROM sessions WHERE github_id = r.github_id ORDER BY expires_at DESC LIMIT 1),
+      (SELECT poster FROM bounties WHERE poster_id = r.github_id ORDER BY created_at DESC LIMIT 1)) AS login
+    FROM pay_repositories r JOIN pay_settings s ON s.github_id = r.github_id
+    WHERE r.repository = ? AND s.payment_method IS NOT NULL ORDER BY r.on_at LIMIT 10`).bind(repository).all<{ login: string | null }>();
+  return { repository, set_up: true, on_for: results.map(row => row.login).filter((login): login is string => login !== null) };
+}
+
 /** One bounty's charge, for its facts. `looked` is the board's own bookkeeping and says nothing. */
 export const chargeOf = async (env: Env, id: string): Promise<{ state: Exclude<ChargeState, 'looked'>; at: number; amount: number | null; solver: string | null } | null> =>
   env.DB.prepare(`SELECT state, at, amount, solver FROM charges WHERE bounty_id = ? AND state != 'looked'`).bind(id).first();

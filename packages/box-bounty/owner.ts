@@ -16,7 +16,7 @@ import { checkInstructionSettingsWrite, readInstructions, writeInstructions } fr
 import { changePublishList, publishLists } from './never-ship.js';
 import { githubRemotes, repositoryAddress } from './repository.js';
 import { boundAmount } from './format.js';
-import { boardAddress } from './board.js';
+import { boardAddress, payOnMergeLines } from './board.js';
 import { BOARD_SENDS } from './wording.js';
 import { boardAddressOf, saveSettings } from './settings.js';
 import { paymentOf } from './pay.js';
@@ -100,6 +100,8 @@ export function allowRepository(repoRoot: string | null, name?: string, ask = fa
   // offers the one command here and never writes the block itself.
   if (repoRoot !== null && !readInstructions(repoRoot).enabled) lines.push('an agent box setup does not cover learns of the tool only once instructions are on — box bounty config set instructions true writes the block into this project\'s instruction files');
   if (ask) lines.push('This covers each post and each merge — the owner is asked before either.');
+  // The one step after setup that only the owner takes, named with its page (PF20).
+  lines.push(...payOnMergeLines([address]));
   const retiredNotice = rewardNoticeLine();
   if (retiredNotice !== null) lines.push(retiredNotice);
   const askNotice = askMergeNoticeLine();
@@ -323,7 +325,8 @@ export function renderConfig(repoRoot: string | null, options?: { readonly full?
   // A board the tool calls is always said; only "off, and nobody chose it" stays off the bare surface.
   const board = boardAddress();
   if (full || board !== '' || settings.board !== undefined) lines.push(`board: ${board === '' ? 'off — the tool makes no call to it' : `${board} — ${BOARD_SENDS}`}; change: box bounty config set board <address>, or "" for off`);
-  if (board !== '') lines.push(`pay on merge: only the owner's signed-in page at ${board}/me/ can turn it on or show it; this command cannot; each bounty's state: box bounty status`);
+  // Pay on merge is the one step only the owner's signed-in page takes: each allowed repository's state, as the board says it (PF20).
+  if (board !== '') lines.push(...payOnMergeLines(Object.entries(settings.repositories).filter(([, entry]) => entry.bounty !== null && entry.bounty !== 'off').map(([key]) => key)));
   if (!full) lines.push('every setting, its history and the commands that change it: box bounty config --full');
   const rewardNotice = rewardNoticeLine();
   if (rewardNotice !== null) lines.push(rewardNotice);

@@ -1,6 +1,6 @@
 'use client';
 // Stripe on Your page (PF19): the solver's connection, a row with its status; the owner's pay on merge,
-// one card and a table of repositories, each with its own limit. Signed-in only: this page is the one place
+// one card and a table of repositories, each with what it may charge ("charge up to"; the CLI's limit is another thing). Signed-in only: this page is the one place
 // charging can be turned on. The card itself is typed on Stripe's page.
 import { useEffect, useRef, useState } from 'react';
 import { countryName, STRIPE_COUNTRIES } from '../src/pay-ways.ts';
@@ -67,18 +67,34 @@ export function StripeRow({ pay, setPay }) {
   );
 }
 
-/** Add or change one repository's limit. The whole list goes back, so nothing else moves. */
+/** Add a repository or change what it may charge. The whole list goes back, so nothing else moves. */
 function RepositoryDialog({ open, onClose, editing, repositories, save }) {
   const [name, setName] = useState('');
   const [limit, setLimit] = useState('');
-  useEffect(() => { if (open) { setName(editing?.repository ?? ''); setLimit(editing?.limit ?? ''); } }, [open, editing]);
+  const [from, setFrom] = useState(null);
+  const typed = useRef(false);
+  useEffect(() => { if (open) { setName(editing?.repository ?? ''); setLimit(editing?.limit ?? ''); setFrom(null); typed.current = editing !== null; } }, [open, editing]);
+  // A new repository starts from what the board already sees there: the largest reward on its open bounties (PF20). The owner confirms or changes it.
+  useEffect(() => {
+    if (!open || editing !== null || !/^[\w.-]+\/[\w.-]+$/.test(name.trim())) return;
+    const wanted = name.trim();
+    const timer = setTimeout(() => {
+      fetch(`/bounties.json?repository=${encodeURIComponent(wanted)}&limit=50`).then(response => (response.ok ? response.json() : null)).then(feed => {
+        const amounts = (feed?.bounties ?? []).map(bounty => bounty.amount).filter(amount => Number.isSafeInteger(amount) && amount > 0);
+        if (amounts.length === 0 || typed.current) return;
+        setLimit(String(Math.max(...amounts)));
+        setFrom({ repository: wanted, count: amounts.length });
+      }).catch(() => undefined);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [name, open, editing]);
   const submit = async event => {
     event.preventDefault();
     const others = repositories.filter(entry => entry.repository.toLowerCase() !== (editing?.repository ?? name).toLowerCase());
     if (await save([...others, { repository: editing?.repository ?? name.trim(), limit: Number(limit) }])) onClose();
   };
   return (
-    <Dialog open={open} onClose={onClose} title={editing ? `Limit for ${editing.repository}` : 'Add a repository'} onSubmit={submit} submit={editing ? 'Save' : 'Turn on'}>
+    <Dialog open={open} onClose={onClose} title={editing ? `Charge up to, on ${editing.repository}` : 'Add a repository'} onSubmit={submit} submit={editing ? 'Save' : 'Turn on'}>
       {editing ? null : (
         <label className="flex flex-col gap-1">
           <span>Repository</span>
@@ -86,15 +102,16 @@ function RepositoryDialog({ open, onClose, editing, repositories, save }) {
         </label>
       )}
       <label className="flex flex-col gap-1">
-        <span>Limit per bounty, in whole dollars</span>
-        <input name="limit" type="number" min="1" className={FIELD} value={limit} onChange={event => setLimit(event.target.value)} required />
+        <span>Charge up to, per bounty, in whole dollars</span>
+        <input name="limit" type="number" min="1" className={FIELD} value={limit} onChange={event => { typed.current = true; setFrom(null); setLimit(event.target.value); }} required />
       </label>
-      <p className="text-sm text-soft">When exactly one solution to your bounty there lands, the board starts a charge from your card to the solver&apos;s own Stripe account, up to this limit. A merge from before you turned it on is never charged.</p>
+      {from !== null ? <p data-from className="text-sm text-soft">Filled in from the largest reward on its {from.count === 1 ? 'open bounty' : `${from.count} open bounties`}. Change it if you like.</p> : null}
+      <p className="text-sm text-soft">When exactly one solution to your bounty there lands, the board starts a charge from your card to the solver&apos;s own Stripe account, up to this amount. A merge from before you turned it on is never charged.</p>
     </Dialog>
   );
 }
 
-/** The owner's pay on merge: one card, then each repository with its own limit. Off by default. */
+/** The owner's pay on merge: one card, then each repository with what it may charge. Off by default. */
 export function PayOnMergeOwner({ pay, setPay }) {
   const { call, leave, message } = usePayCall(setPay);
   const [dialog, setDialog] = useState(null);
@@ -114,7 +131,7 @@ export function PayOnMergeOwner({ pay, setPay }) {
   if (!pay.card) {
     return (
       <>
-        <Empty title="Pay on merge is off." why="Save a card, then choose repositories and a limit for each." action={<Button primary onClick={() => leave('/api/me/card')}>Save a card on Stripe&apos;s page</Button>} />
+        <Empty title="Pay on merge is off." why="Save a card, then choose repositories and how much each may charge." action={<Button primary onClick={() => leave('/api/me/card')}>Save a card on Stripe&apos;s page</Button>} />
         <Said message={message} />
       </>
     );
@@ -128,7 +145,7 @@ export function PayOnMergeOwner({ pay, setPay }) {
         {repositories.length === 0
           ? <Empty title="No repository is on." why="Add one, and merged solutions there pay themselves." />
           : (
-            <Table label="Repositories on pay on merge" head={['Repository', ['Limit per bounty', 'r'], 'On since', '']}
+            <Table label="Repositories on pay on merge" head={['Repository', ['Charge up to', 'r'], 'On since', '']}
               rows={repositories.map(entry => [
                 <span key="n" className="break-all">{entry.repository}</span>,
                 `$${entry.limit}`,

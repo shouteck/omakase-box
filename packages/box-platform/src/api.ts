@@ -1,7 +1,7 @@
 // What a browser may have: only facts about bounties on public repositories,
 // filtered here on the server. No unfiltered record ever leaves this file.
 import { accountResponse } from './account.js';
-import { applyEvent, payingIds } from './charge.js';
+import { applyEvent, payingIds, payOnMergeOf } from './charge.js';
 import { applyPayPalEvent, authorTakes } from './paypal-pay.js';
 import { PayPalUnavailable, webhookHolds } from './paypal.js';
 import { waysOfBounty } from './pay-ways.js';
@@ -134,6 +134,11 @@ export async function handle(request: Request, env: Env): Promise<Response> {
   if (file !== null) return detailResponse(request, env, decodeURIComponent(file[1]!), now);
   if (url.pathname === '/api/board') return board(env, url, now);
   if (url.pathname === '/api/ways') return json(200, waysOn(env));
+  if (url.pathname === '/api/pay-on-merge') {
+    const repository = url.searchParams.get('repository') ?? '';
+    if (!/^[A-Za-z\d-]{1,39}\/[A-Za-z\d._-]{1,100}$/.test(repository)) return json(400, { error: 'Name one repository as owner/name. Next: /api/pay-on-merge?repository=owner/name.' });
+    return json(200, await payOnMergeOf(env, repository));
+  }
   const detail = /^\/api\/b\/([^/]+)$/.exec(url.pathname);
   if (detail !== null) return bounty(env, decodeURIComponent(detail[1]!), now);
   if (url.pathname.startsWith('/api/')) return json(404, { error: 'No such address. Next: /api/board.' });

@@ -395,6 +395,26 @@ describe('the pages', () => {
       await back.close();
     });
 
+    // PF20: the board's amount is "Charge up to", never a "limit", which is the tool's word for the most promised across open bounties.
+    it('pay on merge says "Charge up to", never "limit"; a new repository starts from its largest open reward', async () => {
+      const { page, close } = await open({ ...base, login: 'example-mara', pay: pay({ card: 'visa ending 3155', repositories: [{ repository: 'example-org/ledger', on_at: new Date(NOW).toISOString(), limit: 100 }] }) }, '/me/#pay');
+      await page.route('**/bounties.json?repository=example-org%2Flite*', route => route.fulfill({ json: { bounties: [{ amount: 30 }, { amount: 75 }, { amount: 0 }] } }));
+      const section = async () => (await page.locator('main').innerText()).slice((await page.locator('main').innerText()).indexOf('Pay on merge'));
+      expect(await section()).toContain('Charge up to');
+      expect(await section()).not.toMatch(/limit/i);
+      await page.click('text=+ Add a repository');
+      await page.fill('dialog[open] input[name=repository]', 'example-org/lite');
+      await expect.poll(() => page.inputValue('dialog[open] input[name=limit]')).toBe('75');
+      expect(await page.locator('dialog[open] [data-from]').innerText()).toBe('Filled in from the largest reward on its 2 open bounties. Change it if you like.');
+      expect(await page.locator('dialog[open]').innerText()).not.toMatch(/limit/i);
+      // A typed amount is the owner's: the board does not overwrite it.
+      await page.fill('dialog[open] input[name=limit]', '20');
+      await page.fill('dialog[open] input[name=repository]', 'example-org/lite ');
+      await page.waitForTimeout(600);
+      expect(await page.inputValue('dialog[open] input[name=limit]')).toBe('20');
+      await close();
+    });
+
     it('the account menu holds the public profile and sign-out; the add dialog opens and closes by keyboard; a phone holds it all', async () => {
       const me = { ...base, login: 'example-quill', pay: pay() };
       const { page, close } = await open(me);
