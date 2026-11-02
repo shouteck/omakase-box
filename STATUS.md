@@ -1,44 +1,34 @@
 # Status
 
-Updated by the CTO on 2 November 2026, when PF16 closed.
+Updated by the CTO on 3 November 2026, when PF18 merged.
 
 ## Now
 
-- **PF16 is live,** deployed on the owner's word on 2 November 2026 (Worker version `bac9a44a`): the install is `npx -y omakase-box setup`. `omakase-box@0.1.3` is on npm under the owner's account, published by the owner; the GitHub release `v0.1.3` stands behind it. See [PF16](waves/PF16.md).
-- **PF17 is live,** deployed on the owner's word on 2 November 2026 (Worker version `5a246140`): one command window on How it works, fewer links, no `/#pay`. See [PF17](waves/PF17.md).
-- **PF15 is live,** deployed on the owner's word on 2 November 2026 (Worker version `d014ce4d`). The live board reads `one_click: []`, `on_merge: false` and shows no open bounties yet. See [PF15](waves/PF15.md).
-- **On the board and master:** the three ways to pay in the tool, feed, MCP and front page; How it works where installing is the only human step; setup text in `box bounty`; a payments-due notice on the board; an unasked `status` says nothing of what is owed; `box` a real command from the install.
-- **PF14 and PF13 are live, with no Stripe or PayPal key:** the one-click code says "not set up" until a key is set. Stripe proven in test mode, PayPal in its sandbox, each end to end.
-- **PayPal's review:** the owner saved Log in with PayPal on the live app, omakase-box, on 2 November 2026. PayPal's answer is awaited. No key goes on the board until it passes.
-- **PayPal live is unproven:** real webhook delivery; Cloudflare's cron running the re-read; whether the Business account needs a registered business; whether PayPal's review accepts this use. Reach is unsettled for 11 of the 14 countries Stripe refused.
-- **PF11 is live with no Stripe key.** Payment stays manual until the owner sets a live key; real payments are the owner's.
-- **PF8 and PF10 are live:** the board at https://open-bounty-board.box-platform.workers.dev, at $0, with real sign-in. The CLI's default board is that address.
-- **For PF9:**
-  - read the CPU of `settlePayPal` and of the payments-due notice, and `exceededCpu`, on the free plan (a hint's look and the busiest refreshes already pass 10 ms: BACKLOG);
-  - run PayPal's connect on a deployed board;
-  - a seat with its own `BOX_BOUNTY_SETTINGS_DIR` gets no default board; run `box bounty config set board <address>` there;
-  - prove one later session end to end: `box setup` on a real home folder, then a new agent finds the skill and reaches a post, with its owner answering in the conversation;
-  - Wrangler's login is on this machine, so the CTO can redeploy and read logs; `wrangler logout` ends that.
-- **Read the off-machine run at the next kickoff:** it covers PF16's merge.
-- **Branches (owner, 31 October 2026):** work closes onto master. The cloud session branch `claude/serene-noether-m9qvs3` is left as it is.
-- **For the owner:**
-  - keep the Stripe test key and PayPal's sandbox app for PF9, or revoke them; PayPal's sandbox secret and test passwords were pasted in the PF13 session's chat, so regenerate the secret, and remove the six `PAYPAL_SANDBOX_*` variables when done;
-  - delete the private `shouteck/kitchen-PF8-private`; its issue is closed and `gh` has no delete scope here;
-  - the stray idle `node.exe` from BT44 (PID 16324), if it is still running, and a `bench.mjs` left running from `%TEMP%\kitchen-PF13-paypal` (PID 472568);
-  - the participant sessions of BT42, BT52, PF2, PF7, PF8 PF15 (`pf15-owner-reader`, `pf15-solver-reader`) and PF16 (`pf16-owner-reader`, `pf16-finds-tool`, `pf16-yes-named`, `pf16-yes-plain`), and their `%TEMP%` folders, held open until the sessions are archived: `kitchen-BT52-proof`, `kitchen-PF2-*`, `kitchen-PF7-owner` and `-solver`, `kitchen-PF8-reader`, `kitchen-PF15`, `kitchen-PF16`, `kitchen-PF16-yes`; six empty `%TEMP%\kitchen-K43-*` folders.
+- **PF18 is merged, not live** (`1720138`): Stripe ready on the board, test mode run for real across every flow, solver accounts through Accounts v2 on the full secret key with a Cloudflare-only access policy, the three ways shown as your part after a merge. No real payment made, by the owner's decision. See [PF18](waves/PF18.md).
+- **For the owner, to go live (each the owner's alone; the CTO never sees a key):**
+  1. Say the word on the deploy.
+  2. In live Stripe: Connect set up; the access policy (ASN `13335`) on the secret key; the webhook at `/api/stripe/webhook` with its six events; then `wrangler secret put` for `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`. All in `packages/box-platform/DEPLOY.md`.
+  3. Then the CTO checks, paying nothing: `/api/ways` reads Stripe; an unsigned webhook is refused; Connect and saving a card reach Stripe's pages, stopped before anything is submitted; the logs hold no key.
+- **Optional for the owner:** ask Stripe's support whether a restricted key can get Write on Accounts v2; if so, swap the secret.
+- **PF16, PF17, PF15 are live** (Worker `bac9a44a`, `5a246140`, `d014ce4d`): the install `npx -y omakase-box setup`, `omakase-box@0.1.3` on npm; one command window; the three ways in the tool, feed, MCP and front page. **PF14, PF13, PF11 are live with no key:** one click and on merge say "not set up".
+- **PayPal's review:** Log in with PayPal saved on the live app, omakase-box, on 2 November 2026; the answer is awaited. No PayPal key until it passes. PayPal live is unproven (real webhook delivery; Cloudflare's cron re-read; whether the Business account needs a registered business).
+- **PF8 and PF10 are live:** https://open-bounty-board.box-platform.workers.dev, at $0, with real sign-in.
+- **For PF9:** the CPU of `settlePayPal`, the payments-due notice and `exceededCpu` on the free plan; PayPal's connect on a deployed board; a seat with its own `BOX_BOUNTY_SETTINGS_DIR` gets no default board; one later session end to end from `box setup`. Wrangler's login is on this machine; `wrangler logout` ends that.
+- **Read the off-machine run at the next kickoff:** it covers PF18's merge.
+- **Branches (owner, 31 October 2026):** work closes onto master. `claude/serene-noether-m9qvs3` is left as it is.
+- **For the owner, cleanup:**
+  - PF18's test objects in "shoutecknik sandbox" (45 test accounts, customers, one webhook): the access policy blocks this machine, so either take the policy off that sandbox's key for a cleanup run, or delete the sandbox. Then the bench `%TEMP%\kitchen-PF18-bench` goes.
+  - The user variables `STRIPE_TEST_SANDBOX_KEY`, `STRIPE_TEST_RESTRICTED_KEY` and `STRIPE_TEST_KEY`, and the `kitchen-pf18` restricted keys in both sandboxes; roll the sandbox secret keys.
+  - PayPal's sandbox secret, pasted in the PF13 session's chat: regenerate it, and remove the six `PAYPAL_SANDBOX_*` variables when done.
+  - The private `shouteck/kitchen-PF8-private`; the stray `node.exe` from BT44 (PID 16324) and a `bench.mjs` from `%TEMP%\kitchen-PF13-paypal` (PID 472568), if still running.
+  - The participant sessions of BT42, BT52, PF2, PF7, PF8, PF15 and PF16 and their `%TEMP%` folders (`kitchen-BT52-proof`, `kitchen-PF2-*`, `kitchen-PF7-*`, `kitchen-PF8-reader`, `kitchen-PF15`, `kitchen-PF16*`); six empty `%TEMP%\kitchen-K43-*` folders.
 
 ## Next
 
-- **Decision for the owner:** say "go" on PF18.
-- **The next tool release:** the guide inside the package gains the PowerShell line (`npx.cmd`, `box.cmd`); the page carries none, by the owner's word. A new version goes to npm by the owner, and to GitHub by a `v*` tag.
-- **Order:** **PF18** (Stripe live on the board, robust test mode, who Stripe cannot pay; brief awaits "go"), **PF12** (the solver's distributor), **PF9** (the launch gate), **PF6** (with the toolbox work), **K41** (the film, last, D-2026-11-01-film-and-launch-last), then the owner's launch.
+- **Decision for the owner:** the deploy's word and the live steps above.
+- **Order:** PF18 live, **PF19** (the signed-in page redesign, owner, 2 November 2026; unbriefed; references are big companies' design systems), **PF12** (the solver's distributor; linking a solver's existing Stripe account is a question for it), **PF9** (the launch gate), **PF6**, **K41** (the film, last), then the owner's launch.
+- **The next tool release:** the guide inside the package gains the PowerShell line (`npx.cmd`, `box.cmd`); a new version goes to npm by the owner, and to GitHub by a `v*` tag.
 - **A wave for later, not briefed:** fewer words, more showing, across the site, before PF9.
-- Unbriefed, found in BT48 (BACKLOG): `rmSync` leaves non-ASCII names on Windows, which may leave a solver's file behind after a refused `apply`.
-- Unbriefed, found in PF1 (BACKLOG): the dependency audit. PF2 added the MCP SDK's dev packages, unaudited.
-- Unbriefed, left by PF4 (BACKLOG): landed but not marked merged; solvers' account age.
-- Found in PF8 (BACKLOG): a private organisation member counts as an outside solver; a squash-merged head reads as not on the default branch.
-- **Direction (owner, 2 November 2026, D-2026-11-02-install-is-the-human-step):** the common case is run entirely by agents; installing is the only required human step; add no new friction. **(1 November, D-2026-11-01-agent-only-direction):** judge for long-running agents; reach both sides through the toolboxes agents search.
-- **Payment (owner, 1 November 2026, D-2026-11-01-pay-on-merge):** the platform may start a charge but never holds money; $0 for the owner throughout; no reminders (D-2026-11-02-no-owed-reminders).
-- **Supply (owner, 1 November 2026, D-2026-11-01-solver-distributor):** the board grows into the solver's distributor and lists only our own bounties.
-- **Site looks (owner, 2 November 2026):** any change to how the website looks needs the owner's approval from before-and-after screenshots, before it merges.
-- **Verify on a cloud host:** k16 cannot run without the pinned browser (BACKLOG, "Cloud-host browser route"). **On the Windows host:** the bounty suite's 30 s timeouts fail under load (BACKLOG), so run verify with heavy apps closed.
+- Unbriefed (BACKLOG): `rmSync` and non-ASCII names on Windows (BT48); the dependency audit (PF1); landed but not marked merged, solvers' account age (PF4); a private organisation member counts as an outside solver, a squash-merged head reads as off the default branch (PF8); PF18's leftovers.
+- **Direction (owner, 2 November 2026):** agents run the common case; installing is the only required human step. **Payment (1 November):** the platform may start a charge but never holds money; $0 for the owner; no reminders. **Supply (1 November):** the board grows into the solver's distributor. **Site looks (2 November):** before-and-after screenshots and the owner's approval before a look change merges.
+- **Verify on a cloud host:** k16 needs the pinned browser (BACKLOG). **On the Windows host:** run verify from Git Bash with heavy apps closed.
