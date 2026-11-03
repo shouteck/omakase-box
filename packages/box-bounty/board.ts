@@ -292,6 +292,21 @@ function factFrom(id: string, detail: Record<string, unknown>, at: string): Boar
   };
 }
 
+/** One bounty's public detail read now, as the facts a solver's status states (PF26): never kept, never signed in. */
+export function readBountyFact(id: string): { readonly fact: BoardFact; readonly poster: string | null; readonly paysOnMerge: boolean | null; readonly reward: number | null } | null {
+  if (boardAddress() === '') return null;
+  const at = new Date().toISOString();
+  const read = readBountyDetail(id);
+  if ('failed' in read) return { fact: read.failed === 'the board does not list it' ? { kind: 'not-listed', at } : { kind: 'unreachable', at, reason: read.failed }, poster: null, paysOnMerge: null, reward: null };
+  const bounty = isObject(read.detail['bounty']) ? read.detail['bounty'] : {};
+  return {
+    fact: factFrom(id, read.detail, at) ?? { kind: 'unreachable', at, reason: 'its answer could not be read' },
+    poster: isObject(bounty['owner']) ? loginOr(bounty['owner']['login']) : null,
+    paysOnMerge: typeof bounty['pays_on_merge'] === 'boolean' ? bounty['pays_on_merge'] : null,
+    reward: isObject(bounty['reward']) ? countOr(bounty['reward']['amount']) : null
+  };
+}
+
 function storedFact(root: string, id: string): BoardFact | null {
   try {
     const value: unknown = JSON.parse(metaGet(root, readKey(id)) ?? 'null');

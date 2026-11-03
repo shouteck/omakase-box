@@ -85,7 +85,10 @@ export interface GhState {
   // Kept beside the comment, not on it: tests assert the stored comment as
   // exactly {body, user}. Seeded comments have no entry and show on every issue.
   commentIssue?: Record<string, number>;
-  prs: { number: number; user: { login: string }; base: { ref: string; repo: { full_name: string } }; head: { sha: string }; files: { filename: string }[]; body?: string; editedBy?: string; merged?: boolean; merged_at?: string; created_at?: string }[];
+  prs: { number: number; user: { login: string }; base: { ref: string; repo: { full_name: string } }; head: { sha: string }; files: { filename: string }[]; body?: string; editedBy?: string; merged?: boolean; merged_at?: string; created_at?: string; draft?: boolean; state?: string; headRef?: string;
+    /** PF26: conversation comments and reviews (with their line comments), read only through the attempt's graphql. */
+    notes?: { body: string; user: { login: string } | null; created_at?: string }[];
+    reviews?: { body?: string; user: { login: string } | null; state?: string; created_at?: string; lines?: { body: string; user: { login: string } | null; path?: string; created_at?: string }[] }[] }[];
   /** Reads of a reached pull request that still answer "not merged" (BT51's late mark). */
   markDelay?: number;
   labels: { name: string }[];
@@ -141,7 +144,7 @@ const onIssue = n => state.comments.filter((comment, index) => issueOf(comment, 
 // A pull request object never carries its changed-files list — real GitHub
 // answers that only under pulls/<n>/files — so files stays in state and
 // never leaves in a response (K22: the stand-ins must agree key-for-key).
-const publicPr = pr => { const { files, ...rest } = pr; return rest; };
+const publicPr = pr => { const { files, headRef, notes, reviews, ...rest } = pr; return rest; };
 // GitHub's rule (BT51): a pull request is marked merged when its head reaches
 // its base branch, by another pull request or directly, and the mark stays
 // after the branch is gone. markDelay holds the mark back for that many reads.
@@ -152,7 +155,31 @@ const markMerged = pr => {
   pr.merged = true; pr.merged_at = new Date().toISOString(); pr.state = 'closed';
 };
 let result;
-if (endpoint === 'graphql' && input.query && input.query.includes('pullRequest')) {
+// PF26: a taken attempt's pull request in one read, and submit's mark ready (with the description, when asked).
+// Hidden fields, never in a REST answer: headRef (the branch a POST named), notes (conversation comments), reviews.
+const asNode = note => ({ author: note.user ?? null, body: note.body, createdAt: note.created_at ?? '2026-01-01T00:00:00Z' });
+if (endpoint === 'graphql' && input.query && input.query.includes('markPullRequestReadyForReview')) {
+  const pr = state.prs.find(entry => 'PR_' + entry.number === input.variables.id);
+  if (!pr) fail();
+  pr.draft = false;
+  if (typeof input.variables.body === 'string') pr.body = input.variables.body;
+  result = { data: { ready: { pullRequest: { isDraft: false } }, ...(typeof input.variables.body === 'string' ? { described: { pullRequest: { body: pr.body } } } : {}) } };
+}
+else if (endpoint === 'graphql' && input.query && input.query.includes('changedFiles')) {
+  const pr = state.prs.find(entry => entry.number === input.variables.number);
+  if (!pr) fail();
+  markMerged(pr);
+  const notes = pr.notes ?? [];
+  const reviews = pr.reviews ?? [];
+  result = { data: { repository: { pullRequest: {
+    id: 'PR_' + pr.number, isDraft: pr.draft === true, state: pr.merged ? 'MERGED' : pr.state === 'closed' ? 'CLOSED' : 'OPEN', merged: pr.merged === true, mergedAt: pr.merged_at ?? null,
+    baseRefName: pr.base.ref, headRefName: pr.headRef ?? '', author: pr.user, body: pr.body ?? '', changedFiles: pr.files.length,
+    comments: { totalCount: notes.length, nodes: notes.slice(-50).map(asNode) },
+    reviews: { totalCount: reviews.length, nodes: reviews.slice(-50).map(review => ({ author: review.user ?? null, body: review.body ?? '', state: review.state ?? 'COMMENTED', submittedAt: review.created_at ?? '2026-01-01T00:00:00Z',
+      comments: { totalCount: (review.lines ?? []).length, nodes: (review.lines ?? []).map(line => ({ ...asNode(line), path: line.path ?? 'app.txt' })) } })) }
+  } } } };
+}
+else if (endpoint === 'graphql' && input.query && input.query.includes('pullRequest')) {
   const pr = state.prs.find(pr => pr.number === input.variables.number);
   if (!pr) fail();
   result = { data: { repository: { pullRequest: { body: pr.body ?? '', userContentEdits: { nodes: pr.editedBy ? [{ editor: { login: pr.editedBy } }] : [] } } } } };
@@ -178,7 +205,7 @@ else if (endpoint === 'repos/' + state.repository) result = state.malformed ? { 
 else if (resource.endsWith('/pulls') && input) {
   const n = nextNumber();
   result = { number: n, html_url: 'https://github.com/' + state.repository + '/pull/' + n, state: 'open', draft: input.draft === true, title: input.title, body: input.body, user: { login: input.user ?? input.author ?? 'solver' }, head: { sha: input.head ?? '0'.repeat(40) }, base: { ref: input.base ?? 'main', repo: { full_name: state.repository } } };
-  state.prs.push({ ...result, files: [] });
+  state.prs.push({ ...result, files: [], ...(typeof input.head === 'string' ? { headRef: input.head.split(':').pop() } : {}) });
 }
 else if (endpoint.includes('/pulls/')) {
   const n = Number(endpoint.split('/pulls/')[1].split('/')[0].split('?')[0]);

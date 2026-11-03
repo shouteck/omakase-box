@@ -16,7 +16,7 @@ import { repositoryAddress } from './repository.js';
 import { loadSettings, saveSettings, settingsDir, writeToolFile } from './settings.js';
 import { solvingOf } from './solving.js';
 
-export type TakenStage = 'waiting' | 'taken' | 'withdrawn';
+export type TakenStage = 'waiting' | 'taken' | 'submitted' | 'withdrawn';
 export interface Taken {
   readonly id: string; readonly repository: string; readonly stage: TakenStage; readonly at: string;
   /** Where the work is pushed: the solver's fork, or the repository itself when the solver can push to it. */
@@ -28,14 +28,14 @@ export interface Taken {
 const ID = /^bt-[a-f\d]{12}$/;
 const takenDir = (): string => join(settingsDir(), 'taken');
 const takenFile = (id: string): string => join(takenDir(), `${id}.json`);
-const save = (taken: Taken): void => writeToolFile(takenFile(taken.id), `${JSON.stringify({ kind: 'box-taken', ...taken }, null, 2)}\n`);
+export const saveTaken = (taken: Taken): void => writeToolFile(takenFile(taken.id), `${JSON.stringify({ kind: 'box-taken', ...taken }, null, 2)}\n`);
 
 /** A taken bounty's record, or null. A file that does not read is named, never guessed at. */
 export function loadTaken(id: string): Taken | null {
   if (!ID.test(id) || !existsSync(takenFile(id))) return null;
   try {
     const value = JSON.parse(readFileSync(takenFile(id), 'utf8')) as Record<string, unknown>;
-    if (value['id'] !== id || typeof value['repository'] !== 'string' || !['waiting', 'taken', 'withdrawn'].includes(String(value['stage']))) throw new Error('shape');
+    if (value['id'] !== id || typeof value['repository'] !== 'string' || !['waiting', 'taken', 'submitted', 'withdrawn'].includes(String(value['stage']))) throw new Error('shape');
     const { kind: _kind, ...rest } = value;
     return rest as unknown as Taken;
   } catch { throw new BountyRefused('taken-record-unreadable', `the record of ${id} at ${takenFile(id)} does not read; nothing changed; next: remove that file and take the bounty again`); }
@@ -73,12 +73,15 @@ function forkOf(root: string, repository: string, login: string): string {
   return name;
 }
 
+/** The draft's own words; submit replaces exactly these, and leaves anything the solver wrote. */
+export const DRAFT_BODY = (id: string): string => `Started on bounty ${id}. A draft: work in progress, opened at once so other agents can see this attempt.`;
+
 export function takeBounty(id: string, options: TakeOptions = {}): TakeResult {
   if (!ID.test(id)) throw new BountyRefused('bounty-id-invalid', `"${id.slice(0, 40)}" is not a bounty id; nothing was taken; next: an id from box bounty discover, such as bt-0123456789ab`);
   const limits = solvingOf();
   if (limits.mode === 'off') throw new BountyRefused('solving-off', 'solving is off — the owner has not allowed your agents to take bounties; nothing was taken; next: ask the owner to run box bounty config set solving allowed (or ask, to be asked before each one)');
   const existing = loadTaken(id);
-  if (existing?.stage === 'taken') throw new BountyRefused('already-taken', `${id} is already taken, with its draft at ${existing.pullRequest?.url ?? 'its pull request'} and its workspace at ${existing.workspace ?? 'unknown'}; nothing changed; next: work there, or box bounty close ${id} to withdraw`);
+  if (existing?.stage === 'taken' || existing?.stage === 'submitted') throw new BountyRefused('already-taken', `${id} is already taken, with its draft at ${existing.pullRequest?.url ?? 'its pull request'} and its workspace at ${existing.workspace ?? 'unknown'}; nothing changed; next: work there, or box bounty close ${id} to withdraw`);
   const facts = factsOf(id);
   if (!facts.open) throw new BountyRefused('bounty-not-open', `${id} is no longer open on the board; nothing was taken; next: box bounty discover for open ones`);
   const outside = [
@@ -89,7 +92,7 @@ export function takeBounty(id: string, options: TakeOptions = {}): TakeResult {
   if (outside.length > 0) throw new BountyRefused('outside-owner-limits', `${id} is outside the owner's limits: ${outside.join('; ')}; nothing was taken; next: choose another bounty from box bounty discover`);
   // "Ask each time": the owner's yes on this one bounty, written by the owner's own command, is used once.
   if (limits.mode === 'ask' && !(limits.approved ?? []).includes(id)) {
-    save({ id, repository: facts.repository, stage: 'waiting', at: new Date().toISOString(), reward: facts.reward });
+    saveTaken({ id, repository: facts.repository, stage: 'waiting', at: new Date().toISOString(), reward: facts.reward });
     return { kind: 'waiting', lines: [
       `${id} waits on the owner — the owner asked to be asked before each bounty taken. Put this to them:`,
       `  Your agent wants to take ${id} on ${facts.repository} ($${facts.reward}, pays on merge: ${facts.paysOnMerge ? 'yes' : 'no'}). It would fork the repository to your GitHub account, run that repository's code in a throwaway folder, and open a draft pull request under your name.`,
@@ -129,14 +132,14 @@ export function takeBounty(id: string, options: TakeOptions = {}): TakeResult {
     head: canPush ? branch : `${target.split('/')[0]}:${branch}`,
     base: facts.bountyBranch,
     draft: true,
-    body: `Started on bounty ${id}. A draft: work in progress, opened at once so other agents can see this attempt.`
+    body: DRAFT_BODY(id)
   });
   const number = isObject(opened) ? opened['number'] : undefined;
   const url = isObject(opened) ? opened['html_url'] : undefined;
   if (typeof number !== 'number' || !Number.isSafeInteger(number) || number < 1 || typeof url !== 'string' || !url.startsWith('https://github.com/')) return invalid('github-response-invalid', `GitHub did not answer with the draft pull request; the branch ${branch} is on ${target}; next: open a draft pull request from it against ${facts.bountyBranch} on GitHub`);
   const ownBounty = facts.owner.toLowerCase() === login.toLowerCase();
   const taken: Taken = { id, repository: facts.repository, stage: 'taken', at: new Date().toISOString(), target, branch, bountyBranch: facts.bountyBranch, baseCommit: facts.baseCommit, workspace, pullRequest: { number, url }, reward: facts.reward, ownBounty };
-  save(taken);
+  saveTaken(taken);
   // A yes from the owner covers one take.
   if (limits.approved?.includes(id)) saveSettings({ ...loadSettings(), solving: { ...limits, approved: limits.approved.filter(entry => entry !== id) } });
   return { kind: 'taken', taken, lines: [
@@ -144,7 +147,7 @@ export function takeBounty(id: string, options: TakeOptions = {}): TakeResult {
     `workspace: ${workspace} — the bounty branch at ${facts.baseCommit.slice(0, 12)}, with an empty start commit`,
     'the tool ran nothing from this repository. Run its tests only here, and keep your credentials out of this folder. The tool pushed with your own gh sign-in, and this machine stays signed in to GitHub; it cannot stop an agent reaching that sign-in.',
     ...(ownBounty ? [`${id} was posted by ${login}, the account taking it: a merge here is not counted in the owner's record.`] : []),
-    `next: work in ${workspace}, commit, and push to ${target} ${branch} — the draft updates as you push; box bounty close ${id} withdraws the attempt`
+    `next: work in ${workspace}, commit, and push to ${target} ${branch} — the draft updates as you push; box bounty submit ${id} once it is ready for review; box bounty close ${id} withdraws the attempt`
   ] };
 }
 
@@ -163,11 +166,12 @@ export function closeTaken(id: string): string {
   if (taken === null) throw new BountyRefused('not-taken', `${id} is not a bounty you took; nothing changed; next: box bounty close inside the checkout that posted it, if it is yours`);
   if (taken.stage === 'withdrawn') return `${id} — already withdrawn; nothing to do`;
   if (taken.stage === 'waiting') {
-    save({ ...taken, stage: 'withdrawn', at: new Date().toISOString() });
+    saveTaken({ ...taken, stage: 'withdrawn', at: new Date().toISOString() });
     return `${id} — withdrawn before it was taken; nothing was on GitHub`;
   }
+  const what = taken.stage === 'submitted' ? 'pull request' : 'draft';
   const closed = api(taken.workspace !== undefined && existsSync(taken.workspace) ? taken.workspace : tmpdir(), `repos/${taken.repository}/pulls/${taken.pullRequest!.number}`, { state: 'closed' }, 'PATCH');
-  if (!isObject(closed) || closed['state'] !== 'closed') return invalid('github-response-invalid', `GitHub did not say draft #${taken.pullRequest!.number} is closed; the attempt stays taken; next: close it on GitHub at ${taken.pullRequest!.url}, then run box bounty close ${id} again`);
-  save({ ...taken, stage: 'withdrawn', at: new Date().toISOString() });
-  return `${id} — withdrawn: draft #${taken.pullRequest!.number} closed. The branch ${taken.branch} on ${taken.target} and the workspace at ${taken.workspace} are yours to keep or remove.`;
+  if (!isObject(closed) || closed['state'] !== 'closed') return invalid('github-response-invalid', `GitHub did not say ${what} #${taken.pullRequest!.number} is closed; the attempt stays taken; next: close it on GitHub at ${taken.pullRequest!.url}, then run box bounty close ${id} again`);
+  saveTaken({ ...taken, stage: 'withdrawn', at: new Date().toISOString() });
+  return `${id} — withdrawn: ${what} #${taken.pullRequest!.number} closed. The branch ${taken.branch} on ${taken.target} and the workspace at ${taken.workspace} are yours to keep or remove.`;
 }

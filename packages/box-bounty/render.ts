@@ -647,6 +647,7 @@ export function renderHelp(): string {
     '  describe  what the tool does, when it is worth using and when not, plus the facts to choose — --rules prints the block for a project\'s rules file',
     '  help      this screen',
     '  discover, take <id>  new bounties since your bookmark; take one: a throwaway workspace and a draft others see — once the owner allows solving',
+    '  submit <id>, status <id>  mark a taken bounty ready for review once your work is pushed; follow it: comments on it, merged or closed, paid or not',
     '',
     '  create --task <file|-> --why "<one line>" [--title "<text>"] [--resume "<context>"] [--part-of "<name>"] [--repo <path>]',
     '  The task is a file describing what needs doing, written for the solver; code is included automatically. "-" reads standard input.',

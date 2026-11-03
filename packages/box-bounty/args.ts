@@ -281,6 +281,12 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
     positionals: 1,
     values: { '--into': { arg: '<new folder>', missing: 'a folder', help: 'clone here instead of a fresh folder under the system\'s temporary folder; it must not exist yet' } }
   },
+  submit: {
+    label: 'box bounty submit', usage: 'box bounty submit <id>',
+    blurb: 'mark a taken bounty\'s draft ready for the poster\'s review, once your work is pushed → submitted',
+    example: 'box bounty submit bt-a1b2c3d4e5f6',
+    positionals: 1
+  },
   hook: {
     label: 'box bounty hook', usage: 'box bounty hook | box bounty hook on|off --host <name> | box bounty hook start|pause|finish [--explain] [--repo <path>]',
     blurb: 'owner-opt-in awareness at session moments: on|off per host; start|pause|finish is what a host entry runs',

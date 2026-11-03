@@ -9,7 +9,7 @@ import { actingOn, applyBounty, BountyRefused, BountyUsage, closeBounty, createB
 import { boardAddress, boardNotToldLine, flushBoardHints, readBoardFacts } from '../../box-bounty/index.js';
 import type { ParsedOptions } from '../../box-bounty/index.js';
 import { previewGitHub } from '../../box-bounty/index.js';
-import { closeTaken, discover, discoverDocument, loadTaken, renderDiscover, takeBounty } from '../../box-bounty/index.js';
+import { attemptStatus, closeTaken, discover, discoverDocument, loadTaken, renderDiscover, submitTaken, takeBounty, takenOverview } from '../../box-bounty/index.js';
 import { escapeControls, exportLook, findDocument, lookBounty, solverBlock, SOLVER_WORDS, renderFind, renderResume, openRecords, endedContaining, readGitPinsOncePerProcess, boundAmount, payToLine, gitOutcome } from '../../box-bounty/index.js';
 
 // Does .git/config name this remote — read as bytes, so the apply output
@@ -253,6 +253,12 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       const into = parsed.values['--into'];
       const result = takeBounty(id, into === undefined ? {} : { into: resolve(into) });
       console.log(result.lines.join('\n'));
+    } else if (subcommand === 'submit') {
+      // The solver's half (PF26): the draft becomes ready for review; no checkout needed.
+      const parsed = parse('submit');
+      const [id] = parsed.positionals;
+      if (id === undefined) host.usage('box bounty submit <id>');
+      console.log(submitTaken(id));
     } else if (subcommand === 'find') {
       // Recall by purpose (BT28): one query over every readable record.
       const parsed = parse('find');
@@ -269,7 +275,21 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
     } else if (subcommand === 'status') {
       const parsed = parse('status');
       const [id] = parsed.positionals;
-      const root = resolveRepoRoot(repoPath(parsed), 'status');
+      // PF26: a bounty this account took is read from GitHub and the board's public answers; it needs no checkout.
+      if (id !== undefined && loadTaken(id) !== null) {
+        if (parsed.switches.has('--json') || parsed.switches.has('--full') || parsed.values['--since'] !== undefined) throw new BountyRefused('taken-status-options', `${id} is a bounty you took: its status prints text, and --comments adds what was written on its pull request; nothing was read; next: box bounty status ${id} --comments`);
+        console.log(attemptStatus(id, { comments: parsed.switches.has('--comments') }));
+        return;
+      }
+      let root: string;
+      try { root = resolveRepoRoot(repoPath(parsed), 'status'); }
+      catch (error) {
+        // Outside a checkout, the attempts this account took are still this command's to show.
+        const taken = takenOverview();
+        if (!(error instanceof BountyRefused) || error.reason !== 'not-a-repository' || parsed.values['--repo'] !== undefined || id !== undefined || taken.length === 0) throw error;
+        console.log(taken.join('\n'));
+        return;
+      }
       const since = parsed.values['--since'];
       flushBoardHints(root);
       readBoardFacts(root, id);
@@ -285,6 +305,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       } else {
         sayActingOn(root);
         console.log(renderStatus(root, { ...(id === undefined ? {} : { id }), full: parsed.switches.has('--full'), comments: parsed.switches.has('--comments') }));
+        if (id === undefined) { const taken = takenOverview(); if (taken.length > 0) console.log(taken.join('\n')); }
         if (since !== undefined) console.log(renderSummary(root, since));
       }
     } else if (subcommand === 'post') {

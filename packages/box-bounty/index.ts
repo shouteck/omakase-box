@@ -90,12 +90,13 @@ export { classifySnapshot, createSnapshot, createSnapshotCommit } from './snapsh
 export type { Snapshot, SnapshotFile, SnapshotRemoval } from './snapshot.js';
 export { checkMergedSolutions, noticeMergedSolutions } from './merged.js';
 export { setMergeNoticeListener } from './notice.js';
-export { BOARD_DEFAULT, boardAddress, boardFact, boardLine, boardNotToldLine, boardTold, flushBoardHints, hintOf, holdBoardCalls, queueBoardHint, readBoardFacts, readPayAccepts } from './board.js';
+export { BOARD_DEFAULT, boardAddress, boardFact, boardLine, boardNotToldLine, boardTold, flushBoardHints, hintOf, holdBoardCalls, queueBoardHint, readBoardFacts, readBountyFact, readPayAccepts } from './board.js';
 export type { BoardFact, BoardTold, Hint, HintEvent } from './board.js';
 export { runSetup, runSetupRemove } from './setup.js';
 export { changeSolving, discover, DISCOVER_FLOOR_MINUTES, DISCOVER_PAGE, discoverDocument, renderDiscover, solvingLines, solvingOf } from './solving.js';
 export type { DiscoveredBounty, DiscoverOptions, DiscoverResult } from './solving.js';
 export { approveTake, closeTaken, loadTaken, takeBounty, takenIds } from './take.js';
+export { attemptStatus, submitTaken, takenOverview } from './attempt.js';
 export type { Taken, TakenStage, TakeOptions, TakeResult } from './take.js';
 export { parsePayTo, paymentOf, payToLine, payMessageLines, payNotice } from './pay.js';
 export type { PaymentState, PayOutcome, PayToFact } from './pay.js';
