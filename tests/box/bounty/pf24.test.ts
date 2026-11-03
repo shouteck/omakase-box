@@ -90,7 +90,8 @@ describe('discover', () => {
     second.save();
     const third = discover({});
     expect(ids(third)).toEqual([]);
-    expect(requested()).toEqual(['/bounties.json?since=start&limit=10', '/bounties.json?since=B1&limit=10', '/bounties.json?since=B2&limit=10']);
+    // PF29: the first run also reads the board's numbers; runs from a bookmark make one request, as before.
+    expect(requested()).toEqual(['/bounties.json?since=start&limit=10', '/numbers.json', '/bounties.json?since=B1&limit=10', '/bounties.json?since=B2&limit=10']);
     expect(renderDiscover(third).at(-1)).toMatch(/^bookmark saved; next: run it again from your own schedule, no more often than every 15 minutes/);
   });
 
@@ -133,7 +134,7 @@ describe('discover', () => {
     // The agent's minimum of $10 is raised to the owner's $30; two languages are filtered here, not by the board.
     routes({ '/bounties.json?since=start&limit=10&min_reward=30': page(all, 'F1') });
     const result = discover({ languages: ['TypeScript', 'Rust'], minReward: 30 });
-    expect(requested()).toEqual(['/bounties.json?since=start&limit=10&min_reward=30']);
+    expect(requested()).toEqual(['/bounties.json?since=start&limit=10&min_reward=30', '/numbers.json']);
     expect(all.map(b => b.id)).toHaveLength(6);
     expect(ids(result)).toEqual([`bt-${hex(1)}`, `bt-${hex(6)}`]);
     expect(result.skipped).toBe(4);

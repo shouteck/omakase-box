@@ -5,7 +5,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { allowRepository, changeConfig, discover, renderDescribe, renderDiscover } from '../../../packages/box-bounty/index.js';
+import { allowRepository, changeConfig, discover, renderDescribe, renderDescribeSolving, renderDiscover } from '../../../packages/box-bounty/index.js';
 import { git, makeRepo, runRoot } from './support.js';
 
 const STANDIN = fileURLToPath(new URL('./board-standin.cjs', import.meta.url));
@@ -58,6 +58,27 @@ describe('discover states the new facts', () => {
     const lines = renderDiscover(discover({})).join('\n');
     expect(lines).not.toContain('others\' pull requests');
     expect(lines).not.toContain('GitHub\'s checks');
+  });
+});
+
+describe('the board in one line', () => {
+  const numbers = { board: 'Open bounty board', bounties: { listed: 9, open: 4, open_with_reward: 3, base: 'x' }, rewards: { stated_on_open_bounties_usd: 120, pays_on_merge: { bounties: 2, usd: 90 }, no_attempt_yet: { bounties: 1, usd: 30 }, base: 'x' }, payments: { merged_with_reward: 5, recorded_paid: 4, confirmed_received: 3, says_not_received: 0, owed_now: { bounties: 1, usd: 25, oldest_days: 2 }, base: 'x' }, last_30_days: { posted: 6, merged: 2, base: 'x' } };
+  it('discover and describe --solving state it from the board\'s public numbers, with where to read more', () => {
+    changeConfig(null, 'set', 'board', board);
+    changeConfig(null, 'set', 'solving', 'allowed');
+    routes({ '/bounties.json?since=start&limit=10': listing([]), '/numbers.json': { status: 200, body: numbers } });
+    const line = `board numbers: 4 of 5 merged rewarded bounties recorded paid; 1 owed now ($25); 3 open with a reward, 2 paying on merge, 1 with no attempt yet; 6 posted and 2 merged in the last 30 days · ${board}/numbers/`;
+    expect(renderDiscover(discover({}))).toContain(line);
+    expect(renderDescribeSolving().split('\n')).toContain(line);
+  });
+
+  it('a board that does not answer is said to, never shown as zeros', () => {
+    changeConfig(null, 'set', 'board', board);
+    changeConfig(null, 'set', 'solving', 'allowed');
+    routes({ '/bounties.json?since=start&limit=10': listing([]) });
+    const lines = renderDiscover(discover({})).join('\n');
+    expect(lines).toContain(`board numbers: not read (the board answered 404) · ${board}/numbers/`);
+    expect(lines).not.toContain('0 of 0');
   });
 });
 

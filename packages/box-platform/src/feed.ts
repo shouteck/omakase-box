@@ -7,7 +7,7 @@ import { pageWords, STRIPE_COUNTRIES, STRIPE_REACH, type WayId, waysOfBounty, wa
 import { authorTakes } from './paypal-pay.js';
 import { paypalOn } from './paypal.js';
 import { emptyPayment, LISTED_WITH_ACCESS, loadPayments, type OwnerRecord, ownerRecords, paymentOf } from './payments.js';
-import { numbersOf } from './numbers.js';
+import { NUMBERS_SCHEMA, numbersCached } from './numbers.js';
 import { addOwnerRecord, type BountyRow, checksFact, DAY, filterOf, freshness, FROM_LISTED, OPEN_COUNT, readBounty, stateOf } from './query.js';
 import { stripeOn } from './stripe.js';
 
@@ -341,7 +341,8 @@ export async function detailResponse(request: Request, env: Env, id: string, now
 
 export const schemaResponse = (request: Request): Promise<Response> => tagged(request, JSON.stringify(FEED_SCHEMA), JSON_TYPE);
 /** PF29: the board as a whole, with the feed's tag, so a repeat check costs a 304. */
-export const numbersResponse = async (request: Request, env: Env): Promise<Response> => tagged(request, JSON.stringify(await numbersOf(env)), JSON_TYPE);
+export const numbersResponse = async (request: Request, env: Env): Promise<Response> => tagged(request, JSON.stringify(await numbersCached(env)), JSON_TYPE);
+export const numbersSchemaResponse = (request: Request): Promise<Response> => tagged(request, JSON.stringify(NUMBERS_SCHEMA), JSON_TYPE);
 
 // XML 1.0 has no way to write these at all; escaping is not enough.
 const xml = (text: string): string => text

@@ -3,7 +3,7 @@ import { ownerStatusLine } from './owner-text.js';
 import { renderOpenLine } from './render.js';
 import { instructionBlock, solvingAllowed } from './instructions.js';
 import { readDecision, repoReward } from './settings.js';
-import { boardAddress } from './board.js';
+import { boardAddress, readBoardNumbers } from './board.js';
 import { solvingLines, solvingOf } from './solving.js';
 import { DESCRIBE_LINES, describeModeLine, describeRewardLine, renderRulesBlock, SOLVING_LINES } from './wording.js';
 
@@ -63,6 +63,7 @@ export function renderDescribeSolving(): string {
     '',
     ...solvingLines(false),
     board === '' ? 'board: none named, so there is nothing to discover; the owner names one with box bounty config set board <address>' : `board: ${board} — discover reads its public feed`,
+    ...(board === '' ? [] : [readBoardNumbers() ?? '']),
     '',
     solvingOf().mode === 'off'
       ? 'next: ask the owner to run box bounty config set solving allowed (or ask, to be asked before each bounty)'

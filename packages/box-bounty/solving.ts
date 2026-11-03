@@ -5,7 +5,7 @@
 // the agent's host wakes it.
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { boardAddress, readFeedPage } from './board.js';
+import { boardAddress, readBoardNumbers, readFeedPage } from './board.js';
 import { BountyRefused } from './errors.js';
 import { repositoryAddress } from './repository.js';
 import { loadSettings, saveSettings, settingsDir, writeToolFile, type SolvingSettings } from './settings.js';
@@ -116,6 +116,9 @@ export interface DiscoverResult {
   readonly filter: { readonly languages: readonly string[]; readonly minReward: number };
   readonly bounties: readonly DiscoveredBounty[]; readonly more: boolean; readonly skipped: number;
   readonly unreadable: number; readonly began: 'start' | 'now' | 'bookmark'; readonly resetNote: string | null;
+  /** PF29: the board as a whole in one line, on a first run (from the start or from now), when an agent decides whether
+      to check this board at all; null on a routine run from a bookmark, which makes one request as before, or with no board. */
+  readonly numbers: string | null;
   /** Saves the bookmark: call only once the bounties are shown, so a failure repeats them rather than skips them. */
   readonly save: () => void;
 }
@@ -187,7 +190,7 @@ export function discover(options: DiscoverOptions): DiscoverResult {
   }
   const resetNote = saved.reset ? 'your discover bookmark was unreadable and started again from every open bounty' : saved.value !== null && saved.value.board !== board ? `the board changed from ${saved.value.board}, so your bookmark started again there` : null;
   return {
-    board, mode: limits.mode, limits, filter: { languages, minReward }, bounties, more: entries.length >= DISCOVER_PAGE, skipped, unreadable, began, resetNote,
+    board, mode: limits.mode, limits, filter: { languages, minReward }, bounties, more: entries.length >= DISCOVER_PAGE, skipped, unreadable, began, resetNote, numbers: began === 'bookmark' ? null : readBoardNumbers(),
     save: () => writeToolFile(discoverFile(), `${JSON.stringify({ kind: 'box-discover', board, bookmark: next, languages, minReward, at: new Date().toISOString() }, null, 2)}\n`)
   };
 }
@@ -200,6 +203,7 @@ export function renderDiscover(result: DiscoverResult): string[] {
   const lines = [
     `discover: ${plural(result.bounties.length, 'new bounty', 'new bounties')} on ${result.board} ${result.began === 'bookmark' ? 'since your bookmark' : result.began === 'start' ? 'from every open bounty' : 'from now'} — filter: ${filter}`,
     ...(result.resetNote === null ? [] : [result.resetNote]),
+    ...(result.numbers === null ? [] : [result.numbers]),
     NOT_RUN
   ];
   if (result.mode === 'ask') lines.push('the owner asked to be asked before each bounty you take.');
@@ -221,7 +225,7 @@ export function renderDiscover(result: DiscoverResult): string[] {
 /** The --json document (box-bounty/discover@1): the same read, one document, with whose words each stranger's field is. */
 export const discoverDocument = (result: DiscoverResult): object => ({
   schema: 'box-bounty/discover@1', board: result.board, solving: { mode: result.mode, floor: result.limits.floor, paysOnMergeOnly: result.limits.paysOnMergeOnly, skip: result.limits.skip },
-  filter: result.filter, began: result.began, resetNote: result.resetNote, notRun: NOT_RUN,
+  filter: result.filter, began: result.began, resetNote: result.resetNote, notRun: NOT_RUN, numbers: result.numbers,
   bounties: result.bounties, skipped: result.skipped, unreadable: result.unreadable, more: result.more,
   next: result.more ? 'box bounty discover' : SCHEDULE,
   foreignFields: [{ field: 'bounties[].title', source: 'other account' }, { field: 'bounties[].owner', source: 'other account' }]

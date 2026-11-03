@@ -153,3 +153,17 @@ describe('the numbers page', () => {
     expect(again.status).toBe(304);
   });
 });
+
+describe('the numbers are computed at most once per refresh', () => {
+  it('a second ask inside 15 minutes is served from the stored copy; after it, the numbers are read again', async () => {
+    r.standin.issues.push(issue(60));
+    await refreshUntilDone(r);
+    expect((await askJson(r, '/numbers.json')).bounties.listed).toBe(1);
+    // The bounty leaves the board; the numbers were computed less than 15 minutes ago, so the stored copy answers.
+    await r.env.DB.prepare('DELETE FROM bounties').run();
+    r.clock.at += 14 * 60000;
+    expect((await askJson(r, '/numbers.json')).bounties.listed).toBe(1);
+    r.clock.at += 60000;
+    expect((await askJson(r, '/numbers.json')).bounties.listed).toBe(0);
+  });
+});

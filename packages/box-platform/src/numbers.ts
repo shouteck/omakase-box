@@ -8,6 +8,7 @@ import { payingIds } from './charge.js';
 import type { Env } from './github.js';
 import { LISTED_WITH_ACCESS, loadPayments, paymentOf } from './payments.js';
 import { DAY, freshness, OPEN_WHERE } from './query.js';
+import { getMetas, setMeta } from './store.js';
 
 const median = (values: readonly number[]): number | null => {
   if (values.length === 0) return null;
@@ -69,3 +70,41 @@ export async function numbersOf(env: Env) {
   };
 }
 export type Numbers = Awaited<ReturnType<typeof numbersOf>>;
+
+/** At most once per refresh: the numbers read every bounty with a merge, and solvers may ask often. */
+const NUMBERS_FRESH_MS = 15 * 60000;
+export async function numbersCached(env: Env): Promise<Numbers> {
+  const now = env.now?.() ?? Date.now();
+  const kept = await getMetas(env.DB, ['numbers_json', 'numbers_at']);
+  if (now - Number(kept.get('numbers_at') ?? 0) < NUMBERS_FRESH_MS && kept.get('numbers_json')) return JSON.parse(kept.get('numbers_json')!) as Numbers;
+  const fresh = await numbersOf(env);
+  await setMeta(env.DB, 'numbers_json', JSON.stringify(fresh));
+  await setMeta(env.DB, 'numbers_at', String(now));
+  return fresh;
+}
+
+// The numbers' own schema (PF29), so an agent's code reads them by name and a new number never breaks it.
+const COUNT = { type: 'integer', minimum: 0 };
+const BASE = { type: 'string', description: 'What this group counts, in words.' };
+const group = (properties: Record<string, unknown>) => ({ type: 'object', properties: { ...properties, base: BASE }, required: [...Object.keys(properties), 'base'] });
+const MEDIAN = { type: ['integer', 'null'], minimum: 0, description: 'null when there is nothing to take a median of.' };
+export const NUMBERS_SCHEMA = {
+  $schema: 'https://json-schema.org/draft/2020-12/schema',
+  title: 'Open bounty board numbers',
+  description: `${NUMBERS_ABOUT} New numbers may be added; a field's meaning does not change.`,
+  type: 'object',
+  required: ['board', 'about', 'read_at', 'stale', 'bounties', 'rewards', 'payments', 'last_30_days', 'pull_requests', 'attempts_per_bounty', 'solvers', 'days_to_decision'],
+  properties: {
+    board: { type: 'string' }, about: { type: 'string' }, schema: { type: 'string' },
+    read_at: { type: ['string', 'null'], description: 'When the board last read GitHub.' }, stale: { type: ['string', 'null'] },
+    sample_data: { const: true },
+    bounties: group({ listed: COUNT, open: COUNT, open_with_reward: COUNT }),
+    rewards: group({ stated_on_open_bounties_usd: COUNT, pays_on_merge: { type: 'object', properties: { bounties: COUNT, usd: COUNT } }, no_attempt_yet: { type: 'object', properties: { bounties: COUNT, usd: COUNT } } }),
+    payments: group({ merged_with_reward: COUNT, recorded_paid: COUNT, confirmed_received: COUNT, says_not_received: COUNT, owed_now: { type: 'object', properties: { bounties: COUNT, usd: COUNT, oldest_days: COUNT } } }),
+    last_30_days: group({ posted: COUNT, merged: COUNT }),
+    pull_requests: group({ merged: COUNT, closed: COUNT, open: COUNT }),
+    attempts_per_bounty: group({ median: MEDIAN, bounties: COUNT }),
+    solvers: group({ distinct: COUNT }),
+    days_to_decision: group({ median: MEDIAN, bounties: COUNT })
+  }
+};
