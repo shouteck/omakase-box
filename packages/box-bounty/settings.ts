@@ -72,6 +72,17 @@ export interface OwnerSettings {
       and the branch tip the owner was shown — a changed solution or moved
       branch no longer matches and is asked again. */
   readonly mergeAnswers?: Record<string, MergeAnswer>;
+  /** Whether the owner's agents may take bounties (PF24), and the guard rails they cannot loosen. Absent: off. */
+  readonly solving?: SolvingSettings;
+}
+/** The owner's word on solving: off, ask each time before taking, or allowed; a reward floor; pays on merge only;
+    repositories never to take from. The agent's own filter and bookmark are not here: they are the agent's. */
+export interface SolvingSettings {
+  readonly mode: 'off' | 'ask' | 'allowed';
+  readonly floor: number;
+  readonly paysOnMergeOnly: boolean;
+  readonly skip: readonly string[];
+  readonly at: string;
 }
 /** The tool's own bookkeeping — the whole content of state.json (BT22).
     Nothing here carries authority: no decision, reward, limit or answer is
@@ -253,6 +264,8 @@ function persist(settings: OwnerSettings): void {
   writeAtomic(settingsFile(), `${JSON.stringify({ kind: 'box-owner-settings', ...settings }, null, 2)}\n`);
 }
 export const saveSettings = persist;
+/** The same atomic write, for the tool's other files in the settings folder (PF24's discover bookmark). */
+export const writeToolFile = writeAtomic;
 
 /** The write path for the tool's own file — any command may land here; the
     owner's file is untouched by bookkeeping. */
@@ -402,6 +415,19 @@ function moneySetting(value: unknown, where: string, refuse: (detail: string) =>
 
 // Consume legacy paths once. Unresolved paths grant nothing under a blanket
 // default, and conflicting copies require a fresh repository decision.
+/** The owner's solving entry, checked like every other setting: a hand-edited one that does not read fails loudly. */
+function solvingSetting(value: unknown): SolvingSettings {
+  if (!isObject(value)) return bad('solving must hold {mode, floor, paysOnMergeOnly, skip, at}');
+  for (const name of Object.keys(value)) if (!['mode', 'floor', 'paysOnMergeOnly', 'skip', 'at'].includes(name)) unknownSetting(name);
+  const { mode, floor, paysOnMergeOnly, skip, at } = value;
+  if (mode !== 'off' && mode !== 'ask' && mode !== 'allowed') return bad('solving.mode must be off, ask or allowed');
+  if (typeof floor !== 'number' || !Number.isSafeInteger(floor) || floor < 0) return bad('solving.floor must be a whole dollar amount at or above 0');
+  if (typeof paysOnMergeOnly !== 'boolean') return bad('solving.paysOnMergeOnly must be true or false');
+  if (!Array.isArray(skip) || skip.some(entry => typeof entry !== 'string' || repositoryAddress(entry) !== entry)) return bad('solving.skip must list GitHub addresses');
+  if (typeof at !== 'string') return bad('solving.at must hold the time it was written');
+  return { mode, floor, paysOnMergeOnly, skip: skip as string[], at };
+}
+
 /** The address in one spelling, or null: https anywhere, http only on this machine; nothing but the host. */
 export function boardAddressOf(value: string): string | null {
   if (value === '') return '';
@@ -419,7 +445,7 @@ export function loadSettings(): OwnerSettings {
   try { parsed = JSON.parse(readFileSync(path, 'utf8')); } catch { return bad('not readable JSON'); }
   if (!isObject(parsed)) return bad('must hold a JSON object');
   if (parsed['board'] !== undefined && (typeof parsed['board'] !== 'string' || boardAddressOf(parsed['board']) !== parsed['board'])) return bad('board must be a web address with nothing after the host, or empty');
-  for (const name of Object.keys(parsed)) if (!['board', 'kind', 'default', 'projects', 'repositories', 'migrations', 'firstMerges', 'instructions', 'publishing', 'reward', 'rewardLimit', 'retiredReward', 'rewardPromiseSaid', 'rewardNoticeAt', 'askMergeNoticeAt', 'mergeAnswers', 'said'].includes(name)) unknownSetting(name);
+  for (const name of Object.keys(parsed)) if (!['board', 'kind', 'default', 'projects', 'repositories', 'migrations', 'firstMerges', 'instructions', 'publishing', 'reward', 'rewardLimit', 'retiredReward', 'rewardPromiseSaid', 'rewardNoticeAt', 'askMergeNoticeAt', 'mergeAnswers', 'said', 'solving'].includes(name)) unknownSetting(name);
   if (parsed['kind'] !== undefined && parsed['kind'] !== 'box-owner-settings') return bad('kind must be box-owner-settings');
   const repositories: Record<string, SettingsLevel> = {};
   const rawRepositories = parsed['repositories'];
@@ -510,7 +536,8 @@ export function loadSettings(): OwnerSettings {
       mergeAnswers[key] = { n: entry['n'] as number, commit: entry['commit'], head: entry['head'], at: entry['at'] };
     }
   }
-  const settings: OwnerSettings = { ...(parsed['board'] === undefined ? {} : { board: parsed['board'] as string }), ...(defaultLevel !== undefined ? { default: defaultLevel } : {}), repositories, ...(rawInstructions === undefined ? {} : { instructions }), ...(rawPublishing === undefined ? {} : { publishing }), ...(Object.keys(mergeAnswers).length === 0 ? {} : { mergeAnswers }) };
+  const solving = parsed['solving'] === undefined ? undefined : solvingSetting(parsed['solving']);
+  const settings: OwnerSettings = { ...(parsed['board'] === undefined ? {} : { board: parsed['board'] as string }), ...(defaultLevel !== undefined ? { default: defaultLevel } : {}), repositories, ...(rawInstructions === undefined ? {} : { instructions }), ...(rawPublishing === undefined ? {} : { publishing }), ...(Object.keys(mergeAnswers).length === 0 ? {} : { mergeAnswers }), ...(solving === undefined ? {} : { solving }) };
   const legacy = parsed['projects'];
   if (legacy !== undefined && !isObject(legacy)) return bad('projects must hold an object keyed by legacy folder path');
   const carried = STATE_KEYS.some(key => parsed[key] !== undefined) || Object.keys(movedInstructionNotes).length > 0;

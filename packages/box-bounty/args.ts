@@ -258,6 +258,22 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
       '--json': { help: 'print one JSON document (schema box-bounty/find@1) instead of text' }
     }
   },
+  // The solver's half (PF24): only once the owner allowed solving. Monid's verb for finding, so agents know it.
+  discover: {
+    label: 'box bounty discover', usage: 'box bounty discover [--language <name>]... [--any-language] [--min-reward <whole dollars>] [--from <start|now>] [--json]',
+    blurb: 'new bounties since your own bookmark that pass your filter and the owner\'s limits — each once, with the facts to judge it',
+    example: 'box bounty discover --language TypeScript --min-reward 40',
+    positionals: 0,
+    values: {
+      '--language': { arg: '<name>', missing: 'a language name', repeatable: true, help: 'a language you take, as GitHub names it; once per language; saved for next time' },
+      '--min-reward': { arg: '<whole dollars>', missing: 'a whole dollar amount', help: 'your own minimum, never below the owner\'s floor; saved for next time' },
+      '--from': { arg: '<start|now>', missing: 'start or now', help: 'begin again: from every open bounty, or only from now' }
+    },
+    switches: {
+      '--any-language': { help: 'forget the saved languages' },
+      '--json': { help: 'print one JSON document (schema box-bounty/discover@1) instead of text' }
+    }
+  },
   hook: {
     label: 'box bounty hook', usage: 'box bounty hook | box bounty hook on|off --host <name> | box bounty hook start|pause|finish [--explain] [--repo <path>]',
     blurb: 'owner-opt-in awareness at session moments: on|off per host; start|pause|finish is what a host entry runs',

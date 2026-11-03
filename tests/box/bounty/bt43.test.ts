@@ -365,6 +365,9 @@ describe('BT43 the parser walk over the shipped source', () => {
       'packages/box-bounty/render.ts solverAccountOr',
       'packages/box-bounty/render.ts solverAccountOr',
       'packages/box-bounty/render.ts solverBlock',
+      // PF24: discover quotes each poster's title inside its own block, and names the owner by login shape.
+      'packages/box-bounty/solving.ts solverAccount',
+      'packages/box-bounty/solving.ts solverLine',
       'packages/box-cli/src/bounty.ts solverBlock',
       'packages/box-cli/src/bounty.ts solverBlock'
     ]);

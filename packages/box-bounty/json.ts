@@ -540,7 +540,9 @@ export function configDocument(repoRoot: string | null, notice: (line: string) =
     // The `records:` line as a fact (BT28) — null outside a checkout.
     records: trackedFiles === null ? null : { tracked: trackedFiles > 0, trackedFiles },
     // PF5: the board's address; null when every call to it is off.
-    board: boardAddress() === '' ? null : boardAddress()
+    board: boardAddress() === '' ? null : boardAddress(),
+    // PF24: the owner's word on solving; null when nothing is written (off).
+    solving: (() => { const solving = loadSettings().solving; return solving === undefined ? null : { mode: solving.mode, floor: solving.floor, paysOnMergeOnly: solving.paysOnMergeOnly, skip: [...solving.skip], at: solving.at }; })()
   };
 }
 

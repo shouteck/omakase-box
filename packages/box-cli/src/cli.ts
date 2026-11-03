@@ -24,7 +24,7 @@ import { version } from './version.js';
 // one table in box-bounty/args.ts drives both parsing and help — nothing
 // re-derives it.
 const HELP_LINES = [
-  ...(['create', 'help', 'describe', 'status', 'post', 'look', 'apply', 'close'] as const)
+  ...(['create', 'help', 'describe', 'status', 'post', 'look', 'apply', 'close', 'discover'] as const)
     .map((name, index) => `${index === 0 ? 'usage: ' : '       '}${BOUNTY_COMMANDS[name]!.usage}`),
   '       box setup [--remove] — put box on this machine and a skill where agents look',
   '       box bounty allow|deny|config — the owner\'s settings',

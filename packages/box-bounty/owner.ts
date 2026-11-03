@@ -24,6 +24,7 @@ import { sharePaid } from './chain.js';
 import { showPath } from './notice.js';
 import { hitPlace } from './scan.js';
 import { solverAccountOr } from './untrusted.js';
+import { changeSolving, solvingLines } from './solving.js';
 
 // What `allow` prints before it writes: the owner block first — the plain
 // sentences that say what a bounty is, that it is public under the owner's
@@ -327,6 +328,7 @@ export function renderConfig(repoRoot: string | null, options?: { readonly full?
   if (full || board !== '' || settings.board !== undefined) lines.push(`board: ${board === '' ? 'off — the tool makes no call to it' : `${board} — ${BOARD_SENDS}`}; change: box bounty config set board <address>, or "" for off`);
   // Pay on merge is the one step only the owner's signed-in page takes: each allowed repository's state, as the board says it (PF20).
   if (board !== '') lines.push(...payOnMergeLines(Object.entries(settings.repositories).filter(([, entry]) => entry.bounty !== null && entry.bounty !== 'off').map(([key]) => key)));
+  lines.push(...solvingLines(full));
   if (!full) lines.push('every setting, its history and the commands that change it: box bounty config --full');
   const rewardNotice = rewardNoticeLine();
   if (rewardNotice !== null) lines.push(rewardNotice);
@@ -441,6 +443,8 @@ export function changeConfig(repoRoot: string | null, verb: string, name: string
     }
     return lines.join('\n');
   }
+  // The owner's word on solving (PF24): off, ask or allowed, and the limits the agent cannot loosen.
+  if (name === 'solving' || name === 'solving-floor' || name === 'solving-pays-on-merge' || name === 'solving-skip') return changeSolving(verb, name, value);
   if (name !== 'all-projects') return unknownSetting(name);
   if (verb !== 'set' || !['true', 'false', 'ask'].includes(value)) throw new BountyRefused('config-value-invalid', 'nothing changed; next: box bounty config set all-projects <true|false|ask>');
   const bounty = value === 'true' ? 'allowed' : value === 'ask' ? 'ask' : 'off';

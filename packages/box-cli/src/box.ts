@@ -7,7 +7,7 @@ import { runBounty } from './bounty.js';
 import { version } from './version.js';
 
 const HELP_LINES = [
-  ...(['create', 'help', 'describe', 'status', 'post', 'look', 'apply', 'close'] as const)
+  ...(['create', 'help', 'describe', 'status', 'post', 'look', 'apply', 'close', 'discover'] as const)
     .map((name, index) => `${index === 0 ? 'usage: ' : '       '}${BOUNTY_COMMANDS[name]!.usage}`),
   '       box setup [--remove] — put box on this machine and a skill where agents look',
   '       box bounty allow|deny|config — the owner\'s settings',

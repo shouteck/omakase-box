@@ -76,6 +76,8 @@ beforeEach(() => {
   // own state beside it.
   rmSync(join(ownerSettingsRoot, 'settings.json'), { force: true });
   rmSync(join(ownerSettingsRoot, 'state.json'), { force: true });
+  // PF24: the agent's discover bookmark sits beside them.
+  rmSync(join(ownerSettingsRoot, 'discover.json'), { force: true, recursive: true });
   if (process.env['BOX_BOUNTY_SETTINGS_DIR'] !== ownerSettingsRoot) process.env['BOX_BOUNTY_SETTINGS_DIR'] = ownerSettingsRoot;
 });
 // Write one level of the owner's decision inside the temp folder — the same

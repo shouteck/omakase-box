@@ -11,6 +11,7 @@ import { isOpenStage, listRecords, type BountyRecord } from './record.js';
 import { loadSettings } from './settings.js';
 import { metaGet, metaKeys, metaSet, sharedEnded, sharedOpen } from './store.js';
 import { solverAccount } from './untrusted.js';
+import { quoteForeign } from './notice.js';
 
 /** The public deployment's address. Settings choose another or none; no test run may reach it (boardAddress). */
 export const BOARD_DEFAULT = 'https://open-bounty-board.box-platform.workers.dev';
@@ -72,13 +73,13 @@ process.stdin.on('end', async () => {
 });
 `;
 
-function boardCalls(calls: readonly Call[]): readonly Reply[] {
+function boardCalls(calls: readonly Call[], max = ANSWER_BYTES_MAX): readonly Reply[] {
   const origin = boardAddress();
   const unreachable = (): Reply[] => calls.map(() => ({ failed: 'it could not be reached' }));
   try {
     const run = spawnSync(process.execPath, ['-e', CHILD], {
-      input: JSON.stringify({ calls: calls.map(call => ({ url: `${origin}${call.path}`, body: call.body })), deadline: DEADLINE_MS, max: ANSWER_BYTES_MAX }),
-      encoding: 'utf8', timeout: DEADLINE_MS + 1500, windowsHide: true, maxBuffer: ANSWER_BYTES_MAX * (calls.length + 1) * 7,
+      input: JSON.stringify({ calls: calls.map(call => ({ url: `${origin}${call.path}`, body: call.body })), deadline: DEADLINE_MS, max }),
+      encoding: 'utf8', timeout: DEADLINE_MS + 1500, windowsHide: true, maxBuffer: max * (calls.length + 1) * 7,
       env: process.platform === 'win32' && process.env['SYSTEMROOT'] !== undefined ? { SYSTEMROOT: process.env['SYSTEMROOT'] } : {}
     });
     if (run.status !== 0) return unreachable();
@@ -94,6 +95,20 @@ const jsonOf = (reply: Reply): Record<string, unknown> | null => {
     return value !== null && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : null;
   } catch { return null; }
 };
+
+/** One page of the board's feed (PF24's discover): its answer, or why it was not read. A page is at most 100 KB, the board's own stated bound. */
+const FEED_PAGE_BYTES_MAX = 100_000;
+export function readFeedPage(query: string): { readonly page: Record<string, unknown> } | { readonly failed: string } {
+  if (boardAddress() === '') return { failed: 'the board is off' };
+  const reply = boardCalls([{ path: `/bounties.json?${query}` }], FEED_PAGE_BYTES_MAX)[0]!;
+  if ('failed' in reply) return { failed: reply.failed };
+  const page = jsonOf(reply);
+  if (page !== null) return { page };
+  if (reply.status === 400) {
+    try { const error = (JSON.parse(reply.text) as { error?: unknown }).error; if (typeof error === 'string') return { failed: `the board refused: ${quoteForeign(error.slice(0, 200))}` }; } catch { /* unreadable: said below */ }
+  }
+  return { failed: reply.status !== 200 ? `the board answered ${reply.status}` : 'its answer was unreadable' };
+}
 
 // ---- hints -----------------------------------------------------------------
 
