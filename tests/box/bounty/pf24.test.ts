@@ -178,7 +178,7 @@ describe('discover', () => {
     const lines = renderDiscover(discover({}));
     expect(lines).toContain('the board has not read or run any repository\'s code; work on a bounty only in a throwaway copy, with no credentials of yours in reach.');
     expect(lines).toContain('the owner asked to be asked before each bounty you take.');
-    expect(lines.find(line => line.startsWith(`bt-${hex(1)}`))).toBe(`bt-${hex(1)} — $45, pays on merge: yes · attempts in progress: 1 · open pull requests: 2 (all by the poster) · posted 3 days ago`);
+    expect(lines.find(line => line.startsWith(`bt-${hex(1)}`))).toBe(`bt-${hex(1)} — $45, pays on merge: yes (the reward is within the owner's approved limit, with a saved card) · attempts in progress: 1 · open pull requests: 2 (all by the poster) · posted 3 days ago`);
     expect(lines).toContain('  owner example-mara: 3 merged, 3 recorded paid, 2 confirmed received, 0 owed now; decides in a median 2 days (4 decided)');
   });
 

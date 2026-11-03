@@ -57,10 +57,12 @@ export const SOLVING_LINES: readonly string[] = [
   'poster\'s, you do. To be paid, whoever holds your GitHub account connects a',
   'way once on the board; status says when that is still missing.'
 ];
-/** The one line `describe` gives the solving half. */
-export const describeSolvingPointer = (mode: 'off' | 'ask' | 'allowed'): string => mode === 'off'
-  ? 'it can also take paid bounties others posted, once the owner allows it: box bounty describe --solving.'
-  : 'the owner allows taking paid bounties others posted: box bounty describe --solving says when one is worth it.';
+/** The one line `describe` gives the owner's modes and the solving half (PF27, PF29): who decides each step, from the
+    owner's own settings. Posting and merging share one answer per repository; solving has its own. */
+const POSTING_MODE = { allowed: 'the agent decides', ask: 'the owner is asked each time', off: 'not allowed yet', none: 'not allowed yet', 'no-repository': 'needs a repository to say' } as const;
+const SOLVING_MODE = { allowed: 'the agent decides', ask: 'the owner is asked each time', off: 'off' } as const;
+export const describeModeLine = (posting: keyof typeof POSTING_MODE, solving: keyof typeof SOLVING_MODE): string =>
+  `modes: posting and merging: ${POSTING_MODE[posting]}; taking others' bounties: ${SOLVING_MODE[solving]} (box bounty describe --solving).`;
 /** The instruction block's solving line, there only while the owner allows solving. */
 export const SOLVING_BLOCK_LINE = 'The owner also allows taking paid bounties: `box bounty describe --solving`.';
 

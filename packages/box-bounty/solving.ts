@@ -106,6 +106,9 @@ export interface DiscoveredBounty {
   readonly record: { readonly merged: number; readonly recordedPaid: number; readonly confirmedReceived: number; readonly owedNow: number };
   readonly decisions: { readonly count: number; readonly medianDays: number | null };
   readonly solutionsOpen: number; readonly openAllByPoster: boolean; readonly attempts: number;
+  /** PF29: others' pull requests on this owner's bounties, and what GitHub's checks say on the attempts shown. */
+  readonly pullRequests: { readonly merged: number; readonly closed: number; readonly open: number } | null;
+  readonly checks: Readonly<Record<'passing' | 'failing' | 'pending' | 'none' | 'unread', number>>;
   readonly ageDays: number; readonly branch: string; readonly baseCommit: string; readonly page: string;
 }
 export interface DiscoverResult {
@@ -131,6 +134,13 @@ function entryOf(raw: unknown): DiscoveredBounty | null {
   const owner = typeof e['owner']?.['login'] === 'string' ? e['owner']['login'] as string : null;
   const record = e['owner']?.['record'];
   const decisions = e['owner']?.['decisions'];
+  const odds = e['owner']?.['pull_requests'];
+  const pullRequests = num(odds?.['merged']) !== null && num(odds?.['closed']) !== null && num(odds?.['open']) !== null ? { merged: odds['merged'] as number, closed: odds['closed'] as number, open: odds['open'] as number } : null;
+  const checks = { passing: 0, failing: 0, pending: 0, none: 0, unread: 0 };
+  for (const draft of Array.isArray(e['attempts_in_progress']?.['drafts']) ? e['attempts_in_progress']['drafts'] as unknown[] : []) {
+    const state = (draft as Record<string, any> | null)?.['checks']?.['state'];
+    if (typeof state === 'string' && Object.hasOwn(checks, state)) checks[state as keyof typeof checks] += 1;
+  }
   const branch = typeof e['answer']?.['branch'] === 'string' && e['answer']['branch'] === `box-bounty/${id}` ? e['answer']['branch'] as string : null;
   const base = typeof e['answer']?.['base_commit'] === 'string' && /^[a-f\d]{40}$/.test(e['answer']['base_commit']) ? e['answer']['base_commit'] as string : null;
   const page = typeof e['links']?.['page'] === 'string' && /^https?:\/\/[^\s"]+$/.test(e['links']['page']) ? e['links']['page'] as string : null;
@@ -140,7 +150,7 @@ function entryOf(raw: unknown): DiscoveredBounty | null {
     record: { merged: num(record?.['merged']) ?? 0, recordedPaid: num(record?.['recorded_paid']) ?? 0, confirmedReceived: num(record?.['confirmed_received']) ?? 0, owedNow: num(record?.['owed_now']) ?? 0 },
     decisions: { count: num(decisions?.['count']) ?? 0, medianDays: num(decisions?.['median_days']) },
     solutionsOpen: num(e['solutions']?.['open']) ?? 0, openAllByPoster: e['solutions']?.['open_all_by_poster'] === true,
-    attempts: num(e['attempts_in_progress']?.['count']) ?? 0, ageDays: num(e['age_days']) ?? 0, branch, baseCommit: base, page
+    attempts: num(e['attempts_in_progress']?.['count']) ?? 0, pullRequests, checks, ageDays: num(e['age_days']) ?? 0, branch, baseCommit: base, page
   };
 }
 
@@ -196,8 +206,9 @@ export function renderDiscover(result: DiscoverResult): string[] {
   for (const b of result.bounties) {
     const decided = b.decisions.medianDays === null ? 'no decision yet' : `decides in a median ${plural(b.decisions.medianDays, 'day', 'days')} (${b.decisions.count} decided)`;
     lines.push('');
-    lines.push(`${b.id} — $${b.reward}, pays on merge: ${b.paysOnMerge ? 'yes' : 'no'} · attempts in progress: ${b.attempts} · open pull requests: ${b.solutionsOpen}${b.openAllByPoster ? ' (all by the poster)' : ''} · posted ${plural(b.ageDays, 'day', 'days')} ago`);
-    lines.push(`  owner ${solverAccount(b.owner)}: ${b.record.merged} merged, ${b.record.recordedPaid} recorded paid, ${b.record.confirmedReceived} confirmed received, ${b.record.owedNow} owed now; ${decided}`);
+    const checked = (['failing', 'pending', 'passing', 'none'] as const).filter(state => b.checks[state] > 0).map(state => `${b.checks[state]} ${state === 'none' ? 'with no checks' : state}`);
+    lines.push(`${b.id} — $${b.reward}, pays on merge: ${b.paysOnMerge ? "yes (the reward is within the owner's approved limit, with a saved card)" : 'no'} · attempts in progress: ${b.attempts}${checked.length === 0 ? '' : ` (GitHub's checks: ${checked.join(', ')})`} · open pull requests: ${b.solutionsOpen}${b.openAllByPoster ? ' (all by the poster)' : ''} · posted ${plural(b.ageDays, 'day', 'days')} ago`);
+    lines.push(`  owner ${solverAccount(b.owner)}: ${b.record.merged} merged, ${b.record.recordedPaid} recorded paid, ${b.record.confirmedReceived} confirmed received, ${b.record.owedNow} owed now; ${decided}${b.pullRequests === null ? '' : `; others' pull requests: ${b.pullRequests.merged} merged, ${b.pullRequests.closed} closed without a merge, ${b.pullRequests.open} open`}`);
     lines.push(`  ${b.repository}${b.language === null ? '' : ` (${b.language})`} · answer from ${b.branch} at ${b.baseCommit.slice(0, 12)} · ${b.page}`);
     lines.push(`  ${blockHeader('other account')}`, `  ${solverLine(b.title, 'other account')}`, `  ${blockFooter('other account')}`);
   }
