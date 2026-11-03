@@ -194,7 +194,7 @@ describe('discover', () => {
 
   it('the command: in help, and refusing by name with exit 3 when solving is off', () => {
     const help = spawnSync(process.execPath, [CLI_DIST, 'bounty', 'help'], { encoding: 'utf8', env: process.env, timeout: 60000 });
-    expect(help.stdout).toContain('discover  new bounties since your own bookmark');
+    expect(help.stdout).toContain('discover  new bounties since your own bookmark, each once with its facts — once the owner allows solving');
     changeConfig(null, 'set', 'board', board);
     const off = spawnSync(process.execPath, [CLI_DIST, 'bounty', 'discover'], { encoding: 'utf8', env: process.env, timeout: 60000 });
     expect(off.status).toBe(3);

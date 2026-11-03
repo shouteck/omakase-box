@@ -76,7 +76,9 @@ const LABELS: Record<string, Record<string, string | null>> = {
     'owner/project': '/repositories/owner~1project',
     'records': '/records/tracked',
     'legacy record files': '/records/tracked',
-    'board': '/board'
+    'board': '/board',
+    // PF24: the owner's word on solving.
+    'solving': '/solving'
   }
 };
 const NOT_FACT: Record<string, Record<string, string>> = {
