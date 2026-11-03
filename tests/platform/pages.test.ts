@@ -665,10 +665,10 @@ describe('the pages', () => {
     expect(await owner.page.locator('[role=tablist][aria-label="Your role"] [role=tab][aria-selected=true]').innerText()).toContain('Owner');
     expect(await owner.page.locator('[data-stage-tab][aria-selected=true]').innerText()).toMatch(/^Payment due\s+2\s+\$90$/);
     const owed = owner.page.locator(`tr[data-bounty="${STATE_IDS.owed}"]`);
-    expect(await owed.innerText()).toMatch(/Duplicate rows after a retry\s+example-tidepool\/ledger-lite #55 · \d+ days? ago\s+Payment due\s+Pay on merge is off for this repository\.\s+\$45$/);
+    expect(await owed.innerText()).toMatch(/Duplicate rows after a retry\s+example-tidepool\/ledger-lite #55 · \d+ days? ago\s+Payment due\s+Merged · example-quill\s+\$45$/);
     expect(await owed.locator(`a[href="/b/${STATE_IDS.owed}/"]`).count()).toBe(1);
     // The title is the one way in: no Pay button that leads to the same page.
-    expect(await owed.locator('a').evaluateAll(links => links.map(link => link.getAttribute('href')))).toEqual([`/b/${STATE_IDS.owed}/`]);
+    expect(await owed.locator('a').evaluateAll(links => links.map(link => link.getAttribute('href')))).toEqual([`/b/${STATE_IDS.owed}/`, '/solver/example-quill/']);
     const solver = await signedIn(7001, 'example-quill');
     expect(await solver.page.locator('[role=tab][aria-selected=true]').innerText()).toContain('Solver');
     expect(await solver.page.locator('table[aria-label="Coming to you"] tbody tr').filter({ hasText: 'Duplicate rows after a retry' }).innerText()).toMatch(/example-mara\s+\$45\s+\d+ \w+ \d{4}\s+Open/);

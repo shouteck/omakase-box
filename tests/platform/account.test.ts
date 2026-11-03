@@ -514,7 +514,8 @@ describe('your bounties (PF21)', () => {
     expect(list.get(STATE_IDS.open)).toMatchObject({ stage: 'waiting', solutions: 0, reward: 45, repository: 'example-tidepool/ledger-lite', issue_number: 48 });
     expect(list.get(STATE_IDS.waiting)).toMatchObject({ stage: 'solutions', solutions: 2 });
     expect(list.get(STATE_IDS.closed)).toMatchObject({ stage: 'closed' });
-    expect(list.get(STATE_IDS.owed)).toMatchObject({ stage: 'due', merged: PAYEE.login, card_failed: false, note: 'Pay on merge is off for this repository.' });
+    // On a board without pay on merge, a due bounty names whose work was merged, and nothing about pay on merge.
+    expect(list.get(STATE_IDS.owed)).toMatchObject({ stage: 'due', merged: PAYEE.login, card_failed: false, note: null });
     expect(list.get(STATE_IDS.moreThanOne)).toMatchObject({ stage: 'due', merged: null, merged_one_of: ['example-fern', 'example-rook'], note: 'More than one solution was merged. You choose whom to pay.' });
     expect(list.get(STATE_IDS.merged)).toMatchObject({ stage: 'paid', merged: PAYEE.login, paid_by: 'Recorded by you' });
     expect(list.has(STATE_IDS.private)).toBe(false);
@@ -550,6 +551,11 @@ describe('your bounties (PF21)', () => {
     const charge = (state: string, method: string | null) => r.env.DB.prepare(`INSERT INTO charges (bounty_id, state, solver, payment_method, at) VALUES (?, ?, ?, ?, ?)
       ON CONFLICT (bounty_id) DO UPDATE SET state = excluded.state, payment_method = excluded.payment_method`).bind(STATE_IDS.owed, state, PAYEE.login, method, r.clock.at).run();
     const owed = async () => byId(await listed(jar)).get(STATE_IDS.owed);
+    // With Stripe set up on the board and this repository not on pay on merge, the row says so.
+    r.env.STRIPE_SECRET_KEY = 'sk_test_standin';
+    expect(await owed()).toMatchObject({ stage: 'due', note: 'Pay on merge is off for this repository.' });
+    await r.env.DB.prepare('INSERT INTO pay_repositories (github_id, repository, on_at) VALUES (?, ?, ?)').bind(OWNER.id, 'example-tidepool/ledger-lite', new Date(r.clock.at).toISOString()).run();
+    expect(await owed()).toMatchObject({ stage: 'due', note: null });
     await charge('declined', 'pm_saved');
     expect(await owed()).toMatchObject({ stage: 'due', card_failed: true, note: 'The card was declined. Nothing was charged.' });
     await charge('charging', 'pm_saved');
