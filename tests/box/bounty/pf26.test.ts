@@ -164,7 +164,7 @@ describe('status on a taken bounty', { timeout: 120000 }, () => {
     const json = box('status', id, '--json');
     expect(json.status).toBe(3);
     expect(json.stderr).toContain('taken-status-options');
-    expect(box('help').stdout).toContain('submit <id>, status <id>  mark a taken bounty ready for review once your work is pushed');
+    expect(box('help').stdout).toContain('discover, take <id>, submit <id>  new bounties since your bookmark');
   }));
 
   it('the way to be paid: unknown before the board has read a pull request; with none, the board\'s link once; connected, said so', () => postedFixture(({ bare, id }) => {

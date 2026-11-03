@@ -352,6 +352,11 @@ describe('BT43 the parser walk over the shipped source', () => {
   it('enumerates the renderer\'s callers — the look block, the comment block and the account names', () => {
     const where = found.callers.filter(caller => caller.file !== RENDERER_FILE).map(caller => `${caller.file} ${caller.text}`).sort();
     expect(where).toEqual([
+      // PF26: a taken attempt's status quotes each comment inside its own block, and names accounts by login shape.
+      'packages/box-bounty/attempt.ts solverAccount',
+      'packages/box-bounty/attempt.ts solverAccount',
+      'packages/box-bounty/attempt.ts solverAccountOr',
+      'packages/box-bounty/attempt.ts solverBlock',
       'packages/box-bounty/board.ts solverAccount',
       'packages/box-bounty/board.ts solverAccount',
       'packages/box-bounty/owner-text.ts solverAccount',
