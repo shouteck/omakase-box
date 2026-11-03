@@ -169,5 +169,5 @@ export function closeTaken(id: string): string {
   const closed = api(taken.workspace !== undefined && existsSync(taken.workspace) ? taken.workspace : tmpdir(), `repos/${taken.repository}/pulls/${taken.pullRequest!.number}`, { state: 'closed' }, 'PATCH');
   if (!isObject(closed) || closed['state'] !== 'closed') return invalid('github-response-invalid', `GitHub did not say draft #${taken.pullRequest!.number} is closed; the attempt stays taken; next: close it on GitHub at ${taken.pullRequest!.url}, then run box bounty close ${id} again`);
   save({ ...taken, stage: 'withdrawn', at: new Date().toISOString() });
-  return `${id} — withdrawn: draft #${taken.pullRequest!.number} closed. The fork and the workspace at ${taken.workspace} are yours to keep or remove.`;
+  return `${id} — withdrawn: draft #${taken.pullRequest!.number} closed. The branch ${taken.branch} on ${taken.target} and the workspace at ${taken.workspace} are yours to keep or remove.`;
 }

@@ -148,7 +148,7 @@ describe('take', { timeout: 120000 }, () => {
     const result = takeBounty(id);
     if (result.kind !== 'taken') throw new Error('not taken');
     expect(() => takeBounty(id)).toThrow(expect.objectContaining({ reason: 'already-taken' }));
-    expect(closeTaken(id)).toContain(`draft #${result.taken.pullRequest!.number} closed`);
+    expect(closeTaken(id)).toContain(`draft #${result.taken.pullRequest!.number} closed. The branch box-solve/${id} on owner/project`);
     expect(state().prs.find(pr => pr.number === result.taken.pullRequest!.number)).toMatchObject({ state: 'closed' });
     expect(loadTaken(id)?.stage).toBe('withdrawn');
     expect(closeTaken(id)).toContain('already withdrawn');
