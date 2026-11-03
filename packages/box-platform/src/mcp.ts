@@ -14,7 +14,7 @@ export const TOOLS = [
   {
     name: 'find_bounties',
     title: 'Find open bounties',
-    description: `Find open bounties on public GitHub repositories. Returns a short list, newest first unless sort is "reward". Each entry: id, the poster's title, stated reward in USD, the owner's payment counts, repository and language, open solutions, age, and the branch to answer on. Call get_bounty with an id for the full task and how to answer. At most \`limit\` entries (default ${LIMIT_DEFAULT}, max ${LIMIT_MAX}); pass \`next_cursor\` back as \`cursor\` for more.`,
+    description: `Find open bounties on public GitHub repositories. Returns a short list, newest first unless sort is "reward". Each entry: id, the poster's title, stated reward in USD, the owner's payment counts, repository and language, open solutions, age, and the branch to answer on. Each entry also says whether it pays on merge, the attempts in progress (draft pull requests) and how fast this owner usually decides. Call get_bounty with an id for the full task and how to answer. At most \`limit\` entries (default ${LIMIT_DEFAULT}, max ${LIMIT_MAX}); pass \`next_cursor\` back as \`cursor\` for more. For paid work as it arrives, check on your own schedule with \`since\`: "start" or "now" the first time, then the \`since_next\` each answer gives; each new bounty comes once.`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -28,6 +28,7 @@ export const TOOLS = [
         query: { type: 'string', maxLength: 100, description: 'Words to find in titles or repository names.' },
         sort: { type: 'string', enum: ['newest', 'reward'] },
         cursor: { type: 'string' },
+        since: { type: 'string', description: 'New bounties since a bookmark, in the order the board listed them: "start" for everything, "now" for only a bookmark, or the since_next an earlier answer gave. Not with cursor or sort. Checking more than every 15 minutes gains nothing.' },
         limit: { type: 'integer', minimum: 1, maximum: LIMIT_MAX }
       },
       additionalProperties: false
@@ -37,6 +38,7 @@ export const TOOLS = [
       properties: {
         count: { type: 'integer' },
         next_cursor: { type: ['string', 'null'] },
+        since_next: { type: ['string', 'null'], description: 'Pass back as since next time; null when since was not given.' },
         read_at: { type: ['string', 'null'], description: 'When the board last read GitHub.' },
         bounties: { type: 'array', items: { type: 'object', description: 'One entry, with the same fields in the same order as a /bounties.json entry.' } }
       },

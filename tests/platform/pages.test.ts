@@ -411,7 +411,8 @@ describe('the pages', () => {
       const dialog = page.locator('dialog[open]');
       expect(await dialog.locator('input[name=repository]').evaluateAll(inputs => inputs.map(input => [(input as HTMLInputElement).type, (input as HTMLInputElement).value]))).toEqual([['radio', 'example-org/lite']]);
       expect(await dialog.innerText()).toContain('1 open · $75');
-      expect(await page.inputValue('dialog[open] input[name=reward]')).toBe('75');
+      // The dialog fills the reward from the chosen repository just after it opens; wait for it, as a person would see it.
+      await expect.poll(() => page.inputValue('dialog[open] input[name=reward]')).toBe('75');
       expect(await dialog.innerText()).not.toMatch(/limit/i);
       await close();
     });
