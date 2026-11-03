@@ -109,7 +109,7 @@ if (rest === 'pulls' && method === 'GET') {
 if (rest === 'pulls' && method === 'POST') {
   const number = nextNumber();
   const sha = spawnSync('git', ['-C', bare, 'rev-parse', 'refs/pull/' + number + '/head'], { encoding: 'utf8' }).stdout.trim();
-  const pr = { number, html_url: 'https://github.com/owner/project/pull/' + number, title: input.title, body: input.body, user: { login: input.author || 'solver' }, base: { ref: input.base, repo: { full_name: 'owner/project' } }, head: { sha }, state: 'open' };
+  const pr = { number, html_url: 'https://github.com/owner/project/pull/' + number, title: input.title, body: input.body, user: { login: input.author || 'solver' }, base: { ref: input.base, repo: { full_name: 'owner/project' } }, head: { sha }, state: 'open', draft: input.draft === true };
   state.prs.push(pr); save(state); emit(pr);
 }
 fail();
