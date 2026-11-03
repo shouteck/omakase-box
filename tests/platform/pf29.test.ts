@@ -105,3 +105,39 @@ describe('what GitHub\'s checks say on each attempt', () => {
     expect(await runs(30, async () => (await r.env.DB.prepare('SELECT COUNT(*) AS n FROM pull_requests WHERE number = 340').first<{ n: number }>())!.n === 1)).not.toBeNull();
   });
 });
+
+describe('the numbers page', () => {
+  it('an empty board shows zeros and says what each number counts', async () => {
+    await refreshUntilDone(r);
+    const numbers = await askJson(r, '/numbers.json');
+    expect(numbers.bounties).toMatchObject({ listed: 0, open: 0, open_with_reward: 0 });
+    expect(numbers.rewards).toMatchObject({ stated_on_open_bounties_usd: 0, recorded_paid: { bounties: 0, usd: 0 } });
+    expect(numbers.pull_requests).toMatchObject({ merged: 0, closed: 0, open: 0 });
+    expect(numbers.attempts_per_bounty).toMatchObject({ median: null, bounties: 0 });
+    expect(numbers.days_to_decision).toMatchObject({ median: null, bounties: 0 });
+    for (const key of ['bounties', 'rewards', 'pull_requests', 'attempts_per_bounty', 'solvers', 'days_to_decision']) expect(typeof numbers[key].base).toBe('string');
+  });
+
+  it('a seeded world\'s numbers equal a hand count, and a repeat ask with the tag costs a 304', async () => {
+    r.standin.issues.push(
+      // Merged by another: decided in 1 day; closed issue.
+      issue(51, { amount: 30, state: 'closed', closedAt: ago(1), pulls: [pull(501, { state: 'closed', merged_at: ago(1), created_at: ago(2), landed: true }), pull(502, { author: 'example-quill', state: 'closed', created_at: ago(2) })] }),
+      // Open, rewarded, two attempts by others, one by the poster (not counted as by others).
+      issue(52, { amount: 50, pulls: [pull(503, {}), pull(504, { author: 'example-quill' }), pull(505, { author: 'pf29-poster', association: 'OWNER' })] }),
+      // Open, no reward, no attempts.
+      issue(53, { amount: 0 })
+    );
+    await refreshUntilDone(r);
+    const numbers = await askJson(r, '/numbers.json');
+    expect(numbers.bounties).toMatchObject({ listed: 3, open: 2, open_with_reward: 1 });
+    expect(numbers.rewards.stated_on_open_bounties_usd).toBe(50);
+    expect(numbers.pull_requests).toMatchObject({ merged: 1, closed: 1, open: 2 });
+    expect(numbers.solvers.distinct).toBe(2);
+    // Pull requests per bounty: 2 and 3 over the two bounties with any; the median of two is their mean, rounded.
+    expect(numbers.attempts_per_bounty).toMatchObject({ median: 3, bounties: 2 });
+    expect(numbers.days_to_decision).toMatchObject({ median: 1, bounties: 1 });
+    const first = await handle(new Request(`${ORIGIN}/numbers.json`), r.env);
+    const again = await handle(new Request(`${ORIGIN}/numbers.json`, { headers: { 'if-none-match': first.headers.get('etag')! } }), r.env);
+    expect(again.status).toBe(304);
+  });
+});

@@ -6,7 +6,7 @@ import { applyPayPalEvent, authorTakes } from './paypal-pay.js';
 import { PayPalUnavailable, webhookHolds } from './paypal.js';
 import { waysOfBounty } from './pay-ways.js';
 import { signatureHolds } from './stripe.js';
-import { feedResponse, detailResponse, rssResponse, schemaResponse, waysOn } from './feed.js';
+import { feedResponse, detailResponse, numbersResponse, rssResponse, schemaResponse, waysOn } from './feed.js';
 import type { Env } from './github.js';
 import { hintResponse } from './hint.js';
 import { mcpResponse } from './mcp.js';
@@ -130,6 +130,7 @@ export async function handle(request: Request, env: Env): Promise<Response> {
   if (url.pathname === '/bounties.json') return feedResponse(request, env, now);
   if (url.pathname === '/bounties.schema.json') return schemaResponse(request);
   if (url.pathname === '/rss.xml') return rssResponse(request, env, now);
+  if (url.pathname === '/numbers.json') return numbersResponse(request, env);
   const file = /^\/bounties\/([^/]+)\.json$/.exec(url.pathname);
   if (file !== null) return detailResponse(request, env, decodeURIComponent(file[1]!), now);
   if (url.pathname === '/api/board') return board(env, url, now);
