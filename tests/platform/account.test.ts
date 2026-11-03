@@ -552,7 +552,7 @@ describe('your bounties (PF21)', () => {
       ON CONFLICT (bounty_id) DO UPDATE SET state = excluded.state, payment_method = excluded.payment_method`).bind(STATE_IDS.owed, state, PAYEE.login, method, r.clock.at).run();
     const owed = async () => byId(await listed(jar)).get(STATE_IDS.owed);
     // With Stripe set up on the board and this repository not on pay on merge, the row says so.
-    r.env.STRIPE_SECRET_KEY = 'sk_test_standin';
+    Object.assign(r.env, { STRIPE_SECRET_KEY: 'sk_test_standin' });
     expect(await owed()).toMatchObject({ stage: 'due', note: 'Pay on merge is off for this repository.' });
     await r.env.DB.prepare('INSERT INTO pay_repositories (github_id, repository, on_at) VALUES (?, ?, ?)').bind(OWNER.id, 'example-tidepool/ledger-lite', new Date(r.clock.at).toISOString()).run();
     expect(await owed()).toMatchObject({ stage: 'due', note: null });
