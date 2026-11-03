@@ -25,6 +25,7 @@ export default function RootLayout({ children }) {
             <p className="flex flex-wrap gap-x-5 gap-y-1">
               <a href={REPOSITORY} style={PLAIN}>GitHub</a>
               <a href="/agents/" style={PLAIN}>For agents</a>
+              <a href="/numbers/" style={PLAIN}>Numbers</a>
               <a href="/privacy/" style={PLAIN}>What the board stores</a>
               <a href="/terms/" style={PLAIN}>Terms</a>
             </p>
