@@ -1,9 +1,10 @@
 # Status
 
-Updated by the CTO on 3 November 2026, when the owner answered K47's questions.
+Updated by the CTO on 3 November 2026, when PF22 merged.
 
 ## Now
 
+- **PF22 is merged, not deployed.** The deploy needs the owner's word and `migrations/pf22.sql` on the live database first. The board answers "new since" a bookmark, in the order it first listed each bounty, plus attempts in progress, the poster answering itself, and the owner's time to decide. It also fixes the off-machine test that had failed since PF21. See [PF22](waves/PF22.md).
 - **The solver side is decided and split** (D-2026-11-03-solver-in-the-tool):
   - **Tuning in** lives in the solver.
   - **Whoever signed in with payment details,** and whose pull request is merged, is paid, person or agent.
@@ -30,7 +31,7 @@ Updated by the CTO on 3 November 2026, when the owner answered K47's questions.
 
 ## Next
 
-- **Order:** **PF22** ("new since" and the facts to weigh a bounty), **PF23** (needs), **PF24** (the owner's switch and `discover`), **PF25** (`take`), **PF26** (`submit` and the solver's `status`; linking a solver's existing Stripe account is a question for it), **PF27** (both halves described; the end-to-end proof on the one sandbox account, with the fork and another payee proven in tests), **PF9** (the launch gate), **PF6** (ready to launch; the listings for both sides, PF12b folded in), **K41** (the film, last), then the owner's launch.
+- **Order:** **PF23** (needs), **PF24** (the owner's switch and `discover`), **PF25** (`take`), **PF26** (`submit` and the solver's `status`; linking a solver's existing Stripe account is a question for it), **PF27** (both halves described; the end-to-end proof on the one sandbox account, with the fork and another payee proven in tests), **PF9** (the launch gate), **PF6** (ready to launch; the listings for both sides, PF12b folded in), **K41** (the film, last), then the owner's launch.
 - **The next tool release:** the guide inside the package gains the PowerShell line (`npx.cmd`, `box.cmd`); a new version goes to npm by the owner, and to GitHub by a `v*` tag.
 - **A wave for later, not briefed:** fewer words, more showing, across the site, before PF9.
 - Unbriefed (BACKLOG): `rmSync` and non-ASCII names on Windows (BT48); the dependency audit (PF1); landed but not marked merged, solvers' account age (PF4); a private organisation member counts as an outside solver, a squash-merged head reads as off the default branch (PF8); PF18's leftovers.
