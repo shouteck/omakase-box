@@ -1,10 +1,15 @@
 # Status
 
-Updated by the CTO on 3 November 2026, when K47 merged.
+Updated by the CTO on 3 November 2026, when the owner answered K47's questions.
 
 ## Now
 
-- **K47 merged** (`6ef8ce92`): [SOLVER-SIDE.md](docs/box-v4/SOLVER-SIDE.md) takes PF12 apart for 24/7 solver agents. Four faults named: the tune-in belongs in the solver's own scheduler, not a board-side subscription with push; broadcast plus winner-takes-all has no answer to contention (draft pull requests as the attempt convention); a solver is undefined, and pay on merge can only pay a signed-in GitHub user, never an App `[bot]` identity (define a solver as a payee); needs as matched sets (hard requirements only). **PF12 is not rewritten until the owner answers the three questions at the end of that document:** where the tune-in lives, what a solver is, whether the installed base may earn under a standing rule.
+- **The solver side is decided and split** (D-2026-11-03-solver-in-the-tool):
+  - **Tuning in** lives in the solver.
+  - **Whoever signed in with payment details,** and whose pull request is merged, is paid, person or agent.
+  - **The tool serves both sides,** with solving off until the owner allows it.
+
+  PF12 is retired into PF22 to PF27, sketched in [SOLVER-CLI.md](docs/box-v4/SOLVER-CLI.md), after K47's critique ([SOLVER-SIDE.md](docs/box-v4/SOLVER-SIDE.md), merged `6ef8ce92`).
 - **PF21 is live,** deployed on the owner's word on 3 November 2026 (Worker version `2605d119`; no migration): Your bounties on the Owner side. Every bounty the owner's GitHub account opened, in four stages (Waiting for solutions, Solutions in, Payment due, Paid) plus Closed. It replaces the "You owe" figure and the "To pay" table. Payment due holds only what waits on the owner; pay on merge goes straight to Paid. See [PF21](waves/PF21.md).
 - **PF20 is live,** deployed on the owner's word on 3 November 2026 (Worker version `225e9f5d`): the CLI's pay-on-merge lines read the new public answer (checked live: `set_up` true, no one on yet; a bad name gets 400); one fixed "Reward"; repositories from the owner's own bounties; removing the card confirmed. See [PF20](waves/PF20.md).
 - **PF19 is live,** deployed on the owner's word on 3 November 2026 (Worker version `6cd916d0`), after `migrations/pf19.sql` on the live database (no repository was on pay on merge yet, so nothing was copied): Your page by role, pay on merge per repository, Stripe's countries readable signed out. See [PF19](waves/PF19.md).
@@ -25,7 +30,7 @@ Updated by the CTO on 3 November 2026, when K47 merged.
 
 ## Next
 
-- **Order:** **PF12** (re-briefed from K47's recommendation once the owner answers; linking a solver's existing Stripe account is a question for it), **PF12b** (the channel listed where agents search, each listing on the owner's word), **PF9** (the launch gate), **PF6**, **K41** (the film, last), then the owner's launch.
+- **Order:** **PF22** ("new since" and the facts to weigh a bounty), **PF23** (needs), **PF24** (the owner's switch and `discover`), **PF25** (`take`), **PF26** (`submit` and the solver's `status`; linking a solver's existing Stripe account is a question for it), **PF27** (both halves described; the end-to-end proof), **PF12b** (listings, each on the owner's word), **PF9** (the launch gate), **PF6**, **K41** (the film, last), then the owner's launch.
 - **The next tool release:** the guide inside the package gains the PowerShell line (`npx.cmd`, `box.cmd`); a new version goes to npm by the owner, and to GitHub by a `v*` tag.
 - **A wave for later, not briefed:** fewer words, more showing, across the site, before PF9.
 - Unbriefed (BACKLOG): `rmSync` and non-ASCII names on Windows (BT48); the dependency audit (PF1); landed but not marked merged, solvers' account age (PF4); a private organisation member counts as an outside solver, a squash-merged head reads as off the default branch (PF8); PF18's leftovers.
