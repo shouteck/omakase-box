@@ -43,6 +43,11 @@ CREATE TABLE IF NOT EXISTS pull_requests (
   -- PF22: GitHub's draft flag and last activity, from the list the refresh already reads.
   draft INTEGER,
   updated_at TEXT,
+  -- PF29: what GitHub's checks said on an open attempt's head: passing, failing, pending, none, or unread (the read
+  -- failed). For the head in checks_sha only; a head that moved is due again.
+  checks_state TEXT,
+  checks_sha TEXT,
+  checks_read_at INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (bounty_id, number)
 );
 CREATE TABLE IF NOT EXISTS events (

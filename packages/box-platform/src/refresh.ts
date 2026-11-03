@@ -10,6 +10,8 @@ const SEARCH_PAGES = 10; // GitHub search answers at most 1,000 results.
 const REPOSITORY_STALE_MS = TICK_MINUTES * 60000;
 const DETAILS_STALE_MS = TICK_MINUTES * 60000;
 const SEARCH_EVERY_MS = TICK_MINUTES * 60000;
+/** PF29: a head with no checks yet is read again only while its attempt was active this recently: CI often starts after a push. */
+const RECENT_ACTIVITY_MS = 60 * 60000;
 const TITLE_MAX = 300;
 const TASK_MAX = 65536;
 
@@ -179,6 +181,28 @@ async function readOnDefault(env: Env, github: GitHub, id: string, repository: s
   }
 }
 
+// PF29: what GitHub's checks say on an open attempt's head, as one state. Check runs (GitHub Actions and apps) and
+// commit statuses (other CI) are two reads; a failure in either is failing, anything unfinished is pending, and a head
+// with neither is none. Only the state is kept: check names are a solver's text and never stored.
+const FAILED = new Set(['failure', 'timed_out', 'cancelled', 'action_required', 'startup_failure', 'stale']);
+export type ChecksState = 'passing' | 'failing' | 'pending' | 'none' | 'unread';
+export function checksOf(runs: unknown, status: unknown): ChecksState {
+  if (!record(runs) || !Array.isArray(runs['check_runs']) || !record(status) || !Number.isSafeInteger(status['total_count'])) return 'unread';
+  const list = (runs['check_runs'] as unknown[]).filter(record);
+  const states = (status['total_count'] as number) > 0 && Array.isArray(status['statuses']) ? (status['statuses'] as unknown[]).filter(record).map(entry => entry['state']) : [];
+  if (list.some(run => run['status'] === 'completed' && typeof run['conclusion'] === 'string' && FAILED.has(run['conclusion'])) || states.some(state => state === 'failure' || state === 'error')) return 'failing';
+  if (list.some(run => run['status'] !== 'completed') || states.some(state => state === 'pending')) return 'pending';
+  return list.length > 0 || states.length > 0 ? 'passing' : 'none';
+}
+
+async function readChecks(env: Env, github: GitHub, id: string, repository: string, number: number, head: string, now: number): Promise<void> {
+  const runs = await github.get(`/repos/${repository}/commits/${head}/check-runs?per_page=100`);
+  const status = await github.get(`/repos/${repository}/commits/${head}/status`);
+  const state = runs.status === 200 && status.status === 200 ? checksOf(runs.json, status.json) : 'unread';
+  // Kept only if the head is still the one read: a push in between leaves it due for the new head.
+  await env.DB.prepare('UPDATE pull_requests SET checks_state = ?, checks_sha = ?, checks_read_at = ? WHERE bounty_id = ? AND number = ? AND head_sha = ?').bind(state, head, now, id, number, head).run();
+}
+
 const EVENT_TYPES = new Set(['posted', 'solution', 'merged', 'closed', 'paid']);
 const APPROVAL: Record<string, string> = { once: 'owner-this-bounty', allowed: 'owner-standing-rule' };
 const integer = (value: unknown): number | null => Number.isSafeInteger(value) ? value as number : null;
@@ -304,17 +328,25 @@ export async function refresh(env: Env): Promise<RefreshResult> {
     // request step is done once its list is stored; the compares after it are best effort.
     const stale = now - DETAILS_STALE_MS;
     const closedStale = now - (env.closedStaleMs ?? DETAILS_STALE_MS);
-    const due = await db.prepare(`SELECT id, repository, issue_number, seen_at, issue_state, step, at FROM (
-        SELECT id, repository, issue_number, seen_at, issue_state, 'pulls' AS step, details_read_at AS at FROM bounties WHERE details_read_at <= ? AND (issue_state = 'open' OR details_read_at <= ?)
+    // PF29: a third step, per open attempt: its head's checks. Due when the head was never read, after the stale bound
+    // while pending or unread, and while "none" only if the attempt was active in the last hour (CI starting late).
+    const recent = new Date(now - RECENT_ACTIVITY_MS).toISOString();
+    const due = await db.prepare(`SELECT id, repository, issue_number, seen_at, issue_state, step, at, number, head FROM (
+        SELECT id, repository, issue_number, seen_at, issue_state, 'pulls' AS step, details_read_at AS at, NULL AS number, NULL AS head FROM bounties WHERE details_read_at <= ? AND (issue_state = 'open' OR details_read_at <= ?)
         UNION ALL
-        SELECT id, repository, issue_number, seen_at, issue_state, 'events' AS step, events_read_at AS at FROM bounties WHERE events_read_at <= ? AND (issue_state = 'open' OR events_read_at <= ?))
-      ORDER BY at, id, step`)
-      .bind(stale, closedStale, stale, closedStale).all<{ id: string; repository: string; issue_number: number; seen_at: number; issue_state: string; step: 'pulls' | 'events'; at: number }>();
+        SELECT id, repository, issue_number, seen_at, issue_state, 'events' AS step, events_read_at AS at, NULL AS number, NULL AS head FROM bounties WHERE events_read_at <= ? AND (issue_state = 'open' OR events_read_at <= ?)
+        UNION ALL
+        SELECT b.id, b.repository, b.issue_number, b.seen_at, b.issue_state, 'checks' AS step, p.checks_read_at AS at, p.number, p.head_sha AS head FROM pull_requests p JOIN bounties b ON b.id = p.bounty_id
+          WHERE p.state = 'open' AND b.issue_state = 'open' AND p.head_sha IS NOT NULL AND (p.checks_sha IS NULL OR p.checks_sha != p.head_sha
+            OR (p.checks_read_at <= ? AND (p.checks_state IN ('pending', 'unread') OR (p.checks_state = 'none' AND p.updated_at >= ?)))))
+      ORDER BY at, id, step, number`)
+      .bind(stale, closedStale, stale, closedStale, stale, recent).all<{ id: string; repository: string; issue_number: number; seen_at: number; issue_state: string; step: 'pulls' | 'events' | 'checks'; at: number; number: number | null; head: string | null }>();
     const checked = new Map<string, boolean>();
     for (const row of due.results) {
-      const column = row.step === 'pulls' ? 'details_read_at' : 'events_read_at';
       const spent = github.used;
-      const mark = (at: number) => db.prepare(`UPDATE bounties SET ${column} = ? WHERE id = ?`).bind(at, row.id).run();
+      const mark = (at: number) => row.step === 'checks'
+        ? db.prepare('UPDATE pull_requests SET checks_read_at = ? WHERE bounty_id = ? AND number = ?').bind(at, row.id, row.number).run()
+        : db.prepare(`UPDATE bounties SET ${row.step === 'pulls' ? 'details_read_at' : 'events_read_at'} = ? WHERE id = ?`).bind(at, row.id).run();
       await mark(row.issue_state === 'open' ? stale : closedStale);
       try {
         if (!checked.has(row.id)) checked.set(row.id, !(row.issue_state === 'open' && row.seen_at < completeAt) || await readIssueAgain(env, github, row.id, row.repository, row.issue_number, now));
@@ -323,13 +355,15 @@ export async function refresh(env: Env): Promise<RefreshResult> {
           await readPullRequests(env, github, row.id, row.repository);
           await mark(now);
           await readOnDefault(env, github, row.id, row.repository);
-        } else {
+        } else if (row.step === 'events') {
           await readEvents(env, github, row.id, row.repository);
           await mark(now);
+        } else {
+          await readChecks(env, github, row.id, row.repository, row.number!, row.head!, now);
         }
       } catch (error) {
         // A step the budget stopped before its first read keeps its place.
-        if (error instanceof BudgetSpent && github.used === spent) await db.prepare(`UPDATE bounties SET ${column} = ? WHERE id = ?`).bind(row.at, row.id).run();
+        if (error instanceof BudgetSpent && github.used === spent) await mark(row.at);
         throw error;
       }
     }

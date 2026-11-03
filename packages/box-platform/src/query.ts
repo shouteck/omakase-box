@@ -72,7 +72,10 @@ export async function addOwnerRecord(db: Db, q: URLSearchParams, filter: Filter,
 }
 
 export type BountyRow = { id: string; repository: string; issue_number: number; title: string; task: string; poster: string; issue_state: string; closed_at: string | null; amount: number; created_at: string; work_commit: string; approved_by: string | null; language: string | null; default_branch: string; read_at: number };
-export type PullRow = { number: number; author: string; state: string; opened_at: string; merged_at: string | null };
+export type PullRow = { number: number; author: string; state: string; opened_at: string; merged_at: string | null; head_sha?: string | null; checks_state?: string | null; checks_sha?: string | null; checks_read_at?: number };
+/** PF29: what GitHub's checks said, for the current head only; null when this head is not read yet. */
+export const checksFact = (pull: Pick<PullRow, 'head_sha' | 'checks_state' | 'checks_sha' | 'checks_read_at'>): { state: string; head: string; read_at: string } | null =>
+  typeof pull.head_sha === 'string' && pull.checks_sha === pull.head_sha && typeof pull.checks_state === 'string' ? { state: pull.checks_state, head: pull.head_sha, read_at: new Date(pull.checks_read_at ?? 0).toISOString() } : null;
 type EventRow = { at: string; type: string; pull_request: number | null; amount: number | null; withdrawn: number | null; kind: string | null };
 export type Line = { at: string; event: string; source: 'github' | 'project-record' };
 
@@ -122,7 +125,7 @@ export async function readBounty(env: Env, id: string, now: number): Promise<Bou
       if (!(error instanceof GitHubUnavailable || error instanceof BudgetSpent)) throw error;
     }
   }
-  const pulls = (await env.DB.prepare('SELECT number, author, state, opened_at, merged_at FROM pull_requests WHERE bounty_id = ? ORDER BY number').bind(id).all<PullRow>()).results;
+  const pulls = (await env.DB.prepare('SELECT number, author, state, opened_at, merged_at, head_sha, checks_state, checks_sha, checks_read_at FROM pull_requests WHERE bounty_id = ? ORDER BY number').bind(id).all<PullRow>()).results;
   const events = (await env.DB.prepare('SELECT at, type, pull_request, amount, withdrawn, kind FROM events WHERE bounty_id = ? AND type IS NOT NULL').bind(id).all<EventRow>()).results;
   return { row, pulls, history: historyOf(row, pulls, events) };
 }
