@@ -274,6 +274,13 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
       '--json': { help: 'print one JSON document (schema box-bounty/discover@1) instead of text' }
     }
   },
+  take: {
+    label: 'box bounty take', usage: 'box bounty take <id> [--into <new folder>]',
+    blurb: 'start an attempt: fork if needed, a throwaway workspace, and a draft pull request others can see → taken',
+    example: 'box bounty take bt-a1b2c3d4e5f6',
+    positionals: 1,
+    values: { '--into': { arg: '<new folder>', missing: 'a folder', help: 'clone here instead of a fresh folder under the system\'s temporary folder; it must not exist yet' } }
+  },
   hook: {
     label: 'box bounty hook', usage: 'box bounty hook | box bounty hook on|off --host <name> | box bounty hook start|pause|finish [--explain] [--repo <path>]',
     blurb: 'owner-opt-in awareness at session moments: on|off per host; start|pause|finish is what a host entry runs',

@@ -9,7 +9,7 @@ import { actingOn, applyBounty, BountyRefused, BountyUsage, closeBounty, createB
 import { boardAddress, boardNotToldLine, flushBoardHints, readBoardFacts } from '../../box-bounty/index.js';
 import type { ParsedOptions } from '../../box-bounty/index.js';
 import { previewGitHub } from '../../box-bounty/index.js';
-import { discover, discoverDocument, renderDiscover } from '../../box-bounty/index.js';
+import { closeTaken, discover, discoverDocument, loadTaken, renderDiscover, takeBounty } from '../../box-bounty/index.js';
 import { escapeControls, exportLook, findDocument, lookBounty, solverBlock, SOLVER_WORDS, renderFind, renderResume, openRecords, endedContaining, readGitPinsOncePerProcess, boundAmount, payToLine, gitOutcome } from '../../box-bounty/index.js';
 
 // Does .git/config name this remote — read as bytes, so the apply output
@@ -245,6 +245,14 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       if (parsed.switches.has('--json')) printDocument(discoverDocument(result));
       else console.log(renderDiscover(result).join('\n'));
       result.save();
+    } else if (subcommand === 'take') {
+      // The solver's half (PF25): no checkout needed; the workspace is a new folder outside every repository.
+      const parsed = parse('take');
+      const [id] = parsed.positionals;
+      if (id === undefined) host.usage('box bounty take <id> [--into <new folder>]');
+      const into = parsed.values['--into'];
+      const result = takeBounty(id, into === undefined ? {} : { into: resolve(into) });
+      console.log(result.lines.join('\n'));
     } else if (subcommand === 'find') {
       // Recall by purpose (BT28): one query over every readable record.
       const parsed = parse('find');
@@ -420,6 +428,9 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
     } else if (subcommand === 'close') {
       const parsed = parse('close');
       const reason = parsed.values['--reason'];
+      // PF25: an id the solver took is withdrawn on GitHub; it needs no checkout.
+      const named = parsed.positionals[0];
+      if (named !== undefined && parsed.positionals.length === 1 && loadTaken(named) !== null) { console.log(closeTaken(named)); return; }
       const [id, ...extraIds] = commandIds(parsed);
       if (id === undefined || extraIds.length > 0) host.usage('box bounty close [id] [--reason "<text>"] [--repo <path>]');
       const closeRoot = resolveRepoRoot(repoPath(parsed), 'close');

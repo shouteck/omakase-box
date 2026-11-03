@@ -57,7 +57,7 @@ export function gitProgram(): string {
 // commit: the same tree, parent, message and dates always give the same sha,
 // so the GitHub preview, the record and the push can never disagree about
 // which commit it is.
-export interface GitEnv { readonly GIT_INDEX_FILE?: string; readonly GIT_ATTR_SOURCE?: string; readonly GIT_AUTHOR_DATE?: string; readonly GIT_COMMITTER_DATE?: string; readonly GIT_LITERAL_PATHSPECS?: string }
+export interface GitEnv { readonly GIT_INDEX_FILE?: string; readonly GIT_ATTR_SOURCE?: string; readonly GIT_AUTHOR_DATE?: string; readonly GIT_COMMITTER_DATE?: string; readonly GIT_LITERAL_PATHSPECS?: string; readonly GIT_AUTHOR_NAME?: string; readonly GIT_AUTHOR_EMAIL?: string; readonly GIT_COMMITTER_NAME?: string; readonly GIT_COMMITTER_EMAIL?: string }
 
 export interface GitOutcome {
   readonly status: number | null;

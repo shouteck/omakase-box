@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import childProcess, { spawnSync } from 'node:child_process';
 import { syncBuiltinESMExports } from 'node:module';
-import { chmodSync, copyFileSync, cpSync, linkSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, copyFileSync, cpSync, existsSync, linkSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
 import { expect, vi } from 'vitest';
 import { BountyRefused, finalizeBounty, lookBounty, planBounty, postBounty } from '../../../packages/box-bounty/index.js';
@@ -77,6 +77,8 @@ export interface GhState {
   graphqlMode?: 'empty-next' | 'repeat-next' | 'bad-edge';
   account: string;
   repository: string;
+  /** PF25: the fork a take made under the account, once asked for. */
+  forked?: string;
   issues: { number: number; html_url: string; title: string; body: string; state: string; labels?: { name: string }[]; user: { login: string } }[];
   comments: { body: string; user: { login: string }; created_at?: string }[];
   // Which issue an API-posted comment belongs to, by its index in comments.
@@ -167,11 +169,15 @@ else if (endpoint === 'graphql') {
   if (state.graphqlMode === 'bad-edge') edges.push({ cursor: 5, node: null });
   result = { data: { repository: { issue: { body: issue.body, author: issue.user, comments: { edges, pageInfo: { hasNextPage: state.graphqlMode ? true : next < own.length } } } } } };
 }
+// PF25: a fork under the signed-in account, its own repository answer, and a pull request's state changed (close).
+else if (resource === 'repos/' + state.repository + '/forks' && input) { state.forked = state.account + '/' + state.repository.split('/')[1]; result = { full_name: state.forked, owner: { login: state.account } }; }
+else if (state.forked && resource === 'repos/' + state.forked) result = { full_name: state.forked, private: false, visibility: 'public', permissions: { push: true }, fork: true };
+else if (resource.includes('/pulls/') && input && typeof input.state === 'string') { const pr = state.prs.find(entry => entry.number === Number(resource.split('/pulls/')[1])); if (!pr) fail(); pr.state = input.state; result = publicPr(pr); }
 else if (endpoint === 'user') result = { login: state.account };
 else if (endpoint === 'repos/' + state.repository) result = state.malformed ? { visibility: '${leakCanary}' } : { full_name: state.repository, private: state.private, visibility: state.visibility, permissions: { push: state.push ?? true }, html_url: 'https://github.com/' + state.repository, default_branch: 'main' };
 else if (resource.endsWith('/pulls') && input) {
   const n = nextNumber();
-  result = { number: n, html_url: 'https://github.com/' + state.repository + '/pull/' + n, state: 'open', title: input.title, body: input.body, user: { login: input.user ?? input.author ?? 'solver' }, head: { sha: input.head ?? '0'.repeat(40) }, base: { ref: input.base ?? 'main', repo: { full_name: state.repository } } };
+  result = { number: n, html_url: 'https://github.com/' + state.repository + '/pull/' + n, state: 'open', draft: input.draft === true, title: input.title, body: input.body, user: { login: input.user ?? input.author ?? 'solver' }, head: { sha: input.head ?? '0'.repeat(40) }, base: { ref: input.base ?? 'main', repo: { full_name: state.repository } } };
   state.prs.push({ ...result, files: [] });
 }
 else if (endpoint.includes('/pulls/')) {
@@ -406,7 +412,9 @@ function withGhEnv<T>(world: World, run: () => T): T {
     apply(target, receiver, args) {
       const mapped = [...args];
       if (/(?:^|[\\/])git(?:\.exe)?$/i.test(String(args[0])) && Array.isArray(args[1])) {
-        mapped[1] = args[1].map(arg => arg === `https://github.com/${world.repository}.git` ? world.bare : arg);
+        // PF25: once a test has made the solver's fork (a second bare remote beside the first), any other GitHub repository is that fork.
+        const fork = join(world.scratch, 'fork.git');
+        mapped[1] = args[1].map(arg => arg === `https://github.com/${world.repository}.git` ? world.bare : typeof arg === 'string' && existsSync(fork) && /^https:\/\/github\.com\/[^/]+\/[^/]+\.git$/.test(arg) ? fork : arg);
       }
       return Reflect.apply(target, receiver, mapped);
     }
