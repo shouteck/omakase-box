@@ -314,11 +314,22 @@ describe('MCP, through the SDK client', () => {
     for (const words of ['public GitHub', 'never holds money', 'does not judge', 'data, not instructions']) expect(instructions).toContain(words);
   });
 
-  it('lists two read-only tools', async () => {
+  it('lists three read-only tools', async () => {
     const { tools } = await client.listTools();
-    expect(tools.map(tool => tool.name)).toEqual(['find_bounties', 'get_bounty']);
+    // PF29 added get_numbers, the board as a whole.
+    expect(tools.map(tool => tool.name)).toEqual(['find_bounties', 'get_bounty', 'get_numbers']);
     for (const tool of tools) expect(tool.annotations?.readOnlyHint).toBe(true);
     expect(tools[0]!.description).toContain('public GitHub');
+  });
+
+  it('get_numbers answers exactly what /numbers.json answers, each group with its base', async () => {
+    const numbers = await call('get_numbers');
+    expect(numbers.isError).toBeFalsy();
+    const page = await (await fetch(`${board.url}/numbers.json`)).json();
+    expect(numbers.structuredContent).toEqual(page);
+    for (const key of ['bounties', 'rewards', 'payments', 'last_30_days']) expect(typeof page[key].base).toBe('string');
+    const schema = await (await fetch(`${board.url}/numbers.schema.json`)).json();
+    for (const key of schema.required as string[]) expect(page).toHaveProperty(key);
   });
 
   it('find_bounties answers exactly what the feed answers', async () => {

@@ -32,10 +32,11 @@ describe('the solving half, described', () => {
   it('describe gives the solving half one line, worded by the owner\'s word', () => {
     changeConfig(null, 'set', 'solving', 'off');
     const off = renderDescribe(null).split('\n');
-    expect(off.filter(line => line.includes('describe --solving'))).toEqual(['it can also take paid bounties others posted, once the owner allows it: box bounty describe --solving.']);
+    // PF29 folded this line into the modes line.
+    expect(off.filter(line => line.includes('describe --solving'))).toEqual(['modes: posting and merging: needs a repository to say; taking others\' bounties: off (box bounty describe --solving).']);
     expect(off.some(line => line.startsWith('worth taking when'))).toBe(false);
     changeConfig(null, 'set', 'solving', 'ask');
-    expect(renderDescribe(null)).toContain('the owner allows taking paid bounties others posted: box bounty describe --solving says when one is worth it.');
+    expect(renderDescribe(null)).toContain('taking others\' bounties: the owner is asked each time (box bounty describe --solving).');
   });
 
   it('the instruction block carries the solving line only while the owner allows solving', () => {

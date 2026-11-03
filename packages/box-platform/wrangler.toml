@@ -6,7 +6,7 @@ compatibility_date = "2026-10-01"
 directory = "out"
 binding = "ASSETS"
 not_found_handling = "404-page"
-run_worker_first = ["/api/*", "/b/*", "/bounties.json", "/bounties.schema.json", "/bounties/*", "/rss.xml", "/mcp", "/auth/*", "/solver/*", "/owner/*"]
+run_worker_first = ["/api/*", "/b/*", "/bounties.json", "/bounties.schema.json", "/numbers.json", "/numbers.schema.json", "/bounties/*", "/rss.xml", "/mcp", "/auth/*", "/solver/*", "/owner/*"]
 
 [[d1_databases]]
 binding = "DB"

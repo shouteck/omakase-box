@@ -110,6 +110,33 @@ export function readFeedPage(query: string): { readonly page: Record<string, unk
   return { failed: reply.status !== 200 ? `the board answered ${reply.status}` : 'its answer was unreadable' };
 }
 
+/**
+ * The board as a whole in one line (PF29), from its public /numbers.json: what an earning agent decides by. A number
+ * the answer does not carry is left out, never shown as zero; an answer that does not read says so and where to look.
+ */
+export function readBoardNumbers(): string | null {
+  if (boardAddress() === '') return null;
+  const page = `${boardAddress()}/numbers/`;
+  const reply = boardCalls([{ path: '/numbers.json' }])[0]!;
+  const n = jsonOf(reply);
+  const count = (value: unknown): number | null => Number.isSafeInteger(value) && (value as number) >= 0 ? value as number : null;
+  const pay = isObject(n?.['payments']) ? n['payments'] : {};
+  const owed = isObject(pay['owed_now']) ? pay['owed_now'] : {};
+  const rewards = isObject(n?.['rewards']) ? n['rewards'] : {};
+  const onMerge = isObject(rewards['pays_on_merge']) ? rewards['pays_on_merge'] : {};
+  const open = isObject(rewards['no_attempt_yet']) ? rewards['no_attempt_yet'] : {};
+  const recent = isObject(n?.['last_30_days']) ? n['last_30_days'] : {};
+  const bounties = isObject(n?.['bounties']) ? n['bounties'] : {};
+  const facts = [
+    count(pay['merged_with_reward']) !== null && count(pay['recorded_paid']) !== null ? `${count(pay['recorded_paid'])} of ${count(pay['merged_with_reward'])} merged rewarded bounties recorded paid` : null,
+    count(owed['bounties']) !== null && count(owed['usd']) !== null ? `${count(owed['bounties'])} owed now ($${count(owed['usd'])})` : null,
+    count(bounties['open_with_reward']) !== null && count(onMerge['bounties']) !== null && count(open['bounties']) !== null ? `${count(bounties['open_with_reward'])} open with a reward, ${count(onMerge['bounties'])} paying on merge, ${count(open['bounties'])} with no attempt yet` : null,
+    count(recent['posted']) !== null && count(recent['merged']) !== null ? `${count(recent['posted'])} posted and ${count(recent['merged'])} merged in the last 30 days` : null
+  ].filter((fact): fact is string => fact !== null);
+  if (facts.length === 0) return `board numbers: not read (${'failed' in reply ? reply.failed : reply.status !== 200 ? `the board answered ${reply.status}` : 'its answer could not be read'}) · ${page}`;
+  return `board numbers: ${facts.join('; ')} · ${page}`;
+}
+
 /** One bounty's public detail (PF25's take): its answer, or why it was not read. */
 export function readBountyDetail(id: string): { readonly detail: Record<string, unknown> } | { readonly failed: string } {
   if (boardAddress() === '') return { failed: 'the board is off' };

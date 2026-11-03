@@ -11,6 +11,10 @@ export type StandinPull = {
   association?: string;
   /** Is the head on the default branch? Absent: yes. Null: the compare API does not answer. */
   landed?: boolean | null;
+  /** PF29: the head's sha, when a test moves it (a push). Absent: derived from the number. */
+  head?: string;
+  /** PF29: what GitHub's checks say on the current head. Absent: none. Null: both reads answer 404. */
+  checks?: { runs?: { status: string; conclusion: string | null }[]; statuses?: string[] } | null;
 };
 export type StandinEvent = Record<string, unknown>;
 export type StandinIssue = {
@@ -23,7 +27,7 @@ export type StandinIssue = {
 export type StandinRepository = { language: string | null; visibility: 'public' | 'private'; default_branch?: string };
 
 export const commitFor = (id: string): string => id.slice(3).padEnd(40, '0');
-const headOf = (pull: StandinPull): string => pull.number.toString(16).padStart(40, 'a');
+const headOf = (pull: StandinPull): string => pull.head ?? pull.number.toString(16).padStart(40, 'a');
 
 export function bodyOf(issue: StandinIssue): string {
   const value = { schemaVersion: 2 as const, kind: 'box-bounty' as const, id: issue.id, repository: issue.repository, workCommit: commitFor(issue.id), branch: `box-bounty/${issue.id}`, withChanges: false, createdAt: issue.createdAt, state: { kind: 'open' as const }, reward: { amount: issue.amount, currency: 'USD' as const }, terms: 'merged-solution-earns-whole' as const };
@@ -112,6 +116,17 @@ export class Standin {
       const pull = this.issues.filter(entry => entry.repository === match![1]).flatMap(entry => entry.pulls ?? []).find(entry => headOf(entry) === match![2]);
       if (pull === undefined || pull.landed === null) return { status: 404 };
       return { status: 200, json: { status: pull.landed === false ? 'diverged' : 'ahead' } };
+    }
+    // PF29: check runs and the combined status on one commit: answered for an attempt's current head only.
+    match = /^\/repos\/([^/]+\/[^/]+)\/commits\/([a-f\d]{40})\/(check-runs|status)$/.exec(path);
+    if (match) {
+      const pull = this.issues.filter(entry => entry.repository === match![1]).flatMap(entry => entry.pulls ?? []).find(entry => headOf(entry) === match![2]);
+      if (pull === undefined || pull.checks === null) return { status: 404 };
+      const runs = pull.checks?.runs ?? [];
+      const statuses = pull.checks?.statuses ?? [];
+      if (match[3] === 'check-runs') return { status: 200, json: { total_count: runs.length, check_runs: runs.map((run, index) => ({ id: index + 1, name: 'A SOLVER NAMED THIS CHECK', status: run.status, conclusion: run.conclusion })) } };
+      const state = statuses.includes('failure') || statuses.includes('error') ? 'failure' : statuses.length === 0 || statuses.includes('pending') ? 'pending' : 'success';
+      return { status: 200, json: { state, total_count: statuses.length, statuses: statuses.map(entry => ({ state: entry, context: 'A SOLVER NAMED THIS STATUS' })) } };
     }
     match = /^\/repos\/([^/]+\/[^/]+)\/commits$/.exec(path);
     if (match) {

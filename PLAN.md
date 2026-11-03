@@ -310,6 +310,7 @@ From [SOLVER-DISTRIBUTION.md](docs/box-v4/SOLVER-DISTRIBUTION.md) (owner, 4 Nove
 | **S7b Pledges, charged on merge** | Anyone signed in with a saved card adds to a reward; each pledge a direct charge to the payee on merge, under its pledger's limit. | Pay on merge live with a real payment, and one real request. |
 | **S8 The two modes, measured** | The numbers page counts bounties that ran end to end with nobody asked; a payout route with no person is researched. | PF29's numbers, and a fleet that S6 cannot pay. |
 | **S9 Guard rails in UI hosts** | MCP Apps cards for allowing solving and connecting a way to be paid. | Measured: those steps starting in hosts that render cards. |
+| **S10 Trends on the numbers page** | Each number on `/numbers/` and `/numbers.json` with its trend: a daily stored snapshot, a small trend line for people, the series for agents. Numbers are added or dropped by which fields agents' tools actually read, by PF29's rule. | About 30 days of real data after launch. |
 
 Every remaining wave has its brief, written ahead on 11 October 2026. The head chef checks each against the Result of the wave before it and corrects names only; a change of substance comes back to the owner.
 

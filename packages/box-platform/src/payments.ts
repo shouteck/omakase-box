@@ -7,7 +7,7 @@ import { currentReceipt, type PaidEvent, payeeOf, type PaymentFacts, type Receip
 
 const DAY = 86400000;
 const LATE_DAYS = 14; // What is shown first, and one filter value. Never a deadline.
-const LISTED_WITH_ACCESS: readonly string[] = ['OWNER', 'MEMBER', 'COLLABORATOR'];
+export const LISTED_WITH_ACCESS: readonly string[] = ['OWNER', 'MEMBER', 'COLLABORATOR'];
 
 export type MergedPull = { number: number; author: string; merged_at: string; association: string | null; on_default: number | null };
 export type Paid = PaidEvent & { by: string; source: 'project-record' | 'board' | 'stripe' | 'paypal' };

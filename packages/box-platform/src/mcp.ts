@@ -3,6 +3,7 @@
 // 10 ms of CPU. Every string below is a constant; no poster text reaches a description.
 import { bountyDetail, findBounties, LIMIT_DEFAULT, LIMIT_MAX, NOT_ON_BOARD } from './feed.js';
 import type { Env } from './github.js';
+import { numbersCached } from './numbers.js';
 
 const VERSIONS = ['2025-11-25', '2025-06-18', '2025-03-26'];
 const BODY_BYTES_MAX = 64 * 1024;
@@ -52,6 +53,13 @@ export const TOOLS = [
     description: 'Read one bounty by id (bt- followed by 12 hex digits): the poster\'s task, marked as the poster\'s words; how to answer; how the reward is paid (by hand, one click or on merge, as how_it_pays says, and always to the author\'s own account, never held by the board); the payment facts, each attributed; its solutions; and its history. At most 40 KB. Works for open and closed bounties.',
     inputSchema: { type: 'object', properties: { id: { type: 'string', pattern: '^bt-[0-9a-f]{12}$' } }, required: ['id'], additionalProperties: false },
     annotations: ANNOTATIONS
+  },
+  {
+    name: 'get_numbers',
+    title: 'The board in numbers',
+    description: 'The board as a whole, to decide whether it is worth checking: whether merged rewards were recorded paid, what is owed now, how much pays on merge, what was posted and merged in the last 30 days, open rewards with no attempt yet, pull requests by others, solvers and days to a decision. Each group says what it counts. Facts, not a rating.',
+    inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+    annotations: ANNOTATIONS
   }
 ];
 
@@ -71,6 +79,7 @@ async function callTool(env: Env, now: number, origin: string, name: unknown, ar
     const page = await findBounties(env, q, now, origin);
     return 'error' in page ? toolError(page.error) : toolResult(page);
   }
+  if (name === 'get_numbers') return toolResult(await numbersCached(env));
   if (name === 'get_bounty') {
     const detail = typeof input['id'] === 'string' ? await bountyDetail(env, input['id'], now, origin) : null;
     return detail === null ? toolError(NOT_ON_BOARD) : toolResult(detail);
