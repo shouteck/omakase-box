@@ -34,6 +34,8 @@ export interface Env extends PayPalEnv {
   readonly tickReads?: number;
   /** How long a closed bounty's details may stand, when longer than an open one's. A hint reads it sooner. */
   readonly closedStaleMs?: number;
+  /** PF9b: repositories this board never lists, comma-separated (the kitchen's sandbox). Set only by whoever deploys the board. */
+  readonly UNLISTED_REPOSITORIES?: string;
   /** The platform's Stripe key and webhook secret (PF11). Absent: pay on merge says it is not set up. */
   readonly STRIPE_SECRET_KEY?: string;
   readonly STRIPE_WEBHOOK_SECRET?: string;

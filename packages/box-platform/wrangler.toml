@@ -13,6 +13,10 @@ binding = "DB"
 database_name = "open-bounty-board"
 database_id = "13c1a481-11a8-4cc4-bcaa-0c69a8b56000"
 
+# PF9b: repositories this board never lists. The kitchen's sandbox: tests run there without showing as activity.
+[vars]
+UNLISTED_REPOSITORIES = "shouteck/box-bounty-sandbox"
+
 [triggers]
 crons = ["* * * * *"]
 
