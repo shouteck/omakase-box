@@ -1,6 +1,6 @@
 # Status
 
-Updated by the CTO on 4 November 2026, when PF29 deployed.
+Updated by the CTO on 4 November 2026, when PF30 was retired.
 
 ## Now
 
@@ -39,7 +39,7 @@ Updated by the CTO on 4 November 2026, when PF29 deployed.
 ## Next
 
 - **PF23 (needs) is deferred** (owner, 3 November 2026): the task text says what it needs; back if real bounties show the need.
-- **Order:** **PF30** (an existing issue becomes a bounty), **PF9** (the launch gate), **PF6** (ready to launch; the listings for both sides, PF12b folded in), **K41** (the film, last), then the owner's launch.
+- **Order:** **PF9** (the launch gate), **PF6** (ready to launch; the listings for both sides, PF12b folded in), **K41** (the film, last), then the owner's launch.
 - **The next tool release:** the guide inside the package gains the PowerShell line (`npx.cmd`, `box.cmd`); a new version goes to npm by the owner, and to GitHub by a `v*` tag.
 - **A wave for later, not briefed:** fewer words, more showing, across the site, before PF9.
 - Unbriefed (BACKLOG): `rmSync` and non-ASCII names on Windows (BT48); the dependency audit (PF1); landed but not marked merged, solvers' account age (PF4); a private organisation member counts as an outside solver, a squash-merged head reads as off the default branch (PF8); PF18's leftovers.
