@@ -25,6 +25,7 @@ import { showPath } from './notice.js';
 import { hitPlace } from './scan.js';
 import { solverAccountOr } from './untrusted.js';
 import { changeSolving, solvingLines } from './solving.js';
+import { approveTake, loadTaken } from './take.js';
 
 // What `allow` prints before it writes: the owner block first — the plain
 // sentences that say what a bounty is, that it is public under the owner's
@@ -63,6 +64,8 @@ export interface AllowMoney {
 
 export function allowRepository(repoRoot: string | null, name?: string, ask = false, money?: AllowMoney, emitDisclosure?: (text: string) => void): string {
   if (name?.startsWith('bt-')) {
+    // PF25: the owner's yes on one bounty an agent wants to take, under "ask each time". Needs no checkout.
+    if (!ask && money === undefined && loadTaken(name)?.stage === 'waiting') return approveTake(name);
     if (ask || repoRoot === null || money?.reward !== undefined || money?.rewardLimit !== undefined) throw new BountyRefused('allow-arguments', 'a waiting bounty requires a repository and takes no money options; nothing changed; next: run box bounty allow inside the checkout, without money options');
     return allowBounty(repoRoot, name);
   }

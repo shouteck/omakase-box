@@ -110,6 +110,16 @@ export function readFeedPage(query: string): { readonly page: Record<string, unk
   return { failed: reply.status !== 200 ? `the board answered ${reply.status}` : 'its answer was unreadable' };
 }
 
+/** One bounty's public detail (PF25's take): its answer, or why it was not read. */
+export function readBountyDetail(id: string): { readonly detail: Record<string, unknown> } | { readonly failed: string } {
+  if (boardAddress() === '') return { failed: 'the board is off' };
+  const reply = boardCalls([{ path: `/bounties/${id}.json` }])[0]!;
+  if ('failed' in reply) return { failed: reply.failed };
+  if (reply.status === 404) return { failed: 'the board does not list it' };
+  const detail = jsonOf(reply);
+  return detail === null ? { failed: reply.status !== 200 ? `the board answered ${reply.status}` : 'its answer was unreadable' } : { detail };
+}
+
 // ---- hints -----------------------------------------------------------------
 
 export type HintEvent = 'posted' | 'merged' | 'closed' | 'paid';

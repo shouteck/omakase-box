@@ -82,6 +82,8 @@ export interface SolvingSettings {
   readonly floor: number;
   readonly paysOnMergeOnly: boolean;
   readonly skip: readonly string[];
+  /** Bounties the owner said yes to, one at a time, under "ask each time" (PF25); a take uses its yes. */
+  readonly approved?: readonly string[];
   readonly at: string;
 }
 /** The tool's own bookkeeping — the whole content of state.json (BT22).
@@ -418,14 +420,15 @@ function moneySetting(value: unknown, where: string, refuse: (detail: string) =>
 /** The owner's solving entry, checked like every other setting: a hand-edited one that does not read fails loudly. */
 function solvingSetting(value: unknown): SolvingSettings {
   if (!isObject(value)) return bad('solving must hold {mode, floor, paysOnMergeOnly, skip, at}');
-  for (const name of Object.keys(value)) if (!['mode', 'floor', 'paysOnMergeOnly', 'skip', 'at'].includes(name)) unknownSetting(name);
-  const { mode, floor, paysOnMergeOnly, skip, at } = value;
+  for (const name of Object.keys(value)) if (!['mode', 'floor', 'paysOnMergeOnly', 'skip', 'approved', 'at'].includes(name)) unknownSetting(name);
+  const { mode, floor, paysOnMergeOnly, skip, approved, at } = value;
   if (mode !== 'off' && mode !== 'ask' && mode !== 'allowed') return bad('solving.mode must be off, ask or allowed');
   if (typeof floor !== 'number' || !Number.isSafeInteger(floor) || floor < 0) return bad('solving.floor must be a whole dollar amount at or above 0');
   if (typeof paysOnMergeOnly !== 'boolean') return bad('solving.paysOnMergeOnly must be true or false');
   if (!Array.isArray(skip) || skip.some(entry => typeof entry !== 'string' || repositoryAddress(entry) !== entry)) return bad('solving.skip must list GitHub addresses');
+  if (approved !== undefined && (!Array.isArray(approved) || approved.some(entry => typeof entry !== 'string' || !/^bt-[a-f\d]{12}$/.test(entry)))) return bad('solving.approved must list bounty ids');
   if (typeof at !== 'string') return bad('solving.at must hold the time it was written');
-  return { mode, floor, paysOnMergeOnly, skip: skip as string[], at };
+  return { mode, floor, paysOnMergeOnly, skip: skip as string[], ...(approved === undefined ? {} : { approved: approved as string[] }), at };
 }
 
 /** The address in one spelling, or null: https anywhere, http only on this machine; nothing but the host. */
