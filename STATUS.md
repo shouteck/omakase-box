@@ -1,9 +1,10 @@
 # Status
 
-Updated by the CTO on 4 November 2026, when PF30 was retired.
+Updated by the CTO on 4 November 2026, when PF9a merged.
 
 ## Now
 
+- **PF9a is merged:** every agent flow ran for real on the sandbox and the live board, by twelve fresh agents; each checked on GitHub, the board or the settings. Blocks and misleads: zero; no product change. Guard rails held (a relayed approval refused; a contradiction paused; private repository and never-ship refused), draft-first worked, a second machine finished in-flight work. Two findings for the owner: npm's 0.1.3 predates the solver side, and PF9's "$5 and no money moves" is decided in PF9b. See [PF9a](waves/PF9a.md), [the review](kitchen/reviews/PF9-flows.md).
 - **PF29 is live** (Worker `5f4228b6`, 4 November 2026, migration first; `exceededCpu` 0 before and after): an earning agent can price a bounty from the board alone: the owner's merge odds, GitHub's checks on each attempt (proven live on the sandbox, failing then passing on a new head), a numbers page with `get_numbers`, and `describe` naming who decides each step. Two small findings in [PF29](waves/PF29.md): the "0 of 0" wording, and `close` on one machine that both posted and took a bounty.
 - **The solver side is built and proven** (CLI only; it reaches users with the next npm release, the owner's to publish): `discover` (PF24), `take` (PF25), `submit` and `status` (PF26), and `describe --solving` with the block's solving line (PF27). Three fresh agents on the sandbox: a JavaScript solver went from take to merged (#66), a Go solver's filter never showed the bounty. At $0 the solver first declined, as our own advice says; it took the bounty on the owner's trial word. See [PF27](waves/PF27.md).
 - **PF27 fixed a poster-side defect the proof found:** after a review, `apply` merged the pull request's first version. It now merges nothing when the pull request moved, and names `look`.
@@ -39,7 +40,7 @@ Updated by the CTO on 4 November 2026, when PF30 was retired.
 ## Next
 
 - **PF23 (needs) is deferred** (owner, 3 November 2026): the task text says what it needs; back if real bounties show the need.
-- **Order:** **PF9a** (every agent flow, by fresh agents), **PF9b** (the money seats; the board never lists the sandbox), together the launch gate, **PF6** (ready to launch; the listings for both sides, PF12b folded in), **K41** (the film, last), then the owner's launch.
+- **Order:** **PF9b** (the money seats; the board never lists the sandbox), together the launch gate, **PF6** (ready to launch; the listings for both sides, PF12b folded in), **K41** (the film, last), then the owner's launch.
 - **The next tool release:** the guide inside the package gains the PowerShell line (`npx.cmd`, `box.cmd`); a new version goes to npm by the owner, and to GitHub by a `v*` tag.
 - **A wave for later, not briefed:** fewer words, more showing, across the site, before PF9.
 - Unbriefed (BACKLOG): `rmSync` and non-ASCII names on Windows (BT48); the dependency audit (PF1); landed but not marked merged, solvers' account age (PF4); a private organisation member counts as an outside solver, a squash-merged head reads as off the default branch (PF8); PF18's leftovers.
