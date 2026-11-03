@@ -5,6 +5,8 @@ import { renderFormat } from '../../box-bounty/format.js';
 
 export type StandinPull = {
   number: number; author: string; state: 'open' | 'closed'; merged_at?: string; created_at: string;
+  /** GitHub's draft flag and last activity (PF22). Absent: not a draft, last active when opened. */
+  draft?: boolean; updated_at?: string;
   /** GitHub's word for how the author relates to the repository. Absent: NONE. */
   association?: string;
   /** Is the head on the default branch? Absent: yes. Null: the compare API does not answer. */
@@ -103,7 +105,7 @@ export class Standin {
     match = /^\/repos\/([^/]+\/[^/]+)\/pulls$/.exec(path);
     if (match) {
       const issue = this.issues.find(entry => entry.repository === match![1] && `box-bounty/${entry.id}` === query.get('base'));
-      return { status: 200, json: (issue?.pulls ?? []).map(pull => ({ number: pull.number, state: pull.state, merged_at: pull.merged_at ?? null, created_at: pull.created_at, user: { login: pull.author, id: this.idOf(pull.author) }, author_association: pull.association ?? 'NONE', head: { sha: headOf(pull) }, title: 'A SOLVER WROTE THIS TITLE' })) };
+      return { status: 200, json: (issue?.pulls ?? []).map(pull => ({ number: pull.number, state: pull.state, merged_at: pull.merged_at ?? null, created_at: pull.created_at, draft: pull.draft ?? false, updated_at: pull.updated_at ?? pull.created_at, user: { login: pull.author, id: this.idOf(pull.author) }, author_association: pull.association ?? 'NONE', head: { sha: headOf(pull) }, title: 'A SOLVER WROTE THIS TITLE' })) };
     }
     match = /^\/repos\/([^/]+\/[^/]+)\/compare\/([a-f\d]{40})\.\.\.[^/]+$/.exec(path);
     if (match) {

@@ -21,9 +21,12 @@ CREATE TABLE IF NOT EXISTS bounties (
   work_commit TEXT NOT NULL,
   approved_by TEXT,
   seen_at INTEGER NOT NULL,
-  details_read_at INTEGER NOT NULL DEFAULT 0
+  details_read_at INTEGER NOT NULL DEFAULT 0,
+  -- PF22: the order the board first listed it in, so "new since" never skips one read late.
+  listed_seq INTEGER
 );
 CREATE INDEX IF NOT EXISTS bounties_board ON bounties (issue_state, created_at);
+CREATE INDEX IF NOT EXISTS bounties_listed ON bounties (listed_seq);
 CREATE TABLE IF NOT EXISTS pull_requests (
   bounty_id TEXT NOT NULL,
   number INTEGER NOT NULL,
@@ -35,6 +38,9 @@ CREATE TABLE IF NOT EXISTS pull_requests (
   association TEXT,
   head_sha TEXT,
   on_default INTEGER,
+  -- PF22: GitHub's draft flag and last activity, from the list the refresh already reads.
+  draft INTEGER,
+  updated_at TEXT,
   PRIMARY KEY (bounty_id, number)
 );
 CREATE TABLE IF NOT EXISTS events (
