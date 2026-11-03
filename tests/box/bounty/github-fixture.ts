@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import childProcess, { spawnSync } from 'node:child_process';
 import { syncBuiltinESMExports } from 'node:module';
-import { chmodSync, copyFileSync, cpSync, linkSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, copyFileSync, cpSync, existsSync, linkSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
 import { expect, vi } from 'vitest';
 import { BountyRefused, finalizeBounty, lookBounty, planBounty, postBounty } from '../../../packages/box-bounty/index.js';
@@ -412,8 +412,9 @@ function withGhEnv<T>(world: World, run: () => T): T {
     apply(target, receiver, args) {
       const mapped = [...args];
       if (/(?:^|[\\/])git(?:\.exe)?$/i.test(String(args[0])) && Array.isArray(args[1])) {
-        // PF25: any other GitHub repository a test names is the solver's fork, a second bare remote beside the first.
-        mapped[1] = args[1].map(arg => arg === `https://github.com/${world.repository}.git` ? world.bare : typeof arg === 'string' && /^https:\/\/github\.com\/[^/]+\/[^/]+\.git$/.test(arg) ? join(world.scratch, 'fork.git') : arg);
+        // PF25: once a test has made the solver's fork (a second bare remote beside the first), any other GitHub repository is that fork.
+        const fork = join(world.scratch, 'fork.git');
+        mapped[1] = args[1].map(arg => arg === `https://github.com/${world.repository}.git` ? world.bare : typeof arg === 'string' && existsSync(fork) && /^https:\/\/github\.com\/[^/]+\/[^/]+\.git$/.test(arg) ? fork : arg);
       }
       return Reflect.apply(target, receiver, mapped);
     }
