@@ -78,7 +78,7 @@ describe('sign-in', () => {
     expect(asked.searchParams.get('state')).toMatch(/^[a-f\d]{64}$/);
 
     const me = await (await send(jar, '/api/me')).json() as any;
-    expect(me).toEqual({ signed_in: true, login: PAYEE.login, sponsors_page: `https://github.com/sponsors/${PAYEE.login}`, pay: { set_up: false }, paypal: { set_up: false, connected: false }, methods: [], you_owe: [], owed_to_you: [expect.objectContaining({ id: STATE_IDS.owed, amount: 45, to: PAYEE.login })] });
+    expect(me).toEqual({ signed_in: true, login: PAYEE.login, sponsors_page: `https://github.com/sponsors/${PAYEE.login}`, pay: { set_up: false }, paypal: { set_up: false, connected: false }, methods: [], you_owe: [], owed_to_you: [expect.objectContaining({ id: STATE_IDS.owed, amount: 45, to: PAYEE.login })], bounties: { list: [], more: false } });
 
     const token = r.standin.tokensIssued[0]!;
     expect(token.length).toBeGreaterThan(10);
@@ -494,5 +494,75 @@ describe('profiles', () => {
     const detail = await (await send(null, `/bounties/${STATE_IDS.open}.json`)).json() as any;
     expect(detail.bounty.how_to_get_paid.join(' ')).toContain(`${ORIGIN}/me/`);
     expect(detail.bounty.how_to_get_paid.join(' ')).toContain('say how in your pull request');
+  });
+});
+
+describe('your bounties (PF21)', () => {
+  // The stand-in gives each login a GitHub id; the owner's is made the one they sign in with, and the board reads it again.
+  const asOwner = async (): Promise<Jar> => {
+    r.standin.accountIds.set(OWNER.login, OWNER.id);
+    r.clock.at += 15 * MINUTE;
+    await refreshUntilDone(r);
+    return signIn(OWNER);
+  };
+  const listed = async (jar: Jar) => ((await (await send(jar, '/api/me')).json() as any).bounties.list as any[]);
+  const byId = (list: any[]) => new Map(list.map(b => [b.id, b]));
+
+  it('every bounty GitHub says I opened, each in the stage its facts put it; a repository gone private leaves with its bounties', async () => {
+    const jar = await asOwner();
+    const list = byId(await listed(jar));
+    expect(list.get(STATE_IDS.open)).toMatchObject({ stage: 'waiting', solutions: 0, reward: 45, repository: 'example-tidepool/ledger-lite', issue_number: 48 });
+    expect(list.get(STATE_IDS.waiting)).toMatchObject({ stage: 'solutions', solutions: 2 });
+    expect(list.get(STATE_IDS.closed)).toMatchObject({ stage: 'closed' });
+    // On a board without pay on merge, a due bounty names whose work was merged, and nothing about pay on merge.
+    expect(list.get(STATE_IDS.owed)).toMatchObject({ stage: 'due', merged: PAYEE.login, card_failed: false, note: null });
+    expect(list.get(STATE_IDS.moreThanOne)).toMatchObject({ stage: 'due', merged: null, merged_one_of: ['example-fern', 'example-rook'], note: 'More than one solution was merged. You choose whom to pay.' });
+    expect(list.get(STATE_IDS.merged)).toMatchObject({ stage: 'paid', merged: PAYEE.login, paid_by: 'Recorded by you' });
+    expect(list.has(STATE_IDS.private)).toBe(false);
+    expect([...list.values()].map(b => b.created_at)).toEqual([...list.values()].map(b => b.created_at).sort().reverse());
+    // A repository with nothing owed (so no other list reads it again) goes private: at the next look past the
+    // recheck window, its bounties leave the list. First shown to be listed.
+    r.standin.repositories.set('example-tidepool/quiet', { language: 'Go', visibility: 'public' });
+    r.standin.issues.push({ ...r.standin.issues.find(issue => issue.id === STATE_IDS.open)!, id: 'bt-0000000000aa', repository: 'example-tidepool/quiet', number: 7, title: 'QUIET REPOSITORY BOUNTY' });
+    r.clock.at += 15 * MINUTE;
+    await refreshUntilDone(r);
+    expect((await listed(jar)).map(b => b.title)).toContain('QUIET REPOSITORY BOUNTY');
+    r.standin.repositories.get('example-tidepool/quiet')!.visibility = 'private';
+    r.clock.at += 6 * MINUTE;
+    expect((await listed(jar)).map(b => b.title)).not.toContain('QUIET REPOSITORY BOUNTY');
+  });
+
+  it('another person\'s bounty never appears, nor any to a new holder of my login', async () => {
+    const ownerJar = await asOwner();
+    // Another poster's bounty on a listed repository, first shown to be on the board.
+    r.standin.issues.push({ ...r.standin.issues.find(issue => issue.id === STATE_IDS.open)!, id: 'bt-0123456789ab', number: 90, title: 'SOMEONE ELSES BOUNTY', poster: THIRD.login });
+    r.standin.accountIds.set(THIRD.login, THIRD.id);
+    r.clock.at += 15 * MINUTE;
+    await refreshUntilDone(r);
+    expect(await r.env.DB.prepare('SELECT poster_id FROM bounties WHERE id = ?').bind('bt-0123456789ab').first()).toEqual({ poster_id: THIRD.id });
+    expect((await listed(ownerJar)).map(b => b.title)).not.toContain('SOMEONE ELSES BOUNTY');
+    expect((await listed(await signIn(THIRD))).map(b => b.title)).toEqual(['SOMEONE ELSES BOUNTY']);
+    // The login passed to someone else: the bounties stay with the GitHub account that opened them.
+    expect(await listed(await signIn({ id: 7999, login: OWNER.login }))).toEqual([]);
+  });
+
+  it('how a payment went decides the stage: a declined card is due, in red; pay on merge and one click are paid, each by name', async () => {
+    const jar = await asOwner();
+    const charge = (state: string, method: string | null) => r.env.DB.prepare(`INSERT INTO charges (bounty_id, state, solver, payment_method, at) VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT (bounty_id) DO UPDATE SET state = excluded.state, payment_method = excluded.payment_method`).bind(STATE_IDS.owed, state, PAYEE.login, method, r.clock.at).run();
+    const owed = async () => byId(await listed(jar)).get(STATE_IDS.owed);
+    // With Stripe set up on the board and this repository not on pay on merge, the row says so.
+    Object.assign(r.env, { STRIPE_SECRET_KEY: 'sk_test_standin' });
+    expect(await owed()).toMatchObject({ stage: 'due', note: 'Pay on merge is off for this repository.' });
+    await r.env.DB.prepare('INSERT INTO pay_repositories (github_id, repository, on_at) VALUES (?, ?, ?)').bind(OWNER.id, 'example-tidepool/ledger-lite', new Date(r.clock.at).toISOString()).run();
+    expect(await owed()).toMatchObject({ stage: 'due', note: null });
+    await charge('declined', 'pm_saved');
+    expect(await owed()).toMatchObject({ stage: 'due', card_failed: true, note: 'The card was declined. Nothing was charged.' });
+    await charge('charging', 'pm_saved');
+    expect(await owed()).toMatchObject({ stage: 'due', card_failed: false, note: 'A charge has been started and has not finished.' });
+    await charge('paid', 'pm_saved');
+    expect(await owed()).toMatchObject({ stage: 'paid', paid_by: 'Pay on merge', merged: PAYEE.login });
+    await charge('paid', null);
+    expect(await owed()).toMatchObject({ stage: 'paid', paid_by: 'Stripe, one click' });
   });
 });

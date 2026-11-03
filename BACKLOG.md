@@ -21,6 +21,7 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 ## Product
 
+- **From PF21** (see [PF21](waves/PF21.md)): a hover card on a person's name in Your bounties, which the owner raised; the solvers' GitHub pictures in place of linked names, which would load images from GitHub.
 - **From PF18** (see [PF18](waves/PF18.md)):
   - a paid bounty's page still says "Next: ask on pull request #n how they want to be paid" (`account.ts`, the payee's `next`);
   - the bounty page's button says "Record $45 paid" while the front page's card no longer names recording;

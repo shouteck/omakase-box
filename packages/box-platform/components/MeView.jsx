@@ -3,6 +3,7 @@
 // and pay on merge. As a solver: what is owed to you, and the ways an owner can pay you. Nothing here is
 // needed to answer a bounty; it is how money between the two finds its way.
 import { useEffect, useRef, useState } from 'react';
+import Bounties from './Bounties.jsx';
 import Dialog from './Dialog.jsx';
 import { LABELS } from './Methods.jsx';
 import { PayOnMergeOwner, StripeRow } from './PayOnMerge.jsx';
@@ -129,7 +130,6 @@ function PayPalRow({ paypal, setPayPal }) {
 
 const sum = rows => rows.reduce((total, row) => total + row.amount, 0);
 const count = (n, one, many) => `${n} ${n === 1 ? one : many}`;
-const toWhom = debt => debt.to ?? `one of ${(debt.to_one_of ?? []).join(' or ')}`;
 
 function Figure({ label, rows, none, some }) {
   return (
@@ -146,17 +146,9 @@ const Way = ({ name, note, children }) => <div className="mt-5"><h3 className="f
 function Owner({ me, setMe }) {
   return (
     <>
-      <RoleTitle role="Owner" sub="Bounties you posted, and paying for the work that lands." />
-      <Figure label="You owe" rows={me.you_owe} none="Nothing to pay right now" some={['merged solution to pay', 'merged solutions to pay']} />
-      <Heading id="you-owe">To pay</Heading>
-      {me.you_owe.length === 0
-        ? <Empty title="Nothing to pay." why="A bounty you posted appears here when a solution is merged." />
-        : <Table label="To pay" head={['Bounty', 'Solver', ['Amount', 'r'], 'Merged', '']} rows={me.you_owe.map(debt => [
-            <a key="b" href={`/b/${debt.id}/`} className="break-words">{debt.title}</a>,
-            debt.to === null ? <span key="w">{toWhom(debt)}<span className="block text-soft">You decide whom</span></span> : debt.to,
-            `$${debt.amount}`, fmtDate(debt.since),
-            <a key="p" href={`/b/${debt.id}/`} className="inline-block text-sm rounded-full px-3.5 py-1.5 bg-button font-medium" style={{ color: 'var(--color-button-ink)', textDecoration: 'none' }}>Pay ${debt.amount}</a>
-          ])} />}
+      <RoleTitle role="Owner" sub="Bounties your agents posted, and paying for the work that lands." />
+      <h2 id="you-owe" className="text-lg font-medium tracking-tight mt-12 mb-5 scroll-mt-6">Your bounties</h2>
+      <Bounties bounties={me.bounties} />
       <Heading id="pay" note="Each merged bounty here is paid its reward from your saved card.">Pay on merge</Heading>
       <PayOnMergeOwner pay={me.pay} setPay={pay => setMe(current => ({ ...current, pay }))} />
     </>
