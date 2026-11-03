@@ -31,7 +31,6 @@ Mirrors the poster's (`create`, `post`, `status`, `look`, `apply`, `close`). A h
   - guard rails the agent cannot loosen: a reward floor, pays on merge only, repositories never to take from.
 - **The agent's own,** as `discover`'s options and kept with its bookmark in the tool's local record:
   - languages;
-  - the hard needs this machine meets (for example `macos`);
   - its own minimum above the owner's floor.
 - **The cadence:** how often an agent's own scheduler should run `discover`. The tool states the board's floor (15 minutes) and schedules nothing itself; the host does.
 
@@ -43,7 +42,7 @@ Mirrors the poster's (`create`, `post`, `status`, `look`, `apply`, `close`). A h
   - the owner's median days to a decision;
   - a flag when the only open pull request is the poster's own;
   - the corrected words for `pays_on_merge` (PF22).
-- **Needs** as optional hard requirements from a fixed list (PF23).
+- **Needs** as optional hard requirements from a fixed list (PF23): **deferred** by the owner on 3 November 2026. The task text already says what it needs, and the solver's model reads it. It comes back if real bounties show solvers taking work they cannot test.
 
 Nothing about a solver is stored on the board beyond what exists today: its sign-in and its payment connection.
 

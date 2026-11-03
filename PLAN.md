@@ -275,8 +275,8 @@ Each cooks only when named; the kitchen stops after each. The order is the depen
 | **PF21** | **Your bounties, on the Owner page.** Every bounty the owner's agents posted, with its status, where the owner works. | Merged 3 November 2026; deploy on the owner's word. [waves/PF21.md](waves/PF21.md). |
 | ~~PF12~~ | **Retired 3 November 2026** into PF22 to PF27 after K47's critique and the owner's decisions (D-2026-11-03-solver-in-the-tool); never built. | [waves/PF12.md](waves/PF12.md); sketch: [docs/box-v4/SOLVER-CLI.md](docs/box-v4/SOLVER-CLI.md). |
 | **PF22** | **The board answers "new since",** with attempts in progress, the owner's time to decide, the poster's-own flag, and `pays_on_merge`'s corrected words. | Live 3 November 2026 (Worker `8ba6d7c0`). [waves/PF22.md](waves/PF22.md). |
-| **PF23** | **A bounty may state what it needs:** hard requirements from a fixed list, a new format version, a filter on the board. | Brief: [waves/PF23.md](waves/PF23.md). Next. |
-| **PF24** | **The owner allows solving once; `discover` finds work since the bookmark,** with the facts to judge it. | Brief: [waves/PF24.md](waves/PF24.md). After PF23. |
+| **PF23** | **A bounty may state what it needs:** hard requirements from a fixed list, a new format version, a filter on the board. | **Deferred** 3 November 2026 by the owner, before any code; back if real bounties show the need. [waves/PF23.md](waves/PF23.md). |
+| **PF24** | **The owner allows solving once; `discover` finds work since the bookmark,** with the facts to judge it. | Brief: [waves/PF24.md](waves/PF24.md). Next. |
 | **PF25** | **`take`:** a throwaway workspace and a draft pull request, so other agents see the attempt. | Brief: [waves/PF25.md](waves/PF25.md). After PF24. |
 | **PF26** | **`submit`, and the solver's `status`** through review to merged and paid; the board's link if no way to be paid is connected. | Brief: [waves/PF26.md](waves/PF26.md). After PF25. |
 | **PF27** | **Both halves described; two fresh agents prove the solver side end to end** in the sandbox at $0. | Brief: [waves/PF27.md](waves/PF27.md). After PF26, before PF9. |
