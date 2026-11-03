@@ -1,9 +1,12 @@
 # Status
 
-Updated by the CTO on 3 November 2026, when PF28 deployed.
+Updated by the CTO on 3 November 2026, when PF26 merged.
 
 ## Now
 
+- **PF26 is merged** (CLI only; next npm release). `box bounty submit <id>` marks a taken bounty's draft ready for review once its work is pushed; `box bounty status <id>` follows the attempt outside any checkout: comments on it (marked as theirs), merged or closed, and payment from the board's public answers, with the board's `/me/` step named once. Proven on real GitHub in the sandbox, take to merged (#61, #62). See [PF26](waves/PF26.md).
+- **The live board's bounty detail is slow:** 0.4 to 9 seconds this evening, against the tool's 2.5-second limit, so a solver's `status` often says "board: not read (it took too long)". The Worker waits 4 to 6 s with 20 ms of CPU; not its GitHub re-check. Not investigated (PF26, finding).
+- **The solver side has no distribution roadmap past launch:** PF6 lists the tool where agents search, and nothing makes it the obvious choice for an agent that decides to earn. The owner is asking another session to study it.
 - **PF25 is merged** (CLI only; next npm release). `box bounty take <id>` gives a solver agent a throwaway workspace on the bounty branch and opens a draft pull request at once; `close` withdraws it; "ask each time" waits for `box bounty allow <id>`. Proven on real GitHub in the sandbox (draft #60, opened and closed); the fork path is test-proven. See [PF25](waves/PF25.md).
 - **PF28 is merged and deployed:** the board's reading can no longer stall. One bounty needing more GitHub reads than a run has (a squash-merged head, a long event chain) held every other bounty behind it, which is why the live board never saw PF25's sandbox draft. Migration and deploy on 3 November 2026; within about 15 minutes the live board had read all 27 bounties and stored PF25's draft. See [PF28](waves/PF28.md).
 - **PF24 is merged** (CLI only; it reaches users with the next npm release, the owner's to publish). The owner allows solving once in `config` (`solving off|ask|allowed`, a reward floor, pays on merge only, repositories to skip), and `box bounty discover` brings each new bounty since the agent's own bookmark, once, with the facts to judge it. See [PF24](waves/PF24.md).
@@ -35,7 +38,7 @@ Updated by the CTO on 3 November 2026, when PF28 deployed.
 ## Next
 
 - **PF23 (needs) is deferred** (owner, 3 November 2026): the task text says what it needs; back if real bounties show the need.
-- **Order:** **PF26** (`submit` and the solver's `status`; linking a solver's existing Stripe account is a question for it), **PF27** (both halves described; the end-to-end proof on the one sandbox account, with the fork and another payee proven in tests), **PF9** (the launch gate), **PF6** (ready to launch; the listings for both sides, PF12b folded in), **K41** (the film, last), then the owner's launch.
+- **Order:** **PF27** (both halves described; the end-to-end proof on the one sandbox account, with the fork and another payee proven in tests), **PF9** (the launch gate), **PF6** (ready to launch; the listings for both sides, PF12b folded in), **K41** (the film, last), then the owner's launch.
 - **The next tool release:** the guide inside the package gains the PowerShell line (`npx.cmd`, `box.cmd`); a new version goes to npm by the owner, and to GitHub by a `v*` tag.
 - **A wave for later, not briefed:** fewer words, more showing, across the site, before PF9.
 - Unbriefed (BACKLOG): `rmSync` and non-ASCII names on Windows (BT48); the dependency audit (PF1); landed but not marked merged, solvers' account age (PF4); a private organisation member counts as an outside solver, a squash-merged head reads as off the default branch (PF8); PF18's leftovers.
