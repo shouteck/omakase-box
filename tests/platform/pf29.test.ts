@@ -111,11 +111,13 @@ describe('the numbers page', () => {
     await refreshUntilDone(r);
     const numbers = await askJson(r, '/numbers.json');
     expect(numbers.bounties).toMatchObject({ listed: 0, open: 0, open_with_reward: 0 });
-    expect(numbers.rewards).toMatchObject({ stated_on_open_bounties_usd: 0, recorded_paid: { bounties: 0, usd: 0 } });
+    expect(numbers.rewards).toMatchObject({ stated_on_open_bounties_usd: 0, pays_on_merge: { bounties: 0, usd: 0 }, no_attempt_yet: { bounties: 0, usd: 0 } });
+    expect(numbers.payments).toMatchObject({ merged_with_reward: 0, recorded_paid: 0, confirmed_received: 0, says_not_received: 0, owed_now: { bounties: 0, usd: 0, oldest_days: 0 } });
+    expect(numbers.last_30_days).toMatchObject({ posted: 0, merged: 0 });
     expect(numbers.pull_requests).toMatchObject({ merged: 0, closed: 0, open: 0 });
     expect(numbers.attempts_per_bounty).toMatchObject({ median: null, bounties: 0 });
     expect(numbers.days_to_decision).toMatchObject({ median: null, bounties: 0 });
-    for (const key of ['bounties', 'rewards', 'pull_requests', 'attempts_per_bounty', 'solvers', 'days_to_decision']) expect(typeof numbers[key].base).toBe('string');
+    for (const key of ['bounties', 'rewards', 'payments', 'last_30_days', 'pull_requests', 'attempts_per_bounty', 'solvers', 'days_to_decision']) expect(typeof numbers[key].base).toBe('string');
   });
 
   it('a seeded world\'s numbers equal a hand count, and a repeat ask with the tag costs a 304', async () => {
@@ -125,17 +127,27 @@ describe('the numbers page', () => {
       // Open, rewarded, two attempts by others, one by the poster (not counted as by others).
       issue(52, { amount: 50, pulls: [pull(503, {}), pull(504, { author: 'example-quill' }), pull(505, { author: 'pf29-poster', association: 'OWNER' })] }),
       // Open, no reward, no attempts.
-      issue(53, { amount: 0 })
+      issue(53, { amount: 0 }),
+      // Open, rewarded, no attempt yet.
+      issue(54, { amount: 20 }),
+      // Merged by another and recorded paid by the owner; posted long ago, merged inside the 30 days.
+      issue(55, { amount: 25, createdAt: ago(60), state: 'closed', closedAt: ago(5), pulls: [pull(506, { state: 'closed', merged_at: ago(5), created_at: ago(6), landed: true })], events: [{ v: 1, type: 'paid', at: ago(4), amount: 25, by: 'pf29-poster', withdrawn: false }] }),
+      // Self-dealt: the poster's own merge, rewarded; not counted as paid work.
+      issue(56, { amount: 40, state: 'closed', closedAt: ago(1), pulls: [pull(507, { author: 'pf29-poster', association: 'OWNER', state: 'closed', merged_at: ago(1), landed: true })] })
     );
     await refreshUntilDone(r);
     const numbers = await askJson(r, '/numbers.json');
-    expect(numbers.bounties).toMatchObject({ listed: 3, open: 2, open_with_reward: 1 });
-    expect(numbers.rewards.stated_on_open_bounties_usd).toBe(50);
-    expect(numbers.pull_requests).toMatchObject({ merged: 1, closed: 1, open: 2 });
+    expect(numbers.bounties).toMatchObject({ listed: 6, open: 3, open_with_reward: 2 });
+    expect(numbers.rewards).toMatchObject({ stated_on_open_bounties_usd: 70, pays_on_merge: { bounties: 0, usd: 0 }, no_attempt_yet: { bounties: 1, usd: 20 } });
+    // 51 owed (never recorded), 55 recorded paid; 56 is the poster's own and left out.
+    expect(numbers.payments).toMatchObject({ merged_with_reward: 2, recorded_paid: 1, confirmed_received: 0, says_not_received: 0, owed_now: { bounties: 1, usd: 30, oldest_days: 1 } });
+    // Posted inside 30 days: every bounty but 55; merged by others inside 30 days: 501 and 506.
+    expect(numbers.last_30_days).toMatchObject({ posted: 5, merged: 2 });
+    expect(numbers.pull_requests).toMatchObject({ merged: 2, closed: 1, open: 2 });
     expect(numbers.solvers.distinct).toBe(2);
-    // Pull requests per bounty: 2 and 3 over the two bounties with any; the median of two is their mean, rounded.
-    expect(numbers.attempts_per_bounty).toMatchObject({ median: 3, bounties: 2 });
-    expect(numbers.days_to_decision).toMatchObject({ median: 1, bounties: 1 });
+    // Pull requests per bounty: 2, 3, 1 and 1 over the four bounties with any; the median of four is the middle pair's mean, rounded.
+    expect(numbers.attempts_per_bounty).toMatchObject({ median: 2, bounties: 4 });
+    expect(numbers.days_to_decision).toMatchObject({ median: 1, bounties: 3 });
     const first = await handle(new Request(`${ORIGIN}/numbers.json`), r.env);
     const again = await handle(new Request(`${ORIGIN}/numbers.json`, { headers: { 'if-none-match': first.headers.get('etag')! } }), r.env);
     expect(again.status).toBe(304);
