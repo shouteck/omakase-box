@@ -149,7 +149,9 @@ describe('the facts to weigh a bounty', () => {
     await reread();
     expect(await listed()).toContain(idOf(0xe000 + 10));
     const one = await entry(idOf(0xe000 + 10));
-    expect(one.attempts_in_progress).toEqual({ count: 2, drafts: [{ author: 'agent-a', opened_at: ago(1), last_activity_at: ago(0.5) }, { author: 'agent-b', opened_at: ago(1), last_activity_at: ago(0.5) }] });
+    // PF29 added each draft's checks: the stand-in's drafts here have none, read for their own heads.
+    const none = (head: string) => ({ state: 'none', head, read_at: expect.any(String) });
+    expect(one.attempts_in_progress).toEqual({ count: 2, drafts: [{ author: 'agent-a', opened_at: ago(1), last_activity_at: ago(0.5), checks: none(`${'a'.repeat(39)}1`) }, { author: 'agent-b', opened_at: ago(1), last_activity_at: ago(0.5), checks: none(`${'a'.repeat(39)}2`) }] });
     expect(one.solutions).toMatchObject({ open: 3 });
     // The same fact, in the list.
     const page: any = await askJson(r, '/bounties.json?repository=example-org/pf22');
