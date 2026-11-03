@@ -109,7 +109,9 @@ const BUDGET: Record<string, { git: number; gh: number }> = {
   // safety, rev-list new history, one never-ship read per new commit (this
   // journey's head has one), show landing date, push to the bounty branch.
   // gh +1 — reading the pull request back.
-  'apply': { git: 32, gh: 6 },
+  // PF27: +1 gh — apply reads the pull request's current head, so a version
+  // pushed after collection is never merged unseen.
+  'apply': { git: 32, gh: 7 },
   'status-applied': { git: 9, gh: 0 }, // BT32: +6 — same refresh + import as status-posted
   'close-ended': { git: 4, gh: 5 },
   'close-reason': { git: 4, gh: 0 },

@@ -430,6 +430,8 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       // never the tool's own. The read-off-objects reassurance is the help's
       // standing explanation (BT17).
       console.log(`${id} solution ${label} — ${result.collected ? 'collected — ' : ''}written by the solver, not by the tool; nothing in it was run or checked out.`);
+      // PF27: a pull request collected again at a new head: its number shows the latest version, which has its own solution number.
+      if (result.attempt.pullRequest !== undefined && result.attempt.n !== result.attempt.pullRequest) console.log(`this is pull request #${result.attempt.pullRequest}'s latest version collected, solution ${label}; box bounty apply ${id} ${result.attempt.pullRequest} takes this version.`);
       if (result.attempt.payTo !== undefined && (boundAmount(result.record) ?? 0) > 0) console.log(payToLine(result.attempt.payTo));
       // BT43: the solver's lines leave through the one renderer, inside its
       // labelled block, and the tool's own `next:` comes after the footer.
