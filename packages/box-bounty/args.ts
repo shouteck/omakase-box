@@ -119,12 +119,12 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
     positionals: 0
   },
   describe: {
-    label: 'box bounty describe', usage: 'box bounty describe [--rules] [--repo <path>]',
+    label: 'box bounty describe', usage: 'box bounty describe [--rules] [--solving] [--repo <path>]',
     blurb: 'what the tool does, when it is worth using and when not, plus the facts to choose',
     example: 'box bounty describe',
     positionals: 0,
     values: { '--repo': REPO },
-    switches: { '--rules': { help: "print the block for a project's rules file" } }
+    switches: { '--rules': { help: "print the block for a project's rules file" }, '--solving': { help: 'the solving half: when taking a bounty is worth it, and how' } }
   },
   create: {
     label: 'box bounty create', usage: 'box bounty create --task <file|-> --why "<one line>" [--title "<one line>"] [--resume "<context>"] [--repo <path>]',

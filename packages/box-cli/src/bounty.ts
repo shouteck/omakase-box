@@ -9,7 +9,7 @@ import { actingOn, applyBounty, BountyRefused, BountyUsage, closeBounty, createB
 import { boardAddress, boardNotToldLine, flushBoardHints, readBoardFacts } from '../../box-bounty/index.js';
 import type { ParsedOptions } from '../../box-bounty/index.js';
 import { previewGitHub } from '../../box-bounty/index.js';
-import { attemptStatus, closeTaken, discover, discoverDocument, loadTaken, renderDiscover, submitTaken, takeBounty, takenOverview } from '../../box-bounty/index.js';
+import { attemptStatus, closeTaken, discover, discoverDocument, loadTaken, renderDescribeSolving, renderDiscover, submitTaken, takeBounty, takenOverview } from '../../box-bounty/index.js';
 import { escapeControls, exportLook, findDocument, lookBounty, solverBlock, SOLVER_WORDS, renderFind, renderResume, openRecords, endedContaining, readGitPinsOncePerProcess, boundAmount, payToLine, gitOutcome } from '../../box-bounty/index.js';
 
 // Does .git/config name this remote — read as bytes, so the apply output
@@ -175,6 +175,11 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       // Works outside a checkout too — without a repository it prints the
       // description and says the live facts need one.
       const parsed = parse('describe');
+      // PF27: the solving half reads no repository; it works anywhere.
+      if (parsed.switches.has('--solving')) {
+        console.log(renderDescribeSolving());
+        return;
+      }
       let described: string | null = null;
       try {
         described = resolveRepoRoot(repoPath(parsed), 'describe');

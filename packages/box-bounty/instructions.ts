@@ -6,7 +6,7 @@ import { BountyRefused } from './errors.js';
 import { gitOutcome } from './git.js';
 import { showPath } from './notice.js';
 import { attemptsOf, openRecords } from './record.js';
-import { readInstructionNotes, readInstructions, writeInstructionNotes } from './settings.js';
+import { loadSettings, readInstructionNotes, readInstructions, writeInstructionNotes } from './settings.js';
 import { renderRulesBlock, RULES_MARKERS } from './wording.js';
 
 // Confirmed against each host's documentation on 2026-10-13. Only this
@@ -206,7 +206,9 @@ export function instructionState(repoRoot: string): 'idle' | 'open' | 'new' {
   if (open.some(record => attemptsOf(record).some(attempt => attempt.seenAt === undefined) || record.github?.availablePullRequests?.some(pr => !record.github?.seenPullRequests?.some(seen => seen.n === pr.n && seen.commit === pr.commit)))) return 'new';
   return 'open';
 }
-export const instructionBlock = (repoRoot: string) => renderRulesBlock(instructionState(repoRoot));
+// PF27: the solving line is there only while the owner allows solving (ask or allowed).
+export const solvingAllowed = (): boolean => (loadSettings().solving?.mode ?? 'off') !== 'off';
+export const instructionBlock = (repoRoot: string) => renderRulesBlock(instructionState(repoRoot), solvingAllowed());
 
 function span(bytes: Buffer): { readonly afterOpen: number; readonly closeAt: number; readonly openAt: number } | null {
   const open = Buffer.from(RULES_MARKERS.open), close = Buffer.from(RULES_MARKERS.close);

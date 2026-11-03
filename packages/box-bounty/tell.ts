@@ -1,16 +1,18 @@
 import { attemptsOf, isOpenStage, listRecords } from './record.js';
 import { ownerStatusLine } from './owner-text.js';
 import { renderOpenLine } from './render.js';
-import { instructionBlock } from './instructions.js';
+import { instructionBlock, solvingAllowed } from './instructions.js';
 import { repoReward } from './settings.js';
-import { DESCRIBE_LINES, describeRewardLine, renderRulesBlock } from './wording.js';
+import { boardAddress } from './board.js';
+import { solvingLines, solvingOf } from './solving.js';
+import { DESCRIBE_LINES, describeRewardLine, describeSolvingPointer, renderRulesBlock, SOLVING_LINES } from './wording.js';
 
 export function renderDescribe(repoRoot: string | null): string {
   const { amount } = repoRoot === null ? { amount: 0 } : repoReward(repoRoot);
   // The reward sentence sits where the frozen text ended its thought — the
   // amount is generated from this repository's own entry, never hard-coded.
   const at = DESCRIBE_LINES.indexOf('available.');
-  const lines: string[] = [...DESCRIBE_LINES.slice(0, at + 1), describeRewardLine(amount), ...DESCRIBE_LINES.slice(at + 1), ''];
+  const lines: string[] = [...DESCRIBE_LINES.slice(0, at + 1), describeRewardLine(amount), ...DESCRIBE_LINES.slice(at + 1), describeSolvingPointer(solvingOf().mode), ''];
   // The standing explanation said once at allow and never repeated (BT17)
   // stays readable here permanently — ahead of the repository-gated facts.
   lines.push('the owner\'s answers live in the owner\'s own settings outside the repository — they stop accidents and record changes; they are not a lock against an agent that deliberately changes them.');
@@ -44,5 +46,20 @@ export function renderDescribe(repoRoot: string | null): string {
 }
 
 export function renderRules(repoRoot: string | null): string {
-  return ['the tool keeps this fixed block in existing instruction files after box bounty config set instructions true:', '', repoRoot === null ? renderRulesBlock('idle') : instructionBlock(repoRoot)].join('\n');
+  return ['the tool keeps this fixed block in existing instruction files after box bounty config set instructions true:', '', repoRoot === null ? renderRulesBlock('idle', solvingAllowed()) : instructionBlock(repoRoot)].join('\n');
+}
+
+/** `describe --solving` (PF27): the solving half, then where this machine stands. It reads no repository. */
+export function renderDescribeSolving(): string {
+  const board = boardAddress();
+  return [
+    ...SOLVING_LINES,
+    '',
+    ...solvingLines(false),
+    board === '' ? 'board: none named, so there is nothing to discover; the owner names one with box bounty config set board <address>' : `board: ${board} — discover reads its public feed`,
+    '',
+    solvingOf().mode === 'off'
+      ? 'next: ask the owner to run box bounty config set solving allowed (or ask, to be asked before each bounty)'
+      : 'next: box bounty discover --language <a language you work in>, then box bounty take <id>'
+  ].join('\n');
 }
