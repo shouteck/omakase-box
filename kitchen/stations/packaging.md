@@ -70,3 +70,4 @@ Each trap names the wave that taught it; that wave file has the story.
 - Confirm excluded modules are really absent; try each negative: omitted dependency, escaping path or link, unlisted input, edit outside editable paths, wrong base commit, altered agreement.
 - Verify any outside claim independently before repeating it.
 - **A walk over `packages/` meets build output** (PF1): `next build` writes `.ts`. Name its scope.
+- **A new command or `config` label** (PF24) must join three enumerations: BT17's help budget, BT40's real commands, and the JSON-agreement table. Run those three before verify.

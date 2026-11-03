@@ -1,9 +1,10 @@
 # Status
 
-Updated by the CTO on 3 November 2026, when PF22 merged.
+Updated by the CTO on 3 November 2026, when PF24 merged.
 
 ## Now
 
+- **PF24 is merged** (CLI only; it reaches users with the next npm release, the owner's to publish). The owner allows solving once in `config` (`solving off|ask|allowed`, a reward floor, pays on merge only, repositories to skip), and `box bounty discover` brings each new bounty since the agent's own bookmark, once, with the facts to judge it. See [PF24](waves/PF24.md).
 - **PF22 is live,** deployed on the owner's word on 3 November 2026 (Worker version `8ba6d7c0`), after `migrations/pf22.sql` on the live database. The board answers "new since" a bookmark, in the order it first listed each bounty, plus attempts in progress, the poster answering itself, and the owner's time to decide. It also fixes the off-machine test that had failed since PF21. See [PF22](waves/PF22.md).
 - **The solver side is decided and split** (D-2026-11-03-solver-in-the-tool):
   - **Tuning in** lives in the solver.
@@ -32,7 +33,7 @@ Updated by the CTO on 3 November 2026, when PF22 merged.
 ## Next
 
 - **PF23 (needs) is deferred** (owner, 3 November 2026): the task text says what it needs; back if real bounties show the need.
-- **Order:** **PF24** (the owner's switch and `discover`), **PF25** (`take`), **PF26** (`submit` and the solver's `status`; linking a solver's existing Stripe account is a question for it), **PF27** (both halves described; the end-to-end proof on the one sandbox account, with the fork and another payee proven in tests), **PF9** (the launch gate), **PF6** (ready to launch; the listings for both sides, PF12b folded in), **K41** (the film, last), then the owner's launch.
+- **Order:** **PF25** (`take`), **PF26** (`submit` and the solver's `status`; linking a solver's existing Stripe account is a question for it), **PF27** (both halves described; the end-to-end proof on the one sandbox account, with the fork and another payee proven in tests), **PF9** (the launch gate), **PF6** (ready to launch; the listings for both sides, PF12b folded in), **K41** (the film, last), then the owner's launch.
 - **The next tool release:** the guide inside the package gains the PowerShell line (`npx.cmd`, `box.cmd`); a new version goes to npm by the owner, and to GitHub by a `v*` tag.
 - **A wave for later, not briefed:** fewer words, more showing, across the site, before PF9.
 - Unbriefed (BACKLOG): `rmSync` and non-ASCII names on Windows (BT48); the dependency audit (PF1); landed but not marked merged, solvers' account age (PF4); a private organisation member counts as an outside solver, a squash-merged head reads as off the default branch (PF8); PF18's leftovers.

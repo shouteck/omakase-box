@@ -9,6 +9,7 @@ import { actingOn, applyBounty, BountyRefused, BountyUsage, closeBounty, createB
 import { boardAddress, boardNotToldLine, flushBoardHints, readBoardFacts } from '../../box-bounty/index.js';
 import type { ParsedOptions } from '../../box-bounty/index.js';
 import { previewGitHub } from '../../box-bounty/index.js';
+import { discover, discoverDocument, renderDiscover } from '../../box-bounty/index.js';
 import { escapeControls, exportLook, findDocument, lookBounty, solverBlock, SOLVER_WORDS, renderFind, renderResume, openRecords, endedContaining, readGitPinsOncePerProcess, boundAmount, payToLine, gitOutcome } from '../../box-bounty/index.js';
 
 // Does .git/config name this remote — read as bytes, so the apply output
@@ -226,6 +227,24 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       }
       lines.push(`next: box bounty post ${result.id} (--preview shows what becomes public)`);
       console.log(lines.join('\n'));
+    } else if (subcommand === 'discover') {
+      // The solver's half (PF24): no checkout needed; the owner's word and the agent's bookmark live outside every repository.
+      const parsed = parse('discover');
+      const minReward = parsed.values['--min-reward'];
+      if (minReward !== undefined && !/^\d+$/.test(minReward)) throw new BountyRefused('reward-amount-invalid', `--min-reward "${minReward}" is not a whole dollar amount at or above 0; nothing was read or changed; next: pass a whole dollar amount`);
+      const from = parsed.values['--from'];
+      if (from !== undefined && from !== 'start' && from !== 'now') throw new BountyRefused('discover-from-invalid', '--from takes start or now; nothing was read or changed; next: box bounty discover --from start, or --from now');
+      const languages = parsed.repeated['--language'];
+      const result = discover({
+        ...(languages === undefined ? {} : { languages: [...languages] }),
+        ...(parsed.switches.has('--any-language') ? { anyLanguage: true } : {}),
+        ...(minReward === undefined ? {} : { minReward: Number(minReward) }),
+        ...(from === undefined ? {} : { from })
+      });
+      // Shown first, then saved: a failure in between repeats these bounties next time, never skips them.
+      if (parsed.switches.has('--json')) printDocument(discoverDocument(result));
+      else console.log(renderDiscover(result).join('\n'));
+      result.save();
     } else if (subcommand === 'find') {
       // Recall by purpose (BT28): one query over every readable record.
       const parsed = parse('find');
