@@ -56,7 +56,7 @@ describe('the pages', () => {
     for (let tick = 0; tick < 40; tick++) {
       await board.refresh();
       await board.env.DB.prepare(`DELETE FROM meta WHERE key LIKE 'budget_%'`).run();
-      const unread = await board.env.DB.prepare('SELECT COUNT(*) AS n FROM bounties WHERE details_read_at = 0').first<{ n: number }>();
+      const unread = await board.env.DB.prepare('SELECT COUNT(*) AS n FROM bounties WHERE details_read_at = 0 OR events_read_at = 0').first<{ n: number }>();
       if (unread?.n === 0) break;
     }
     browser = await chromium.launch();

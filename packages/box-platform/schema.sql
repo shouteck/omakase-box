@@ -22,6 +22,8 @@ CREATE TABLE IF NOT EXISTS bounties (
   approved_by TEXT,
   seen_at INTEGER NOT NULL,
   details_read_at INTEGER NOT NULL DEFAULT 0,
+  -- PF28: the event chain is read as its own step, so neither step can hold up the other or the rest.
+  events_read_at INTEGER NOT NULL DEFAULT 0,
   -- PF22: the order the board first listed it in, so "new since" never skips one read late.
   listed_seq INTEGER
 );

@@ -30,7 +30,7 @@ export async function rig(token?: string): Promise<Rig> {
 export async function refreshUntilDone(r: Rig): Promise<number> {
   for (let ticks = 1; ticks < 500; ticks++) {
     const { state } = await refresh(r.env);
-    const unread = await r.env.DB.prepare('SELECT COUNT(*) AS n FROM bounties WHERE details_read_at = 0').first<{ n: number }>();
+    const unread = await r.env.DB.prepare('SELECT COUNT(*) AS n FROM bounties WHERE details_read_at = 0 OR events_read_at = 0').first<{ n: number }>();
     if (state === 'done' || (state === 'budget-spent' && unread?.n === 0)) return ticks;
     r.clock.at += 15 * MINUTE;
   }

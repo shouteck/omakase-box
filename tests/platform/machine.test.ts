@@ -301,7 +301,7 @@ describe('MCP, through the SDK client', () => {
     for (let i = 0; i < 20; i++) {
       await board.env.DB.prepare("DELETE FROM meta WHERE key LIKE 'budget_%'").run();
       await board.refresh();
-      if ((await board.env.DB.prepare('SELECT COUNT(*) AS n FROM bounties WHERE details_read_at = 0').first<{ n: number }>())?.n === 0) break;
+      if ((await board.env.DB.prepare('SELECT COUNT(*) AS n FROM bounties WHERE details_read_at = 0 OR events_read_at = 0').first<{ n: number }>())?.n === 0) break;
     }
     client = new Client({ name: 'pf2-test', version: '1.0.0' });
     await client.connect(new StreamableHTTPClientTransport(new URL(`${board.url}/mcp`)));
