@@ -518,6 +518,33 @@ describe('Stripe telling the board', () => {
     await settle();
     return { account, intent: s.charged(account)[0]!.id };
   }
+  // PF9b: the two cases PF11 did not prove on Stripe's real test mode.
+  it('a dispute on the board\'s payment marks it disputed, a repeated success does not undo it, and the bounty says so', async () => {
+    const { account, intent } = await paid();
+    const elsewhere = JSON.stringify({ type: 'charge.dispute.created', account, data: { object: { payment_intent: 'pi_someone_elses' } } });
+    await send(elsewhere, signed(elsewhere));
+    expect(await stateOf()).toBe('paid');
+    const dispute = JSON.stringify({ type: 'charge.dispute.created', account, data: { object: { payment_intent: intent } } });
+    expect((await send(dispute, signed(dispute))).status).toBe(200);
+    expect(await stateOf()).toBe('disputed');
+    const again = JSON.stringify({ type: 'payment_intent.succeeded', account, data: { object: { id: intent } } });
+    await send(again, signed(again));
+    expect(await stateOf()).toBe('disputed');
+    const view = await (await handle(new Request(`${ORIGIN}/api/b/${ID}/payment`), env)).json() as any;
+    expect(view.payment.charge.state).toBe('disputed');
+  });
+  it('a solver who disconnects before the merge is not charged for; the merge is owed, paid by hand', async () => {
+    await ownerOn();
+    const account = await solverReady();
+    const gone = JSON.stringify({ type: 'account.application.deauthorized', account, data: { object: {} } });
+    expect((await send(gone, signed(gone, Math.floor(NOW / 1000)))).status).toBe(200);
+    await merged();
+    await settle();
+    expect(s.charged(account)).toEqual([]);
+    expect(await stateOf()).not.toBe('paid');
+    const view = await (await handle(new Request(`${ORIGIN}/api/b/${ID}/payment`), env)).json() as any;
+    expect(view.payment.state).toBe('owed');
+  });
   it('a signed refund changes the state', async () => {
     const { account, intent } = await paid();
     const body = refund(account, intent);
