@@ -193,7 +193,7 @@ describe('rate limits', () => {
     expect((await refresh(r.env)).requests).toBe(LIMITS.anonymous.tick);
     r.clock.at += 15 * MINUTE;
     await refreshUntilDone(r);
-    const unread = await r.env.DB.prepare('SELECT COUNT(*) AS n FROM bounties WHERE details_read_at = 0').first<{ n: number }>();
+    const unread = await r.env.DB.prepare('SELECT COUNT(*) AS n FROM bounties WHERE details_read_at = 0 OR events_read_at = 0').first<{ n: number }>();
     expect(unread?.n).toBe(0);
   });
 

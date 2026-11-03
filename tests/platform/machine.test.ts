@@ -298,10 +298,10 @@ describe('MCP, through the SDK client', () => {
       }
     });
     await board.refresh();
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 40; i++) {
       await board.env.DB.prepare("DELETE FROM meta WHERE key LIKE 'budget_%'").run();
-      await board.refresh();
-      if ((await board.env.DB.prepare('SELECT COUNT(*) AS n FROM bounties WHERE details_read_at = 0').first<{ n: number }>())?.n === 0) break;
+      // Done: every step read in full once (PF28: a step a budget cut off stays due at this clock).
+      if ((await board.refresh()).state === 'done') break;
     }
     client = new Client({ name: 'pf2-test', version: '1.0.0' });
     await client.connect(new StreamableHTTPClientTransport(new URL(`${board.url}/mcp`)));

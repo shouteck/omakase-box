@@ -153,6 +153,16 @@ node node_modules/wrangler/bin/wrangler.js d1 execute open-bounty-board --remote
 
 Then build and deploy as in step 4.
 
+## Updating a board deployed before PF28
+
+Once only, before deploying this code. Each bounty's event chain gets its own read time, starting from when its details were last read, so nothing is read again all at once.
+
+```bash
+node node_modules/wrangler/bin/wrangler.js d1 execute open-bounty-board --remote --file migrations/pf28.sql
+```
+
+Then build and deploy as in step 4.
+
 ## Pay on merge (optional)
 
 Without a Stripe key the board works as before: its pages say pay on merge is not set up, and solvers are paid by hand. Turning it on takes real payments, so only you can do it, and it is only ever your own Stripe account:

@@ -165,7 +165,6 @@ async function readPullRequests(env: Env, github: GitHub, id: string, repository
       .bind(id, pull['number'] as number, author, Number.isSafeInteger(authorId) ? authorId as number : null, merged !== null ? 'merged' : pull['state'] === 'closed' ? 'closed' : 'open', pull['created_at'], merged, association, head, draft, updated));
   }
   await runAll(env.DB, writes);
-  await readOnDefault(env, github, id, repository);
 }
 
 /** Is a merged head on the default branch? Yes stays yes. A failed read stays unknown, and the page says nothing is confirmed. */
@@ -252,20 +251,25 @@ export async function lookNow(env: Env, repository: string, number: number, id: 
   const github = new GitHub(env, true);
   try {
     if (!await readRepository(env, github, repository, now)) return 'not-public';
+    // A bounty the board already holds at this address: its pull requests before the issue is checked again (PF28), so a
+    // look at 2 reads stores a new one. The repository was just read as public, and the stored bounty is the hint's own.
+    const held = await env.DB.prepare('SELECT 1 AS yes FROM bounties WHERE id = ? AND repository = ? AND issue_number = ?').bind(id, repository, number).first();
+    if (held !== null) await readPullRequests(env, github, id, repository);
     const answer = await github.get(`/repos/${repository}/issues/${number}`);
     if (answer.status !== 200) return 'not-this-bounty';
     const listed = readIssue(answer.json);
     if ('refused' in listed || listed.id !== id || listed.repository.toLowerCase() !== repository.toLowerCase()) return 'not-this-bounty';
     // A copy of another repository's bounty must not read its pull requests into that bounty.
     if (!await storeIssue(env.DB, listed, now)) return 'not-this-bounty';
-    await readPullRequests(env, github, id, listed.repository);
+    if (held === null) await readPullRequests(env, github, id, listed.repository);
     await readEvents(env, github, id, listed.repository);
-    await env.DB.prepare('UPDATE bounties SET details_read_at = ? WHERE id = ?').bind(now, id).run();
+    await readOnDefault(env, github, id, listed.repository);
+    await env.DB.prepare('UPDATE bounties SET details_read_at = ?, events_read_at = ? WHERE id = ?').bind(now, now, id).run();
     return 'read';
   } catch (error) {
     if (error instanceof BudgetSpent) {
       // What the look could not finish goes first in the next refresh, closed or not.
-      await env.DB.prepare('UPDATE bounties SET details_read_at = 0 WHERE id = ? AND repository = ?').bind(id, repository).run();
+      await env.DB.prepare('UPDATE bounties SET details_read_at = 0, events_read_at = 0 WHERE id = ? AND repository = ?').bind(id, repository).run();
       return 'budget-spent';
     }
     if (error instanceof GitHubUnavailable) return 'github-unavailable';
@@ -293,13 +297,41 @@ export async function refresh(env: Env): Promise<RefreshResult> {
     }
     const repositories = await db.prepare('SELECT name FROM repositories WHERE read_at <= ? ORDER BY read_at').bind(now - REPOSITORY_STALE_MS).all<{ name: string }>();
     for (const { name } of repositories.results) await readRepository(env, github, name, now);
-    const due = await db.prepare('SELECT id, repository, issue_number, seen_at, issue_state FROM bounties WHERE details_read_at <= ? AND (issue_state = \'open\' OR details_read_at <= ?) ORDER BY details_read_at, id')
-      .bind(now - DETAILS_STALE_MS, now - (env.closedStaleMs ?? DETAILS_STALE_MS)).all<{ id: string; repository: string; issue_number: number; seen_at: number; issue_state: string }>();
+    // PF28: a bounty's pull requests and its event chain are two steps, each with its own read time, stalest first.
+    // A step's turn is spent when it starts: one cut off by the budget keeps what it stored and stays due behind every
+    // other due step, so a bounty that needs more reads than a run has can never hold up the rest. Each step's fixed
+    // cost is one list read and each further read is stored, so at 2 reads a run every turn makes progress. The pull
+    // request step is done once its list is stored; the compares after it are best effort.
+    const stale = now - DETAILS_STALE_MS;
+    const closedStale = now - (env.closedStaleMs ?? DETAILS_STALE_MS);
+    const due = await db.prepare(`SELECT id, repository, issue_number, seen_at, issue_state, step, at FROM (
+        SELECT id, repository, issue_number, seen_at, issue_state, 'pulls' AS step, details_read_at AS at FROM bounties WHERE details_read_at <= ? AND (issue_state = 'open' OR details_read_at <= ?)
+        UNION ALL
+        SELECT id, repository, issue_number, seen_at, issue_state, 'events' AS step, events_read_at AS at FROM bounties WHERE events_read_at <= ? AND (issue_state = 'open' OR events_read_at <= ?))
+      ORDER BY at, id, step`)
+      .bind(stale, closedStale, stale, closedStale).all<{ id: string; repository: string; issue_number: number; seen_at: number; issue_state: string; step: 'pulls' | 'events'; at: number }>();
+    const checked = new Map<string, boolean>();
     for (const row of due.results) {
-      if (row.issue_state === 'open' && row.seen_at < completeAt && !await readIssueAgain(env, github, row.id, row.repository, row.issue_number, now)) continue;
-      await readPullRequests(env, github, row.id, row.repository);
-      await readEvents(env, github, row.id, row.repository);
-      await db.prepare('UPDATE bounties SET details_read_at = ? WHERE id = ?').bind(now, row.id).run();
+      const column = row.step === 'pulls' ? 'details_read_at' : 'events_read_at';
+      const spent = github.used;
+      const mark = (at: number) => db.prepare(`UPDATE bounties SET ${column} = ? WHERE id = ?`).bind(at, row.id).run();
+      await mark(row.issue_state === 'open' ? stale : closedStale);
+      try {
+        if (!checked.has(row.id)) checked.set(row.id, !(row.issue_state === 'open' && row.seen_at < completeAt) || await readIssueAgain(env, github, row.id, row.repository, row.issue_number, now));
+        if (!checked.get(row.id)) continue;
+        if (row.step === 'pulls') {
+          await readPullRequests(env, github, row.id, row.repository);
+          await mark(now);
+          await readOnDefault(env, github, row.id, row.repository);
+        } else {
+          await readEvents(env, github, row.id, row.repository);
+          await mark(now);
+        }
+      } catch (error) {
+        // A step the budget stopped before its first read keeps its place.
+        if (error instanceof BudgetSpent && github.used === spent) await db.prepare(`UPDATE bounties SET ${column} = ? WHERE id = ?`).bind(row.at, row.id).run();
+        throw error;
+      }
     }
     if (searched) await markRead(db, now);
     return { requests: github.used, state: 'done' };
