@@ -48,6 +48,7 @@ Each trap names the wave that taught it; that wave file has the story.
 ## Fixtures, suites and journeys
 
 - **`check` never runs the bounty suite** — briefs name `test:box-bounty` and `test:kitchen`; only `verify --full` selects both. Plan the inner loop by file: `node scripts/suite.mjs box --suite bounty <file.test.ts>` (repo-relative path; BT21/BT22).
+- **A new help line or a new print of a stranger's text runs `bt17` and `bt43` in the inner loop** (PF26): the help budget and the register of stranger-text callers fail only in the full suite otherwise.
 - **Run a printed command as printed** (PF7): `--help` passes lines that real state refuses; see `tests/platform/commands.ts`. Setup too (PF15).
 - **Three GitHub stand-ins exist** (`tests/box/bounty/github-fixture.ts`, `bt7-ux-fixture.mjs`, `kitchen/demo/gh-standin.cjs`) — a response-shape change greps and fixes all three (BT16, K18).
 - **A declared setup must bootstrap from nothing** — a snapshot carries no `node_modules`; prove it in a copy with `.git`/`node_modules`/`dist` deleted (BT5). What setup creates, the solver must remove — `answer` counts install/build artifacts as `added` (recorded unfixed product decision, BT5).

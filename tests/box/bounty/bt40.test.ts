@@ -24,7 +24,7 @@ const SCAN_DIRS = ['packages/box-bounty', 'packages/box-cli/src'];
 // The dispatcher's real branches in packages/box-cli/src/bounty.ts — a `next:`
 // that names a `box bounty <word>` outside this list sends the reader to a
 // command that does not exist.
-const COMMANDS = new Set(['allow', 'apply', 'close', 'config', 'create', 'deny', 'describe', 'discover', 'find', 'take', 'help', 'hook', 'look', 'post', 'status']);
+const COMMANDS = new Set(['allow', 'apply', 'close', 'config', 'create', 'deny', 'describe', 'discover', 'find', 'take', 'submit', 'help', 'hook', 'look', 'post', 'status']);
 
 interface Site { file: string; line: number; reason: string; message: string; excepted: boolean }
 
