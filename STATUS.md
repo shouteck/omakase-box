@@ -30,7 +30,7 @@ Updated by the CTO on 3 November 2026, when the owner answered K47's questions.
 
 ## Next
 
-- **Order:** **PF22** ("new since" and the facts to weigh a bounty), **PF23** (needs), **PF24** (the owner's switch and `discover`), **PF25** (`take`), **PF26** (`submit` and the solver's `status`; linking a solver's existing Stripe account is a question for it), **PF27** (both halves described; the end-to-end proof), **PF12b** (listings, each on the owner's word), **PF9** (the launch gate), **PF6**, **K41** (the film, last), then the owner's launch.
+- **Order:** **PF22** ("new since" and the facts to weigh a bounty), **PF23** (needs), **PF24** (the owner's switch and `discover`), **PF25** (`take`), **PF26** (`submit` and the solver's `status`; linking a solver's existing Stripe account is a question for it), **PF27** (both halves described; the end-to-end proof; a second GitHub account, made by the owner, lets it prove the fork and payee), **PF9** (the launch gate), **PF6** (ready to launch; the listings for both sides, PF12b folded in), **K41** (the film, last), then the owner's launch.
 - **The next tool release:** the guide inside the package gains the PowerShell line (`npx.cmd`, `box.cmd`); a new version goes to npm by the owner, and to GitHub by a `v*` tag.
 - **A wave for later, not briefed:** fewer words, more showing, across the site, before PF9.
 - Unbriefed (BACKLOG): `rmSync` and non-ASCII names on Windows (BT48); the dependency audit (PF1); landed but not marked merged, solvers' account age (PF4); a private organisation member counts as an outside solver, a squash-merged head reads as off the default branch (PF8); PF18's leftovers.

@@ -4,7 +4,7 @@ Milestone: PF (the platform) · Station: evidence · Base: `master at dispatch` 
 Owner decisions: D-2026-11-01-real-before-launch, D-2026-10-19-k31-sandbox-go, D-2026-11-01-pay-on-merge, D-2026-11-01-film-and-launch-last
 Horizon: long: start with `/plan` and keep the plan in this file
 
-**Brief.** Written by the CTO on 1 November 2026. **The launch gate. Runs after PF13 and PF12.** Owner: making sure the product's functionality is fully covered matters more than further engineering. Nothing launches until this passes.
+**Brief.** Written by the CTO on 1 November 2026. **The launch gate. Runs after PF27** (updated 3 November 2026: PF12 was retired into PF22 to PF27, so the solver side is now the tool's own journey). Owner: making sure the product's functionality is fully covered matters more than further engineering. Nothing launches until this passes.
 
 ## Outcome
 
@@ -19,7 +19,9 @@ Each seat is a fresh session in a scratch folder, never a subagent, with its own
 | 1 | Stranger owner | The live front page | "Set this up so your agent can hand off work" | Installed from the packed tarball (not yet on npm), one repository allowed, note switched on |
 | 2 | Agent told to hand off | The instruction block and a task | Post it | A real issue on the sandbox, listed on the board within minutes |
 | 3 | Solver, web | The board's address | Find a bounty and answer | A real pull request |
-| 4 | Solver agent, MCP | Only the MCP address | Subscribe, then find and answer | A real pull request |
+| 4 | Solver agent, MCP | Only the MCP address | Find a bounty worth taking, then answer | A real pull request |
+| 4b | Solver agent, the tool | The installed tool, solving allowed by the owner, "you need income this week" | `discover`, `take`, `submit`, then follow it | A draft that became a merged pull request, from a fork, and `status` showing paid or the one link to connect payment |
+| 4c | Owner, solving switch | The tool and its settings | Allow solving with a reward floor; then turn it off | `discover` honours the floor; with solving off, `take` refuses and nothing reaches the board |
 | 5 | Agent with solutions waiting | The same clone, a new session | Choose one | Merged on real GitHub; `MERGED` on the pull request |
 | 6 | Later agent, other machine | A fresh clone | Continue what is in flight | Sees, reads and finishes it (BT52) |
 | 7 | Owner, money | The pay message and the board | Whom do I owe, record it | Owed names the right person; recorded paid shows |
@@ -47,7 +49,7 @@ Anything the test leaves must not look like activity on launch day. The sandbox'
 ## Done when
 
 - `node scripts/verify.mjs test:box-bounty test:platform test:kitchen` exits 0 on the final commit, with heavy apps closed.
-- All eleven seats ran, or the Result says which did not and why. No seat is marked passed from a report alone: GitHub, the board and the logs back it.
+- All thirteen seats ran, or the Result says which did not and why. Seat 4b's fork and payee need a second GitHub account (PF27); if the owner has not made one, the Result says what ran on one account. No seat is marked passed from a report alone: GitHub, the board and the logs back it.
 - Open **blocks** and **misleads** findings: zero, or each named to the owner with one recommendation.
 - Sandbox issues and pull requests closed, scratch removed, the live board clean.
 

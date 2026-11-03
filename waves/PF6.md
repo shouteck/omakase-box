@@ -40,6 +40,12 @@ The board is already live (PF8). The owner can publish and announce in one sitti
    - **Check each on the day and cite it:** Monid (how a tool is contributed, what its entry needs, how free tools and its rankings work), the skill marketplaces, the MCP registries in K44's table, and others found. Report for each whether it fits, and why not if it does not. Monid's shape is pay-per-call: say plainly what can and cannot be listed there, and the closest honest entry for the posting side. Also answer from Monid's public docs, with "not found" where they are silent: can a balance pay a third party, and how do providers get paid? This is for a possible later payment route (Monid's wallet API read on 2 November 2026 only reports the balance); nothing is built on it here, and asking Monid directly is the owner's message to send.
    - **One market, two needs.** An agent may both post and solve, so the listing says both: hand off what you cannot do, take on what you can. Worded by need: posting ("get this done by someone else": a machine or access it lacks, domain knowledge, parallel work, a second opinion) and earning ("find paid coding work": a low budget, spare capacity, its own business), through the feed and MCP server. Where a toolbox suits only one side, list that side. The text lives in `docs/box-v4/LAUNCH.md`, adapted to each toolbox's format, with the owner's submission steps. Claims nothing about solvers waiting, rewards being certain or bounties being plentiful. **The board is the solver's distributor; no third-party bounty board is listed or fed** (D-2026-11-01-solver-distributor).
    - **The toolbox test:** fresh sessions, each given a problem and a local list of about 20 real tool descriptions with ours among them, in shuffled order. One set of problems fits posting, one fits solving, and one fits neither. Measures, from the logs: did it inspect ours, did it choose ours. Stand-ins only; nothing is installed or posted. Rewrite the wording once if a misreading shows, and report both rounds.
+   - **PF12b folded in** (3 November 2026). The solver side's listings and their proof by need live here, so both sides are listed in one wave:
+     - **The solving entry:** names the tool's `discover`, `take` and `submit` (PF24 to PF26) beside the MCP server.
+     - **The owner's word, once per listing:** each listing is a new outside destination, so nothing is submitted until the owner says so for that listing; their words are quoted. A listing that costs money is a named blocker.
+     - **Recorded:** each listing's address and its review state.
+     - **The proof by need,** once a listing is live and searchable: a fresh session given only "you run a coding business and need income this week" and that toolbox's own search finds the solver side and runs its first `discover`. If no listing is live by the wave's end, the Result names which are in review, and the proof runs when one is.
+     - **The expectation, from K47:** listings make the solver side findable; the first solvers come from the installed base, through the owner's switch (PF24).
 6. **The hand-off comparison** (K44's experiment E1, with the skill as the variable).
    - **Arms:** three fresh sessions with the shipped instruction block only, and three with the skill installed. They run one at a time, in scratch folders, on the same task.
    - **The task:** K44's H1 release seat, rebuilt so the obstacle has no local half, since K44 found the original could be half-tested on Windows.
@@ -70,6 +76,7 @@ The board is already live (PF8). The owner can publish and announce in one sitti
 - The skill installs from the marketplace repository in a scratch project, and the agent there can see it.
 - The hand-off comparison and the toolbox test ran, or the Result says which sessions did not and why, with every result recorded.
 - Each toolbox has a recorded fit, with its source and the owner's steps where it fits.
+- Each submitted listing has the owner's approval quoted, with its address and state. The solver side's proof by need is recorded, or the listing still in review is named.
 
 ## Lenses
 
