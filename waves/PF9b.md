@@ -28,3 +28,13 @@ The money flows have run for real where they can at $0 and are test-proven where
 
 - [x] **Measurement fairness:** the numbers and records exclude the sandbox; nothing from a test reads as real use.
 - [x] **Security:** the exclusion cannot be used to hide a real repository's bounties from the public by anyone but the board's owner.
+
+## Plan
+
+Written by the CTO at kickoff, 4 November 2026.
+
+- **The stated reward (owner, 4 November 2026: "you can run the 9b, its fake money right"):** seats 7 and 8 run on a sandbox bounty stating $5, its task saying "test bounty; solved by the project's own agents; no money moves". No money moves anywhere: seats 7 and 8 are records on the board, seat 11 is tests only. A "paid" recorded in the test is withdrawn before the wave closes.
+- **Built first (done):** the board never lists a repository its own setting names (`UNLISTED_REPOSITORIES`, the sandbox), through the one gate every listing passes (`readRepository`), plus a purge at each run and a refusal at render; three tests, each guard broken once. Seat 11: a dispute's webhook and a solver's disconnect, two tests, each guard broken once.
+- **Then seats 7 and 8 live, before the setting is deployed** (it would hide their bounty): a $5 sandbox bounty, a solution merged with the tool, then seat 7 (the owner: "whom do I owe, record it") and seat 8 (the solver, signed in: confirm or dispute). The browser pane has no GitHub session and the CTO enters no password, so the owner signs in to GitHub there once.
+- **One account:** poster and solver are the same login, so the merge is self-dealt and left out of the owner's record; whether the board lets that one login both record and confirm is what the seats find, and the Result names it.
+- **Then deploy (owner's word):** the setting goes live; the live feed, pages, numbers, MCP and owner records are each checked for no sandbox bounty; `exceededCpu` before and after.
