@@ -4,8 +4,8 @@ Measurements, comparisons and what the kitchen is allowed to claim. Runs through
 
 ## What this station knows
 
-- Current outcomes and contracts are in `PLAN.md` and `docs/box-v4/MEMORY-SPEC.md`. The former delegation validation plan is archived with the retired platform; do not use it as the current product's acceptance contract.
-- Record for every attempt: owner preparation, recipient onboarding, implementation, owner acceptance, elapsed time, and quality. From D2 on also record the share of owner source disclosed, and for agent recipients the same agent with the Box and with the full repository: success, tokens, time, owner interventions.
+- Current outcomes and contracts are in `PLAN.md` and `docs/box-v4/MEMORY-SPEC.md`; the retired platform's validation plan is not an acceptance contract.
+- Record for every attempt: owner preparation, recipient onboarding, implementation, owner acceptance, elapsed time, quality, the share of owner source disclosed, and for agent recipients the same agent with the Box and with the full repository: success, tokens, time, owner interventions.
 - Four conclusions are always reported separately: software capability, measured effort, actual repeat use, commercial commitment. A good result in one says nothing about the next.
 - The kitchen's own waves delivered as Boxes are real repeat use by one team. Label them internal; they are not customer evidence.
 
@@ -51,7 +51,7 @@ Learned the hard way in R3b and the lab's live runs. They apply to BT5, BT6 and 
 - **Clean up by exact name, never by pattern,** when agents share a scratch folder.
 - **A stand-in that answers is not one that answers correctly.** Before a stand-in GitHub carries participants, run each command the journey needs and compare with a real-GitHub transcript (`kitchen/demo/bt11b-real-transcript.txt`) — `tests/kitchen/k19-github-standin.test.ts` does exactly that for every committed stand-in. K18's stand-in (copied from `bt11b-replay.mjs`) returned the issue list for one issue and read `page=` out of `per_page=`, so every refresh failed and no pull request was ever listed; one participant run was spent before anyone noticed. And the shim is a `gh` binary, not only an API client: answer `gh version`/`gh auth` before parsing endpoints — K19 lost one verify cycle to a fixture that parsed the endpoint first. On Claude Code the cook cannot start participants: the head chef starts them and saves each own report verbatim at hand-off.
 - **Cold fresh-agent journeys reuse the `bt17-measure.mjs` world:** a `NODE_OPTIONS --require` shim routes `gh`→`gh-standin.cjs` and the fake remote URL→a bare repo; each agent gets its own `BOX_BOUNTY_SETTINGS_DIR` and a `box.sh` wrapper baking the env. Two traps from BT17: the fixture repo's `origin` must spell the fake `github.com` URL (cloning from the bare path leaves a local `origin` and the tool correctly refuses `github-remote-required`), and seeded owner settings must have the `said` map deleted or standing explanations never print to the cold agent.
-- **Never present unfinished or failed work as complete** — folded from the retired console card: a passing test is not a usable screen, and state that survives only in a page is a bug. The terminal demo under `kitchen/demo/` is demo tooling, not a restored web app.
+- **Never present unfinished or failed work as complete:** a passing test is not a usable screen, and state that survives only in a page is a bug. The terminal demo under `kitchen/demo/` is demo tooling, not a restored web app.
 - **Do not download a browser.** The demo's Chromium lives in `.runtime/browsers` and the suite runner sets the path; if it is missing or will not launch, stop and report.
 
 
@@ -61,6 +61,7 @@ Learned the hard way in R3b and the lab's live runs. They apply to BT5, BT6 and 
 
 - **A design that adds a trigger names the command that fires it, what a refusal leaves behind and what a retry finds.** K42's payment rule took three corrections, each fix opening the next edge case.
 - **A design wave states invariants, each with the test that proves it; step-by-step state machines are designed in the build wave, against tests.** K42b's PF4 payment steps grew a new edge case in each of three rounds of prose.
+- **A brief for an actor nobody here has observed names how it is woken, identified and paid before it names features** (K47, `docs/box-v4/SOLVER-SIDE.md`).
 - **Claude Code desktop participants are fresh sessions, never subagents** (those inherit this AGENTS.md): the head chef starts them in their own scratch folders from an owner message and takes each report from `~/.claude/projects/<folder>/*.jsonl`; the app shows sibling names, so name sessions neutrally (K44).
 - **A pooled rate states its denominator by what the right answer was** (K44: 1 of 11 hid 1 of 5).
 - **Start a participant with one plain line** ("open TASK.md and carry out the task it describes"); K43's first start, which also told it how to end its report, was refused by a model safeguard before any work, and the same words resent to that session ran. Its cwd is visible to it, so name packet folders neutrally (K43's held "kitchen" and "pass").
