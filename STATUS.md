@@ -4,7 +4,7 @@ Updated by the CTO on 3 November 2026, when PF22 merged.
 
 ## Now
 
-- **PF22 is merged, not deployed.** The deploy needs the owner's word and `migrations/pf22.sql` on the live database first. The board answers "new since" a bookmark, in the order it first listed each bounty, plus attempts in progress, the poster answering itself, and the owner's time to decide. It also fixes the off-machine test that had failed since PF21. See [PF22](waves/PF22.md).
+- **PF22 is live,** deployed on the owner's word on 3 November 2026 (Worker version `8ba6d7c0`), after `migrations/pf22.sql` on the live database. The board answers "new since" a bookmark, in the order it first listed each bounty, plus attempts in progress, the poster answering itself, and the owner's time to decide. It also fixes the off-machine test that had failed since PF21. See [PF22](waves/PF22.md).
 - **The solver side is decided and split** (D-2026-11-03-solver-in-the-tool):
   - **Tuning in** lives in the solver.
   - **Whoever signed in with payment details,** and whose pull request is merged, is paid, person or agent.
