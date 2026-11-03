@@ -23,16 +23,18 @@ export async function rig(token?: string): Promise<Rig> {
 }
 
 /**
- * Refreshes, moving the clock a tick each time, until every bounty's details
- * have been read once. With more bounties than a tick's budget a refresh may
- * never report "done": the board is always reading its stalest few.
+ * Refreshes until every bounty's details have been read in full once. While
+ * some step was never started the clock moves a tick each time, as the cron
+ * does. Then it stays put, so the steps a budget cut off stay due and the ones
+ * finished do not, with the hour's budget given back, until a run is done.
  */
 export async function refreshUntilDone(r: Rig): Promise<number> {
   for (let ticks = 1; ticks < 500; ticks++) {
     const { state } = await refresh(r.env);
+    if (state === 'done') return ticks;
     const unread = await r.env.DB.prepare('SELECT COUNT(*) AS n FROM bounties WHERE details_read_at = 0 OR events_read_at = 0').first<{ n: number }>();
-    if (state === 'done' || (state === 'budget-spent' && unread?.n === 0)) return ticks;
-    r.clock.at += 15 * MINUTE;
+    if (unread?.n !== 0) r.clock.at += 15 * MINUTE;
+    else await r.env.DB.prepare("DELETE FROM meta WHERE key LIKE 'budget_%'").run();
   }
   throw new Error('refresh never finished');
 }

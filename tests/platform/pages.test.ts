@@ -53,11 +53,10 @@ describe('the pages', () => {
     if (built.status !== 0) throw new Error(`next build failed:\n${built.stdout}\n${built.stderr}`);
     // The owner signs in as GitHub id 7100 throughout, so the board reads their bounties with that id (PF21).
     board = await startLocal({ schema: SCHEMA, out: OUT, now: () => clock, seed: standin => { standin.accountIds.set('example-mara', 7100); seedStates(standin, NOW); seed120(standin, NOW); } });
-    for (let tick = 0; tick < 40; tick++) {
-      await board.refresh();
+    for (let tick = 0; tick < 80; tick++) {
+      // Done: every step read in full once (PF28: a step a budget cut off stays due at this clock).
+      if ((await board.refresh()).state === 'done') break;
       await board.env.DB.prepare(`DELETE FROM meta WHERE key LIKE 'budget_%'`).run();
-      const unread = await board.env.DB.prepare('SELECT COUNT(*) AS n FROM bounties WHERE details_read_at = 0 OR events_read_at = 0').first<{ n: number }>();
-      if (unread?.n === 0) break;
     }
     browser = await chromium.launch();
     mkdirSync(SHOTS, { recursive: true });
