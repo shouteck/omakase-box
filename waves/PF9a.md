@@ -55,7 +55,7 @@ Seat 1 and `box setup`: setup installs the tool globally and writes its skill in
 ## Result
 
 - CTO: Claude Code desktop, Windows / Claude Opus 5.5. Seats: twelve fresh Claude Code desktop sessions (Claude Opus 5.5), each started from an owner turn in its own scratch folder.
-- Commit: see the verify line below
+- Commit: `6664f296` · Verify: `verify 6664f29 PASS check=reused build=reused test:box-bounty=reused test:platform=reused (ancestor 32300ad, only inert paths changed) test:kitchen=0(selected 2 of 18 kitchen files) db=none 34s`
 - Level: ui-verified (fresh agents, real GitHub, the live board)
 - **Every seat ran** (seat 10 twice, its token case test-proven); the table and the verbatim notes are in [kitchen/reviews/PF9-flows.md](../kitchen/reviews/PF9-flows.md). Each outcome was checked on GitHub, the board or the settings, never from a seat's report.
 - **Blocks and misleads: zero.** No product change in this wave.
