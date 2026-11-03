@@ -57,7 +57,8 @@ Each trap names the wave that taught it; that wave file has the story.
 - **A copy of a stranger's tree is a second boundary** — what may run there (info/attributes, hooks), which byte form lives there, what is checked on the way back; `git worktree remove` deletes before registration and fails on Windows while a process sits in the folder (BT7, parked).
 - **Verify outside state independently** (`gh api`, `git ls-remote`), never the tool's word. `undone` is terminal; closed-by-base-deletion reads as rejection (BT6a). `allowedDestinations` gates both directions.
 - **Fresh-reader journeys reuse `bt8b-fixtures.mjs`** (per-case repos, isolated settings, the exact SHA's built CLI); cold ones reuse `bt17-measure.mjs` (evidence card).
-- Name negative candidates by the actual source mutation — a cosmetic change is not a probe; a green alternative is not a wrong candidate. **A clean install proves nothing** — only a check that loads the code shows a dangling link (A0).- **A produced artifact is not evidence of what it claims** — rebuild from the current commit before recording or demoing (K16 stale dist; evidence card).
+- Name negative candidates by the actual source mutation: a cosmetic change is not a probe. **A clean install proves nothing**; only loading the code shows a dangling link (A0).
+- **A produced artifact is not evidence of what it claims:** rebuild from the current commit first (K16).
 - **Parseable is not the promised wire format** — validate or normalize at the boundary; test malformed *and* parseable-but-nonconforming (BT35).
 - **The root `.gitignore` ignores any `data/` folder** (K43's sample world went uncommitted). **Verify in a clean worktree** needs the Playwright revision under its `.runtime/browsers`: copy from `%LOCALAPPDATA%/ms-playwright`, never download.
 
@@ -70,4 +71,4 @@ Each trap names the wave that taught it; that wave file has the story.
 - Confirm excluded modules are really absent; try each negative: omitted dependency, escaping path or link, unlisted input, edit outside editable paths, wrong base commit, altered agreement.
 - Verify any outside claim independently before repeating it.
 - **A walk over `packages/` meets build output** (PF1): `next build` writes `.ts`. Name its scope.
-- **A new command or `config` label** (PF24) must join three enumerations: BT17's help budget, BT40's real commands, and the JSON-agreement table. Run those three before verify.
+- **A new command or `config` label** (PF24): run BT17 (help budget), BT40 (command list), json-agreement.
