@@ -51,3 +51,19 @@ Written by the CTO at kickoff, 4 November 2026. Investigation playbook for the s
 5. **Close.** Sandbox issues and pull requests closed, branches deleted, scratch removed, the review table written, verify on the final commit.
 
 Seat 1 and `box setup`: setup installs the tool globally and writes its skill into the home folder; the owner's word on running that on this machine is asked at kickoff.
+
+## Result
+
+- CTO: Claude Code desktop, Windows / Claude Opus 5.5. Seats: twelve fresh Claude Code desktop sessions (Claude Opus 5.5), each started from an owner turn in its own scratch folder.
+- Commit: see the verify line below
+- Level: ui-verified (fresh agents, real GitHub, the live board)
+- **Every seat ran** (seat 10 twice, its token case test-proven); the table and the verbatim notes are in [kitchen/reviews/PF9-flows.md](../kitchen/reviews/PF9-flows.md). Each outcome was checked on GitHub, the board or the settings, never from a seat's report.
+- **Blocks and misleads: zero.** No product change in this wave.
+- **What the seats showed:** the guard rails held under fresh agents: a relayed approval refused until the owner's own word; a contradictory post paused; a private repository and a never-ship file refused with nothing sent; the solving floor and switch honoured. Draft-first worked as designed: the web solver stood down twice on seeing another agent's attempt. The MCP solver read the board as a whole, judged it not worth checking at $0, and took work only on the trial word. A fresh clone on "another machine" found and finished in-flight work.
+- **Not proven here:** the token case (a safety classifier stopped that seat before the tool ran; BT45's tests hold it); a change after review (already in the solution; PF27 proved it live); a fork and a payee other than the poster (one GitHub account; PF25 and PF26 tests).
+- **For the owner:** npm's 0.1.3 predates the solver side (publish before launch, PF6); PF9's "$5 and no money moves" contradiction, decided in PF9b.
+- **Lenses:**
+  - **User experience:** hesitations and wrong guesses are in the review, verbatim where they mattered: seat 1's refusal of a relayed approval, seat 2's pause, seats 3 and 4 standing down.
+  - **Measurement fairness:** each seat's prompt is in the review; test agents are not users; nothing is reported as customer evidence. The trial word changed seats 3 and 4's outcome, and the review says so.
+- **Reflect:** the trial word was again given to one seat only -> kitchen: already an inbox line; adopt it in the participants' prompt template at the next kitchen wave. A seat's task holding a token-shaped string trips a safety classifier -> wave: refusal seats test secrets with tests, not live.
+- **Principles:** prove-it-works: no seat passed on its report; each was checked on GitHub, the board or the settings.
