@@ -83,7 +83,7 @@ export { binaryPatchPaths, looksBinary, SECRET_RULES, scanPatch, scanText } from
 export type { ScanHit, SecretRule } from './scan.js';
 export { recordScanFinding, settleScanFindings } from './record.js';
 export type { ScanFinding } from './record.js';
-export { renderDescribe, renderRules } from './tell.js';
+export { renderDescribe, renderDescribeSolving, renderRules } from './tell.js';
 export { readGitPinsOncePerProcess } from './git.js';
 export { DESCRIBE_LINES, INSTALL_PACKAGE, SKILL_MARKER, SKILL_TEXT, renderRulesBlock, RULES_LINES, RULES_MARKERS, rulesBlockInterior } from './wording.js';
 export { classifySnapshot, createSnapshot, createSnapshotCommit } from './snapshot.js';

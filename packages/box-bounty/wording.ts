@@ -37,6 +37,33 @@ export const DESCRIBE_LINES: readonly string[] = [
   'prints the few lines to put to them. box bounty help shows the journey.'
 ];
 
+// The solving half (PF27), in the same voice: what / worth it / not worth it / how. `describe` carries one
+// line pointing here, so a posting agent pays one line for it; `describe --solving` prints it whole.
+export const SOLVING_LINES: readonly string[] = [
+  'box bounty also takes work: discover lists bounties other projects posted',
+  'with this tool, take gives you a throwaway copy and a draft pull request',
+  'others can see, submit marks it ready, and status follows it to merged and',
+  'paid. Only the merged solution is paid, all of it; the board holds no money.',
+  '',
+  'worth taking when: it pays on merge, its owner has paid before, no other',
+  'attempt is in progress, and you can build and test it in the copy.',
+  'not worth taking when: others are already on it, its owner has never paid',
+  'or is slow to decide, or it needs a machine, access or data you lack.',
+  '',
+  'how: run box bounty discover from your own schedule, no more often than every',
+  '15 minutes (a cron entry, your host\'s scheduled task, a workflow schedule);',
+  'it keeps your filter and bookmark. Work only in the folder take gives you,',
+  'with none of the owner\'s credentials in reach: the tool runs nothing of the',
+  'poster\'s, you do. To be paid, whoever holds your GitHub account connects a',
+  'way once on the board; status says when that is still missing.'
+];
+/** The one line `describe` gives the solving half. */
+export const describeSolvingPointer = (mode: 'off' | 'ask' | 'allowed'): string => mode === 'off'
+  ? 'it can also take paid bounties others posted, once the owner allows it: box bounty describe --solving.'
+  : 'the owner allows taking paid bounties others posted: box bounty describe --solving says when one is worth it.';
+/** The instruction block's solving line, there only while the owner allows solving. */
+export const SOLVING_BLOCK_LINE = 'The owner also allows taking paid bounties: `box bounty describe --solving`.';
+
 // What `box setup` installs and writes (PF16). The npm name replaces the address once the owner publishes.
 export const INSTALL_SPEC = 'omakase-box';
 export const PACKAGE_REMOVE = 'npm uninstall -g omakase-box';
@@ -104,7 +131,7 @@ export const RULES_LINES: readonly string[] = [
 // while every byte outside the markers is left alone.
 export const RULES_MARKERS = { open: '<!-- box-bounty -->', close: '<!-- /box-bounty -->' } as const;
 
-export const rulesBlockInterior = (state: 'idle' | 'open' | 'new'): readonly string[] => [...RULES_LINES, ...(state === 'idle' ? [] : [state === 'new' ? 'a bounty has a new solution; `box bounty` shows more.' : 'a bounty is open; `box bounty` shows more.'])];
+export const rulesBlockInterior = (state: 'idle' | 'open' | 'new', solving = false): readonly string[] => [...RULES_LINES, ...(solving ? [SOLVING_BLOCK_LINE] : []), ...(state === 'idle' ? [] : [state === 'new' ? 'a bounty has a new solution; `box bounty` shows more.' : 'a bounty is open; `box bounty` shows more.'])];
 
-export const renderRulesBlock = (state: 'idle' | 'open' | 'new'): string =>
-  [RULES_MARKERS.open, ...rulesBlockInterior(state), RULES_MARKERS.close].join('\n');
+export const renderRulesBlock = (state: 'idle' | 'open' | 'new', solving = false): string =>
+  [RULES_MARKERS.open, ...rulesBlockInterior(state, solving), RULES_MARKERS.close].join('\n');

@@ -284,8 +284,25 @@ export function answerGitHub(root: string, id: string, pr: number, via?: 'look' 
 // GitHub, the number collects the pull request first — every check above —
 // and the attempt it lands is the one the command proceeds with. `via` is
 // the command's own name for the recorded event.
+//
+// PF27: a pull request's number names its latest collected version, and a pull
+// request can move after it was collected (a solver answering a review). `look`
+// shows the latest version collected and reads no GitHub. `apply` reads the
+// current head first: if it moved, it collects the new version and merges
+// nothing, since nothing is merged that was not shown. A head GitHub cannot
+// give leaves the version collected, as before.
 export function resolveAttempt(root: string, record: BountyRecord, n: number, via: 'look' | 'apply'): { record: BountyRecord; attempt: Attempt; collected: boolean } {
-  const found = attemptsOf(record).find(candidate => candidate.n === n);
+  const versions = attemptsOf(record).filter(candidate => candidate.pullRequest === n);
+  const found = versions.at(-1) ?? attemptsOf(record).find(candidate => candidate.n === n);
+  if (via === 'apply' && found !== undefined && found.pullRequest === n && record.github?.state === 'posted' && isOpenStage(record.stage)) {
+    let head: unknown;
+    try { const data = api(root, `repos/${record.github.repository}/pulls/${n}`); head = isObject(data) && isObject(data['head']) ? data['head']['sha'] : undefined; }
+    catch (error) { if (namesGitHubCause(error)) throw error; }
+    if (typeof head === 'string' && /^[a-f\d]{40}$/.test(head) && head !== found.commit) {
+      const collected = answerGitHub(root, record.id, n, via);
+      return invalid('pull-request-moved', `pull request #${n} has new commits since solution ${found.n} was collected; its current version is collected as solution ${collected.attempt}; nothing was merged; next: box bounty look ${record.id} ${n} shows it, then box bounty apply ${record.id} ${n}`);
+    }
+  }
   if (found !== undefined) return { record, attempt: found, collected: false };
   if (record.github?.state === 'posted' && isOpenStage(record.stage)) {
     const collected = answerGitHub(root, record.id, n, via);

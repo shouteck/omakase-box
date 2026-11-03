@@ -35,7 +35,9 @@ const BUDGETS: Record<string, Budget> = {
   'help':              { lines: 32, characters: 4200 },
   // BT37: the not-worth-it list gained the "a solver could not do it either"
   // clause — measured 2,085 characters on the standard journey (+85).
-  'describe':          { lines: 28, characters: 2085 },
+  // PF27: one line points to the solving half (describe --solving), so a posting
+  // agent pays one line for it — measured 2,186 characters (+101), 29 lines.
+  'describe':          { lines: 29, characters: 2190 },
   'describe --rules':  { lines: 10, characters: 600 },
 };
 

@@ -163,16 +163,21 @@ describe('a chosen solution shows as merged on GitHub', { timeout: 180000 }, () 
     expect(merged(world, 1)).toBe(false);
   }));
 
-  it('a pull request force-pushed after collection: only the chosen head reaches the branch, and it is not marked', () => posted(world => {
+  // PF27 changed this expectation: apply used to merge the head collected before the push. PF27's proof showed that
+  // merges a version the poster had already rejected in review, so apply now merges nothing, collects the current
+  // head as a new solution, and names look. Nothing unreviewed reaches the bounty branch either way.
+  it('a pull request force-pushed after collection: apply merges nothing, collects the new head, and the branch stays where it was', () => posted(world => {
     const { repo, bare, id, pr } = world;
-    const chosen = pr('solver1');
+    const posted = tipOf(bare, id);
+    pr('solver1');
     answerGitHub(repo, id, 1);
     const later = pr('solver1');
+    // On GitHub a push moves the pull request's own ref.
+    git(bare, ['update-ref', 'refs/pull/1/head', later]);
     world.update({ prs: world.state().prs.filter(entry => entry.number === 1).map(entry => ({ ...entry, head: { sha: later } })) });
-    applyBounty(repo, id, 1);
-    expect(tipOf(bare, id)).toBe(chosen);
+    expect(() => applyBounty(repo, id, 1)).toThrow(expect.objectContaining({ reason: 'pull-request-moved' }));
+    expect(tipOf(bare, id)).toBe(posted);
     expect(merged(world, 1)).toBe(false);
-    expect(pending(world)).toContain('bounty-branch-not-advanced: not-marked-merged');
   }));
 
   it("a stranger's pull request on the owner's own commit is not pushed and not marked", () => posted(world => {
