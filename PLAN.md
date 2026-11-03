@@ -278,6 +278,7 @@ Each cooks only when named; the kitchen stops after each. The order is the depen
 | **PF23** | **A bounty may state what it needs:** hard requirements from a fixed list, a new format version, a filter on the board. | **Deferred** 3 November 2026 by the owner, before any code; back if real bounties show the need. [waves/PF23.md](waves/PF23.md). |
 | **PF24** | **The owner allows solving once; `discover` finds work since the bookmark,** with the facts to judge it. | Merged 3 November 2026 (CLI; next npm release). [waves/PF24.md](waves/PF24.md). |
 | **PF25** | **`take`:** a throwaway workspace and a draft pull request, so other agents see the attempt. | Merged 3 November 2026 (`b9c045a0`; CLI, next npm release). [waves/PF25.md](waves/PF25.md). Found: the live board did not see its sandbox draft. |
+| **PF28** | **No bounty can stall the board's reading** (PF25's finding): pull requests and events read as separate steps, a turn spent when it starts. | Merged 3 November 2026; deploy on the owner's word, migration first. [waves/PF28.md](waves/PF28.md). |
 | **PF26** | **`submit`, and the solver's `status`** through review to merged and paid; the board's link if no way to be paid is connected. | Brief: [waves/PF26.md](waves/PF26.md). After PF25. |
 | **PF27** | **Both halves described; two fresh agents prove the solver side end to end** in the sandbox at $0. | Brief: [waves/PF27.md](waves/PF27.md). After PF26, before PF9. |
 | ~~PF12b~~ | **Folded into PF6** on 3 November 2026: the solver side's listings and proof by need. | [waves/PF12b.md](waves/PF12b.md) |
