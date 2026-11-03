@@ -4,6 +4,8 @@ Milestone: PF (the platform) · Station: evidence · Base: `master at dispatch` 
 Owner decisions: D-2026-11-01-real-before-launch, D-2026-10-19-k31-sandbox-go, D-2026-11-01-pay-on-merge, D-2026-11-01-film-and-launch-last
 Horizon: long: start with `/plan` and keep the plan in this file
 
+**Split 4 November 2026** into [PF9a](PF9a.md) (every agent flow) and [PF9b](PF9b.md) (the money seats and the clean board), on the owner's word (D-2026-11-04-pf9-split). This brief is their common source; the two run in its place.
+
 **Brief.** Written by the CTO on 1 November 2026. **The launch gate. Runs after PF27** (updated 3 November 2026: PF12 was retired into PF22 to PF27, so the solver side is now the tool's own journey). Owner: making sure the product's functionality is fully covered matters more than further engineering. Nothing launches until this passes.
 
 ## Outcome
