@@ -39,3 +39,15 @@ Sandbox bounties state **$5** with the task saying "test bounty; solved by the p
 - [x] **User experience:** this wave is the lens; hesitations and wrong guesses verbatim.
 - [x] **Measurement fairness:** each seat had only its material (prompts in the report); a test agent is not a user; nothing is reported as customer evidence.
 - [ ] **Security:** seat 10.
+
+## Plan
+
+Written by the CTO at kickoff, 4 November 2026. Investigation playbook for the seats; bug-fix for what they find. Principle: prove-it-works (no seat passes from its own report; GitHub, the board and the logs back each).
+
+1. **The world.** One scratch root, `%TEMP%/kitchen-PF9a`. The package packed once with `packages/box-cli/pack.mjs` into it, the tarball each install seat uses. Per seat: its own folder and settings folder, and a `box` wrapper for the seats that do not install it themselves. A fresh sandbox clone for the posting seats. The board is the live one.
+2. **Order, by dependency.** Wave A, alone: seats 1 (install and allow), 4c (the solving switch), 10 (refusals). Wave B: seat 2 posts a $5 test bounty from a task. Wave C, on what seat 2 posted (and a second bounty the CTO posts with the tool, so 3, 4 and 4b do not all answer one): seats 3 (web), 4 (MCP), 4b (the tool). Wave D: seat 5 chooses, after asking one solver for a change; seat 6 continues from a fresh clone; seat 9 stops posting and closes what is left.
+3. **Each seat's prompt** is written into `kitchen/reviews/PF9-flows.md` before it starts, with what it was given, and its transcript is read after: hesitations and wrong guesses verbatim. Every outcome is checked independently (`gh`, the board's answers, the record).
+4. **Blockers.** Blocks and misleads fixed on this branch with a test, and the seat run again fresh; larger ones to the owner with one recommendation. Slows recorded.
+5. **Close.** Sandbox issues and pull requests closed, branches deleted, scratch removed, the review table written, verify on the final commit.
+
+Seat 1 and `box setup`: setup installs the tool globally and writes its skill into the home folder; the owner's word on running that on this machine is asked at kickoff.
