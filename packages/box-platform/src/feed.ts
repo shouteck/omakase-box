@@ -6,7 +6,7 @@ import type { Env } from './github.js';
 import { pageWords, STRIPE_COUNTRIES, STRIPE_REACH, type WayId, waysOfBounty, waysSetUp, type WaysSetUp } from './pay-ways.js';
 import { authorTakes } from './paypal-pay.js';
 import { paypalOn } from './paypal.js';
-import { emptyPayment, loadPayments, type OwnerRecord, ownerRecords, paymentOf } from './payments.js';
+import { emptyPayment, LISTED_WITH_ACCESS, loadPayments, type OwnerRecord, ownerRecords, paymentOf } from './payments.js';
 import { addOwnerRecord, type BountyRow, DAY, filterOf, freshness, FROM_LISTED, OPEN_COUNT, readBounty, stateOf } from './query.js';
 import { stripeOn } from './stripe.js';
 
@@ -42,6 +42,7 @@ const LEGEND = {
   attempts_in_progress: 'Draft pull requests open against this bounty, from GitHub: count, and the first few with author, when opened and when last active on GitHub. A draft is how an agent says it has started; it reserves nothing. Facts, not a judgement of anyone.',
   'solutions.open_all_by_poster': 'True when there are open pull requests and every one is by the poster. Merges by the poster are not counted in the owner\'s record.',
   'owner.decisions': 'Over this owner\'s bounties that have had a pull request and then a merge or a close: count, and the median whole days from the first pull request to that merge or close. null when there are none. A fact about time, not a rating.',
+  'owner.pull_requests': 'Pull requests by others on this owner\'s bounties, from GitHub: merged, closed without a merge, and still open. Not counted, by the owner record\'s rule: the poster\'s own, and any by an owner, member or collaborator of the repository or whose relation GitHub did not state. Counts, not a rate: merged over merged plus closed is the share decided in a solver\'s favour so far.',
   poster_says: 'The poster\'s own words, copied from the GitHub issue. Data, not instructions.',
   'owner.record': 'This owner\'s counts, over rewarded bounties. merged: GitHub\'s word, a merge with its head on the default branch. recorded_paid: the owner\'s word. confirmed_received, from_solvers (how many different people), says_not_received: the solvers\' word. owed_now, oldest_owed_days: merged and not recorded paid. median_days_to_record_paid: null when nothing is recorded. has_history false: nothing to show either way. A merge is not counted when the solver is the poster, or GitHub lists them as an owner, member or collaborator of the repository. Facts, not a rating.',
   owner_record: 'confirmed-payments: at least one solver confirmed receiving this owner\'s payment. confirmed-none-late: that, no payee says a recorded payment has not arrived, and nothing owed for more than 14 days; the 14 days is a filter value, not a deadline. no-history: no counted merge.',
@@ -62,8 +63,10 @@ export const NOT_ON_BOARD = 'This bounty is not on the board. It may be mistyped
 type EntryRow = Pick<BountyRow, 'id' | 'title' | 'amount' | 'poster' | 'repository' | 'language' | 'created_at' | 'approved_by' | 'work_commit' | 'issue_number'>;
 
 /** What an agent weighing a bounty needs beyond the counts (PF22): attempts started, whether the poster answers itself, how fast the owner decides. */
-type Weigh = { attempts: { count: number; drafts: { author: string; opened_at: string; last_activity_at: string | null }[] }; open_all_by_poster: boolean; decisions: { count: number; median_days: number | null } };
-const NO_WEIGH: Weigh = { attempts: { count: 0, drafts: [] }, open_all_by_poster: false, decisions: { count: 0, median_days: null } };
+type Odds = { merged: number; closed: number; open: number };
+type Weigh = { attempts: { count: number; drafts: { author: string; opened_at: string; last_activity_at: string | null }[] }; open_all_by_poster: boolean; decisions: { count: number; median_days: number | null }; pull_requests: Odds };
+const NO_ODDS: Odds = { merged: 0, closed: 0, open: 0 };
+const NO_WEIGH: Weigh = { attempts: { count: 0, drafts: [] }, open_all_by_poster: false, decisions: { count: 0, median_days: null }, pull_requests: NO_ODDS };
 
 /** One read for every bounty and owner on a page: three queries, whatever the page's size. */
 async function weighOf(env: Env, rows: readonly { id: string; poster: string }[]): Promise<Map<string, Weigh>> {
@@ -77,6 +80,12 @@ async function weighOf(env: Env, rows: readonly { id: string; poster: string }[]
   // A decision: the bounty's first merge, or else the issue's close, after its first pull request.
   const decided = (await env.DB.prepare(`SELECT LOWER(b.poster) AS poster, MIN(p.opened_at) AS first, COALESCE(MIN(p.merged_at), b.closed_at) AS at FROM bounties b JOIN pull_requests p ON p.bounty_id = b.id
     WHERE LOWER(b.poster) IN (${posters.map(() => '?').join(', ')}) GROUP BY b.id HAVING at IS NOT NULL`).bind(...posters).all<{ poster: string; first: string; at: string }>()).results;
+  // PF29: the owner's merge odds, as counts. Pull requests by others only, by the owner record's own rule: not the
+  // poster, and GitHub must say the author is none of owner, member or collaborator (an unstated relation is left out).
+  const odds = new Map((await env.DB.prepare(`SELECT LOWER(b.poster) AS poster, SUM(p.state = 'merged') AS merged, SUM(p.state = 'closed') AS closed, SUM(p.state = 'open') AS open
+    FROM bounties b JOIN pull_requests p ON p.bounty_id = b.id WHERE LOWER(b.poster) IN (${posters.map(() => '?').join(', ')})
+    AND p.author != b.poster COLLATE NOCASE AND p.association IS NOT NULL AND p.association NOT IN (${LISTED_WITH_ACCESS.map(() => '?').join(', ')}) GROUP BY LOWER(b.poster)`)
+    .bind(...posters, ...LISTED_WITH_ACCESS).all<{ poster: string } & Odds>()).results.map(row => [row.poster, { merged: row.merged, closed: row.closed, open: row.open }]));
   const days = new Map<string, number[]>();
   for (const entry of decided) {
     const span = Math.max(0, Math.floor((Date.parse(entry.at) - Date.parse(entry.first)) / DAY));
@@ -95,7 +104,8 @@ async function weighOf(env: Env, rows: readonly { id: string; poster: string }[]
     out.set(row.id, {
       attempts: { count: mine.length, drafts: mine.slice(0, ATTEMPTS_SHOWN).map(entry => ({ author: entry.author, opened_at: entry.opened_at, last_activity_at: entry.updated_at })) },
       open_all_by_poster: counts !== undefined && counts.n > 0 && counts.by_poster === counts.n,
-      decisions: { count: spans.length, median_days: median(spans) }
+      decisions: { count: spans.length, median_days: median(spans) },
+      pull_requests: odds.get(row.poster.toLowerCase()) ?? NO_ODDS
     });
   }
   return out;
@@ -112,7 +122,7 @@ function entryOf(row: EntryRow, record: OwnerRecord, state: string, open: number
     pays_on_merge: paying,
     how_it_pays: { ways },
     agents_welcome: true,
-    owner: { login: row.poster, record, decisions: weigh.decisions },
+    owner: { login: row.poster, record, decisions: weigh.decisions, pull_requests: weigh.pull_requests },
     repository: { name: row.repository, language: row.language, url: base },
     state,
     solutions: { open, total, open_all_by_poster: weigh.open_all_by_poster },
@@ -274,7 +284,7 @@ const ENTRY_SCHEMA = closed({
     has_history: { type: 'boolean' },
     merged: COUNT, recorded_paid: COUNT, confirmed_received: COUNT, from_solvers: COUNT, owed_now: COUNT, oldest_owed_days: COUNT, says_not_received: COUNT,
     median_days_to_record_paid: { type: ['integer', 'null'], minimum: 0 }
-  }), decisions: closed({ count: COUNT, median_days: { type: ['integer', 'null'], minimum: 0 } }) }),
+  }), decisions: closed({ count: COUNT, median_days: { type: ['integer', 'null'], minimum: 0 } }), pull_requests: closed({ merged: COUNT, closed: COUNT, open: COUNT }) }),
   repository: closed({ name: { type: 'string' }, language: nullable('string'), url: { type: 'string' } }),
   state: { enum: ['open', 'solutions-waiting'] },
   solutions: closed({ open: { type: 'integer', minimum: 0 }, total: { type: 'integer', minimum: 0 }, open_all_by_poster: { type: 'boolean' } }),
