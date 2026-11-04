@@ -42,7 +42,9 @@ export function loadTaken(id: string): Taken | null {
 }
 export const takenIds = (): string[] => existsSync(takenDir()) ? readdirSync(takenDir()).flatMap(name => /^(bt-[a-f\d]{12})\.json$/.exec(name)?.[1] ?? []) : [];
 
-interface Facts { readonly repository: string; readonly bountyBranch: string; readonly baseCommit: string; readonly reward: number; readonly paysOnMerge: boolean; readonly owner: string; readonly open: boolean }
+interface Facts { readonly repository: string; readonly bountyBranch: string; readonly baseCommit: string; readonly reward: number; readonly paysOnMerge: boolean; readonly owner: string; readonly open: boolean;
+  /** PF32: a bounty an owner listed from the board on an existing issue: answered against the default branch, the draft's description closing the issue. */
+  readonly closesIssue: string | null }
 
 function factsOf(id: string): Facts {
   const read = readBountyDetail(id);
@@ -52,11 +54,12 @@ function factsOf(id: string): Facts {
   const answer = isObject(b['answer']) ? b['answer'] : {};
   const reward = isObject(b['reward']) ? b['reward']['amount'] : undefined;
   const owner = isObject(b['owner']) ? b['owner']['login'] : undefined;
-  if (b['id'] !== id || repository === null || answer['branch'] !== `box-bounty/${id}` || typeof answer['base_commit'] !== 'string' || !/^[a-f\d]{40}$/.test(answer['base_commit'])
+  const listed = b['way_in'] === 'listed' && typeof answer['closes_issue'] === 'string' && /^Fixes #\d{1,9}$/.test(answer['closes_issue']) && typeof answer['branch'] === 'string' && /^[\w./-]{1,255}$/.test(answer['branch']);
+  if (b['id'] !== id || repository === null || (!listed && answer['branch'] !== `box-bounty/${id}`) || typeof answer['base_commit'] !== 'string' || !/^[a-f\d]{40}$/.test(answer['base_commit'])
     || typeof reward !== 'number' || !Number.isSafeInteger(reward) || reward < 0 || typeof b['pays_on_merge'] !== 'boolean' || typeof owner !== 'string') {
     throw new BountyRefused('board-unread', `the board's answer for ${id} did not read as a bounty; nothing was taken; next: check the id with box bounty discover`);
   }
-  return { repository, bountyBranch: answer['branch'], baseCommit: answer['base_commit'], reward, paysOnMerge: b['pays_on_merge'], owner, open: b['state'] === 'open' || b['state'] === 'solutions-waiting' };
+  return { repository, bountyBranch: answer['branch'] as string, baseCommit: answer['base_commit'], reward, paysOnMerge: b['pays_on_merge'], owner, open: b['state'] === 'open' || b['state'] === 'solutions-waiting', closesIssue: listed ? answer['closes_issue'] as string : null };
 }
 
 export interface TakeOptions {
@@ -113,7 +116,7 @@ export function takeBounty(id: string, options: TakeOptions = {}): TakeResult {
   // A public clone of the bounty branch only, in Git's foreign mode: no hook, filter or merge driver runs.
   git(root, ['clone', '--quiet', '--no-tags', '--single-branch', '--branch', facts.bountyBranch, `https://github.com/${facts.repository}.git`, workspace]);
   const head = git(workspace, ['rev-parse', 'HEAD']);
-  if (head !== facts.baseCommit) throw new BountyRefused('bounty-branch-moved', `${facts.bountyBranch} is at ${head.slice(0, 12)} on GitHub, not the ${facts.baseCommit.slice(0, 12)} the board lists; nothing was taken and the workspace at ${workspace} is left as it is; next: wait for the board to read the bounty again, then take it`);
+  if (facts.closesIssue === null && head !== facts.baseCommit) throw new BountyRefused('bounty-branch-moved', `${facts.bountyBranch} is at ${head.slice(0, 12)} on GitHub, not the ${facts.baseCommit.slice(0, 12)} the board lists; nothing was taken and the workspace at ${workspace} is left as it is; next: wait for the board to read the bounty again, then take it`);
   const branch = `box-solve/${id}`;
   git(workspace, ['switch', '--quiet', '-c', branch]);
   // The empty start commit carries the solver's GitHub login, so it never depends on a Git identity being set here.
@@ -132,7 +135,8 @@ export function takeBounty(id: string, options: TakeOptions = {}): TakeResult {
     head: canPush ? branch : `${target.split('/')[0]}:${branch}`,
     base: facts.bountyBranch,
     draft: true,
-    body: DRAFT_BODY(id)
+    // A listed bounty's draft closes its issue, so GitHub links it and the board reads it as this bounty's.
+    body: facts.closesIssue === null ? DRAFT_BODY(id) : `${DRAFT_BODY(id)}\n\n${facts.closesIssue}`
   });
   const number = isObject(opened) ? opened['number'] : undefined;
   const url = isObject(opened) ? opened['html_url'] : undefined;
