@@ -352,6 +352,34 @@ describe('the pages', () => {
     }
   });
 
+  // PF31b (owner, 4 November 2026): only a payment made by hand asks the solver to confirm; Stripe's or PayPal's word is
+  // the record. A by-hand payment still asks (the test above).
+  it('a payment through Stripe asks the solver nothing: no Confirm on the bounty, nothing to confirm on their page', async () => {
+    const db = board.env.DB;
+    await db.prepare('DELETE FROM paid_clicks WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
+    await db.prepare('DELETE FROM receipts WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
+    await db.prepare(`INSERT INTO charges (bounty_id, state, pull_number, solver, account_id, amount, payment_method, payment_intent, at, provider) VALUES (?, 'paid', 68, 'example-quill', 'acct_sample', 45, NULL, 'pi_sample', ?, NULL)`).bind(STATE_IDS.owed, clock).run();
+    board.standin.signInAs = { id: 7001, login: 'example-quill' };
+    const solver = await fresh();
+    try {
+      await visit(solver.page, '/me/');
+      await solver.page.click('[data-primary]');
+      await solver.page.waitForSelector('[role=tablist]');
+      expect(await solver.page.locator(`[data-confirm-row="${STATE_IDS.owed}"]`).count()).toBe(0);
+      await visit(solver.page, `/b/${STATE_IDS.owed}/`);
+      await expect.poll(() => solver.page.locator('[data-standing]').innerText()).toMatch(/^Paid through Stripe/);
+      const card = await solver.page.locator('[data-payment]').innerText();
+      expect(card).toContain('Stripe\'s word: paid to example-quill\'s own account.');
+      expect(card).not.toMatch(/confirm/i);
+      expect(await solver.page.locator('[data-confirm]').count()).toBe(0);
+      await solver.page.click('[data-payment-details] summary');
+      expect(await solver.page.locator('[data-payment-details]').innerText()).not.toContain('Not confirmed received');
+    } finally {
+      await db.prepare('DELETE FROM charges WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
+      await solver.close();
+    }
+  });
+
   it('the front page says it in few words, shows the real product, and leads to the detail', async () => {
     const { page, close } = await fresh();
     await visit(page, '/');

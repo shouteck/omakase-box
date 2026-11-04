@@ -34,7 +34,7 @@ function Facts({ view, poster }) {
       {recorded?.chosen_by_owner_from ? <p>{recorded.by} named {owed.to} when recording the payment. The owner&apos;s word.</p> : null}
       {says?.word === 'received' ? <p>{says.by} says it was received, as of {fmtDate(says.at)}. The solver&apos;s word.</p> : null}
       {says?.word === 'not-received' ? <p>{says.by} said it had not been received, as of {fmtDate(says.at)}. The solver&apos;s word; the board does not decide between them.</p> : null}
-      {recorded !== null && says === null ? <p>Not confirmed received by {owed.to}.</p> : null}
+      {recorded !== null && says === null && recorded.source !== 'stripe' && recorded.source !== 'paypal' ? <p>Not confirmed received by {owed.to}.</p> : null}
       {p.excluded_from_counts ? <p>Not counted in either record: {p.excluded_from_counts.because} ({p.excluded_from_counts.solver}).</p> : null}
     </>
   );
@@ -51,8 +51,9 @@ export function standing(view, amount, state) {
   if (recorded === null) return p.state === 'owner-decides'
     ? { line: `Owed to one of ${owed.to_one_of.join(' or ')}`, sub: `Since ${fmtDate(owed.since)}. The owner chooses whom to pay.` }
     : { line: `Owed to ${owed.to} since ${fmtDate(owed.since)}`, sub: `GitHub records ${owed.fact}. Not yet recorded paid.` };
-  if (recorded.source === 'stripe') return { line: view.on_merge ? `Paid on merge through Stripe, ${fmtDate(recorded.at)}` : `Paid through Stripe, ${fmtDate(recorded.at)}`, sub: `Stripe's word. ${confirmed}` };
-  if (recorded.source === 'paypal') return { line: `Paid through PayPal, ${fmtDate(recorded.at)}`, sub: `PayPal's word. ${confirmed}` };
+  // PF31b: the provider's word is the record; the solver is not asked, so nothing about confirming is said.
+  if (recorded.source === 'stripe') return { line: view.on_merge ? `Paid on merge through Stripe, ${fmtDate(recorded.at)}` : `Paid through Stripe, ${fmtDate(recorded.at)}`, sub: `Stripe's word: paid to ${owed.to}'s own account.` };
+  if (recorded.source === 'paypal') return { line: `Paid through PayPal, ${fmtDate(recorded.at)}`, sub: `PayPal's word: paid to ${owed.to}'s own account.` };
   if (view.role === 'payee') return { line: `${recorded.by} recorded paying you, ${fmtDate(recorded.at)}`, sub: `The owner's word. ${says?.word === 'received' ? 'You confirmed it was received.' : 'Not yet confirmed by you.'}` };
   return { line: `Recorded paid by ${you ? 'you' : recorded.by}, ${fmtDate(recorded.at)}`, sub: `${you ? 'Your' : 'The owner\'s'} word. ${confirmed}` };
 }

@@ -201,7 +201,7 @@ async function toConfirm(env: Env, login: string, now: number) {
   const rows: { id: string; title: string; amount: number; from: string; at: string; by: string; number: number | null }[] = [];
   for (const input of await loadPayments(env.DB, `EXISTS (SELECT 1 FROM pull_requests p WHERE p.bounty_id = b.id AND p.state = 'merged' AND p.author = ? COLLATE NOCASE)`, login)) {
     const payment = paymentOf(input);
-    if ((payment.state !== 'recorded' && payment.state !== 'says-not-received') || payment.recorded_paid === null || payment.owed === null || !same(payment.owed.to, login) || same(input.poster, login) || rows.length >= LIST_MAX) continue;
+    if ((payment.state !== 'recorded' && payment.state !== 'says-not-received') || payment.recorded_paid === null || byProvider(payment.recorded_paid) || payment.owed === null || !same(payment.owed.to, login) || same(input.poster, login) || rows.length >= LIST_MAX) continue;
     if (await readBounty(env, input.id, now) === null) continue;
     rows.push({ id: input.id, title: input.title, amount: payment.owed.amount, from: input.poster, at: payment.recorded_paid.at, by: payment.recorded_paid.by, number: landedOf(input).find(pull => same(pull.author, login))?.number ?? null });
   }
@@ -316,7 +316,8 @@ async function paymentView(env: Env, id: string, viewer: Viewer | null, now: num
     recorded: facts.record === null ? null : { at: facts.record.at, amount: facts.record.amount },
     owner_only_hidden: role === 'owner' && payee !== null && !ownerOnlyAllowed(facts, login),
     receipt: facts.receipt,
-    can_answer: role === 'payee' && facts.record !== null,
+    // PF31b: only a payment the owner recorded by hand asks the solver; Stripe's or PayPal's word is the record itself.
+    can_answer: role === 'payee' && facts.record !== null && !byProvider(facts.record),
     can_record: role === 'owner' && facts.amount > 0 && facts.merged.length > 0 && facts.record === null,
     can_withdraw: role === 'owner' && facts.record !== null && !byProvider(facts.record),
     can_authenticate: role === 'owner' && input.charge?.state === 'owner-must-authenticate',
