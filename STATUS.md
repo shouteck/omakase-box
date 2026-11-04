@@ -1,9 +1,10 @@
 # Status
 
-Updated by the CTO on 4 November 2026, when PF9b merged.
+Updated by the CTO on 4 November 2026, when PF31 merged.
 
 ## Now
 
+- **PF31 is merged, not deployed:** one payment window (from the bounty, Your page or #pay), the reward and payment state as one block on the bounty card with one outlined way to the issue, "Pay $X" and "Confirm $X" on Your page, Stripe on merge and one click said apart; approved by the owner on every state. See [PF31](waves/PF31.md). Whom-to-pay from every linked pull request moved to PF32.
 - **The live board is empty** (owner, 4 November 2026: no records from testing): besides the sandbox (PF9b), the two $0 test bounties on `shouteck/omakase-box` (#5, #6, October) were removed from the database and their `box-bounty` label taken off on GitHub so the search does not bring them back. The owner's own sign-ins, Stripe connection and pay settings stay.
 - **PF9b is live** (Worker `6c69528b`, 4 November 2026; `exceededCpu` 0 before and after; the live board now lists 2 bounties, none from the sandbox): the board never lists a repository its own setting names (the sandbox), on any surface, and reads nothing of it from GitHub; pay on merge proven for a solver disconnecting Stripe and for a dispute. Seats 7 and 8 left test-proven by the owner: with one account a live record would say the owner paid themselves. The owner's $5 self-debt is gone with it. See [PF9b](waves/PF9b.md).
 - **PF9a is merged:** every agent flow ran for real on the sandbox and the live board, by twelve fresh agents; each checked on GitHub, the board or the settings. Blocks and misleads: zero; no product change. Guard rails held (a relayed approval refused; a contradiction paused; private repository and never-ship refused), draft-first worked, a second machine finished in-flight work. Two findings for the owner: npm's 0.1.3 predates the solver side, and PF9's "$5 and no money moves" is decided in PF9b. See [PF9a](waves/PF9a.md), [the review](kitchen/reviews/PF9-flows.md).
@@ -42,7 +43,7 @@ Updated by the CTO on 4 November 2026, when PF9b merged.
 ## Next
 
 - **PF23 (needs) is deferred** (owner, 3 November 2026): the task text says what it needs; back if real bounties show the need.
-- **Order:** **PF31** (the payment window and the bounty page, briefed), **PF32** (an owner lists an existing GitHub issue from the board, D-2026-11-04-dual-usage), **PF6** (ready to launch; the listings for both sides, PF12b folded in), **K41** (the film, last), then the owner's launch.
+- **Order:** PF31's deploy (owner's word), **PF32** (an owner lists an existing GitHub issue from the board, D-2026-11-04-dual-usage), **PF6** (ready to launch; the listings for both sides, PF12b folded in), **K41** (the film, last), then the owner's launch.
 - **The next tool release:** the guide inside the package gains the PowerShell line (`npx.cmd`, `box.cmd`); a new version goes to npm by the owner, and to GitHub by a `v*` tag.
 - **A wave for later, not briefed:** fewer words, more showing, across the site, before PF9.
 - Unbriefed (BACKLOG): `rmSync` and non-ASCII names on Windows (BT48); the dependency audit (PF1); landed but not marked merged, solvers' account age (PF4); a private organisation member counts as an outside solver, a squash-merged head reads as off the default branch (PF8); PF18's leftovers.
