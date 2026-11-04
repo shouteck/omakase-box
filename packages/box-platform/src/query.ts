@@ -2,7 +2,7 @@
 // filters, the private rule at render, and what a state or a history line says.
 import { type Env, GitHub, GitHubUnavailable, BudgetSpent } from './github.js';
 import { ownersMatching, OWNER_RECORD_FILTERS } from './payments.js';
-import { readRepository } from './refresh.js';
+import { readRepository, unlisted } from './refresh.js';
 import { type Db, getMeta } from './store.js';
 
 const MAX_QUERY = 100;
@@ -115,7 +115,8 @@ export async function readBounty(env: Env, id: string, now: number): Promise<Bou
   if (!/^bt-[a-f\d]{12}$/.test(id)) return null;
   const select = `SELECT b.*, r.language, r.default_branch, r.read_at FROM bounties b JOIN repositories r ON r.name = b.repository WHERE b.id = ?`;
   const row = await env.DB.prepare(select).bind(id).first<BountyRow>();
-  if (row === null) return null;
+  // PF9b: a repository the board never lists is not shown, even before the next run removes it.
+  if (row === null || unlisted(env, row.repository)) return null;
   // The private rule at render: an old read is read again before anything is sent.
   if (now - row.read_at > RENDER_RECHECK_MS) {
     try {

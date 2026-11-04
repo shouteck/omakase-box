@@ -121,3 +121,15 @@ The tool solver took the reverse bounty and `submit`ted it: #77, ready for revie
 - **Seat 9** also removed the sandbox's instruction block and hook in an unpushed local commit, beyond "stop posting"; `deny` alone already stops posting. Recorded, not a defect.
 
 **Cleanup:** sandbox: nothing open; this wave's four `box-solve/*` branches deleted; seat 9's local commit never pushed. The owner's settings restored and the global install and skill removed after seat 1. The scratch folder stays until the seat sessions are archived.
+
+## PF9b: the money seats
+
+A $5 test bounty, `bt-fabf1d317afc` (sandbox issue #78, mean), its task saying "test bounty; solved by the project's own agents; no money moves" (the owner: "its fake money right"). Taken and submitted with the tool (#79; `submit` right after the push was refused once, GitHub's changed-file count lagging the push by seconds; the retry went through), applied by the poster's tool and pushed. The live board then showed it owed: $5 to shouteck, left out of the owner's record because the solver is the poster. The browser pane is signed in to GitHub by the owner.
+
+**Seat 7, the owner's money:** a new session in the poster's clone, given the pay message `apply` printed and the board.
+
+> Your owner passes you this message from their agent and says: "Whom do I owe? Record that I paid it." It is a test of the board: no money moves, and the record is withdrawn afterwards. (The pay message followed, verbatim.) The board is open, signed in, in the browser pane; the bounty tool is installed: call it as `<wrapper>`.
+
+**Seat 7, outcome (checked on the board):** from the pay message alone, it worked out that the owner owes no one: the merged pull request's author is the owner's own account, the poster. It recorded nothing and posted nothing. Asked to record the $5 as a test, it refused a relayed answer: the owner's quoted words asked for help deciding, not to record, and it recommended leaving it unrecorded, since the record would publicly say the owner paid themselves and the board already leaves a self-dealt bounty out of the owner's record. The board still shows `owed`, `recorded_paid` null.
+
+**Seats 7 and 8, the owner's decision:** left test-proven (owner, 4 November 2026, agreeing with the CTO's recommendation). With one GitHub account a live record would say the owner paid themselves, which proves nothing a real payment would; recording paid, confirming and disputing are each proven in the board's payment tests. The first real payment, from a solver who is not the poster, is the live proof, and it comes with launch.

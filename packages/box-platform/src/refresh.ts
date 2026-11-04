@@ -86,7 +86,18 @@ async function storeIssue(db: Db, listed: Listed, now: number): Promise<boolean>
 }
 
 /** Reads one repository and applies the private rule. True while it stays public. */
+/** PF9b: a repository the board's own setting names is never listed, whatever GitHub says of it. */
+const unlistedNames = (env: Env): string[] => (env.UNLISTED_REPOSITORIES ?? '').split(',').map(entry => entry.trim()).filter(Boolean);
+export const unlisted = (env: Env, name: string): boolean => unlistedNames(env).some(entry => entry.toLowerCase() === name.toLowerCase());
+
 export async function readRepository(env: Env, github: GitHub, name: string, now: number): Promise<boolean> {
+  // The one gate every listing passes, from the search or a notice: an unlisted repository is treated as a private one,
+  // its bounties removed and nothing of it read, so the feed, pages, numbers, MCP and owner records leave it out too.
+  if (unlisted(env, name)) {
+    await purgeRepository(env.DB, name);
+    await log(env.DB, now, 'repository-unlisted', null);
+    return false;
+  }
   const answer = await github.get(`/repos/${name}`);
   if (!isPublicRepository(answer)) {
     await purgeRepository(env.DB, name);
@@ -125,7 +136,8 @@ async function search(env: Env, github: GitHub, now: number): Promise<{ readonly
     for (const listed of read) {
       if ('refused' in listed) { writes.push(...logStatements(db, now, listed.refused, listed.url)); continue; }
       // A repository not yet read holds its bounties back until it has been.
-      const isPublic = known.get(listed.repository.toLowerCase()) ?? await readRepository(env, github, listed.repository, now);
+      // An unlisted repository passes the gate every time, so a stored one is purged, never let through as known.
+      const isPublic = unlisted(env, listed.repository) ? await readRepository(env, github, listed.repository, now) : known.get(listed.repository.toLowerCase()) ?? await readRepository(env, github, listed.repository, now);
       known.set(listed.repository.toLowerCase(), isPublic);
       if (!isPublic) continue;
       if (claimedElsewhere(held.get(listed.id), listed)) { writes.push(...logStatements(db, now, 'id-claimed-by-another-issue', listed.issue['html_url'] as string)); continue; }
@@ -319,6 +331,9 @@ export async function refresh(env: Env): Promise<RefreshResult> {
       searched = true;
       if (complete) { completeAt = now; await setMeta(db, 'search_complete_at', String(now)); }
     }
+    // PF9b: a repository the setting names is removed at the next run, not at its next scheduled read: one batched delete
+    // per name (a no-op once gone), and no database call at all when the setting is empty.
+    for (const name of unlistedNames(env)) await purgeRepository(db, name);
     const repositories = await db.prepare('SELECT name FROM repositories WHERE read_at <= ? ORDER BY read_at').bind(now - REPOSITORY_STALE_MS).all<{ name: string }>();
     for (const { name } of repositories.results) await readRepository(env, github, name, now);
     // PF28: a bounty's pull requests and its event chain are two steps, each with its own read time, stalest first.
