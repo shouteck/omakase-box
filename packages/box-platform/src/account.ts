@@ -196,12 +196,25 @@ async function debtRows(env: Env, login: string, now: number, where: string, min
   return rows;
 }
 
+/** PF31: payments recorded to this solver and not yet confirmed received: they stay on the solver's page until confirmed. */
+async function toConfirm(env: Env, login: string, now: number) {
+  const rows: { id: string; title: string; amount: number; from: string; at: string; by: string }[] = [];
+  for (const input of await loadPayments(env.DB, `EXISTS (SELECT 1 FROM pull_requests p WHERE p.bounty_id = b.id AND p.state = 'merged' AND p.author = ? COLLATE NOCASE)`, login)) {
+    const payment = paymentOf(input);
+    if ((payment.state !== 'recorded' && payment.state !== 'says-not-received') || payment.recorded_paid === null || payment.owed === null || !same(payment.owed.to, login) || same(input.poster, login) || rows.length >= LIST_MAX) continue;
+    if (await readBounty(env, input.id, now) === null) continue;
+    rows.push({ id: input.id, title: input.title, amount: payment.owed.amount, from: input.poster, at: payment.recorded_paid.at, by: payment.recorded_paid.by });
+  }
+  return rows;
+}
+
 const youOwe = (env: Env, login: string, now: number) => debtRows(env, login, now, 'b.poster = ? COLLATE NOCASE', (_input, payment) => !same(payment.owed!.to, login));
 
 async function debtsOf(env: Env, login: string, now: number) {
   const lists = (where: string, mine: (input: BountyPayment, payment: ReturnType<typeof paymentOf>) => boolean) => debtRows(env, login, now, where, mine);
   return {
     you_owe: await youOwe(env, login, now),
+    to_confirm: await toConfirm(env, login, now),
     owed_to_you: await lists(`EXISTS (SELECT 1 FROM pull_requests p WHERE p.bounty_id = b.id AND p.state = 'merged' AND p.author = ? COLLATE NOCASE)`, (input, payment) => !same(input.poster, login) && landedOf(input).some(pull => same(pull.author, login)) && (payment.owed!.to === null || same(payment.owed!.to, login)))
   };
 }
@@ -293,10 +306,12 @@ async function paymentView(env: Env, id: string, viewer: Viewer | null, now: num
     const all = await methodsOfLogin(env, author);
     const methods = (author === payee && ownerOnlyAllowed(facts, login) ? all : publicOnly(all)).map(shown);
     // Once a payment is recorded, asking how to be paid is no longer the next step (PF19).
-    return { login: author, methods, next: methods.length === 0 && facts.record === null ? ask(author, number) : null };
+    return { login: author, number, methods, next: methods.length === 0 && facts.record === null ? ask(author, number) : null };
   })) : [];
+  // PF31: a Stripe payment from the owner's saved card is pay on merge; from Stripe's page, one click. Said apart on the page.
+  const onMerge = (await env.DB.prepare('SELECT 1 AS yes FROM charges WHERE bounty_id = ? AND payment_method IS NOT NULL').bind(id).first()) !== null;
   return json(200, {
-    viewer: login, role, payee, payees,
+    viewer: login, role, payee, payees, on_merge: onMerge,
     payment: paymentOf(input),
     recorded: facts.record === null ? null : { at: facts.record.at, amount: facts.record.amount },
     owner_only_hidden: role === 'owner' && payee !== null && !ownerOnlyAllowed(facts, login),
