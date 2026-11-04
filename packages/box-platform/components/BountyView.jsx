@@ -1,8 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { WAYS } from '../src/pay-ways.ts';
-import PaymentPanel from './PaymentPanel.jsx';
-import { CodeBlock, Facts, Primary, SampleNote, Section, Soft, Stale, TheirWords, Title, fmtDate } from './ui.jsx';
+import PaymentCard from './PaymentPanel.jsx';
+import { CodeBlock, Facts, SampleNote, Section, Soft, Stale, TheirWords, Title, fmtDate } from './ui.jsx';
 
 const SOURCE = { github: 'GitHub', 'project-record': 'the project\'s record on GitHub' };
 const APPROVED = {
@@ -21,14 +21,6 @@ function stateSentence(b) {
   }
 }
 
-function payment(b) {
-  if (b.amount === 0) return 'No reward is stated, so nothing is owed.';
-  if (b.state === 'closed-none') return 'Closed without a merge. Nothing is owed.';
-  const line = `$${b.amount} for the merged solution, paid directly by the owner.`;
-  if (b.state === 'merged-more-than-one') return `${line} The terms pay one merged solution, so the owner decides whom to pay.`;
-  return line;
-}
-
 function View({ data }) {
   const b = data.bounty;
   const open = b.state === 'open' || b.state === 'solutions-waiting';
@@ -41,9 +33,12 @@ function View({ data }) {
       <Stale data={data} />
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_22rem] gap-x-12 gap-y-10 items-start">
         <aside className="lg:col-start-2 lg:row-start-1 lg:sticky lg:top-6 bg-surface rounded-3xl px-6 pt-6 pb-3" aria-label="Summary">
-          <p className="text-sm text-soft">Stated reward</p>
-          <p className={b.amount > 0 ? 'text-xl font-medium tracking-tight tabular-nums' : 'text-lg font-medium'}>{b.amount > 0 ? `$${b.amount}` : 'No reward'}</p>
-          {open ? <div className="mt-4 mb-5"><Primary href={b.links.branch}>Open the bounty branch on GitHub</Primary></div> : <div className="mb-5" />}
+          <PaymentCard id={b.id} poster={b.poster} amount={b.amount} state={b.state} issue={b.links.issue}
+            terms={<Facts stacked rows={[
+              ['Terms', 'The merged solution earns the whole reward. Other solutions and parts used by hand earn nothing.'],
+              ['Posting approved', b.approved_by ? APPROVED[b.approved_by] : 'The project\'s record does not say.'],
+              ['Read from GitHub', data.read_at ? `${fmtDate(data.read_at)}, ${data.read_at.slice(11, 16)} UTC` : 'Not yet']
+            ]} />}>
           <Facts stacked rows={[
             ['Posted by', <a key="poster" href={`/owner/${b.poster}/`}>{b.poster}</a>],
             ['Repository', <>{b.repository}{b.language ? ` · ${b.language}` : ''}</>],
@@ -52,14 +47,7 @@ function View({ data }) {
             ['Who may answer', 'Agents welcome, through a GitHub account'],
             ...(b.amount > 0 ? [['Payment', WAYS.filter(way => b.how_it_pays.ways.includes(way.id)).map(way => way.name).join(', ')]] : [])
           ]} />
-          <details className="border-t border-line py-3 text-sm">
-            <summary className="text-soft">Terms and more</summary>
-            <div className="mt-2"><Facts stacked rows={[
-              ['Terms', 'The merged solution earns the whole reward. Other solutions and parts used by hand earn nothing.'],
-              ['Posting approved', b.approved_by ? APPROVED[b.approved_by] : 'The project\'s record does not say.'],
-              ['Read from GitHub', data.read_at ? `${fmtDate(data.read_at)}, ${data.read_at.slice(11, 16)} UTC` : 'Not yet']
-            ]} /></div>
-          </details>
+          </PaymentCard>
         </aside>
 
         <div className="lg:col-start-1 lg:row-start-1 min-w-0">
@@ -79,10 +67,6 @@ function View({ data }) {
             </Section>
           ) : null}
 
-          <Section title="Payment for this bounty" id="payment">
-            {open && b.amount > 0 ? null : <p className="max-w-prose mb-4">{payment(b)}</p>}
-            <PaymentPanel id={b.id} poster={b.poster} />
-          </Section>
 
           <Section title="Solutions" id="solutions">
             {b.solutions.length === 0 ? <p>No solution yet.</p> : (

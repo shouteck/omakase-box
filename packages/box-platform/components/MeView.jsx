@@ -155,6 +155,63 @@ function Owner({ me, setMe }) {
   );
 }
 
+/** The solver's answer, in the same window as the owner's payment (PF31, as approved): the amount and from whom, one button. */
+function ConfirmWindow({ row, message, onClose, onConfirm }) {
+  const ref = useRef(null);
+  useEffect(() => { if (ref.current && !ref.current.open) ref.current.showModal(); }, []);
+  return (
+    <dialog ref={ref} onClose={onClose} aria-label="Did it arrive?" className="m-0 sm:m-auto w-full max-w-none sm:max-w-[30rem] max-sm:h-full max-sm:max-h-none bg-card text-ink sm:rounded-2xl border border-line p-0 backdrop:bg-black/35">
+      <form onSubmit={onConfirm} className="flex flex-col max-sm:h-full">
+        <header className="flex justify-between items-center px-5 py-3.5 border-b border-line"><h2 className="font-medium">Did it arrive?</h2><button type="button" aria-label="Close" className="text-soft text-lg" onClick={onClose}>✕</button></header>
+        <div className="px-5 py-5 flex flex-col gap-4 flex-1 overflow-auto">
+          <div className="text-center pt-1.5">
+            <p className="text-[2.5rem] leading-[2.875rem] font-medium tracking-[-0.03em] tabular-nums">${row.amount}</p>
+            <p className="text-soft">from {row.from}{row.number ? ` · for pull request #${row.number}` : ''}</p>
+          </div>
+          <p className="text-sm text-soft">{row.by === row.from ? `${row.from} recorded paying you on ${fmtDate(row.at)}, by hand.` : `Paid through ${row.by} on ${fmtDate(row.at)}.`} Your answer shows on the bounty as your word.</p>
+          <button type="submit" data-window-action className="w-full rounded-full px-5 py-2.5 font-medium bg-button text-button-ink">Yes, I received ${row.amount}</button>
+          <p className="text-sm text-soft">Not yet? Leave it. The bounty shows it as not confirmed until you say so.</p>
+          {message ? <p role="alert">{message}</p> : null}
+        </div>
+      </form>
+    </dialog>
+  );
+}
+
+/** PF31: a payment the owner recorded stays on the solver's page until the solver confirms it arrived. One answer, received. */
+function ToConfirm({ me, setMe }) {
+  const [open, setOpen] = useState(null);
+  const [message, setMessage] = useState(null);
+  const rows = me.to_confirm ?? [];
+  if (rows.length === 0) return null;
+  const confirm = async event => {
+    event.preventDefault();
+    try {
+      const response = await fetch(`/api/b/${encodeURIComponent(open.id)}/receipt`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ says: 'received' }) });
+      const body = await response.json();
+      if (!response.ok) { setMessage(body.error); return; }
+      setMe(current => ({ ...current, to_confirm: current.to_confirm.filter(row => row.id !== open.id) }));
+      setOpen(null);
+    } catch {
+      setMessage('The board could not be reached. Nothing changed. Next: try again.');
+    }
+  };
+  return (
+    <>
+      <p className="text-soft mb-2">Recorded paid by the owner. Confirm when it arrives.</p>
+      {/* The amount is the button, left in its column like every other cell; the empty last column keeps it there. */}
+      <Table label="To confirm" head={['Bounty', 'Owner', 'Recorded', 'Amount', '']} rows={rows.map(row => [
+        <a key="b" href={`/b/${row.id}/`} className="break-words">{row.title}</a>,
+        row.from,
+        fmtDate(row.at),
+        <button key="c" type="button" data-confirm-row={row.id} onClick={() => { setMessage(null); setOpen(row); }} className="rounded-full px-3.5 py-1.5 text-sm font-medium bg-button text-button-ink tabular-nums whitespace-nowrap">Confirm ${row.amount}</button>,
+        ''
+      ])} />
+      {open === null ? null : <ConfirmWindow row={open} message={message} onClose={() => setOpen(null)} onConfirm={confirm} />}
+    </>
+  );
+}
+
 function Solver({ me, setMe }) {
   const ready = me.pay.set_up && me.pay.solver?.ready;
   return (
@@ -162,9 +219,10 @@ function Solver({ me, setMe }) {
       <RoleTitle role="Solver" sub="Bounties you solved, and getting paid for them." />
       <Figure label="Owed to you" rows={me.owed_to_you} none="Nothing owed right now" some={['merged solution', 'merged solutions']} />
       <Heading id="owed-to-you">Coming to you</Heading>
-      {me.owed_to_you.length === 0
+      <ToConfirm me={me} setMe={setMe} />
+      {me.owed_to_you.length === 0 && (me.to_confirm ?? []).length > 0 ? null : me.owed_to_you.length === 0
         ? <Empty title="Nothing owed to you yet." why="A bounty appears here when your solution is merged." />
-        : <Table label="Coming to you" head={['Bounty', 'Owner', ['Amount', 'r'], 'Merged', '']} rows={me.owed_to_you.map(debt => [
+        : <Table label="Coming to you" head={['Bounty', 'Owner', 'Amount', 'Merged', '']} rows={me.owed_to_you.map(debt => [
             <a key="b" href={`/b/${debt.id}/`} className="break-words">{debt.title}</a>,
             debt.from ?? '',
             debt.to === null ? <span key="a">${debt.amount}<span className="block text-soft">If the owner decides on you</span></span> : `$${debt.amount}`,
@@ -219,7 +277,7 @@ function firstRole(me) {
   if (OWNER_HASHES.includes(hash)) return 'owner';
   if (SOLVER_HASHES.includes(hash)) return 'solver';
   if (me.you_owe.length > 0) return 'owner';
-  if (me.owed_to_you.length > 0) return 'solver';
+  if (me.owed_to_you.length > 0 || (me.to_confirm ?? []).length > 0) return 'solver';
   try { const last = window.localStorage.getItem(ROLE_KEY); if (last === 'owner' || last === 'solver') return last; } catch { /* storage may be blocked */ }
   return 'solver';
 }
