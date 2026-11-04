@@ -51,8 +51,8 @@ export async function finishOrder(env: Env, id: string, now: number): Promise<'p
 }
 
 /** The payee rule, with the account tied to the merged author's GitHub id. Never read from anything a solver wrote. */
-async function decidePayPal(env: Env, bounty: { amount: number; poster: string }, id: string) {
-  const facts = await payeeFacts(env, id);
+async function decidePayPal(env: Env, bounty: { amount: number; poster: string }, id: string, chosen?: string) {
+  const facts = await payeeFacts(env, id, chosen);
   const row = await rowOf(env, id);
   const authorId = facts.landed.length === 1 ? facts.landed[0]!.author_id : null;
   const connected = authorId === null ? null : await env.DB.prepare('SELECT payer_id FROM paypal_accounts WHERE github_id = ?').bind(authorId).first<{ payer_id: string }>();
@@ -61,11 +61,11 @@ async function decidePayPal(env: Env, bounty: { amount: number; poster: string }
 }
 
 /** The poster's click. One bounty has one live order: an unfinished one is opened again, and clicks at once share one key. */
-export async function openPayPalPage(env: Env, id: string, origin: string, now: number): Promise<{ url: string } | { paid: true } | { error: string }> {
+export async function openPayPalPage(env: Env, id: string, origin: string, now: number, chosen?: string): Promise<{ url: string } | { paid: true } | { error: string }> {
   const bounty = await env.DB.prepare('SELECT amount, poster FROM bounties WHERE id = ?').bind(id).first<{ amount: number; poster: string }>();
   if (bounty === null) return { error: 'This bounty is not on the board. Nothing was charged.' };
   if (await finishOrder(env, id, now) === 'paid') return { paid: true };
-  const { decision, row } = await decidePayPal(env, bounty, id);
+  const { decision, row } = await decidePayPal(env, bounty, id, chosen);
   if (decision.act === 'refuse') return { error: decision.words };
   const { pull, account } = decision;
   const held = row?.provider === 'paypal' && row.state === 'owner-paying' ? row.payment_intent : null;
@@ -95,11 +95,11 @@ export async function openPayPalPage(env: Env, id: string, origin: string, now: 
 }
 
 /** What the poster's page offers. Calls no one: the click checks with PayPal. */
-export async function paypalOffer(env: Env, id: string, githubId: number): Promise<{ can_pay_paypal: boolean; note: string | null }> {
+export async function paypalOffer(env: Env, id: string, githubId: number, chosen?: string): Promise<{ can_pay_paypal: boolean; note: string | null }> {
   if (!paypalOn(env)) return { can_pay_paypal: false, note: null };
   const bounty = await env.DB.prepare('SELECT amount, poster, poster_id FROM bounties WHERE id = ?').bind(id).first<{ amount: number; poster: string; poster_id: number | null }>();
   if (bounty === null || bounty.poster_id !== githubId) return { can_pay_paypal: false, note: null };
-  const { decision, facts } = await decidePayPal(env, bounty, id);
+  const { decision, facts } = await decidePayPal(env, bounty, id, chosen);
   if (facts.recorded || facts.landed.length === 0 || bounty.amount <= 0) return { can_pay_paypal: false, note: null };
   return { can_pay_paypal: decision.act === 'open', note: decision.act === 'refuse' && decision.shown ? decision.words : null };
 }

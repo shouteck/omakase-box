@@ -23,12 +23,14 @@ export type PaymentFacts = {
   merged: readonly { number: number; author: string }[];
   record: PaidEvent | null;
   receipt: Receipt | null;
+  /** PF32: a listed bounty, whose payee only a payment record names. */
+  listed?: boolean;
 };
 
 /** The one merged author of a rewarded bounty. More than one: the owner decides, and nobody is named until a record names one of them. */
-export function payeeOf(facts: Pick<PaymentFacts, 'amount' | 'merged'> & { record?: PaidEvent | null }): string | null {
+export function payeeOf(facts: Pick<PaymentFacts, 'amount' | 'merged' | 'listed'> & { record?: PaidEvent | null }): string | null {
   if (facts.amount === 0) return null;
-  if (facts.merged.length === 1) return facts.merged[0]!.author;
+  if (facts.merged.length === 1 && facts.listed !== true) return facts.merged[0]!.author;
   return facts.merged.find(pull => same(pull.author, facts.record?.to ?? null))?.author ?? null;
 }
 
