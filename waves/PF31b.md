@@ -22,3 +22,14 @@ A payment through Stripe or PayPal (pay on merge or one click) is shown as the p
 - `node scripts/verify.mjs test:box-bounty test:platform test:kitchen` exits 0 on the final commit.
 - Tests, each failing once when its guard is broken: a provider payment offers the solver no Confirm and is not on their Your page; a by-hand payment still does both.
 - Before-and-after of every state touched, approved by the owner before merge; deploy on the owner's word.
+
+## Result
+
+- CTO: Claude Code desktop, Windows / Claude Opus 5.5
+- Commit: `a47ae16f` · Verify: `verify a47ae16 PASS check=0 build=0 test:box-bounty=0 test:platform=0 test:kitchen=0(selected 18 of 18 kitchen files) db=none 1999s` (later commits on the branch are wave files only)
+- Level: ui-verified on the local board; the owner approved the before-and-after of every touched state ("Approve and merge").
+- **What shipped:** `can_answer` is true only for a payment the owner recorded by hand; the solver's `to_confirm` leaves out Stripe and PayPal payments; a provider payment's line reads "Stripe's word: paid to <solver>'s own account" (or PayPal's) and Payment details no longer says "Not confirmed received" for it. The receipt route, who is paid, what counts as paid, the owner's record and the numbers are unchanged.
+- **Tests:** a new page test (a Stripe payment asks the solver nothing: no Confirm on the bounty, nothing to confirm on their page); page suite 51 of 51, account and payment suites 115 of 115. No expectation changed.
+- **Guards shown failing once each:** the solver asked after a provider payment; a provider payment listed to confirm; a provider payment's line speaking of confirming.
+- **Deploy:** the owner's word.
+- **Reflect:** none new.
