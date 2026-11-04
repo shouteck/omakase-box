@@ -120,7 +120,7 @@ export class Standin {
       return { status: 200, json: (issue.pulls ?? []).map(pull => ({ event: 'cross-referenced', source: { type: 'issue', issue: { number: pull.number, state: pull.state, draft: pull.draft ?? false, created_at: pull.created_at, updated_at: pull.updated_at ?? pull.created_at, repository_url: `https://api.github.com/repos/${issue.repository}`, user: { login: pull.author, id: this.idOf(pull.author) }, author_association: pull.association ?? 'NONE', pull_request: { merged_at: pull.merged_at ?? null }, title: 'A SOLVER WROTE THIS TITLE' } } })) };
     }
     // PF32: a branch's head commit, by name.
-    match = /^\/repos\/([^/]+\/[^/]+)\/commits\/([A-Za-z][\w./-]*)$/.exec(path);
+    match = /^\/repos\/([^/]+\/[^/]+)\/commits\/([A-Za-z][\w.%-]*)$/.exec(path);
     if (match && !/^[a-f\d]{40}$/.test(match[2]!)) return this.repositories.has(match[1]!) ? { status: 200, json: { sha: '1'.repeat(40) } } : { status: 404 };
     match = /^\/repos\/([^/]+\/[^/]+)\/pulls$/.exec(path);
     if (match) {
