@@ -126,7 +126,7 @@ describe('the pages', () => {
     ['more than one merged', STATE_IDS.moreThanOne, ['GitHub marks more than one pull request merged: #65 by example-fern and #66 by example-rook.', 'the owner decides whom to pay'], 0],
     ['closed without a merge', STATE_IDS.closed, ['Closed without a merge on', 'Nothing is owed.', 'closed without a merge. Source: GitHub.'], 0],
     ['no reward', STATE_IDS.noReward, ['No reward is stated, so nothing is owed.'], 1]
-  ])('a bounty page in state: %s', async (_name, id, phrases, primaries) => {
+  ])('a bounty page in state: %s', async (_name, id, phrases, open) => {
     const { page, close } = await fresh();
     await visit(page, `/b/${id}/`);
     await page.waitForSelector('#history');
@@ -134,9 +134,13 @@ describe('the pages', () => {
     for (const phrase of phrases) await expect.poll(() => page.locator('main').textContent()).toContain(phrase);
     const text = (await page.locator('main').textContent())!;
     expect(text).toContain('The poster\'s words (example-mara), from the GitHub issue');
-    expect(await page.locator('[data-primary]').count()).toBe(primaries);
+    // PF31 (owner, 4 November 2026): no bounty-branch button; one outlined way to the issue on every bounty, and How to
+    // answer, naming the branch, only while the bounty is open to answers.
+    expect(await page.locator('[data-primary]').count()).toBe(0);
+    expect(await page.locator('[data-issue]').count()).toBe(1);
     expect(moneyClaims(text)).toEqual([]);
-    if (primaries) expect(text).toContain(`box-bounty/${id}`);
+    expect(text.includes(`box-bounty/${id}`)).toBe(open === 1);
+    expect(text.includes('How to answer')).toBe(open === 1);
     await close();
   });
 
@@ -172,6 +176,7 @@ describe('the pages', () => {
     const stranger = await fresh();
     stranger.page.on('response', async response => { try { bodies.push(await response.text()); } catch { /* a redirect has no body */ } });
     await visit(stranger.page, `/b/${STATE_IDS.owed}/`);
+    await stranger.page.click('[data-payment-details] summary');
     await expect.poll(() => stranger.page.locator('main').innerText()).toContain('https://paypal.me/examplequill');
     expect(await stranger.page.locator('main').innerText()).not.toContain('Pay the author directly');
     await visit(stranger.page, '/solver/example-quill/');
@@ -187,6 +192,7 @@ describe('the pages', () => {
     await owner.page.click('[data-primary]');
     await owner.page.waitForSelector('[role=tablist]');
     await visit(owner.page, `/b/${STATE_IDS.owed}/`);
+    await owner.page.click('[data-payment-details] summary');
     await expect.poll(() => owner.page.locator('main').innerText()).toContain(secret);
     expect(await owner.page.locator('main').innerText()).toContain('Pay the author directly, by a method they listed.');
     await visit(owner.page, '/owner/example-mara/');
@@ -204,7 +210,7 @@ describe('the pages', () => {
     await solver.close();
   });
 
-  it('an owner records a payment, the payee disputes it, then confirms: each word attributed, on the page and the profiles, to a stranger too', async () => {
+  it('an owner records a payment in the window, the payee confirms it: each word attributed, on the page and the profiles, to a stranger too', async () => {
     const signedIn = async (id: number, login: string) => {
       board.standin.signInAs = { id, login };
       const person = await fresh();
@@ -215,43 +221,125 @@ describe('the pages', () => {
       return person;
     };
     const says = (person: { page: Page }) => person.page.locator('main').innerText();
+    const details = async (person: { page: Page }) => { await person.page.click('[data-payment-details] summary'); };
     const stranger = await fresh();
     await visit(stranger.page, `/b/${STATE_IDS.owed}/`);
-    await expect.poll(() => says(stranger)).toContain('Owed to example-quill: $45, since');
+    await expect.poll(() => says(stranger)).toContain('Owed to example-quill since');
+    await details(stranger);
+    expect(await says(stranger)).toContain('Owed to example-quill: $45, since');
     expect(await says(stranger)).toContain('Source: GitHub records pull request #68 merged.');
     expect(await says(stranger)).toContain('Not recorded paid by example-mara.');
-    expect(await says(stranger)).not.toContain('Mark $45');
+    expect(await stranger.page.locator('[data-pay]').count()).toBe(0);
 
     const payee = await signedIn(7001, 'example-quill');
     await expect.poll(() => says(payee)).toContain('Owed to example-quill');
-    expect(await says(payee)).not.toContain('Mark $45');
+    expect(await payee.page.locator('[data-pay]').count()).toBe(0);
 
     const owner = await signedIn(7100, 'example-mara');
-    await owner.page.click('text=Mark $45 paid to example-quill');
-    await expect.poll(() => says(owner)).toContain('Recorded paid by example-mara on');
+    await owner.page.click('[data-pay]');
+    await owner.page.click('[data-pay-window] [data-window-action]:has-text("I\'ve paid $45")');
+    await expect.poll(() => owner.page.locator('[data-pay-window]').innerText()).toContain('Recorded: you paid example-quill $45');
+    await owner.page.click('[data-pay-window] [aria-label=Close]');
+    await expect.poll(() => says(owner)).toContain('Recorded paid by you');
+    await details(owner);
     expect(await says(owner)).toContain('The owner\'s word, from their click on the board. Recording moves no money.');
     expect(await says(owner)).toContain('Earned by example-quill: $45');
 
     await visit(payee.page, `/b/${STATE_IDS.owed}/`);
-    await payee.page.click('text=It has not arrived');
-    await expect.poll(() => says(payee)).toContain('example-quill says it has not been received');
+    await expect.poll(() => says(payee)).toContain('example-mara recorded paying you');
+    expect(await says(payee)).not.toContain('It has not arrived');
+    await payee.page.click('[data-confirm]');
+    await expect.poll(() => says(payee)).toContain('You confirmed it was received.');
     await visit(stranger.page, `/b/${STATE_IDS.owed}/`);
-    await expect.poll(() => says(stranger)).toContain('The owner and the solver disagree. Both words are shown as theirs; the board does not decide between them.');
-    expect(await says(stranger)).toContain('Recorded paid by example-mara');
-    await visit(stranger.page, '/owner/example-mara/');
-    await expect.poll(() => says(stranger)).toContain('Says not received');
-    expect(await says(stranger)).toContain('recorded paid, the solver says not received');
-
-    await payee.page.click('text=Confirm I received $45');
-    await expect.poll(() => says(payee)).toContain('example-quill says it was received');
+    await expect.poll(() => says(stranger)).toContain('example-quill confirmed it was received.');
     await visit(stranger.page, '/solver/example-quill/');
     await expect.poll(() => says(stranger)).toContain('1 payment they confirmed received (their word)');
 
     await visit(owner.page, `/b/${STATE_IDS.owed}/`);
+    await details(owner);
     await owner.page.click('text=Withdraw this record');
     await expect.poll(() => says(owner)).toContain('Owed to example-quill');
     expect(await says(owner)).not.toContain('says it was received');
     for (const person of [stranger, payee, owner]) await person.close();
+  });
+
+  // PF31: one payment window, opened from the bounty's card, from Your page and from its own address; closing it records
+  // nothing; more than one merged solution asks whom first; the solver confirms from Your page; Stripe's two cases differ.
+  it('the payment window opens from the card, Your page and #pay; closing records nothing; whom first when two merged', async () => {
+    const db = board.env.DB;
+    await db.prepare('DELETE FROM paid_clicks WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
+    await db.prepare('DELETE FROM receipts WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
+    await db.prepare("INSERT OR IGNORE INTO methods (github_id, login, position, kind, value, chain, visibility) VALUES (7001, 'example-quill', 9, 'github-sponsors', 'https://github.com/sponsors/example-quill', NULL, 'everyone')").run();
+    board.standin.signInAs = { id: 7100, login: 'example-mara' };
+    const owner = await fresh();
+    await visit(owner.page, '/me/');
+    await owner.page.click('[data-primary]');
+    await owner.page.waitForSelector('[role=tablist]');
+    const recordedPaid = async () => (await db.prepare('SELECT COUNT(*) AS n FROM paid_clicks WHERE bounty_id = ? AND withdrawn = 0').bind(STATE_IDS.owed).first<{ n: number }>())!.n;
+
+    // From Your page: the amount is the button; the window names whom and how much; closing records nothing.
+    await owner.page.click(`[data-pay-row="${STATE_IDS.owed}"]:visible`);
+    await expect.poll(() => owner.page.locator('[data-pay-window]').innerText()).toContain('to example-quill · pull request #68');
+    expect(await owner.page.locator('[data-pay-window]').innerText()).toContain("I've paid $45");
+    await owner.page.click('[data-pay-window] [aria-label=Close]');
+    expect(await recordedPaid()).toBe(0);
+
+    // From the bounty's own address: #pay opens it.
+    await owner.page.goto(`${board.url}/b/${STATE_IDS.owed}/#pay`);
+    await expect.poll(() => owner.page.locator('[data-pay-window]').isVisible()).toBe(true);
+    await owner.page.keyboard.press('Escape');
+    expect(await recordedPaid()).toBe(0);
+
+    // Two merged solutions: whom first, only the people; then that person's ways.
+    await visit(owner.page, `/b/${STATE_IDS.moreThanOne}/`);
+    await owner.page.click('[data-pay]');
+    await expect.poll(() => owner.page.locator('[data-pay-window]').innerText()).toContain('Whom are you paying?');
+    const choose = await owner.page.locator('[data-pay-window]').innerText();
+    expect(choose).toContain('example-fern');
+    expect(choose).toContain('example-rook');
+    expect(choose).not.toContain("I've paid");
+    await owner.page.check('[data-pay-window] input[value=example-rook]');
+    await owner.page.click('[data-pay-window] [data-window-action]:has-text("Continue")');
+    await expect.poll(() => owner.page.locator('[data-pay-window]').innerText()).toContain('Pay example-rook');
+    await owner.page.click('[data-pay-window] [aria-label=Close]');
+    await owner.close();
+  });
+
+  it('a payment recorded to a solver stays on their page until they confirm it; one answer only; Stripe says on merge or one click', async () => {
+    const db = board.env.DB;
+    await db.prepare('DELETE FROM receipts WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
+    await db.prepare(`INSERT INTO paid_clicks (bounty_id, by_login, to_login, amount, withdrawn, at) VALUES (?, 'example-mara', 'example-quill', 45, 0, ?)
+      ON CONFLICT (bounty_id) DO UPDATE SET to_login = excluded.to_login, amount = 45, withdrawn = 0, at = excluded.at`).bind(STATE_IDS.owed, new Date(clock).toISOString()).run();
+    board.standin.signInAs = { id: 7001, login: 'example-quill' };
+    const solver = await fresh();
+    await visit(solver.page, '/me/');
+    await solver.page.click('[data-primary]');
+    await solver.page.waitForSelector('[role=tablist]');
+    await expect.poll(() => solver.page.locator('main').innerText()).toContain('Confirm when it arrives.');
+    await solver.page.click(`[data-confirm-row="${STATE_IDS.owed}"]`);
+    const window = await solver.page.locator('dialog[open]').innerText();
+    expect(window).toContain('Yes, I received $45');
+    expect(window).not.toMatch(/not arrived|not been received/);
+    await solver.page.click('dialog[open] button[type=submit]');
+    await expect.poll(async () => (await db.prepare('SELECT says FROM receipts WHERE bounty_id = ?').bind(STATE_IDS.owed).first<{ says: string }>())?.says).toBe('received');
+    await expect.poll(() => solver.page.locator(`[data-confirm-row="${STATE_IDS.owed}"]`).count()).toBe(0);
+    await solver.close();
+
+    // Stripe's two cases: a charge from the owner's saved card is pay on merge; from Stripe's page, one click.
+    await db.prepare('DELETE FROM paid_clicks WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
+    await db.prepare('DELETE FROM receipts WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
+    await db.prepare(`INSERT INTO charges (bounty_id, state, pull_number, solver, account_id, amount, payment_method, payment_intent, at, provider) VALUES (?, 'paid', 68, 'example-quill', 'acct_sample', 45, 'pm_saved', 'pi_sample', ?, NULL)`).bind(STATE_IDS.owed, clock).run();
+    const stranger = await fresh();
+    await visit(stranger.page, `/b/${STATE_IDS.owed}/`);
+    await expect.poll(() => stranger.page.locator('[data-standing]').innerText()).toContain('Paid on merge through Stripe');
+    await db.prepare('UPDATE charges SET payment_method = NULL WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
+    await visit(stranger.page, `/b/${STATE_IDS.owed}/`);
+    await expect.poll(() => stranger.page.locator('[data-standing]').innerText()).toMatch(/^Paid through Stripe/);
+    await db.prepare('DELETE FROM charges WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
+    // One way to GitHub on every bounty, and no bounty-branch button.
+    expect(await stranger.page.locator('[data-issue]').getAttribute('href')).toContain('/issues/');
+    expect(await stranger.page.locator('main').innerText()).not.toContain('Open the bounty branch on GitHub');
+    await stranger.close();
   });
 
   it('the front page says it in few words, shows the real product, and leads to the detail', async () => {
@@ -355,7 +443,7 @@ describe('the pages', () => {
       const text = await page.locator('main').innerText();
       // PF21: what is owed is the Payment due stage, chosen when the page opens (it was the "You owe" figure).
       expect(await page.locator('[data-stage-tab][aria-selected=true]').innerText()).toMatch(/^Payment due\s+1\s+\$45$/);
-      expect(await page.locator(`tr[data-bounty="${STATE_IDS.owed}"]`).innerText()).toMatch(/Merged · example-quill\s+\$45$/);
+      expect(await page.locator(`tr[data-bounty="${STATE_IDS.owed}"]`).innerText()).toMatch(/Merged · example-quill\s+Pay \$45$/);
       expect(await page.locator('table[aria-label="Repositories on pay on merge"] tbody tr').allInnerTexts()).toEqual([expect.stringMatching(/example-org\/ledger\s+\$100/), expect.stringMatching(/example-org\/lite\s+\$50/)]);
       for (const absent of ['By hand', 'One click', 'Owed to you']) expect(text, absent).not.toContain(absent);
       expect(moneyClaims(text)).toEqual([]);
@@ -665,9 +753,9 @@ describe('the pages', () => {
     expect(await owner.page.locator('[role=tablist][aria-label="Your role"] [role=tab][aria-selected=true]').innerText()).toContain('Owner');
     expect(await owner.page.locator('[data-stage-tab][aria-selected=true]').innerText()).toMatch(/^Payment due\s+2\s+\$90$/);
     const owed = owner.page.locator(`tr[data-bounty="${STATE_IDS.owed}"]`);
-    expect(await owed.innerText()).toMatch(/Duplicate rows after a retry\s+example-tidepool\/ledger-lite #55 · \d+ days? ago\s+Payment due\s+Merged · example-quill\s+\$45$/);
+    expect(await owed.innerText()).toMatch(/Duplicate rows after a retry\s+example-tidepool\/ledger-lite #55 · \d+ days? ago\s+Payment due\s+Merged · example-quill\s+Pay \$45$/);
     expect(await owed.locator(`a[href="/b/${STATE_IDS.owed}/"]`).count()).toBe(1);
-    // The title is the one way in: no Pay button that leads to the same page.
+    // The title is the one way in to the bounty; the Pay button opens the payment window in place (PF31), not a link.
     expect(await owed.locator('a').evaluateAll(links => links.map(link => link.getAttribute('href')))).toEqual([`/b/${STATE_IDS.owed}/`, '/solver/example-quill/']);
     const solver = await signedIn(7001, 'example-quill');
     expect(await solver.page.locator('[role=tab][aria-selected=true]').innerText()).toContain('Solver');
@@ -785,7 +873,7 @@ describe('the pages', () => {
     await visit(page, '/board/');
     await page.click('main ul li a');
     await page.waitForURL(/\/b\/bt-/);
-    await expect.poll(() => page.locator('main').innerText()).toContain('Payment for this bounty');
+    await expect.poll(() => page.locator('main').innerText()).toContain('Payment details and terms');
     await page.click('nav[aria-label=Site] >> text=How it works');
     await page.waitForURL(/\/how\//);
     await page.click('nav[aria-label=Site] a[href="/board/"]');
@@ -814,7 +902,7 @@ describe('the pages', () => {
       const { page, close } = await fresh({ width, dark });
       for (const [name, path] of [['front', '/'], ['board', '/board/'], ['bounty', `/b/${STATE_IDS.waiting}/`]] as const) {
         await visit(page, path);
-        await expect.poll(() => page.locator('main').innerText()).toMatch(/three ways|open bounties.|Payment for this bounty/);
+        await expect.poll(() => page.locator('main').innerText()).toMatch(/three ways|open bounties.|Payment details and terms/);
         const measured = await page.evaluate(() => {
           const sizes = new Set<string>(); const weights = new Set<string>(); const families = new Set<string>();
           for (const element of document.querySelectorAll('body *')) {
@@ -882,7 +970,7 @@ describe('the pages', () => {
     const { page, close } = await fresh();
     const entry = standin.issues.find(issue => issue.repository === repository)!;
     await visit(page, `/b/${entry.id}/`);
-    expect(await page.locator('main').innerText()).toContain('Payment for this bounty');
+    expect(await page.locator('main').innerText()).toContain('Payment details and terms');
     standin.repositories.get(repository)!.visibility = 'private';
     clock += 6 * MINUTE;
     await visit(page, `/b/${entry.id}/`);

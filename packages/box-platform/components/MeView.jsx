@@ -182,14 +182,14 @@ function ToConfirm({ me, setMe }) {
         fmtDate(row.at),
         <button key="c" type="button" data-confirm-row={row.id} onClick={() => { setMessage(null); setOpen(row); }} className="rounded-full px-3.5 py-1.5 text-sm font-medium bg-button text-button-ink tabular-nums whitespace-nowrap">Confirm ${row.amount}</button>
       ])} />
-      <Dialog open={open !== null} onClose={() => setOpen(null)} title="Did it arrive?" onSubmit={confirm} submit={open ? `Yes, I received $${open.amount}` : 'Yes'}>
+      {open === null ? null : <Dialog open onClose={() => setOpen(null)} title="Did it arrive?" onSubmit={confirm} submit={open ? `Yes, I received $${open.amount}` : 'Yes'}>
         {open ? <>
           <p className="text-center text-[2.5rem] leading-[2.875rem] font-medium tracking-[-0.03em] tabular-nums">${open.amount}</p>
           <p className="text-center text-soft -mt-3">from {open.from}</p>
           <p className="text-sm text-soft">{open.from} recorded paying you on {fmtDate(open.at)}. Your answer shows on the bounty as your word. Not yet? Leave it: the bounty shows it as not confirmed until you say so.</p>
           {message ? <p role="alert">{message}</p> : null}
         </> : null}
-      </Dialog>
+      </Dialog>}
     </>
   );
 }
