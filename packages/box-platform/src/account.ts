@@ -198,12 +198,12 @@ async function debtRows(env: Env, login: string, now: number, where: string, min
 
 /** PF31: payments recorded to this solver and not yet confirmed received: they stay on the solver's page until confirmed. */
 async function toConfirm(env: Env, login: string, now: number) {
-  const rows: { id: string; title: string; amount: number; from: string; at: string; by: string }[] = [];
+  const rows: { id: string; title: string; amount: number; from: string; at: string; by: string; number: number | null }[] = [];
   for (const input of await loadPayments(env.DB, `EXISTS (SELECT 1 FROM pull_requests p WHERE p.bounty_id = b.id AND p.state = 'merged' AND p.author = ? COLLATE NOCASE)`, login)) {
     const payment = paymentOf(input);
     if ((payment.state !== 'recorded' && payment.state !== 'says-not-received') || payment.recorded_paid === null || payment.owed === null || !same(payment.owed.to, login) || same(input.poster, login) || rows.length >= LIST_MAX) continue;
     if (await readBounty(env, input.id, now) === null) continue;
-    rows.push({ id: input.id, title: input.title, amount: payment.owed.amount, from: input.poster, at: payment.recorded_paid.at, by: payment.recorded_paid.by });
+    rows.push({ id: input.id, title: input.title, amount: payment.owed.amount, from: input.poster, at: payment.recorded_paid.at, by: payment.recorded_paid.by, number: landedOf(input).find(pull => same(pull.author, login))?.number ?? null });
   }
   return rows;
 }

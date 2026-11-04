@@ -281,6 +281,10 @@ describe('the pages', () => {
     await owner.page.click(`[data-pay-row="${STATE_IDS.owed}"]:visible`);
     await expect.poll(() => owner.page.locator('[data-pay-window]').innerText()).toContain('to example-quill · pull request #68');
     expect(await owner.page.locator('[data-pay-window]').innerText()).toContain("I've paid $45");
+    // As approved: the way by its name, then its address short (no scheme) and opening outside; not the long method line.
+    const byHand = await owner.page.locator('[data-pay-window] [data-way]').filter({ hasText: 'GitHub Sponsors' }).innerText();
+    expect(byHand).toMatch(/^GitHub Sponsors\s+github\.com\/sponsors\/example-quill ↗$/);
+    expect(await owner.page.locator('[data-pay-window]').innerText()).not.toContain('https://');
     await owner.page.click('[data-pay-window] [aria-label=Close]');
     expect(await recordedPaid()).toBe(0);
 
@@ -319,6 +323,8 @@ describe('the pages', () => {
     await solver.page.click(`[data-confirm-row="${STATE_IDS.owed}"]`);
     const window = await solver.page.locator('dialog[open]').innerText();
     expect(window).toContain('Yes, I received $45');
+    expect(window).toContain('from example-mara · for pull request #68');
+    expect(await solver.page.locator('dialog[open] button').allInnerTexts()).toEqual(['✕', 'Yes, I received $45']);
     expect(window).not.toMatch(/not arrived|not been received/);
     await solver.page.click('dialog[open] button[type=submit]');
     await expect.poll(async () => (await db.prepare('SELECT says FROM receipts WHERE bounty_id = ?').bind(STATE_IDS.owed).first<{ says: string }>())?.says).toBe('received');

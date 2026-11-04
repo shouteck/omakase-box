@@ -4,7 +4,20 @@
 // click before by hand. Only by hand has "I've paid": a provider's payment is recorded by the provider's word. Closing
 // records nothing. It reads and calls the same routes the bounty page always used; it decides nothing itself.
 import { useEffect, useRef, useState } from 'react';
-import { MethodLine } from './Methods.jsx';
+import { LABELS } from './Methods.jsx';
+
+/** One way to be paid by hand, as approved: its name, then the address short and whole (no scheme), opening outside. */
+function WayRow({ method }) {
+  const name = method.chain ? `${LABELS[method.kind]} (${method.chain})` : LABELS[method.kind];
+  return (
+    <li data-way className="flex flex-wrap justify-between gap-x-3 gap-y-1">
+      <span>{name}</span>
+      {method.link
+        ? <a href={method.value} rel="nofollow noopener noreferrer" target="_blank" className="break-words" style={{ textDecoration: 'none' }}>{method.value.replace(/^https:\/\/(www\.)?/, '').replace(/\/$/, '')} ↗</a>
+        : <span className="break-all">{method.value}</span>}
+    </li>
+  );
+}
 import { fmtDate } from './ui.jsx';
 
 const Big = ({ amount, line }) => (
@@ -26,7 +39,7 @@ const Wide = ({ quiet = false, onClick, children, disabled = false }) => (
 const Done = ({ title, children }) => (
   <div className="text-center flex flex-col items-center gap-1.5 py-2.5" role="status">
     <span aria-hidden="true" className="size-11 rounded-full flex items-center justify-center text-xl" style={{ background: 'var(--color-ok-bg)', color: 'var(--color-ok)' }}>✓</span>
-    <p className="text-lg font-medium">{title}</p>
+    <p className="text-[1.5rem] leading-[1.875rem] font-medium">{title}</p>
     <p className="text-soft">{children}</p>
   </div>
 );
@@ -131,7 +144,7 @@ export default function PayWindow({ id, open, onClose, onChange }) {
         ) : null}
         {person.methods.length > 0 ? (
           <Way label={`By hand, ${person.methods.length === 1 ? 'a way' : 'ways'} ${person.login} listed`}>
-            <ul className="flex flex-col gap-2">{person.methods.map((method, i) => <li key={i}><MethodLine method={method} /></li>)}</ul>
+            <ul className="flex flex-col gap-3">{person.methods.map((method, i) => <WayRow key={i} method={method} />)}</ul>
             <p className="text-sm text-soft">You pay outside the board, then tell it you did.</p>
           </Way>
         ) : null}
