@@ -5,6 +5,10 @@
 // where it is paid: no second button to the same page (GitHub's and Stripe's lists act from the item's own page).
 // One ink and its greys; the accent only where something waits on the owner, red only for the owner's card failing.
 import { useRef, useState } from 'react';
+import PayWindow from './PayWindow.jsx';
+
+/** PF31: on a row you owe, the amount is the action: one button that opens the payment window. */
+const PayButton = ({ b, onPay }) => <button type="button" data-pay-row={b.id} onClick={() => onPay(b.id)} className="rounded-full px-3.5 py-1.5 text-sm font-medium bg-button text-button-ink tabular-nums whitespace-nowrap">Pay ${b.reward}</button>;
 
 const STAGES = [
   { key: 'waiting', name: 'Waiting for solutions', why: 'Open, with no solution yet.' },
@@ -47,18 +51,19 @@ function Detail({ b }) {
   return null;
 }
 
-function Row({ b, now }) {
+function Row({ b, now, onPay }) {
+  const pay = b.stage === 'due';
   return (
     <tr data-bounty={b.id} data-stage={b.stage} className="block sm:table-row border-b border-line py-3.5 sm:py-0">
       <td className="block sm:table-cell sm:py-4 sm:pr-3 align-middle">
         <a href={`/b/${b.id}/`} className="font-medium" style={{ color: 'var(--color-ink)' }}>{b.title}</a>
-        <span className="flex justify-between gap-3 text-sm text-soft"><span title={b.created_at}>{b.repository} #{b.issue_number} · {ago(b.created_at, now)}</span><span className="sm:hidden tabular-nums" style={{ color: 'var(--color-ink)' }}>${b.reward}</span></span>
+        <span className="flex justify-between gap-3 text-sm text-soft"><span title={b.created_at}>{b.repository} #{b.issue_number} · {ago(b.created_at, now)}</span><span className="sm:hidden tabular-nums" style={{ color: 'var(--color-ink)' }}>{pay ? <PayButton b={b} onPay={onPay} /> : `${b.reward}`}</span></span>
       </td>
       <td className="block sm:table-cell sm:py-4 sm:px-3 align-middle pt-2 sm:pt-4">
         <span className="inline-flex items-center gap-2 text-soft whitespace-nowrap"><Glyph stage={b.stage} />{NAMES[b.stage]}</span>
         <span data-detail className={`block text-sm pl-6 ${b.card_failed ? 'text-[var(--color-danger)]' : 'text-soft'}`}><Detail b={b} /></span>
       </td>
-      <td className="hidden sm:table-cell sm:py-4 sm:pl-3 text-right tabular-nums align-middle">${b.reward}</td>
+      <td className="hidden sm:table-cell sm:py-4 sm:pl-3 text-left tabular-nums align-middle">{pay ? <PayButton b={b} onPay={onPay} /> : `${b.reward}`}</td>
     </tr>
   );
 }
@@ -70,6 +75,8 @@ export default function Bounties({ bounties, now = Date.now() }) {
   const list = bounties.list;
   const [view, setView] = useState(() => firstView(list));
   const [page, setPage] = useState(0);
+  const [paying, setPaying] = useState(null);
+  const changed = useRef(false);
   const tabs = useRef([]);
   const choose = next => { setView(next); setPage(0); };
   if (list.length === 0) {
@@ -126,8 +133,8 @@ export default function Bounties({ bounties, now = Date.now() }) {
         ? <p data-none className="mt-3 border-t border-line py-8 text-center text-sm text-soft">None at this stage.</p>
         : (
           <table aria-label={stage ? stage.name : 'Your bounties'} className="w-full mt-3 text-[0.9375rem] border-collapse">
-            <thead className="hidden sm:table-header-group"><tr className="text-sm text-soft text-left border-b border-line"><th scope="col" className="font-normal py-2.5 pr-3">Bounty</th><th scope="col" className="font-normal py-2.5 px-3">Stage</th><th scope="col" className="font-normal py-2.5 pl-3 text-right">Reward</th></tr></thead>
-            <tbody className="border-t border-line sm:border-t-0">{rows.map(b => <Row key={b.id} b={b} now={now} />)}</tbody>
+            <thead className="hidden sm:table-header-group"><tr className="text-sm text-soft text-left border-b border-line"><th scope="col" className="font-normal py-2.5 pr-3">Bounty</th><th scope="col" className="font-normal py-2.5 px-3">Stage</th><th scope="col" className="font-normal py-2.5 pl-3 text-left">Reward</th></tr></thead>
+            <tbody className="border-t border-line sm:border-t-0">{rows.map(b => <Row key={b.id} b={b} now={now} onPay={setPaying} />)}</tbody>
           </table>
         )}
       {pages > 1 || bounties.more ? (
@@ -136,6 +143,7 @@ export default function Bounties({ bounties, now = Date.now() }) {
           {pages > 1 ? <span className="flex gap-4"><button type="button" disabled={page === 0} onClick={() => setPage(page - 1)} className="disabled:text-soft disabled:opacity-60">Previous</button><button type="button" disabled={page >= pages - 1} onClick={() => setPage(page + 1)} className="disabled:opacity-60">Next</button></span> : null}
         </div>
       ) : null}
+      {paying ? <PayWindow id={paying} open onClose={() => { setPaying(null); if (changed.current) window.location.reload(); }} onChange={() => { changed.current = true; }} /> : null}
     </>
   );
 }
