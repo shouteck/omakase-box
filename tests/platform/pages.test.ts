@@ -330,16 +330,20 @@ describe('the pages', () => {
     await db.prepare('DELETE FROM receipts WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
     await db.prepare(`INSERT INTO charges (bounty_id, state, pull_number, solver, account_id, amount, payment_method, payment_intent, at, provider) VALUES (?, 'paid', 68, 'example-quill', 'acct_sample', 45, 'pm_saved', 'pi_sample', ?, NULL)`).bind(STATE_IDS.owed, clock).run();
     const stranger = await fresh();
-    await visit(stranger.page, `/b/${STATE_IDS.owed}/`);
-    await expect.poll(() => stranger.page.locator('[data-standing]').innerText()).toContain('Paid on merge through Stripe');
-    await db.prepare('UPDATE charges SET payment_method = NULL WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
-    await visit(stranger.page, `/b/${STATE_IDS.owed}/`);
-    await expect.poll(() => stranger.page.locator('[data-standing]').innerText()).toMatch(/^Paid through Stripe/);
-    await db.prepare('DELETE FROM charges WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
-    // One way to GitHub on every bounty, and no bounty-branch button.
-    expect(await stranger.page.locator('[data-issue]').getAttribute('href')).toContain('/issues/');
-    expect(await stranger.page.locator('main').innerText()).not.toContain('Open the bounty branch on GitHub');
-    await stranger.close();
+    try {
+      await visit(stranger.page, `/b/${STATE_IDS.owed}/`);
+      await expect.poll(() => stranger.page.locator('[data-standing]').innerText()).toContain('Paid on merge through Stripe');
+      await db.prepare('UPDATE charges SET payment_method = NULL WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
+      await visit(stranger.page, `/b/${STATE_IDS.owed}/`);
+      await expect.poll(() => stranger.page.locator('[data-standing]').innerText()).toMatch(/^Paid through Stripe/);
+      // One way to GitHub on every bounty, and no bounty-branch button.
+      expect(await stranger.page.locator('[data-issue]').getAttribute('href')).toContain('/issues/');
+      expect(await stranger.page.locator('main').innerText()).not.toContain('Open the bounty branch on GitHub');
+    } finally {
+      // The later tests read this bounty as owed: the charge leaves even when a check above fails.
+      await db.prepare('DELETE FROM charges WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
+      await stranger.close();
+    }
   });
 
   it('the front page says it in few words, shows the real product, and leads to the detail', async () => {
