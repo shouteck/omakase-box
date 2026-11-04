@@ -8,6 +8,7 @@ import { errorWords, redact, stripe, stripeOn, StripeUnavailable } from './strip
 import { checkMethod, isLink, MAX_METHODS, type Method, parseStored, publicOnly } from './methods.js';
 import { waysSetUp } from './pay-ways.js';
 import { type BountyPayment, emptyPayment, factsOf, landedOf, loadPayments, notCounted, notCountedOf, ownerRecord, paymentOf, solverRecord } from './payments.js';
+import { listIssue, removeListed } from './listing.js';
 import { FROM_LISTED, readBounty, stateOf } from './query.js';
 import { LOGIN } from './refresh.js';
 import { ownerOnlyAllowed, payeeOf, roleOf, same } from './visibility.js';
@@ -15,6 +16,8 @@ import { ownerOnlyAllowed, payeeOf, roleOf, same } from './visibility.js';
 const SESSION_COOKIE = '__Host-board_session';
 const STATE_COOKIE = '__Host-board_oauth_state';
 const PAYPAL_STATE_COOKIE = '__Host-board_paypal_state';
+// PF32: a listing waiting on a one-time sign-in that asks GitHub for the lister's permission on the repository.
+const LIST_COOKIE = '__Host-board_list';
 const SESSION_DAYS = 30;
 const DAY_SECONDS = 86400;
 const BODY_BYTES_MAX = 16_384;
@@ -75,6 +78,18 @@ function startSignIn(env: Env, url: URL): Response {
   to.searchParams.set('redirect_uri', `${url.origin}/auth/github/callback`);
   to.searchParams.set('state', state);
   return redirect(to.href, [cookie(STATE_COOKIE, state, 600)]);
+}
+
+/** PF32: a fresh sign-in's token for one listing, returned to the caller to use once and drop. Never stored. */
+async function tokenFrom(env: Env, code: string, redirectUri: string): Promise<string | null> {
+  const exchanged = await fetch(`${env.GITHUB_WEB ?? 'https://github.com'}/login/oauth/access_token`, {
+    method: 'POST', signal: AbortSignal.timeout(15000),
+    headers: { accept: 'application/json', 'content-type': 'application/json', 'user-agent': 'open-bounty-board' },
+    body: JSON.stringify({ client_id: env.GITHUB_OAUTH_CLIENT_ID, client_secret: env.GITHUB_OAUTH_CLIENT_SECRET, code, redirect_uri: redirectUri })
+  });
+  if (!exchanged.ok) return null;
+  const token = (await exchanged.json() as { access_token?: unknown }).access_token;
+  return typeof token === 'string' ? token : null;
 }
 
 /** The token is held only in this function's locals: exchanged, used once, dropped. */
@@ -328,9 +343,9 @@ const isPoster = async (env: Env, id: string, viewer: Viewer): Promise<boolean> 
   (await env.DB.prepare('SELECT poster_id FROM bounties WHERE id = ?').bind(id).first<{ poster_id: number | null }>())?.poster_id === viewer.github_id;
 
 /** What the poster may click, across the providers. A note only when no click is offered. */
-async function offers(env: Env, id: string, viewer: Viewer) {
-  const stripeOffer = await payOffer(env, id, viewer.github_id);
-  const { can_pay_paypal, note } = await paypalOffer(env, id, viewer.github_id);
+async function offers(env: Env, id: string, viewer: Viewer, chosen?: string) {
+  const stripeOffer = await payOffer(env, id, viewer.github_id, chosen);
+  const { can_pay_paypal, note } = await paypalOffer(env, id, viewer.github_id, chosen);
   return { can_pay: stripeOffer.can_pay, can_pay_paypal, pay_note: stripeOffer.can_pay || can_pay_paypal ? null : [stripeOffer.pay_note, note].filter(Boolean).join(' ') || null };
 }
 
@@ -351,7 +366,9 @@ async function paymentView(env: Env, id: string, viewer: Viewer | null, now: num
     const all = await methodsOfLogin(env, author);
     const methods = (author === payee && ownerOnlyAllowed(facts, login) ? all : publicOnly(all)).map(shown);
     // Once a payment is recorded, asking how to be paid is no longer the next step (PF19).
-    return { login: author, number, methods, next: methods.length === 0 && facts.record === null ? ask(author, number) : null };
+    // PF32: when the owner chooses, each candidate carries their own one-click offers, so the window shows every way.
+    const own = role === 'owner' && payee === null && facts.record === null ? await offers(env, id, viewer!, author) : null;
+    return { login: author, number, methods, next: methods.length === 0 && facts.record === null ? ask(author, number) : null, ...(own === null ? {} : { can_pay: own.can_pay, can_pay_paypal: own.can_pay_paypal }) };
   })) : [];
   // PF31: a Stripe payment from the owner's saved card is pay on merge; from Stripe's page, one click. Said apart on the page.
   const onMerge = (await env.DB.prepare('SELECT 1 AS yes FROM charges WHERE bounty_id = ? AND payment_method IS NOT NULL').bind(id).first()) !== null;
@@ -392,7 +409,7 @@ async function recordPaid(request: Request, env: Env, id: string, viewer: Viewer
     return paymentView(env, id, viewer, now);
   }
   if (facts.amount === 0 || facts.merged.length === 0) return json(409, { error: 'Nothing is owed on this bounty, so there is nothing to record. Nothing changed.' });
-  const named = typeof sent.to === 'string' ? facts.merged.find(pull => same(pull.author, sent.to as string))?.author : facts.merged.length === 1 ? facts.merged[0]!.author : undefined;
+  const named = typeof sent.to === 'string' ? facts.merged.find(pull => same(pull.author, sent.to as string))?.author : facts.merged.length === 1 && facts.listed !== true ? facts.merged[0]!.author : undefined;
   if (named === undefined) return json(400, { error: `Name one merged author: ${facts.merged.map(pull => pull.author).join(' or ')}. Nothing changed.` });
   if (facts.record !== null) {
     if (same(payeeOf(facts), named)) return paymentView(env, id, viewer, now);
@@ -608,6 +625,47 @@ export async function accountResponse(request: Request, env: Env, url: URL, now:
     await env.DB.prepare('DELETE FROM paypal_accounts WHERE github_id = ?').bind(viewer.github_id).run();
     return json(200, { paypal: await paypalOf(env, viewer) });
   }
+  // PF32: listing an existing issue. A maintainer who did not open the issue is sent through one fresh sign-in, whose
+  // token is used once for their permission on the repository and dropped.
+  if (method === 'POST' && path === '/api/list') {
+    const refusal = writeRefusal(request, url, true);
+    if (refusal !== null) return refusal;
+    const viewer = await viewerOf(request, env, now);
+    if (viewer === null) return json(401, SIGN_IN_FIRST);
+    const body = await readBody(request);
+    if ('refused' in body) return body.refused;
+    const sent = (body.value ?? {}) as { issue?: unknown; reward?: unknown };
+    const listing = await listIssue(env, viewer, sent.issue, sent.reward, now);
+    if ('id' in listing) return json(200, { listed: listing.id });
+    if ('needs_permission' in listing) return json(409, { needs_permission: true, next: `/auth/github/list?${new URLSearchParams({ issue: String(sent.issue), reward: String(sent.reward) })}` });
+    return json(listing.status, { error: listing.error });
+  }
+  if (method === 'GET' && path === '/auth/github/list') {
+    const viewer = await viewerOf(request, env, now);
+    if (viewer === null || env.GITHUB_OAUTH_CLIENT_ID === undefined) return redirect('/me/');
+    const state = randomToken();
+    const pending = encodeURIComponent(JSON.stringify({ state, issue: url.searchParams.get('issue') ?? '', reward: url.searchParams.get('reward') ?? '' }));
+    const to = new URL('/login/oauth/authorize', env.GITHUB_WEB ?? 'https://github.com');
+    to.searchParams.set('client_id', env.GITHUB_OAUTH_CLIENT_ID);
+    to.searchParams.set('redirect_uri', `${url.origin}/auth/github/list/callback`);
+    to.searchParams.set('state', state);
+    return redirect(to.href, [cookie(LIST_COOKIE, pending, 600)]);
+  }
+  if (method === 'GET' && path === '/auth/github/list/callback') {
+    const clear = cookie(LIST_COOKIE, '', 0);
+    const viewer = await viewerOf(request, env, now);
+    let pending: { state?: unknown; issue?: unknown; reward?: unknown } = {};
+    try { pending = JSON.parse(decodeURIComponent(cookieOf(request, LIST_COOKIE) ?? '')); } catch { pending = {}; }
+    const code = url.searchParams.get('code');
+    if (viewer === null || code === null || typeof pending.state !== 'string' || pending.state !== url.searchParams.get('state')) return redirect('/me/?list_error=try-again#bounties', [clear]);
+    let token: string | null = null;
+    try { token = await tokenFrom(env, code, `${url.origin}/auth/github/list/callback`); } catch { token = null; }
+    if (token === null) return redirect('/me/?list_error=github#bounties', [clear]);
+    const listing = await listIssue(env, viewer, pending.issue, Number(pending.reward), now, token);
+    token = null;
+    if ('id' in listing) return redirect(`/me/?listed=${listing.id}#bounties`, [clear]);
+    return redirect(`/me/?list_error=${encodeURIComponent('error' in listing ? listing.error : 'GitHub did not say you can write to this repository. Nothing was listed. Next: ask the issue\'s author or the repository\'s owner to list it.')}#bounties`, [clear]);
+  }
   if (method === 'GET' && path === '/api/me/due') {
     const viewer = await viewerOf(request, env, now);
     return json(200, { due: viewer === null ? 0 : (await youOwe(env, viewer.login, now)).length });
@@ -635,9 +693,17 @@ export async function accountResponse(request: Request, env: Env, url: URL, now:
     if (login === null) return json(404, { error: 'That is not a GitHub login. Next: check the address.' });
     return person[1] === 'solver' ? solverProfile(env, login) : ownerProfile(env, login, now);
   }
-  const payment = /^\/api\/b\/(bt-[a-f\d]{12})\/(payment|receipt|paid|authenticate|pay|pay-paypal)$/.exec(path);
+  const payment = /^\/api\/b\/(bt-[a-f\d]{12})\/(payment|receipt|paid|authenticate|pay|pay-paypal|remove)$/.exec(path);
   if (payment !== null) {
     const id = payment[1]!;
+    if (method === 'POST' && payment[2] === 'remove') {
+      const refusal = writeRefusal(request, url, true);
+      if (refusal !== null) return refusal;
+      const viewer = await viewerOf(request, env, now);
+      if (viewer === null) return json(401, SIGN_IN_FIRST);
+      const removed = await removeListed(env, viewer, id);
+      return 'removed' in removed ? json(200, removed) : json(removed.status, { error: removed.error });
+    }
     if (method === 'POST' && (payment[2] === 'authenticate' || payment[2] === 'pay' || payment[2] === 'pay-paypal')) {
       const refusal = writeRefusal(request, url, true);
       if (refusal !== null) return refusal;
@@ -651,7 +717,11 @@ export async function accountResponse(request: Request, env: Env, url: URL, now:
       try {
         // An order the owner already approved is finished first: it must not be left for a second payment beside it.
         if (payment[2] === 'pay' && paypalOn(env) && await finishOrder(env, id, now) === 'paid') return json(200, { paid: true });
-        const page = payment[2] === 'pay-paypal' ? await openPayPalPage(env, id, url.origin, now) : payment[2] === 'pay' ? await openPayPage(env, id, url.origin, now) : await authenticationPage(env, id, url.origin, now);
+        const body = await readBody(request);
+        if ('refused' in body) return body.refused;
+        const to = (body.value as { to?: unknown } | null)?.to;
+        const chosen = typeof to === 'string' && LOGIN.test(to) ? to : undefined;
+        const page = payment[2] === 'pay-paypal' ? await openPayPalPage(env, id, url.origin, now, chosen) : payment[2] === 'pay' ? await openPayPage(env, id, url.origin, now, chosen) : await authenticationPage(env, id, url.origin, now);
         return 'error' in page ? json(409, page) : json(200, page);
       } catch (error) {
         if (error instanceof StripeUnavailable || error instanceof PayPalUnavailable) return json(503, { error: `${redact(error.message)}. Nothing was charged. Next: try again.` });
