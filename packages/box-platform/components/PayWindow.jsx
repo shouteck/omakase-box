@@ -10,7 +10,7 @@ import { LABELS } from './Methods.jsx';
 function WayRow({ method }) {
   const name = method.chain ? `${LABELS[method.kind]} (${method.chain})` : LABELS[method.kind];
   return (
-    <li data-way className="flex flex-wrap justify-between gap-x-3 gap-y-1">
+    <li data-way className="flex flex-col gap-0.5">
       <span>{name}</span>
       {method.link
         ? <a href={method.value} rel="nofollow noopener noreferrer" target="_blank" className="break-words" style={{ textDecoration: 'none' }}>{method.value.replace(/^https:\/\/(www\.)?/, '').replace(/\/$/, '')} ↗</a>
