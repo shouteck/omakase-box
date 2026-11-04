@@ -70,6 +70,33 @@ beforeEach(async () => {
 });
 afterEach(async () => { await r.close(); });
 
+// PF31c: the solver's own list, every bounty they answered, each in the stage its facts put it, kept after paying.
+describe('your solutions', () => {
+  const stages = async (jar: Jar) => Object.fromEntries(((await (await send(jar, '/api/me')).json() as any).solutions.list as { id: string; stage: string; needs_confirm?: boolean }[]).map(row => [row.id, row]));
+  it('each bounty the solver answered is in its stage: open, owed, paid by hand (to confirm), not merged; a provider payment needs no confirming', async () => {
+    await r.env.DB.prepare(`INSERT INTO pull_requests (bounty_id, number, author, author_id, state, opened_at) VALUES (?, 69, 'example-quill', ?, 'closed', ?)`).bind(STATE_IDS.closed, PAYEE.id, new Date(NOW).toISOString()).run();
+    const jar = await signIn(PAYEE);
+    let rows = await stages(jar);
+    expect(rows[STATE_IDS.waiting]!.stage).toBe('progress');
+    expect(rows[STATE_IDS.owed]!.stage).toBe('due');
+    expect(rows[STATE_IDS.merged]).toMatchObject({ stage: 'paid', needs_confirm: true });
+    expect(rows[STATE_IDS.closed]!.stage).toBe('closed');
+    // Paid through Stripe: Paid, and nothing to confirm (PF31b).
+    await r.env.DB.prepare(`INSERT INTO charges (bounty_id, state, pull_number, solver, account_id, amount, payment_method, payment_intent, at, provider) VALUES (?, 'paid', 68, 'example-quill', 'acct_x', 45, NULL, 'pi_x', ?, NULL)`).bind(STATE_IDS.owed, NOW).run();
+    rows = await stages(jar);
+    expect(rows[STATE_IDS.owed]).toMatchObject({ stage: 'paid', needs_confirm: false });
+  });
+
+  it('never the solver\'s own bounty, never a repository the board does not list', async () => {
+    const jar = await signIn(PAYEE);
+    expect(Object.keys(await stages(jar))).toContain(STATE_IDS.waiting);
+    await r.env.DB.prepare('UPDATE bounties SET poster = ?, poster_id = ? WHERE id = ?').bind(PAYEE.login, PAYEE.id, STATE_IDS.waiting).run();
+    expect(Object.keys(await stages(jar))).not.toContain(STATE_IDS.waiting);
+    (r.env as { UNLISTED_REPOSITORIES?: string }).UNLISTED_REPOSITORIES = 'example-tidepool/ledger-lite';
+    expect(Object.keys(await stages(jar))).toEqual([]);
+  });
+});
+
 describe('sign-in', () => {
   it('a round trip creates a session, asks GitHub for no scope, and stores no token anywhere', async () => {
     const jar = await signIn(PAYEE);
@@ -78,7 +105,7 @@ describe('sign-in', () => {
     expect(asked.searchParams.get('state')).toMatch(/^[a-f\d]{64}$/);
 
     const me = await (await send(jar, '/api/me')).json() as any;
-    expect(me).toEqual({ signed_in: true, login: PAYEE.login, sponsors_page: `https://github.com/sponsors/${PAYEE.login}`, pay: { set_up: false }, paypal: { set_up: false, connected: false }, methods: [], you_owe: [], to_confirm: [expect.objectContaining({ id: STATE_IDS.merged, amount: 45, from: 'example-mara', number: 64 })], owed_to_you: [expect.objectContaining({ id: STATE_IDS.owed, amount: 45, to: PAYEE.login })], bounties: { list: [], more: false } });
+    expect(me).toEqual({ signed_in: true, login: PAYEE.login, sponsors_page: `https://github.com/sponsors/${PAYEE.login}`, pay: { set_up: false }, paypal: { set_up: false, connected: false }, methods: [], you_owe: [], to_confirm: [expect.objectContaining({ id: STATE_IDS.merged, amount: 45, from: 'example-mara', number: 64 })], owed_to_you: [expect.objectContaining({ id: STATE_IDS.owed, amount: 45, to: PAYEE.login })], bounties: { list: [], more: false }, solutions: expect.objectContaining({ more: false }) });
 
     const token = r.standin.tokensIssued[0]!;
     expect(token.length).toBeGreaterThan(10);
