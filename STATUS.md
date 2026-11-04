@@ -41,7 +41,7 @@ Updated by the CTO on 4 November 2026, when PF9b merged.
 ## Next
 
 - **PF23 (needs) is deferred** (owner, 3 November 2026): the task text says what it needs; back if real bounties show the need.
-- **Order:** PF9b's deploy (owner's word), **PF31** (the payment window and the bounty page, to brief), then a wave letting a maintainer put a bounty on an existing issue without the board form (owner discussing, 4 November 2026), **PF6** (ready to launch; the listings for both sides, PF12b folded in), **K41** (the film, last), then the owner's launch.
+- **Order:** PF9b's deploy (owner's word), **PF31** (the payment window and the bounty page, to brief), **PF32** (an owner lists an existing GitHub issue from the board, D-2026-11-04-dual-usage), **PF6** (ready to launch; the listings for both sides, PF12b folded in), **K41** (the film, last), then the owner's launch.
 - **The next tool release:** the guide inside the package gains the PowerShell line (`npx.cmd`, `box.cmd`); a new version goes to npm by the owner, and to GitHub by a `v*` tag.
 - **A wave for later, not briefed:** fewer words, more showing, across the site, before PF9.
 - Unbriefed (BACKLOG): `rmSync` and non-ASCII names on Windows (BT48); the dependency audit (PF1); landed but not marked merged, solvers' account age (PF4); a private organisation member counts as an outside solver, a squash-merged head reads as off the default branch (PF8); PF18's leftovers.
