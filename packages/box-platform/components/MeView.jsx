@@ -4,6 +4,7 @@
 // needed to answer a bounty; it is how money between the two finds its way.
 import { useEffect, useRef, useState } from 'react';
 import Bounties from './Bounties.jsx';
+import Solutions from './Solutions.jsx';
 import Dialog from './Dialog.jsx';
 import { LABELS } from './Methods.jsx';
 import { PayOnMergeOwner, StripeRow } from './PayOnMerge.jsx';
@@ -178,35 +179,26 @@ function ConfirmWindow({ row, message, onClose, onConfirm }) {
   );
 }
 
-/** PF31: a payment the owner recorded stays on the solver's page until the solver confirms it arrived. One answer, received. */
-function ToConfirm({ me, setMe }) {
+/** PF31c: the solver's own list, every bounty they answered in its stage; a by-hand payment's amount is its Confirm button. */
+function YourSolutions({ me, setMe }) {
   const [open, setOpen] = useState(null);
   const [message, setMessage] = useState(null);
-  const rows = me.to_confirm ?? [];
-  if (rows.length === 0) return null;
   const confirm = async event => {
     event.preventDefault();
     try {
       const response = await fetch(`/api/b/${encodeURIComponent(open.id)}/receipt`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ says: 'received' }) });
       const body = await response.json();
       if (!response.ok) { setMessage(body.error); return; }
-      setMe(current => ({ ...current, to_confirm: current.to_confirm.filter(row => row.id !== open.id) }));
+      setMe(current => ({ ...current, solutions: { ...current.solutions, list: current.solutions.list.map(row => row.id === open.id ? { ...row, needs_confirm: false } : row) } }));
       setOpen(null);
     } catch {
       setMessage('The board could not be reached. Nothing changed. Next: try again.');
     }
   };
+  const asRow = s => ({ id: s.id, amount: s.reward, from: s.from, by: s.from, number: s.pull_number, at: s.paid_at });
   return (
     <>
-      <p className="text-soft mb-2">Recorded paid by the owner. Confirm when it arrives.</p>
-      {/* The amount is the button, left in its column like every other cell; the empty last column keeps it there. */}
-      <Table label="To confirm" head={['Bounty', 'Owner', 'Recorded', 'Amount', '']} rows={rows.map(row => [
-        <a key="b" href={`/b/${row.id}/`} className="break-words">{row.title}</a>,
-        row.from,
-        fmtDate(row.at),
-        <button key="c" type="button" data-confirm-row={row.id} onClick={() => { setMessage(null); setOpen(row); }} className="rounded-full px-3.5 py-1.5 text-sm font-medium bg-button text-button-ink tabular-nums whitespace-nowrap">Confirm ${row.amount}</button>,
-        ''
-      ])} />
+      <Solutions solutions={me.solutions} onConfirm={s => { setMessage(null); setOpen(asRow(s)); }} />
       {open === null ? null : <ConfirmWindow row={open} message={message} onClose={() => setOpen(null)} onConfirm={confirm} />}
     </>
   );
@@ -218,17 +210,8 @@ function Solver({ me, setMe }) {
     <>
       <RoleTitle role="Solver" sub="Bounties you solved, and getting paid for them." />
       <Figure label="Owed to you" rows={me.owed_to_you} none="Nothing owed right now" some={['merged solution', 'merged solutions']} />
-      <Heading id="owed-to-you">Coming to you</Heading>
-      <ToConfirm me={me} setMe={setMe} />
-      {me.owed_to_you.length === 0 && (me.to_confirm ?? []).length > 0 ? null : me.owed_to_you.length === 0
-        ? <Empty title="Nothing owed to you yet." why="A bounty appears here when your solution is merged." />
-        : <Table label="Coming to you" head={['Bounty', 'Owner', 'Amount', 'Merged', '']} rows={me.owed_to_you.map(debt => [
-            <a key="b" href={`/b/${debt.id}/`} className="break-words">{debt.title}</a>,
-            debt.from ?? '',
-            debt.to === null ? <span key="a">${debt.amount}<span className="block text-soft">If the owner decides on you</span></span> : `$${debt.amount}`,
-            fmtDate(debt.since),
-            <a key="o" href={`/b/${debt.id}/`} className="inline-block text-sm rounded-full px-3.5 py-1.5 border border-line bg-card" style={{ textDecoration: 'none', color: 'var(--color-ink)' }}>Open</a>
-          ])} />}
+      <h2 id="owed-to-you" className="text-lg font-medium tracking-tight mt-12 mb-5 scroll-mt-6">Your solutions</h2>
+      <YourSolutions me={me} setMe={setMe} />
       <Heading id="methods" note="An owner pays by whichever you have.">How you get paid</Heading>
       <Way name="By hand" note="Links you list"><Links me={me} setMe={setMe} /></Way>
       <Way name="One click" note="An owner pays on the provider's page, straight to you">

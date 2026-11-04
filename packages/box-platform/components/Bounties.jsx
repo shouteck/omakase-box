@@ -21,7 +21,7 @@ const STEP = { waiting: 1, solutions: 2, due: 3, paid: 4 };
 const PAGE = 20;
 
 /** A circle that fills a quarter per stage and becomes a tick when paid: the order is in the shape, not in colours. */
-function Glyph({ stage }) {
+export function Glyph({ stage }) {
   if (stage === 'paid') return <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="var(--color-ink)" /><path d="M5.2 8.3l1.9 1.9 3.7-4" fill="none" stroke="var(--color-paper)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>;
   if (stage === 'closed') return <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--color-soft)" strokeWidth="1.4"><circle cx="8" cy="8" r="6.25" /><path d="M5 11L11 5" /></svg>;
   const colour = stage === 'due' ? 'var(--color-accent)' : 'var(--color-ink)';
@@ -31,7 +31,7 @@ function Glyph({ stage }) {
 
 const DAY = 86400000;
 /** "2 days ago", the way GitHub's lists say it; the exact date is in the title attribute. */
-function ago(iso, now) {
+export function ago(iso, now) {
   const days = Math.floor((now - Date.parse(iso)) / DAY);
   if (days < 1) return 'today';
   if (days < 14) return `${days} ${days === 1 ? 'day' : 'days'} ago`;

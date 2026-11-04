@@ -269,6 +269,51 @@ async function bountiesOf(env: Env, viewer: Viewer, now: number) {
   return { list, more: read.length > OWN_MAX };
 }
 
+type SolutionRow = { id: string; title: string; repository: string; issue_number: number; amount: number; poster: string; number: number; state: string; draft: number | null; checks_state: string | null; opened_at: string; merged_at: string | null };
+
+/**
+ * PF31c: every bounty this person opened a pull request on (GitHub's author id), their latest pull request each, newest
+ * first, in the stage its facts put it: progress (open), due (merged, owed to them), paid (a payment recorded to them), or
+ * closed (not merged, or another solution was the one merged or paid). Never their own bounty; listed repositories only,
+ * gone-private at render, as the owner's list. The stage is decided here and nowhere else.
+ */
+async function solutionsOf(env: Env, viewer: Viewer, now: number) {
+  const read = (await env.DB.prepare(`SELECT b.id, b.title, b.repository, b.issue_number, b.amount, b.poster, p.number, p.state, p.draft, p.checks_state, p.opened_at, p.merged_at
+    ${FROM_LISTED} JOIN pull_requests p ON p.bounty_id = b.id
+    WHERE p.author_id = ? AND (b.poster_id IS NULL OR b.poster_id != ?) AND p.number = (SELECT MAX(q.number) FROM pull_requests q WHERE q.bounty_id = b.id AND q.author_id = ?)
+    ORDER BY p.opened_at DESC, b.id LIMIT ?`).bind(viewer.github_id, viewer.github_id, viewer.github_id, OWN_MAX + 1).all<SolutionRow>()).results;
+  const gone = new Set<string>();
+  for (const repository of new Set(read.map(row => row.repository.toLowerCase()))) {
+    if (await readBounty(env, read.find(row => row.repository.toLowerCase() === repository)!.id, now) === null) gone.add(repository);
+  }
+  const rows = read.filter(row => !gone.has(row.repository.toLowerCase()) && !same(row.poster, viewer.login));
+  const ids = rows.map(row => row.id);
+  const inputs = new Map(ids.length === 0 ? [] : (await loadPayments(env.DB, `b.id IN (${ids.map(() => '?').join(', ')})`, ...ids)).map(input => [input.id, input]));
+  const savedCard = new Set(ids.length === 0 ? [] : (await env.DB.prepare(`SELECT bounty_id FROM charges WHERE payment_method IS NOT NULL AND bounty_id IN (${ids.map(() => '?').join(', ')})`).bind(...ids).all<{ bounty_id: string }>()).results.map(row => row.bounty_id));
+  const list = rows.slice(0, OWN_MAX).map(row => {
+    const base = { id: row.id, title: row.title, repository: row.repository, issue_number: row.issue_number, pull_number: row.number, created_at: row.opened_at, reward: row.amount, from: row.poster };
+    const input = inputs.get(row.id);
+    const payment = input === undefined ? null : paymentOf(input);
+    const mine = (login: string | null | undefined) => same(login ?? null, viewer.login);
+    if (payment !== null && payment.owed !== null) {
+      const owedToMe = mine(payment.owed.to) || (payment.owed.to === null && ((payment.owed as { to_one_of?: readonly string[] }).to_one_of ?? []).some(mine));
+      if (payment.recorded_paid !== null) {
+        if (!mine(payment.owed.to)) return { ...base, stage: 'closed', note: 'Another solution was paid.' };
+        const provider = byProvider(payment.recorded_paid);
+        return { ...base, stage: 'paid', paid_by: paidBy(payment.recorded_paid.source, savedCard.has(row.id)), paid_at: payment.recorded_paid.at, needs_confirm: !provider && payment.solver_says?.word !== 'received' };
+      }
+      if (owedToMe) return { ...base, stage: 'due', since: payment.owed.since, one_of: payment.owed.to === null };
+      return { ...base, stage: 'closed', note: 'Another solution was merged.' };
+    }
+    if (row.state === 'open') return { ...base, stage: 'progress', draft: row.draft === 1, checks: row.checks_state };
+    if (row.state === 'merged') return row.amount === 0
+      ? { ...base, stage: 'paid', paid_by: null, note: 'No reward was stated.' }
+      : { ...base, stage: 'progress', note: 'Merged. The board has not yet confirmed it on the default branch.' };
+    return { ...base, stage: 'closed', note: null };
+  });
+  return { list, more: read.length > OWN_MAX };
+}
+
 async function paymentInput(env: Env, id: string, now: number): Promise<BountyPayment | null> {
   const read = await readBounty(env, id, now);
   if (read === null) return null;
@@ -570,7 +615,7 @@ export async function accountResponse(request: Request, env: Env, url: URL, now:
   if (method === 'GET' && path === '/api/me') {
     const viewer = await viewerOf(request, env, now);
     if (viewer === null) return json(200, { signed_in: false });
-    return json(200, { signed_in: true, login: viewer.login, sponsors_page: `https://github.com/sponsors/${viewer.login}`, methods: (await methodsOfLogin(env, viewer.login)).map(shown), pay: await payOf(env, viewer), paypal: await paypalOf(env, viewer), ...await debtsOf(env, viewer.login, now), bounties: await bountiesOf(env, viewer, now) });
+    return json(200, { signed_in: true, login: viewer.login, sponsors_page: `https://github.com/sponsors/${viewer.login}`, methods: (await methodsOfLogin(env, viewer.login)).map(shown), pay: await payOf(env, viewer), paypal: await paypalOf(env, viewer), ...await debtsOf(env, viewer.login, now), bounties: await bountiesOf(env, viewer, now), solutions: await solutionsOf(env, viewer, now) });
   }
   if (method === 'POST' && PAY_ROUTES.includes(path)) {
     const refusal = writeRefusal(request, url, true);

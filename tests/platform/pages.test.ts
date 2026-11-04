@@ -319,8 +319,9 @@ describe('the pages', () => {
     await visit(solver.page, '/me/');
     await solver.page.click('[data-primary]');
     await solver.page.waitForSelector('[role=tablist]');
-    await expect.poll(() => solver.page.locator('main').innerText()).toContain('Confirm when it arrives.');
-    await solver.page.click(`[data-confirm-row="${STATE_IDS.owed}"]`);
+    // PF31c: the payment to confirm is a row of Your solutions, in Paid, whose amount is the Confirm button.
+    await expect.poll(() => solver.page.locator(`[data-solution="${STATE_IDS.owed}"]`).getAttribute('data-stage')).toBe('paid');
+    await solver.page.click(`[data-confirm-row="${STATE_IDS.owed}"]:visible`);
     const window = await solver.page.locator('dialog[open]').innerText();
     expect(window).toContain('Yes, I received $45');
     expect(window).toContain('from example-mara · for pull request #68');
@@ -796,8 +797,12 @@ describe('the pages', () => {
     // The title is the one way in to the bounty; the Pay button opens the payment window in place (PF31), not a link.
     expect(await owed.locator('a').evaluateAll(links => links.map(link => link.getAttribute('href')))).toEqual([`/b/${STATE_IDS.owed}/`, '/solver/example-quill/']);
     const solver = await signedIn(7001, 'example-quill');
-    expect(await solver.page.locator('[role=tab][aria-selected=true]').innerText()).toContain('Solver');
-    expect(await solver.page.locator('table[aria-label="Coming to you"] tbody tr').filter({ hasText: 'Duplicate rows after a retry' }).innerText()).toMatch(/example-mara\s+\$45\s+\d+ \w+ \d{4}\s+Open/);
+    expect(await solver.page.locator('[role=tablist][aria-label="Your role"] [role=tab][aria-selected=true]').innerText()).toContain('Solver');
+    // PF31c: what is owed to the solver is a Payment due row of Your solutions, linking to the bounty, owed by its poster.
+    const owedRow = solver.page.locator(`[data-solution="${STATE_IDS.owed}"]`);
+    expect(await owedRow.getAttribute('data-stage')).toBe('due');
+    expect(await owedRow.innerText()).toMatch(/Duplicate rows after a retry[\s\S]*Payment due[\s\S]*owed by example-mara since[\s\S]*\$45/);
+    expect(await owedRow.locator(`a[href="/b/${STATE_IDS.owed}/"]`).count()).toBe(1);
     for (const person of [owner, solver]) await person.close();
   });
 
