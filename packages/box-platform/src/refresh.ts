@@ -87,8 +87,8 @@ async function storeIssue(db: Db, listed: Listed, now: number): Promise<boolean>
 
 /** Reads one repository and applies the private rule. True while it stays public. */
 /** PF9b: a repository the board's own setting names is never listed, whatever GitHub says of it. */
-export const unlisted = (env: Env, name: string): boolean =>
-  (env.UNLISTED_REPOSITORIES ?? '').split(',').map(entry => entry.trim().toLowerCase()).filter(Boolean).includes(name.toLowerCase());
+const unlistedNames = (env: Env): string[] => (env.UNLISTED_REPOSITORIES ?? '').split(',').map(entry => entry.trim()).filter(Boolean);
+export const unlisted = (env: Env, name: string): boolean => unlistedNames(env).some(entry => entry.toLowerCase() === name.toLowerCase());
 
 export async function readRepository(env: Env, github: GitHub, name: string, now: number): Promise<boolean> {
   // The one gate every listing passes, from the search or a notice: an unlisted repository is treated as a private one,
@@ -331,8 +331,9 @@ export async function refresh(env: Env): Promise<RefreshResult> {
       searched = true;
       if (complete) { completeAt = now; await setMeta(db, 'search_complete_at', String(now)); }
     }
-    // PF9b: a repository the setting names is removed at the next run, not at its next scheduled read.
-    for (const { name } of (await db.prepare('SELECT name FROM repositories').all<{ name: string }>()).results) if (unlisted(env, name)) await readRepository(env, github, name, now);
+    // PF9b: a repository the setting names is removed at the next run, not at its next scheduled read: one batched delete
+    // per name (a no-op once gone), and no database call at all when the setting is empty.
+    for (const name of unlistedNames(env)) await purgeRepository(db, name);
     const repositories = await db.prepare('SELECT name FROM repositories WHERE read_at <= ? ORDER BY read_at').bind(now - REPOSITORY_STALE_MS).all<{ name: string }>();
     for (const { name } of repositories.results) await readRepository(env, github, name, now);
     // PF28: a bounty's pull requests and its event chain are two steps, each with its own read time, stalest first.
