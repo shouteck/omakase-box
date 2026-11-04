@@ -61,7 +61,11 @@ async function bounty(env: Env, id: string, now: number): Promise<Response> {
   if (facts === null) return json(404, { error: NOT_ON_BOARD });
   const { row, pulls, history } = facts;
   const base = `https://github.com/${row.repository}`;
-  const paying = (await payingIds(env, [row.id])).has(row.id);
+  const listed = row.source === 'listed';
+  // PF32: a listed bounty is never paid on merge, and it stops taking answers at a payment or when its issue closes.
+  const paying = !listed && (await payingIds(env, [row.id])).has(row.id);
+  const settled = listed && (await env.DB.prepare(`SELECT 1 AS yes FROM paid_clicks WHERE bounty_id = ? AND withdrawn = 0 UNION SELECT 1 FROM charges WHERE bounty_id = ? AND state = 'paid'`).bind(row.id, row.id).first()) !== null;
+  const state = stateOf(row.issue_state, pulls);
   return json(200, {
     ...await freshness(env),
     bounty: {
@@ -70,7 +74,12 @@ async function bounty(env: Env, id: string, now: number): Promise<Response> {
       task: row.task,
       poster: row.poster,
       amount: row.amount,
-      state: stateOf(row.issue_state, pulls),
+      state,
+      source: listed ? 'listed' : 'posted',
+      issue_number: row.issue_number,
+      issue_author: listed ? row.issue_author ?? null : row.poster,
+      listed_by: listed ? row.listed_by ?? row.poster : null,
+      open_to_answers: listed ? row.issue_state === 'open' && !settled : state === 'open' || state === 'solutions-waiting',
       closed_at: row.closed_at,
       repository: row.repository,
       language: row.language,
@@ -78,8 +87,8 @@ async function bounty(env: Env, id: string, now: number): Promise<Response> {
       posted_at: row.created_at,
       approved_by: row.approved_by,
       work_commit: row.work_commit,
-      branch: `box-bounty/${row.id}`,
-      links: { issue: `${base}/issues/${row.issue_number}`, branch: `${base}/tree/box-bounty/${row.id}` },
+      branch: listed ? null : `box-bounty/${row.id}`,
+      links: { issue: `${base}/issues/${row.issue_number}`, branch: listed ? null : `${base}/tree/box-bounty/${row.id}` },
       solutions: pulls.slice(0, SOLUTIONS_MAX).map(pull => ({ number: pull.number, author: pull.author, state: pull.state, opened_at: pull.opened_at, merged_at: pull.merged_at, url: `${base}/pull/${pull.number}` })),
       history,
       pays_on_merge: paying,

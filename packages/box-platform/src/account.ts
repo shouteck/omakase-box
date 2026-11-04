@@ -279,6 +279,10 @@ async function bountiesOf(env: Env, viewer: Viewer, now: number) {
       return { ...base, stage: 'paid', merged: payment.owed!.to, paid_by: paidBy(payment.recorded_paid!.source, savedCard.has(row.id)), note: payment.state === 'says-not-received' ? 'The solver says it has not arrived.' : null };
     }
     if (payment.state === 'no-reward') return { ...base, stage: 'paid', merged: landedOf(input)[0]?.author ?? null, paid_by: null, note: 'No reward was stated.' };
+    if (payment.state === 'owner-chooses') {
+      const merged = input.pulls.filter(pull => pull.state === 'merged');
+      return { ...base, stage: input.pulls.length === 0 ? 'waiting' : 'solutions', note: merged.length === 0 ? null : `${merged.map(pull => `#${pull.number}`).join(' and ')} merged · no payment recorded · you choose whom to pay` };
+    }
     return { ...base, stage: 'solutions', note: payment.state === 'merged-not-on-default' ? 'Merged. The board has not yet confirmed it on the default branch.' : null };
   });
   return { list, more: read.length > OWN_MAX };
@@ -321,6 +325,8 @@ async function solutionsOf(env: Env, viewer: Viewer, now: number) {
       return { ...base, stage: 'closed', note: 'Another solution was merged.' };
     }
     if (row.state === 'open') return { ...base, stage: 'progress', draft: row.draft === 1, checks: row.checks_state };
+    if (row.state === 'merged' && payment?.state === 'owner-chooses') return { ...base, stage: 'progress', note: 'Merged · no payment recorded · the owner chooses whom to pay' };
+    if (row.state === 'open' && payment?.state === 'owner-chooses') return { ...base, stage: 'progress', draft: row.draft === 1, checks: row.checks_state };
     if (row.state === 'merged') return row.amount === 0
       ? { ...base, stage: 'paid', paid_by: null, note: 'No reward was stated.' }
       : { ...base, stage: 'progress', note: 'Merged. The board has not yet confirmed it on the default branch.' };
@@ -368,7 +374,8 @@ async function paymentView(env: Env, id: string, viewer: Viewer | null, now: num
     // Once a payment is recorded, asking how to be paid is no longer the next step (PF19).
     // PF32: when the owner chooses, each candidate carries their own one-click offers, so the window shows every way.
     const own = role === 'owner' && payee === null && facts.record === null ? await offers(env, id, viewer!, author) : null;
-    return { login: author, number, methods, next: methods.length === 0 && facts.record === null ? ask(author, number) : null, ...(own === null ? {} : { can_pay: own.can_pay, can_pay_paypal: own.can_pay_paypal }) };
+    const state = input.pulls.find(pull => pull.number === number)?.state ?? 'merged';
+    return { login: author, number, state, methods, next: methods.length === 0 && facts.record === null ? ask(author, number) : null, ...(own === null ? {} : { can_pay: own.can_pay, can_pay_paypal: own.can_pay_paypal }) };
   })) : [];
   // PF31: a Stripe payment from the owner's saved card is pay on merge; from Stripe's page, one click. Said apart on the page.
   const onMerge = (await env.DB.prepare('SELECT 1 AS yes FROM charges WHERE bounty_id = ? AND payment_method IS NOT NULL').bind(id).first()) !== null;
@@ -382,6 +389,9 @@ async function paymentView(env: Env, id: string, viewer: Viewer | null, now: num
     can_answer: role === 'payee' && facts.record !== null && !byProvider(facts.record),
     can_record: role === 'owner' && facts.amount > 0 && facts.merged.length > 0 && facts.record === null,
     can_withdraw: role === 'owner' && facts.record !== null && !byProvider(facts.record),
+    // PF32: Remove and Withdraw never both: a listed bounty with nothing merged and nothing paid.
+    can_remove: role === 'owner' && input.source === 'listed' && facts.record === null && !input.pulls.some(pull => pull.state === 'merged') && (input.charge?.state ?? null) !== 'paid',
+    source: input.source === 'listed' ? 'listed' : 'posted',
     can_authenticate: role === 'owner' && input.charge?.state === 'owner-must-authenticate',
     ...(role === 'owner' ? await offers(env, id, viewer!) : { can_pay: false, can_pay_paypal: false, pay_note: null })
   });
