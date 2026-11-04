@@ -31,5 +31,5 @@ A payment through Stripe or PayPal (pay on merge or one click) is shown as the p
 - **What shipped:** `can_answer` is true only for a payment the owner recorded by hand; the solver's `to_confirm` leaves out Stripe and PayPal payments; a provider payment's line reads "Stripe's word: paid to <solver>'s own account" (or PayPal's) and Payment details no longer says "Not confirmed received" for it. The receipt route, who is paid, what counts as paid, the owner's record and the numbers are unchanged.
 - **Tests:** a new page test (a Stripe payment asks the solver nothing: no Confirm on the bounty, nothing to confirm on their page); page suite 51 of 51, account and payment suites 115 of 115. No expectation changed.
 - **Guards shown failing once each:** the solver asked after a provider payment; a provider payment listed to confirm; a provider payment's line speaking of confirming.
-- **Deploy:** the owner's word.
+- **Deployed 4 November 2026, on the owner's word** ("Yes, deploy it"): Worker version `c835dc50-1aa2-4ddb-86fe-89742047ef39`, no migration; the pages, the feed and `/api/me` answer. `exceededCpu` from `wrangler tail`: before, 2 runs, ok, 41 ms; after, 7 runs, ok, median 2 ms, max 7 ms; 0 both times. Bench removed.
 - **Reflect:** none new.
