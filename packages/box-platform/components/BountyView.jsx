@@ -31,7 +31,7 @@ function View({ data }) {
       <SampleNote data={data} />
       <nav aria-label="Breadcrumb" className="text-sm text-soft mb-6"><a href="/board/">Open bounties</a> / {b.id}</nav>
       <Title sub={stateSentence(b)}>{b.title}</Title>
-      <Soft className="-mt-9 mb-10">The title is the poster&apos;s own words.</Soft>
+      <Soft className="-mt-9 mb-10">{listed ? `The title is the issue's own words (${b.issue_author}).` : <>The title is the poster&apos;s own words.</>}</Soft>
       <Stale data={data} />
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_22rem] gap-x-12 gap-y-10 items-start">
         <aside className="lg:col-start-2 lg:row-start-1 lg:sticky lg:top-6 bg-surface rounded-3xl px-6 pt-6 pb-3" aria-label="Summary">

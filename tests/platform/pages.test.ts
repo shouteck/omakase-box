@@ -794,6 +794,10 @@ describe('the pages', () => {
     const owed = owner.page.locator(`tr[data-bounty="${STATE_IDS.owed}"]`);
     expect(await owed.innerText()).toMatch(/Duplicate rows after a retry\s+example-tidepool\/ledger-lite #55 · \d+ days? ago\s+Payment due\s+Merged · example-quill\s+Pay \$45$/);
     expect(await owed.locator(`a[href="/b/${STATE_IDS.owed}/"]`).count()).toBe(1);
+    // A row not owed shows its reward as an amount, with its currency sign (PF32 found PF31 had dropped it).
+    await owner.page.click('[data-view="all"]');
+    expect(await owner.page.locator(`tr[data-bounty="${STATE_IDS.waiting}"] td:last-child`).innerText()).toBe('$45');
+    await owner.page.click('[data-stage-tab="due"]');
     // The title is the one way in to the bounty; the Pay button opens the payment window in place (PF31), not a link.
     expect(await owed.locator('a').evaluateAll(links => links.map(link => link.getAttribute('href')))).toEqual([`/b/${STATE_IDS.owed}/`, '/solver/example-quill/']);
     const solver = await signedIn(7001, 'example-quill');
