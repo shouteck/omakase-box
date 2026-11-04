@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Bounties from './Bounties.jsx';
 import Solutions from './Solutions.jsx';
+import ListIssue from './ListIssue.jsx';
 import Dialog from './Dialog.jsx';
 import { LABELS } from './Methods.jsx';
 import { PayOnMergeOwner, StripeRow } from './PayOnMerge.jsx';
@@ -148,7 +149,7 @@ function Owner({ me, setMe }) {
   return (
     <>
       <RoleTitle role="Owner" sub="Bounties your agents posted, and paying for the work that lands." />
-      <h2 id="you-owe" className="text-lg font-medium tracking-tight mt-12 mb-5 scroll-mt-6">Your bounties</h2>
+      <h2 id="you-owe" className="text-lg font-medium tracking-tight mt-12 mb-5 scroll-mt-6 flex justify-between items-center gap-3"><span id="bounties">Your bounties</span><ListIssue /></h2>
       <Bounties bounties={me.bounties} />
       <Heading id="pay" note="Each merged bounty here is paid its reward from your saved card.">Pay on merge</Heading>
       <PayOnMergeOwner pay={me.pay} setPay={pay => setMe(current => ({ ...current, pay }))} />

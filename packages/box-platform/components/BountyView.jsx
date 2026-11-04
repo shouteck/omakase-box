@@ -23,7 +23,9 @@ function stateSentence(b) {
 
 function View({ data }) {
   const b = data.bounty;
-  const open = b.state === 'open' || b.state === 'solutions-waiting';
+  // PF32: the server says when a bounty takes answers: a posted one until a merge or close, a listed one until a payment or close.
+  const open = b.open_to_answers ?? (b.state === 'open' || b.state === 'solutions-waiting');
+  const listed = b.source === 'listed';
   return (
     <>
       <SampleNote data={data} />
@@ -35,8 +37,8 @@ function View({ data }) {
         <aside className="lg:col-start-2 lg:row-start-1 lg:sticky lg:top-6 bg-surface rounded-3xl px-6 pt-6 pb-3" aria-label="Summary">
           <PaymentCard id={b.id} poster={b.poster} amount={b.amount} state={b.state} issue={b.links.issue}
             terms={<Facts stacked rows={[
-              ['Terms', 'The merged solution earns the whole reward. Other solutions and parts used by hand earn nothing.'],
-              ['Posting approved', b.approved_by ? APPROVED[b.approved_by] : 'The project\'s record does not say.'],
+              ['Terms', listed ? 'The owner chooses whom to pay, from every pull request linked to the issue, merged or not. One is paid.' : 'The merged solution earns the whole reward. Other solutions and parts used by hand earn nothing.'],
+              ...(listed ? [] : [['Posting approved', b.approved_by ? APPROVED[b.approved_by] : 'The project\'s record does not say.']]),
               ['Read from GitHub', data.read_at ? `${fmtDate(data.read_at)}, ${data.read_at.slice(11, 16)} UTC` : 'Not yet']
             ]} />}>
           <Facts stacked rows={[
@@ -44,6 +46,7 @@ function View({ data }) {
             ['Repository', <>{b.repository}{b.language ? ` · ${b.language}` : ''}</>],
             ['Posted', fmtDate(b.posted_at)],
             ['Solutions so far', String(b.solutions.length)],
+            ...(listed ? [['Listed', `From the board by ${b.listed_by}, on GitHub's issue #${b.issue_number}`]] : []),
             ['Who may answer', 'Agents welcome, through a GitHub account'],
             ...(b.amount > 0 ? [['Payment', WAYS.filter(way => b.how_it_pays.ways.includes(way.id)).map(way => way.name).join(', ')]] : [])
           ]} />
@@ -52,10 +55,21 @@ function View({ data }) {
 
         <div className="lg:col-start-1 lg:row-start-1 min-w-0">
           <Section title="The task" id="task">
-            <TheirWords who={<>The poster&apos;s words ({b.poster}), from the <a href={b.links.issue} rel="nofollow noopener">GitHub issue</a></>}>{b.task}</TheirWords>
+            <TheirWords who={listed ? <>The issue&apos;s words ({b.issue_author}), from the <a href={b.links.issue} rel="nofollow noopener">GitHub issue</a></> : <>The poster&apos;s words ({b.poster}), from the <a href={b.links.issue} rel="nofollow noopener">GitHub issue</a></>}>{b.task}</TheirWords>
           </Section>
 
-          {open ? (
+          {open && listed ? (
+            <Section title="How to answer" id="answer">
+              <ol className="flex flex-col gap-4">
+                <li>1. Fork {b.repository} and work from its default branch, {b.default_branch}.</li>
+                <li>
+                  <p>2. Open a pull request against {b.default_branch} in {b.repository} whose description says:</p>
+                  <CodeBlock lines={[`Fixes #${b.issue_number}`]} what="line" className="mt-2" />
+                </li>
+                <li>3. The board links it to this bounty from GitHub. The owner chooses whom to pay.</li>
+              </ol>
+            </Section>
+          ) : open ? (
             <Section title="How to answer" id="answer">
               <ol className="flex flex-col gap-4">
                 <li>

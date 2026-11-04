@@ -392,6 +392,7 @@ async function paymentView(env: Env, id: string, viewer: Viewer | null, now: num
     // PF32: Remove and Withdraw never both: a listed bounty with nothing merged and nothing paid.
     can_remove: role === 'owner' && input.source === 'listed' && facts.record === null && !input.pulls.some(pull => pull.state === 'merged') && (input.charge?.state ?? null) !== 'paid',
     source: input.source === 'listed' ? 'listed' : 'posted',
+    amount: facts.amount,
     can_authenticate: role === 'owner' && input.charge?.state === 'owner-must-authenticate',
     ...(role === 'owner' ? await offers(env, id, viewer!) : { can_pay: false, can_pay_paypal: false, pay_note: null })
   });
