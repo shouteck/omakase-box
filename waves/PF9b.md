@@ -42,7 +42,7 @@ Written by the CTO at kickoff, 4 November 2026.
 ## Result
 
 - CTO: Claude Code desktop, Windows / Claude Opus 5.5. Seat 7: a fresh Claude Code desktop session (Claude Opus 5.5) in the poster's clone.
-- Commit: see the verify line below
+- Commit: `2a6cbf01` · Verify: `verify 2a6cbf0 PASS check=0 build=0 test:box-bounty=0 test:platform=0 test:kitchen=0(selected 18 of 18 kitchen files) db=none 1748s`
 - Level: test-verified for the gate and seat 11; ui-verified for seat 7's judgement; seats 7 and 8's records left test-proven by the owner
 - **What shipped:** the board never lists a repository its own setting names (`UNLISTED_REPOSITORIES` in `wrangler.toml`, the sandbox). One gate, `readRepository`, which every listing passes, treats it as a private repository: its bounties removed, nothing of it read from GitHub. A stored one is purged at the next run, and a bounty page refuses at once. The feed, pages, numbers, MCP and owner records read only what is stored, so all leave it out. Only whoever deploys the board can set it.
 - **Seat 11 (pay on merge):** a dispute's webhook marks the board's payment disputed, and a repeated success does not undo it; a solver who disconnects Stripe before the merge is not charged for, and the merge is owed by hand. Each a test; each guard broken once.
