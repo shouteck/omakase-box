@@ -42,3 +42,7 @@ The Solver tab has "Your solutions": every bounty on which this person opened a 
 
 - [ ] **Experience:** one list, the same shape as the owner's; nothing a solver did disappears.
 - [ ] **Facts, not verdicts:** "another solution was merged" states GitHub's fact; no ranking.
+
+## Mock-up approval
+
+The mock-up (today's Solver tab with "Your solutions" applied, each stage selected, desktop and phone) was approved by the owner on 4 November 2026: "ok i approve". The stages work like the owner's: each card selects its list; "All" shows every row; no separate Closed link (Not merged is a stage); the list opens on the stage that waits on the solver.
