@@ -52,7 +52,7 @@ const LEGEND = {
   state: 'open | solutions-waiting (open, with open pull requests). Closed states appear only in a bounty\'s detail.',
   approved_by: 'How posting was approved, as the poster\'s tool recorded it (source project-record: the owner\'s word), a fact and not a rating. null: the record does not say. owner-this-bounty: the owner said yes to this bounty before it was posted. owner-standing-rule: the owner set a standing permission once, and their tool posted this bounty under it.',
   answer: 'Branch from answer.branch at answer.base_commit; open a pull request against answer.pull_request_base. When answer.closes_issue is set (a bounty listed from the board on an existing issue), the pull request\'s description must say it, so GitHub links it to the issue.',
-  way_in: 'posted: the owner\'s tool posted the bounty as its own issue; the merged solution is paid. listed: an owner listed an existing issue from the board; they choose whom to pay from every pull request linked to it, merged or not.',
+  way_in: 'Present only as listed: an owner listed an existing issue from the board, and chooses whom to pay from every pull request linked to it, merged or not. Absent: the owner\'s tool posted the bounty as its own issue, and the merged solution is paid.',
   count: 'How many open bounties match, across all pages.',
   stale: 'null: the last read of GitHub worked. Otherwise why it failed; the facts are from read_at, and the board retries every 15 minutes.'
 };
@@ -134,8 +134,8 @@ function entryOf(row: EntryRow, record: OwnerRecord, state: string, open: number
     posted_at: row.created_at,
     age_days: Math.max(0, Math.floor((now - Date.parse(row.created_at)) / DAY)),
     approved_by: row.approved_by,
-    way_in: listed ? 'listed' as const : 'posted' as const,
-    answer: { branch, base_commit: row.work_commit, pull_request_base: branch, closes_issue: listed ? `Fixes #${row.issue_number}` : null },
+    ...(listed ? { way_in: 'listed' as const } : {}),
+    answer: { branch, base_commit: row.work_commit, pull_request_base: branch, ...(listed ? { closes_issue: `Fixes #${row.issue_number}` } : {}) },
     links: { page: `${origin}/b/${row.id}/`, issue: `${base}/issues/${row.issue_number}`, detail: `${origin}/bounties/${row.id}.json` }
   };
 }
@@ -303,10 +303,12 @@ const ENTRY_SCHEMA = closed({
   posted_at: { type: 'string' },
   age_days: { type: 'integer', minimum: 0 },
   approved_by: { enum: ['owner-this-bounty', 'owner-standing-rule', null] },
-  way_in: { enum: ['posted', 'listed'] },
-  answer: closed({ branch: { type: 'string' }, base_commit: { type: 'string' }, pull_request_base: { type: 'string' }, closes_issue: { type: ['string', 'null'] } }),
+  way_in: { const: 'listed' },
+  answer: closed({ branch: { type: 'string' }, base_commit: { type: 'string' }, pull_request_base: { type: 'string' }, closes_issue: { type: 'string' } }, ['branch', 'base_commit', 'pull_request_base']),
   links: closed({ page: { type: 'string' }, issue: { type: 'string' }, detail: { type: 'string' } })
 });
+// PF32: way_in appears only on a listed bounty.
+ENTRY_SCHEMA.required = ENTRY_SCHEMA.required.filter(key => key !== 'way_in');
 export const FEED_SCHEMA = {
   $schema: 'https://json-schema.org/draft/2020-12/schema',
   title: 'Open bounty board feed',

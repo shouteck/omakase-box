@@ -161,6 +161,20 @@ describe('a listed bounty on the board', () => {
     expect(view.can_remove).toBe(false);
   });
 
+  it('with one merged pull request still names nobody: no payee, nothing owed, and a record must name the person', async () => {
+    const mara = await signIn(MARA);
+    const id = (await (await list(mara, issueOf(12))).json() as any).listed as string;
+    const issue = r.standin.issues.find(entry => entry.number === 12 && entry.repository === REPO)!;
+    issue.pulls = [{ number: 42, author: ROOK.login, state: 'closed', merged_at: new Date(NOW).toISOString(), created_at: new Date(NOW).toISOString() }];
+    r.clock.at += 20 * MINUTE; await refreshUntilDone(r);
+    const view = await (await send(mara, `/api/b/${id}/payment`)).json() as any;
+    expect(view).toMatchObject({ payee: null, payment: { state: 'owner-chooses', owed: null } });
+    expect((await post(mara, `/api/b/${id}/paid`, {})).status).toBe(400);
+    const rook = await (await send(await signIn(ROOK), '/api/me')).json() as any;
+    expect(rook.owed_to_you).toEqual([]);
+    expect(rook.solutions.list.find((s: any) => s.id === id)).toMatchObject({ stage: 'progress', note: 'Merged · no payment recorded · the owner chooses whom to pay' });
+  });
+
   it('can be removed by its lister before any merge or payment, and not after; a posted bounty never', async () => {
     const mara = await signIn(MARA);
     const id = (await (await list(mara, issueOf(12))).json() as any).listed as string;
