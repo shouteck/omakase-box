@@ -46,3 +46,7 @@ The Solver tab has "Your solutions": every bounty on which this person opened a 
 ## Mock-up approval
 
 The mock-up (today's Solver tab with "Your solutions" applied, each stage selected, desktop and phone) was approved by the owner on 4 November 2026: "ok i approve". The stages work like the owner's: each card selects its list; "All" shows every row; no separate Closed link (Not merged is a stage); the list opens on the stage that waits on the solver.
+
+## As-built approval
+
+The as-built page (today, the approved mock-up and the build, each stage clicked) was approved by the owner on 5 November 2026: "Yeah, I agree. We can keep it as it is, and I approve of the design." The owner asked what each side's stages hold; kept as built: the owner's Closed is only "closed with nothing merged" (a merge goes to Payment due, then Paid); the solver's Not merged holds a pull request closed without a merge or one whose bounty went to another solution, each row's line saying which.
