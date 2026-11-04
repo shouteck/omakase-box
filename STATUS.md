@@ -4,7 +4,7 @@ Updated by the CTO on 4 November 2026, when PF31 merged.
 
 ## Now
 
-- **PF31c is merged, not deployed:** the Solver tab has "Your solutions", every bounty the solver answered in its stage (In progress, Payment due, Paid, Not merged), built on the owner's list. See [PF31c](waves/PF31c.md).
+- **PF31c is live** (Worker `ffce3e4d`; `exceededCpu` 0 before and after): the Solver tab has "Your solutions", every bounty the solver answered in its stage (In progress, Payment due, Paid, Not merged), built on the owner's list. See [PF31c](waves/PF31c.md).
 - **PF31b is live** (Worker `c835dc50`; `exceededCpu` 0 before and after): a Stripe or PayPal payment no longer asks the solver to confirm; only a payment recorded by hand does. See [PF31b](waves/PF31b.md).
 - **PF31 is live** (Worker `e38dff9f`, 4 November 2026; `exceededCpu` 0 before and after): one payment window (from the bounty, Your page or #pay), the reward and payment state as one block on the bounty card with one outlined way to the issue, "Pay $X" and "Confirm $X" on Your page, Stripe on merge and one click said apart; approved by the owner on every state. See [PF31](waves/PF31.md). Whom-to-pay from every linked pull request moved to PF32.
 - **The live board is empty** (owner, 4 November 2026: no records from testing): besides the sandbox (PF9b), the two $0 test bounties on `shouteck/omakase-box` (#5, #6, October) were removed from the database and their `box-bounty` label taken off on GitHub so the search does not bring them back. The owner's own sign-ins, Stripe connection and pay settings stay.
@@ -45,7 +45,7 @@ Updated by the CTO on 4 November 2026, when PF31 merged.
 ## Next
 
 - **PF23 (needs) is deferred** (owner, 3 November 2026): the task text says what it needs; back if real bounties show the need.
-- **Order:** PF31c's deploy (merged; owner's word), **PF32** (an owner lists an existing GitHub issue from the board, D-2026-11-04-dual-usage), **PF6** (ready to launch; the listings for both sides, PF12b folded in), **K41** (the film, last), then the owner's launch.
+- **Order:** **PF32** (an owner lists an existing GitHub issue from the board, D-2026-11-04-dual-usage), **PF6** (ready to launch; the listings for both sides, PF12b folded in), **K41** (the film, last), then the owner's launch.
 - **The next tool release:** the guide inside the package gains the PowerShell line (`npx.cmd`, `box.cmd`); a new version goes to npm by the owner, and to GitHub by a `v*` tag.
 - **A wave for later, not briefed:** fewer words, more showing, across the site, before PF9.
 - Unbriefed (BACKLOG): `rmSync` and non-ASCII names on Windows (BT48); the dependency audit (PF1); landed but not marked merged, solvers' account age (PF4); a private organisation member counts as an outside solver, a squash-merged head reads as off the default branch (PF8); PF18's leftovers.
