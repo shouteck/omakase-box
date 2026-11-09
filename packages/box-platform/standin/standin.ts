@@ -23,8 +23,12 @@ export type StandinIssue = {
   /** Replaces the whole body: for malformed and missing blocks. */
   rawBody?: string;
   pulls?: StandinPull[]; events?: StandinEvent[];
+  /** PF32: a plain issue (no block, no label), as a person writes one; its pull requests reference it, read from its timeline. */
+  plain?: boolean;
 };
-export type StandinRepository = { language: string | null; visibility: 'public' | 'private'; default_branch?: string };
+export type StandinRepository = { language: string | null; visibility: 'public' | 'private'; default_branch?: string;
+  /** PF32: the repository's owner (a user by default, named by the repository) and who can write to it, by account id. */
+  owner?: { login: string; type: 'User' | 'Organization' }; writers?: number[] };
 
 export const commitFor = (id: string): string => id.slice(3).padEnd(40, '0');
 const headOf = (pull: StandinPull): string => pull.head ?? pull.number.toString(16).padStart(40, 'a');
@@ -84,7 +88,7 @@ export class Standin {
     return null;
   }
 
-  private answer(path: string, query: URLSearchParams): { status: number; json?: unknown } {
+  private answer(path: string, query: URLSearchParams, token = ''): { status: number; json?: unknown } {
     if (path === '/search/issues') {
       const q = query.get('q') ?? '';
       if (!q.includes('label:box-bounty')) return { status: 422 };
@@ -92,20 +96,32 @@ export class Standin {
       const perPage = Number(query.get('per_page') ?? 30);
       // Real search returns public and, for a token that can see them, private
       // issues alike; serving private ones here makes the board's own check count.
-      const open = this.issues.filter(issue => !q.includes('is:open') || (issue.state ?? 'open') === 'open');
+      const open = this.issues.filter(issue => issue.plain !== true && (!q.includes('is:open') || (issue.state ?? 'open') === 'open'));
       return { status: 200, json: { total_count: open.length, incomplete_results: false, items: open.slice((page - 1) * perPage, page * perPage).map(issue => this.issueJson(issue)) } };
     }
     let match = /^\/repos\/([^/]+\/[^/]+)$/.exec(path);
     if (match) {
       const repository = this.repositories.get(match[1]!);
       if (!repository) return { status: 404 };
-      return { status: 200, json: { full_name: match[1], private: repository.visibility === 'private', visibility: repository.visibility, language: repository.language, default_branch: repository.default_branch ?? 'main' } };
+      const ownerLogin = repository.owner?.login ?? match[1]!.split('/')[0]!;
+      const viewer = this.tokens.get(token);
+      const permissions = viewer === undefined ? {} : { permissions: { admin: false, maintain: false, push: (repository.writers ?? []).includes(viewer.id) || viewer.login === ownerLogin, triage: false, pull: true } };
+      return { status: 200, json: { full_name: match[1], private: repository.visibility === 'private', visibility: repository.visibility, language: repository.language, default_branch: repository.default_branch ?? 'main', owner: { login: ownerLogin, id: this.idOf(ownerLogin), type: repository.owner?.type ?? 'User' }, ...permissions } };
     }
     match = /^\/repos\/([^/]+\/[^/]+)\/issues\/(\d+)$/.exec(path);
     if (match) {
       const issue = this.issues.find(entry => entry.repository === match![1] && entry.number === Number(match![2]));
       return issue ? { status: 200, json: this.issueJson(issue) } : { status: 404 };
     }
+    match = /^\/repos\/([^/]+\/[^/]+)\/issues\/(\d+)\/timeline$/.exec(path);
+    if (match) {
+      const issue = this.issues.find(entry => entry.repository === match![1] && entry.number === Number(match![2]));
+      if (!issue) return { status: 404 };
+      return { status: 200, json: (issue.pulls ?? []).map(pull => ({ event: 'cross-referenced', source: { type: 'issue', issue: { number: pull.number, state: pull.state, draft: pull.draft ?? false, created_at: pull.created_at, updated_at: pull.updated_at ?? pull.created_at, repository_url: `https://api.github.com/repos/${issue.repository}`, user: { login: pull.author, id: this.idOf(pull.author) }, author_association: pull.association ?? 'NONE', pull_request: { merged_at: pull.merged_at ?? null }, title: 'A SOLVER WROTE THIS TITLE' } } })) };
+    }
+    // PF32: a branch's head commit, by name.
+    match = /^\/repos\/([^/]+\/[^/]+)\/commits\/([A-Za-z][\w.%-]*)$/.exec(path);
+    if (match && !/^[a-f\d]{40}$/.test(match[2]!)) return this.repositories.has(match[1]!) ? { status: 200, json: { sha: '1'.repeat(40) } } : { status: 404 };
     match = /^\/repos\/([^/]+\/[^/]+)\/pulls$/.exec(path);
     if (match) {
       const issue = this.issues.find(entry => entry.repository === match![1] && `box-bounty/${entry.id}` === query.get('base'));
@@ -152,13 +168,14 @@ export class Standin {
     return {
       html_url: `https://github.com/${issue.repository}/issues/${issue.number}`,
       repository_url: `https://api.github.com/repos/${issue.repository}`,
-      number: issue.number, title: `[box bounty ${issue.id}] ${issue.title}`, body: issue.rawBody ?? bodyOf(issue),
+      node_id: `I_${issue.repository}#${issue.number}`,
+      number: issue.number, title: issue.plain ? issue.title : `[box bounty ${issue.id}] ${issue.title}`, body: issue.plain ? issue.task : issue.rawBody ?? bodyOf(issue),
       state: issue.state ?? 'open', closed_at: issue.closedAt ?? null, user: { login: issue.poster, id: this.idOf(issue.poster) }
     };
   }
 
   /** GitHub's id for an account. A test sets one to give a login to someone new. */
-  private idOf(login: string): number {
+  idOf(login: string): number {
     return this.accountIds.get(login) ?? 9000 + [...login].reduce((sum, char) => sum + char.charCodeAt(0), 0);
   }
 
@@ -180,7 +197,7 @@ export class Standin {
         }
         this.rateLimitAfter -= 1;
       }
-      const { status, json } = this.answer(url.pathname, url.searchParams);
+      const { status, json } = this.answer(url.pathname, url.searchParams, (request.headers.authorization ?? '').replace(/^Bearer /, ''));
       response.writeHead(status, { 'content-type': 'application/json' }).end(JSON.stringify(json ?? { message: 'Not Found' }));
     });
     await new Promise<void>(resolve => this.server!.listen(0, '127.0.0.1', resolve));

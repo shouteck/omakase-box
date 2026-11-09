@@ -71,7 +71,7 @@ export async function addOwnerRecord(db: Db, q: URLSearchParams, filter: Filter,
   filter.values.push(JSON.stringify(logins));
 }
 
-export type BountyRow = { id: string; repository: string; issue_number: number; title: string; task: string; poster: string; issue_state: string; closed_at: string | null; amount: number; created_at: string; work_commit: string; approved_by: string | null; language: string | null; default_branch: string; read_at: number };
+export type BountyRow = { id: string; repository: string; issue_number: number; title: string; task: string; poster: string; issue_state: string; closed_at: string | null; amount: number; created_at: string; work_commit: string; approved_by: string | null; language: string | null; default_branch: string; read_at: number; source?: string; issue_author?: string | null; listed_by?: string | null };
 export type PullRow = { number: number; author: string; state: string; opened_at: string; merged_at: string | null; head_sha?: string | null; checks_state?: string | null; checks_sha?: string | null; checks_read_at?: number };
 /** PF29: what GitHub's checks said, for the current head only; null when this head is not read yet. */
 export const checksFact = (pull: Pick<PullRow, 'head_sha' | 'checks_state' | 'checks_sha' | 'checks_read_at'>): { state: string; head: string; read_at: string } | null =>

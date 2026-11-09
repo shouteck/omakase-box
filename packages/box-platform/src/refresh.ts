@@ -265,6 +265,52 @@ async function readEvents(env: Env, github: GitHub, id: string, repository: stri
   }
 }
 
+/**
+ * PF32: a listed bounty's issue, read again as it is: its title, its author's words, open or closed. It carries no block
+ * and never will; a 404, a 410 or an address that became a pull request takes it off the board.
+ */
+async function readListedIssue(env: Env, github: GitHub, id: string, repository: string, number: number, now: number): Promise<boolean> {
+  const answer = await github.get(`/repos/${repository}/issues/${number}`);
+  if (answer.status === 404 || answer.status === 410) { await removeBounty(env.DB, id); await log(env.DB, now, 'listed-issue-gone', null); return false; }
+  if (answer.status !== 200 || !record(answer.json)) return true;
+  const issue = answer.json;
+  if ('pull_request' in issue || typeof issue['title'] !== 'string' || !record(issue['user']) || typeof issue['user']['login'] !== 'string') { await removeBounty(env.DB, id); return false; }
+  await env.DB.prepare('UPDATE bounties SET title = ?, task = ?, issue_author = ?, issue_state = ?, closed_at = ?, seen_at = ? WHERE id = ?')
+    .bind(unescaped(issue['title']).slice(0, TITLE_MAX), unescaped(typeof issue['body'] === 'string' ? issue['body'] : '').trim().slice(0, TASK_MAX), issue['user']['login'],
+      issue['state'] === 'closed' ? 'closed' : 'open', typeof issue['closed_at'] === 'string' ? issue['closed_at'] : null, now, id).run();
+  return true;
+}
+
+/**
+ * PF32: a listed bounty's pull requests are the ones GitHub's timeline says reference its issue, from the same repository
+ * (a closing keyword such as "Fixes #12", or any link). One read, in the turn the branch list read would take.
+ */
+async function readLinkedPulls(env: Env, github: GitHub, id: string, repository: string, number: number): Promise<void> {
+  const answer = await github.get(`/repos/${repository}/issues/${number}/timeline?per_page=100`);
+  if (answer.status !== 200 || !Array.isArray(answer.json)) return;
+  const writes: Statement[] = [];
+  const seen = new Set<number>();
+  for (const event of answer.json as unknown[]) {
+    if (!record(event) || event['event'] !== 'cross-referenced' || !record(event['source']) || !record(event['source']['issue'])) continue;
+    const pull = event['source']['issue'];
+    if (!record(pull['pull_request']) || !Number.isSafeInteger(pull['number']) || !record(pull['user']) || typeof pull['created_at'] !== 'string') continue;
+    const from = typeof pull['repository_url'] === 'string' ? /\/repos\/([^/]+\/[^/]+)$/.exec(pull['repository_url'])?.[1] : undefined;
+    const author = pull['user']['login'];
+    if (from?.toLowerCase() !== repository.toLowerCase() || typeof author !== 'string' || !LOGIN.test(author) || seen.has(pull['number'] as number)) continue;
+    seen.add(pull['number'] as number);
+    const merged = typeof pull['pull_request']['merged_at'] === 'string' ? pull['pull_request']['merged_at'] : null;
+    const association = typeof pull['author_association'] === 'string' && ASSOCIATIONS.has(pull['author_association']) ? pull['author_association'] : null;
+    const authorId = pull['user']['id'];
+    const draft = typeof pull['draft'] === 'boolean' ? (pull['draft'] ? 1 : 0) : null;
+    const updated = typeof pull['updated_at'] === 'string' ? pull['updated_at'] : null;
+    writes.push(env.DB.prepare(`INSERT INTO pull_requests (bounty_id, number, author, author_id, state, opened_at, merged_at, association, head_sha, on_default, draft, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?)
+      ON CONFLICT (bounty_id, number) DO UPDATE SET author = excluded.author, author_id = excluded.author_id, state = excluded.state, merged_at = excluded.merged_at, on_default = excluded.on_default, draft = excluded.draft, updated_at = excluded.updated_at,
+        association = CASE WHEN pull_requests.merged_at IS NOT NULL THEN pull_requests.association ELSE excluded.association END`)
+      .bind(id, pull['number'] as number, author, Number.isSafeInteger(authorId) ? authorId as number : null, merged !== null ? 'merged' : pull['state'] === 'closed' ? 'closed' : 'open', pull['created_at'], merged, association, merged !== null ? 1 : null, draft, updated));
+  }
+  await runAll(env.DB, writes);
+}
+
 /** An open bounty the finished search no longer returns: read its issue directly. */
 async function readIssueAgain(env: Env, github: GitHub, id: string, repository: string, number: number, now: number): Promise<boolean> {
   const answer = await github.get(`/repos/${repository}/issues/${number}`);
@@ -346,16 +392,16 @@ export async function refresh(env: Env): Promise<RefreshResult> {
     // PF29: a third step, per open attempt: its head's checks. Due when the head was never read, after the stale bound
     // while pending or unread, and while "none" only if the attempt was active in the last hour (CI starting late).
     const recent = new Date(now - RECENT_ACTIVITY_MS).toISOString();
-    const due = await db.prepare(`SELECT id, repository, issue_number, seen_at, issue_state, step, at, number, head FROM (
-        SELECT id, repository, issue_number, seen_at, issue_state, 'pulls' AS step, details_read_at AS at, NULL AS number, NULL AS head FROM bounties WHERE details_read_at <= ? AND (issue_state = 'open' OR details_read_at <= ?)
+    const due = await db.prepare(`SELECT id, repository, issue_number, seen_at, issue_state, source, step, at, number, head FROM (
+        SELECT id, repository, issue_number, seen_at, issue_state, source, 'pulls' AS step, details_read_at AS at, NULL AS number, NULL AS head FROM bounties WHERE details_read_at <= ? AND (issue_state = 'open' OR details_read_at <= ?)
         UNION ALL
-        SELECT id, repository, issue_number, seen_at, issue_state, 'events' AS step, events_read_at AS at, NULL AS number, NULL AS head FROM bounties WHERE events_read_at <= ? AND (issue_state = 'open' OR events_read_at <= ?)
+        SELECT id, repository, issue_number, seen_at, issue_state, source, 'events' AS step, events_read_at AS at, NULL AS number, NULL AS head FROM bounties WHERE events_read_at <= ? AND (issue_state = 'open' OR events_read_at <= ?)
         UNION ALL
-        SELECT b.id, b.repository, b.issue_number, b.seen_at, b.issue_state, 'checks' AS step, p.checks_read_at AS at, p.number, p.head_sha AS head FROM pull_requests p JOIN bounties b ON b.id = p.bounty_id
+        SELECT b.id, b.repository, b.issue_number, b.seen_at, b.issue_state, b.source, 'checks' AS step, p.checks_read_at AS at, p.number, p.head_sha AS head FROM pull_requests p JOIN bounties b ON b.id = p.bounty_id
           WHERE p.state = 'open' AND b.issue_state = 'open' AND p.head_sha IS NOT NULL AND (p.checks_sha IS NULL OR p.checks_sha != p.head_sha
             OR (p.checks_read_at <= ? AND (p.checks_state IN ('pending', 'unread') OR (p.checks_state = 'none' AND p.updated_at >= ?)))))
       ORDER BY at, id, step, number`)
-      .bind(stale, closedStale, stale, closedStale, stale, recent).all<{ id: string; repository: string; issue_number: number; seen_at: number; issue_state: string; step: 'pulls' | 'events' | 'checks'; at: number; number: number | null; head: string | null }>();
+      .bind(stale, closedStale, stale, closedStale, stale, recent).all<{ id: string; repository: string; issue_number: number; seen_at: number; issue_state: string; source: string; step: 'pulls' | 'events' | 'checks'; at: number; number: number | null; head: string | null }>();
     const checked = new Map<string, boolean>();
     for (const row of due.results) {
       const spent = github.used;
@@ -364,6 +410,17 @@ export async function refresh(env: Env): Promise<RefreshResult> {
         : db.prepare(`UPDATE bounties SET ${row.step === 'pulls' ? 'details_read_at' : 'events_read_at'} = ? WHERE id = ?`).bind(at, row.id).run();
       await mark(row.issue_state === 'open' ? stale : closedStale);
       try {
+        // PF32: a listed bounty has no block and no chain. Its pull step reads its issue as it is, then the pull requests
+        // linked to it; its events step has nothing to read.
+        if (row.source === 'listed') {
+          if (row.step === 'events') { await mark(now); continue; }
+          if (row.step === 'pulls') {
+            if (!await readListedIssue(env, github, row.id, row.repository, row.issue_number, now)) continue;
+            await readLinkedPulls(env, github, row.id, row.repository, row.issue_number);
+            await mark(now);
+            continue;
+          }
+        }
         if (!checked.has(row.id)) checked.set(row.id, !(row.issue_state === 'open' && row.seen_at < completeAt) || await readIssueAgain(env, github, row.id, row.repository, row.issue_number, now));
         if (!checked.get(row.id)) continue;
         if (row.step === 'pulls') {

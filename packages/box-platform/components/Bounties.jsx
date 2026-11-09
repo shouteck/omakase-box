@@ -57,13 +57,13 @@ function Row({ b, now, onPay }) {
     <tr data-bounty={b.id} data-stage={b.stage} className="block sm:table-row border-b border-line py-3.5 sm:py-0">
       <td className="block sm:table-cell sm:py-4 sm:pr-3 align-middle">
         <a href={`/b/${b.id}/`} className="font-medium" style={{ color: 'var(--color-ink)' }}>{b.title}</a>
-        <span className="flex justify-between gap-3 text-sm text-soft"><span title={b.created_at}>{b.repository} #{b.issue_number} · {ago(b.created_at, now)}</span><span className="sm:hidden tabular-nums" style={{ color: 'var(--color-ink)' }}>{pay ? <PayButton b={b} onPay={onPay} /> : `${b.reward}`}</span></span>
+        <span className="flex justify-between gap-3 text-sm text-soft"><span title={b.created_at}>{b.repository} #{b.issue_number} · {ago(b.created_at, now)}</span><span className="sm:hidden tabular-nums" style={{ color: 'var(--color-ink)' }}>{pay ? <PayButton b={b} onPay={onPay} /> : `$${b.reward}`}</span></span>
       </td>
       <td className="block sm:table-cell sm:py-4 sm:px-3 align-middle pt-2 sm:pt-4">
         <span className="inline-flex items-center gap-2 text-soft whitespace-nowrap"><Glyph stage={b.stage} />{NAMES[b.stage]}</span>
         <span data-detail className={`block text-sm pl-6 ${b.card_failed ? 'text-[var(--color-danger)]' : 'text-soft'}`}><Detail b={b} /></span>
       </td>
-      <td className="hidden sm:table-cell sm:py-4 sm:pl-3 text-left tabular-nums align-middle">{pay ? <PayButton b={b} onPay={onPay} /> : `${b.reward}`}</td>
+      <td className="hidden sm:table-cell sm:py-4 sm:pl-3 text-left tabular-nums align-middle">{pay ? <PayButton b={b} onPay={onPay} /> : `$${b.reward}`}</td>
     </tr>
   );
 }

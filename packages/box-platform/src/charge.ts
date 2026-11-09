@@ -96,6 +96,7 @@ const DUE = `SELECT b.id, b.amount, b.poster, b.poster_id, r.on_at, s.customer_i
   JOIN pay_settings s ON s.github_id = b.poster_id
   LEFT JOIN charges c ON c.bounty_id = b.id
   WHERE b.amount > 0 AND s.payment_method IS NOT NULL AND COALESCE(r.limit_per_bounty, s.limit_per_bounty) IS NOT NULL
+    AND b.source = 'posted' -- PF32: a listed bounty's owner chooses whom to pay; a merge never charges for it
     AND EXISTS (SELECT 1 FROM pull_requests p WHERE p.bounty_id = b.id AND p.state = 'merged' AND p.on_default = 1)
     AND (c.state IS NULL OR c.state NOT IN ('paid', 'refunded', 'disputed', 'owner-must-authenticate', 'owner-paying'))
     AND (c.at IS NULL OR c.at <= ?)
@@ -105,9 +106,16 @@ type DueRow = { id: string; amount: number; poster: string; poster_id: number; o
 const LOOK_AGAIN_MS = 300000; // A state that may change is looked at this often, never faster.
 
 /** Who can be paid here, by GitHub's facts and the account tied to the merged author's id. Shared by the machine and the owner's click. */
-export async function payeeFacts(env: Env, id: string): Promise<Pick<ChargeFacts, 'landed' | 'solver' | 'recorded'>> {
+/**
+ * Who a payment on this bounty goes to. Without `chosen`, the merge decides (one landed pull request). With `chosen`, the
+ * owner's choice (PF32): on a listed bounty any linked pull request's author, merged or not; on a posted bounty one of
+ * the landed ones. The rest of the rule (connected, ready, not self-dealt) is unchanged.
+ */
+export async function payeeFacts(env: Env, id: string, chosen?: string): Promise<Pick<ChargeFacts, 'landed' | 'solver' | 'recorded'>> {
   const db = env.DB;
-  const landed = (await db.prepare(`SELECT number, author, author_id, merged_at, association, on_default FROM pull_requests WHERE bounty_id = ? AND state = 'merged' AND on_default = 1 ORDER BY number`).bind(id).all<Merged>()).results;
+  const listed = chosen !== undefined && (await db.prepare(`SELECT 1 AS yes FROM bounties WHERE id = ? AND source = 'listed'`).bind(id).first()) !== null;
+  const all = (await db.prepare(`SELECT number, author, author_id, merged_at, association, on_default FROM pull_requests WHERE bounty_id = ? AND ${listed ? '1 = 1' : `state = 'merged' AND on_default = 1`} ORDER BY number`).bind(id).all<Merged>()).results;
+  const landed = chosen === undefined ? all : all.filter(pull => pull.author.toLowerCase() === chosen.toLowerCase()).slice(-1);
   const authorId = landed.length === 1 ? landed[0]!.author_id : null;
   const solver = authorId === null ? null : await db.prepare('SELECT account_id, ready FROM stripe_accounts WHERE github_id = ?').bind(authorId).first<{ account_id: string; ready: number }>();
   const events = await db.prepare(`SELECT 1 FROM events WHERE bounty_id = ? AND type = 'paid' AND withdrawn = 0 UNION SELECT 1 FROM paid_clicks WHERE bounty_id = ? AND withdrawn = 0 LIMIT 1`).bind(id, id).first();
@@ -248,16 +256,16 @@ export function decidePay(facts: PayFacts): PayDecision {
 const PAGE_MINUTES = 31; // Stripe's shortest life for a page is 30 minutes.
 type PayRow = { state: ChargeState; provider: string | null; account_id: string | null; amount: number | null; payment_intent: string | null; at: number };
 
-const payFacts = async (env: Env, id: string): Promise<{ facts: PayFacts; row: PayRow | null; poster_id: number | null } | null> => {
+const payFacts = async (env: Env, id: string, chosen?: string): Promise<{ facts: PayFacts; row: PayRow | null; poster_id: number | null } | null> => {
   const bounty = await env.DB.prepare('SELECT amount, poster, poster_id FROM bounties WHERE id = ?').bind(id).first<{ amount: number; poster: string; poster_id: number | null }>();
   if (bounty === null) return null;
   const row = await env.DB.prepare('SELECT state, provider, account_id, amount, payment_intent, at FROM charges WHERE bounty_id = ?').bind(id).first<PayRow>();
-  return { facts: { amount: bounty.amount, poster: bounty.poster, ...await payeeFacts(env, id), state: row?.state ?? null }, row, poster_id: bounty.poster_id };
+  return { facts: { amount: bounty.amount, poster: bounty.poster, ...await payeeFacts(env, id, chosen), state: row?.state ?? null }, row, poster_id: bounty.poster_id };
 };
 
-/** What the poster's page offers. Calls no one: the click checks with Stripe. */
-export async function payOffer(env: Env, id: string, githubId: number): Promise<{ can_pay: boolean; pay_note: string | null }> {
-  const found = await payFacts(env, id);
+/** What the poster's page offers. Calls no one: the click checks with Stripe. `chosen`: the person the owner chose (PF32). */
+export async function payOffer(env: Env, id: string, githubId: number, chosen?: string): Promise<{ can_pay: boolean; pay_note: string | null }> {
+  const found = await payFacts(env, id, chosen);
   if (found === null || found.poster_id !== githubId || found.facts.recorded || found.facts.landed.length === 0 || found.facts.amount <= 0) return { can_pay: false, pay_note: null };
   if (!stripeOn(env)) return { can_pay: false, pay_note: 'Paying through Stripe is not set up on this board. The ways to pay on this page still work.' };
   const decision = decidePay(found.facts);
@@ -300,8 +308,8 @@ export async function retireStripePage(env: Env, id: string, now: number): Promi
  * The poster's click. One bounty has one live page: a page still open is opened again, and clicks at once share
  * one key, so they share one page. The claim stops the machine charging while a person is on Stripe's page.
  */
-export async function openPayPage(env: Env, id: string, origin: string, now: number): Promise<{ url: string } | { paid: true } | { error: string }> {
-  const found = await payFacts(env, id);
+export async function openPayPage(env: Env, id: string, origin: string, now: number, chosen?: string): Promise<{ url: string } | { paid: true } | { error: string }> {
+  const found = await payFacts(env, id, chosen);
   if (found === null) return { error: 'This bounty is not on the board. Nothing was charged.' };
   const decision = decidePay(found.facts);
   if (decision.act === 'refuse') return { error: decision.words };

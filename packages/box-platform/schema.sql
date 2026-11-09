@@ -25,7 +25,15 @@ CREATE TABLE IF NOT EXISTS bounties (
   -- PF28: the event chain is read as its own step, so neither step can hold up the other or the rest.
   events_read_at INTEGER NOT NULL DEFAULT 0,
   -- PF22: the order the board first listed it in, so "new since" never skips one read late.
-  listed_seq INTEGER
+  listed_seq INTEGER,
+  -- PF32: how the bounty came in: 'posted' (the tool's block in the issue) or 'listed' (the board form, an existing
+  -- issue). A listed bounty's reward is the lister's word on the board; who listed it, by GitHub id. Removing a listed
+  -- bounty (only before any merge or payment) deletes it, as a repository gone private does.
+  source TEXT NOT NULL DEFAULT 'posted',
+  listed_by_id INTEGER,
+  listed_by TEXT,
+  -- The issue's own author, whose words the task is (the lister may be someone who can write to the repository).
+  issue_author TEXT
 );
 CREATE INDEX IF NOT EXISTS bounties_board ON bounties (issue_state, created_at);
 CREATE INDEX IF NOT EXISTS bounties_listed ON bounties (listed_seq);

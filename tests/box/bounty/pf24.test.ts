@@ -43,6 +43,21 @@ beforeAll(async () => {
 afterAll(() => { server.kill(); });
 beforeEach(() => { writeFileSync(join(folder, 'requests.jsonl'), ''); routes({}); });
 
+// PF32: a bounty an owner listed from the board is answered on the default branch, its pull request closing the issue.
+// The PF32 real run found discover leaving it out; a listed shape that does not hold is still left out.
+describe('a listed bounty', () => {
+  it('is discovered, answered on the default branch; without closes_issue the same answer is left out', () => {
+    allow();
+    const listed = entry(7, { way_in: 'listed', answer: { branch: 'main', base_commit: 'a'.repeat(40), pull_request_base: 'main', closes_issue: 'Fixes #12' } });
+    const broken = entry(8, { way_in: 'listed', answer: { branch: 'main', base_commit: 'a'.repeat(40), pull_request_base: 'main' } });
+    routes({ '/bounties.json?since=start&limit=10': page([listed, broken], 'B1') });
+    const result = discover({ from: 'start' });
+    expect(ids(result)).toEqual([`bt-${hex(7)}`]);
+    expect(result.bounties[0]!.branch).toBe('main');
+    expect(result.unreadable).toBe(1);
+  });
+});
+
 describe('the owner\'s switch', () => {
   it('off by default: discover refuses by name, reads nothing from the board, and saves nothing', () => {
     changeConfig(null, 'set', 'board', board);

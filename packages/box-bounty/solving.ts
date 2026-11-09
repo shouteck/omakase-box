@@ -144,7 +144,9 @@ function entryOf(raw: unknown): DiscoveredBounty | null {
     const state = (draft as Record<string, any> | null)?.['checks']?.['state'];
     if (typeof state === 'string' && Object.hasOwn(checks, state)) checks[state as keyof typeof checks] += 1;
   }
-  const branch = typeof e['answer']?.['branch'] === 'string' && e['answer']['branch'] === `box-bounty/${id}` ? e['answer']['branch'] as string : null;
+  // PF32: a bounty an owner listed from the board is answered on the default branch, its pull request closing the issue.
+  const listed = e['way_in'] === 'listed' && typeof e['answer']?.['closes_issue'] === 'string' && /^Fixes #\d{1,9}$/.test(e['answer']['closes_issue']);
+  const branch = typeof e['answer']?.['branch'] === 'string' && (e['answer']['branch'] === `box-bounty/${id}` || (listed && /^[\w./-]{1,255}$/.test(e['answer']['branch']))) ? e['answer']['branch'] as string : null;
   const base = typeof e['answer']?.['base_commit'] === 'string' && /^[a-f\d]{40}$/.test(e['answer']['base_commit']) ? e['answer']['base_commit'] as string : null;
   const page = typeof e['links']?.['page'] === 'string' && /^https?:\/\/[^\s"]+$/.test(e['links']['page']) ? e['links']['page'] as string : null;
   if (id === null || title === null || reward === null || repository === null || owner === null || branch === null || base === null || page === null || typeof e['pays_on_merge'] !== 'boolean') return null;

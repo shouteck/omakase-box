@@ -51,7 +51,8 @@ const LEGEND = {
   source: 'github: read from GitHub\'s public API. project-record: an event the poster\'s tool pushed to refs/box-bounty/<id> in the repository on GitHub; only someone with push access can push it, so it is read as the owner\'s word. board: a click on the board by the signed-in person named in by.',
   state: 'open | solutions-waiting (open, with open pull requests). Closed states appear only in a bounty\'s detail.',
   approved_by: 'How posting was approved, as the poster\'s tool recorded it (source project-record: the owner\'s word), a fact and not a rating. null: the record does not say. owner-this-bounty: the owner said yes to this bounty before it was posted. owner-standing-rule: the owner set a standing permission once, and their tool posted this bounty under it.',
-  answer: 'Branch from answer.branch at answer.base_commit; open a pull request against answer.pull_request_base.',
+  answer: 'Branch from answer.branch at answer.base_commit; open a pull request against answer.pull_request_base. When answer.closes_issue is set (a bounty listed from the board on an existing issue), the pull request\'s description must say it, so GitHub links it to the issue.',
+  way_in: 'Present only as listed: an owner listed an existing issue from the board, and chooses whom to pay from every pull request linked to it, merged or not. Absent: the owner\'s tool posted the bounty as its own issue, and the merged solution is paid.',
   count: 'How many open bounties match, across all pages.',
   stale: 'null: the last read of GitHub worked. Otherwise why it failed; the facts are from read_at, and the board retries every 15 minutes.'
 };
@@ -61,7 +62,7 @@ const JUDGED = 'The board does not judge solutions or rank people.';
 const TERMS = 'The merged solution earns the whole reward. Other solutions and parts used by hand earn nothing.';
 export const NOT_ON_BOARD = 'This bounty is not on the board. It may be mistyped, on a private repository (never listed), or not yet read from GitHub. Next: search the list (find_bounties, or /bounties.json).';
 
-type EntryRow = Pick<BountyRow, 'id' | 'title' | 'amount' | 'poster' | 'repository' | 'language' | 'created_at' | 'approved_by' | 'work_commit' | 'issue_number'>;
+type EntryRow = Pick<BountyRow, 'id' | 'title' | 'amount' | 'poster' | 'repository' | 'language' | 'created_at' | 'approved_by' | 'work_commit' | 'issue_number' | 'source'> & { default_branch?: string };
 
 /** What an agent weighing a bounty needs beyond the counts (PF22): attempts started, whether the poster answers itself, how fast the owner decides. */
 type Odds = { merged: number; closed: number; open: number };
@@ -115,7 +116,8 @@ async function weighOf(env: Env, rows: readonly { id: string; poster: string }[]
 
 function entryOf(row: EntryRow, record: OwnerRecord, state: string, open: number, total: number, origin: string, now: number, paying: boolean, here: WaysSetUp, weigh: Weigh = NO_WEIGH) {
   const base = `https://github.com/${row.repository}`;
-  const branch = `box-bounty/${row.id}`;
+  const listed = row.source === 'listed';
+  const branch = listed ? row.default_branch ?? 'main' : `box-bounty/${row.id}`;
   const ways = waysOfBounty(row.amount, here, paying);
   return {
     id: row.id,
@@ -132,7 +134,8 @@ function entryOf(row: EntryRow, record: OwnerRecord, state: string, open: number
     posted_at: row.created_at,
     age_days: Math.max(0, Math.floor((now - Date.parse(row.created_at)) / DAY)),
     approved_by: row.approved_by,
-    answer: { branch, base_commit: row.work_commit, pull_request_base: branch },
+    ...(listed ? { way_in: 'listed' as const } : {}),
+    answer: { branch, base_commit: row.work_commit, pull_request_base: branch, ...(listed ? { closes_issue: `Fixes #${row.issue_number}` } : {}) },
     links: { page: `${origin}/b/${row.id}/`, issue: `${base}/issues/${row.issue_number}`, detail: `${origin}/bounties/${row.id}.json` }
   };
 }
@@ -203,7 +206,7 @@ export async function findBounties(env: Env, q: URLSearchParams, now: number, or
     else { where.push(newer); after.push(at.created_at, at.created_at, at.id); }
   }
   const order = since !== null ? 'b.listed_seq' : sort === 'reward' ? 'b.amount DESC, b.created_at DESC, b.id' : 'b.created_at DESC, b.id';
-  const rows = (await env.DB.prepare(`SELECT b.id, b.title, b.amount, b.poster, b.repository, r.language, b.created_at, b.approved_by, b.work_commit, b.issue_number, b.listed_seq, ${OPEN_COUNT} AS open_pulls, (SELECT COUNT(*) FROM pull_requests t WHERE t.bounty_id = b.id) AS all_pulls ${from} WHERE ${where.join(' AND ')} ORDER BY ${order} LIMIT ?`)
+  const rows = (await env.DB.prepare(`SELECT b.id, b.title, b.amount, b.poster, b.repository, r.language, b.created_at, b.approved_by, b.work_commit, b.issue_number, b.source, r.default_branch, b.listed_seq, ${OPEN_COUNT} AS open_pulls, (SELECT COUNT(*) FROM pull_requests t WHERE t.bounty_id = b.id) AS all_pulls ${from} WHERE ${where.join(' AND ')} ORDER BY ${order} LIMIT ?`)
     .bind(...values, ...after, limit + 1).all<EntryRow & { listed_seq: number; open_pulls: number; all_pulls: number }>()).results;
   const shown = rows.slice(0, limit);
   const last = shown[shown.length - 1];
@@ -249,7 +252,12 @@ export async function bountyDetail(env: Env, id: string, now: number, origin: st
       poster_says: { title: row.title, task, task_truncated: task.length < row.task.length, note: POSTER_NOTE },
       closed_at: row.closed_at,
       terms: TERMS,
-      how_to_answer: [
+      how_to_answer: row.source === 'listed' ? [
+        `Fork ${row.repository} and create a branch from its default branch, ${row.default_branch}.`,
+        'Make the change the task asks for.',
+        `Open a pull request against ${row.default_branch} in ${row.repository} whose description says "Fixes #${row.issue_number}". The board links it to this bounty from GitHub.`,
+        'The owner chooses whom to pay, from every pull request linked to the issue, merged or not. A merge names nobody.'
+      ] : [
         `Fork ${row.repository} and create a branch from ${branch} at commit ${row.work_commit}.`,
         'Make the change the task asks for.',
         `Open a pull request against the branch ${branch} in ${row.repository} (not against ${row.default_branch}).`
@@ -295,9 +303,12 @@ const ENTRY_SCHEMA = closed({
   posted_at: { type: 'string' },
   age_days: { type: 'integer', minimum: 0 },
   approved_by: { enum: ['owner-this-bounty', 'owner-standing-rule', null] },
-  answer: closed({ branch: { type: 'string' }, base_commit: { type: 'string' }, pull_request_base: { type: 'string' } }),
+  way_in: { const: 'listed' },
+  answer: closed({ branch: { type: 'string' }, base_commit: { type: 'string' }, pull_request_base: { type: 'string' }, closes_issue: { type: 'string' } }, ['branch', 'base_commit', 'pull_request_base']),
   links: closed({ page: { type: 'string' }, issue: { type: 'string' }, detail: { type: 'string' } })
 });
+// PF32: way_in appears only on a listed bounty.
+ENTRY_SCHEMA.required = ENTRY_SCHEMA.required.filter(key => key !== 'way_in');
 export const FEED_SCHEMA = {
   $schema: 'https://json-schema.org/draft/2020-12/schema',
   title: 'Open bounty board feed',
