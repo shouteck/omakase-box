@@ -77,47 +77,48 @@ function listingHistory(record: BountyRecord, repository: string, plan: GitHubPl
   // A commit's subject prints quoted (BT43 correction 4): the commits a post
   // publishes for the first time can include a solver's, merged locally by
   // apply, under the subject the solver wrote.
-  const onTop = plan.pushed.length === 0
-    ? `it points at that commit — nothing new was published`
-    : `it carries the poster's work in progress — ${plan.pushed.length} commit(s) on top of that commit: ${plan.pushed.map(c => `\`${c.sha.slice(0, 12)}\` ${showPath(c.subject)}`).join(', ')}`;
+  // PF33 (owner, 10 November 2026): the issue a solver reads, plain and in order: the reward first, a link to the
+  // board, three steps to answer, a hint for agents, then the reward's terms. Every fact the old text carried stays.
+  // A commit's subject prints quoted (BT43 correction 4): the commits a post publishes for the first time can include
+  // a solver's, merged locally by apply, under the subject the solver wrote.
+  const board = boardAddress();
+  const posted = new Date(record.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+  const short = plan.base.slice(0, 12);
+  const work = plan.pushed.length === 0 ? [] : [publicText(`   It also carries the poster's work in progress, ${plan.pushed.length} commit(s): ${plan.pushed.map(c => `\`${c.sha.slice(0, 12)}\` ${showPath(c.subject)}`).join(', ')}.`)];
   const body = [
     `# Bounty: ${publicText(record.title)}`,
     '',
-    `id ${record.id} · created ${record.createdAt} by ${content.tool}`,
+    `${reward > 0 ? `$${reward} for the merged solution` : 'No reward'} · ${record.id} · posted ${posted}`,
+    ...(board === '' ? [] : [`On the board: ${board}/b/${record.id}/`]),
     '',
     '## What is wanted',
     '',
     publicText(content.task.text.trim()),
     '',
-    // The issue and the create preview agree on the note (BT14, F4): a
-    // generated note exists — the preview names it — it is simply not
-    // published; only a truly absent note says "none supplied".
-    '## What was already tried', '', note !== null ? publicText(note.text.trim()) : record.noteSource === 'generated' ? 'What the poster tried is in the task above — the tool asks agents to put it there.' : 'No public note was supplied.', '',
-    '## The code',
-    '',
-    `Branch from \`${branch}\` — it is the branch pull requests for this bounty target.`,
-    publicText(`The branch is based on commit ${plan.base}, the newest commit this repository already had: ${onTop}.`),
-    '',
+    // The issue and the create preview agree on the note (BT14, F4): a generated note stays local, so the section is
+    // there only when the poster wrote one.
+    ...(note !== null ? ['## What was already tried', '', publicText(note.text.trim()), ''] : []),
     '## How to answer',
     '',
-    `Fork this repository (or push a branch inside it), branch from \`${branch}\`, make the change, and open a pull request against \`${branch}\` in this repository. Collecting an answer runs nothing you wrote — the poster reads the change and decides.`,
+    `1. Fork this repository (or push a branch inside it) and start from \`${branch}\` (commit ${short}). It holds the code as the poster left it.`,
+    ...work,
+    `2. Make the change and open a pull request against \`${branch}\`, not against the default branch.`,
+    '3. The poster reads the change and decides. The tool never runs anything you wrote.',
     '',
-    'Nobody is known to be watching these issues yet. Anyone can read this issue and the branch, and any account may answer.',
+    `Agents: \`box bounty take ${record.id}\` does steps 1 and 2 (npm i -g omakase-box).`,
     '',
-    `reward: $${reward}`,
+    '## Reward',
+    '',
     ...(reward > 0 ? [
-      boardAddress() === ''
-        ? 'to be paid: say how in your pull request description.'
-        : `to be paid: connect an account or list a way at ${boardAddress()}/me/, or say how in your pull request description.`,
-      'payment is the poster\'s to make — posting an answer does not guarantee it.'
-    ] : []),
-    'The merged solution earns the whole reward. Other solutions and parts used by hand earn nothing.',
-    // The licence file's name and package.json's declared licence are read
-    // from the branch root, where an applied solution can have put them:
-    // both quoted (BT43 correction 5).
+      `$${reward} for the merged solution, paid by the poster directly. Other solutions and parts used by hand earn nothing.`,
+      board === '' ? 'To be paid: say how in your pull request description.' : `To be paid: sign in with your GitHub account at ${board}/me/ and set up how you get paid there.`,
+      board === '' ? 'Posting an answer doesn\'t guarantee payment.' : 'Posting an answer doesn\'t guarantee payment; the poster\'s payment record is on the board.'
+    ] : ['No reward is stated.']),
+    // The licence file's name and package.json's declared licence are read from the branch root, where an applied
+    // solution can have put them: both quoted (BT43 correction 5).
     plan.licence.file !== null
-      ? publicText(`licence: ${showPath(plan.licence.file)}${plan.licence.declared !== null ? ` (package.json declares ${showPath(plan.licence.declared)})` : ''}`)
-      : 'licence: no licence file was found at the branch root',
+      ? publicText(`Licence: ${showPath(plan.licence.file)}${plan.licence.declared !== null ? ` (package.json declares ${showPath(plan.licence.declared)})` : ''}`)
+      : 'Licence: no licence file was found at the branch root.',
     '',
     `<!-- box-bounty:${record.id} -->`,
     ''
