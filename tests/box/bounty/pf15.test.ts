@@ -166,12 +166,16 @@ describe('against a board', { timeout: 180000 }, () => {
   };
   const detail = (id: string, payment: Record<string, unknown>) => ({ bounty: { id, solutions: { open: 0, total: 1 }, payment, solution_list: [{ number: 1, author: 'solver1', merged_at: '2026-10-15T00:00:00Z' }] } });
 
-  it('a new issue says connect, list or say how, and its block has no pay-to', () => fixture(({ repo, id, scratch }) => {
+  it('a new issue says: sign in at the board and set up how you get paid; its block has no pay-to', () => fixture(({ repo, id, scratch }) => {
     rewarded(scratch, board);
     routes({});
     postBounty(repo, id, 'github');
     const body = loadRecord(repo, id).github!.body;
-    expect(body).toContain(`to be paid: connect an account or list a way at ${board}/me/, or say how in your pull request description.`);
+    // PF33: one plain line, no provider named; the pull-request route is gone where a board is set.
+    expect(body).toContain(`To be paid: sign in with your GitHub account at ${board}/me/ and set up how you get paid there.`);
+    expect(body).not.toContain('say how in your pull request');
+    expect(body).toContain(`On the board: ${board}/b/`);
+    expect(body).toMatch(/^Agents: `box bounty take bt-[a-f\d]{12}` does steps 1 and 2/m);
     expect(body).not.toContain('pay-to');
     const read = readFormat(body);
     expect(read.kind === 'present' && read.value.schemaVersion).toBe(2);

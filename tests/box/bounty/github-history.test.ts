@@ -60,7 +60,7 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     // Identical history on the remote: same shas, same parents, same order.
     expect(git(bare, ['rev-list', '--topo-order', `refs/heads/${pub.branch}`])).toBe(git(repo, ['rev-list', '--topo-order', 'HEAD']));
     const issue = state().issues[0]!;
-    expect(issue.body).toContain(`2 commit(s) on top of that commit`);
+    expect(issue.body).toContain(`work in progress, 2 commit(s):`);
     expect(issue.body).toContain(`\`${c2!.slice(0, 12)}\` "first local"`);
   }));
 
