@@ -148,7 +148,7 @@ export function takeBounty(id: string, options: TakeOptions = {}): TakeResult {
   if (limits.approved?.includes(id)) saveSettings({ ...loadSettings(), solving: { ...limits, approved: limits.approved.filter(entry => entry !== id) } });
   return { kind: 'taken', taken, lines: [
     `${id} — taken: draft pull request #${number} ${url}, from ${target} ${branch}${canPush ? '' : ' (your fork)'}`,
-    `workspace: ${workspace} — the bounty branch at ${facts.baseCommit.slice(0, 12)}, with an empty start commit`,
+    `workspace: ${workspace} — ${facts.closesIssue === null ? 'the bounty branch' : `the default branch, ${facts.bountyBranch},`} at ${head.slice(0, 12)}, with an empty start commit`,
     'the tool ran nothing from this repository. Run its tests only here, and keep your credentials out of this folder. The tool pushed with your own gh sign-in, and this machine stays signed in to GitHub; it cannot stop an agent reaching that sign-in.',
     ...(ownBounty ? [`${id} was posted by ${login}, the account taking it: a merge here is not counted in the owner's record.`] : []),
     `next: work in ${workspace}, commit, and push to ${target} ${branch} — the draft updates as you push; box bounty submit ${id} once it is ready for review; box bounty close ${id} withdraws the attempt`

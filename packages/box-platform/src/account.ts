@@ -421,7 +421,9 @@ async function recordPaid(request: Request, env: Env, id: string, viewer: Viewer
   }
   if (facts.amount === 0 || facts.merged.length === 0) return json(409, { error: 'Nothing is owed on this bounty, so there is nothing to record. Nothing changed.' });
   const named = typeof sent.to === 'string' ? facts.merged.find(pull => same(pull.author, sent.to as string))?.author : facts.merged.length === 1 && facts.listed !== true ? facts.merged[0]!.author : undefined;
-  if (named === undefined) return json(400, { error: `Name one merged author: ${facts.merged.map(pull => pull.author).join(' or ')}. Nothing changed.` });
+  if (named === undefined) return json(400, { error: facts.listed === true
+    ? `Name whom you paid, from the pull requests linked to the issue: ${facts.merged.map(pull => pull.author).join(' or ')}. Nothing changed.`
+    : `Name one merged author: ${facts.merged.map(pull => pull.author).join(' or ')}. Nothing changed.` });
   if (facts.record !== null) {
     if (same(payeeOf(facts), named)) return paymentView(env, id, viewer, now);
     return json(409, { error: 'A payment to someone else is already recorded. Nothing changed. Next: withdraw that record first.' });
