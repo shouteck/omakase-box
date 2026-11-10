@@ -29,4 +29,3 @@ packages/box-platform/next-env.d.ts
 # Design review pictures: remade by node docs/box-v4/design/review.mjs
 docs/box-v4/design/review/
 docs/box-v4/design/review.html
-docs/box-v4/design/picture-*.html

@@ -46,9 +46,9 @@ const frame = ({ MARK }) => {
   document.title = document.title.replace(/open bounty board/i, 'omakase-box');
 };
 
-// 2. The front page: the install line under the two buttons; a third way in (both approved by the owner,
-// 11 November 2026); and the picture replaced by a still drawing (picture.mjs), proposed.
-const front = ({ HERO }) => {
+// 2. The front page (approved by the owner, 11 November 2026): the install line under the two buttons and a
+// third way in. The picture stays as it is today.
+const front = () => {
   const buttons = document.querySelector('header p.mt-8');
   const line = document.createElement('p');
   line.style.cssText = 'margin:1.25rem auto 0;display:inline-flex;align-items:center;gap:0.9rem;border:1px solid var(--color-line);background:var(--color-card);border-radius:999px;padding:0.4rem 0.45rem 0.4rem 1.1rem;max-width:100%';
@@ -61,20 +61,24 @@ const front = ({ HERO }) => {
   third.querySelector('a').firstChild.textContent = 'List an issue ';
   doors.children[0].after(third);
   if (window.innerWidth >= 768) doors.style.gridTemplateColumns = 'repeat(3, minmax(0, 1fr))';
-  if (HERO) document.querySelector('figure > div.wash').outerHTML = HERO;
 };
 
-// 3. How it works, third pass. Each half of the page offers two ways, chosen with two tabs (the same tab the
-// signed-in page uses for a bounty's stages), so the ways sit side by side and are never stacked:
-//   Hand off work:   With the tool (you install, your agent does the rest)  |  Without installing (list an issue)
-//   Answer bounties: With the tool (you set up, your agent does the rest)   |  By hand (explicit steps, no jargon)
-// The page's rule is kept: the boxed panel is only ever what an agent does. Paying follows the first half and
-// is shown as the three cards the front page already has. `mode` picks which tabs are open in the picture.
-const how = async ({ mode }) => {
+// The command's new name, everywhere a page prints it (owner, 11 November 2026). On the real site this comes
+// from the tool itself when BT63 renames the command: the pages' commands are checked against the built tool.
+const rename = () => {
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const nodes = []; while (walker.nextNode()) nodes.push(walker.currentNode);
+  for (const node of nodes) if (node.nodeValue.includes('box bounty')) node.nodeValue = node.nodeValue.replaceAll('box bounty ', 'omakase-box ').replaceAll('box bounty', 'omakase-box');
+};
+
+// 3. How it works, fourth pass. Each half offers two ways, switched by a small two-part control beside its
+// heading. The tool's way shows the one thing a person runs and then the agent's panel (the panel is only ever
+// what an agent does). The other way is three or four short steps in one row: a number, an action, one line.
+// Paying is not repeated here: the front page shows the three ways; this page keeps one line and a link.
+const how = ({ mode }) => {
   const hand = document.querySelector('#hand-off'), answer = document.querySelector('#answer');
   const [handTitle, who, install, panel] = hand.children;
-  const list = answer.querySelector('ol');
-  const stepTpl = list.children[0], codeTpl = install.children[1].firstElementChild;
+  const codeTpl = install.children[1].firstElementChild;
   const byHand = mode === 'hand';
 
   const code = (lines) => {
@@ -84,90 +88,76 @@ const how = async ({ mode }) => {
     for (const line of lines.slice(1)) { const next = first.cloneNode(true); next.textContent = line; last.after(next); last = next; }
     return block;
   };
+  // A heading with the switch at its right: [ With the tool | Without it ].
+  const heading = (title, options, open) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem 2rem;margin-bottom:2.25rem';
+    title.style.margin = '0';
+    const control = document.createElement('div');
+    control.setAttribute('role', 'tablist');
+    control.style.cssText = 'display:inline-flex;background:var(--color-surface);border-radius:999px;padding:0.25rem';
+    options.forEach((name, index) => {
+      const on = index === open, tab = document.createElement('button');
+      tab.type = 'button'; tab.setAttribute('role', 'tab'); tab.setAttribute('aria-selected', String(on)); tab.textContent = name;
+      tab.style.cssText = `border-radius:999px;padding:0.4rem 1.1rem;font-size:0.9375rem;white-space:nowrap;border:1px solid ${on ? 'var(--color-line)' : 'transparent'};background:${on ? 'var(--color-card)' : 'transparent'};color:${on ? 'var(--color-ink)' : 'var(--color-soft)'};font-weight:${on ? 500 : 400}`;
+      control.append(tab);
+    });
+    row.append(title, control);
+    return row;
+  };
+  // Short steps, side by side: a number, what to do, one line.
   const steps = (items) => {
-    const ol = list.cloneNode(false);
-    items.forEach(([name, words, lines], index) => {
-      const li = stepTpl.cloneNode(true);
-      li.children[0].textContent = String(index + 1);
-      const body = li.children[1]; body.querySelector('h4').textContent = name;
-      body.querySelector('h4').nextElementSibling.innerHTML = `<p>${words}</p>`;
-      body.style.maxWidth = '44rem';
-      if (lines) { const block = code(lines); block.style.marginTop = '0.75rem'; body.append(block); }
+    const ol = document.createElement('ol');
+    ol.style.cssText = `display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:2rem;border-top:1px solid var(--color-line);padding-top:1.75rem;list-style:none;margin:0;padding-left:0`;
+    items.forEach(([name, words], index) => {
+      const li = document.createElement('li');
+      li.innerHTML = `<p class="text-sm text-soft tabular-nums">${index + 1}</p><p class="font-medium" style="margin-top:0.35rem">${name}</p><p class="text-sm text-soft" style="margin-top:0.25rem">${words}</p>`;
       ol.append(li);
     });
     return ol;
   };
-  const tabs = (items, open) => {
-    const row = document.createElement('div');
-    row.setAttribute('role', 'tablist');
-    row.style.cssText = 'display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 1.5rem;margin:1.75rem 0 2.5rem';
-    items.forEach(([name, words], index) => {
-      const on = index === open, tab = document.createElement('button');
-      tab.type = 'button'; tab.setAttribute('role', 'tab'); tab.setAttribute('aria-selected', String(on));
-      tab.style.cssText = `text-align:left;padding:0.9rem 0 0.25rem;border-top:${on ? '2px solid var(--color-ink)' : '1px solid var(--color-line);margin-top:1px'}`;
-      tab.innerHTML = `<span class="text-lg font-medium tracking-tight" style="display:block;color:${on ? 'var(--color-ink)' : 'var(--color-soft)'}">${name}</span><span class="text-sm text-soft" style="display:block;margin-top:0.15rem">${words}</span>`;
-      row.append(tab);
-    });
-    return row;
-  };
 
   // ---- Hand off work ----
-  const handTabs = tabs([['With the tool', 'You install it once. Your agent posts and merges.'], ['Without installing', 'Put a reward on an issue you already have.']], byHand ? 1 : 0);
   const listing = steps([
-    ['Sign in with GitHub', 'On <a href="/me/">Your page</a>. Nothing is installed.'],
-    ['Paste the issue’s address and set a reward', 'Any open issue on a public repository that you wrote, own or can write to. The reward is in whole US dollars.', ['https://github.com/owner/repository/issues/12']],
-    ['Solvers answer on GitHub', 'They open pull requests whose description says “Fixes #12”. The board links each one to your bounty. You review and merge on GitHub, as always.'],
-    ['You choose whom to pay', 'One is paid, from every pull request linked to the issue.']
+    ['Open Your page', 'Sign in with GitHub, then choose <a href="/me/">List an issue</a>.'],
+    ['Give it the issue and a reward', 'Paste the link to your GitHub issue and type the amount in dollars.'],
+    ['Merge on GitHub as usual', 'Solvers send pull requests that fix the issue. You pick one to pay.']
   ]);
-  hand.replaceChildren(handTitle, handTabs, ...(byHand ? [listing] : [who, install, panel]));
-
-  // ---- Paying, after either way ----
-  const paying = document.createElement('section');
-  paying.style.marginTop = '5rem';
-  const payTitle = handTitle.cloneNode(true); payTitle.removeAttribute('id'); payTitle.textContent = 'Then you pay the solver';
-  const payWords = document.createElement('p'); payWords.className = 'mt-3 text-soft'; payWords.style.maxWidth = '40rem';
-  payWords.textContent = 'When a solution is merged, the reward is owed. The board never holds money: it goes from you to the solver, one of three ways.';
-  const frontPage = new DOMParser().parseFromString(await (await fetch('/')).text(), 'text/html');
-  const ways = document.importNode([...frontPage.querySelectorAll('h3')].find(h => h.textContent.includes('three ways')).closest('div[class*="bg-surface"]').lastElementChild, true);
-  ways.style.marginTop = '1.75rem';
-  paying.append(payTitle, payWords, ways);
-  hand.after(paying);
+  const owed = document.createElement('p'); owed.className = 'text-sm text-soft'; owed.style.marginTop = '2rem';
+  owed.innerHTML = 'When a solution is merged, you pay the solver directly: by hand, with one click, or on merge. <a href="/#flow">The three ways</a>';
+  hand.replaceChildren(heading(handTitle, ['With the tool', 'Without it'], byHand ? 1 : 0), ...(byHand ? [listing] : [who, install, panel]), owed);
 
   // ---- Answer bounties ----
+  const answerTitle = answer.children[0];
   const setUpTitle = who.cloneNode(true); setUpTitle.textContent = 'You set it up';
   const setUp = install.cloneNode(true);
-  setUp.querySelector('p').textContent = 'The same tool. Allow solving once, and on your page connect a way to be paid. That is all you do.';
+  setUp.querySelector('p').textContent = 'Install the tool, allow solving, and connect a way to be paid on Your page.';
   setUp.children[1].replaceChildren(code(['npx -y omakase-box setup', 'box bounty config set solving allowed']));
   const agent = panel.cloneNode(true);
   agent.querySelector('h3').nextElementSibling.textContent = 'It finds work that fits, does it in the open, and follows it until you are paid.';
   const cards = agent.querySelector('ol'), card = cards.children[0];
-  cards.replaceChildren(...[['Finds a bounty', 'New ones since its last look, by language and reward.'], ['Starts in the open', 'A throwaway copy and a draft pull request others can see.'], ['Marks it ready', 'When the work is done, for the owner’s agent to read.'], ['Follows it to paid', 'Merged, paid, and whether the money arrived.']]
+  cards.replaceChildren(...[['Finds a bounty', 'New ones since its last look, by language and reward.'], ['Starts in the open', 'A throwaway copy and a draft pull request others can see.'], ['Marks it ready', 'When the work is done.'], ['Follows it to paid', 'Merged, paid, and whether the money arrived.']]
     .map(([name, words]) => { const c = card.cloneNode(true); c.children[0].textContent = name; c.children[1].textContent = words; return c; }));
   const manual = steps([
-    ['Pick a bounty on the board', 'Open its page. It shows the task, the reward, how the owner pays, and the exact steps for that bounty.'],
-    ['Fork the repository and start from the bounty’s branch', 'Fork it on GitHub, then copy your fork and switch to the branch the bounty was posted on. Its name is on the bounty’s page and starts with “box-bounty/”.', ['git clone https://github.com/you/repository', 'cd repository', 'git fetch https://github.com/owner/repository refs/heads/box-bounty/bt-4f2a91c07d3e', 'git checkout -b my-answer FETCH_HEAD']],
-    ['Do the work and open a pull request', 'Push your branch to your fork. On GitHub, open a pull request into the owner’s repository and choose the bounty’s branch as the base, not main.', ['git push origin my-answer']],
-    ['Get merged, get paid, confirm', 'Sign in on <a href="/me/">Your page</a> and connect a way to be paid. When the owner pays, say on the bounty’s page whether it arrived.']
+    ['Pick a bounty', 'On <a href="/board/">the board</a>. Its page has the task and the reward.'],
+    ['Fork and branch', 'Fork the repository. Start from the branch named on the bounty’s page.'],
+    ['Open a pull request', 'Into that same branch, on the owner’s repository.'],
+    ['Get paid', 'Connect a way on <a href="/me/">Your page</a>. The owner pays you when it is merged.']
   ]);
-  const note = document.createElement('p'); note.className = 'text-sm text-soft'; note.style.cssText = 'margin-top:1.5rem;max-width:44rem';
-  note.textContent = 'A bounty listed from an existing issue is simpler: open your pull request against the repository’s usual branch and write “Fixes #12” in its description. The bounty’s page says which kind it is.';
-  const answerTabs = tabs([['With the tool', 'You set it up once. Your agent finds, solves and follows up.'], ['By hand', 'Your own tools and a GitHub account. Nothing to install.']], byHand ? 1 : 0);
-  answer.replaceChildren(answer.children[0], answerTabs, ...(byHand ? [manual, note] : [setUpTitle, setUp, agent]));
+  answer.replaceChildren(heading(answerTitle, ['With the tool', 'By hand'], byHand ? 1 : 0), ...(byHand ? [manual] : [setUpTitle, setUp, agent]));
+  answer.style.marginTop = '5rem';
 };
 
-// 4. The empty board, third pass: one message, the two ways in as two small cards, one quiet sample row.
+// 4. The empty board (agreed by the owner, 11 November 2026): one centred message with the two ways in as the
+// site's own blue links, and one quiet sample row.
 const emptyBoard = () => {
   const box = [...document.querySelectorAll('p')].find(p => p.textContent.includes('No open bounties on the board yet')).parentElement;
-  const way = (href, name, words) => `<a href="${href}" class="bg-card border border-line rounded-2xl" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem 1.25rem;text-decoration:none;color:var(--color-ink);text-align:left"><span><span class="font-medium" style="display:block">${name}</span><span class="text-sm text-soft" style="display:block">${words}</span></span><span aria-hidden="true" style="display:grid;place-items:center;width:2rem;height:2rem;border-radius:999px;background:var(--color-button);color:var(--color-button-ink);flex:none">›</span></a>`;
   const wrap = document.createElement('div');
   wrap.innerHTML = `
     <div style="border-top:1px solid var(--color-line);padding:4.5rem 0 3.5rem;text-align:center">
       <p class="text-xl font-medium tracking-tight">No open bounties yet.</p>
       <p class="mt-2 text-soft" style="max-width:30rem;margin-left:auto;margin-right:auto">A bounty appears here a few minutes after someone posts one on a public GitHub repository.</p>
-      <div style="margin:2rem auto 0;max-width:46rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(16rem,1fr));gap:0.75rem">
-        ${way('/how/', 'Post one with your agent', 'Install the tool once. It hands off on its own.')}
-        ${way('/me/', 'List an issue you already have', 'Put a reward on it. Nothing to install.')}
-      </div>
+      <p style="margin-top:1.5rem;display:flex;gap:0.5rem 2rem;justify-content:center;flex-wrap:wrap"><a href="/how/" class="font-medium" style="text-decoration:none">Post one with your agent <span aria-hidden="true">›</span></a><a href="/me/" class="font-medium" style="text-decoration:none">List an issue you already have <span aria-hidden="true">›</span></a></p>
     </div>
     <div style="max-width:46rem;margin:0 auto">
       <p class="text-sm text-soft" style="padding-bottom:0.5rem">What one will look like</p>
@@ -186,12 +176,10 @@ const emptyBoard = () => {
 
 // ---- the shots ----
 const EMPTY = { open_total: 0, count: 0, page: 1, pages: 1, bounties: [], languages: [], repositories: [] };
-const PICTURES = { a: readFileSync(join(HERE, 'picture-a.html'), 'utf8'), b: readFileSync(join(HERE, 'picture-b.html'), 'utf8') };
 const SHOTS = [
-  { name: 'front-a', path: '/', patches: [frame, front], give: { HERO: PICTURES.a } },
-  { name: 'front-b', path: '/', patches: [frame, front], give: { HERO: PICTURES.b } },
-  { name: 'how-tool', path: '/how/', patches: [frame, how], give: { mode: 'tool' } },
-  { name: 'how-hand', path: '/how/', patches: [frame, how], give: { mode: 'hand' } },
+  { name: 'front', path: '/', patches: [frame, front, rename] },
+  { name: 'how-tool', path: '/how/', patches: [frame, how, rename], give: { mode: 'tool' } },
+  { name: 'how-hand', path: '/how/', patches: [frame, how, rename], give: { mode: 'hand' } },
   { name: 'board-empty', path: '/board/', patches: [frame, emptyBoard], empty: true }
 ];
 
@@ -217,5 +205,4 @@ for (const shot of SHOTS) {
   }
 }
 await browser.close();
-// The review page: the source with the two pictures put in.
-writeFileSync(join(HERE, 'review.html'), readFileSync(join(HERE, 'review.src.html'), 'utf8').replace('<!--PICTURE-A-->', () => PICTURES.a).replace('<!--PICTURE-B-->', () => PICTURES.b));
+writeFileSync(join(HERE, 'review.html'), readFileSync(join(HERE, 'review.src.html'), 'utf8'));

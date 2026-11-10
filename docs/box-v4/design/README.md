@@ -15,13 +15,18 @@ What is here now is a second pass, **not yet approved**:
 - **The empty board's layout is agreed** (one centred message, a sample row); only how the two ways in are drawn was still open.
 - **Every page not listed below stays exactly as it is.** Do not propose changes to them again.
 
-## What is proposed and waits for the owner (fourth pass)
+## Settled on 11 November 2026 (D-2026-11-11-site-settled)
 
-1. **How it works:** each half gets two tabs. Hand off work: With the tool | Without installing (list an issue, four steps). Answer bounties: With the tool | By hand (explicit Git steps, no jargon). Paying is its own section between them, shown as the front page's three cards. Patch `how`, with `mode` choosing which tabs are open.
-2. **The empty board:** the layout the owner agreed to, with the two ways in as two small cards (patch `emptyBoard`).
-3. **The front page's picture:** two still drawings, `picture.mjs`: A, a tangle goes into the box and comes out finished; B, the missing piece arrives. The owner rejected an animated isometric machine as too much to take in: **the picture must be understood in one glance; a still is enough.**
+- **The front page's picture stays as it is today.** An animated isometric machine and two line drawings were each rejected. Do not propose a new picture unless the owner asks.
+- **The empty board:** one centred message, the two ways in as the site's own blue links, one quiet sample row (patch `emptyBoard`). The owner rejected filled black round buttons there: stay with the look the site already uses.
+- **Every command the site prints says omakase-box.** That follows the tool's rename (BT63), since the pages' commands are checked against the built tool.
+- **How it works does not repeat the three payment cards;** they belong to the front page.
 
-`review.src.html` is the review page; `review.mjs` makes the pictures of the pages and writes `review.html` with the two drawings put in.
+## What is proposed and waits for the owner (fifth pass)
+
+**How it works** (patch `how`, with `mode` choosing which way is open): each half has a small two-part switch beside its heading. Hand off work: With the tool | Without it (three short steps to list an issue). Answer bounties: With the tool | By hand (four short steps). The tool's way is the one thing a person runs and then the agent's panel. One line and a link stand in for payment.
+
+`review.src.html` is the review page; `review.mjs` makes the pictures and copies it to `review.html`.
 
 ## Lessons kept from the rejected pass
 
