@@ -17,8 +17,9 @@
 // snapshot commit at `refs/box-bounty/<id>` — drafts made now keep neither
 // the ref nor the `snapshot` field, and removing that name is a no-op delete.
 
-import { existsSync,readFileSync,realpathSync,statSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { basename,dirname,join,resolve } from 'node:path';
+import { canonicalPath } from './folder.js';
 import { BountyRefused } from './errors.js';
 import { allRecords,listOpen,listEndedRecent,countEnded,readStored,writeStored,setStoreCodec } from './store.js';
 import { gitOutcome,gitRefsWrite } from './git.js';
@@ -732,15 +733,7 @@ const toPosix = (path: string): string => path.split('\\').join('/');
 // junction at any existing level resolves to its real location, so task-file
 // classification uses the actual location even when the final file is missing.
 export function canonicalForNew(target: string): string {
-  const tail: string[] = [];
-  let cursor = target;
-  while (!existsSync(cursor)) {
-    const parent = dirname(cursor);
-    if (parent === cursor) return target; // no existing ancestor — keep the spelling
-    tail.unshift(basename(cursor));
-    cursor = parent;
-  }
-  return join(realpathSync(cursor), ...tail);
+  return canonicalPath(target);
 }
 
 // One check names every retired delivery route (BT23): a GitHub publication

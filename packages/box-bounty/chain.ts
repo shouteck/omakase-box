@@ -25,8 +25,8 @@
 // passes the same secret scan a publish does BEFORE the event object is
 // written; a hit holds the event exactly as a publish hit holds a post.
 
-import { realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { canonicalFolder } from './folder.js';
 import { BountyRefused } from './errors.js';
 import { git, gitNamedBlobs, gitOutcome, gitRefsWrite, gitStdin, gitWriteBlob } from './git.js';
 import type { RefWrite } from './git.js';
@@ -371,7 +371,7 @@ export function sharePaid(root: string, record: BountyRecord, amount: number, wi
 // ---------------------------------------------------------------------------
 
 const stateKey = (root: string): string => {
-  try { return realpathSync(root); } catch { return resolve(root); }
+  try { return canonicalFolder(root); } catch { return resolve(root); }
 };
 
 const loadChainState = (root: string): { fetchedAt?: string; error?: { at: string; reason: string } } =>

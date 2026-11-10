@@ -14,8 +14,8 @@
 // scan costs one `git rev-list` per open bounty — it is invoked from
 // loadRecord/listRecords, so every command that reads a record runs it
 // first, and it runs at most once per repository per process.
-import { realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { canonicalFolder } from './folder.js';
 import { gitOutcome,gitProgram } from './git.js';
 import { shipRules } from './never-ship.js';
 import { attemptsOf,baseCommitOf,dropDurabilityRefs,openRecords,setRecordReadScan,transitionTo } from './record.js';
@@ -52,7 +52,7 @@ const noticed = new Set<string>();
 export function noticeMergedSolutions(repoRoot: string): void {
   if (noticing) return;
   let key: string;
-  try { key = resolve(realpathSync(repoRoot)); } catch { key = resolve(repoRoot); }
+  try { key = resolve(canonicalFolder(repoRoot)); } catch { key = resolve(repoRoot); }
   if (noticed.has(key)) return;
   noticed.add(key);
   // BT32: the shared bounty memory refreshes only where the brief names it —

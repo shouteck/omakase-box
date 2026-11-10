@@ -1,5 +1,6 @@
-import { existsSync, realpathSync, statSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 import { delimiter, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { canonicalFolder } from './folder.js';
 
 // Safe lookup of the programs the tool itself launches — `git`, `gh`,
 // `cmd.exe`. Copied from the older platform's commands.ts `resolveProgram`
@@ -47,8 +48,8 @@ export function resolveProgram(program: string, root?: string): ResolvedProgram 
   for (const candidate of candidates) {
     if (existsSync(candidate) && statSync(candidate).isFile()) {
       if (root !== undefined && !isAbsolute(program) && (program.includes('/') || program.includes('\\'))) {
-        const canonicalRoot = realpathSync(root);
-        const offset = relative(canonicalRoot, realpathSync(candidate));
+        const canonicalRoot = canonicalFolder(root);
+        const offset = relative(canonicalRoot, canonicalFolder(candidate));
         if (offset === '' || offset.startsWith('..') || isAbsolute(offset)) {
           throw new ProgramLaunchUnsupported(`declared program path '${program}' resolves outside the context root`);
         }

@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, realpathSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, isAbsolute, resolve } from 'node:path';
+import { canonicalFolder, canonicalPath } from './folder.js';
 import { resolveProgram } from './program.js';
 import { BountyRefused } from './errors.js';
 import { showPath } from './notice.js';
@@ -568,12 +569,14 @@ export function unsafeOwnerCommands(repo: string): UnsafeConfigCommand[] {
   // command shares, so the check adds no process start of its own. `git
   // config` reads files only; nothing it reads runs.
   let realRoot = resolve(repo);
-  try { realRoot = realpathSync(repo); } catch { /* the checkout exists — a resolve miss keeps the lexical form */ }
+  try { realRoot = canonicalFolder(repo); } catch { /* the checkout exists — a resolve miss keeps the lexical form */ }
   const rootKey = `${realRoot.split(BACKSLASH).join('/').toLowerCase().replace(/\/+$/, '')}/`;
   const inside = (token: string): boolean => {
     const resolved = isAbsolute(token) ? resolve(token) : resolve(repo, token);
+    // Not there now — a merge could create it: its nearest existing ancestor
+    // still gives it the root's spelling (BT64; macOS /var vs /private/var).
     let real = resolved;
-    try { real = realpathSync(resolved); } catch { /* not there now — a merge could create it */ }
+    try { real = canonicalPath(resolved); } catch { /* unresolvable — the lexical form */ }
     const key = `${real.split(BACKSLASH).join('/').toLowerCase()}/`;
     return key === rootKey || key.startsWith(rootKey);
   };

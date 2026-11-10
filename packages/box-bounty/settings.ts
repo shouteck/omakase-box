@@ -1,6 +1,7 @@
-import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, lstatSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { basename, dirname, isAbsolute, join, resolve } from 'node:path';
+import { canonicalFolder, folderEntry, withFolderEntry } from './folder.js';
 import { BountyRefused } from './errors.js';
 import { gitOutcome } from './git.js';
 import { chooseRepository, repositoryAddress, repositoryChoiceLines } from './repository.js';
@@ -559,7 +560,7 @@ export function loadSettings(): OwnerSettings {
     try {
       if (isAbsolute(key) && existsSync(key)) {
         const top = gitOutcome(key, ['rev-parse', '--show-toplevel']);
-        if (top.status === 0 && realpathSync(key).toLowerCase() === realpathSync(top.stdout.trim()).toLowerCase()) {
+        if (top.status === 0 && canonicalFolder(key).toLowerCase() === canonicalFolder(top.stdout.trim()).toLowerCase()) {
           // Never repositoryIdentity — it would recurse into loadSettings.
           // An empty list means only a single candidate resolves, so a
           // two-remote checkout keeps today's rule: no permission moved.
@@ -671,7 +672,7 @@ function saidMap(value: unknown, refuse: (detail: string) => never = bad): Recor
 }
 
 const saidKey = (repoRoot: string | null, topic: string): string =>
-  `${repoRoot === null ? '*' : realpathSync(repoRoot)}#${topic}`;
+  `${repoRoot === null ? '*' : canonicalFolder(repoRoot)}#${topic}`;
 
 /** Read without recording — for a caller that must emit the explanation
     before the record may be written (the allow disclosure prints while
@@ -822,10 +823,10 @@ export function writeDecision(repoRoot: string, scope: 'project' | 'default', bo
   return { path: settingsFile(), at, key: 'all-projects' };
 }
 export function readInstructions(repoRoot: string): InstructionSettings {
-  return loadSettings().instructions?.[realpathSync(repoRoot)] ?? { enabled: false };
+  return folderEntry(loadSettings().instructions, repoRoot) ?? { enabled: false };
 }
 export function checkInstructionSettingsWrite(repoRoot: string): void {
-  const root = realpathSync(repoRoot);
+  const root = canonicalFolder(repoRoot);
   let ancestor = resolve(settingsDir());
   const tail: string[] = [];
   while (!existsSync(ancestor)) {
@@ -834,7 +835,7 @@ export function checkInstructionSettingsWrite(repoRoot: string): void {
     tail.unshift(basename(ancestor));
     ancestor = parent;
   }
-  const folder = resolve(realpathSync(ancestor), ...tail);
+  const folder = resolve(canonicalFolder(ancestor), ...tail);
   const relativeFolder = folder.toLowerCase().replaceAll('\\', '/');
   const rootKey = root.toLowerCase().replaceAll('\\', '/');
   if (relativeFolder === rootKey || relativeFolder.startsWith(`${rootKey}/`)) throw new BountyRefused('settings-inside-repo', 'instruction maintenance settings must live outside the repository; nothing changed; next: name a settings file outside the repository');
@@ -844,9 +845,8 @@ export function checkInstructionSettingsWrite(repoRoot: string): void {
 }
 export function writeInstructions(repoRoot: string, choice: InstructionSettings): void {
   checkInstructionSettingsWrite(repoRoot);
-  const root = realpathSync(repoRoot);
   const settings = loadSettings();
-  persist({ ...settings, instructions: { ...settings.instructions, [root]: choice } });
+  persist({ ...settings, instructions: withFolderEntry(settings.instructions, repoRoot, choice) });
 }
 
 /** The tool's instruction marks for one checkout — the "file lacks the
@@ -855,7 +855,7 @@ export function writeInstructions(repoRoot: string, choice: InstructionSettings)
     `notices`/`retired` are already folded into state before this read. */
 export function readInstructionNotes(repoRoot: string): InstructionNotes {
   loadSettings(); // move-out first, as in saidAlready
-  return loadState().instructionNotes[realpathSync(repoRoot)] ?? { notices: [] };
+  return folderEntry(loadState().instructionNotes, repoRoot) ?? { notices: [] };
 }
 
 /** The write path for those marks — the state writer alone, so a read
@@ -863,7 +863,7 @@ export function readInstructionNotes(repoRoot: string): InstructionNotes {
 export function writeInstructionNotes(repoRoot: string, notes: InstructionNotes): void {
   loadSettings(); // move-out first, so a pending old file's marks are kept
   const state = loadState();
-  saveState({ ...state, instructionNotes: { ...state.instructionNotes, [realpathSync(repoRoot)]: notes } });
+  saveState({ ...state, instructionNotes: withFolderEntry(state.instructionNotes, repoRoot, notes) });
 }
 interface LocalMergeNotice extends MergeNotice { readonly repository: string }
 const localMergeFile = (repoRoot: string): string => join(repoRoot, '.box', 'bounties', 'FIRST_MERGE');
@@ -915,7 +915,7 @@ export function recordFirstMerge(repoRoot: string, commit: string): FirstMergeNo
     if (address === null) {
       mkdirSync(join(repoRoot, '.box', 'bounties'), { recursive: true });
       checkLocalMergePath(repoRoot);
-      writeFileSync(localMergeFile(repoRoot), `${JSON.stringify({ kind: 'box-local-first-merge', repository: realpathSync(repoRoot), commit, at: new Date().toISOString() }, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' });
+      writeFileSync(localMergeFile(repoRoot), `${JSON.stringify({ kind: 'box-local-first-merge', repository: canonicalFolder(repoRoot), commit, at: new Date().toISOString() }, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' });
     } else {
       loadSettings(); // move-out first, so a pending old file's marks are seen
       const state = loadState();
