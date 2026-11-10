@@ -1,8 +1,10 @@
 # Status
 
-Updated by the CTO on 10 November 2026, when K49 (the engineering review) closed.
+Updated by the CTO on 10 November 2026, when K53 (the tooling and architecture review) closed.
 
 ## Now
+
+- **K53, the tooling, architecture and language reviewed** (10 November 2026, no code changed): keep TypeScript on Node and the tool's design. One certain fault: a bounty's page, the board and the numbers page are empty to a program that does not run JavaScript, and every posted issue links there ([PF39](waves/PF39.md)). One certain gap: no linter ([K54](waves/K54.md), fault-finding rules only). Both **await the owner's go**. Big changes are listed for discussion and not briefed: rebuilding the site without its framework, a formatter over the tree, a shared package, publishing from the tag. See [K53](waves/K53.md).
 
 - **K49, the engineering reviewed** (10 November 2026, no code changed): the tool is fast and sound (commands 0.2 to 0.8 s; no speed or memory wave needed). The board works at today's size but spends only 2 GitHub reads a minute on the free plan, has no backup, rollback, migration record or watch, and its pages carry no security headers. The same verify takes about 5 minutes on GitHub's machine and 20 to 31 here, and runs there only after a merge, on Linux only. Five briefs **await the owner's go**: [BT58](waves/BT58.md) (the shared record's ref name, cheapest before the npm release), [K50](waves/K50.md) (verified on Linux, Windows and macOS before a merge; audit clean), [PF36](waves/PF36.md) (the board measured at size), [PF37](waves/PF37.md) (restore, roll back, watch), [PF38](waves/PF38.md) (security headers). The owner answered three of K49's questions the same day (D-2026-11-10-k49-answers): the board stays at $0; the hosted run becomes the acceptance run and the verify run may be trimmed ([K51](waves/K51.md)); the tool may work with a token alone ([BT59](waves/BT59.md), measured as small). The retired product's folders leave the working tree before launch ([K52](waves/K52.md), D-2026-11-10-clear-the-repository; a removal, so it waits for the go on its card). Every brief stays; none is dropped. See [K49](waves/K49.md).
 
@@ -52,7 +54,7 @@ Updated by the CTO on 10 November 2026, when K49 (the engineering review) closed
 ## Next
 
 - **PF23 (needs) is deferred** (owner, 3 November 2026): the task text says what it needs; back if real bounties show the need.
-- **Order (owner, 10 November 2026; each wave still on the owner's go):** K50 first (it makes the rest faster), then BT54, BT56 and BT58, then BT53 and the owner's npm publish, each wave on the owner's go; BT55, BT57, PF34 to PF38 and K51 any time (BT57 best before the publish); BT59 after the publish; K52 before PF6. Then **PF6** (ready to launch; the listings for both sides, PF12b folded in), **K41** (the film, last), then the owner's launch.
+- **Order (owner, 10 November 2026; each wave still on the owner's go):** K50 first (it makes the rest faster), then BT54, BT56 and BT58, then BT53 and the owner's npm publish, each wave on the owner's go; BT55, BT57, PF34 to PF38 and K51 any time (BT57 best before the publish); BT59 after the publish; K52 before PF6; PF39 and K54 any time. Then **PF6** (ready to launch; the listings for both sides, PF12b folded in), **K41** (the film, last), then the owner's launch.
 - **The next tool release:** the guide inside the package gains the PowerShell line (`npx.cmd`, `box.cmd`); a new version goes to npm by the owner, and to GitHub by a `v*` tag.
 - **A wave for later, not briefed:** fewer words, more showing, across the site, before PF9.
 - Unbriefed (BACKLOG): `rmSync` and non-ASCII names on Windows (BT48); the dependency audit (PF1); landed but not marked merged, solvers' account age (PF4); a private organisation member counts as an outside solver, a squash-merged head reads as off the default branch (PF8); PF18's leftovers.
