@@ -1,8 +1,10 @@
 # Status
 
-Updated by the CTO on 10 November 2026, when K55 (what successful agent tools do) closed.
+Updated by the CTO on 10 November 2026, when K56 (the site reviewed as a designer would) closed.
 
 ## Now
+
+- **K56, the site reviewed as a designer would** (10 November 2026, nothing changed): the front page sets a good standard; the rest reads as a second, plainer site. No mark and three names; a navigation with no action; the board and the numbers undesigned for being empty, which is how launch will find them; on a phone the hero's picture first paints as an empty black box. Four design waves **await the owner's go**, each stopping for approved before-and-after mock-ups: [PF40](waves/PF40.md) (one frame: mark, navigation, grid), [PF41](waves/PF41.md) (the board and a bounty, for empty, one and many), [PF42](waves/PF42.md) (the reading pages), [PF43](waves/PF43.md) (the front page finished). Three questions for the owner, the first the name, are in [K56](waves/K56.md).
 
 - **K55, what successful agent tools do** (10 November 2026, no code changed): against Beads, Firecrawl, Context7, Arcjet's CLI and Anthropic's guidance, the tool already has most of their practices (one-command setup, no prompts, exit codes, examples in help, versioned JSON). Two gaps: under `--json` a refusal is still a sentence, and only four commands take `--json` ([BT61](waves/BT61.md), **awaits the owner's go**). Notes added to PF6 (the skill as a public repository; how installs are counted) and PF35. The owner answered (D-2026-11-10-k55-answers): no standing agent evaluation, no fee stated in advance, no new install routes; no 1.0 promise until after real use, with the surface recorded now ([BT62](waves/BT62.md), awaits the owner's go). See [K55](waves/K55.md).
 
@@ -58,7 +60,7 @@ Updated by the CTO on 10 November 2026, when K55 (what successful agent tools do
 ## Next
 
 - **PF23 (needs) is deferred** (owner, 3 November 2026): the task text says what it needs; back if real bounties show the need.
-- **Order (owner, 10 November 2026; each wave still on the owner's go):** K50 first (it makes the rest faster), then BT54, BT56, BT58 and BT60, then BT53 and the owner's npm publish, each wave on the owner's go; BT55, BT57, PF34 to PF38 and K51 any time (BT57 best before the publish); BT59 after the publish; K52 before PF6; PF39 and K54 any time; BT61 after the publish; BT62 any time. Then **PF6** (ready to launch; the listings for both sides, PF12b folded in), **K41** (the film, last), then the owner's launch.
+- **Order (owner, 10 November 2026; each wave still on the owner's go):** K50 first (it makes the rest faster), then BT54, BT56, BT58 and BT60, then BT53 and the owner's npm publish, each wave on the owner's go; BT55, BT57, PF34 to PF38 and K51 any time (BT57 best before the publish); BT59 after the publish; K52 before PF6; PF39 and K54 any time; BT61 after the publish; BT62 any time. Design order: PF40, PF41 (before PF39), PF42 (before PF35), PF43 (before K41). Then **PF6** (ready to launch; the listings for both sides, PF12b folded in), **K41** (the film, last), then the owner's launch.
 - **The next tool release:** the guide inside the package gains the PowerShell line (`npx.cmd`, `box.cmd`); a new version goes to npm by the owner, and to GitHub by a `v*` tag.
 - **A wave for later, not briefed:** fewer words, more showing, across the site, before PF9.
 - Unbriefed (BACKLOG): `rmSync` and non-ASCII names on Windows (BT48); the dependency audit (PF1); landed but not marked merged, solvers' account age (PF4); a private organisation member counts as an outside solver, a squash-merged head reads as off the default branch (PF8); PF18's leftovers.
