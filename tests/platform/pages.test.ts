@@ -38,6 +38,10 @@ describe('the pages', () => {
 
   const fresh = async (options: { width?: number; dark?: boolean } = {}): Promise<{ page: Page; notFound: string[]; close(): Promise<void> }> => {
     const context = await browser.newContext({ viewport: { width: options.width ?? 1280, height: 900 }, colorScheme: options.dark ? 'dark' : 'light' });
+    // K58: a page works out its ages ("4 days ago") with the browser's own clock,
+    // while the fixtures are dated from NOW. Without this the page said "2 weeks
+    // ago" once the real date was 14 days past 27 October. Time still flows.
+    await context.clock.install({ time: new Date(clock) });
     const page = await context.newPage();
     const notFound: string[] = [];
     page.on('response', response => { if (response.status() === 404 && !response.url().includes('/api/b/')) notFound.push(response.url()); });
