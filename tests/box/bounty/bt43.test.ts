@@ -1263,7 +1263,7 @@ describe('BT43 a solver\'s file names merged by apply, in the tool\'s own senten
     expect(rawGuarded(preview.stdout)).toEqual([]);
     expect(outputLines(preview.stdout).some(line => line.startsWith(`    ${showPath(SECRET_FILE)}:1 — aws-access-key-id`)), preview.stdout).toBe(true);
     expect(outputLines(preview.stdout)).toContain(`  not scanned — Git treats them as binary: ${showPath(BINARY_FILE)}`);
-    expect(preview.stdout).toContain(`licence: ${showPath(LICENCE_FILE)} (package.json declares ${showPath(declaredLicence(id))})`);
+    expect(preview.stdout).toContain(`Licence: ${showPath(LICENCE_FILE)} (package.json declares ${showPath(declaredLicence(id))})`);
     for (const name of [SECRET_FILE, BINARY_FILE, LICENCE_FILE]) expectQuoted(preview.stdout, name);
     // package.json's line feed cannot start a line of the issue body.
     expect(nextLines(preview.stdout)).toEqual([]);
@@ -1299,7 +1299,7 @@ describe('BT43 a solver\'s file names merged by apply, in the tool\'s own senten
     // The issue body it published carries the same quoted licence line, and
     // package.json's line feed starts no line of it.
     const body = state().issues.at(-1)!.body;
-    expect(body).toContain(`licence: ${showPath(LICENCE_FILE)} (package.json declares ${showPath(declaredLicence(id))})`);
+    expect(body).toContain(`Licence: ${showPath(LICENCE_FILE)} (package.json declares ${showPath(declaredLicence(id))})`);
     expect(body.split('\n').filter(line => line.trimStart().startsWith('next:'))).toEqual([]);
   }));
 });

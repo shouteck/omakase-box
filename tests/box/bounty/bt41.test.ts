@@ -77,12 +77,16 @@ describe('BT41 — a stranger reads what the tool does', () => {
     });
   });
 
-  it('the public issue with no note points at the task above, and its format block is byte-identical to master\'s shape', () => {
+  it('the public issue with no note has no tried section, and its format block is byte-identical to master\'s shape', () => {
     fixture(({ repo, id, state }) => {
       postBounty(repo, id, 'github');
       const body = state().issues[0]!.body;
       expect(body).not.toContain('is not published');
-      expect(body).toContain('What the poster tried is in the task above — the tool asks agents to put it there.');
+      // PF33: with no note written, there is no such section; the tool does not talk about itself to a stranger.
+      expect(body).not.toContain('## What was already tried');
+      expect(body).not.toContain('Nobody is known to be watching');
+      expect(body).not.toMatch(/by box-bounty@/);
+      expect(body).toMatch(/^No reward · bt-[a-f\d]{12} · posted \d{1,2} [A-Z][a-z]{2} \d{4}$/m);
 
       // The exact bytes master's formatFor produced for this record: a fresh
       // $0 post is schemaVersion 2, open, no pushed work (BT11a/BT11b rules

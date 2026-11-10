@@ -24,7 +24,9 @@ const unescaped = (text: string): string => text.replaceAll('&lt;', '<');
 /** The issue's "What is wanted" section, or the body before the block when the shape differs. */
 export function taskOf(body: string, blockStart: number): string {
   const text = body.slice(0, blockStart);
-  const match = /^## What is wanted\r?\n([\s\S]*?)(?=^## What was already tried\r?$)/m.exec(text);
+  // PF33: the tool writes "What was already tried" only when the poster wrote a note, so the task ends at whichever of
+  // the tool's next headings comes first; a task with headings of its own keeps them.
+  const match = /^## What is wanted\r?\n([\s\S]*?)(?=^## (?:What was already tried|How to answer)\r?$)/m.exec(text);
   return unescaped((match?.[1] ?? text).trim()).slice(0, TASK_MAX);
 }
 export const titleOf = (title: string, id: string): string =>

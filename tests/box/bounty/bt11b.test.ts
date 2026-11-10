@@ -99,10 +99,9 @@ it('the posted issue asks how to be paid only when the bounty states a reward', 
   reward5(scratch);
   postBounty(repo, id, 'github');
   const posted = state().issues[0]!.body;
-  expect(posted).toContain('to be paid: say how in your pull request description.');
+  expect(posted).toContain('To be paid: say how in your pull request description.');
   expect(posted).not.toContain('pay-to:');
-  expect(posted).toContain('payment is the poster\'s to make');
-  expect(posted).toContain('posting an answer does not guarantee');
+  expect(posted).toContain('Posting an answer doesn\'t guarantee payment.');
   // The wording pin: nothing promises payment, timing or selection.
   expect(posted).not.toMatch(/\bwill (earn|receive|be paid|get paid)\b|\bgets? paid\b|\bwithin \d+ (hour|day|minute|week)s?\b|\balways paid\b/i);
 }, 'Repair app'));

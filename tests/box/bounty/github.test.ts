@@ -69,14 +69,14 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(state().issues).toHaveLength(1);
     const issue = state().issues[0]!;
     expect(issue.body).toContain('Repair the app.');
-    expect(issue.body).toContain('What was already tried');
-    expect(issue.body).toContain(`Branch from \`${pub.branch}\``);
-    expect(issue.body).toContain(`based on commit ${head}`);
-    expect(issue.body).toContain('it points at that commit — nothing new was published');
+    expect(issue.body).not.toContain('## What was already tried'); // no note was written
+    expect(issue.body).toContain(`start from \`${pub.branch}\``);
+    expect(issue.body).toContain(`(commit ${head.slice(0, 12)})`);
+    expect(issue.body).not.toContain('work in progress'); // nothing new was published
     expect(issue.body).toContain('Fork this repository');
     expect(issue.body).toContain('pull request against');
-    expect(issue.body).toContain('reward: $0');
-    expect(issue.body).toContain('licence: no licence file');
+    expect(issue.body).toContain('No reward ·');
+    expect(issue.body).toContain('Licence: no licence file');
     expect(issue.body).not.toContain('snapshot');
     expect(issue.body).not.toContain('NEVER_PUBLIC_SECRET');
     expect(issue.body).toContain(`<!-- box-bounty:${id} -->`);

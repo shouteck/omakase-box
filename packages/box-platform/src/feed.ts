@@ -263,7 +263,8 @@ export async function bountyDetail(env: Env, id: string, now: number, origin: st
         `Open a pull request against the branch ${branch} in ${row.repository} (not against ${row.default_branch}).`
       ],
       how_to_get_paid: row.amount > 0 ? [
-        `You need a GitHub account to answer, and no sign-in to this board. Before you can be paid, the owner needs a way to pay you: whoever holds that GitHub account signs in once at ${origin}/me/ and lists the ways they accept payment; or say how in your pull request.`,
+        // PF33 (owner, 10 November 2026): one plain line, no provider named; which ways apply follows.
+        `You need a GitHub account to answer, and no sign-in to this board. To be paid: sign in with your GitHub account at ${origin}/me/ and set up how you get paid there.`,
         paying
           ? `If your pull request is the one merged and you have connected Stripe at ${origin}/me/, the board starts a charge of $${row.amount} from the owner's saved card to your own Stripe account; Stripe's fee comes out of it, and a dispute lands on your account. Without Stripe, the owner owes you $${row.amount} and pays you directly. The board never holds or guarantees money.`
           : `If your pull request is the one merged, the owner owes you $${row.amount} and pays you directly. The board never holds or guarantees money.`,

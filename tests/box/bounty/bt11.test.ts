@@ -100,7 +100,7 @@ describe('BT11c — each repository carries its own reward and limit', () => {
     const { id } = draft(repoB);
     const { destination } = postToGitHub(repoB, id);
     expect(loadRecord(repoB, id).reward).toEqual({ amount: 0 });
-    expect(loadRecord(repoB, id).github!.body).toContain('reward: $0');
+    expect(loadRecord(repoB, id).github!.body).toContain('No reward ·');
     // Compact status stays silent on a bare $0 (BT17); the full view states
     // it, and neither surface ever names A's $10 on B.
     expect(statusGitHub(repoB)).not.toContain('$10');
@@ -257,7 +257,7 @@ describe('BT11a — posting binds the amount in force', () => {
     expect(record.reward).toBeUndefined(); // create binds nothing
     const { destination } = postToGitHub(repo, id);
     expect(loadRecord(repo, id).reward).toEqual({ amount: 0 });
-    expect(loadRecord(repo, id).github!.body).toContain('reward: $0');
+    expect(loadRecord(repo, id).github!.body).toContain('No reward ·');
   });
 
   it('status states the reward, the limit, what is promised and what is left', () => {
@@ -323,8 +323,8 @@ describe('BT11a — the public side and the words around it', () => {
     changeConfig(repo, 'set', 'reward', '25');
     postBounty(repo, id, 'github');
     const body = state().issues[0]!.body;
-    expect(body).toContain('reward: $25');
-    expect(body).toContain('payment is the poster\'s to make — posting an answer does not guarantee it.');
+    expect(body).toContain('$25 for the merged solution');
+    expect(body).toContain('paid by the poster directly'); expect(body).toContain("Posting an answer doesn't guarantee payment.");
     const read = readFormat(body);
     if (read.kind !== 'present') throw new Error('format missing');
     // v2 since PF15: a new rewarded post's block no longer names one way to ask for payment.
@@ -411,7 +411,7 @@ describe('BT11a fix round — the record file is never a render source', () => {
     const body = state().issues[0]!.body;
     // Listing text and block state the one bound amount — the forged field
     // reached neither.
-    expect(body).toContain('reward: $50');
+    expect(body).toContain('$50 for the merged solution');
     expect(body).not.toContain('99999');
     const read = readFormat(body);
     if (read.kind !== 'present') throw new Error('format missing');
@@ -469,7 +469,7 @@ describe('BT11a fix round — the record file is never a render source', () => {
     it('the post then binds the amount on the record', () => {
       arm();
       const { destination } = postToGitHub(repo, id);
-      expect(loadRecord(repo, id).github!.body).toContain('reward: $12');
+      expect(loadRecord(repo, id).github!.body).toContain('$12 for the merged solution');
     });
   });
 });
