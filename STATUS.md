@@ -1,11 +1,11 @@
 # Status
 
-Updated by the CTO on 10 November 2026, when K50 was parked.
+Updated by the CTO on 10 November 2026, when BT64 (one spelling of the repository folder) closed.
 
 ## Now
 
-- **A never-ship hard stop fails on Windows, found by K50 and briefed as [BT64](waves/BT64.md), awaiting the owner's go:** when the repository folder is spelled two ways (an 8.3 short name and its long name), a path on the owner's never-publish list ships. Reproduced on this host. It came from K50's first run on GitHub's Windows machine, whose temp folder is `C:\Users\RUNNER~1`.
-- **K50 is parked** on `wave/K50` (`5a2fd5e1`, pushed) at step 3 of its plan, with every job of its first three-system run recorded in [K50](waves/K50.md): Linux nearly green, Windows 23 tests red, macOS 10 red (the first macOS evidence), and a second high advisory (`source-map-js`, through the board's `next`) that the brief did not know of. Resume after BT64.
+- **BT64 is merged:** a never-publish entry now holds however the repository folder is spelled. Before, an 8.3 short name or **just a different letter case** of the folder made the owner's list miss, and the listed path shipped. `packages/box-bounty/folder.ts` gives the folder one spelling; older stored keys are read by folder, so nothing an owner set is lost; a test fails on any new `realpathSync` outside it. Proven on this host (local verify, the rule in force). The likely cause of K50's macOS miss of `apply-unsafe-config` is fixed too, **unproven until K50's macOS run**. Reaches users with the next npm release. See [BT64](waves/BT64.md).
+- **K50 is parked** on `wave/K50` (`5a2fd5e1`, pushed) at step 3 of its plan, every job of its first run recorded in [K50](waves/K50.md). Resume next: rebase on master (BT64), rerun on three systems. Known open: a second high advisory (`source-map-js`, through the board's `next`) needs a brief edit; `bt18` and `bt22` compute their expected key with JavaScript `realpathSync`, which fails only under a short temp folder (GitHub's Windows), and changing that is an expectation edit to decide with a reason.
 
 - **K57 is merged:** master's hosted run was red from the K48 brief (runs 42743732293 to 42750108726), on kitchen documents only. STATUS.md's length and K48's unanswered question were fixed at kickoff; the sandbox guard now reads `omakase-box` alone as the product and `shouteck/omakase-box` or "on omakase-box" as the repository. **Read the hosted run on the merge at the next kickoff;** it should be green. See [K57](waves/K57.md).
 
@@ -39,7 +39,7 @@ Updated by the CTO on 10 November 2026, when K50 was parked.
 
 ## Next
 
-- **Order (owner, 10 November 2026; each wave still on the owner's go):** BT64 next (a hard stop), then K50 resumed (it makes the rest faster), then BT54, BT56, BT58 and BT60, then BT63, BT53 and the owner's npm publish; BT55, BT57, PF34 to PF38 and K51 any time (BT57 best before the publish); BT59 and BT61 after the publish; K52 before PF6; PF39, K54 and BT62 any time. Design order: PF40, PF41 (before PF39), PF42 (before PF35), PF43 (before K41). Then **PF6** (the listings for both sides), **K41** (the film, last), then the owner's launch. PF23 is deferred.
+- **Order (owner, 10 November 2026; each wave still on the owner's go):** K50 resumed next (it makes the rest faster), then BT54, BT56, BT58 and BT60, then BT63, BT53 and the owner's npm publish; BT55, BT57, PF34 to PF38 and K51 any time (BT57 best before the publish); BT59 and BT61 after the publish; K52 before PF6; PF39, K54 and BT62 any time. Design order: PF40, PF41 (before PF39), PF42 (before PF35), PF43 (before K41). Then **PF6** (the listings for both sides), **K41** (the film, last), then the owner's launch. PF23 is deferred.
 - **The next tool release:** the guide gains the PowerShell line (`npx.cmd`, `box.cmd`); a new version goes to npm by the owner, and to GitHub by a `v*` tag.
 - Unbriefed (BACKLOG): `rmSync` and non-ASCII names on Windows (BT48); solvers' account age (PF4); a private organisation member counts as an outside solver, a squash-merged head reads as off the default branch (PF8); PF18's leftovers; fewer words, more showing, across the site.
 - **Direction:** agents run the common case; installing is the only required human step. The platform may start a charge but never holds money; no reminders. Site looks need before-and-after screenshots and the owner's approval.
