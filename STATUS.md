@@ -1,11 +1,13 @@
 # Status
 
-Updated by the CTO on 11 November 2026, when K58 closed.
+Updated by the CTO on 11 November 2026, when BT63 was parked at its first step.
 
 ## Now
 
+- **BT63 is parked on `wave/BT63`** (`376b24a1`; **owner answered 11 November 2026: ship without `box`**, D-2026-11-11-drop-box-command); it resumes now, without the old-name notice. See [BT63](waves/BT63.md).
+
 - **K58 is merged:** master's hosted run had been red on every run since the BT64 merge (9 runs), on one platform page test, not on BT64: the fixtures are dated from a fixed 31 October while the page works out ages with the real clock, so "4 days ago" became "2 weeks ago" on 10 November. The test browser now has the fixtures' clock. **Read the hosted run on the merge at the next kickoff;** it should be green. See [K58](waves/K58.md).
-- **BT63 (the rename) has the owner's go** (11 November 2026, "you can start the rename wave") and is next: it was named at this kickoff but master's red run took the one wave. Start it with `START.md: BT63`.
+- **BT63 (the rename) is in progress on its branch** (resumed 11 November 2026).
 
 - **BT64 is merged:** a never-publish entry now holds however the repository folder is spelled. Before, an 8.3 short name or **just a different letter case** of the folder made the owner's list miss, and the listed path shipped. `packages/box-bounty/folder.ts` gives the folder one spelling; older stored keys are read by folder, so nothing an owner set is lost; a test fails on any new `realpathSync` outside it. Proven on this host (local verify, the rule in force). The likely cause of K50's macOS miss of `apply-unsafe-config` is fixed too, **unproven until K50's macOS run**. Reaches users with the next npm release. See [BT64](waves/BT64.md).
 - **K50 is parked** on `wave/K50` (`5a2fd5e1`, pushed) at step 3 of its plan, every job of its first run recorded in [K50](waves/K50.md). Resume next: rebase on master (BT64), rerun on three systems. Known open: a second high advisory (`source-map-js`, through the board's `next`) needs a brief edit; `bt18` and `bt22` compute their expected key with JavaScript `realpathSync`, which fails only under a short temp folder (GitHub's Windows), and changing that is an expectation edit to decide with a reason.
