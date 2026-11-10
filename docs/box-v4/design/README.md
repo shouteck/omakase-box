@@ -12,15 +12,16 @@ What is here now is a second pass, **not yet approved**:
 - **The current design stays.** A proposal improves a named weak spot and says why, with a before and an after of the whole page.
 - **Front page, approved** (11 November 2026, D-2026-11-11-front-page): the install line under the two buttons, "Maintain a repository?" as a third way in, and the picture visible from the first moment. The patch is `front` in `review.mjs`.
 - **How it works: the panel means "your agent does this, you do nothing".** The owner rejected putting a person's steps in it. Plain text is what a person does.
+- **The empty board's layout is agreed** (one centred message, a sample row); only how the two ways in are drawn was still open.
 - **Every page not listed below stays exactly as it is.** Do not propose changes to them again.
 
-## What is proposed and waits for the owner (third pass)
+## What is proposed and waits for the owner (fourth pass)
 
-1. **The front page's picture:** an isometric "hand-off bench" that plays the product's story (`hero/build.mjs`, which needs the anatomy kit; `hero/shot.mjs` captures it). The owner asked for something more eye-catching than today's picture.
-2. **How it works, the solver's half:** "You set it up" (plain), "Your agent takes it from there" (panel), then today's by-hand steps unchanged (patch `how`).
-3. **The empty board:** one centred message with two plain links, and one quiet sample row (patch `emptyBoard`).
+1. **How it works:** each half gets two tabs. Hand off work: With the tool | Without installing (list an issue, four steps). Answer bounties: With the tool | By hand (explicit Git steps, no jargon). Paying is its own section between them, shown as the front page's three cards. Patch `how`, with `mode` choosing which tabs are open.
+2. **The empty board:** the layout the owner agreed to, with the two ways in as two small cards (patch `emptyBoard`).
+3. **The front page's picture:** two still drawings, `picture.mjs`: A, a tangle goes into the box and comes out finished; B, the missing piece arrives. The owner rejected an animated isometric machine as too much to take in: **the picture must be understood in one glance; a still is enough.**
 
-`review.src.html` is the review page; `review.mjs` makes the pictures, and `review.html` is the source with the picture's fragment put in at `<!--HERO-->`.
+`review.src.html` is the review page; `review.mjs` makes the pictures of the pages and writes `review.html` with the two drawings put in.
 
 ## Lessons kept from the rejected pass
 
