@@ -89,4 +89,5 @@ The board is already live (PF8). The owner can publish and announce in one sitti
 
 - Feature playbook; principles: prove-it-works.
 - The skill's one-sentence description is the advertisement an agent sees at the moment of need (owner, 10 November 2026, D-2026-11-10-found-at-the-moment): word it as the moments themselves, and keep item 6's comparison as a script that can be run again when the sentence changes.
+- **From [K55](K55.md):** tools in wide use keep their skill in a public repository an agent adds by name (`npx skills add <owner>/<repository>`). Today ours is written only by `box setup`, from inside the package. Read on the day, from the registry's own pages, how installs are counted, and say in the Result whether a skill written by `box setup` counts; if it does not, propose how `box setup` and the registry route become one, since installs are the ranking.
 - Do not edit `waves/PF6.md` while a verify runs. Report at the timebox.

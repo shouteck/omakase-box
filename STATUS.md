@@ -1,8 +1,10 @@
 # Status
 
-Updated by the CTO on 10 November 2026, when K53 (the tooling and architecture review) closed.
+Updated by the CTO on 10 November 2026, when K55 (what successful agent tools do) closed.
 
 ## Now
+
+- **K55, what successful agent tools do** (10 November 2026, no code changed): against Beads, Firecrawl, Context7, Arcjet's CLI and Anthropic's guidance, the tool already has most of their practices (one-command setup, no prompts, exit codes, examples in help, versioned JSON). Two gaps: under `--json` a refusal is still a sentence, and only four commands take `--json` ([BT61](waves/BT61.md), **awaits the owner's go**). Notes added to PF6 (the skill as a public repository; how installs are counted) and PF35. Four questions for the owner, the first a standing agent evaluation, are in [K55](waves/K55.md).
 
 - **Owner decisions in talk, 10 November 2026:** from going live, no bounty is posted or listed at $0; one minimum reward, above $0 for now; testing may still use $0 ([BT60](waves/BT60.md), **awaits the owner's go**, D-2026-11-10-no-zero-bounties). Revenue: nothing is charged until there is sensible volume; modest monetisation may come later (D-2026-11-10-revenue-later). The project still spends nothing.
 
@@ -56,7 +58,7 @@ Updated by the CTO on 10 November 2026, when K53 (the tooling and architecture r
 ## Next
 
 - **PF23 (needs) is deferred** (owner, 3 November 2026): the task text says what it needs; back if real bounties show the need.
-- **Order (owner, 10 November 2026; each wave still on the owner's go):** K50 first (it makes the rest faster), then BT54, BT56, BT58 and BT60, then BT53 and the owner's npm publish, each wave on the owner's go; BT55, BT57, PF34 to PF38 and K51 any time (BT57 best before the publish); BT59 after the publish; K52 before PF6; PF39 and K54 any time. Then **PF6** (ready to launch; the listings for both sides, PF12b folded in), **K41** (the film, last), then the owner's launch.
+- **Order (owner, 10 November 2026; each wave still on the owner's go):** K50 first (it makes the rest faster), then BT54, BT56, BT58 and BT60, then BT53 and the owner's npm publish, each wave on the owner's go; BT55, BT57, PF34 to PF38 and K51 any time (BT57 best before the publish); BT59 after the publish; K52 before PF6; PF39 and K54 any time; BT61 after the publish. Then **PF6** (ready to launch; the listings for both sides, PF12b folded in), **K41** (the film, last), then the owner's launch.
 - **The next tool release:** the guide inside the package gains the PowerShell line (`npx.cmd`, `box.cmd`); a new version goes to npm by the owner, and to GitHub by a `v*` tag.
 - **A wave for later, not briefed:** fewer words, more showing, across the site, before PF9.
 - Unbriefed (BACKLOG): `rmSync` and non-ASCII names on Windows (BT48); the dependency audit (PF1); landed but not marked merged, solvers' account age (PF4); a private organisation member counts as an outside solver, a squash-merged head reads as off the default branch (PF8); PF18's leftovers.
