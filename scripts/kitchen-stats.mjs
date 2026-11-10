@@ -543,7 +543,8 @@ export function waveReport(root, waveId) {
     runIds: [],
     unattributed: { count: 0, ids: [], note: 'runs outside the wave bounds; first 50 ids listed' },
     durationAdvisory: [],
-    provenance: 'local ' + runsDir + (history === 'missing' ? ' — absent: a fresh clone has no run history, reported missing not zero' : ''),
+    // K50: acceptance is the hosted run; this counts only this machine's runs.
+    provenance: 'local ' + runsDir + ' — local runs only; hosted runs are not counted (gh run list --branch wave/' + waveId + ')' + (history === 'missing' ? ' — absent: a fresh clone has no run history, reported missing not zero' : ''),
   };
   if (wave === null) { report.error = 'no wave record ' + waveId + ' in waves/ or no merge/branch found'; }
   const bounds = wave ? new Set(wave.branchCommits) : new Set();
@@ -591,6 +592,7 @@ function page(root, { budgetSeconds = null } = {}) {
 
   out.push('kitchen stats — ' + new Date().toISOString());
   out.push('source: ' + runsDir + ' (' + runs.length + ' run dirs) + git log; read-only, nothing written');
+  out.push('counts local runs only: hosted runs, the acceptance runs since K50, are read with gh run list');
   out.push('');
   out.push('Verify runs');
   const withoutLabel = run => run.summary === 'malformed' ? ' (malformed summary)'

@@ -162,6 +162,7 @@ describe('BT3b — fewer things to supply', () => {
   // tracked file and planting a junction on its spelling must not redirect the
   // deletion's judgement through the link — the note names the base spelling
   // the owner deleted, never the live directory that now occupies it.
+  // Host-only (K50): a junction exists only on Windows.
   it.skipIf(process.platform !== 'win32')('names a tracked file deleted under a junction replacement — not the live directory the link resolves to', () => {
     const repo = makeRepo({ '.gitignore': 'realdir/\n', 'a.py': 'a\n', 'TASK.md': 'the task\n' }, (repo) => {
       rmSync(join(repo, 'a.py'));
@@ -182,6 +183,7 @@ describe('BT3b — fewer things to supply', () => {
   // Host-only (K10): the same replacement pointed at a never-ship target must
   // still name the lost base file — a deletion resolved through the link reads
   // as a non-shipping path and prints the exact false all-clear.
+  // Host-only (K50): junction.
   it.skipIf(process.platform !== 'win32')('a tracked file deleted under a junction to a never-ship dir is still named — never a false all-clear', () => {
     const repo = makeRepo({ '.gitignore': 'secrets/\n', 'a.py': 'a\n', 'TASK.md': 'the task\n' }, (repo) => {
       rmSync(join(repo, 'a.py'));
@@ -204,6 +206,7 @@ describe('BT3b — fewer things to supply', () => {
   // silent. The base path still ships under another name's spelling no more:
   // it is absent and the note must say so — while the junction's new spelling
   // of an unchanged file is not a change.
+  // Host-only (K50): junction.
   it.skipIf(process.platform !== 'win32')('a tracked dir replaced by a junction still names the file it lost — repopulation through the link hides no deletion', () => {
     const repo = makeRepo({ 'dir/f.py': 'f\n', 'other/f.py': 'f\n', 'other/g.py': 'g\n', 'TASK.md': 'the task\n' }, (repo) => {
       rmSync(join(repo, 'dir'), { recursive: true });
@@ -224,6 +227,7 @@ describe('BT3b — fewer things to supply', () => {
   // modified blob, so no deletion branch fires. The base spelling's judgement
   // must still outrank live canonicalisation: `a/b.py` no longer exists as
   // itself in the shipped set.
+  // Host-only (K50): junction.
   it.skipIf(process.platform !== 'win32')('a tracked dir swapped for a junction holding different bytes still names the file the shipped set lost', () => {
     const repo = makeRepo({ 'a/b.py': 'b1\n', 'x/b.py': 'b2\n', 'TASK.md': 'the task\n' }, (repo) => {
       rmSync(join(repo, 'a'), { recursive: true });
@@ -246,6 +250,7 @@ describe('BT3b — fewer things to supply', () => {
   // rule-covered canonical must never suppress a rule-free base spelling's
   // change — `a/b.py`'s loss is named while the name behind the link still
   // never ships.
+  // Host-only (K50): junction.
   it.skipIf(process.platform !== 'win32')('a junction swap onto a tracked never-ship target still names the lost base file — never a false all-clear', () => {
     const repo = makeRepo({ 'a/b.py': 'b1\n', 'secrets/b.py': 'b2\n', 'TASK.md': 'the task\n' }, (repo) => {
       rmSync(join(repo, 'a'), { recursive: true });

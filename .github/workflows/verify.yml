@@ -80,6 +80,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      # K50: on a wave branch the checkout has origin/master but no local
+      # master, and bt8b diffs master...HEAD (run 42802182752, all systems).
+      - name: Make master resolvable on a wave branch
+        run: git rev-parse -q --verify refs/heads/master >/dev/null || git branch master origin/master
+
       - uses: actions/setup-node@v7
         with:
           node-version-file: .node-version
