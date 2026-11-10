@@ -520,7 +520,9 @@ describe('profiles', () => {
   it('the feed tells a solver how to be paid, and points at the profile', async () => {
     const detail = await (await send(null, `/bounties/${STATE_IDS.open}.json`)).json() as any;
     expect(detail.bounty.how_to_get_paid.join(' ')).toContain(`${ORIGIN}/me/`);
-    expect(detail.bounty.how_to_get_paid.join(' ')).toContain('say how in your pull request');
+    // PF33 (owner, 10 November 2026): one plain line; the pull-request route is gone where a board is set.
+    expect(detail.bounty.how_to_get_paid.join(' ')).toContain(`To be paid: sign in with your GitHub account at ${ORIGIN}/me/ and set up how you get paid there.`);
+    expect(detail.bounty.how_to_get_paid.join(' ')).not.toContain('say how in your pull request');
   });
 });
 
