@@ -44,7 +44,14 @@ function cutoffCommit(): string {
 // or exempts it ("never", "not", "instead", "the sandbox") is a statement
 // of the rule, not a breach of it — the sandbox mention exemption exists so
 // guidance like "post to the sandbox, never omakase-box" stays legal.
-const REPO = /omakase-box/i;
+//
+// K57: omakase-box is also the product's name since 10 November 2026, so
+// the repository is recognised only as `shouteck/omakase-box` or as a place
+// ("on", "to", "in", "at", "against", optionally "the", then the name not
+// followed by "@" or more of a name). A bare mention is the package or the
+// command. Accepted loss: a line naming the repository bare, with neither
+// the owner nor a place word, no longer flags.
+const REPO = /shouteck\/omakase-box|\b(?:on|to|in|at|against)\s+(?:the\s+)?`?omakase-box(?![@\w-])/i;
 const LIVE_STEP = /post|publish|real|live|bounty|bounties|issue|pull\s*request|\bpr\b|merge|journey|solver|solve/i;
 const PROHIBITION = /never|not\b|no\b|without|instead|except|refus|declin|avoid|only the sandbox|sandbox/i;
 function offendingLines(text: string): string[] {
@@ -80,6 +87,29 @@ describe('K15 sandbox guard — no new wave asks for a real post on shouteck/oma
     expect(offendingLines('No later wave posts a real bounty on shouteck/omakase-box; the sandbox exists for that.')).toHaveLength(0);
     expect(offendingLines('post --to github on shouteck/box-bounty-sandbox — the sandbox, not the working repository')).toHaveLength(0);
     expect(offendingLines('a plain line about omakase-box, with no step named')).toHaveLength(0);
+  });
+
+  // K57: since 10 November 2026 omakase-box is also the product's name (the
+  // package and the command). A line that only names the package or the
+  // command is not a step on the repository; these four, from BT53, BT63
+  // and K48, failed the guard on master.
+  it('a line naming only the package or the command is not a post on the repository', () => {
+    const productLines = [
+      '- `npm uninstall -g box-bounty` becomes `npm uninstall -g omakase-box`, both times; a test pins it equal to `PACKAGE_REMOVE`.',
+      '- The release carries BT54, BT56, BT58, BT57, BT60 and BT63 (owner, 10 November 2026): cook them first, BT63 last. The guide is written in the new command, `omakase-box`. The README\'s first-bounty section then says a reward is set before the first post.',
+      '**Brief.** Written by the CTO on 10 November 2026 from the owner\'s decisions that day: the product has one name, omakase-box, and the command follows it. Read on npm the same day: Box, the storage company, publishes its official command-line tool as `@box/cli` with the command `box`.',
+      '- npm serves `omakase-box@0.1.3`, published 2 November: **before the solver side** (PF24 to PF29), before listed bounties (PF32) and before the plain issue text (PF33).'
+    ];
+    for (const line of productLines) expect(offendingLines(line), line).toHaveLength(0);
+    // A step on the repository still offends, however it is spelled.
+    for (const line of [
+      'post the bounty to `omakase-box`',
+      'merge it on omakase-box',
+      'publish a real bounty against the omakase-box repository',
+      'POST A REAL BOUNTY ON OMAKASE-BOX',
+      'open the issue at `shouteck/omakase-box`',
+      'the solver merges into github.com/shouteck/omakase-box'
+    ]) expect(offendingLines(line), line).toHaveLength(1);
   });
 
   it('no line added under waves/ since K15 asks for a real post on the working repository', () => {
