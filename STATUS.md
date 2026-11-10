@@ -4,7 +4,7 @@ Updated by the CTO on 10 November 2026, when PF33 merged.
 
 ## Now
 
-- **PF33 is merged, not deployed:** the posted issue reads plainly (reward and date first, a link to the board, three steps to answer, a Reward section, one fact per paragraph) and says "sign in with your GitHub account at the board and set up how you get paid there"; the board reads tasks with or without a note, and its feed says the same line. The board part deploys on the owner's word; the CLI part reaches users with the next npm release. See [PF33](waves/PF33.md).
+- **PF33 is live** (Worker `f701a97e`, no migration; `exceededCpu` 0 before and after): the posted issue reads plainly (reward and date first, a link to the board, three steps to answer, a Reward section, one fact per paragraph) and says "sign in with your GitHub account at the board and set up how you get paid there"; the board reads tasks with or without a note, and its feed says the same line. The CLI part reaches users with the next npm release. See [PF33](waves/PF33.md).
 
 - **PF32 is live** (Worker `463a3ac0`, migration first; `exceededCpu` 0 before and after): an owner lists an existing GitHub issue from the board (two fields); the human way is never owed, the owner chooses whom to pay from every linked pull request; real-run-verified against the sandbox, which found and fixed discover leaving listed bounties out. See [PF32](waves/PF32.md).
 - **PF31c is live** (Worker `ffce3e4d`; `exceededCpu` 0 before and after): the Solver tab has "Your solutions", every bounty the solver answered in its stage (In progress, Payment due, Paid, Not merged), built on the owner's list. See [PF31c](waves/PF31c.md).
