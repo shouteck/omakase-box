@@ -1,11 +1,15 @@
-# Off-machine verify (wave K8): frozen install + the kitchen's acceptance command on a
-# GitHub-hosted Linux runner for every code push to master, logs uploaded for 3 days.
+# Hosted verify (K8; K50): frozen install + the kitchen's acceptance command on
+# GitHub-hosted Linux, Windows and macOS for every code push to master or to a
+# wave branch. Since K50 the run on a wave's commit is its acceptance run.
+# Logs are uploaded per system for 7 days, long enough for a wave to close.
 name: verify
 
 on:
+  # push only: a fork's pull request never gets this run (no pull_request or
+  # pull_request_target trigger), and a push comes only from this repository.
   push:
-    # Master only — doc-only pushes are skipped by the negated paths below.
-    branches: [master]
+    # Doc-only pushes are skipped by the negated paths below.
+    branches: [master, 'wave/**']
     # paths mirrors the "no test reads these" set (INERT) in scripts/suite.mjs:
     # '**' includes everything, each '!' drops an inert set, and the files a
     # kitchen test reads are re-included after the negations (GitHub applies
@@ -56,12 +60,20 @@ permissions:
 
 jobs:
   verify:
-    # Pinned to a named Ubuntu, not ubuntu-latest: the label moves to a new
-    # Ubuntu on 19 October 2026, and a migration must not change the result
-    # between two pushes. ubuntu-24.04 is the image the label resolves to
-    # today, so nothing under the run changes with this pin.
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    # K50: one job per system, each reported apart; one system's failure never
+    # cancels another's (fail-fast: false). Images are named, never -latest: a
+    # label that moves must not change the result between two pushes.
+    name: verify (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2025, macos-15]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: ${{ matrix.os == 'ubuntu-24.04' && 10 || 45 }}
+    # Git Bash on Windows: from PowerShell `cat` and `rm` are not on PATH (PF11).
+    defaults:
+      run:
+        shell: bash
     steps:
       # fetch-depth: 0 — verify's merge-base and run-history reads need full git history.
       - uses: actions/checkout@v7
@@ -88,8 +100,9 @@ jobs:
 
       # Chromium into the path suite.mjs sets as PLAYWRIGHT_BROWSERS_PATH — needed by
       # tests/kitchen/k16-record.test.ts, which drives the demo recorder's browser.
+      # --with-deps installs Linux system libraries; Windows and macOS need none.
       - name: Install Chromium for browser-backed tests
-        run: node scripts/pnpm.mjs exec playwright install --with-deps chromium
+        run: node scripts/pnpm.mjs exec playwright install ${{ runner.os == 'Linux' && '--with-deps' || '' }} chromium
         env:
           PLAYWRIGHT_BROWSERS_PATH: .runtime/browsers
 
@@ -115,10 +128,29 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: kitchen-runs-${{ github.run_id }}
+          name: kitchen-runs-${{ matrix.os }}-${{ github.run_id }}
           path: .kitchen/runs/
-          retention-days: 3
+          retention-days: 7
           if-no-files-found: ignore
+
+  # K50: the production dependency audit. The advisory database is the same
+  # from every system, so one Linux job answers it. A new high or critical
+  # advisory on a production dependency fails the run.
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+
+      - name: Install repository-local pnpm
+        run: npm ci --prefix scripts/tooling --ignore-scripts
+
+      - name: Audit production dependencies (high and critical fail)
+        run: node scripts/pnpm.mjs audit --prod --audit-level high
 
   # BT12: the installable package's declared floor is Node 22 (NODE_MINIMUM in
   # packages/box-cli/src/node-check.ts), so the packed artifact's install
@@ -129,9 +161,18 @@ jobs:
   # artifact is packed with 24 first; only then does the job switch to the
   # current Node 22 release and run the two files, which pack the artifact
   # again under 22 and drive the whole $0 journey through it.
+  # K50: on all three systems, each reported apart.
   install-node22:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    name: install-node22 (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2025, macos-15]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: ${{ matrix.os == 'ubuntu-24.04' && 15 || 30 }}
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v7
 
