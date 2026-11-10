@@ -29,6 +29,7 @@ What will be true when this is done, as something a person can observe or a comm
 - <if a test checks that something is filtered out: first assert the row it filters is really there; PF20's test passed with its filter removed, because the row never reached the database>
 - <if the owner approves a page's looks: screenshots are full pages with the sticky menu static; section shots read as a cut-off site (PF17)>
 - <if the wave changes a page: read the running page as its user before the first candidate; PF3 and PF4 found wording faults only there, after verify passed>
+- <if the wave adds a new deployable part: its first milestone includes one measurement at size; the board never had the scale wave the tool had (K49)>
 - <if a brief sets a timing target for a command (seconds, runs), derive it from a measured run or a declared map (e.g. the `// reads:` headers), never from the head chef's estimate of which files read what (K45)>
 
 ## Lenses

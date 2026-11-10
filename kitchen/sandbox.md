@@ -42,3 +42,6 @@ close the issues it posted. What remains on GitHub is listed in the wave
 file by exact name — issues, pull requests, branches — the way BT10's Result
 does. The local clone stays; it is the kitchen's standing fixture, not
 per-wave state.
+
+A fresh-agent proof that needs a merged solution at $0 gives the trial word
+up front: an agent told it needs income rightly declines $0 work (PF27).
