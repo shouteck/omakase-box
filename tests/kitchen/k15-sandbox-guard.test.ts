@@ -44,7 +44,14 @@ function cutoffCommit(): string {
 // or exempts it ("never", "not", "instead", "the sandbox") is a statement
 // of the rule, not a breach of it — the sandbox mention exemption exists so
 // guidance like "post to the sandbox, never omakase-box" stays legal.
-const REPO = /omakase-box/i;
+//
+// K57: omakase-box is also the product's name since 10 November 2026, so
+// the repository is recognised only as `shouteck/omakase-box` or as a place
+// ("on", "to", "in", "at", "against", optionally "the", then the name not
+// followed by "@" or more of a name). A bare mention is the package or the
+// command. Accepted loss: a line naming the repository bare, with neither
+// the owner nor a place word, no longer flags.
+const REPO = /shouteck\/omakase-box|\b(?:on|to|in|at|against)\s+(?:the\s+)?`?omakase-box(?![@\w-])/i;
 const LIVE_STEP = /post|publish|real|live|bounty|bounties|issue|pull\s*request|\bpr\b|merge|journey|solver|solve/i;
 const PROHIBITION = /never|not\b|no\b|without|instead|except|refus|declin|avoid|only the sandbox|sandbox/i;
 function offendingLines(text: string): string[] {
