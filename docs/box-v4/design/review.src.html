@@ -1,0 +1,143 @@
+<title>omakase-box site review</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400&display=swap">
+<style>
+/* Layout: one reading column for the reasons; under each, a full-width pair of frames, before left and after right, each scrolling on its own. The site's own tokens and typeface, so the review does not argue with the thing it reviews. */
+:root {
+  --paper: #fbfbf9; --surface: #f3f2ee; --card: #ffffff; --ink: #1b1b18; --soft: #66655f; --line: #e4e3dd; --accent: #1d4f91;
+  --keep: #1f6b3a; --keep-bg: #e3f1e7; --change: #7a5a00; --change-bg: #f6eccd;
+  --sans: "Geist", ui-sans-serif, system-ui, sans-serif; --mono: "Geist Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper: #111110; --surface: #1b1b19; --card: #232320; --ink: #f1f0ec; --soft: #a6a59e; --line: #31312d; --accent: #9dbfec; --keep: #8fd3a5; --keep-bg: #1d3326; --change: #e8c870; --change-bg: #3a321a; color-scheme: dark } }
+:root[data-theme="dark"] { --paper: #111110; --surface: #1b1b19; --card: #232320; --ink: #f1f0ec; --soft: #a6a59e; --line: #31312d; --accent: #9dbfec; --keep: #8fd3a5; --keep-bg: #1d3326; --change: #e8c870; --change-bg: #3a321a; color-scheme: dark }
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 78rem; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.col { max-width: 42rem; }
+h1 { font-size: clamp(2rem, 5vw, 3.25rem); line-height: 1.08; font-weight: 500; letter-spacing: -0.035em; margin: 0; text-wrap: balance; }
+h2 { font-size: 1.75rem; line-height: 1.2; font-weight: 500; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+h3 { font-size: 1rem; font-weight: 500; margin: 0; }
+p { margin: 0; } a { color: var(--accent); }
+code { font-family: var(--mono); font-size: 0.875em; }
+.soft { color: var(--soft); } .sm { font-size: 0.8125rem; line-height: 1.4; }
+header.top { padding-block: 4rem 2.5rem; display: grid; gap: 1rem; }
+.lede { font-size: 1.25rem; line-height: 1.5; color: var(--soft); max-width: 40rem; }
+.wrong { background: var(--surface); border-radius: 1.25rem; padding: 1.5rem; display: grid; gap: 0.75rem; max-width: 48rem; }
+.wrong ul, .why { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.6rem; }
+.wrong li { padding-left: 1.1rem; position: relative; } .wrong li::before { content: "·"; position: absolute; left: 0.25rem; color: var(--soft); }
+table { border-collapse: collapse; width: 100%; font-size: 0.9375rem; }
+.scroll { overflow-x: auto; }
+th { text-align: left; font-weight: 400; color: var(--soft); font-size: 0.8125rem; padding: 0.5rem 1rem 0.5rem 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 0.7rem 1rem 0.7rem 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+.tag { display: inline-block; border-radius: 999px; padding: 0.05rem 0.6rem; font-size: 0.8125rem; font-weight: 500; white-space: nowrap; }
+.tag.keep { background: var(--keep-bg); color: var(--keep); } .tag.change { background: var(--change-bg); color: var(--change); }
+section.page { border-top: 1px solid var(--line); padding-block: 3.5rem; display: grid; gap: 1.75rem; }
+.head { display: grid; gap: 0.5rem; }
+.why li { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr); gap: 0.25rem; }
+.why .n { font-size: 0.8125rem; color: var(--soft); font-variant-numeric: tabular-nums; padding-top: 0.15rem; }
+.why b { font-weight: 500; } .why .ref { color: var(--soft); font-size: 0.875rem; display: block; margin-top: 0.15rem; }
+.bar { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center; justify-content: space-between; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 2px; background: var(--card); }
+.seg button { font: inherit; font-size: 0.8125rem; border: 0; background: none; color: var(--soft); padding: 0.25rem 0.85rem; border-radius: 999px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.pair.phone { grid-template-columns: repeat(2, minmax(0, 24.5rem)); justify-content: center; }
+figure { margin: 0; min-width: 0; display: grid; gap: 0.4rem; grid-template-rows: auto 1fr; }
+figcaption { font-size: 0.8125rem; color: var(--soft); display: flex; justify-content: space-between; gap: 0.5rem; }
+figcaption b { color: var(--ink); font-weight: 500; }
+.frame { border: 1px solid var(--line); border-radius: 0.75rem; overflow-y: auto; max-height: 46rem; background: #fbfbf9; }
+.frame img { display: block; width: 100%; height: auto; }
+.frame:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ask { background: var(--surface); border-radius: 1.25rem; padding: 1.5rem; }
+.ask ol { margin: 0.75rem 0 0; padding-left: 1.25rem; display: grid; gap: 0.6rem; }
+footer { border-top: 1px solid var(--line); padding-block: 2rem 4rem; color: var(--soft); font-size: 0.8125rem; }
+@media (max-width: 720px) { .pair, .pair.phone { grid-template-columns: minmax(0, 1fr); } .frame { max-height: 30rem; } header.top { padding-block: 2.5rem 2rem; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <p class="sm soft">Third pass · 11 November 2026</p>
+    <h1>Three things to look at</h1>
+    <p class="lede">A new picture for the front page, How it works redone for the solver's side, and a calmer empty board. Each "after" is your real page with only that change applied.</p>
+  </header>
+
+  <div class="wrong">
+    <h3>Already settled, and built into every "after" below</h3>
+    <ul>
+      <li>Mark A and the name omakase-box in the top bar.</li>
+      <li>Front page: the install line under the buttons, and "Maintain a repository?" as a third way in.</li>
+      <li>The picture's first-moment fix: nothing is invisible while it waits its turn.</li>
+    </ul>
+  </div>
+
+  <section class="page" data-shot="front" style="border-top:0">
+    <div class="head col"><p class="sm soft">1 of 3 · a proposal, not yet approved</p><h2>The front page's picture</h2>
+      <p class="soft">You asked for something that catches the eye. This is the product drawn as a small machine on a bench, moving. It is running live here:</p></div>
+    <div style="max-width:68rem"><!--HERO--></div>
+    <p class="sm soft col">An example. Every name in it is invented. With reduced motion switched on it stands still at the moment shown first.</p>
+    <ol class="why col">
+      <li><span class="n">1</span><div><b>The machine is the explanation.</b> A blue task card drops into an open box. The box rides out through a gate and the task is pinned on the public board. Three answers ride back in on the near rail. The arm picks one and sets it on the stack. That is the product, start to finish, in eleven seconds, with no words needed.</div></li>
+      <li><span class="n">2</span><div><b>It is drawn in your own materials.</b> Paper, ink and your one blue; the same soft panel the current picture sits in. It should feel like the rest of the site grew a third dimension, not like a different brand arrived.<span class="ref">The open box with a card in it is mark A, built as an object.</span></div></li>
+      <li><span class="n">3</span><div><b>The real commands stay.</b> The line under the drawing shows the actual command for each moment and what the tool answers, so the picture still shows the real product in real text, as today's does.</div></li>
+      <li><span class="n">4</span><div><b>What you give up:</b> today's picture shows a terminal beside the GitHub issue it produced, which is literal and immediately familiar to a developer. The bench is more striking and less literal. If you like the bench but miss the issue card, the two can share the panel.</div></li>
+      <li><span class="n">5</span><div><b>Where this stands:</b> a first take, about fifty parts. If the direction is right I would deepen it: more small detail, a hover that lets a visitor step through the story, and a dark version checked as carefully as the light one.</div></li>
+    </ol>
+  </section>
+
+  <section class="page" data-shot="how">
+    <div class="head col"><p class="sm soft">2 of 3 · redone</p><h2>How it works, the solver's half</h2>
+      <p class="soft">You were right about the box: on this page the panel means "your agent does this, you do nothing". Putting a person's steps inside it said the wrong thing. This version keeps that rule and uses it.</p></div>
+    <ol class="why col">
+      <li><span class="n">1</span><div><b>The solver's half now has the same three parts as the owner's half.</b> "You set it up" in plain text, because a person does it. "Your agent takes it from there" in the panel, because the agent does it. Then the steps by hand, in plain text, for anyone working without the tool.</div></li>
+      <li><span class="n">2</span><div><b>It tells the truth about what you built.</b> Today this half says only "use your own tools". Since the solver side went into the tool, an agent can find a bounty, start it, submit it and follow it to paid by itself. The page did not say so.</div></li>
+      <li><span class="n">3</span><div><b>What a person does is small and stated:</b> install the same tool, allow solving once, connect a way to be paid. The second command line is the real setting.</div></li>
+      <li><span class="n">4</span><div><b>The by-hand steps are today's list, untouched,</b> under the heading "Or answer by hand, with your own tools".</div></li>
+      <li><span class="n">5</span><div><b>New words, for you to check:</b> the two sentences and the four card texts in the solver's panel are mine, taken from facts on your For agents page.</div></li>
+    </ol>
+  </section>
+
+  <section class="page" data-shot="board-empty">
+    <div class="head col"><p class="sm soft">3 of 3 · redone</p><h2>The board, when it is empty</h2>
+      <p class="soft">The last version put four separate things on a screen that has nothing on it. This one has two: a message and a sample.</p></div>
+    <ol class="why col">
+      <li><span class="n">1</span><div><b>The two big tiles became two plain links</b> under the message. Same two ways in, a fraction of the weight.</div></li>
+      <li><span class="n">2</span><div><b>The message is centred with air around it,</b> the way your own page already draws "No bounties yet" when you are signed in. One pattern for an empty list, used twice.</div></li>
+      <li><span class="n">3</span><div><b>The sample row is quieter:</b> narrower than the page, slightly faded, with a small label above and "An example. Every name in it is invented." below, the same sentence the front page uses.</div></li>
+      <li><span class="n">4</span><div><b>If it still feels like too much,</b> the sample row is the part to remove: the message and its two links stand on their own.</div></li>
+    </ol>
+  </section>
+
+  <section class="page">
+    <div class="ask col" style="max-width:48rem">
+      <h3>What I need from you</h3>
+      <ol>
+        <li><b style="font-weight:500">The picture:</b> is the bench the right direction? Replace today's picture, share the panel with the issue card, or try something else?</li>
+        <li><b style="font-weight:500">How it works:</b> approve the solver's half as drawn, or tell me what reads wrong.</li>
+        <li><b style="font-weight:500">The empty board:</b> with the sample row, or without?</li>
+      </ol>
+    </div>
+  </section>
+
+  <footer>Before: the pages as the code builds them today, on this machine with sample data. After: the same pages with the proposal applied. Made by <code>docs/box-v4/design/review.mjs</code>; the picture by <code>docs/box-v4/design/hero/build.mjs</code>.</footer>
+</div>
+
+<script>
+const NAMES = { desktop: 'Laptop, 1440 wide', phone: 'Phone, 390 wide' };
+for (const section of document.querySelectorAll('section[data-shot]')) {
+  const shot = section.dataset.shot;
+  const bar = document.createElement('div'); bar.className = 'bar';
+  bar.innerHTML = `<p class="sm soft">Each frame scrolls on its own.</p><div class="seg" role="group" aria-label="Screen size">${Object.keys(NAMES).map((key, i) => `<button type="button" id="${shot}-${key}" data-size="${key}" aria-pressed="${i === 0}">${NAMES[key]}</button>`).join('')}</div>`;
+  const pair = document.createElement('div'); pair.className = 'pair';
+  const figure = when => `<figure><figcaption><b>${when === 'before' ? 'Before' : 'After'}</b><span>${when === 'before' ? 'today' : 'proposed'}</span></figcaption><div class="frame" tabindex="0"><img alt="${shot} page, ${when}" loading="lazy" data-when="${when}"></div></figure>`;
+  pair.innerHTML = figure('before') + figure('after');
+  const show = size => {
+    pair.classList.toggle('phone', size === 'phone');
+    for (const img of pair.querySelectorAll('img')) img.src = `review/${shot}-${size}-${img.dataset.when}.jpg`;
+    for (const button of bar.querySelectorAll('button')) button.setAttribute('aria-pressed', String(button.dataset.size === size));
+  };
+  bar.addEventListener('click', event => { const size = event.target.dataset?.size; if (size) show(size); });
+  section.append(bar, pair);
+  show('desktop');
+}
+</script>

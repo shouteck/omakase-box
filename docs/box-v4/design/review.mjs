@@ -8,7 +8,7 @@
 // mention is, by construction, unchanged. The patches below are the design; a wave that builds one
 // reads its patch here.
 import { chromium } from '@playwright/test';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -46,8 +46,9 @@ const frame = ({ MARK }) => {
   document.title = document.title.replace(/open bounty board/i, 'omakase-box');
 };
 
-// 2. The front page: the install line under the two buttons; a third way in. Nothing is removed.
-const front = () => {
+// 2. The front page: the install line under the two buttons; a third way in (both approved by the owner,
+// 11 November 2026); and the picture replaced by the hand-off bench (hero/build.mjs), proposed.
+const front = ({ HERO }) => {
   const buttons = document.querySelector('header p.mt-8');
   const line = document.createElement('p');
   line.style.cssText = 'margin:1.25rem auto 0;display:inline-flex;align-items:center;gap:0.9rem;border:1px solid var(--color-line);background:var(--color-card);border-radius:999px;padding:0.4rem 0.45rem 0.4rem 1.1rem;max-width:100%';
@@ -60,65 +61,64 @@ const front = () => {
   third.querySelector('a').firstChild.textContent = 'List an issue ';
   doors.children[0].after(third);
   if (window.innerWidth >= 768) doors.style.gridTemplateColumns = 'repeat(3, minmax(0, 1fr))';
+  if (HERO) document.querySelector('figure > div.wash').outerHTML = HERO;
 };
 
-// 3. How it works: the solver's three steps take the same shape as "Your agent takes it from there".
+// 3. How it works, the solver's half. The page's own rule is kept: plain text is what you do, the boxed panel is
+// what your agent does. So the solver's half gets the same three parts as the owner's half: what you set up once,
+// what your agent then does on its own, and, for anyone working without the tool, the steps by hand (unchanged).
 const how = () => {
-  const panel = [...document.querySelectorAll('h3')].find(h => h.textContent.includes('Your agent takes it from there')).closest('div[class*="bg-surface"]');
+  const handOff = document.querySelector('#hand-off');
+  const [title, install, panel] = [handOff.children[1], handOff.children[2], handOff.children[3]];
   const list = document.querySelector('#answer ol');
-  const steps = [...list.children].map(li => ({ title: li.querySelector('h4').textContent, words: li.querySelector('h4').nextElementSibling?.innerHTML ?? '' }));
-  const copy = panel.cloneNode(true);
-  copy.querySelector('details')?.remove();
-  copy.querySelector('h3').textContent = 'Three steps, with your own tools';
-  copy.querySelector('h3').nextElementSibling.textContent = 'You install nothing from this page. A GitHub account is enough.';
-  const cards = copy.querySelector('ol');
-  const card = cards.children[0];
-  cards.replaceChildren(...steps.map(step => { const c = card.cloneNode(true); c.children[0].textContent = step.title; c.children[1].innerHTML = step.words; return c; }));
-  if (window.innerWidth >= 768) cards.style.gridTemplateColumns = 'repeat(3, minmax(0, 1fr))';
-  copy.style.marginTop = '1.5rem';
-  list.replaceWith(copy);
+  const setUpTitle = title.cloneNode(true); setUpTitle.textContent = 'You set it up';
+  const setUp = install.cloneNode(true);
+  setUp.querySelector('p').innerHTML = 'The same tool. Allow solving once, and on your page connect a way to be paid. That is all you do.';
+  const code = setUp.querySelector('code[data-install]');
+  const second = code.cloneNode(true); second.textContent = 'box bounty config set solving allowed';
+  second.style.display = 'block'; code.style.display = 'block'; code.after(second);
+  const agent = panel.cloneNode(true);
+  agent.querySelector('h3').nextElementSibling.textContent = 'It finds work that fits, does it in the open, and follows it until you are paid.';
+  const cards = agent.querySelector('ol'); const card = cards.children[0];
+  const STEPS = [['Finds a bounty', 'New ones since its last look, by language and reward.'], ['Starts in the open', 'A throwaway copy and a draft pull request others can see.'], ['Marks it ready', "When the work is done, for the owner's agent to read."], ['Follows it to paid', 'Merged, paid, and whether the money arrived.']];
+  cards.replaceChildren(...STEPS.map(([name, words]) => { const c = card.cloneNode(true); c.children[0].textContent = name; c.children[1].textContent = words; return c; }));
+  const byHandTitle = title.cloneNode(true); byHandTitle.textContent = 'Or answer by hand, with your own tools';
+  byHandTitle.style.marginTop = '3.5rem';
+  list.before(setUpTitle, setUp, agent, byHandTitle);
 };
 
-// 4. The empty board: what will be here, shown; and the two ways a bounty gets here.
-const emptyBoard = async () => {
+// 4. The empty board, second pass: one message, two plain links, and one sample row. No panels.
+const emptyBoard = () => {
   const box = [...document.querySelectorAll('p')].find(p => p.textContent.includes('No open bounties on the board yet')).parentElement;
-  const frontPage = new DOMParser().parseFromString(await (await fetch('/')).text(), 'text/html');
-  const door = document.importNode(frontPage.querySelector('section[aria-label="Where to start"]').children[0], true);
-  door.classList.remove('arrive');
-  const second = door.cloneNode(true);
-  second.querySelector('h3').textContent = 'Maintain a repository?';
-  second.querySelector('p').textContent = 'Put a reward on an issue you already have. Nothing to install.';
-  second.querySelector('a').firstChild.textContent = 'List an issue ';
   const wrap = document.createElement('div');
   wrap.innerHTML = `
-    <div style="border-top:1px solid var(--color-line);padding-top:2.5rem">
+    <div style="border-top:1px solid var(--color-line);padding:4.5rem 0 3.5rem;text-align:center">
       <p class="text-xl font-medium tracking-tight">No open bounties yet.</p>
-      <p class="mt-2 text-soft" style="max-width:34rem">A bounty appears here a few minutes after someone posts one on a public GitHub repository. Each will look like this:</p>
-      <ul class="mt-6" style="opacity:.92">
-        <li class="border-t border-b border-line py-5 grid grid-cols-[minmax(0,1fr)_auto] gap-x-8">
-          <div class="min-w-0">
-            <p class="text-lg font-medium tracking-tight">Recurring transactions skip the 31st <span class="text-sm text-soft" style="font-weight:400;border:1px solid var(--color-line);border-radius:999px;padding:0.05rem 0.6rem;margin-left:0.5rem;vertical-align:middle">Example</span></p>
-            <p class="mt-1 text-sm text-soft">example-org/ledger · TypeScript · 2 days old · 2 solutions waiting</p>
-            <p class="text-sm text-soft">example-org: 4 merged · 4 paid, the owner's word · 3 received, the solvers' word.</p>
-          </div>
-          <p class="text-lg font-medium tabular-nums whitespace-nowrap text-right">$45</p>
-        </li>
-      </ul>
+      <p class="mt-2 text-soft" style="max-width:30rem;margin-left:auto;margin-right:auto">A bounty appears here a few minutes after someone posts one on a public GitHub repository.</p>
+      <p style="margin-top:1.5rem;display:flex;gap:0.5rem 2rem;justify-content:center;flex-wrap:wrap"><a href="/how/" class="font-medium" style="text-decoration:none">Post one with your agent <span aria-hidden="true">›</span></a><a href="/me/" class="font-medium" style="text-decoration:none">List an issue you already have <span aria-hidden="true">›</span></a></p>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4" style="margin-top:3rem"></div>`;
-  wrap.lastElementChild.append(door, second);
+    <div style="max-width:46rem;margin:0 auto">
+      <p class="text-sm text-soft" style="padding-bottom:0.5rem">What one will look like</p>
+      <ul><li class="border-t border-b border-line py-5 grid grid-cols-[minmax(0,1fr)_auto] gap-x-8" style="opacity:.7">
+        <div class="min-w-0">
+          <p class="text-lg font-medium tracking-tight">Recurring transactions skip the 31st</p>
+          <p class="mt-1 text-sm text-soft">example-org/ledger · TypeScript · 2 days old · 2 solutions waiting</p>
+          <p class="text-sm text-soft">example-org: 4 merged · 4 paid, the owner's word · 3 received, the solvers' word.</p>
+        </div>
+        <p class="text-lg font-medium tabular-nums whitespace-nowrap text-right">$45</p>
+      </li></ul>
+      <p class="text-sm text-soft" style="padding-top:0.5rem">An example. Every name in it is invented.</p>
+    </div>`;
   box.replaceWith(wrap);
 };
 
 // ---- the shots ----
 const EMPTY = { open_total: 0, count: 0, page: 1, pages: 1, bounties: [], languages: [], repositories: [] };
+const HERO = readFileSync(join(HERE, 'hero', 'hero.fragment.html'), 'utf8').split('<script>')[0] + '</div>';
 const SHOTS = [
   { name: 'front', path: '/', patches: [frame, front] },
   { name: 'how', path: '/how/', patches: [frame, how] },
-  { name: 'board-empty', path: '/board/', patches: [frame, emptyBoard], empty: true },
-  { name: 'board', path: '/board/', patches: [frame] },
-  { name: 'bounty', path: '/b/bt-000000000002/', patches: [frame] },
-  { name: 'agents', path: '/agents/', patches: [frame] }
+  { name: 'board-empty', path: '/board/', patches: [frame, emptyBoard], empty: true }
 ];
 
 const browser = await chromium.launch({ channel: 'msedge' }).catch(() => chromium.launch({ channel: 'chrome' }));
@@ -133,7 +133,7 @@ for (const shot of SHOTS) {
       });
       await page.goto(`${BOARD}${shot.path}`, { waitUntil: 'networkidle' });
       await page.addStyleTag({ content: 'nav[aria-label="Site"] { position: static !important; }' });
-      if (after) for (const patch of shot.patches) await page.evaluate(patch, { MARK });
+      if (after) for (const patch of shot.patches) await page.evaluate(patch, { MARK, HERO });
       await page.evaluate(() => document.fonts.ready);
       const file = join(OUT, `${shot.name}-${label}-${after ? 'after' : 'before'}.jpg`);
       await page.screenshot({ path: file, fullPage: true, type: 'jpeg', quality: 82 });
@@ -143,3 +143,5 @@ for (const shot of SHOTS) {
   }
 }
 await browser.close();
+// The review page: the source with the picture's fragment put in.
+writeFileSync(join(HERE, 'review.html'), readFileSync(join(HERE, 'review.src.html'), 'utf8').replace('<!--HERO-->', () => readFileSync(join(HERE, 'hero', 'hero.fragment.html'), 'utf8')));
