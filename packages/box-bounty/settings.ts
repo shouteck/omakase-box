@@ -171,9 +171,9 @@ export function repositoryIdentity(root: string): string | null {
     is repository-choice-needed carrying the candidate lines. */
 export function requireRepository(root: string): string {
   const choice = chooseRepository(root, activeAddresses(loadSettings()));
-  if (choice === null) throw new BountyRefused('repository-address-required', 'this repository has no GitHub address, so it cannot be listed; next: add a GitHub remote, then run box bounty allow');
+  if (choice === null) throw new BountyRefused('repository-address-required', 'this repository has no GitHub address, so it cannot be listed; next: add a GitHub remote, then run omakase-box allow');
   if (choice.kind === 'unlisted') throw new BountyRefused('repository-choice-needed', `this checkout's remotes name several GitHub repositories; tell me which one it is — nothing was posted and nothing changed:\n${repositoryChoiceLines(choice.candidates).join('\n')}
-next: the owner names one with box bounty allow <owner/name>`);
+next: the owner names one with omakase-box allow <owner/name>`);
   return choice.address;
 }
 
@@ -209,7 +209,7 @@ const HARD_STOP_WORDS = ['nevership', 'private', 'secret', 'scan', 'hardstop', '
 export function unknownSetting(name: string): never {
   const folded = name.toLowerCase().replace(/[-_]/g, '');
   const hard = HARD_STOP_WORDS.some(word => folded.includes(word));
-  throw new BountyRefused(hard ? 'settings-hard-stop' : 'settings-unknown-name', `${settingsFile()}: "${name}" ${hard ? 'tries to reach a hard stop; hard stops cannot be changed' : 'is not a setting the tool knows; known settings: all-projects, repositories, instructions, instruction-file, reward, reward-limit, paid, board'}. Nothing changed; next: ${hard ? 'a hard stop cannot be configured — choose a configurable setting; box bounty config lists them' : 'name a known setting — box bounty config lists them'}`);
+  throw new BountyRefused(hard ? 'settings-hard-stop' : 'settings-unknown-name', `${settingsFile()}: "${name}" ${hard ? 'tries to reach a hard stop; hard stops cannot be changed' : 'is not a setting the tool knows; known settings: all-projects, repositories, instructions, instruction-file, reward, reward-limit, paid, board'}. Nothing changed; next: ${hard ? 'a hard stop cannot be configured — choose a configurable setting; omakase-box config lists them' : 'name a known setting — omakase-box config lists them'}`);
 }
 const bad = (detail: string): never => { throw new BountyRefused('settings-malformed', `${settingsFile()}: ${detail}; next: fix the settings file or remove it`); };
 function change(value: unknown, where: string): Change {
@@ -570,13 +570,13 @@ export function loadSettings(): OwnerSettings {
       }
     } catch { /* no safe identity */ }
     if (address === null) {
-      notices.push({ path: key, repository: null, at, detail: 'could not read exactly one GitHub address; no permission moved. Re-add with box bounty allow <owner/name>' });
+      notices.push({ path: key, repository: null, at, detail: 'could not read exactly one GitHub address; no permission moved. Re-add with omakase-box allow <owner/name>' });
       continue;
     }
     const previous = repositories[address];
     if (previous !== undefined && previous.bounty !== entry.bounty) {
       repositories[address] = { bounty: null, at, changes: [...previous.changes, { bounty: previous.bounty, at: previous.at }, ...entry.changes, { bounty: entry.bounty, at: entry.at }] };
-      notices.push({ path: key, repository: address, at, detail: `conflicting old decisions; not allowed. Re-add with box bounty allow ${address}` });
+      notices.push({ path: key, repository: address, at, detail: `conflicting old decisions; not allowed. Re-add with omakase-box allow ${address}` });
     } else if (previous === undefined) repositories[address] = entry;
     else repositories[address] = { ...previous, changes: [...previous.changes, ...entry.changes, { bounty: entry.bounty, at: entry.at }] };
     if (!notices.some(notice => notice.path === key)) notices.push({ path: key, repository: address, at, detail: `moved to ${address}` });
@@ -632,14 +632,14 @@ export function rewardNoticeLine(): string | null {
     const retired = state.retiredReward;
     saveState({ ...state, retiredReward: { ...retired, toldAt: at } });
     const was = retired.reward === null && retired.limit === null ? 'a shared reward entry without readable amounts' : `a shared reward of $${retired.reward?.amount ?? 0}${retired.limit === null ? '' : ` and a $${retired.limit.amount} limit`}`;
-    return `one fact about money: ${was} applied to every repository — it applies to nothing now. Each repository states $0 until you set its own: box bounty config set reward <whole dollars> [owner/name]. Open bounties keep the amount they were posted with (noted ${at})`;
+    return `one fact about money: ${was} applied to every repository — it applies to nothing now. Each repository states $0 until you set its own: omakase-box config set reward <whole dollars> [owner/name]. Open bounties keep the amount they were posted with (noted ${at})`;
   }
   if (state.rewardNoticeAt !== undefined) return null;
   if (settings.default === undefined && Object.keys(settings.repositories).length === 0) return null;
   saveState({ ...state, rewardNoticeAt: at });
   // A reward already set has nothing to be told; it counts as told, so it cannot surface later.
   if (Object.values(settings.repositories).some(entry => entry.reward !== undefined)) return null;
-  return `each repository can state its own reward — the owner sets it inside its checkout or by name: box bounty config set reward <whole dollars> [owner/name]. Until then every bounty states $0 (noted ${at})`;
+  return `each repository can state its own reward — the owner sets it inside its checkout or by name: omakase-box config set reward <whole dollars> [owner/name]. Until then every bounty states $0 (noted ${at})`;
 }
 
 /** The once-only fact owed to an owner carrying an `ask` written before
@@ -766,7 +766,7 @@ export function writeRepository(address: string, bounty: OwnerDecision | null, b
   if (key === null) throw new BountyRefused('repository-address-invalid', `${address} is not a repository address. Nothing changed; next: pass an owner/name repository address`);
   const settings = loadSettings();
   const previous = settings.repositories[key];
-  if (bounty === null && (previous === undefined || previous.bounty === null || previous.bounty === 'off')) throw new BountyRefused('repository-not-listed', `${key} is not listed; nothing changed; next: the owner lists it first with box bounty allow ${key}`);
+  if (bounty === null && (previous === undefined || previous.bounty === null || previous.bounty === 'off')) throw new BountyRefused('repository-not-listed', `${key} is not listed; nothing changed; next: the owner lists it first with omakase-box allow ${key}`);
   const at = new Date().toISOString();
   const changes = [...(previous?.changes ?? []), ...(previous === undefined ? [] : [{ bounty: previous.bounty, at: previous.at }])];
   // Money lives on this entry alone. `deny` clears it — a re-allowed
@@ -804,7 +804,7 @@ export function writeMoney(address: string, patch: { readonly reward?: number; r
   if (key === null) throw new BountyRefused('repository-address-invalid', `${address} is not a repository address. Nothing changed; next: pass an owner/name repository address`);
   const settings = loadSettings();
   const previous = settings.repositories[key];
-  if (previous === undefined || previous.bounty === null || previous.bounty === 'off') throw new BountyRefused('reward-repository-unlisted', `${key} is not on the owner's list — money is promised only for a repository you named. Nothing changed; next: box bounty allow ${key} [--reward <whole dollars> --reward-limit <whole dollars>]`);
+  if (previous === undefined || previous.bounty === null || previous.bounty === 'off') throw new BountyRefused('reward-repository-unlisted', `${key} is not on the owner's list — money is promised only for a repository you named. Nothing changed; next: omakase-box allow ${key} [--reward <whole dollars> --reward-limit <whole dollars>]`);
   const at = new Date().toISOString();
   const entry: SettingsLevel = { ...previous, ...(patch.reward === undefined ? {} : { reward: { amount: patch.reward, at } }), ...(patch.rewardLimit === undefined ? {} : { rewardLimit: { amount: patch.rewardLimit, at } }) };
   persist({ ...settings, repositories: { ...settings.repositories, [key]: entry } });
@@ -923,7 +923,7 @@ export function recordFirstMerge(repoRoot: string, commit: string): FirstMergeNo
       saveState({ ...state, firstMerges: { ...state.firstMerges, [address]: { commit, at: new Date().toISOString() } } });
     }
   } catch (error) {
-    const where = address === null || error instanceof BountyRefused && error.reason.startsWith('first-merge-notice-') ? '.box/bounties/FIRST_MERGE' : 'box bounty config';
+    const where = address === null || error instanceof BountyRefused && error.reason.startsWith('first-merge-notice-') ? '.box/bounties/FIRST_MERGE' : 'omakase-box config';
     return { line: `Tell the owner: ${fact} The first-merge notice could not be recorded (${error instanceof BountyRefused ? error.reason : 'settings-write-failed'}); the merge stands. Check ${where}.`, receiving, recorded: false };
   }
   return { line: `Tell the owner in your closing message: ${fact} ${address === null ? `The receiving GitHub address could not be determined; this notice is recorded in ${JSON.stringify(localMergeFile(repoRoot))}. ` : ''}This notice is recorded once for this repository.`, receiving, recorded: true };

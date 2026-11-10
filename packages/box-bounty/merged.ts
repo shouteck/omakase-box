@@ -56,7 +56,7 @@ export function noticeMergedSolutions(repoRoot: string): void {
   if (noticed.has(key)) return;
   noticed.add(key);
   // BT32: the shared bounty memory refreshes only where the brief names it —
-  // `box bounty`, `status`, `find`, `status --json` and `hook start` call
+  // `omakase-box`, `status`, `find`, `status --json` and `hook start` call
   // refreshSharedMemory themselves; every other record reader runs this scan
   // against the last imported cache and never touches the remote.
   noticing = true;

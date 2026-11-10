@@ -210,7 +210,7 @@ export function payMessageLines(record: { id: string; title: string }, pay: PayO
   // The one place an owner acts, with no command to type. The address was checked when it was read.
   if (ways !== undefined) owner.push(`Pay it or record it on the bounty's page: ${ways.board}/b/${record.id}/`);
   // Only with a board on: the tool cannot see the owner's switch, and says where the answer is.
-  if (accepts !== undefined && (ways === undefined || ways.onMerge)) owner.push(`If you turned on pay on merge for this repository on the board, the board charges your saved card instead. box bounty status ${record.id} says which happened.`);
+  if (accepts !== undefined && (ways === undefined || ways.onMerge)) owner.push(`If you turned on pay on merge for this repository on the board, the board charges your saved card instead. omakase-box status ${record.id} says which happened.`);
   const listed = accepts !== undefined && accepts.methods.length + accepts.more > 0;
   if (listed) {
     // The solver's own list on the board: their word, shape-checked, never followed.
@@ -259,7 +259,7 @@ export function payNotice(record: { id: string; title: string; events: readonly 
 // ---- BT36: whether a merged bounty's reward stands owed or is recorded paid
 //
 // The fact is a `paid` event on the record — the owner's word, written by
-// `box bounty config set paid <id>`; a second `paid` event marked
+// `omakase-box config set paid <id>`; a second `paid` event marked
 // `withdrawn` takes a mistaken record back. The amount is always the bound
 // reward read fresh — never a number typed anywhere — and the tool never
 // checks, moves or enforces the money.

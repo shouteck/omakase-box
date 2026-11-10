@@ -107,7 +107,7 @@ export type AttemptOutcome = 'answered' | 'set-aside';
 export interface Attempt {
   readonly pullRequest?: number;
   readonly seenAt?: string;
-  /** 1-based, stable within the record — `box bounty apply <id> <n>` names it.
+  /** 1-based, stable within the record — `omakase-box apply <id> <n>` names it.
       A solution collected from a pull request is numbered by the pull
       request's number, so `look`/`apply <id> <n>` name the same thing as the
       outside listing. The answer commit is pinned at
@@ -588,14 +588,16 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
   // wording to the command that retries the same outside work now.
   if (record.github?.pending !== null && record.github?.pending !== undefined) {
     record.github.pending = record.github.pending
-      .replace(/box bounty owner answer \S+/g, `box bounty close ${record.id}`)
-      .replace(/box bounty owner (?:setup|allow|ask|off|on|summary)\b[^\n;]*/g, 'box bounty config')
-      .replace(/retry box bounty (?:undo|reject|withdraw|answer|questions|reply|remind)\b[^\n;]*/, `retry box bounty close ${record.id}`)
+      .replace(/box bounty owner answer \S+/g, `omakase-box close ${record.id}`)
+      .replace(/box bounty owner (?:setup|allow|ask|off|on|summary)\b[^\n;]*/g, 'omakase-box config')
+      .replace(/retry box bounty (?:undo|reject|withdraw|answer|questions|reply|remind)\b[^\n;]*/, `retry omakase-box close ${record.id}`)
       .replace(/local (?:undo|reject|withdraw) stands/g, 'local close stands')
-      .replace(/box bounty (?:look|apply) [^\n;]*--from[^\n;]*/g, `box bounty close ${record.id}`)
+      .replace(/box bounty (?:look|apply) [^\n;]*--from[^\n;]*/g, `omakase-box close ${record.id}`)
       .replace(/ --to github\b/g, '')
-      .replace(/box bounty post [^\n;]*--to (?!github\b)[^\n;]*/g, `box bounty close ${record.id}`)
-      .replace(/box bounty (?:undo|reject|withdraw|answer|questions|reply|remind)\b[^\n;]*/, `box bounty close ${record.id}`);
+      .replace(/box bounty post [^\n;]*--to (?!github\b)[^\n;]*/g, `omakase-box close ${record.id}`)
+      .replace(/box bounty (?:undo|reject|withdraw|answer|questions|reply|remind)\b[^\n;]*/, `omakase-box close ${record.id}`)
+      // BT63: the command is now omakase-box; a command still valid keeps its name, in the new spelling.
+      .replace(/(?<![\[\w-])box bounty (?=\S)/g, 'omakase-box ');
   }
   // `outside.answers` is the same kind of stored tool text — the listing
   // listGitHubAnswers printed — replayed verbatim by status and by the
@@ -604,12 +606,13 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
   // pull request now; any other removed name points back at status.
   if (record.github?.outside !== undefined && typeof record.github.outside.answers === 'string') {
     const answers = record.github.outside.answers
-      .replace(/box bounty owner answer (\S+)/g, 'box bounty allow $1')
-      .replace(/box bounty owner (?:setup|allow|ask|off|on|summary)\b[^\n;]*/g, 'box bounty config')
-      .replace(/box bounty (?:look|apply) [^\n;]*--from[^\n;]*/g, `box bounty close ${record.id}`)
+      .replace(/box bounty owner answer (\S+)/g, 'omakase-box allow $1')
+      .replace(/box bounty owner (?:setup|allow|ask|off|on|summary)\b[^\n;]*/g, 'omakase-box config')
+      .replace(/box bounty (?:look|apply) [^\n;]*--from[^\n;]*/g, `omakase-box close ${record.id}`)
       .replace(/ --to github\b/g, '')
-      .replace(/box bounty answer (\S+) --pr (\d+)/g, 'box bounty look $1 $2 or box bounty apply $1 $2')
-      .replace(/box bounty (?:answer|questions|reply|undo|reject|withdraw|remind)\b[^\n;]*/g, `box bounty status ${record.id}`);
+      .replace(/box bounty answer (\S+) --pr (\d+)/g, 'omakase-box look $1 $2 or omakase-box apply $1 $2')
+      .replace(/box bounty (?:answer|questions|reply|undo|reject|withdraw|remind)\b[^\n;]*/g, `omakase-box status ${record.id}`)
+      .replace(/(?<![\[\w-])box bounty (?=\S)/g, 'omakase-box ');
     if (answers !== record.github.outside.answers) {
       record.github = { ...record.github, outside: { ...record.github.outside, answers } };
     }
@@ -630,10 +633,10 @@ export function loadRecord(repoRoot: string, id: string): BountyRecord {
     if (sharedAdopter === undefined) throw new Error('box-bounty wiring: reading a shared record adopts it — adopt.js registers it at load; import the package index');
     const adopted = sharedAdopter(repoRoot, id);
     if (adopted !== null) return adopted;
-    throw new BountyRefused('unknown-bounty', `no bounty ${id} — this project has no record for it; next: box bounty status lists the bounties this project knows`);
+    throw new BountyRefused('unknown-bounty', `no bounty ${id} — this project has no record for it; next: omakase-box status lists the bounties this project knows`);
   }
   if (stored.record === null) {
-    throw new BountyRefused('record-corrupt', `${recordPath(repoRoot, id)} is not a readable bounty record; next: open it by hand, or remove it and run box bounty status again`);
+    throw new BountyRefused('record-corrupt', `${recordPath(repoRoot, id)} is not a readable bounty record; next: open it by hand, or remove it and run omakase-box status again`);
   }
   return stored.record;
 }
@@ -751,7 +754,7 @@ export function retiredRoute(record: BountyRecord): string | null {
 export function requireCurrentDelivery(record: BountyRecord): void {
   const retired = retiredRoute(record);
   if (retired !== null) {
-    throw new BountyRefused(retired, `this bounty used a retired delivery route; its history is still readable; next: end it with box bounty close ${record.id}`);
+    throw new BountyRefused(retired, `this bounty used a retired delivery route; its history is still readable; next: end it with omakase-box close ${record.id}`);
   }
 }
 

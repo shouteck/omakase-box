@@ -20,7 +20,7 @@ import type { DecisionRead } from './settings.js';
 // the approved plan against live state as before (github-preview-stale).
 
 // The decision gate every post and every tool-driven outside close passes.
-// `answered` is true only inside `box bounty allow` — the owner's own
+// `answered` is true only inside `omakase-box allow` — the owner's own
 // one command, which completes the held action without writing a standing
 // decision. Allowed or answered returns the read; anything else marks the
 // record waiting and refuses by name with the lines for the owner.
@@ -55,7 +55,7 @@ export function ownerGate(repoRoot: string, record: BountyRecord, action: { for:
   waitForOwner(repoRoot, record, { for: action.for, reason, at: new Date().toISOString(), to: action.to, ...(action.choice !== undefined ? { choice: action.choice } : {}), ...(shown !== undefined ? { shown } : {}) });
   throw new BountyRefused(
     read.decision === null ? 'owner-allow-needed' : 'owner-answer-needed',
-    [`waiting for the owner: ${record.id} — ${waitingSummary(record)}`, ...ownerWaitLines(repoRoot, record, read), ...(anyJsonContaining(repoRoot, '"decision": "once"') ? ['The owner previously chose this one bounty only.'] : []), `next: pass the owner block on in its words; box bounty status ${record.id} shows when the answer lands`].join('\n')
+    [`waiting for the owner: ${record.id} — ${waitingSummary(record)}`, ...ownerWaitLines(repoRoot, record, read), ...(anyJsonContaining(repoRoot, '"decision": "once"') ? ['The owner previously chose this one bounty only.'] : []), `next: pass the owner block on in its words; omakase-box status ${record.id} shows when the answer lands`].join('\n')
   );
 }
 

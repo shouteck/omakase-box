@@ -13,8 +13,8 @@ import { shareSolution,syncChains } from './chain.js';
 import { adoptedWithoutPermission,settleFromChain } from './adopt.js';
 
 export function listGitHubAnswers(root: string, id: string, record = loadRecord(root, id), shown = true): string {
-  if (record.github === undefined) return invalid('not-github-posted', `this bounty has no GitHub post; next: post it with box bounty post ${id}, or end it with box bounty close ${id}`);
-  if (retiredRoute(record) !== null) return `This bounty used a retired delivery route; end it with box bounty close ${id}`;
+  if (record.github === undefined) return invalid('not-github-posted', `this bounty has no GitHub post; next: post it with omakase-box post ${id}, or end it with omakase-box close ${id}`);
+  if (retiredRoute(record) !== null) return `This bounty used a retired delivery route; end it with omakase-box close ${id}`;
   const { repository, branch } = record.github;
   const data = pages(root, `repos/${repository}/pulls?state=open&base=${branch}`);
   // Every fact a listing line prints except the changed-file names — one
@@ -67,7 +67,7 @@ export function listGitHubAnswers(root: string, id: string, record = loadRecord(
     const files = pages(root, `repos/${repository}/pulls/${n}/files`);
     const names = files.map(file => isObject(file) && typeof file['filename'] === 'string' ? redact(quoteForeign(file['filename'])) : invalid('github-response-invalid', 'GitHub returned unreadable changed files; next: check gh and rerun the same command'));
     const collected = record.attempts?.find(attempt => attempt.commit === commit);
-    const next = collected === undefined ? `collect: box bounty look ${id} ${n} or box bounty apply ${id} ${n}` : `collected as solution ${collected.n}; look: box bounty look ${id} ${collected.n}`;
+    const next = collected === undefined ? `collect: omakase-box look ${id} ${n} or omakase-box apply ${id} ${n}` : `collected as solution ${collected.n}; look: omakase-box look ${id} ${collected.n}`;
     // The `pay-to:` line is read only from the pull request description — a
     // comment or a changed file never carries it — and only the fact is kept.
     const payTo = parsePayTo(typeof entry['body'] === 'string' ? entry['body'] : '');
@@ -139,9 +139,9 @@ export type IssueComment = { readonly author: string | null; readonly body: stri
 
 function boundIssue(root: string, record: BountyRecord, fetched?: unknown): { repository: string; number: number; account: string } {
   const publication = record.github;
-  if (publication === undefined || publication.issue === null) return invalid('not-github-posted', `this bounty has no GitHub issue; next: box bounty status`);
+  if (publication === undefined || publication.issue === null) return invalid('not-github-posted', `this bounty has no GitHub issue; next: omakase-box status`);
   const issue = fetched ?? api(root, `repos/${publication.repository}/issues/${publication.issue.number}`);
-  if (!isObject(issue) || issue['number'] !== publication.issue.number || typeof issue['body'] !== 'string' || !issue['body'].includes(`<!-- box-bounty:${record.id} -->`) || !isObject(issue['user']) || issue['user']['login'] !== publication.account) return invalid('github-issue-mismatch', `the issue is not this bounty's; nothing was read from it; next: box bounty status`);
+  if (!isObject(issue) || issue['number'] !== publication.issue.number || typeof issue['body'] !== 'string' || !issue['body'].includes(`<!-- box-bounty:${record.id} -->`) || !isObject(issue['user']) || issue['user']['login'] !== publication.account) return invalid('github-issue-mismatch', `the issue is not this bounty's; nothing was read from it; next: omakase-box status`);
   return { repository: publication.repository, number: publication.issue.number, account: publication.account };
 }
 
@@ -155,7 +155,7 @@ export function issueComments(root: string, record: BountyRecord, fetched?: unkn
     if (!isObject(entry) || !isObject(entry['user'])) return [];
     const fromPoster = entry['user']['login'] === issue.account;
     if (fromTool(entry['body'], fromPoster)) return [];
-    if (typeof entry['body'] !== 'string' || typeof entry['created_at'] !== 'string' || !Number.isFinite(Date.parse(entry['created_at']))) return invalid('github-response-invalid', 'GitHub returned an unreadable comment; next: box bounty status');
+    if (typeof entry['body'] !== 'string' || typeof entry['created_at'] !== 'string' || !Number.isFinite(Date.parse(entry['created_at']))) return invalid('github-response-invalid', 'GitHub returned an unreadable comment; next: omakase-box status');
     const author = entry['user']['login'];
     return [{ author: typeof author === 'string' && READABLE_LOGIN.test(author) ? author : null, body: redact(entry['body']), at: entry['created_at'], fromPoster }];
   });
@@ -241,7 +241,7 @@ function renderPullRequestReport(record: BountyRecord, n: number, at: string, au
   if (flags.length === 0) lines.push('  flags: none');
   else for (const flag of flags) lines.push(`  flag: ${flag}`);
   lines.push(`  ${NOTHING_RUN}`);
-  lines.push(`  next: box bounty look ${record.id} ${n} to read the change; box bounty apply ${record.id} ${n} to merge it; or box bounty close ${record.id} --reason "<why>"`);
+  lines.push(`  next: omakase-box look ${record.id} ${n} to read the change; omakase-box apply ${record.id} ${n} to merge it; or omakase-box close ${record.id} --reason "<why>"`);
   return lines;
 }
 
@@ -252,8 +252,8 @@ function renderPullRequestReport(record: BountyRecord, n: number, at: string, au
 export function answerGitHub(root: string, id: string, pr: number, via?: 'look' | 'apply') {
   const record = loadRecord(root, id);
   requireCurrentDelivery(record);
-  if (record.github === undefined || record.github.state !== 'posted') return invalid('not-github-posted', 'this bounty is not posted to GitHub; next: box bounty status');
-  if (!isOpenStage(record.stage)) return invalid('not-posted', `bounty ${id} is ${record.stage} — a solution can only come back to a bounty that is still open; next: box bounty status ${id}`);
+  if (record.github === undefined || record.github.state !== 'posted') return invalid('not-github-posted', 'this bounty is not posted to GitHub; next: omakase-box status');
+  if (!isOpenStage(record.stage)) return invalid('not-posted', `bounty ${id} is ${record.stage} — a solution can only come back to a bounty that is still open; next: omakase-box status ${id}`);
   if (!Number.isSafeInteger(pr) || pr < 1) return invalid('github-pr-missing', 'next: name an existing pull request number');
   const publication = record.github;
   const { repository, branch } = publication;
@@ -300,7 +300,7 @@ export function resolveAttempt(root: string, record: BountyRecord, n: number, vi
     catch (error) { if (namesGitHubCause(error)) throw error; }
     if (typeof head === 'string' && /^[a-f\d]{40}$/.test(head) && head !== found.commit) {
       const collected = answerGitHub(root, record.id, n, via);
-      return invalid('pull-request-moved', `pull request #${n} has new commits since solution ${found.n} was collected; its current version is collected as solution ${collected.attempt}; nothing was merged; next: box bounty look ${record.id} ${n} shows it, then box bounty apply ${record.id} ${n}`);
+      return invalid('pull-request-moved', `pull request #${n} has new commits since solution ${found.n} was collected; its current version is collected as solution ${collected.attempt}; nothing was merged; next: omakase-box look ${record.id} ${n} shows it, then omakase-box apply ${record.id} ${n}`);
     }
   }
   if (found !== undefined) return { record, attempt: found, collected: false };
@@ -311,9 +311,9 @@ export function resolveAttempt(root: string, record: BountyRecord, n: number, vi
   }
   const known = attemptsOf(record).map(candidate => `#${candidate.n}`).join(', ') || 'none yet';
   const way = record.github === undefined
-    ? `post to GitHub with box bounty post ${record.id}, or end it with box bounty close ${record.id}`
+    ? `post to GitHub with omakase-box post ${record.id}, or end it with omakase-box close ${record.id}`
     : `name one of them or a pull request number — the pull request collects itself`;
-  return invalid('unknown-attempt', `solution ${n} does not exist on ${record.id} — the bounty knows ${known}; ${way}; next: box bounty status ${record.id}`);
+  return invalid('unknown-attempt', `solution ${n} does not exist on ${record.id} — the bounty knows ${known}; ${way}; next: omakase-box status ${record.id}`);
 }
 
 // What a pull request's head must pass before the tool takes it: tree safety
@@ -326,8 +326,8 @@ export function checkSolutionHistory(root: string, record: BountyRecord, publica
   for (const entry of tree.stdout.split('\0')) {
     if (entry === '') continue;
     const match = /^(100644|100755) blob ([a-f\d]{40})\t(.+)$/s.exec(entry);
-    if (match === null || match[3] === undefined || match[3].split('/').some(segment => segment === '' || segment === '.' || segment === '..') || /[\\:\x00-\x1f]/.test(match[3])) return invalid('answer-unsafe-path', `the pull request tree holds a link, a submodule or an unsafe path; nothing was collected; next: do not collect it, or end the bounty with box bounty close ${record.id} --reason "<why>"`);
-    if (redact(match[3]) !== match[3]) return invalid('github-response-invalid', `a pull request path contains credential-shaped text; nothing was collected; next: do not collect it, or end the bounty with box bounty close ${record.id} --reason "<why>"`);
+    if (match === null || match[3] === undefined || match[3].split('/').some(segment => segment === '' || segment === '.' || segment === '..') || /[\\:\x00-\x1f]/.test(match[3])) return invalid('answer-unsafe-path', `the pull request tree holds a link, a submodule or an unsafe path; nothing was collected; next: do not collect it, or end the bounty with omakase-box close ${record.id} --reason "<why>"`);
+    if (redact(match[3]) !== match[3]) return invalid('github-response-invalid', `a pull request path contains credential-shaped text; nothing was collected; next: do not collect it, or end the bounty with omakase-box close ${record.id} --reason "<why>"`);
   }
   // Never-ship on everything the pull request introduces: a path it touches
   // anywhere in its new history — added, changed or deleted — is refused,
@@ -349,7 +349,7 @@ export function checkSolutionHistory(root: string, record: BountyRecord, publica
   }
   if (violations.length > 0) {
     const named = [...new Map(violations.map(v => [v.path, v])).values()];
-    return invalid('answer-never-ship', `the pull request touches never-ship paths in its history — refused, nothing was collected: ${named.map(v => `${showPath(v.path)} (rule '${v.rule}')`).join(', ')}; next: end the bounty with box bounty close ${record.id} --reason "<why>" — never-ship paths cannot be collected`);
+    return invalid('answer-never-ship', `the pull request touches never-ship paths in its history — refused, nothing was collected: ${named.map(v => `${showPath(v.path)} (rule '${v.rule}')`).join(', ')}; next: end the bounty with omakase-box close ${record.id} --reason "<why>" — never-ship paths cannot be collected`);
   }
   return newCommits;
 }
@@ -372,7 +372,7 @@ function collectHistoryPullRequest(root: string, record: BountyRecord, publicati
   const newCommits = checkSolutionHistory(root, record, publication, commit);
   const change = pullRequestChange(root, publication.commit, commit);
   if (change.changed.length === 0 && change.added.length === 0 && change.deleted.length === 0) {
-    return invalid('answer-empty', `the pull request changes nothing against the bounty branch — a return that changes nothing is no solution; next: ask for a pull request that changes something, or end the bounty with box bounty close ${record.id} --reason "<why>"`);
+    return invalid('answer-empty', `the pull request changes nothing against the bounty branch — a return that changes nothing is no solution; next: ask for a pull request that changes something, or end the bounty with omakase-box close ${record.id} --reason "<why>"`);
   }
   // A pull request keeps its own number as its solution number — the outside
   // listing and `look`/`apply <id> <n>` name the same thing. A number already

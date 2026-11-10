@@ -404,11 +404,11 @@ const day = (at: string | null): string => at?.slice(0, 10) ?? 'an unstated date
 export function boardLine(root: string, record: BountyRecord): string | null {
   if (boardAddress() === '' || !boardScope(root).some(entry => entry.id === record.id)) return null;
   const fact = storedFact(root, record.id);
-  if (fact === null) return `board: not read yet; next: box bounty status ${record.id}`;
+  if (fact === null) return `board: not read yet; next: omakase-box status ${record.id}`;
   if (fact.kind === 'unreachable') return `board: not reachable (${fact.reason}); next: any command when online`;
-  if (fact.kind === 'not-listed') return `board: not listed yet — it reads GitHub every 15 minutes; next: box bounty status ${record.id} later`;
+  if (fact.kind === 'not-listed') return `board: not listed yet — it reads GitHub every 15 minutes; next: omakase-box status ${record.id} later`;
   const name = (login: string | null): string => login === null ? 'an account whose name could not be read' : solverAccount(login);
-  const record_it = record.shared === true ? '' : `; record it: box bounty config set paid ${record.id}`;
+  const record_it = record.shared === true ? '' : `; record it: omakase-box config set paid ${record.id}`;
   const state = fact.charge as keyof typeof CHARGE_WORDS | null | undefined;
   const words = (state ?? null) === null ? undefined : (fact.paypalCharge === true ? PAYPAL_WORDS[state!] : undefined) ?? CHARGE_WORDS[state!];
   const chargeLine = words === undefined ? '' : `; payment: ${words}`;

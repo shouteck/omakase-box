@@ -43,7 +43,7 @@ const disclosure = (address: string, amount: number, limit: number | null, ask: 
     ask
       ? 'You will be asked before each post and before each merge.'
       : 'You will not be asked before a post or a merge.',
-    `You agreed to this; box bounty deny ${address} takes it back.`
+    `You agreed to this; omakase-box deny ${address} takes it back.`
   ]),
   'for you — the answer is recorded in the owner\'s own settings, outside the repository.'
 ];
@@ -66,11 +66,11 @@ export function allowRepository(repoRoot: string | null, name?: string, ask = fa
   if (name?.startsWith('bt-')) {
     // PF25: the owner's yes on one bounty an agent wants to take, under "ask each time". Needs no checkout.
     if (!ask && money === undefined && loadTaken(name)?.stage === 'waiting') return approveTake(name);
-    if (ask || repoRoot === null || money?.reward !== undefined || money?.rewardLimit !== undefined) throw new BountyRefused('allow-arguments', 'a waiting bounty requires a repository and takes no money options; nothing changed; next: run box bounty allow inside the checkout, without money options');
+    if (ask || repoRoot === null || money?.reward !== undefined || money?.rewardLimit !== undefined) throw new BountyRefused('allow-arguments', 'a waiting bounty requires a repository and takes no money options; nothing changed; next: run omakase-box allow inside the checkout, without money options');
     return allowBounty(repoRoot, name);
   }
   const address = name === undefined ? (repoRoot === null ? null : requireRepository(repoRoot)) : repositoryAddress(name);
-  if (address === null) throw new BountyRefused('repository-address-invalid', 'allow needs a GitHub repository address, owner/name, or a waiting bounty; nothing changed; next: box bounty allow --help');
+  if (address === null) throw new BountyRefused('repository-address-invalid', 'allow needs a GitHub repository address, owner/name, or a waiting bounty; nothing changed; next: omakase-box allow --help');
   // Allowing a repository and stating what its bounties promise is one
   // command: --reward and --reward-limit write this entry's own money
   // (BT11c). With neither, the repository is allowed at $0 — unless the
@@ -78,8 +78,8 @@ export function allowRepository(repoRoot: string | null, name?: string, ask = fa
   const previous = loadSettings().repositories[address];
   const reward = money?.reward === undefined ? previous?.reward?.amount ?? 0 : wholeDollars('--reward', money.reward);
   const limit = money?.rewardLimit === undefined ? previous?.rewardLimit?.amount ?? null : wholeDollars('--reward-limit', money.rewardLimit);
-  if (reward > 0 && limit === null) throw new BountyRefused('reward-needs-limit', `a reward above $0 needs the most that may be promised across ${address}'s open bounties; nothing changed; next: add --reward-limit <whole dollars> or set it first with box bounty config set reward-limit <whole dollars> ${address}`);
-  if (reward > 0 && limit !== null && limit < reward) throw new BountyRefused('limit-below-reward', `--reward-limit $${limit} sits below a $${reward} reward for ${address}; nothing changed; next: raise the limit with box bounty config set reward-limit <whole dollars> ${address}, or lower the reward`);
+  if (reward > 0 && limit === null) throw new BountyRefused('reward-needs-limit', `a reward above $0 needs the most that may be promised across ${address}'s open bounties; nothing changed; next: add --reward-limit <whole dollars> or set it first with omakase-box config set reward-limit <whole dollars> ${address}`);
+  if (reward > 0 && limit !== null && limit < reward) throw new BountyRefused('limit-below-reward', `--reward-limit $${limit} sits below a $${reward} reward for ${address}; nothing changed; next: raise the limit with omakase-box config set reward-limit <whole dollars> ${address}, or lower the reward`);
   const words = disclosure(address, reward, limit, ask);
   // The once-ever explanation is decided now but recorded only after the
   // decision write — recording it first would write the owner's settings
@@ -99,10 +99,10 @@ export function allowRepository(repoRoot: string | null, name?: string, ask = fa
       currentAddress = repositoryIdentity(repoRoot);
     } catch { /* named addresses work outside this checkout */ }
   }
-  const lines = [...(emitDisclosure === undefined ? wordsForOwner : []), `${ask ? 'ask me each time' : 'allowed'}: ${address} — written to the owner's settings.`, reward === 0 ? `bounties on ${address} state $0 — no payment is promised; set one with box bounty config set reward <whole dollars> ${address}` : `bounties on ${address} state $${reward} — a promise you pay; at most $${limit} promised open at once`];
+  const lines = [...(emitDisclosure === undefined ? wordsForOwner : []), `${ask ? 'ask me each time' : 'allowed'}: ${address} — written to the owner's settings.`, reward === 0 ? `bounties on ${address} state $0 — no payment is promised; set one with omakase-box config set reward <whole dollars> ${address}` : `bounties on ${address} state $${reward} — a promise you pay; at most $${limit} promised open at once`];
   // Instructions stay off unless the owner turns them on (BT41): the tool
   // offers the one command here and never writes the block itself.
-  if (repoRoot !== null && !readInstructions(repoRoot).enabled) lines.push('an agent box setup does not cover learns of the tool only once instructions are on — box bounty config set instructions true writes the block into this project\'s instruction files');
+  if (repoRoot !== null && !readInstructions(repoRoot).enabled) lines.push('an agent omakase-box setup does not cover learns of the tool only once instructions are on — omakase-box config set instructions true writes the block into this project\'s instruction files');
   if (ask) lines.push('This covers each post and each merge — the owner is asked before either.');
   // The one step after setup that only the owner takes, named with its page (PF20).
   lines.push(...payOnMergeLines([address]));
@@ -121,16 +121,16 @@ export function allowRepository(repoRoot: string | null, name?: string, ask = fa
       // A bounty held for a merge runs its merge on the next `apply` — the
       // new decision already covers it; the wait's binding still applies.
       if (record?.stage === 'waiting' && record.waiting?.for === 'merge') {
-        lines.push(`${record.id} waits for a merge — box bounty apply ${record.id} ${record.waiting.merge?.n ?? '<n>'} runs it now`);
+        lines.push(`${record.id} waits for a merge — omakase-box apply ${record.id} ${record.waiting.merge?.n ?? '<n>'} runs it now`);
         continue;
       }
       if (record?.stage !== 'waiting' || record.waiting?.for !== 'post' || record.waiting.to === undefined) continue;
       if (record.waiting.reason === 'secrets') {
-        lines.push(`${record.id} still waits on the pre-publish scan — an answer cannot release it; decide in box bounty config: the path goes on safe to publish or never publish.`);
+        lines.push(`${record.id} still waits on the pre-publish scan — an answer cannot release it; decide in omakase-box config: the path goes on safe to publish or never publish.`);
         continue;
       }
       if (record.waiting.reason === 'untracked-file') {
-        lines.push(`${record.id} still waits on the pre-publish check; box bounty allow ${record.id} answers that one hold.`);
+        lines.push(`${record.id} still waits on the pre-publish check; omakase-box allow ${record.id} answers that one hold.`);
         continue;
       }
       try {
@@ -147,7 +147,7 @@ export function allowRepository(repoRoot: string | null, name?: string, ask = fa
 }
 export function denyRepository(repoRoot: string | null, name?: string): string {
   const address = name === undefined ? (repoRoot === null ? null : requireRepository(repoRoot)) : repositoryAddress(name);
-  if (address === null) throw new BountyRefused('repository-address-invalid', 'deny needs a GitHub repository address, owner/name; nothing changed; next: box bounty deny <owner/name>');
+  if (address === null) throw new BountyRefused('repository-address-invalid', 'deny needs a GitHub repository address, owner/name; nothing changed; next: omakase-box deny <owner/name>');
   // deny returns the repository to nothing written — its reward and limit go
   // with the entry, so a re-allowed repository states $0 again.
   const previous = loadSettings().repositories[address];
@@ -159,17 +159,17 @@ export function denyRepository(repoRoot: string | null, name?: string): string {
     ? ` Its reward ($${previous.reward?.amount ?? 0})${previous.rewardLimit !== undefined ? ` and limit ($${previous.rewardLimit.amount})` : ''} went with the entry — re-allow states them again.` : '';
   const retiredNotice = rewardNoticeLine();
   const askNotice = askMergeNoticeLine();
-  return `${address}: not allowed — removed from the active list; all-projects does not re-allow it; open bounties are untouched.${money}\nnext: box bounty allow ${address} re-allows it${retiredNotice === null ? '' : `\n${retiredNotice}`}${askNotice === null ? '' : `\n${askNotice}`}`;
+  return `${address}: not allowed — removed from the active list; all-projects does not re-allow it; open bounties are untouched.${money}\nnext: omakase-box allow ${address} re-allows it${retiredNotice === null ? '' : `\n${retiredNotice}`}${askNotice === null ? '' : `\n${askNotice}`}`;
 }
 export function allowBounty(repoRoot: string, id: string): string {
   syncBeforeAction(repoRoot, id);
   const record = loadRecord(repoRoot, id);
   const waiting = record.waiting;
   if (record.stage === 'waiting' && waiting?.for === 'merge') return allowMerge(repoRoot, record, waiting);
-  if (record.stage !== 'waiting' || waiting?.for !== 'post' || waiting.to === undefined) throw new BountyRefused('owner-answer-not-waiting', `${id} is not waiting for a post; nothing changed; next: box bounty status ${id} shows its state`);
+  if (record.stage !== 'waiting' || waiting?.for !== 'post' || waiting.to === undefined) throw new BountyRefused('owner-answer-not-waiting', `${id} is not waiting for a post; nothing changed; next: omakase-box status ${id} shows its state`);
   const retired = retiredRoute(record);
-  if (retired !== null) throw new BountyRefused(retired, `this bounty waited for retired folder delivery; nothing changed; next: end it with box bounty close ${id}`);
-  if (waiting.reason === 'secrets') throw new BountyRefused('allow-scan-held', `${id} waits on the pre-publish scan — an owner answer cannot release it; nothing changed; next: the owner decides in box bounty config — the path goes on safe to publish or never publish, or the flagged content is removed and the post run again`);
+  if (retired !== null) throw new BountyRefused(retired, `this bounty waited for retired folder delivery; nothing changed; next: end it with omakase-box close ${id}`);
+  if (waiting.reason === 'secrets') throw new BountyRefused('allow-scan-held', `${id} waits on the pre-publish scan — an owner answer cannot release it; nothing changed; next: the owner decides in omakase-box config — the path goes on safe to publish or never publish, or the flagged content is removed and the post run again`);
   // A one-bounty yes cannot say which repository it covers (BT16 rule 6):
   // in a checkout whose remotes name several GitHub repositories the list
   // has not settled, this refuses repository-choice-needed before the
@@ -194,11 +194,11 @@ export function allowBounty(repoRoot: string, id: string): string {
 // state, recorded by a fresh `apply`.
 function allowMerge(repoRoot: string, record: BountyRecord, waiting: WaitingFor): string {
   const bound = waiting.merge;
-  if (bound === undefined) throw new BountyRefused('merge-approval-stale', `${record.id} waits for a merge approval that names nothing it is bound to; nothing changed; next: run box bounty apply ${record.id} again so the wait records the current state for the owner`);
+  if (bound === undefined) throw new BountyRefused('merge-approval-stale', `${record.id} waits for a merge approval that names nothing it is bound to; nothing changed; next: run omakase-box apply ${record.id} again so the wait records the current state for the owner`);
   const attempt = attemptsOf(record).find(candidate => candidate.n === bound.n);
   const head = gitOutcome(repoRoot, ['rev-parse', 'HEAD']).stdout.trim();
   if (attempt === undefined || attempt.commit !== bound.commit || head !== bound.head) {
-    throw new BountyRefused('merge-approval-stale', `${record.id}: the solution or the branch changed underneath the waiting merge — the owner's answer was for what they were shown, so it does not carry over; nothing changed; next: run box bounty apply ${record.id} again so the wait records the new state`);
+    throw new BountyRefused('merge-approval-stale', `${record.id}: the solution or the branch changed underneath the waiting merge — the owner's answer was for what they were shown, so it does not carry over; nothing changed; next: run omakase-box apply ${record.id} again so the wait records the new state`);
   }
   // The answer is written to the owner's settings — outside the repository
   // — before the merge reruns: a conflict keeps it so the owner is not
@@ -252,32 +252,32 @@ export function renderConfig(repoRoot: string | null, options?: { readonly full?
     // A never-set all-projects is not a setting — nothing was written, so
     // the bare surface omits the row (BT14). --full always shows it.
     ...(full || settings.default !== undefined ? [
-      `all-projects: ${global}${settings.default === undefined ? ', nothing written' : `, changed ${settings.default.at}`}; change: box bounty config set all-projects <true|false|ask>`,
+      `all-projects: ${global}${settings.default === undefined ? ', nothing written' : `, changed ${settings.default.at}`}; change: omakase-box config set all-projects <true|false|ask>`,
       '  true grants publication permission in repositories without their own decision; false grants no blanket permission; ask asks before each post and each merge in repositories without their own decision.',
-      '  A repository entry overrides all-projects. A dated deny removal keeps that repository not allowed even when all-projects is true or ask; box bounty allow <owner/name> re-allows it.'
+      '  A repository entry overrides all-projects. A dated deny removal keeps that repository not allowed even when all-projects is true or ask; omakase-box allow <owner/name> re-allows it.'
     ] : []),
-    `repositories: ${active.length} active — each entry carries its own reward and its own limit; allow: box bounty allow <owner/name>; deny: box bounty deny <owner/name>`,
+    `repositories: ${active.length} active — each entry carries its own reward and its own limit; allow: omakase-box allow <owner/name>; deny: omakase-box deny <owner/name>`,
     ...(full ? [
-      '  a repository with no reward written states $0. Set one: box bounty config set reward <whole dollars> [owner/name]; its limit: box bounty config set reward-limit <whole dollars> [owner/name] — run inside its checkout or name the repository. The all-projects extra never carries a reward.',
+      '  a repository with no reward written states $0. Set one: omakase-box config set reward <whole dollars> [owner/name]; its limit: omakase-box config set reward-limit <whole dollars> [owner/name] — run inside its checkout or name the repository. The all-projects extra never carries a reward.',
       'ask me each time covers each post and each merge: the tool\'s own post or merge waits for the owner\'s answer; a merge the agent lands by hand still closes the bounty and is stated as not asked. Closing never waits.'
     ] : []),
     `not decided yet: ${undecided.length === 0 ? 'nothing among the settings shown' : undecided.join('; ')}`
   ];
   if (address !== null) {
-    if (current?.decision !== 'allowed') lines.push(`  ${DECISION_WORDS.allow}: box bounty allow ${address}`);
-    if (current?.decision !== 'ask') lines.push(`  ${DECISION_WORDS.ask}: box bounty allow ${address} --ask`);
+    if (current?.decision !== 'allowed') lines.push(`  ${DECISION_WORDS.allow}: omakase-box allow ${address}`);
+    if (current?.decision !== 'ask') lines.push(`  ${DECISION_WORDS.ask}: omakase-box allow ${address} --ask`);
   }
   if (repoRoot !== null) {
     const publish = publishLists(repoRoot);
     // Every listed path is quoted (BT43 correction 5): the owner lists the
     // names a scan hold showed, and after an apply those can be a solver's.
-    lines.push(`never publish: ${publish.never.length === 0 ? 'none listed' : publish.never.map(showPath).join(', ')} — kept out of every bounty; change: box bounty config add never-publish <path>, or remove never-publish <path>`);
-    lines.push(`safe to publish: ${publish.safe.length === 0 ? 'none listed' : publish.safe.map(showPath).join(', ')} — paths the pre-publish scan does not hold a bounty over; change: box bounty config add safe-to-publish <path>, or remove safe-to-publish <path>`);
+    lines.push(`never publish: ${publish.never.length === 0 ? 'none listed' : publish.never.map(showPath).join(', ')} — kept out of every bounty; change: omakase-box config add never-publish <path>, or remove never-publish <path>`);
+    lines.push(`safe to publish: ${publish.safe.length === 0 ? 'none listed' : publish.safe.map(showPath).join(', ')} — paths the pre-publish scan does not hold a bounty over; change: omakase-box config add safe-to-publish <path>, or remove safe-to-publish <path>`);
     const choice = readInstructions(repoRoot);
-    lines.push(`instructions: ${choice.enabled ? 'on' : 'off'}; change: box bounty config set instructions <true|false>`);
-    lines.push(`instruction-file: ${choice.file === undefined ? 'none chosen' : showPath(choice.file)}; choose any existing file: box bounty config set instruction-file <existing-path>`);
+    lines.push(`instructions: ${choice.enabled ? 'on' : 'off'}; change: omakase-box config set instructions <true|false>`);
+    lines.push(`instruction-file: ${choice.file === undefined ? 'none chosen' : showPath(choice.file)}; choose any existing file: omakase-box config set instruction-file <existing-path>`);
     const found = discoverInstructions(repoRoot);
-    lines.push(`instruction files found: ${found.length === 0 ? 'none; name an existing file with box bounty config set instruction-file <existing-path>' : found.map(file => `${showPath(file.path)}${file.refusal === undefined ? '' : ` (refused: ${file.refusal})`}`).join(', ')}`);
+    lines.push(`instruction files found: ${found.length === 0 ? 'none; name an existing file with omakase-box config set instruction-file <existing-path>' : found.map(file => `${showPath(file.path)}${file.refusal === undefined ? '' : ` (refused: ${file.refusal})`}`).join(', ')}`);
     lines.push(...instructionNotices(repoRoot, false));
     // Whether the records are committed is a fact needing attention (BT28):
     // tracked records on a repository that posts to GitHub publish owner-only
@@ -298,12 +298,12 @@ export function renderConfig(repoRoot: string | null, options?: { readonly full?
     for (const record of waiting) {
       const held = record!.waiting!;
       lines.push(held.for === 'merge'
-        ? `  ${record!.id} waits for a merge — ${DECISION_WORDS.once}: box bounty allow ${record!.id}`
+        ? `  ${record!.id} waits for a merge — ${DECISION_WORDS.once}: omakase-box allow ${record!.id}`
         : held.reason === 'secrets'
           ? `  ${record!.id} waits on the pre-publish scan — decide with the lists above: safe to publish or never publish the path`
-          : `  ${DECISION_WORDS.once}: box bounty allow ${record!.id}`);
+          : `  ${DECISION_WORDS.once}: omakase-box allow ${record!.id}`);
     }
-    if (waiting.length === 0) lines.push('waiting actions: none; see current actions with box bounty status');
+    if (waiting.length === 0) lines.push('waiting actions: none; see current actions with omakase-box status');
   }
   // The repository table: one line each — address, its decision, its reward,
   // its limit, and what its open bounties promise now. The promise count is
@@ -321,18 +321,18 @@ export function renderConfig(repoRoot: string | null, options?: { readonly full?
     // A denied entry offers a re-allow, never a second remove for a
     // repository already gone (BT14); its history is the long form's.
     const change = entry.bounty === null || entry.bounty === 'off'
-      ? `re-allow: box bounty allow ${key}`
-      : `change: box bounty allow ${key}${entry.bounty === 'ask' ? '' : ' --ask'}; remove: box bounty deny ${key}`;
+      ? `re-allow: omakase-box allow ${key}`
+      : `change: omakase-box allow ${key}${entry.bounty === 'ask' ? '' : ' --ask'}; remove: omakase-box deny ${key}`;
     lines.push(`  ${key}: ${state}; reward $${reward}${limit === null ? ', no limit set' : `, limit $${limit}`}; ${promise}; ${change}`);
     if (full) for (const previous of entry.changes) lines.push(`    history: ${previous.bounty ?? 'denied'} at ${previous.at}`);
   }
   // A board the tool calls is always said; only "off, and nobody chose it" stays off the bare surface.
   const board = boardAddress();
-  if (full || board !== '' || settings.board !== undefined) lines.push(`board: ${board === '' ? 'off — the tool makes no call to it' : `${board} — ${BOARD_SENDS}`}; change: box bounty config set board <address>, or "" for off`);
+  if (full || board !== '' || settings.board !== undefined) lines.push(`board: ${board === '' ? 'off — the tool makes no call to it' : `${board} — ${BOARD_SENDS}`}; change: omakase-box config set board <address>, or "" for off`);
   // Pay on merge is the one step only the owner's signed-in page takes: each allowed repository's state, as the board says it (PF20).
   if (board !== '') lines.push(...payOnMergeLines(Object.entries(settings.repositories).filter(([, entry]) => entry.bounty !== null && entry.bounty !== 'off').map(([key]) => key)));
   lines.push(...solvingLines(full));
-  if (!full) lines.push('every setting, its history and the commands that change it: box bounty config --full');
+  if (!full) lines.push('every setting, its history and the commands that change it: omakase-box config --full');
   const rewardNotice = rewardNoticeLine();
   if (rewardNotice !== null) lines.push(rewardNotice);
   const askNotice = askMergeNoticeLine();
@@ -340,82 +340,82 @@ export function renderConfig(repoRoot: string | null, options?: { readonly full?
   // Migration and first-merge facts are the tool's records, kept in its own
   // state file — the render is the same, the source is not the owner's file.
   const toolState = loadState();
-  for (const notice of toolState.migrations) lines.push(`migration ${notice.at}: ${JSON.stringify(notice.path)} ${notice.detail}; re-add: box bounty allow ${notice.repository ?? '<owner/name>'}`);
-  for (const [key, notice] of Object.entries(toolState.firstMerges)) lines.push(`first outside solution merged in ${key}: commit ${notice.commit} at ${notice.at}; see: box bounty status --full`);
+  for (const notice of toolState.migrations) lines.push(`migration ${notice.at}: ${JSON.stringify(notice.path)} ${notice.detail}; re-add: omakase-box allow ${notice.repository ?? '<owner/name>'}`);
+  for (const [key, notice] of Object.entries(toolState.firstMerges)) lines.push(`first outside solution merged in ${key}: commit ${notice.commit} at ${notice.at}; see: omakase-box status --full`);
   const localMerge = repoRoot === null ? null : localFirstMergeLine(repoRoot);
   if (localMerge !== null) lines.push(localMerge);
   return lines.join('\n');
 }
 export function changeConfig(repoRoot: string | null, verb: string, name: string, value: string, emitDisclosure?: (text: string) => void, target?: string): string {
   if (name === 'instructions' || name === 'instruction-file') {
-    if (repoRoot === null || verb !== 'set') throw new BountyRefused('config-value-invalid', 'instruction settings require a checkout and config set; nothing changed; next: run box bounty config set inside a checkout');
+    if (repoRoot === null || verb !== 'set') throw new BountyRefused('config-value-invalid', 'instruction settings require a checkout and config set; nothing changed; next: run omakase-box config set inside a checkout');
     checkInstructionSettingsWrite(repoRoot);
     const previous = readInstructions(repoRoot);
     if (name === 'instructions') {
-      if (value !== 'true' && value !== 'false') throw new BountyRefused('config-value-invalid', 'nothing changed; next: box bounty config set instructions <true|false>');
+      if (value !== 'true' && value !== 'false') throw new BountyRefused('config-value-invalid', 'nothing changed; next: omakase-box config set instructions <true|false>');
       writeInstructions(repoRoot, { ...previous, enabled: value === 'true' });
       // The tool never creates a host's file, so "on" with none would change nothing: said plainly (PF15).
-      const noFile = value === 'true' && discoverInstructions(repoRoot).length === 0 ? ['no instruction file in this project, so no block was written and later sessions will not know the tool; next: create the file your agent reads, such as AGENTS.md, then run box bounty config set instructions true again'] : [];
+      const noFile = value === 'true' && discoverInstructions(repoRoot).length === 0 ? ['no instruction file in this project, so no block was written and later sessions will not know the tool; next: create the file your agent reads, such as AGENTS.md, then run omakase-box config set instructions true again'] : [];
       return [`instructions: ${value === 'true' ? 'on' : 'off'}; owner's settings outside the repository. Existing blocks remain when off.`, ...noFile, ...syncInstructions(repoRoot, true)].join('\n');
     }
     const file = checkInstructionFile(repoRoot, value);
     checkInstructionMarkers(file);
     writeInstructions(repoRoot, { ...previous, file: relative(repoRoot, file).replaceAll('\\', '/') });
-    return [`instruction-file: ${showPath(value)}; saved in the owner's settings. Enable or add the block: box bounty config set instructions true`, ...syncInstructions(repoRoot, true)].join('\n');
+    return [`instruction-file: ${showPath(value)}; saved in the owner's settings. Enable or add the block: omakase-box config set instructions true`, ...syncInstructions(repoRoot, true)].join('\n');
   }
   if ((name === 'never-publish' || name === 'safe-to-publish') && (verb === 'add' || verb === 'remove')) {
-    if (repoRoot === null) throw new BountyRefused('config-value-invalid', `${name} lists paths inside one repository; nothing changed; next: run box bounty config inside a checkout`);
+    if (repoRoot === null) throw new BountyRefused('config-value-invalid', `${name} lists paths inside one repository; nothing changed; next: run omakase-box config inside a checkout`);
     return changePublishList(repoRoot, name, verb, value);
   }
-  if (name === 'never-publish' || name === 'safe-to-publish') throw new BountyRefused('config-value-invalid', `nothing changed; next: box bounty config add ${name} <path> or box bounty config remove ${name} <path>`);
+  if (name === 'never-publish' || name === 'safe-to-publish') throw new BountyRefused('config-value-invalid', `nothing changed; next: omakase-box config add ${name} <path> or omakase-box config remove ${name} <path>`);
   // `config add/remove repositories` is retired (BT14): the verbs live on
   // `allow`/`deny` now, so the old command is a named refusal that points
   // there rather than silently still working. Any other verb on the same
   // name gets the same pointer — never the "not a setting" wall.
   if (name === 'repositories') {
-    const target = verb === 'remove' ? `box bounty deny ${value ?? '<owner/name>'}` : `box bounty allow ${value ?? '<owner/name>'}`;
-    throw new BountyRefused('config-command-removed', `box bounty config ${verb} repositories ${verb === 'add' || verb === 'remove' ? 'was removed' : 'is not how a repository is listed'} — ${verb === 'remove' ? 'denying' : 'allowing'} a repository is its own command; nothing changed; next: ${target}`);
+    const target = verb === 'remove' ? `omakase-box deny ${value ?? '<owner/name>'}` : `omakase-box allow ${value ?? '<owner/name>'}`;
+    throw new BountyRefused('config-command-removed', `omakase-box config ${verb} repositories ${verb === 'add' || verb === 'remove' ? 'was removed' : 'is not how a repository is listed'} — ${verb === 'remove' ? 'denying' : 'allowing'} a repository is its own command; nothing changed; next: ${target}`);
   }
   // `config set paid <bounty-id>` is the owner's word that a merged bounty's
   // solver was paid (BT36); `... no` withdraws a mistaken record. The amount
   // is the bound reward — never typed — and the fact stays private: the
   // record and the shared memory carry it, the issue never hears of it.
   if (name === 'paid') {
-    if (repoRoot === null) throw new BountyRefused('config-value-invalid', 'paid records on a bounty in this checkout; nothing changed; next: run box bounty config inside the checkout');
-    if (verb !== 'set' || (target !== undefined && target !== 'no')) throw new BountyRefused('config-value-invalid', `nothing changed; next: box bounty config set paid <bounty-id> records the solver was paid, or box bounty config set paid <bounty-id> no withdraws a mistaken record`);
+    if (repoRoot === null) throw new BountyRefused('config-value-invalid', 'paid records on a bounty in this checkout; nothing changed; next: run omakase-box config inside the checkout');
+    if (verb !== 'set' || (target !== undefined && target !== 'no')) throw new BountyRefused('config-value-invalid', `nothing changed; next: omakase-box config set paid <bounty-id> records the solver was paid, or omakase-box config set paid <bounty-id> no withdraws a mistaken record`);
     return recordPaid(repoRoot, value, target === 'no');
   }
   if (name === 'board') {
     const address = boardAddressOf(value);
-    if (verb !== 'set' || address === null) throw new BountyRefused('config-value-invalid', 'the board is a web address with nothing after the host: https, or http on this machine; nothing changed; next: box bounty config set board <address>, or box bounty config set board "" turns it off');
+    if (verb !== 'set' || address === null) throw new BountyRefused('config-value-invalid', 'the board is a web address with nothing after the host: https, or http on this machine; nothing changed; next: omakase-box config set board <address>, or omakase-box config set board "" turns it off');
     saveSettings({ ...loadSettings(), board: address });
     return address === ''
       ? 'board: off — the tool makes no call to it; nothing else changes.'
       : `board: ${address} — ${BOARD_SENDS}`;
   }
   if (name === 'reward' || name === 'reward-limit') {
-    if (verb !== 'set') throw new BountyRefused('config-value-invalid', `nothing changed; next: box bounty config set ${name} <whole dollars> [owner/name]`);
+    if (verb !== 'set') throw new BountyRefused('config-value-invalid', `nothing changed; next: omakase-box config set ${name} <whole dollars> [owner/name]`);
     if (!/^\d+$/.test(value) || !Number.isSafeInteger(Number(value))) throw new BountyRefused('reward-amount-invalid', `"${value}" is not a whole dollar amount at or above 0; nothing changed; next: pass a whole dollar amount at or above 0`);
     const amount = Number(value);
     // Money is a fact of one repository entry — the checkout this runs in, or
     // the repository named after the amount. A repository not on the owner's
     // list cannot be paid on; the all-projects extra never carries a reward.
-    if (target === 'all-projects') throw new BountyRefused('reward-all-projects', `the all-projects extra is not a repository and never carries a reward; nothing changed; next: box bounty config set ${name} ${value} <owner/name>`);
+    if (target === 'all-projects') throw new BountyRefused('reward-all-projects', `the all-projects extra is not a repository and never carries a reward; nothing changed; next: omakase-box config set ${name} ${value} <owner/name>`);
     const address = target === undefined
       ? (repoRoot === null ? null : repositoryIdentity(repoRoot))
       : repositoryAddress(target);
-    if (address === null) throw new BountyRefused('repository-address-invalid', `config set ${name} needs a repository; nothing changed; next: run it inside a checkout with one GitHub address or name one — box bounty config set ${name} ${value} <owner/name>`);
+    if (address === null) throw new BountyRefused('repository-address-invalid', `config set ${name} needs a repository; nothing changed; next: run it inside a checkout with one GitHub address or name one — omakase-box config set ${name} ${value} <owner/name>`);
     const settings = loadSettings();
     const entry = settings.repositories[address];
     if (entry === undefined || entry.bounty === null || entry.bounty === 'off') throw new BountyRefused('reward-repository-unlisted', entry === undefined
-      ? `${address} is not on the owner's list — allow it first, with its amounts in the same breath: box bounty allow ${address} --reward <whole dollars> --reward-limit <whole dollars>; nothing changed; next: box bounty allow ${address} --reward <whole dollars> --reward-limit <whole dollars>`
-      : `${address} is denied — allow it again before setting what it pays; nothing changed; next: allow it again with box bounty allow ${address}, then set what it pays`);
+      ? `${address} is not on the owner's list — allow it first, with its amounts in the same breath: omakase-box allow ${address} --reward <whole dollars> --reward-limit <whole dollars>; nothing changed; next: omakase-box allow ${address} --reward <whole dollars> --reward-limit <whole dollars>`
+      : `${address} is denied — allow it again before setting what it pays; nothing changed; next: allow it again with omakase-box allow ${address}, then set what it pays`);
     const lines: string[] = [];
     if (name === 'reward') {
       const limit = entry.rewardLimit?.amount ?? null;
       if (amount > 0 && (limit === null || limit < amount)) throw new BountyRefused('reward-needs-limit', limit === null
-        ? `a reward above $0 on ${address} first needs the most that may be promised across that repository's open bounties — set it: box bounty config set reward-limit <whole dollars> ${address}; nothing changed; next: box bounty config set reward-limit <whole dollars> ${address}`
-        : `${address}'s open-bounty limit is $${limit}, below a $${amount} reward — raise it first: box bounty config set reward-limit <whole dollars> ${address}; nothing changed; next: box bounty config set reward-limit <whole dollars> ${address}`);
+        ? `a reward above $0 on ${address} first needs the most that may be promised across that repository's open bounties — set it: omakase-box config set reward-limit <whole dollars> ${address}; nothing changed; next: omakase-box config set reward-limit <whole dollars> ${address}`
+        : `${address}'s open-bounty limit is $${limit}, below a $${amount} reward — raise it first: omakase-box config set reward-limit <whole dollars> ${address}; nothing changed; next: omakase-box config set reward-limit <whole dollars> ${address}`);
       // The first amount above 0 is the moment the tool says in plain words
       // what a reward is — once ever, recorded so it is never repeated.
       const firstNaming = amount > 0 && loadState().rewardPromiseSaid === undefined;
@@ -425,7 +425,7 @@ export function changeConfig(repoRoot: string | null, verb: string, name: string
       if (firstNaming) lines.push('A bounty reward is a promise, made in your name, that you pay — the tool never moves money.');
     } else {
       const reward = entry.reward?.amount ?? 0;
-      if (amount < reward) throw new BountyRefused('limit-below-reward', `${address}'s reward is $${reward} — the limit on what its open bounties may promise cannot be set below it; nothing changed; next: box bounty config set reward-limit <whole dollars> ${address} at or above the $${reward} reward`);
+      if (amount < reward) throw new BountyRefused('limit-below-reward', `${address}'s reward is $${reward} — the limit on what its open bounties may promise cannot be set below it; nothing changed; next: omakase-box config set reward-limit <whole dollars> ${address} at or above the $${reward} reward`);
       const written = writeMoney(address, { rewardLimit: amount });
       lines.push(`${address} reward limit: $${amount}, written ${written.at} to ${settingsFile()} — the most that may be promised across ${address}'s open bounties; other repositories are unchanged.`);
     }
@@ -449,7 +449,7 @@ export function changeConfig(repoRoot: string | null, verb: string, name: string
   // The owner's word on solving (PF24): off, ask or allowed, and the limits the agent cannot loosen.
   if (name === 'solving' || name === 'solving-floor' || name === 'solving-pays-on-merge' || name === 'solving-skip') return changeSolving(verb, name, value);
   if (name !== 'all-projects') return unknownSetting(name);
-  if (verb !== 'set' || !['true', 'false', 'ask'].includes(value)) throw new BountyRefused('config-value-invalid', 'nothing changed; next: box bounty config set all-projects <true|false|ask>');
+  if (verb !== 'set' || !['true', 'false', 'ask'].includes(value)) throw new BountyRefused('config-value-invalid', 'nothing changed; next: omakase-box config set all-projects <true|false|ask>');
   const bounty = value === 'true' ? 'allowed' : value === 'ask' ? 'ask' : 'off';
   const written = writeDecision(repoRoot ?? '.', 'default', bounty);
   const merge = bounty === 'allowed' ? 'Merging is not gated — the owner is not asked before a merge.' : 'The owner is asked before each merge too — ask me each time covers posts and merges.';
@@ -463,11 +463,11 @@ export function changeConfig(repoRoot: string | null, verb: string, name: string
 function recordPaid(repoRoot: string, id: string, withdraw: boolean): string {
   const record = loadRecord(repoRoot, id);
   const amount = boundAmount(record) ?? 0;
-  if (record.stage !== 'applied') throw new BountyRefused('paid-nothing-owed', `${id} owes nothing: it was not merged; nothing changed; next: box bounty status ${id} shows its state`);
-  if (amount <= 0) throw new BountyRefused('paid-nothing-owed', `${id} owes nothing: its reward is $0; nothing changed; next: box bounty status ${id}`);
+  if (record.stage !== 'applied') throw new BountyRefused('paid-nothing-owed', `${id} owes nothing: it was not merged; nothing changed; next: omakase-box status ${id} shows its state`);
+  if (amount <= 0) throw new BountyRefused('paid-nothing-owed', `${id} owes nothing: its reward is $0; nothing changed; next: omakase-box status ${id}`);
   const payment = paymentOf(record)!;
-  if (!withdraw && payment.paidAt !== null) throw new BountyRefused('paid-already-recorded', `${id} was already recorded paid $${amount} at ${payment.paidAt}; nothing changed; next: withdraw a mistaken record with box bounty config set paid ${id} no`);
-  if (withdraw && payment.paidAt === null) throw new BountyRefused('paid-not-recorded', `${id} has no paid record to withdraw — it reads owed $${amount}; nothing changed; next: box bounty config set paid ${id} records the payment`);
+  if (!withdraw && payment.paidAt !== null) throw new BountyRefused('paid-already-recorded', `${id} was already recorded paid $${amount} at ${payment.paidAt}; nothing changed; next: withdraw a mistaken record with omakase-box config set paid ${id} no`);
+  if (withdraw && payment.paidAt === null) throw new BountyRefused('paid-not-recorded', `${id} has no paid record to withdraw — it reads owed $${amount}; nothing changed; next: omakase-box config set paid ${id} records the payment`);
   const at = new Date().toISOString();
   record.events.push({ stage: 'paid', at, amount, by: 'owner', ...(withdraw ? { withdrawn: true } : {}) });
   persistRecord(repoRoot, record);

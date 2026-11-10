@@ -1,4 +1,4 @@
-// `box bounty find <query>` (BT28): recall by purpose. Nothing else finds a
+// `omakase-box find <query>` (BT28): recall by purpose. Nothing else finds a
 // bounty by what it was for — `status --since` filters by time only and the
 // record shape is the tool's own (asRecord migrates old shapes a grep would
 // not survive). Case-insensitive substring over each readable record's id,
@@ -34,7 +34,7 @@ const haystacks = (record: BountyRecord): readonly (readonly [string, string | u
 
 export function findBounties(repoRoot: string, query: string): { readonly total: number; readonly matches: readonly FindMatch[] } {
   const needle = query.trim().toLowerCase();
-  if (needle === '') throw new BountyRefused('missing-query', 'find needs words to look for; next: box bounty find "<words>"');
+  if (needle === '') throw new BountyRefused('missing-query', 'find needs words to look for; next: omakase-box find "<words>"');
   // The merged-solution scan still runs first — a record read is the moment
   // an outside merge is recognised, and find is a record read. The matching
   // itself is the store's: one plain substring search, the same on every
@@ -62,14 +62,14 @@ export function findBounties(repoRoot: string, query: string): { readonly total:
 export function renderFind(repoRoot: string, query: string): string {
   const { total, matches } = findBounties(repoRoot, query);
   if (total === 0) {
-    return [`find ${JSON.stringify(query)} — no bounty record matches`, 'next: box bounty status lists what this project knows'].join('\n');
+    return [`find ${JSON.stringify(query)} — no bounty record matches`, 'next: omakase-box status lists what this project knows'].join('\n');
   }
   const shown = matches.slice(0, FIND_RESULT_LIMIT);
   const lines = [`find ${JSON.stringify(query)} — ${total} ${total === 1 ? 'match' : 'matches'}${total > shown.length ? `, the first ${shown.length}` : ''}:`];
   for (const { record, fields } of shown) {
     lines.push(`  ${record.id}  ${record.stage}  ${JSON.stringify(record.title)} (matched: ${fields.join(', ')})`);
   }
-  lines.push(`next: box bounty status <id> reads one record; box bounty status lists all${total > shown.length ? ` — ${total - shown.length} more match(es) under status --full` : ''}`);
+  lines.push(`next: omakase-box status <id> reads one record; omakase-box status lists all${total > shown.length ? ` — ${total - shown.length} more match(es) under status --full` : ''}`);
   return lines.join('\n');
 }
 

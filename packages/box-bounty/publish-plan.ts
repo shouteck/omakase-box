@@ -162,7 +162,7 @@ function stagedIndex(root: string): StagedIndex {
 // the same index `ls-files -u` would have listed.
 function trackedChanges(root: string, unmergedKnown: boolean): NamedStatus[] {
   if (unmergedKnown) {
-    return invalid('github-unmerged-paths', 'the repository has unmerged paths; next: finish the merge or run git merge --abort, then run box bounty post again');
+    return invalid('github-unmerged-paths', 'the repository has unmerged paths; next: finish the merge or run git merge --abort, then run omakase-box post again');
   }
   const diff = ownerGitOutcome(root, ['diff', '--name-status', '-z', '--no-renames', 'HEAD']);
   if (diff.status !== 0) return invalid('github-git-failed', `Git could not read the uncommitted state: ${(diff.stderr || diff.stdout).trim()}; next: check signed-in Git and rerun the same command`);
@@ -267,7 +267,7 @@ function buildWip(root: string, record: BountyRecord, tracked: readonly NamedSta
           return false;
         }
         if (stat.isSymbolicLink() || (index < parts.length - 1 && !stat.isDirectory()) || (index === parts.length - 1 && !stat.isFile())) {
-          return invalid('github-non-plain-path', `the uncommitted state holds a link or other non-plain entry at ${showPath(path)} — the tool publishes file contents, not links; nothing was posted; next: remove or replace ${showPath(path)}, then run box bounty post again`);
+          return invalid('github-non-plain-path', `the uncommitted state holds a link or other non-plain entry at ${showPath(path)} — the tool publishes file contents, not links; nothing was posted; next: remove or replace ${showPath(path)}, then run omakase-box post again`);
         }
       }
       // The blob is what `git add` would store for the path — its configured
@@ -279,7 +279,7 @@ function buildWip(root: string, record: BountyRecord, tracked: readonly NamedSta
       try {
         blob = gitFilteredBlob(root, path, readFileSync(absolute));
       } catch (error) {
-        return invalid('github-filter-failed', `the filtered form of ${showPath(path)} cannot be produced — ${error instanceof Error ? error.message : String(error)} — the tool publishes the filtered form only; next: fix the configured filter or commit the file, then run box bounty post again. Nothing was posted`);
+        return invalid('github-filter-failed', `the filtered form of ${showPath(path)} cannot be produced — ${error instanceof Error ? error.message : String(error)} — the tool publishes the filtered form only; next: fix the configured filter or commit the file, then run omakase-box post again. Nothing was posted`);
       }
       pending.push({ mode: modes.get(path) ?? '100644', sha: blob, path });
       return true;
@@ -373,12 +373,12 @@ export function planGitHub(root: string, repository: string, record: BountyRecor
   const headSha = headLines[0] ?? '';
   const headTree = headLines[1] ?? '';
   if (!/^[a-f\d]{40}$/.test(headSha) || !/^[a-f\d]{40}$/.test(headTree)) {
-    return invalid('github-no-public-base', 'the current branch has no commits yet — there is nothing the GitHub repository can already have; next: commit the work, then run box bounty post again');
+    return invalid('github-no-public-base', 'the current branch has no commits yet — there is nothing the GitHub repository can already have; next: commit the work, then run omakase-box post again');
   }
   const tips = scanRemote(root, repository, record.id);
   try {
     if (tips.length === 0) {
-      return invalid('github-no-public-base', 'the GitHub repository reports no branches or tags — there is nothing public to point solvers at; next: push a branch to the GitHub repository first, then run box bounty post again');
+      return invalid('github-no-public-base', 'the GitHub repository reports no branches or tags — there is nothing public to point solvers at; next: push a branch to the GitHub repository first, then run omakase-box post again');
     }
     // The commits on the current branch the remote lacks, newest first — read
     // from what the remote itself reports, never a local tracking name.
@@ -434,7 +434,7 @@ export function planGitHub(root: string, repository: string, record: BountyRecor
     }
     if (violations.length > 0) {
       const named = [...new Map(violations.map(v => [v.path, v])).values()];
-      return invalid('github-never-ship', `a change being published for the first time touches never-ship paths — refused, nothing was posted: ${named.map(v => `${showPath(v.path)} (rule '${v.rule}')`).join(', ')}; next: take the never-ship paths out of the change, then run box bounty post again`);
+      return invalid('github-never-ship', `a change being published for the first time touches never-ship paths — refused, nothing was posted: ${named.map(v => `${showPath(v.path)} (rule '${v.rule}')`).join(', ')}; next: take the never-ship paths out of the change, then run omakase-box post again`);
     }
     // The pre-publish scan: the added lines of every commit published for
     // the first time, of the work-in-progress diff, and of each named

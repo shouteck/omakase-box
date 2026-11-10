@@ -121,7 +121,7 @@ export function resolveRepoRoot(repoPath: string, command?: string): string {
   const repo = resolve(repoPath);
   const top = gitOutcome(repo, ['rev-parse', '--show-toplevel']);
   if (top.status !== 0 || top.stdout.trim() === '') {
-    const verb = command !== undefined ? `box bounty ${command}` : 'box bounty';
+    const verb = command !== undefined ? `omakase-box ${command}` : 'omakase-box';
     throw new BountyRefused('not-a-repository', `${repo} is not inside a Git checkout — ${verb} needs a repository to work in; next: run ${verb} inside a Git checkout`);
   }
   return canonicalFolder(top.stdout.trim());
@@ -218,7 +218,7 @@ export function planBounty(options: CreateOptions): BountyPlan {
 
 export function renderPreview(plan: BountyPlan): string {
   const lines: string[] = [];
-  lines.push('box bounty create — local draft');
+  lines.push('omakase-box create — local draft');
   lines.push(`  repository: ${plan.repoRoot}`);
 
   if (plan.scan.hits.length === 0) {
@@ -229,7 +229,7 @@ export function renderPreview(plan: BountyPlan): string {
     // apply the working state holds file names a solver chose.
     for (const hit of plan.scan.hits) lines.push(`    ${hitPlace(hit)} — ${hit.rule}`);
     // A field has no path for the owner's lists to settle (BT45).
-    if (plan.scan.hits.some(hit => isTextField(hit.path))) lines.push('    next: remove it from the title, why or task text and create the bounty again — box bounty close <id> ends this draft');
+    if (plan.scan.hits.some(hit => isTextField(hit.path))) lines.push('    next: remove it from the title, why or task text and create the bounty again — omakase-box close <id> ends this draft');
   }
   lines.push(`  ${SCAN_LIMIT_LINE}`);
   if (plan.scan.suppressed > 0) lines.push(`    ${plan.scan.suppressed} hit(s) sit on paths the owner listed safe to publish — not held`);
@@ -257,7 +257,7 @@ export function renderPreview(plan: BountyPlan): string {
       ? 'allowed — a GitHub post goes out'
       : decision === 'ask'
         ? 'ask me each time — a GitHub post waits for the owner\'s answer'
-        : `none — a GitHub post waits for the owner's permission; box bounty allow ${address} is their answer`;
+        : `none — a GitHub post waits for the owner's permission; omakase-box allow ${address} is their answer`;
   } catch { /* an unlistable repository leaves permission unknown */ }
   lines.push(`  posting permission: ${permission}`);
   lines.push(`  task: ${plan.task.file === 'standard input' ? plan.task.file : showPath(plan.task.file)}`);

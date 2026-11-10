@@ -24,7 +24,7 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
   // A bounty picked up from another machine writes nothing to GitHub until this
   // machine's owner has given permission: a shared record grants none (BT52).
   if (opts?.authorised !== true && publication.state !== 'closed' && adoptedWithoutPermission(root, record)) {
-    publication.pending = `github-decision-pending (owner-permission-needed): this machine's owner has given no permission for this repository, so GitHub was not touched; next: ask the owner — box bounty allow <owner/name>, then box bounty close ${record.id}`;
+    publication.pending = `github-decision-pending (owner-permission-needed): this machine's owner has given no permission for this repository, so GitHub was not touched; next: ask the owner — omakase-box allow <owner/name>, then omakase-box close ${record.id}`;
     persistRecord(root, record);
     return;
   }
@@ -56,7 +56,7 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
         const body = `${fact}\n\n${marker}`;
         if (!comments.some(entry => isObject(entry) && entry['body'] === body && isObject(entry['user']) && entry['user']['login'] === publication.account)) {
           const response = api(root, `${endpoint}/comments`, { body });
-          if (!isObject(response) || response['body'] !== body || !isObject(response['user']) || response['user']['login'] !== publication.account) return invalid('github-response-invalid', 'GitHub did not confirm the decision comment; next: run box bounty close again; box bounty status shows what is recorded');
+          if (!isObject(response) || response['body'] !== body || !isObject(response['user']) || response['user']['login'] !== publication.account) return invalid('github-response-invalid', 'GitHub did not confirm the decision comment; next: run omakase-box close again; omakase-box status shows what is recorded');
           comments.push(response);
           changed = true;
         }
@@ -74,7 +74,7 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
         const body = `The bounty branch \`${publication.branch}\` is removed. It carried ${pushed.length} commit(s) that existed only there — their identifiers stay valid in any clone that fetched them: ${pushed.map(commit => `\`${commit.sha}\` ${showPath(commit.subject)}`).join(', ')}.\n\n${marker}`;
         if (!comments.some(entry => isObject(entry) && entry['body'] === body && isObject(entry['user']) && entry['user']['login'] === publication.account)) {
           const response = api(root, `${endpoint}/comments`, { body });
-          if (!isObject(response) || response['body'] !== body || !isObject(response['user']) || response['user']['login'] !== publication.account) return invalid('github-response-invalid', 'GitHub did not confirm the branch-removal comment; next: run box bounty close again; box bounty status shows what is recorded');
+          if (!isObject(response) || response['body'] !== body || !isObject(response['user']) || response['user']['login'] !== publication.account) return invalid('github-response-invalid', 'GitHub did not confirm the branch-removal comment; next: run omakase-box close again; omakase-box status shows what is recorded');
           changed = true;
         }
       }
@@ -99,7 +99,7 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
           publication.formatRepair = 'updated';
         } catch { publication.formatRepair = 'update-failed'; closed = api(root, endpoint, { state: 'closed' }, 'PATCH'); }
       } else closed = api(root, endpoint, { state: 'closed' }, 'PATCH');
-      if (!isObject(closed) || closed['state'] !== 'closed') return invalid('github-response-invalid', 'GitHub did not confirm issue closure; next: run box bounty close again; box bounty status shows what is recorded');
+      if (!isObject(closed) || closed['state'] !== 'closed') return invalid('github-response-invalid', 'GitHub did not confirm issue closure; next: run omakase-box close again; omakase-box status shows what is recorded');
       // The record not yet showing 'closed' means this run closed it; a
       // body the PATCH rewrote (the format block) is a real change too.
       if (publication.state !== 'closed' || closed['body'] !== snapshot.body) changed = true;
@@ -126,7 +126,7 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
         // A retry cannot change these: the head itself is the reason.
         const next = /^head-/.test(advanced.notAdvanced)
           ? 'next: ask the owner — this head will not be moved onto the bounty branch, so GitHub will not mark this pull request merged; whether to credit it and when to remove the branch are the owner\'s call'
-          : `next: box bounty close ${record.id} retries this`;
+          : `next: omakase-box close ${record.id} retries this`;
         publication.pending = `github-decision-pending (bounty-branch-not-advanced: ${advanced.notAdvanced}): local merged stands; ${publication.branch} stays as it is; ${next}`;
         persistRecord(root, record);
         return;
@@ -166,7 +166,7 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
     // record it retries exactly this outside work. The local word names the
     // recorded decision with today's vocabulary.
     const local = ({ undo: 'revert', reject: 'close', withdraw: 'close' } as Record<string, string>)[event.command ?? ''] ?? event.command;
-    publication.pending = `github-decision-pending${detail}: local ${local} stands; retry box bounty close ${record.id} to comment, close the issue and remove ${publication.branch}`;
+    publication.pending = `github-decision-pending${detail}: local ${local} stands; retry omakase-box close ${record.id} to comment, close the issue and remove ${publication.branch}`;
   }
   persistRecord(root, record);
 }
@@ -281,23 +281,23 @@ function closingIssue(root: string, publication: GitHubPublication): { body: str
       query: 'query($owner:String!,$name:String!,$number:Int!,$after:String){repository(owner:$owner,name:$name){issue(number:$number){body author{login} comments(first:100,after:$after){edges{cursor node{body author{login}}} pageInfo{hasNextPage}}}}}',
       variables: { owner, name, number: publication.issue?.number, after }
     });
-    if (!isObject(data) || !isObject(data['data']) || !isObject(data['data']['repository']) || !isObject(data['data']['repository']['issue'])) return invalid('github-response-invalid', 'GitHub returned an unreadable closing issue; next: run box bounty close again; box bounty status shows what is recorded');
+    if (!isObject(data) || !isObject(data['data']) || !isObject(data['data']['repository']) || !isObject(data['data']['repository']['issue'])) return invalid('github-response-invalid', 'GitHub returned an unreadable closing issue; next: run omakase-box close again; omakase-box status shows what is recorded');
     const issue = data['data']['repository']['issue'];
-    if (typeof issue['body'] !== 'string' || !isObject(issue['author']) || issue['author']['login'] !== publication.account || !isObject(issue['comments'])) return invalid('github-issue-mismatch', 'the closing issue body or author did not match this bounty; next: check the issue on GitHub, then run box bounty close again');
+    if (typeof issue['body'] !== 'string' || !isObject(issue['author']) || issue['author']['login'] !== publication.account || !isObject(issue['comments'])) return invalid('github-issue-mismatch', 'the closing issue body or author did not match this bounty; next: check the issue on GitHub, then run omakase-box close again');
     body ??= issue['body'];
-    if (body !== issue['body']) return invalid('github-issue-changed', 'the issue body changed while its comments were read; next: run box bounty close again');
+    if (body !== issue['body']) return invalid('github-issue-changed', 'the issue body changed while its comments were read; next: run omakase-box close again');
     const connection = issue['comments'];
-    if (!Array.isArray(connection['edges']) || !isObject(connection['pageInfo'])) return invalid('github-response-invalid', 'GitHub returned unreadable closing comments; next: run box bounty close again; box bounty status shows what is recorded');
+    if (!Array.isArray(connection['edges']) || !isObject(connection['pageInfo'])) return invalid('github-response-invalid', 'GitHub returned unreadable closing comments; next: run omakase-box close again; omakase-box status shows what is recorded');
     let last: string | null = null;
     for (const edge of connection['edges']) {
-      if (!isObject(edge) || typeof edge['cursor'] !== 'string' || edge['cursor'] === '' || !isObject(edge['node']) || typeof edge['node']['body'] !== 'string') return invalid('github-response-invalid', 'GitHub returned an unreadable closing comment; next: run box bounty close again; box bounty status shows what is recorded');
+      if (!isObject(edge) || typeof edge['cursor'] !== 'string' || edge['cursor'] === '' || !isObject(edge['node']) || typeof edge['node']['body'] !== 'string') return invalid('github-response-invalid', 'GitHub returned an unreadable closing comment; next: run omakase-box close again; omakase-box status shows what is recorded');
       const node = edge['node'];
       comments.push({ body: node['body'], user: node['author'] });
       last = edge['cursor'];
     }
     const page = connection['pageInfo'];
     if (page['hasNextPage'] === false) return { body, comments };
-    if (page['hasNextPage'] !== true || last === null || seenAfter.has(last)) return invalid('github-response-invalid', 'GitHub returned an unreadable comment cursor; next: run box bounty close again; box bounty status shows what is recorded');
+    if (page['hasNextPage'] !== true || last === null || seenAfter.has(last)) return invalid('github-response-invalid', 'GitHub returned an unreadable comment cursor; next: run omakase-box close again; omakase-box status shows what is recorded');
     after = last; seenAfter.add(after);
   }
 }

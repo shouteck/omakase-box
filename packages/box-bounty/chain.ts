@@ -79,7 +79,7 @@ const scanHold = (fields: Record<string, string | null | undefined>): void => {
   throw new BountyRefused('publish-held', [
     `the shared bounty memory event was held — ${hits.length} secret-shaped hit(s) in its text:`,
     ...hits.map(hit => `  ${hit.name}:${hit.line} — ${hit.rule}`),
-    'nothing was written to the chain and nothing was pushed. The scan is a stated pattern list, not proof of absence.', `next: pass the owner block on in its words; the answer lands on the publish lists — box bounty config add safe-to-publish <path> or add never-publish <path>`
+    'nothing was written to the chain and nothing was pushed. The scan is a stated pattern list, not proof of absence.', `next: pass the owner block on in its words; the answer lands on the publish lists — omakase-box config add safe-to-publish <path> or add never-publish <path>`
   ].join('\n'));
 };
 
@@ -412,7 +412,7 @@ export function syncChains(root: string, force = false): void {
 }
 
 // The only commands allowed to touch the remote for memory (brief, reading):
-// `box bounty`, `status`, `find`, `status --json` and `hook start` call this
+// `omakase-box`, `status`, `find`, `status --json` and `hook start` call this
 // before they read records. Every other command works the imported cache.
 // A failure never blocks the read — the cache answers and says so once.
 export function refreshSharedMemory(root: string): void {
