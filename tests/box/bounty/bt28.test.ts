@@ -42,7 +42,7 @@ describe('1. the ended overview caps at five, newest first', () => {
     const run = box(repo, ['status']);
     expect(run.status).toBe(0);
     expect(run.stdout).toContain('ended (7 total, 5 most recent):');
-    expect(run.stdout).toContain('all 7: box bounty status --full');
+    expect(run.stdout).toContain('all 7: omakase-box status --full');
     // Newest five are records 3..7 — records 1 and 2 are off the line.
     expect(run.stdout).toContain('seed 7');
     expect(run.stdout).not.toContain('seed 1');
@@ -76,7 +76,7 @@ describe('2. hook start and OPEN cap at ten open records', () => {
     expect(run.status).toBe(0);
     expect(run.stdout).toContain('12 open bounties');
     expect(run.stdout).toContain('and 2 more');
-    expect(run.stdout).toContain('see: box bounty status');
+    expect(run.stdout).toContain('see: omakase-box status');
     expect(run.stdout).not.toContain('seed 12');
   });
 
@@ -86,7 +86,7 @@ describe('2. hook start and OPEN cap at ten open records', () => {
     const run = create(repo);
     expect(run.status).toBe(0);
     const open = openLine(repo);
-    expect(open).toContain('and 2 more (see: box bounty status)');
+    expect(open).toContain('and 2 more (see: omakase-box status)');
     expect(open).not.toContain('seed 11');
   });
 
@@ -96,7 +96,7 @@ describe('2. hook start and OPEN cap at ten open records', () => {
     const run = create(repo);
     expect(run.status).toBe(0);
     const open = openLine(repo);
-    expect(open).not.toContain('more (see: box bounty status)');
+    expect(open).not.toContain('more (see: omakase-box status)');
     expect(open).toContain('seed 9');
   });
 });
@@ -258,7 +258,7 @@ describe('6. ended posted records keep the overview under the bar', () => {
       commit: sha(n + 1), title: `[box bounty ${id}] seed ${n}`, body: `# Bounty\n\n<!-- box-bounty:${id} -->\n`,
       issue: { number: n, url: `https://github.com/owner/project/issues/${n}` },
       state: open ? 'posted' : 'closed', kind: 'history', base: sha(n + 0x10000),
-      pushed: [{ sha: sha(n + 1), subject: `box bounty ${id}: work in progress` }],
+      pushed: [{ sha: sha(n + 1), subject: `omakase-box ${id}: work in progress` }],
       wipCommit: null, wip: null,
       outside: { at: `2025-07-01T00:00:00.000Z`, issueState: open ? 'open' : 'closed', answers: `GitHub answers for ${id} against box-bounty/${id}:\n  none open; wait for one or close the bounty` },
       formatRead: 'matches-record', formatReadAt: '2025-07-01T00:00:00.000Z', pending: null

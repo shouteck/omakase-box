@@ -10,7 +10,7 @@
 // Prints one JSON object. For every captured command: the characters its
 // stdout carried (what an agent must read) and the 1-based line the thing it
 // acts on first appears on. "First useful" is the first line that names an
-// action or a waiting thing — a pull request, a solution, a `box bounty`
+// action or a waiting thing — a pull request, a solution, a `omakase-box`
 // command, or the owner block.
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -46,7 +46,7 @@ const box = (cwd, args) => {
   return out;
 };
 
-const USEFUL = /pull request #\d|solution \d|box bounty (look|apply|status|post|allow|close)|for the owner|for you|waiting for the owner/;
+const USEFUL = /pull request #\d|solution \d|omakase-box (look|apply|status|post|allow|close)|for the owner|for you|waiting for the owner/;
 const measure = (label, run) => {
   const out = `${run.stdout ?? ''}${run.status !== 0 ? run.stderr ?? '' : ''}`;
   const lines = out.split('\n').filter(line => line.trim() !== '');
@@ -97,9 +97,9 @@ for (const [name, body] of [['solver-a', `fixes the bounty\n\npay-to: ${PAY}`], 
 writeFileSync(join(collect, 'app.txt'), 'owner moved it\n');
 git(collect, ['commit', '-qam', 'owner work']);
 
-const overview = measure('collect: box bounty', box(collect, ['bounty']));
-const status = measure('collect: box bounty status', box(collect, ['bounty', 'status']));
-const statusFull = measure('collect: box bounty status --full', box(collect, ['bounty', 'status', '--full']));
+const overview = measure('collect: omakase-box', box(collect, ['bounty']));
+const status = measure('collect: omakase-box status', box(collect, ['bounty', 'status']));
+const statusFull = measure('collect: omakase-box status --full', box(collect, ['bounty', 'status', '--full']));
 
 // --- the posting journey (K18 yes): a fresh agent, a repository nobody has
 // allowed — read what the tool offers, draft, post, learn it waits.
@@ -110,19 +110,19 @@ const postEnv = { ...env, BOX_BOUNTY_SETTINGS_DIR: join(root, 'posting-settings'
 mkdirSync(postEnv.BOX_BOUNTY_SETTINGS_DIR, { recursive: true });
 const pbox = (cwd, args) => spawnSync(process.execPath, [CLI, ...args], { cwd, encoding: 'utf8', env: postEnv });
 const postRuns = [
-  measure('post: box --help', pbox(posting, ['--help'])),
-  measure('post: box bounty describe', pbox(posting, ['bounty', 'describe'])),
-  measure('post: box bounty create', pbox(posting, ['bounty', 'create', '--task', 'TASK.md', '--why', 'beyond this agent'])),
+  measure('post: omakase-box --help', pbox(posting, ['--help'])),
+  measure('post: omakase-box describe', pbox(posting, ['bounty', 'describe'])),
+  measure('post: omakase-box create', pbox(posting, ['bounty', 'create', '--task', 'TASK.md', '--why', 'beyond this agent'])),
 ];
 const pid = /bt-[a-f\d]{12}/.exec(postRuns.at(-1).output)?.[0];
 if (pid === undefined) throw new Error(`no id in create output (exit ${postRuns.at(-1).exit}): ${postRuns.at(-1).output}`);
-postRuns.push(measure('post: box bounty post', pbox(posting, ['bounty', 'post', pid, '--to', 'github'])));
+postRuns.push(measure('post: omakase-box post', pbox(posting, ['bounty', 'post', pid, '--to', 'github'])));
 
 const read = (entry) => ({ characters: entry.characters, lines: entry.lines, firstUsefulLine: entry.firstUsefulLine });
 console.log(JSON.stringify({
-  collecting: { 'box bounty': read(overview), 'box bounty status': read(status), 'box bounty status --full': read(statusFull) },
+  collecting: { 'omakase-box': read(overview), 'omakase-box status': read(status), 'omakase-box status --full': read(statusFull) },
   posting: Object.fromEntries(postRuns.map(entry => [entry.label.slice(6), read(entry)])),
   postingTotal: postRuns.reduce((sum, entry) => sum + entry.characters, 0),
-  outputs: { 'box bounty': overview.output, 'post held': postRuns.at(-1).output }
+  outputs: { 'omakase-box': overview.output, 'post held': postRuns.at(-1).output }
 }, null, 2));
 rmSync(root, { recursive: true, force: true });

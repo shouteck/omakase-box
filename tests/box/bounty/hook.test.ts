@@ -60,7 +60,7 @@ it('shows open-bounty state at session start — tool facts only, never hostile 
   expect(wrapped?.hookSpecificOutput.hookEventName).toBe('SessionStart');
   expect(wrapped?.hookSpecificOutput.additionalContext).toContain('bt-aaaa11112222 posted');
   expect(wrapped?.hookSpecificOutput.additionalContext).toContain('1 solution(s) waiting');
-  expect(wrapped?.hookSpecificOutput.additionalContext).toContain('box bounty status');
+  expect(wrapped?.hookSpecificOutput.additionalContext).toContain('omakase-box status');
   expect(wrapped?.hookSpecificOutput.additionalContext).not.toContain('rm -rf');
   expect(wrapped?.hookSpecificOutput.additionalContext).not.toContain('IGNORE');
   // The banned-words rule from BT3a covers hook output too: facts, never a verdict.
@@ -82,7 +82,7 @@ it('announces a new arrival once, and a left conflict once at finish — never t
   // A solution waiting mid-session: the next natural pause tells it once.
   const first = envelope(runHook(repo, 'pause', []).output);
   expect(first?.hookSpecificOutput.additionalContext).toContain('a solution arrived for bt-bbbb22223333');
-  expect(first?.hookSpecificOutput.additionalContext).toContain('box bounty look bt-bbbb22223333 2');
+  expect(first?.hookSpecificOutput.additionalContext).toContain('omakase-box look bt-bbbb22223333 2');
   // The conflict is not the pause's business — it is the finishing slot's.
   expect(first?.hookSpecificOutput.additionalContext).not.toContain('conflict');
   // Told once: every later slot is silent about it.
@@ -100,7 +100,7 @@ it('hook on prints the disclosure and writes nothing until --confirm; off remove
   expect(disclosure.stdout).toContain('hook-unconfirmed');
   expect(disclosure.stdout).toContain('nothing was written');
   expect(disclosure.stdout).toContain('.devin/hooks.v1.json');
-  expect(disclosure.stdout).toContain('box bounty hook off --host devin');
+  expect(disclosure.stdout).toContain('omakase-box hook off --host devin');
   expect(disclosure.stdout).toContain('once every 5 minutes');
   expect(existsSync(join(repo, '.devin', 'hooks.v1.json'))).toBe(false);
   const on = cli(repo, 'hook', 'on', '--host', 'devin', '--confirm');
@@ -110,9 +110,9 @@ it('hook on prints the disclosure and writes nothing until --confirm; off remove
     expect(file[event][0].hooks[0].type).toBe('command');
     expect(file[event][0].hooks[0].timeout).toBe(30);
   }
-  expect(file.SessionStart[0].hooks[0].command).toBe('box bounty hook start');
-  expect(file.UserPromptSubmit[0].hooks[0].command).toBe('box bounty hook pause');
-  expect(file.Stop[0].hooks[0].command).toBe('box bounty hook finish');
+  expect(file.SessionStart[0].hooks[0].command).toBe('omakase-box hook start');
+  expect(file.UserPromptSubmit[0].hooks[0].command).toBe('omakase-box hook pause');
+  expect(file.Stop[0].hooks[0].command).toBe('omakase-box hook finish');
   // Already on is a named refusal, not a second write.
   expect(cli(repo, 'hook', 'on', '--host', 'devin', '--confirm').stderr).toContain('hook-already-on');
   const off = cli(repo, 'hook', 'off', '--host', 'devin');
@@ -141,7 +141,7 @@ it('round-trips a settings file with other hooks and comments, byte for byte', (
   const on = readFileSync(join(repo, '.claude', 'settings.json'), 'utf8');
   expect(on).toContain('// the owner');
   expect(on).toContain('audit.sh');
-  expect(on).toContain('box bounty hook start');
+  expect(on).toContain('omakase-box hook start');
   JSON.parse(on.replace(/\/\/[^\n]*/g, '').replace(/\/\*[^*]*\*\//g, '')); // still valid JSONC
   hookOff(resolveRepoRoot(repo), hookHost('claude'));
   expect(readFileSync(join(repo, '.claude', 'settings.json'), 'utf8')).toBe(original);

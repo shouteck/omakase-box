@@ -59,9 +59,9 @@ mkdirSync(repo, { recursive: true });
 write(marker, JSON.stringify({ root, kind: 'BT7-disposable-offline-fixture' }));
 write(transportPreload, `const cp = require('node:child_process');\nconst original = cp.spawnSync;\ncp.spawnSync = function(program, args, options) {\n  if (/(^|[\\\\/])git(?:\\.exe)?$/i.test(program) && Array.isArray(args)) args = args.map(arg => arg === 'https://github.com/owner/project.git' ? process.env.BT8A_GIT_REMOTE : arg);\n  return original.call(this, program, args, options);\n};\nrequire('node:module').syncBuiltinESMExports();\nif (process.platform === 'win32' && require('node:path').resolve(process.execPath).toLowerCase() === ${JSON.stringify(ghProgram.toLowerCase())}) {\n  const args = process.argv.slice(2);\n  if (process.argv[1] !== undefined) args.unshift(require('node:path').basename(process.argv[1]));\n  process.argv.splice(1, process.argv.length - 1, 'gh.exe', ...args);\n  require(${JSON.stringify(join(bin, 'gh.cjs'))});\n  process.exit(0);\n}\n`);
 write(join(root, 'invoke.cjs'), `const {spawnSync}=require('node:child_process');\nconst {delimiter}=require('node:path');\nconst env={...process.env,PATH:${JSON.stringify(bin)}+delimiter+(process.env.PATH||''),BT15_GH_PROGRAM:${JSON.stringify(ghProgram)},BT7_UX_STATE:${JSON.stringify(stateFile)},BOX_BOUNTY_SETTINGS_DIR:${JSON.stringify(settingsDir)},BT8A_GIT_REMOTE:${JSON.stringify(join(root, 'remote.git'))},NODE_OPTIONS:(process.env.NODE_OPTIONS||'')+' --require '+${JSON.stringify(transportPreload.replaceAll('\\', '/'))}};\nconst result=spawnSync(${JSON.stringify(process.execPath)},[${JSON.stringify(cli)},...process.argv.slice(2),'--repo',${JSON.stringify(repo)}],{cwd:${JSON.stringify(repo)},env,stdio:'inherit',windowsHide:true});\nprocess.exit(result.status??1);\n`);
-write(join(bin, 'box.cmd'), `@"${process.execPath}" "${join(root, 'invoke.cjs')}" %*\r\n`);
-write(join(bin, 'box'), `#!/bin/sh\nexec '${process.execPath.replaceAll('\\', '/').replaceAll("'", "'\\''")}' '${join(root, 'invoke.cjs').replaceAll('\\', '/').replaceAll("'", "'\\''")}' "$@"\n`);
-chmodSync(join(bin, 'box'), 0o755);
+write(join(bin, 'omakase-box.cmd'), `@"${process.execPath}" "${join(root, 'invoke.cjs')}" %*\r\n`);
+write(join(bin, 'omakase-box'), `#!/bin/sh\nexec '${process.execPath.replaceAll('\\', '/').replaceAll("'", "'\\''")}' '${join(root, 'invoke.cjs').replaceAll('\\', '/').replaceAll("'", "'\\''")}' "$@"\n`);
+chmodSync(join(bin, 'omakase-box'), 0o755);
 // The fixture's own stand-in GitHub. It answers like the real API (K19):
 // one object for a single issue or pull request, `page` selecting the page
 // (never the number inside `per_page`), lists filtered by their query,
@@ -191,4 +191,4 @@ record.attempts = (record.attempts ?? []).map(({ seenAt, ...attempt }) => attemp
 if (record.attempts.length === 0) delete record.attempts;
 if (record.github !== undefined) delete record.github.seenPullRequests;
 write(recordFile, `${JSON.stringify(record, null, 2)}\n`);
-console.log(JSON.stringify({ root, repository: repo, cli, wrapper: join(bin, 'box.cmd'), bin, id, base, first: 'box bounty status' }, null, 2));
+console.log(JSON.stringify({ root, repository: repo, cli, wrapper: join(bin, 'omakase-box.cmd'), bin, id, base, first: 'omakase-box status' }, null, 2));

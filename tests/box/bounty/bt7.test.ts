@@ -80,7 +80,7 @@ describe('BT7a look', () => {
     expect(out.status).toBe(0);
     expect(out.stdout).toContain('2 file(s) changed');
     expect(out.stdout).toContain('written by the solver');
-    expect(out.stdout).toContain(`box bounty look ${context.id} 2 --full`);
+    expect(out.stdout).toContain(`omakase-box look ${context.id} 2 --full`);
     expect(out.stdout).not.toContain('+line 249');
     const full = spawnSync(process.execPath, [CLI_DIST, 'bounty', 'look', context.id, '2', '--full', '--repo', context.repo], { encoding: 'utf8' });
     expect(full.status).toBe(0);

@@ -1,4 +1,4 @@
-// `box setup` (PF16): one command, and a new agent session finds the tool. It runs the built
+// `omakase-box setup` (PF16): one command, and a new agent session finds the tool. It runs the built
 // CLI with its own home, so this machine's agents are never touched. A `box` stand-in on the
 // path skips the install; bt12-install covers the install itself from the package.
 import { spawnSync } from 'node:child_process';
@@ -15,7 +15,7 @@ beforeEach(() => {
   home = mkdtempSync(join(tmpdir(), 'kitchen-PF16-home-'));
   bin = join(home, 'bin');
   mkdirSync(bin);
-  for (const name of ['box', 'box.cmd']) writeFileSync(join(bin, name), '');
+  for (const name of ['omakase-box', 'omakase-box.cmd']) writeFileSync(join(bin, name), '');
 });
 afterEach(() => rmSync(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 }));
 
@@ -23,7 +23,7 @@ const box = (args: string[]) => spawnSync(process.execPath, [CLI_DIST, 'setup', 
 const claude = () => join(home, '.claude', 'skills', 'omakase-box', 'SKILL.md');
 const agents = () => join(home, '.agents', 'skills', 'omakase-box', 'SKILL.md');
 
-describe('box setup', { timeout: 60000 }, () => {
+describe('omakase-box setup', { timeout: 60000 }, () => {
   it('writes a skill for the agents it finds, says exactly what, and touches nothing else', () => {
     mkdirSync(join(home, '.claude'));
     const run = box([]);
@@ -36,7 +36,7 @@ describe('box setup', { timeout: 60000 }, () => {
     expect(run.stdout).not.toContain(home);
     expect(run.stdout).not.toContain('\\');
     expect(run.stdout).toContain('your next agent session finds the tool');
-    expect(run.stdout).toContain('undo: box setup --remove');
+    expect(run.stdout).toContain('undo: omakase-box setup --remove');
   });
   it('one folder serves Codex, Cursor and Gemini CLI', () => {
     mkdirSync(join(home, '.codex'));
@@ -48,7 +48,7 @@ describe('box setup', { timeout: 60000 }, () => {
     const run = box([]);
     expect(run.status).toBe(0);
     expect(run.stdout).toContain('no agent found in its usual place');
-    expect(run.stdout).toContain('box bounty config set instructions true');
+    expect(run.stdout).toContain('omakase-box config set instructions true');
     expect(existsSync(join(home, '.claude'))).toBe(false);
     expect(existsSync(join(home, '.agents'))).toBe(false);
   });
@@ -92,7 +92,7 @@ describe('box setup', { timeout: 60000 }, () => {
 
 describe('the skill', () => {
   it('states the block\'s facts, carries the marker, and steers nobody', () => {
-    for (const fact of ['free', 'public GitHub', 'The owner decides once', 'says what to ask them', 'box bounty', 'always your call']) expect(SKILL_TEXT).toContain(fact);
+    for (const fact of ['free', 'public GitHub', 'The owner decides once', 'says what to ask them', 'omakase-box', 'always your call']) expect(SKILL_TEXT).toContain(fact);
     expect(renderRulesBlock('idle')).toContain('free');
     expect(SKILL_TEXT).toContain(SKILL_MARKER);
     expect(SKILL_TEXT.startsWith('---\nname: omakase-box\ndescription: ')).toBe(true);

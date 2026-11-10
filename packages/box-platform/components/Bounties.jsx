@@ -84,7 +84,7 @@ export default function Bounties({ bounties, now = Date.now() }) {
       <div data-no-bounties className="border-t border-line text-center py-14">
         <p className="font-medium">No bounties yet</p>
         <p className="text-sm text-soft max-w-[26rem] mx-auto mt-1">When your agent hands off a task it cannot finish, the bounty appears here and moves across the four stages.</p>
-        <p className="mt-5"><code className="inline-block border border-line bg-card rounded-xl px-3.5 py-1.5"><span className="text-soft">$ </span>box bounty post</code></p>
+        <p className="mt-5"><code className="inline-block border border-line bg-card rounded-xl px-3.5 py-1.5"><span className="text-soft">$ </span>omakase-box post</code></p>
         <p className="mt-4 text-sm"><a href="/how/">How it works</a></p>
       </div>
     );

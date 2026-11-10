@@ -72,7 +72,7 @@ describe('the fact report', () => {
     expect(report).toContain('lines added');
     expect(report).toContain('current code: the solution would merge cleanly');
     expect(report).toContain('nothing in the solution was run and this report says nothing about whether it works');
-    expect(report).toContain(`next: box bounty look ${id} 1 to read the change; box bounty apply ${id} 1 to merge it; or box bounty close ${id} --reason "<why>"`);
+    expect(report).toContain(`next: omakase-box look ${id} 1 to read the change; omakase-box apply ${id} 1 to merge it; or omakase-box close ${id} --reason "<why>"`);
     // No check path exists to report on.
     expect(report).not.toContain('check:');
     expect(report).not.toContain('guard:');

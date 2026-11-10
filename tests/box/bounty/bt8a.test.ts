@@ -201,7 +201,7 @@ describe('the three owner words through the built CLI', () => {
     const run = cli(root, 'owner', verb);
     expect(run.status).toBe(3);
     expect(run.stderr).toContain('command-removed');
-    expect(run.stderr).toContain('next: box bounty');
+    expect(run.stderr).toContain('next: omakase-box');
     expect(saved()).toBe(before);
   });
   it('stray arguments and unknown or hard-stop settings are named refusals with no write', () => {
@@ -229,9 +229,9 @@ describe('the three owner words through the built CLI', () => {
     // A never-set all-projects is not a setting — the bare surface omits
     // its row and names the long form on one line (BT14).
     expect(shown.stdout).not.toContain('all-projects:');
-    expect(shown.stdout).toContain('box bounty config --full');
+    expect(shown.stdout).toContain('omakase-box config --full');
     expect(shown.stdout).toContain('not decided yet: no repository permission');
-    expect(shown.stdout).toContain('box bounty allow owner/project --ask');
+    expect(shown.stdout).toContain('omakase-box allow owner/project --ask');
     const full = cli(root, 'config', '--full');
     expect(full.status).toBe(0);
     expect(full.stdout).toContain('all-projects: false (off by default), nothing written');
@@ -241,14 +241,14 @@ describe('the three owner words through the built CLI', () => {
     const add = cli(root, 'config', 'add', 'repositories', 'owner/shop');
     expect(add.status).toBe(3);
     expect(add.stderr).toContain('config-command-removed');
-    expect(add.stderr).toContain('box bounty allow owner/shop');
+    expect(add.stderr).toContain('omakase-box allow owner/shop');
     expect(readDecision(repo('owner/shop')).decision).toBeNull();
     expect(cli(root, 'allow', '--ask').status).toBe(0);
     expect(readDecision(root).decision).toBe('ask');
     const remove = cli(root, 'config', 'remove', 'repositories', 'owner/shop');
     expect(remove.status).toBe(3);
     expect(remove.stderr).toContain('config-command-removed');
-    expect(remove.stderr).toContain('box bounty deny owner/shop');
+    expect(remove.stderr).toContain('omakase-box deny owner/shop');
     expect(readDecision(repo('owner/shop')).decision).toBeNull();
   });
   it('config distinguishes effective authority, undecided defaults and applicable waiting choices', () => {
@@ -257,7 +257,7 @@ describe('the three owner words through the built CLI', () => {
     const allowed = renderConfig(root);
     expect(allowed).toContain('this repository: owner/project; allowed by this repository entry');
     expect(allowed).toContain('not decided yet: all-projects (nothing written; defaults to off)');
-    expect(allowed).toContain('allow: box bounty allow <owner/name>; deny: box bounty deny <owner/name>');
+    expect(allowed).toContain('allow: omakase-box allow <owner/name>; deny: omakase-box deny <owner/name>');
     expect(allowed).toContain('waiting actions: none');
     expect(allowed).not.toContain('<waiting-bounty-id>');
     expect(allowed).not.toContain('add it:');
@@ -272,7 +272,7 @@ describe('the three owner words through the built CLI', () => {
     expect(renderConfig(root, { full: true })).toContain('A dated deny removal keeps that repository not allowed even when all-projects is true or ask');
     const { id } = draft(root);
     refused(() => postToGitHub(root, id), 'owner-allow-needed');
-    expect(renderConfig(root)).toContain(`this one bounty only: box bounty allow ${id}`);
+    expect(renderConfig(root)).toContain(`this one bounty only: omakase-box allow ${id}`);
   });
 });
 
@@ -326,17 +326,17 @@ it('GitHub account and API calls pin github.com despite a different GH_HOST', ()
 
 it('legacy tool-written owner spellings are scrubbed on every replay field and history', () => postedFixture(({ repo: root, id }) => {
   const record = JSON.parse(readRecordRaw(root, id));
-  record.github.pending = `waiting-owner: box bounty owner answer ${id}; box bounty owner setup`;
-  record.github.outside = { at: '2026-10-13T00:00:00.000Z', issueState: 'open', answers: 'box bounty owner setup; box bounty owner allow; box bounty owner ask; box bounty owner off; box bounty owner on; box bounty owner summary; box bounty owner answer ' + id };
+  record.github.pending = `waiting-owner: omakase-box owner answer ${id}; omakase-box owner setup`;
+  record.github.outside = { at: '2026-10-13T00:00:00.000Z', issueState: 'open', answers: 'omakase-box owner setup; omakase-box owner allow; omakase-box owner ask; omakase-box owner off; omakase-box owner on; omakase-box owner summary; omakase-box owner answer ' + id };
   for (const verb of ['setup', 'allow', 'ask', 'off', 'on', 'answer', 'summary']) record.events.push({ stage: 'posted', at: '2026-10-13T00:00:00.000Z', command: 'owner ' + verb });
   record.events.push({ stage: 'confirmed', at: '2026-10-13T00:00:00.000Z', command: 'confirm' });
   writeRecordRaw(root, id, JSON.stringify(record));
   withoutGh(() => {
     const status = statusGitHub(root, { full: true });
-    expect(status).not.toContain('box bounty owner ');
+    expect(status).not.toContain('omakase-box owner ');
     expect(status).not.toContain('"command":"owner ');
     expect(status).not.toContain('"command":"confirm"');
-    expect(status).toContain('box bounty allow ' + id);
+    expect(status).toContain('omakase-box allow ' + id);
   });
 }));
 

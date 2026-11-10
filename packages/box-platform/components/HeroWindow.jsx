@@ -27,9 +27,9 @@ export default function HeroWindow() {
           <div className="bg-code text-code-ink px-5 pt-4 pb-6 sm:pb-10 min-w-0">
             <div className="flex gap-1.5 mb-5" aria-hidden="true"><i className="size-2.5 rounded-full bg-code-soft/40" /><i className="size-2.5 rounded-full bg-code-soft/40" /><i className="size-2.5 rounded-full bg-code-soft/40" /></div>
             <div className="flex flex-col gap-2 text-sm font-mono break-words">
-              <Story at={0.3}><Prompt>box bounty post {ID}</Prompt></Story>
+              <Story at={0.3}><Prompt>omakase-box post {ID}</Prompt></Story>
               <Story at={0.9} as="p" className="text-code-soft" data-flow-output="post">{ID} — posted — delivered to https://github.com/example-org/ledger/issues/48</Story>
-              <Story at={3.2} className="mt-3"><Prompt>box bounty apply {ID} 62</Prompt></Story>
+              <Story at={3.2} className="mt-3"><Prompt>omakase-box apply {ID} 62</Prompt></Story>
               <Story at={3.8} as="p" className="text-code-soft" data-flow-output="apply">{ID} — applied — attempt 62 merged as {COMMIT} on this branch</Story>
             </div>
           </div>

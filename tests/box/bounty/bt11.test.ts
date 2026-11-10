@@ -149,8 +149,8 @@ describe('BT11c — each repository carries its own reward and limit', () => {
     // The money explanations are the long form's (BT14).
     const bareFull = renderConfig(repo, { full: true });
     expect(bareFull).toContain('a repository with no reward written states $0');
-    expect(bareFull).toContain('box bounty config set reward <whole dollars>');
-    expect(bareFull).toContain('box bounty config set reward-limit <whole dollars>');
+    expect(bareFull).toContain('omakase-box config set reward <whole dollars>');
+    expect(bareFull).toContain('omakase-box config set reward-limit <whole dollars>');
     changeConfig(repo, 'set', 'reward-limit', '20');
     changeConfig(repo, 'set', 'reward', '5');
     const full = renderConfig(repo);
@@ -183,7 +183,7 @@ describe('BT11c — the setting written before this wave applies to nothing', ()
     const first = renderConfig(repo);
     expect(first).toContain('a shared reward of $5 and a $50 limit');
     expect(first).toContain('states $0 until you set its own');
-    expect(first).toContain('box bounty config set reward <whole dollars>');
+    expect(first).toContain('omakase-box config set reward <whole dollars>');
     expect(renderConfig(repo)).not.toContain('a shared reward of $5'); // told once ever
     const migrated = JSON.parse(readFileSync(settingsFile(), 'utf8'));
     expect(migrated['reward']).toBeUndefined();
@@ -366,7 +366,7 @@ describe('BT11a — the public side and the words around it', () => {
     expect(run.status).toBe(0); // a held post prints the owner lines and exits 0
     expect(run.stdout).toContain('waiting for the owner');
     expect(run.stdout).toContain('Each bounty states what it pays — $0 unless you set an amount, so nothing is promised now.');
-    expect(run.stdout).toContain('allow this repository: box bounty allow');
+    expect(run.stdout).toContain('allow this repository: omakase-box allow');
   });
 
   it('an owner whose settings predate the wave is told once that each repository can state its own reward', () => {
@@ -374,7 +374,7 @@ describe('BT11a — the public side and the words around it', () => {
     ownerSays(repo, 'allowed');
     const first = statusGitHub(repo);
     expect(first).toContain('each repository can state its own reward');
-    expect(first).toContain('box bounty config set reward <whole dollars>');
+    expect(first).toContain('omakase-box config set reward <whole dollars>');
     expect(statusGitHub(repo)).not.toContain('each repository can state its own reward'); // once ever
     // Fresh settings are not told at all — first use already carries the fact.
     const fresh = runRoot('fresh-owner');

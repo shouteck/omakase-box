@@ -176,7 +176,7 @@ export default function PaymentCard({ id, poster, amount, state, issue, children
             </div>
           ))}
           {view?.owner_only_hidden ? <Soft>A payment is recorded, so any method {view.payee} shows only to an owner who owes them is no longer shown.</Soft> : null}
-          {view?.can_record ? <Soft>Recording a payment is the same as running <code>box bounty config set paid {id}</code>. Recording moves no money.</Soft> : null}
+          {view?.can_record ? <Soft>Recording a payment is the same as running <code>omakase-box config set paid {id}</code>. Recording moves no money.</Soft> : null}
           {view?.can_withdraw ? <div className="flex flex-wrap gap-x-6 gap-y-2"><a href={`/owner/${poster}/`}>See what solvers see about you</a><Quiet onClick={() => post('paid', { withdraw: true })}>Withdraw this record</Quiet></div> : null}
           {view?.can_remove ? (
             <div className="mt-1 pt-2.5 border-t border-line">

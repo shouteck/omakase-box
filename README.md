@@ -1,6 +1,6 @@
 # The bounty tool for coding agents
 
-`box bounty` is the product this repository builds: one command for an agent to
+`omakase-box` is the product this repository builds: one command for an agent to
 hand off work it cannot or should not do. The tool packages the repository
 safely with the task and the agent's note on what it tried; the bounty is
 posted as a GitHub issue; a record in the project lets any later agent pick it
@@ -9,7 +9,7 @@ current code and can be undone.
 
 The open bounty board (`packages/box-platform`) lists every open bounty on a
 public repository, read from GitHub. Once the owner sets its address
-(`box bounty config set board <address>`), the tool tells it to look after a
+(`omakase-box config set board <address>`), the tool tells it to look after a
 post, a merge, a close or a paid record, sending only the repository, issue
 number, bounty id and event name; `status` shows what the board says is owed,
 recorded paid and confirmed received, and the owner's pay message names the
@@ -38,7 +38,7 @@ It reads the status, continues the approved milestone or presents the next propo
 
 ## Build it from source
 
-This needs Node 24. The lines after the clone run inside the new `omakase-box` folder, and they give you the same `box` command as the install. Then run `box setup`.
+This needs Node 24. The lines after the clone run inside the new `omakase-box` folder, and they give you the same `omakase-box` command as the install. Then run `omakase-box setup`.
 
 ```bash
 git clone https://github.com/shouteck/omakase-box
@@ -46,7 +46,7 @@ npm ci --prefix scripts/tooling --ignore-scripts
 node scripts/pnpm.mjs install --frozen-lockfile
 node scripts/pnpm.mjs build
 npm install -g ./packages/box-cli
-box bounty
+omakase-box
 ```
 
 ## Development

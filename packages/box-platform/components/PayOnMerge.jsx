@@ -153,7 +153,7 @@ export function PayOnMergeOwner({ pay, setPay }) {
               <span key="a" className="inline-flex gap-2"><Button onClick={() => setDialog(entry)}>Edit</Button><Button onClick={() => save(repositories.filter(other => other !== entry))}>Turn off</Button></span>
             ])} />
         ) : yours.length === 0
-          ? <Empty title="No repositories yet." why="Pay on merge works on repositories where you have posted a bounty. Post one with your agent (box bounty), and it appears here to turn on." />
+          ? <Empty title="No repositories yet." why="Pay on merge works on repositories where you have posted a bounty. Post one with your agent (omakase-box), and it appears here to turn on." />
           : <Empty title="No repository is on." why="Turn one of yours on, and merged solutions there pay themselves." />}
       </div>
       <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 items-center">

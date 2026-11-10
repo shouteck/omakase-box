@@ -74,7 +74,7 @@ describe('the artifact is the bounty tool and nothing else', () => {
     }
     expect(pkg['private']).toBeUndefined();
     expect(pkg['license']).toBe('Apache-2.0');
-    expect((pkg['bin'] as Record<string, string>)['box']).toBe('dist/box.js');
+    expect((pkg['bin'] as Record<string, string>)['omakase-box']).toBe('dist/box.js');
   });
   it('is one file that imports node builtins only', () => {
     const specifiers = [...bundle().matchAll(/from "([^"]+)"/g)].map(match => match[1]);
@@ -108,7 +108,7 @@ describe('the artifact carries no secrets and no machine paths', () => {
       expect(text, name).not.toMatch(/[A-Za-z]:[\\/]Users/i);
     }
   });
-  it('names no command spelling but `box bounty …`', () => {
+  it('names no command spelling but `omakase-box …`', () => {
     // The old spelling was an interpreter plus a repository path.
     for (const [name, body] of files) {
       const text = body.toString('utf8');

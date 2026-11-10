@@ -47,7 +47,7 @@ describe('bounty create argument parsing', () => {
 // create produces the folder and the stage line. An old check flag is a named
 // refusal — checks were removed, nothing runs. Skipped unless the bundle
 // exists — verify builds before suites run.
-describe('box bounty create (built cli)', () => {
+describe('omakase-box create (built cli)', () => {
   const cli = (cwd: string, args: string[]) =>
     spawnSync(process.execPath, [CLI_DIST, ...args], { cwd, encoding: 'utf8' });
   const built = existsSync(CLI_DIST);
@@ -83,7 +83,7 @@ describe('box bounty create (built cli)', () => {
     const run = cli(dir, ['bounty', 'create', '--why', 'w', '--title', 't', '--task', 'TASK.md']);
     expect(run.status).toBe(3);
     expect(run.stderr).toContain('not-a-repository');
-    expect(run.stderr).toContain('box bounty create'); // names the command actually run
+    expect(run.stderr).toContain('omakase-box create'); // names the command actually run
   });
 
   it('refuses create without --why by name, not with a usage wall', () => {
@@ -108,11 +108,11 @@ describe('box bounty create (built cli)', () => {
     // The default place to write: bounties/<slug> next to the repository root.
     const out = join(realpathSync(dirname(repo)), 'bounties', 'fix-the-thing');
     expect(existsSync(out)).toBe(false);
-    expect(run.stdout).toContain(`box bounty post`);
+    expect(run.stdout).toContain(`omakase-box post`);
   });
 });
 
-describe('box bounty help (built cli)', () => {
+describe('omakase-box help (built cli)', () => {
   const cli = (cwd: string, args: string[]) =>
     spawnSync(process.execPath, [CLI_DIST, ...args], { cwd, encoding: 'utf8' });
   const built = existsSync(CLI_DIST);
@@ -140,7 +140,7 @@ describe('box bounty help (built cli)', () => {
     const wrong = cli(dir, ['bounty', 'frobnicate']);
     expect(wrong.status).toBe(2);
     expect(wrong.stderr).toContain('frobnicate');
-    expect(wrong.stderr).toContain('box bounty help');
+    expect(wrong.stderr).toContain('omakase-box help');
   });
 
   it('status outside a checkout names the command actually run, not create', () => {
@@ -150,6 +150,6 @@ describe('box bounty help (built cli)', () => {
     const run = cli(dir, ['bounty', 'status']);
     expect(run.status).toBe(3);
     expect(run.stderr).toContain('not-a-repository');
-    expect(run.stderr).toContain('box bounty status');
+    expect(run.stderr).toContain('omakase-box status');
   });
 });

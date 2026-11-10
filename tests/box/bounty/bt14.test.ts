@@ -28,7 +28,7 @@ describe('create explains placement, the title rule and the owner gate', () => {
     const preview = renderPreview(plan);
     expect(preview).toContain('the task file stays where it is');
     expect(preview).toContain('never commits or removes it');
-    expect(preview).toContain('posting permission: none — a GitHub post waits for the owner\'s permission; box bounty allow owner/notallowed is their answer');
+    expect(preview).toContain('posting permission: none — a GitHub post waits for the owner\'s permission; omakase-box allow owner/notallowed is their answer');
     // An allowed repository states the post goes out instead.
     allowRepository(repo, 'owner/notallowed');
     expect(renderPreview(plan)).toContain('posting permission: allowed — a GitHub post goes out');
@@ -63,7 +63,7 @@ describe('a held post says it waits for the owner and names their command', () =
       const message = String((error as Error).message);
       expect(message).toContain('waiting for the owner');
       expect(message).toContain('waits for');
-      expect(message).toContain('box bounty allow');
+      expect(message).toContain('omakase-box allow');
     }
   }));
 });
@@ -79,7 +79,7 @@ describe('compact status leads with what waits', () => {
     expect(status).not.toContain('0 collected');
     // BT17: one `next:` line carries the collect command; the listing above
     // it names the pull request's number.
-    expect(status).toContain(`next: box bounty look ${id} <number>`);
+    expect(status).toContain(`next: omakase-box look ${id} <number>`);
     expect(status).not.toContain('GitHub format block:');
     const full = renderStatus(repo, { full: true });
     expect(full).toContain('GitHub format block:');
@@ -92,7 +92,7 @@ describe('a failed refresh names the reason — and a hopeless one offers no ret
     const stale = renderStatus(repo);
     expect(stale).toContain('github-issue-mismatch');
     expect(stale).toContain('reads the same answer');
-    expect(stale).not.toContain('retry box bounty status');
+    expect(stale).not.toContain('retry omakase-box status');
   }));
 });
 
@@ -119,16 +119,16 @@ describe('config: never-set settings omitted, retired verbs refused, removals na
     git(repo, ['remote', 'add', 'origin', 'https://github.com/owner/plain.git']);
     const bare = renderConfig(repo);
     expect(bare).not.toContain('all-projects:');
-    expect(bare).toContain('box bounty config --full');
+    expect(bare).toContain('omakase-box config --full');
     expect(renderConfig(repo, { full: true })).toContain('all-projects: false (off by default), nothing written');
   });
   it('config add/remove repositories are named refusals that point at allow and deny', () => {
     const repo = makeRepo({ 'TASK.md': 'task\n' });
     refused(() => changeConfig(repo, 'add', 'repositories', 'owner/shop'), 'config-command-removed');
     try { changeConfig(repo, 'add', 'repositories', 'owner/shop'); expect.unreachable(); }
-    catch (error) { expect(String((error as Error).message)).toContain('box bounty allow owner/shop'); }
+    catch (error) { expect(String((error as Error).message)).toContain('omakase-box allow owner/shop'); }
     try { changeConfig(repo, 'remove', 'repositories', 'owner/shop'); expect.unreachable(); }
-    catch (error) { expect(String((error as Error).message)).toContain('box bounty deny owner/shop'); }
+    catch (error) { expect(String((error as Error).message)).toContain('omakase-box deny owner/shop'); }
   });
   it('deny names the reward and the limit that went with the entry, and the table offers re-allow not a second remove', () => {
     const repo = makeRepo({ 'TASK.md': 'task\n' });
@@ -138,7 +138,7 @@ describe('config: never-set settings omitted, retired verbs refused, removals na
     expect(denied).toContain('reward ($10) and limit ($30) went with the entry');
     const row = renderConfig(repo).split('\n').find(line => line.includes('owner/shop: not allowed'));
     expect(row).toBeDefined();
-    expect(row).toContain('re-allow: box bounty allow owner/shop');
+    expect(row).toContain('re-allow: omakase-box allow owner/shop');
     expect(row).not.toContain('remove:');
   });
 });
@@ -157,11 +157,11 @@ describe('the first merge and the payment are one block', () => {
   }));
 });
 
-describe('box --help exits 0 and lists box bounty first', () => {
+describe('omakase-box --help exits 0 and lists omakase-box first', () => {
   it('--help on stdout, bounty commands only, exit 0', () => {
     const run = cli('.', ['--help']);
     expect(run.status).toBe(0);
-    expect(run.stdout.indexOf('box bounty create')).toBeGreaterThan(-1);
+    expect(run.stdout.indexOf('omakase-box create')).toBeGreaterThan(-1);
     // K29: the older-platform commands' help lines are gone with the commands
     // themselves — the ordering assertion they anchored is replaced by their
     // absence, which is the same "bounty is the product" pin post-removal.

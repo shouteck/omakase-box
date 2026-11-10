@@ -33,8 +33,8 @@ it('an answer names look and apply; hidden characters are escaped in questions a
   collected(context, { 'README.rst': 'Title\n=======\n', 'notes.txt': `${hidden}\n` });
   // An answer's report names look and apply.
   const report = loadRecord(context.repo, context.id).attempts?.[0]?.report.join('\n') ?? '';
-  expect(report).toContain(`box bounty look ${context.id} 1`);
-  expect(report).toContain(`box bounty apply ${context.id} 1`);
+  expect(report).toContain(`omakase-box look ${context.id} 1`);
+  expect(report).toContain(`omakase-box apply ${context.id} 1`);
   // A comment from another account with characters that hide or reorder text.
   context.update({ comments: [{ body: hidden, user: { login: 'questioner' }, created_at: '2026-10-10T01:02:03Z' }] });
   const questions = renderStatus(context.repo, { id: context.id, comments: true });
@@ -53,14 +53,14 @@ it('an answer names look and apply; hidden characters are escaped in questions a
   const apply = cli(context.repo, 'apply', '1');
   expect(apply.status).toBe(0);
   expect(apply.stdout).toContain('conflict');
-  expect(apply.stdout).toContain(`box bounty look ${context.id} 1`);
+  expect(apply.stdout).toContain(`omakase-box look ${context.id} 1`);
   expect(nexts(apply.stdout)).toBe(1);
   const staged = renderStatus(context.repo);
   expect(staged).toContain('conflict');
   expect(nexts(staged)).toBe(1);
   const look = cli(context.repo, 'look', '1');
   expect(look.status).toBe(0);
-  expect(look.stdout).toContain(`box bounty apply ${context.id} 1`);
+  expect(look.stdout).toContain(`omakase-box apply ${context.id} 1`);
   for (const raw of ['‮', '\u009b', '​', '\u007f']) expect(look.stdout).not.toContain(raw);
   expect(look.stdout).toContain('written by the solver');
   expect(look.stdout).not.toContain('unlook');
@@ -79,7 +79,7 @@ it('asking which bounty lists each title, usage lists the commands of this wave,
   expect(which.stderr).toContain(`${second.id} "Mend the second thing"`);
   const usage = cli(repo, 'look', first.id);
   expect(usage.status).toBe(2);
-  for (const line of ['box bounty status [<id>] [--full] [--comments]', 'box bounty look [<id>] <n>', 'box bounty apply [<id>] [<n>]', 'box bounty close [<id>]']) expect(usage.stderr).toContain(line);
+  for (const line of ['omakase-box status [<id>] [--full] [--comments]', 'omakase-box look [<id>] <n>', 'omakase-box apply [<id>] [<n>]', 'omakase-box close [<id>]']) expect(usage.stderr).toContain(line);
   expect(usage.stderr).not.toContain('unlook');
   expect(quoteForeign('a‮b\u009bc​d\u007fe⁦f\u001bg')).toBe('"a\\u202eb\\u009bc\\u200bd\\u007fe\\u2066f\\u001bg"');
   expect(quoteForeign('plain "quoted" path/with spaces.txt')).toBe(JSON.stringify('plain "quoted" path/with spaces.txt'));

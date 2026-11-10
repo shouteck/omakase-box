@@ -41,7 +41,7 @@ describe('BT49 an issue over GitHub\'s size is refused before anything goes out'
     expect(error.message).toContain(`the task text is ${ISSUE_BODY_MAX + 1}`);
     expect(error.message).toContain(`at most ${ISSUE_BODY_MAX}`);
     expect(error.message).toContain('split the task or shorten it');
-    expect(error.message).toContain(`box bounty close ${id}`);
+    expect(error.message).toContain(`omakase-box close ${id}`);
     unchanged(repo, bare, id, state().issues.length);
   }));
 
@@ -109,7 +109,7 @@ describe('BT49 a change too large to show says so', () => {
     expect(run.stdout).not.toContain('solver line of exactly');
     expect(run.stdout).not.toContain('marker-in-small');
     expect(run.stdout).toContain('your own git');
-    expect(run.stdout).toContain(`box bounty apply ${id} 2`);
+    expect(run.stdout).toContain(`omakase-box apply ${id} 2`);
     // The next step names commits that exist: following it works.
     const own = /git diff (--no-ext-diff --no-textconv --stat [a-f\d]{40} [a-f\d]{40})/.exec(run.stdout)!;
     expect(git(repo, ['diff', ...own[1]!.split(' ')])).toContain('huge.txt');

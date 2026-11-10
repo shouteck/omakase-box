@@ -27,7 +27,7 @@ describe('instruction blocks', () => {
     expect(idle).not.toContain('open bounties: none');
     const { id } = draft(repo);
     const open = block(repo, 'AGENTS.md');
-    expect(open).toContain('a bounty is open; `box bounty` shows more.');
+    expect(open).toContain('a bounty is open; `omakase-box` shows more.');
     expect(open).not.toContain(id);
     expect(open).toBe(block(repo, 'GEMINI.md'));
     const record = loadRecord(repo, id);
@@ -37,7 +37,7 @@ describe('instruction blocks', () => {
     record.attempts = [{ n: 1, commit, at: '2026-10-01T00:00:00.000Z', outcome: 'answered', changed: [], added: [], deleted: [], report: [], conflicts: null }];
     writeRecordRaw(repo, id, JSON.stringify(record));
     syncInstructions(repo);
-    expect(block(repo, 'AGENTS.md')).toContain('a bounty has a new solution; `box bounty` shows more.');
+    expect(block(repo, 'AGENTS.md')).toContain('a bounty has a new solution; `omakase-box` shows more.');
     expect(block(repo, 'AGENTS.md')).toBe(block(repo, 'GEMINI.md'));
     statusGitHub(repo);
     expect(block(repo, 'AGENTS.md')).toBe(open);
@@ -109,7 +109,7 @@ describe('instruction blocks', () => {
     changeConfig(repo, 'set', 'instructions', 'true');
     write(repo, 'GEMINI.md', 'new\n');
     expect(renderConfig(repo)).toContain('GEMINI.md');
-    expect(statusGitHub(repo)).toContain('box bounty config set instructions true');
+    expect(statusGitHub(repo)).toContain('omakase-box config set instructions true');
     expect(statusGitHub(repo)).not.toContain('lacks the block');
     expect(bytes(repo, 'GEMINI.md').toString()).toBe('new\n');
     changeConfig(repo, 'set', 'instructions', 'true');

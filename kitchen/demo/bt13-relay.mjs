@@ -48,7 +48,7 @@ const git = (cwd, argv) => {
   return out.stdout.trim();
 };
 const run = (cwd, argv, env) => {
-  console.log(`$ box bounty ${argv.join(' ')}`);
+  console.log(`$ omakase-box ${argv.join(' ')}`);
   const out = spawnSync(process.execPath, [CLI, 'bounty', ...argv], { cwd, env: { ...process.env, ...env }, encoding: 'utf8', timeout: 120000 });
   process.stdout.write(out.stdout ?? '');
   if (out.stderr) process.stdout.write(`[stderr] ${out.stderr}`);

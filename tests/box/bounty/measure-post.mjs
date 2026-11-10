@@ -60,7 +60,7 @@ const buildSnapshot = (indexFile) => {
   git(repo, ['add', '-A'], index);
   git(repo, ['rm', '-r', '-q', '--cached', '--ignore-unmatch', '--', ...NEVER_SHIP_PATHSPECS], index);
   const tree = git(repo, ['write-tree'], index);
-  return git(repo, ['-c', 'user.name=box-bounty', '-c', 'user.email=box-bounty@localhost', 'commit-tree', tree, '-m', 'box bounty measure before'], index);
+  return git(repo, ['-c', 'user.name=box-bounty', '-c', 'user.email=box-bounty@localhost', 'commit-tree', tree, '-m', 'omakase-box measure before'], index);
 };
 
 const buildWip = (indexFile) => {
@@ -73,7 +73,7 @@ const buildWip = (indexFile) => {
   git(repo, ['update-index', '--add', '--cacheinfo', `100644,${run.stdout.trim()},README.md`], index);
   const tree = git(repo, ['write-tree'], index);
   const dates = { GIT_AUTHOR_DATE: '2026-10-11T00:00:00Z', GIT_COMMITTER_DATE: '2026-10-11T00:00:00Z' };
-  return git(repo, ['-c', 'user.name=box-bounty', '-c', 'user.email=box-bounty@localhost', 'commit-tree', tree, '-p', 'HEAD', '-m', 'box bounty measure: work in progress'], { ...index, ...dates });
+  return git(repo, ['-c', 'user.name=box-bounty', '-c', 'user.email=box-bounty@localhost', 'commit-tree', tree, '-p', 'HEAD', '-m', 'omakase-box measure: work in progress'], { ...index, ...dates });
 };
 
 const RUNS = 3;

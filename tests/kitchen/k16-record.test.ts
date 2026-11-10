@@ -97,7 +97,7 @@ describe('a stand-in run', () => {
     expect(stills).toContain('card-title.png');
     expect(stills).toContain('card-end.png');
     // The transcript is the replay's own output, annotated only by [recorder] lines.
-    expect(transcript).toContain('box bounty — an agent hands a task to outside solvers');
+    expect(transcript).toContain('omakase-box — an agent hands a task to outside solvers');
     expect(transcript).toContain('mode: stand-in');
     // The transcript keeps the replay's last line — a dropped tail would hide
     // what the run left behind.
@@ -111,11 +111,11 @@ describe('a stand-in run', () => {
       expect(line).not.toMatch(/\b(bt11b|bt-11b?|k-?1[0-9]|wave|kitchen)\b/i);
       if (line.startsWith('$ ')) expect(line).not.toMatch(/node(\.exe)?\b|cli\.js|gh-standin/);
     }
-    // Every tool command is shown as `box bounty …`; the transcript keeps the
+    // Every tool command is shown as `omakase-box …`; the transcript keeps the
     // full command beside it, paths shortened.
     const shownCommands = screen.split('\n').filter(line => line.startsWith('$ box '));
     expect(shownCommands.length).toBeGreaterThanOrEqual(6);
-    for (const line of shownCommands) expect(line).toMatch(/^\$ box bounty /);
+    for (const line of shownCommands) expect(line).toMatch(/^\$ omakase-box /);
     expect(transcript).toContain('cli.js bounty create');
     expect(transcript).toContain('<tool>');
     // The tool's settings lived in the run's own folder, seen in `allow`'s

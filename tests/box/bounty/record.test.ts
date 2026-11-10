@@ -91,7 +91,7 @@ describe('the bounty record', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const status = statusGitHub(resolveRepoRoot(repo));
     expect(status).toContain('no open bounties');
-    expect(status).toContain('box bounty create');
+    expect(status).toContain('omakase-box create');
     expect(status).toContain('ended: none');
   });
 
@@ -105,7 +105,7 @@ describe('the bounty record', () => {
     expect(status).toContain('2 open');
     expect(status).toContain(`${open.id}  drafted`);
     expect(status).toContain(`${second.id}  drafted`);
-    expect(status).toContain(`box bounty post ${open.id}`);
+    expect(status).toContain(`omakase-box post ${open.id}`);
     expect(status).toContain('owner: nothing written');
     expect(status).toContain(`ended: ${closed.id} withdrawn`);
   });
@@ -121,8 +121,8 @@ describe('the bounty record', () => {
     writeRecord(repo, older);
     const status = statusGitHub(resolveRepoRoot(repo));
     expect(status).toContain(`ended: ${id} undone`);
-    expect(status).toContain(`box bounty status ${id} --full`);
-    expect(status).toContain('box bounty create --task <file>');
+    expect(status).toContain(`omakase-box status ${id} --full`);
+    expect(status).toContain('omakase-box create --task <file>');
     for (const gone of ['answer', 'questions', 'reply', 'undo', 'reject', 'withdraw', 'remind', 'confirm']) {
       expect(status).not.toContain(`bounty ${gone}`);
     }
@@ -191,7 +191,7 @@ describe('close — ends an open bounty cleanly', () => {
 
 // The agent-facing surface, driven through the built CLI: exit codes and the
 // exact printed states. Skipped unless the bundle exists — verify builds first.
-describe('box bounty lifecycle (built cli)', () => {
+describe('omakase-box lifecycle (built cli)', () => {
   const cli = (cwd: string, args: string[]) =>
     spawnSync(process.execPath, [CLI_DIST, ...args], { cwd, encoding: 'utf8' });
   const built = existsSync(CLI_DIST);
@@ -203,7 +203,7 @@ describe('box bounty lifecycle (built cli)', () => {
     const run = cli(repo, ['bounty', 'status']);
     expect(run.status).toBe(0);
     expect(run.stdout).toContain('no open bounties');
-    expect(run.stdout).toContain('box bounty create');
+    expect(run.stdout).toContain('omakase-box create');
   });
 });
 

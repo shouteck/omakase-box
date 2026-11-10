@@ -50,7 +50,7 @@ describe('the owner\'s settings file holds only the owner\'s choices', () => {
     // The owner's answer is the one command allowed to write the file.
     expect(box(repo, ['allow', 'owner/project', '--reward', '10', '--reward-limit', '30']).status).toBe(0);
     pr('solver');
-    // `box bounty` — the overview. The reward's said-once explanation belongs
+    // `omakase-box` — the overview. The reward's said-once explanation belongs
     // to the first read that renders the reward line, and it lands in state.json.
     const overview = reads([]);
     expect(overview.stdout).toContain('a promise in the owner\'s name, which they pay');
@@ -146,7 +146,7 @@ describe('the owner\'s settings file holds only the owner\'s choices', () => {
     const run = box(root, ['status']);
     expect(run.status).toBe(0);
     expect(run.stderr).toContain(`the tool's own state at ${stateFile()} was unreadable and was reset`);
-    expect(run.stdout).toContain('box bounty status');
+    expect(run.stdout).toContain('omakase-box status');
     expect(readFileSync(settingsFile(), 'utf8')).toBe(before);
     expect(JSON.parse(readFileSync(stateFile(), 'utf8'))['kind']).toBe('box-tool-state');
     // A file whose JSON parses but is not the tool's state resets the same way.
