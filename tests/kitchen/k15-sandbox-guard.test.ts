@@ -82,6 +82,29 @@ describe('K15 sandbox guard — no new wave asks for a real post on shouteck/oma
     expect(offendingLines('a plain line about omakase-box, with no step named')).toHaveLength(0);
   });
 
+  // K57: since 10 November 2026 omakase-box is also the product's name (the
+  // package and the command). A line that only names the package or the
+  // command is not a step on the repository; these four, from BT53, BT63
+  // and K48, failed the guard on master.
+  it('a line naming only the package or the command is not a post on the repository', () => {
+    const productLines = [
+      '- `npm uninstall -g box-bounty` becomes `npm uninstall -g omakase-box`, both times; a test pins it equal to `PACKAGE_REMOVE`.',
+      '- The release carries BT54, BT56, BT58, BT57, BT60 and BT63 (owner, 10 November 2026): cook them first, BT63 last. The guide is written in the new command, `omakase-box`. The README\'s first-bounty section then says a reward is set before the first post.',
+      '**Brief.** Written by the CTO on 10 November 2026 from the owner\'s decisions that day: the product has one name, omakase-box, and the command follows it. Read on npm the same day: Box, the storage company, publishes its official command-line tool as `@box/cli` with the command `box`.',
+      '- npm serves `omakase-box@0.1.3`, published 2 November: **before the solver side** (PF24 to PF29), before listed bounties (PF32) and before the plain issue text (PF33).'
+    ];
+    for (const line of productLines) expect(offendingLines(line), line).toHaveLength(0);
+    // A step on the repository still offends, however it is spelled.
+    for (const line of [
+      'post the bounty to `omakase-box`',
+      'merge it on omakase-box',
+      'publish a real bounty against the omakase-box repository',
+      'POST A REAL BOUNTY ON OMAKASE-BOX',
+      'open the issue at `shouteck/omakase-box`',
+      'the solver merges into github.com/shouteck/omakase-box'
+    ]) expect(offendingLines(line), line).toHaveLength(1);
+  });
+
   it('no line added under waves/ since K15 asks for a real post on the working repository', () => {
     const added = addedWaveLines(cutoffCommit());
     const offenders = added.filter(entry => offendingLines(entry.line).length > 0);
