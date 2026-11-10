@@ -1,7 +1,7 @@
 # PF6: ready to launch
 
 Milestone: PF (the platform) · Station: packaging · Base: `master at dispatch` · Branch: `wave/PF6` · Timebox: 240 minutes; at expiry, report partial findings and stop
-Owner decisions: D-2026-10-21-k44-decisions, D-2026-10-31-agent-skill-channel, D-2026-11-01-real-before-launch, D-2026-11-01-agent-only-direction, D-2026-11-01-solver-distributor, D-2026-11-01-film-and-launch-last, D-2026-11-04-solver-distribution-answers
+Owner decisions: D-2026-10-21-k44-decisions, D-2026-10-31-agent-skill-channel, D-2026-11-01-real-before-launch, D-2026-11-01-agent-only-direction, D-2026-11-01-solver-distributor, D-2026-11-01-film-and-launch-last, D-2026-11-04-solver-distribution-answers, D-2026-11-10-k48-answers, D-2026-11-10-found-at-the-moment
 Owner context: D-2026-10-21-k44-decisions (decision 3: lead with the mechanism; decision 5: machine channels first, then one Show HN by the owner); D-2026-10-31-agent-skill-channel (an Agent Skill and a free plugin marketplace repository join the machine channels; D-2026-11-01-agent-only-direction brings Monid and the other toolboxes in; agent wallets stay out, in K46); spend no money. **Going live, publishing to npm, listing in registries, pull requests to other repositories and posting anywhere are the owner's own actions;** this wave prepares them and does none of them.
 Horizon: long: start with `/plan` and keep the plan in this file
 
@@ -88,4 +88,5 @@ The board is already live (PF8). The owner can publish and announce in one sitti
 ## Notes
 
 - Feature playbook; principles: prove-it-works.
+- The skill's one-sentence description is the advertisement an agent sees at the moment of need (owner, 10 November 2026, D-2026-11-10-found-at-the-moment): word it as the moments themselves, and keep item 6's comparison as a script that can be run again when the sentence changes.
 - Do not edit `waves/PF6.md` while a verify runs. Report at the timebox.
