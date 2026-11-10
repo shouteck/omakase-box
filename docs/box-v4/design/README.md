@@ -1,8 +1,6 @@
 # The site's design proposals
 
-**The first pre-design (10 November 2026) was rejected by the owner on 11 November 2026 and is removed.** It redrew pages from scratch and lost things the site already does well. Do not rebuild it from Git history.
-
-What is here now is a second pass, **not yet approved**:
+**What is here is approved** (owner, 11 November 2026) and briefed as [PF40](../../../waves/PF40.md) to [PF43](../../../waves/PF43.md). Earlier drafts were rejected and removed; do not rebuild them from Git history.
 
 - `review.mjs` makes before-and-after pictures from the real pages. "After" is the real page with a small patch applied in the browser, so anything a proposal does not mention is unchanged. Run the local board (`node packages/box-platform/local.mjs`), then `node docs/box-v4/design/review.mjs`. The pictures land in `review/` and are not committed.
 
