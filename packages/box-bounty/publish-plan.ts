@@ -1,8 +1,9 @@
 import { remoteUrl,invalid,type GitHubChoice } from './gh.js';
 import { spawnSync } from 'node:child_process';
-import { lstatSync,mkdtempSync,readFileSync,realpathSync,rmSync } from 'node:fs';
+import { lstatSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { isAbsolute,join,relative,resolve } from 'node:path';
+import { canonicalFolder } from './folder.js';
 import { BountyRefused } from './errors.js';
 import { showPath } from './notice.js';
 import { git,gitBlob,gitFilteredBlob,gitIndexWrite,gitOutcome,gitProgram,gitRefsWrite,ownerGitOutcome } from './git.js';
@@ -193,7 +194,7 @@ function validateIncludes(root: string, names: readonly string[], rules: readonl
   for (const name of names) {
     const absolute = resolve(root, name);
     let real = '';
-    try { real = realpathSync(absolute); } catch { real = ''; }
+    try { real = canonicalFolder(absolute); } catch { real = ''; }
     const offset = real === '' ? '' : toPosix(relative(realRoot, real));
     // The typed name and what it resolves to are both quoted (BT43
     // correction 5): either can be a file name a solver chose.

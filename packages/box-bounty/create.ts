@@ -1,8 +1,9 @@
 import { createHash } from 'node:crypto';
-import { mkdtempSync, readFileSync, realpathSync, rmSync, statSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, isAbsolute, join, relative, resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
+import { canonicalFolder } from './folder.js';
 import { gitOutcome, ownerGitOutcome } from './git.js';
 import { BUILTIN_RULES, publishListed, publishLists, shipRules } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
@@ -88,7 +89,7 @@ function readTextFile(path: string, reason: string, repoRoot: string, rules: rea
   // is refused here exactly as it would be inside the snapshot. Inside the repo
   // the check runs on the canonical repo-relative path (all owner rules apply);
   // outside it only the built-ins apply, judged on the canonical absolute path.
-  const real = realpathSync(absolute);
+  const real = canonicalFolder(absolute); // BT64: the same spelling as repoRoot, or a file inside reads as outside
   const offset = toPosixPath(relative(repoRoot, real));
   const inside = !(offset === '' || offset.startsWith('../') || offset === '..' || isAbsolute(offset));
   const key = (inside ? offset : toPosixPath(real)).toLowerCase();
@@ -123,7 +124,7 @@ export function resolveRepoRoot(repoPath: string, command?: string): string {
     const verb = command !== undefined ? `box bounty ${command}` : 'box bounty';
     throw new BountyRefused('not-a-repository', `${repo} is not inside a Git checkout — ${verb} needs a repository to work in; next: run ${verb} inside a Git checkout`);
   }
-  return realpathSync(top.stdout.trim());
+  return canonicalFolder(top.stdout.trim());
 }
 
 export function planBounty(options: CreateOptions): BountyPlan {

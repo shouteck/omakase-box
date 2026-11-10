@@ -7,8 +7,8 @@
 // folder is C:\Users\RUNNER~1). The snapshot compared long-resolved files
 // against a short root and refused a junction inside as an escape.
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { existsSync, readFileSync, realpathSync, symlinkSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { changePublishList, finalizeBounty, planBounty, settingsFile } from '../../../packages/box-bounty/index.js';
 import type { CreateOptions } from '../../../packages/box-bounty/index.js';
@@ -60,10 +60,19 @@ describe.skipIf(process.platform !== 'win32')('a never-publish entry holds howev
     writeFileSync(file, JSON.stringify({ ...before, publishing }, null, 2));
     expect(ships(repo, 'private/')).toBe(false);
     changePublishList(repo, 'never-publish', 'add', 'other');
-    const forThisFolder = publishingKeys().filter(key => key.toLowerCase() === short.toLowerCase() || dirname(key).toLowerCase() === dirname(repo).toLowerCase());
+    const folder = realpathSync.native(repo).toLowerCase();
+    const forThisFolder = publishingKeys().filter(key => { try { return realpathSync.native(key).toLowerCase() === folder; } catch { return false; } });
     expect(forThisFolder).toHaveLength(1);
     expect(ships(short, 'private/')).toBe(false); // the older entry was carried, not dropped
     expect(ships(short, 'other/')).toBe(false);
+  });
+
+  it('written through a lower-case or a trailing-separator spelling, it holds a create through the plain one', () => {
+    for (const spell of [(path: string) => path.toLowerCase(), (path: string) => `${path}\\`]) {
+      const repo = makeRepo({ 'src/app.py': 'x\n', 'private/notes.txt': 'owner only\n' });
+      changePublishList(spell(repo), 'never-publish', 'add', 'private');
+      expect(ships(repo, 'private/'), spell(repo)).toBe(false);
+    }
   });
 
   it('a junction whose target is spelled short ships under its canonical path, not as an escape', context => {

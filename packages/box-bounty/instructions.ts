@@ -1,7 +1,8 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { existsSync, lstatSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, lstatSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import type { Stats } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { canonicalFolder } from './folder.js';
 import { BountyRefused } from './errors.js';
 import { gitOutcome } from './git.js';
 import { showPath } from './notice.js';
@@ -84,11 +85,11 @@ function onDiskName(dir: string, declared: string, stat: Stats): string {
 }
 
 export function walkProjectPath(repoRoot: string, named: string): ProjectPathWalk {
-  const root = realpathSync(repoRoot);
+  const root = canonicalFolder(repoRoot);
   const path = resolve(root, named);
   const rel = relative(root, path);
   let canonical: string | null = null;
-  try { canonical = realpathSync(path); } catch { /* missing or unresolvable — the walk still reports what it found */ }
+  try { canonical = canonicalFolder(path); } catch { /* missing or unresolvable — the walk still reports what it found */ }
   if (rel === '' || rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel)) {
     return { root, path, rel, problem: { kind: 'outside' }, actual: rel, leaf: undefined, canonical };
   }
@@ -122,7 +123,7 @@ function projectGitDir(root: string): string | null {
     const found = gitOutcome(root, ['rev-parse', '--git-dir']);
     if (found.status === 0 && found.error === undefined) {
       const resolved = resolve(root, found.stdout.trim());
-      try { dir = realpathSync(resolved); } catch { dir = resolved; }
+      try { dir = canonicalFolder(resolved); } catch { dir = resolved; }
     }
   }
   gitDirByRoot.set(root, dir);
