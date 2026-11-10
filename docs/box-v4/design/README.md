@@ -22,7 +22,7 @@ What is here now is a second pass, **not yet approved**:
 - **Every command the site prints says omakase-box.** That follows the tool's rename (BT63), since the pages' commands are checked against the built tool.
 - **How it works does not repeat the three payment cards;** they belong to the front page.
 
-## What is proposed and waits for the owner (fifth pass)
+## Approved on 11 November 2026 (D-2026-11-11-design-approved): to be built
 
 **How it works** (patch `how`, with `mode` choosing which way is open): each half has a small two-part switch beside its heading. Hand off work: With the tool | Without it (three short steps to list an issue). Answer bounties: With the tool | By hand (four short steps). The tool's way is the one thing a person runs and then the agent's panel. One line and a link stand in for payment.
 
