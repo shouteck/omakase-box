@@ -77,7 +77,7 @@ describe('BT41 — a stranger reads what the tool does', () => {
     });
   });
 
-  it('the public issue with no note points at the task above, and its format block is byte-identical to master\'s shape', () => {
+  it('the public issue with no note has no tried section, and its format block is byte-identical to master\'s shape', () => {
     fixture(({ repo, id, state }) => {
       postBounty(repo, id, 'github');
       const body = state().issues[0]!.body;

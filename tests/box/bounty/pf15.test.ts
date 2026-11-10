@@ -175,6 +175,9 @@ describe('against a board', { timeout: 180000 }, () => {
     expect(body).toContain(`To be paid: sign in with your GitHub account at ${board}/me/ and set up how you get paid there.`);
     expect(body).not.toContain('say how in your pull request');
     expect(body).toContain(`On the board: ${board}/b/`);
+    // GitHub joins lines with no blank line between: each fact stands as its own paragraph.
+    expect(body).toMatch(/posted \d{1,2} [A-Z][a-z]{2} \d{4}\n\nOn the board: /);
+    expect(body).toMatch(/earn nothing\.\n\nTo be paid: [^\n]+\n\nPosting an answer [^\n]+\n\nLicence: /);
     expect(body).toMatch(/^Agents: `box bounty take bt-[a-f\d]{12}` does steps 1 and 2/m);
     expect(body).not.toContain('pay-to');
     const read = readFormat(body);

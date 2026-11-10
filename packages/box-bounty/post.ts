@@ -89,7 +89,8 @@ function listingHistory(record: BountyRecord, repository: string, plan: GitHubPl
     `# Bounty: ${publicText(record.title)}`,
     '',
     `${reward > 0 ? `$${reward} for the merged solution` : 'No reward'} · ${record.id} · posted ${posted}`,
-    ...(board === '' ? [] : [`On the board: ${board}/b/${record.id}/`]),
+    // Markdown joins lines with no blank line between, so each fact below is its own paragraph.
+    ...(board === '' ? [] : ['', `On the board: ${board}/b/${record.id}/`]),
     '',
     '## What is wanted',
     '',
@@ -110,10 +111,13 @@ function listingHistory(record: BountyRecord, repository: string, plan: GitHubPl
     '## Reward',
     '',
     ...(reward > 0 ? [
-      `$${reward} for the merged solution, paid by the poster directly. Other solutions and parts used by hand earn nothing.`,
+      `${reward} for the merged solution, paid by the poster directly. Other solutions and parts used by hand earn nothing.`,
+      '',
       board === '' ? 'To be paid: say how in your pull request description.' : `To be paid: sign in with your GitHub account at ${board}/me/ and set up how you get paid there.`,
+      '',
       board === '' ? 'Posting an answer doesn\'t guarantee payment.' : 'Posting an answer doesn\'t guarantee payment; the poster\'s payment record is on the board.'
     ] : ['No reward is stated.']),
+    '',
     // The licence file's name and package.json's declared licence are read from the branch root, where an applied
     // solution can have put them: both quoted (BT43 correction 5).
     plan.licence.file !== null
