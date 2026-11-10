@@ -1,10 +1,10 @@
 # Status
 
-Updated by the CTO on 10 November 2026, at the K50 kickoff.
+Updated by the CTO on 10 November 2026, when K57 (the sandbox guard tells the product's name from the repository) closed.
 
 ## Now
 
-- **Master's hosted run is red** since the K48 brief (run 42743732293 onwards; latest 42750108726), on kitchen documents only: STATUS.md was over its 60-line limit (fixed by this replacement), a K48 question read as asking for a real post on the working repository (the owner's answer is now recorded beside it), and the sandbox guard (`tests/kitchen/k15-sandbox-guard.test.ts`) now reads the product's name, `omakase-box`, as the repository `shouteck/omakase-box`. The guard's fix is [K57](waves/K57.md): it comes before K50 and **awaits the owner's go**.
+- **K57 is merged:** master's hosted run was red from the K48 brief (runs 42743732293 to 42750108726), on kitchen documents only. STATUS.md's length and K48's unanswered question were fixed at kickoff; the sandbox guard now reads `omakase-box` alone as the product and `shouteck/omakase-box` or "on omakase-box" as the repository. **Read the hosted run on the merge at the next kickoff;** it should be green. See [K57](waves/K57.md).
 
 - **One name and one command (owner, 10 November 2026):** the product is omakase-box, on the site, the package and the tool; the command becomes `omakase-box` and drops "bounty", because Box's official tool already owns the command `box` ([BT63](waves/BT63.md), **awaits the owner's go**; in the first release, immediately before BT53; `box bounty` kept for one release).
 
@@ -36,7 +36,7 @@ Updated by the CTO on 10 November 2026, at the K50 kickoff.
 
 ## Next
 
-- **Order (owner, 10 November 2026; each wave still on the owner's go):** K57 (master green) first, then K50 (it makes the rest faster), then BT54, BT56, BT58 and BT60, then BT63, BT53 and the owner's npm publish; BT55, BT57, PF34 to PF38 and K51 any time (BT57 best before the publish); BT59 and BT61 after the publish; K52 before PF6; PF39, K54 and BT62 any time. Design order: PF40, PF41 (before PF39), PF42 (before PF35), PF43 (before K41). Then **PF6** (the listings for both sides), **K41** (the film, last), then the owner's launch. PF23 is deferred.
+- **Order (owner, 10 November 2026; each wave still on the owner's go):** K50 next (it makes the rest faster), then BT54, BT56, BT58 and BT60, then BT63, BT53 and the owner's npm publish; BT55, BT57, PF34 to PF38 and K51 any time (BT57 best before the publish); BT59 and BT61 after the publish; K52 before PF6; PF39, K54 and BT62 any time. Design order: PF40, PF41 (before PF39), PF42 (before PF35), PF43 (before K41). Then **PF6** (the listings for both sides), **K41** (the film, last), then the owner's launch. PF23 is deferred.
 - **The next tool release:** the guide gains the PowerShell line (`npx.cmd`, `box.cmd`); a new version goes to npm by the owner, and to GitHub by a `v*` tag.
 - Unbriefed (BACKLOG): `rmSync` and non-ASCII names on Windows (BT48); solvers' account age (PF4); a private organisation member counts as an outside solver, a squash-merged head reads as off the default branch (PF8); PF18's leftovers; fewer words, more showing, across the site.
 - **Direction:** agents run the common case; installing is the only required human step. The platform may start a charge but never holds money; no reminders. Site looks need before-and-after screenshots and the owner's approval.
