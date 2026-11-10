@@ -1,0 +1,40 @@
+<!doctype html>
+<!-- PF42 pre-design: the numbers page. Switches: ?n=0 (nothing to count yet, the launch state) or ?n=1 (sample figures), ?theme=dark -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Numbers · omakase-box (mock-up)</title><link rel="stylesheet" href="mock.css"></head>
+<body>
+<main class="wrap">
+  <header class="page-head">
+    <div><h1>Numbers</h1><p>The board as a whole, from what it has read from GitHub and what people recorded on it. Facts, not a rating of anyone.</p></div>
+    <a class="one-link" href="#">numbers.json ›</a>
+  </header>
+  <div id="content"></div>
+</main>
+<script src="mock.js"></script>
+<script>
+frame('');
+const DEFS = [
+  ['Open bounties', 'Bounties on public repositories the board lists now.'],
+  ['Rewards on open bounties', 'The sum of what each open bounty states.'],
+  ['Pays on merge', 'Open bounties whose owner saved a card and approved the reward.'],
+  ['No attempt yet', 'Open bounties with no pull request by anyone else.'],
+  ['Merged with a reward', 'Recorded paid is the owner\'s word, or the provider\'s; received is the solver\'s.'],
+  ['Owed now', 'Merged, not yet recorded paid, with the age of the oldest.'],
+  ['Solvers', 'GitHub accounts with a pull request on any listed bounty.'],
+  ['Days to a decision', 'Median days from posting to a merge or a close.']
+];
+const defs = `<dl class="deflist">${DEFS.map(([t, d]) => `<div><dt>${t}</dt><dd>${d}</dd></div>`).join('')}</dl>`;
+document.getElementById('content').innerHTML = q.get('n') === '1'
+  ? `<div class="figures">
+      <div class="figure"><p class="n num">214</p><p class="what">open bounties</p><p class="base">of 512 listed since the board opened</p></div>
+      <div class="figure"><p class="n num">$18,460</p><p class="what">in rewards on open bounties</p><p class="base">$7,900 of it pays on merge, across 88 bounties</p></div>
+      <div class="figure"><p class="n num">61</p><p class="what">open with no attempt yet</p><p class="base">$5,240 in rewards</p></div>
+      <div class="figure"><p class="n num">143</p><p class="what">merged with a reward</p><p class="base">139 recorded paid · 121 confirmed received · 1 said not received</p></div>
+      <div class="figure"><p class="n num">4</p><p class="what">owed now</p><p class="base">$310; the oldest for 6 days</p></div>
+      <div class="figure"><p class="n num">3</p><p class="what">days to a decision, median</p><p class="base">over 298 bounties decided · 97 solvers</p></div>
+    </div>
+    <h2 style="font-size:1.25rem;font-weight:500;margin-top:4rem">What each number counts</h2>${defs}`
+  : `<div class="nothing"><h2>Nothing to count yet.</h2><p>The board lists no bounties so far. Each number below appears here as soon as there is something to count. Read from GitHub at 04:15 UTC, 10 Nov 2026.</p></div>
+     <h2 style="font-size:1.25rem;font-weight:500;margin-top:3.5rem">What will be counted</h2>${defs}`;
+</script>
+</body></html>

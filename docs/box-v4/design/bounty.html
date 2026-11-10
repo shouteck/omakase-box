@@ -1,0 +1,64 @@
+<!doctype html>
+<!-- PF41 pre-design: a bounty's page. Switches: ?kind=listed (a bounty listed from an existing issue), ?theme=dark -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recurring transactions skip the 31st · omakase-box (mock-up)</title><link rel="stylesheet" href="mock.css"></head>
+<body>
+<main class="wrap">
+  <p class="crumb"><a href="board.html">Board</a> / bt-4f2a91c07d3e</p>
+  <div class="bounty" style="margin-top:1.25rem">
+    <div>
+      <h1>Recurring transactions skip the 31st</h1>
+      <p class="soft" style="margin-top:.75rem">Open. Two attempts in progress. <span class="sm" id="words">The title is the poster's own words.</span></p>
+
+      <section class="block" style="margin-top:2rem"><h2>The task</h2>
+        <div class="theirs"><p class="who" id="who">The poster's words (example-org), from the GitHub issue</p>
+          <p>A transaction set to repeat monthly on the 31st is skipped in months with 30 days, and in February. It should fall on the last day of the month instead.</p>
+          <p style="margin-top:.75rem">What was tried: clamping the day in <code>nextRun()</code> fixes April but moves every later run to the 30th for good. The stored anchor day must not change.</p></div>
+      </section>
+
+      <section class="block"><h2>How to answer</h2>
+        <ol class="steps" id="steps"></ol>
+      </section>
+
+      <section class="block"><h2>Attempts</h2>
+        <ul class="rows">
+          <li><span><a href="#">Pull request #61</a> by example-fern</span><span class="soft">draft, in progress</span></li>
+          <li><span><a href="#">Pull request #62</a> by example-quill</span><span class="soft">ready for review</span></li>
+        </ul>
+        <p class="sm soft" style="margin-top:.75rem">The board lists them; it does not judge or rank them.</p>
+      </section>
+    </div>
+
+    <aside class="pay" aria-label="Reward and payment">
+      <p class="sm soft">Reward</p>
+      <p class="reward num">$45</p>
+      <p class="facts" style="margin-top:.5rem;display:flex;gap:.4rem;flex-wrap:wrap;font-size:.8125rem"><span class="tag ok">Pays on merge</span></p>
+      <dl>
+        <div><dt>How it pays</dt><dd id="pays">Charged to the owner's saved card when one solution is merged. Straight to the solver's own account.</dd></div>
+        <div><dt>Terms</dt><dd id="terms">The merged solution earns the whole reward.</dd></div>
+        <div><dt>The owner's record</dt><dd>4 merged · 4 paid · 3 confirmed received</dd></div>
+        <div><dt>Repository</dt><dd>example-org/ledger · TypeScript</dd></div>
+        <div><dt>Read from GitHub</dt><dd>10 Nov 2026, 04:15 UTC</dd></div>
+      </dl>
+      <p style="margin-top:1rem"><a href="#" style="font-weight:500">View the issue on GitHub ›</a></p>
+    </aside>
+  </div>
+</main>
+<script src="mock.js"></script>
+<script>
+frame('board');
+const listed = q.get('kind') === 'listed';
+document.getElementById('steps').innerHTML = listed
+  ? `<li><div>Fork example-org/ledger and work from its default branch, <code>main</code>.</div></li>
+     <li><div>Open a pull request against <code>main</code> whose description says:<div class="cmd"><code>Fixes #48</code><span class="copy">Copy</span></div></div></li>
+     <li><div>The board links it to this bounty. The owner chooses whom to pay.</div></li>`
+  : `<li><div>With the tool, one command gives you a working copy and opens a draft others can see:<div class="cmd"><code>omakase-box take bt-4f2a91c07d3e</code><span class="copy">Copy</span></div></div></li>
+     <li><div>Or by hand: fork example-org/ledger and branch from<div class="cmd"><code>box-bounty/bt-4f2a91c07d3e</code><span class="copy">Copy</span></div></div></li>
+     <li><div>Open a pull request against that branch, not against <code>main</code>.</div></li>`;
+if (listed) {
+  document.getElementById('words').textContent = "The title is the issue's own words (example-fern).";
+  document.getElementById('who').textContent = "The issue's words (example-fern), from the GitHub issue";
+  document.getElementById('terms').textContent = 'The owner chooses whom to pay, from every pull request linked to the issue. One is paid.';
+}
+</script>
+</body></html>

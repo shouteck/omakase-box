@@ -1,0 +1,28 @@
+<!doctype html>
+<!-- PF40 pre-design: three candidate marks, each one colour, shown large, in the navigation, in a browser tab at 16 pixels, and on a dark ground. -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Marks · omakase-box (mock-up)</title><link rel="stylesheet" href="mock.css"></head>
+<body>
+<main class="wrap sheet">
+  <h1 style="font-size:2.5rem;line-height:2.875rem;font-weight:500;letter-spacing:-.03em">Three candidate marks</h1>
+  <p class="soft" style="margin-top:.75rem;max-width:40rem">Each is drawn in one colour from straight lines, so it holds at 16 pixels. The owner picks one, or asks for more.</p>
+  <h2>The candidates</h2>
+  <div class="marks" id="marks"></div>
+</main>
+<script src="mock.js"></script>
+<script>
+document.body.insertAdjacentHTML('afterbegin', '<p class="mock-note">Pre-design mock-up, not the live site.</p>');
+const WHY = {
+  a: ['A · Handed in', 'Something set down into an open box. The most literal of the three: a task goes in.'],
+  b: ['B · Passed on', 'One piece of work moving from one holder to the next. Reads as a hand-off between two parties.'],
+  c: ['C · One corner open', 'A box with one corner left open and the piece that went out. The quietest; closest to a plain square.']
+};
+const tiny = svg => svg.replace('<svg ', '<svg style="width:16px;height:16px" ');
+const mid = svg => svg.replace('<svg ', '<svg style="width:20px;height:20px" ');
+document.getElementById('marks').innerHTML = Object.entries(MARKS).map(([key, svg]) => `<div class="markcard">
+  <div class="big">${svg}</div>
+  <div class="strip"><span class="brand" style="margin:0">${mid(svg)}<span>omakase-box</span></span><span class="tab">${tiny(svg)} omakase-box</span></div>
+  <div class="strip dark"><span class="brand" style="margin:0;color:inherit">${mid(svg)}<span>omakase-box</span></span><span class="tab" style="border-color:#31312d">${tiny(svg)} omakase-box</span></div>
+  <p><b style="color:var(--ink);font-weight:500">${WHY[key][0]}.</b> ${WHY[key][1]}</p></div>`).join('');
+</script>
+</body></html>
