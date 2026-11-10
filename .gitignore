@@ -26,5 +26,5 @@ packages/box-platform/.wrangler/
 packages/box-platform/dist/
 packages/box-platform/next-env.d.ts
 
-# Pre-design screenshots: remade by node docs/box-v4/design/shoot.mjs
-docs/box-v4/design/shots/
+# Design review pictures: remade by node docs/box-v4/design/review.mjs
+docs/box-v4/design/review/
