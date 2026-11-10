@@ -1,8 +1,10 @@
 # Status
 
-Updated by the CTO on 10 November 2026, when PF32 merged.
+Updated by the CTO on 10 November 2026, when PF33 merged.
 
 ## Now
+
+- **PF33 is merged, not deployed:** the posted issue reads plainly (reward and date first, a link to the board, three steps to answer, a Reward section, one fact per paragraph) and says "sign in with your GitHub account at the board and set up how you get paid there"; the board reads tasks with or without a note, and its feed says the same line. The board part deploys on the owner's word; the CLI part reaches users with the next npm release. See [PF33](waves/PF33.md).
 
 - **PF32 is live** (Worker `463a3ac0`, migration first; `exceededCpu` 0 before and after): an owner lists an existing GitHub issue from the board (two fields); the human way is never owed, the owner chooses whom to pay from every linked pull request; real-run-verified against the sandbox, which found and fixed discover leaving listed bounties out. See [PF32](waves/PF32.md).
 - **PF31c is live** (Worker `ffce3e4d`; `exceededCpu` 0 before and after): the Solver tab has "Your solutions", every bounty the solver answered in its stage (In progress, Payment due, Paid, Not merged), built on the owner's list. See [PF31c](waves/PF31c.md).
@@ -46,7 +48,7 @@ Updated by the CTO on 10 November 2026, when PF32 merged.
 ## Next
 
 - **PF23 (needs) is deferred** (owner, 3 November 2026): the task text says what it needs; back if real bounties show the need.
-- **Order:** **PF33** (one plain line on how a solver gets paid, briefed), **PF6** (ready to launch; the listings for both sides, PF12b folded in), **K41** (the film, last), then the owner's launch.
+- **Order:** **PF6** (ready to launch; the listings for both sides, PF12b folded in), **K41** (the film, last), then the owner's launch.
 - **The next tool release:** the guide inside the package gains the PowerShell line (`npx.cmd`, `box.cmd`); a new version goes to npm by the owner, and to GitHub by a `v*` tag.
 - **A wave for later, not briefed:** fewer words, more showing, across the site, before PF9.
 - Unbriefed (BACKLOG): `rmSync` and non-ASCII names on Windows (BT48); the dependency audit (PF1); landed but not marked merged, solvers' account age (PF4); a private organisation member counts as an outside solver, a squash-merged head reads as off the default branch (PF8); PF18's leftovers.
