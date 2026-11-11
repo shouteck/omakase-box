@@ -3,6 +3,7 @@
 // never edited: the bounty is the board's record that its owner put a reward on it.
 import { type Env, GitHub, GitHubUnavailable, BudgetSpent } from './github.js';
 import { readRepository, unlisted } from './refresh.js';
+import { MINIMUM_REWARD_USD } from '../../box-bounty/format.js';
 import { removeBounty } from './store.js';
 
 export type Lister = { github_id: number; login: string };
@@ -41,7 +42,7 @@ async function mayList(env: Env, lister: Lister, repository: string, issue: Reco
 export async function listIssue(env: Env, lister: Lister, address: unknown, reward: unknown, now: number, token?: string): Promise<Listing> {
   const found = typeof address === 'string' ? ISSUE.exec(address.trim()) : null;
   if (found === null) return refuse(400, `That is not a GitHub issue's address. ${nothing} Next: paste it as https://github.com/owner/repository/issues/12.`);
-  if (typeof reward !== 'number' || !Number.isSafeInteger(reward) || reward < 1 || reward > REWARD_MAX) return refuse(400, `The reward must be whole US dollars from 1 to ${REWARD_MAX}. ${nothing} Next: type the amount.`);
+  if (typeof reward !== 'number' || !Number.isSafeInteger(reward) || reward < MINIMUM_REWARD_USD || reward > REWARD_MAX) return refuse(400, `The reward must be whole US dollars from ${MINIMUM_REWARD_USD} to ${REWARD_MAX}. ${nothing} Next: type the amount.`);
   const repository = found[1]!;
   const number = Number(found[2]);
   if (unlisted(env, repository)) return refuse(409, `This board does not list ${repository}. ${nothing}`);

@@ -32,6 +32,12 @@ stating a reward above $0 carries one more member, `payment`:
 link. Bounties stating $0 keep version 2. A version 3 block always carries
 `payment`, so its key set is larger than version 2's — nothing else differs.
 
+**Since BT60 (10 November 2026):** the tool posts no bounty stating less than
+1, and the board lists none (`MINIMUM_REWARD_USD` in `format.ts` is the one
+number both read). A reader may still meet a block stating 0 in an issue an
+older release or another tool wrote: it is read as the fact it states, and
+never listed.
+
 | Field | Meaning |
 |---|---|
 | `schemaVersion`, `kind` | Version `1`, `2` or `3`, format name `box-bounty`. |

@@ -64,10 +64,15 @@ solver in a file, then:
 
 `--preview` shows exactly what becomes public: the issue text, the branch, and
 any of your commits that were not already on GitHub. Posting needs the owner's
-one-time permission; if it is missing, `post` waits and prints the line to put
-to them — for a repository they own the answer is:
+one-time permission and a reward the owner sets: a bounty is not posted without
+one (at least $1, in whole dollars; the owner names the amount, never the tool
+or the agent). If either is missing, `post` says so and prints the line to put
+to the owner — for a repository they own the answer is:
 
-    omakase-box allow owner/project
+    omakase-box allow owner/project --reward <whole dollars> --reward-limit <whole dollars>
+
+The reward is what each bounty states, a promise in the owner's name; the limit
+is the most that may be promised across the repository's open bounties at once.
 
 Then `omakase-box post <id>` posts the issue and pushes the branch. Solutions
 arrive as pull requests: `omakase-box status` lists them, `omakase-box look <id>

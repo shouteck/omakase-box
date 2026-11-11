@@ -66,7 +66,7 @@ export type { NeverShipRule, PublishLists } from './never-ship.js';
 export { applicableAttempts, attemptRefName, attemptsOf, canonicalForNew, endedCount, endedRecords, isOpenStage, listRecords, loadRecord, noticeMergedOnce, openRecords, persistRecord, recordDir, recordPath, refName, requireCurrentDelivery, retiredRoute, trackedRecordFiles, transitionTo, writeNewRecord } from './record.js';
 export { anyJsonContaining, closeStores, countCorrupt, corruptFiles, dropStored, endedContaining, forgetFileSha, listEndedRecent, listOpen, recordExists, recordIds, readStored, searchRecords, seedStored, storeDbPath, storedIds, storedRaw } from './store.js';
 export { ownerGate, waitForOwner } from './gate.js';
-export { assertPromiseRoom, promisedTotal, rewardForPost, withPromiseLock } from './money.js';
+export { assertMinimumReward, assertPromiseRoom, promisedTotal, rewardForPost, withPromiseLock } from './money.js';
 export { waitingSummary } from './owner-text.js';
 export { ENDED_OVERVIEW_LIMIT, renderHelp, renderOpenLine, renderResume, renderOverview, setInstructionNoticeListener } from './render.js';
 export { firstUseBlock, mergeWaitLines, ownerBlock, ownerWaitLines } from './owner-text.js';

@@ -268,7 +268,7 @@ function rewardStatusLine(repoRoot: string, open: readonly BountyRecord[], full:
   const { amount, limit } = repoReward(repoRoot);
   const promised = promisedTotal(open);
   if (!full && amount === 0 && promised === 0 && limit === null) return null;
-  const stated = amount === 0 ? 'each new bounty states $0' : `each new bounty states $${amount}`;
+  const stated = amount === 0 ? 'no reward is set: a bounty is not posted without one' : `each new bounty states $${amount}`;
   const counted = limit === null ? `open bounties here promise $${promised}` : `open bounties here promise $${promised} of a $${limit} limit — ${promised <= limit ? `$${limit - promised} left` : `$${promised - limit} over`}`;
   const once = !full && amount > 0 && saidOnce(repoRoot, 'reward-is-a-promise')
     ? " — a promise in the owner's name, which they pay; the owner sets it in omakase-box config"
@@ -633,7 +633,7 @@ export function renderHelp(): string {
   return [
     'omakase-box — hand off work you cannot or should not do: packaged safely, remembered in the project, returned as facts.',
     'GitHub posting is free and public, only to this project\'s already-public repository. Nobody is known to be watching these issues.',
-    'the owner allows the tool once — a decision kept in the owner\'s own settings outside the repository. Those settings stop accidents and record changes; they are not a lock against an agent that deliberately changes them. Until then the first post waits and prints the few lines to put to them. post <id> --preview shows exactly what becomes public — the commit already there, unpushed commits, and only the uncommitted work you ask for (--with-changes, --include <file>). status reads the pull requests waiting; look <id> <n> collects one and shows its change, read from fetched objects — nothing is checked out, nothing is left behind. Every bounty states the reward the owner set for its repository — $0 until the owner sets one in omakase-box config.',
+    'the owner allows the tool once — a decision kept in the owner\'s own settings outside the repository. Those settings stop accidents and record changes; they are not a lock against an agent that deliberately changes them. Until then the first post waits and prints the few lines to put to them. post <id> --preview shows exactly what becomes public — the commit already there, unpushed commits, and only the uncommitted work you ask for (--with-changes, --include <file>). status reads the pull requests waiting; look <id> <n> collects one and shows its change, read from fetched objects — nothing is checked out, nothing is left behind. Every bounty states the reward the owner set for its repository; with none set, nothing is posted.',
     '',
     'the journey (what each command does → the stage it leaves):',
     '  create    save the task and private context and snapshot the working state → drafted',
@@ -657,6 +657,7 @@ export function renderHelp(): string {
     'nothing a solver wrote is ever run — checks were removed on 11 October 2026: a solution arrives as a',
     'numbered attempt, the report states facts about the change, and apply/close is always your call.',
     '',
+    'a bounty is not posted without a reward, which the owner sets (at least $1, whole dollars). Setting BOX_BOUNTY_ALLOW_ZERO_FOR_TESTING=1 posts without one — for testing the tool; such a bounty is never listed.',
     boardAddress() === '' ? 'three ways to pay a reward: by hand, one click, on merge.' : `three ways to pay a reward: by hand, one click, on merge. See ${boardAddress()}/how/`,
     '',
     'what ends a bounty: apply, or close — or a solution merged onto the bounty\'s branch with your own',

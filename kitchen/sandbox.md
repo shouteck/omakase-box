@@ -43,5 +43,7 @@ file by exact name — issues, pull requests, branches — the way BT10's Result
 does. The local clone stays; it is the kitchen's standing fixture, not
 per-wave state.
 
+Since BT60 no bounty is posted without a reward, and the sandbox's bounties stay at $0 (one account: a stated reward would be a promise nobody means). They are posted with the testing allowance: `BOX_BOUNTY_ALLOW_ZERO_FOR_TESTING=1` in the environment of the command that posts. A bounty posted that way is never listed on the live board. Without the variable the same post is refused.
+
 A fresh-agent proof that needs a merged solution at $0 gives the trial word
 up front: an agent told it needs income rightly declines $0 work (PF27).

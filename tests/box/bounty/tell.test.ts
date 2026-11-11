@@ -25,7 +25,7 @@ it('describe retains the BT4 choice sentences and supplies facts with no history
   expect(result.stdout).toContain('not worth it when: you can plainly do the work');
   expect(result.stdout).toContain('create a draft any time');
   expect(result.stdout).toContain('public and free');
-  expect(result.stdout).toContain('reward of $0');
+  expect(result.stdout).toContain('no reward is set');
   expect(result.stdout).toContain('no bounty history yet');
 });
 

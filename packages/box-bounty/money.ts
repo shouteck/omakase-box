@@ -8,7 +8,7 @@
 import { mkdirSync, rmSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { BountyRefused } from './errors.js';
-import { boundAmount } from './format.js';
+import { boundAmount, MINIMUM_REWARD_USD } from './format.js';
 import { openRecords } from './record.js';
 import type { BountyRecord } from './record.js';
 import { repoReward } from './settings.js';
@@ -32,8 +32,18 @@ export function promisedTotal(open: readonly BountyRecord[]): number {
 // refusal also covers a hand-edited settings file: the shape is checked on
 // load, but reward>limit is a rule about the pair on one entry, enforced
 // where it is written and again where it is spent.
+// BT60: no bounty is posted without a reward. This is the one place the testing allowance is read: the kitchen's sandbox
+// has one account, so a stated reward there would be a promise nobody means. A bounty posted under it is never listed (the
+// board has its own rule), and the allowance is stated in `help` as exactly that. The tool never suggests an amount: the
+// minimum is a rule, and what to set is the owner's word.
+export function assertMinimumReward(amount: number): void {
+  if (amount >= MINIMUM_REWARD_USD || process.env['BOX_BOUNTY_ALLOW_ZERO_FOR_TESTING'] === '1') return;
+  throw new BountyRefused('reward-required', `a bounty is not posted without a reward: this repository has none set (the least is ${MINIMUM_REWARD_USD}, in whole dollars); nothing was posted; next: the owner sets one with omakase-box allow --reward <whole dollars> --reward-limit <whole dollars>`);
+}
+
 export function rewardForPost(repoRoot: string): { readonly amount: number } {
   const { amount } = repoReward(repoRoot);
+  assertMinimumReward(amount);
   assertPromiseRoom(repoRoot, amount);
   return { amount };
 }

@@ -112,7 +112,7 @@ export default function Page() {
           </More>
           <More title="Who decides what">
             <p>You answer once, when your agent asks: this repository, the reward and the limit. After that it can post without asking you, within what you set. Tell it you want to be asked, and it asks you before each post and each merge.</p>
-            <p>The reward is what each bounty states, and the limit is the most promised across its open bounties, both in whole dollars. Without them every bounty states $0.</p>
+            <p>The reward is what each bounty states, and the limit is the most promised across its open bounties, both in whole dollars. Without them nothing is posted.</p>
             <p>The choice of solution is your agent&apos;s; the tool never judges one. Nothing a solver wrote is run.</p>
           </More>
           <More title="How payment works">

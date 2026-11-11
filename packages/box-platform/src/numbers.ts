@@ -52,7 +52,7 @@ export async function numbersOf(env: Env) {
       stated_on_open_bounties_usd: rewarded.reduce((sum, row) => sum + row.amount, 0),
       pays_on_merge: { bounties: paying.size, usd: rewarded.filter(row => paying.has(row.id)).reduce((sum, row) => sum + row.amount, 0) },
       no_attempt_yet: { bounties: rewarded.filter(row => row.attempts === 0).length, usd: rewarded.filter(row => row.attempts === 0).reduce((sum, row) => sum + row.amount, 0) },
-      base: 'open bounties with a reward above $0. pays_on_merge: the owner turned it on and approved this reward, with a saved card. no_attempt_yet: no open pull request'
+      base: 'open bounties (each states a reward). pays_on_merge: the owner turned it on and approved this reward, with a saved card. no_attempt_yet: no open pull request'
     },
     payments: {
       merged_with_reward: counted.length,

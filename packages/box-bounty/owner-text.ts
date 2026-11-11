@@ -37,7 +37,7 @@ export function firstUseBlock(repoRoot: string): string[] {
     'A bounty asks people outside the project to fix something, and it is posted publicly on GitHub.',
     'It is posted under your GitHub account. Your answer covers this repository only.',
     'A solution your agent chooses is merged into your code.',
-    `Each bounty states what it pays — ${amount === 0 ? '$0 unless you set an amount, so nothing is promised now' : `$${amount}, a promise in your name that you pay`}.`,
+    `Each bounty states what it pays — ${amount === 0 ? 'no reward is set, and a bounty is not posted without one' : `$${amount}, a promise in your name that you pay`}.`,
     'You can allow this, or you can ask to be asked each time.',
     'If you allow it, you will not be asked before a post or a merge.',
     'If you ask each time, you will be asked before each post and before each merge.',

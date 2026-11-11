@@ -109,7 +109,7 @@ export const WITHHELD = '(withheld — the scan flagged it; see the hit above)';
 // The money side of `describe`, generated from the owner's setting (BT11a) —
 // the amount is never hard-coded, so the text cannot outlive what is set.
 export const describeRewardLine = (amount: number): string => amount === 0
-  ? 'Every bounty states a reward of $0 — nothing promised.'
+  ? 'No reward is set: a bounty is not posted without one.'
   : `Every bounty states a reward of $${amount} — a promise in the owner's name; posting an answer does not guarantee it. There are three ways to pay it: by hand, one click and on merge (omakase-box help).`;
 
 // The name the published package answers to — provisional until the owner's

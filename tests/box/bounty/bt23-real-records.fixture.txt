@@ -2,7 +2,7 @@
 bt-22f3b1723a38 current GitHub format read unavailable at <ts>; cached last comparison matches-record at <ts>; local record governs
 bt-22f3b1723a38 GitHub format update: updated
 owner: nothing written — the first post will wait for the owner
-reward: each new bounty states $0; open bounties here promise $0
+reward: no reward is set: a bounty is not posted without one; open bounties here promise $0
 omakase-box status — no open bounties in <repo>
 ended: bt-22f3b1723a38 applied — scan finding recorded (job: job.txt)
   Saved job context (bt-22f3b1723a38) — where the work stood when the bounty was created
@@ -70,7 +70,7 @@ ended: bt-22f3b1723a38 applied — scan finding recorded (job: job.txt)
 bt-26bb9883d6b2 current GitHub format read unavailable at <ts>; cached last comparison matches-record at <ts>; local record governs
 bt-26bb9883d6b2 GitHub format update: updated
 owner: nothing written — the first post will wait for the owner
-reward: each new bounty states $0; open bounties here promise $0
+reward: no reward is set: a bounty is not posted without one; open bounties here promise $0
 omakase-box status — no open bounties in <repo>
 ended: bt-26bb9883d6b2 rejected — scan finding recorded (job: Clarify the unresolved BT9 real-host hook evidence in BACKLOG)
   Saved job context (bt-26bb9883d6b2) — where the work stood when the bounty was created
@@ -121,7 +121,7 @@ ended: bt-26bb9883d6b2 rejected — scan finding recorded (job: Clarify the unre
 == bt-4ad668353616 ==
 bt-4ad668353616 current GitHub format read unavailable at <ts>; cached last comparison not read at time not recorded; local record governs
 owner: nothing written — the first post will wait for the owner
-reward: each new bounty states $0; open bounties here promise $0
+reward: no reward is set: a bounty is not posted without one; open bounties here promise $0
 omakase-box status — no open bounties in <repo>
 ended: bt-4ad668353616 undone (job: Quote solver-supplied paths in the fact report)
   Return to your job
@@ -143,7 +143,7 @@ ended: bt-4ad668353616 undone (job: Quote solver-supplied paths in the fact repo
 == bt-6b7b1d15d8f0 ==
 bt-6b7b1d15d8f0 current GitHub format read unavailable at <ts>; cached last comparison not read at time not recorded; local record governs
 owner: nothing written — the first post will wait for the owner
-reward: each new bounty states $0; open bounties here promise $0
+reward: no reward is set: a bounty is not posted without one; open bounties here promise $0
 omakase-box status — no open bounties in <repo>
 ended: bt-6b7b1d15d8f0 applied (job: Explain how to bootstrap a cold copy of this repository)
   Return to your job
@@ -163,7 +163,7 @@ ended: bt-6b7b1d15d8f0 applied (job: Explain how to bootstrap a cold copy of thi
     nothing in the solution was run and this report says nothing about whether it works
 == bt-e197a6998847 ==
 owner: nothing written — the first post will wait for the owner
-reward: each new bounty states $0; open bounties here promise $0
+reward: no reward is set: a bounty is not posted without one; open bounties here promise $0
 omakase-box status — no open bounties in <repo>
 ended: bt-e197a6998847 applied (job: # Fix the dangling rendering of an empty `allowedDestinations` list)
   Return to your job

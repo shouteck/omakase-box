@@ -83,7 +83,7 @@ describe('BT11c — each repository carries its own reward and limit', () => {
     allowRepository(repo);
     expect(repoReward(repo)).toEqual({ amount: 0, limit: null });
     const free = cli(repo, ['bounty', 'allow']);
-    expect(free.stdout).toContain('states $0 — no payment is promised');
+    expect(free.stdout).toContain('a bounty is not posted without one');
   });
 
   it('one repository\'s reward and limit never reach another', () => {
@@ -104,7 +104,7 @@ describe('BT11c — each repository carries its own reward and limit', () => {
     // Compact status stays silent on a bare $0 (BT17); the full view states
     // it, and neither surface ever names A's $10 on B.
     expect(statusGitHub(repoB)).not.toContain('$10');
-    expect(statusGitHub(repoB, { full: true })).toContain('each new bounty states $0');
+    expect(statusGitHub(repoB, { full: true })).toContain('no reward is set: a bounty is not posted without one');
     expect(statusGitHub(repoA)).toContain('each new bounty states $10');
   });
 
@@ -148,7 +148,7 @@ describe('BT11c — each repository carries its own reward and limit', () => {
     expect(bare).toContain('open bounties here promise $0; no limit set');
     // The money explanations are the long form's (BT14).
     const bareFull = renderConfig(repo, { full: true });
-    expect(bareFull).toContain('a repository with no reward written states $0');
+    expect(bareFull).toContain('a repository with no reward written has none set');
     expect(bareFull).toContain('omakase-box config set reward <whole dollars>');
     expect(bareFull).toContain('omakase-box config set reward-limit <whole dollars>');
     changeConfig(repo, 'set', 'reward-limit', '20');
@@ -182,7 +182,7 @@ describe('BT11c — the setting written before this wave applies to nothing', ()
     expect(repoReward(repo)).toEqual({ amount: 0, limit: null }); // applied to nothing
     const first = renderConfig(repo);
     expect(first).toContain('a shared reward of $5 and a $50 limit');
-    expect(first).toContain('states $0 until you set its own');
+    expect(first).toContain('has no reward until you set its own');
     expect(first).toContain('omakase-box config set reward <whole dollars>');
     expect(renderConfig(repo)).not.toContain('a shared reward of $5'); // told once ever
     const migrated = JSON.parse(readFileSync(settingsFile(), 'utf8'));
@@ -267,7 +267,7 @@ describe('BT11a — posting binds the amount in force', () => {
     // A bare $0 with nothing promised is silent in the compact view (BT17);
     // the full view always states it.
     expect(statusGitHub(repo)).not.toContain('reward:');
-    expect(statusGitHub(repo, { full: true })).toContain('each new bounty states $0');
+    expect(statusGitHub(repo, { full: true })).toContain('no reward is set: a bounty is not posted without one');
     changeConfig(repo, 'set', 'reward-limit', '30');
     changeConfig(repo, 'set', 'reward', '10');
     postToGitHub(repo, id);
@@ -350,7 +350,7 @@ describe('BT11a — the public side and the words around it', () => {
   it('describe generates its money sentence from the setting', () => {
     const repo = makeRepo({ 'TASK.md': 'task\n' });
     ownerSays(repo, 'allowed');
-    expect(renderDescribe(repo)).toContain('a reward of $0 — nothing promised');
+    expect(renderDescribe(repo)).toContain('No reward is set: a bounty is not posted without one');
     changeConfig(repo, 'set', 'reward-limit', '40');
     changeConfig(repo, 'set', 'reward', '7');
     const text = renderDescribe(repo);
@@ -365,7 +365,7 @@ describe('BT11a — the public side and the words around it', () => {
     const run = cli(repo, ['bounty', 'post', id]);
     expect(run.status).toBe(0); // a held post prints the owner lines and exits 0
     expect(run.stdout).toContain('waiting for the owner');
-    expect(run.stdout).toContain('Each bounty states what it pays — $0 unless you set an amount, so nothing is promised now.');
+    expect(run.stdout).toContain('Each bounty states what it pays — no reward is set, and a bounty is not posted without one.');
     expect(run.stdout).toContain('allow this repository: omakase-box allow');
   });
 
@@ -389,7 +389,7 @@ describe('BT11a — the public side and the words around it', () => {
     git(repo, ['remote', 'add', 'origin', 'https://github.com/owner/thing.git']);
     const run = cli(repo, ['bounty', 'allow']);
     expect(run.status).toBe(0);
-    expect(run.stdout).toContain('states $0 — no payment is promised');
+    expect(run.stdout).toContain('a bounty is not posted without one');
     expect(run.stdout).toContain('config set reward');
     const paid = cli(repo, ['bounty', 'allow', '--reward', '5', '--reward-limit', '20']);
     expect(paid.status).toBe(0);

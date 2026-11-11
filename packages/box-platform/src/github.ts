@@ -36,6 +36,8 @@ export interface Env extends PayPalEnv {
   readonly closedStaleMs?: number;
   /** PF9b: repositories this board never lists, comma-separated (the kitchen's sandbox). Set only by whoever deploys the board. */
   readonly UNLISTED_REPOSITORIES?: string;
+  /** BT60: set only by the test board (tests/platform/support.ts): with it the board lists a bounty whose reward is below the minimum. Never in wrangler.toml. */
+  readonly ALLOW_ZERO_FOR_TESTING?: string;
   /** The platform's Stripe key and webhook secret (PF11). Absent: pay on merge says it is not set up. */
   readonly STRIPE_SECRET_KEY?: string;
   readonly STRIPE_WEBHOOK_SECRET?: string;
