@@ -93,7 +93,12 @@ beforeAll(() => {
     for (const name of ['SystemRoot', 'windir', 'COMSPEC', 'PATHEXT', 'TEMP', 'TMP', 'NoDefaultCurrentDirectoryInExePath']) {
       if (process.env[name] !== undefined) keep[name] = process.env[name]!;
     }
-  } else if (process.env.TMPDIR !== undefined) keep.TMPDIR = process.env.TMPDIR;
+  } else {
+    // K50: npm starts `sh`, which is in /bin and not beside node or git on macOS (the first hosted macOS run: "spawn sh
+    // ENOENT"); Windows gets System32 above for the same reason. A system folder, never the runner's own tools.
+    path.push('/bin');
+    if (process.env.TMPDIR !== undefined) keep.TMPDIR = process.env.TMPDIR;
+  }
   env = {
     ...keep,
     PATH: path.join(delimiter),

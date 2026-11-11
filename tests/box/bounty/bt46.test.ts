@@ -30,6 +30,8 @@ const treeBy = (repo: string, statFrom: number): string => createSnapshotCommit(
 const newerThanIndex = (repo: string, path: string): Date => { const later = new Date(Date.now() + 60_000); utimesSync(join(repo, path), later, later); return later; };
 const FILTER_UP = 'node -e "process.stdin.on(\'data\',d=>process.stdout.write(String(d).toUpperCase()))"';
 
+// Host-only (K50): the two link scenarios skip where this host cannot make a
+// file symlink (Windows without developer mode or an elevated account).
 const linkCapable = (() => {
   const probe = runRoot('bt46-link');
   writeFileSync(join(probe, 't'), 'x');

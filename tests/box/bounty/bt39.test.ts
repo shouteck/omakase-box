@@ -85,6 +85,7 @@ describe('canonicalisation runs native realpath — the refusals and dedup still
   // second-largest cost). The security surface is unchanged — an escape is
   // still refused, a junction still lands on its target, and a spelling that
   // differs only in case still folds onto the one real file.
+  // Host-only (K50): a junction exists only on Windows.
   it.skipIf(process.platform !== 'win32')('a junction whose target leaves the repository is still refused, not followed', () => {
     const outside = join(runRoot('bt39-out'), 'outside');
     write(outside, 'leak.txt', 'never\n');
@@ -102,6 +103,8 @@ describe('canonicalisation runs native realpath — the refusals and dedup still
     }
   });
 
+  // Host-only (K50): disk and tree spellings differ only where the filesystem
+  // folds case; the fixture is written for Windows' NTFS.
   it.skipIf(process.platform !== 'win32')('a tracked file whose disk case differs still ships once — under the tree spelling output always carried', () => {
     const repo = makeRepo({ 'MiXeD.TxT': 'x\n', 'TASK.md': 'the task\n' }, r => {
       // The checkout's case-insensitive filesystem keeps one file; only its
@@ -119,6 +122,7 @@ describe('canonicalisation runs native realpath — the refusals and dedup still
   // The reviewer's probe, made a fixture: a binary file committed 'low.bin'
   // whose disk name became 'LOW.BIN'. Baseline names 'low.bin' in the file
   // list AND in the scan's binary note; the disk spelling must not surface.
+  // Host-only (K50): case folding, as above.
   it.skipIf(process.platform !== 'win32')('a case-divergent binary still names the tree spelling in files and the scan note', () => {
     const repo = makeRepo({ 'low.bin': '', 'TASK.md': 'the task\n' }, r => {
       writeFileSync(join(r, 'low.bin'), Buffer.from([0x00, 0x01, 0x02, 0x00]));

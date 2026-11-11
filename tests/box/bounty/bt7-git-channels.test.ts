@@ -11,6 +11,8 @@ import { git, makeRepo, runRoot, write } from './support.js';
 const quote = (value: string): string => `'${value.replaceAll("'", "'\\''")}'`;
 const CLI_DIST = fileURLToPath(new URL('../../../packages/box-cli/dist/cli.js', import.meta.url));
 
+// Host-only (K50): only Windows finds an executable in the current directory
+// before PATH, so only there can the CLI's cwd carry a replacement.
 it.skipIf(process.platform !== 'win32')('uses pinned Git and command interpreter when the CLI cwd carries replacement executables', () => fixture(context => {
   postBounty(context.repo, context.id, 'github');
   copyFileSync(process.execPath, join(context.repo, 'git.exe'));

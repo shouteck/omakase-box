@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "bin": { "omakase-box": "dist/cli.js" },
-  "dependencies": { "zod": "4.6.5" }
+  "bin": {
+    "omakase-box": "dist/cli.js"
+  }
 }
