@@ -85,19 +85,24 @@ Public: the task, the one line of why, the bounty branch's commits, and a
 machine-readable block on the issue (the `box-bounty` issue format, versioned
 separately from the tool's own version). Also public: each bounty's history —
 posted, solutions, merged, closed, paid — pushed to the project's remote as
-one small Git ref per bounty under `refs/box-bounty/*`. Anyone who can read
-the repository can read those refs; ordinary clones and working trees never
+one small Git ref per bounty under `refs/box-bounty-records/*`. Anyone who can
+read the repository can read those refs; ordinary clones and working trees never
 show them. They carry only the allow-listed fields, and their free-text
 fields are secret-scanned before they are written. To remove one from the
 remote:
 
-    git push origin --delete refs/box-bounty/<id>
+    git push origin --delete refs/box-bounty-records/<id>
 
-`git ls-remote --refs origin 'refs/box-bounty/*'` lists every one. Removal
-lasts only while no machine still holds that chain: one that does pushes it
-back at its next command, so delete the local ref there too:
+`git ls-remote --refs origin 'refs/box-bounty-records/*'` lists every one.
+Removal lasts only while no machine still holds that chain: one that does pushes
+it back at its next command, so delete the local ref there too:
 
-    git update-ref -d refs/box-bounty/<id>
+    git update-ref -d refs/box-bounty-records/<id>
+
+Bounties posted before version 0.2.0 keep that history under the old form,
+`refs/box-bounty/<id>` (the same commands apply with that name), and the tool
+continues it there. The name changed because Git reads a short name such as
+`box-bounty/<id>` as `refs/box-bounty/<id>` before the branch of that name.
 
 Never public: files on the never-ship
 list (`.env`, keys, credentials — the tool removes them before anything is

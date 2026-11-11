@@ -34,13 +34,13 @@ function secondMachine(world: GithubFixture): string {
 }
 
 const chainTip = (repo: string, id: string): string | null => {
-  try { return git(repo, ['rev-parse', '-q', '--verify', `refs/box-bounty/${id}`]) || null; } catch { return null; }
+  try { return git(repo, ['rev-parse', '-q', '--verify', `refs/box-bounty-records/${id}`]) || null; } catch { return null; }
 };
 const remoteTip = (repo: string, id: string): string | null => {
-  try { return git(repo, ['rev-parse', '-q', '--verify', `refs/remotes/origin/box-bounty/${id}`]) || null; } catch { return null; }
+  try { return git(repo, ['rev-parse', '-q', '--verify', `refs/box-bounty-records-origin/${id}`]) || null; } catch { return null; }
 };
 const bareTip = (world: { bare: string }, id: string): string | null => {
-  const out = execFileSync('git', ['-c', `safe.directory=${world.bare}`, 'ls-remote', world.bare, `refs/box-bounty/${id}`], { encoding: 'utf8' }).trim();
+  const out = execFileSync('git', ['-c', `safe.directory=${world.bare}`, 'ls-remote', world.bare, `refs/box-bounty-records/${id}`], { encoding: 'utf8' }).trim();
   return out === '' ? null : out.split('\t')[0]!;
 };
 const eventsOf = (repo: string, tip: string): Record<string, unknown>[] =>
@@ -79,9 +79,9 @@ describe('BT32 shared bounty memory', { timeout: 180000 }, () => {
       // clone created — the GitHub-side fact (a fresh clone downloads no
       // chain ref at all) is Step 0's evidence. Note: the remote also carries
       // the published solver branch refs/heads/box-bounty/<id>, which every
-      // clone legitimately maps to refs/remotes/origin/box-bounty/<id> — it
+      // clone legitimately maps to refs/box-bounty-records-origin/<id> — it
       // holds the ordinary base commit, never a chain commit.
-      expect(git(plain, ['for-each-ref', 'refs/box-bounty'])).toBe('');
+      expect(git(plain, ['for-each-ref', 'refs/box-bounty', 'refs/box-bounty-records'])).toBe('');
       expect(git(plain, ['for-each-ref'])).not.toContain(tip!);
       expect(git(plain, ['ls-files'])).not.toContain('box-bounty');
       // Case 11: grep and log -p over the branch show nothing of the chains.
@@ -140,12 +140,12 @@ describe('BT32 shared bounty memory', { timeout: 180000 }, () => {
       // A local chain ref pointing at a commit with no event.json is not
       // chain history: it is never adopted, imported or retried.
       const empty = gitIn(['commit-tree', '4b825dc642cb6eb9a060e54bf8d69288fbee4904', '-m', 'plain'], '');
-      git(other, ['update-ref', `refs/box-bounty/${fake}`, empty]);
+      git(other, ['update-ref', `refs/box-bounty-records/${fake}`, empty]);
       // And a remote-tracking ref pointing at a corrupt event imports nothing.
       const blob = gitIn(['hash-object', '-w', '--stdin'], 'not an event at all\n');
       const tree = gitIn(['mktree'], `100644 blob ${blob}\tevent.json\n`);
       const commit = gitIn(['commit-tree', tree, '-m', 'forged'], '');
-      git(other, ['update-ref', `refs/remotes/origin/box-bounty/${fake}`, commit]);
+      git(other, ['update-ref', `refs/box-bounty-records-origin/${fake}`, commit]);
       syncChains(other, true);
       expect(sharedRead(other, fake)).toBeNull();
       expect(renderStatus(other)).not.toContain('forged');
@@ -175,7 +175,7 @@ describe('BT32 shared bounty memory', { timeout: 180000 }, () => {
       const blob = gitIn(['hash-object', '-w', '--stdin'], JSON.stringify({ v: 1, type: 'posted', at: '2026-10-18T02:00:00.000Z', actor: 'x', id: world.id, title: 'PLANTED-NEVER-SHOWN', task: 't', base: 'a'.repeat(40), branch: 'main', issue: { number: 1, url: 'https://github.com/owner/project/issues/1' }, published: { pushed: [] } }) + '\n');
       const tree = gitIn(['mktree'], `100644 blob ${blob}\tevent.json\n`);
       const forged = gitIn(['commit-tree', tree, '-m', 'forged', '-p', retried]);
-      git(world.repo, ['update-ref', `refs/box-bounty/${world.id}`, forged]);
+      git(world.repo, ['update-ref', `refs/box-bounty-records/${world.id}`, forged]);
       syncChains(world.repo, true);
       syncChains(world.repo, true);
       expect(bareTip(world, world.id), 'the swapped-in descendant was pushed over the trusted tip').toBe(retried);
@@ -195,7 +195,7 @@ describe('BT32 shared bounty memory', { timeout: 180000 }, () => {
       const tip = bareTip(world, world.id)!;
       const writer = join(runRoot('bt32-writer'), 'w');
       execFileSync('git', ['-c', `safe.directory=${world.bare}`, 'clone', '--no-checkout', world.bare, writer], { encoding: 'utf8' });
-      execFileSync('git', ['-c', `safe.directory=${writer}`, 'fetch', 'origin', `refs/box-bounty/${world.id}:refs/box-bounty/${world.id}`], { cwd: writer, encoding: 'utf8' });
+      execFileSync('git', ['-c', `safe.directory=${writer}`, 'fetch', 'origin', `refs/box-bounty-records/${world.id}:refs/box-bounty-records/${world.id}`], { cwd: writer, encoding: 'utf8' });
       const commitEvent = (event: string, parents: string[]) => {
         const blob = execFileSync('git', ['-c', `safe.directory=${writer}`, 'hash-object', '-w', '--stdin'], { cwd: writer, input: event, encoding: 'utf8' }).trim();
         const tree = execFileSync('git', ['-c', `safe.directory=${writer}`, 'mktree'], { cwd: writer, input: `100644 blob ${blob}\tevent.json\n`, encoding: 'utf8' }).trim();
@@ -204,8 +204,8 @@ describe('BT32 shared bounty memory', { timeout: 180000 }, () => {
       };
       const good = commitEvent(JSON.stringify({ v: 1, type: 'closed', at: new Date().toISOString(), kind: 'withdrawn' }) + '\n', [tip]);
       const bad = commitEvent('{"v":1,"type":"posted","extra-field":"surprise"}\n', [good]);
-      execFileSync('git', ['-c', `safe.directory=${writer}`, 'update-ref', `refs/box-bounty/${world.id}`, bad], { cwd: writer, encoding: 'utf8' });
-      execFileSync('git', ['-c', `safe.directory=${writer}`, 'push', 'origin', `refs/box-bounty/${world.id}:refs/box-bounty/${world.id}`], { cwd: writer, encoding: 'utf8' });
+      execFileSync('git', ['-c', `safe.directory=${writer}`, 'update-ref', `refs/box-bounty-records/${world.id}`, bad], { cwd: writer, encoding: 'utf8' });
+      execFileSync('git', ['-c', `safe.directory=${writer}`, 'push', 'origin', `refs/box-bounty-records/${world.id}:refs/box-bounty-records/${world.id}`], { cwd: writer, encoding: 'utf8' });
       syncChains(other, true);
       const shared = sharedRead(other, world.id);
       // The corrupt event is dropped; the valid closed event still landed.
@@ -242,7 +242,7 @@ describe('BT32 shared bounty memory', { timeout: 180000 }, () => {
       expect(events.map(e => e['type'])).toContain('solution');
       expect(events.map(e => e['type'])).toContain('closed');
       // Remote deletion: the next read restores the ref from this machine.
-      execFileSync('git', ['-c', `safe.directory=${other}`, 'push', world.bare, `:refs/box-bounty/${world.id}`], { cwd: other, encoding: 'utf8' });
+      execFileSync('git', ['-c', `safe.directory=${other}`, 'push', world.bare, `:refs/box-bounty-records/${world.id}`], { cwd: other, encoding: 'utf8' });
       expect(bareTip(world, world.id)).toBeNull();
       syncChains(world.repo, true);
       expect(bareTip(world, world.id)).not.toBeNull();
@@ -259,7 +259,7 @@ describe('BT32 shared bounty memory', { timeout: 180000 }, () => {
       const other = secondMachine(world);
       syncChains(other, true);
       const imported = bareTip(world, world.id)!;
-      execFileSync('git', ['-c', `safe.directory=${other}`, 'push', world.bare, `:refs/box-bounty/${world.id}`], { cwd: other, encoding: 'utf8' });
+      execFileSync('git', ['-c', `safe.directory=${other}`, 'push', world.bare, `:refs/box-bounty-records/${world.id}`], { cwd: other, encoding: 'utf8' });
       expect(bareTip(world, world.id)).toBeNull();
       syncChains(other, true);
       expect(bareTip(world, world.id)).toBe(imported);
@@ -330,7 +330,7 @@ describe('BT32 shared bounty memory', { timeout: 180000 }, () => {
               : { v: 1, type: 'solution', at: '2026-10-18T00:00:00.000Z', n: e, commit: 'b'.repeat(40), changed: [], added: [], deleted: [] }) + '\n';
             const msg = `box-bounty ${id} chain event\n`;
             mark += 1;
-            chunks.push(`commit refs/box-bounty/${id}\nmark :${mark}\ncommitter box-bounty <box-bounty@localhost> 1770672000 +0000\ndata ${Buffer.byteLength(msg)}\n${msg}`);
+            chunks.push(`commit refs/box-bounty-records/${id}\nmark :${mark}\ncommitter box-bounty <box-bounty@localhost> 1770672000 +0000\ndata ${Buffer.byteLength(msg)}\n${msg}`);
             if (prev !== null) chunks.push(`from :${prev}\n`);
             chunks.push(`M 644 inline event.json\ndata ${Buffer.byteLength(body)}\n${body}\n`);
             prev = mark;
@@ -353,7 +353,7 @@ describe('BT32 shared bounty memory', { timeout: 180000 }, () => {
       // tip carries no event.json — the negative leg must not break the rest.
       const firstSeeded = seed(40, 3, 100);
       execFileSync('git', ['-c', `safe.directory=${world.bare}`, '-C', world.bare, 'update-ref',
-        'refs/box-bounty/bt-ffffffffffff',
+        'refs/box-bounty-records/bt-ffffffffffff',
         execFileSync('git', ['-c', `safe.directory=${world.bare}`, '-c', 'user.name=x', '-c', 'user.email=x@x', '-C', world.bare, 'commit-tree', '4b825dc642cb6eb9a060e54bf8d69288fbee4904', '-m', 'empty'], { encoding: 'utf8' }).trim()], { encoding: 'utf8' });
       const large = secondMachine(world);
       const largeTrace = traceGit('bt32-scale-large', () => syncChains(large, true));

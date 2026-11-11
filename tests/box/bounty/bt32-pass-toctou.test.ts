@@ -1,6 +1,6 @@
 // BT32 pass TOCTOU probe — the independent pass's check/use attack on the
 // corrected provenance gate. pushChain verifies the proven tip, then pushes
-// the ref NAME `refs/box-bounty/<id>` — git resolves the CURRENT ref inside
+// the ref NAME `refs/box-bounty-records/<id>` — git resolves the CURRENT ref inside
 // the push, not the sha that was just proven. A local process that can move
 // the ref between the check and the push (the same attacker who plants a
 // local ref, now racing the spawn boundary) launders an unproven commit and
@@ -22,7 +22,7 @@ import { runRoot } from './support.js';
 const MARKER = 'PROBE-TOCTOU-NEVER-PUBLISHED-2c9a';
 
 const bareTip = (bare: string, id: string): string | null => {
-  const out = execFileSync('git', ['-c', `safe.directory=${bare}`, 'ls-remote', bare, `refs/box-bounty/${id}`], { encoding: 'utf8' }).trim();
+  const out = execFileSync('git', ['-c', `safe.directory=${bare}`, 'ls-remote', bare, `refs/box-bounty-records/${id}`], { encoding: 'utf8' }).trim();
   return out === '' ? null : out.split('\t')[0]!;
 };
 
@@ -30,7 +30,7 @@ describe('BT32 pass TOCTOU probe', { timeout: 120000 }, () => {
   it('the push publishes the proven sha, never whatever the ref says at push time', () => {
     { const world = sharedPostedFixture(); world.run(() => {
       const id = world.id;
-      const refname = `refs/box-bounty/${id}`;
+      const refname = `refs/box-bounty-records/${id}`;
       const remoteTip = bareTip(world.bare, id);
       expect(remoteTip, 'fixture is not posted — setup failed').not.toBeNull();
       // The attacker's forged commit: a well-formed event (never scanned —

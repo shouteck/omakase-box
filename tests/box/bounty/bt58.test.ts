@@ -148,6 +148,22 @@ describe('BT58: the shared record cannot be taken for the bounty branch', { time
     expect(refsOn(world.bare)).not.toContain(`${NEW}/bt-eeeeeeeeeeee`);
   }));
 
+  it('5b. a forged record at the old name for a bounty this machine posted at the new name is never read, followed or written to', () => postedFixture(world => {
+    const stdin = (args: string[], input: string) => execFileSync('git', ['-c', `safe.directory=${world.bare}`, '-C', world.bare, ...args], { input, encoding: 'utf8' }).trim();
+    const posted = JSON.parse(git(world.bare, ['cat-file', 'blob', `${git(world.bare, ['rev-parse', `${NEW}/${world.id}`])}:event.json`])) as Record<string, unknown>;
+    const blob = stdin(['hash-object', '-w', '--stdin'], JSON.stringify({ ...posted, title: 'FORGED TITLE AT THE OLD NAME' }) + '\n');
+    const tree = stdin(['mktree'], `100644 blob ${blob}\tevent.json\n`);
+    const forged = git(world.bare, ['-c', 'user.name=forger', '-c', 'user.email=forger@test.invalid', 'commit-tree', tree, '-m', 'forged']);
+    git(world.bare, ['update-ref', `${OLD}/${world.id}`, forged]);
+    syncChains(world.repo, true);
+    // not read: nothing of the forgery is found; not followed: the new-name record is still this machine's chain; not written to
+    expect(JSON.stringify(statusDocument(world.repo, {}, () => {}))).not.toContain('FORGED');
+    expect(tryGit(world.repo, ['rev-parse', '-q', '--verify', `${OLD}/${world.id}`])).toBeNull();
+    answerGitHub(world.repo, world.id, 1);
+    expect(git(world.bare, ['rev-parse', `${OLD}/${world.id}`]), 'the forged old-name ref was moved').toBe(forged);
+    expect(eventTypes(world.bare, `${NEW}/${world.id}`)).toEqual(['posted', 'solution']);
+  }, { prAuthor: 'solver1' }));
+
   it('6. a remote that advertises both names for one id: a machine that has not chosen uses the old, and writes nothing to the new', () => postedFixture(world => {
     const newTip = git(world.bare, ['rev-parse', `${NEW}/${world.id}`]);
     git(world.bare, ['update-ref', `${OLD}/${world.id}`, newTip]);

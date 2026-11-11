@@ -150,7 +150,7 @@ describe('the shared part carries the paid fact — and nothing else of the owne
     git(repo, ['rev-list', '--topo-order', '--reverse', tip]).split('\n').filter(line => line !== '').map(commit =>
       JSON.parse(git(repo, ['cat-file', 'blob', `${commit}:event.json`])) as Record<string, unknown>);
   const bareTip = (world: { bare: string }, rid: string): string | null => {
-    const out = execFileSync('git', ['-c', `safe.directory=${world.bare}`, 'ls-remote', world.bare, `refs/box-bounty/${rid}`], { encoding: 'utf8' }).trim();
+    const out = execFileSync('git', ['-c', `safe.directory=${world.bare}`, 'ls-remote', world.bare, `refs/box-bounty-records/${rid}`], { encoding: 'utf8' }).trim();
     return out === '' ? null : out.split('\t')[0]!;
   };
   const secondMachine = (world: { bare: string }): string => {

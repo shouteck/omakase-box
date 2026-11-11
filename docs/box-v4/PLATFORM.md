@@ -99,7 +99,7 @@ It reads, all from GitHub, **without any token that can see private code** [G4][
 - the issue's open/closed state and title; every pull request targeting `box-bounty/<id>`, open, closed or merged (`state=all` and `base` on the list endpoint), with its author, head commit and `merged_at` [G2];
 - the repository's `visibility` [G4] and default branch.
 
-Its own records: owners, solvers, the reward amount registered at posting, payment states and receipts. What stays only on GitHub: the task text beyond the title, solution code and diffs, comments (never read [BF]), and the Git-ref memory under `refs/box-bounty/*`, which the platform does not need. K43 decides how much task text to show and how it is marked as the poster's words.
+Its own records: owners, solvers, the reward amount registered at posting, payment states and receipts. What stays only on GitHub: the task text beyond the title, solution code and diffs, comments (never read [BF]), and the Git-ref memory under `refs/box-bounty-records/*` (and `refs/box-bounty/*` for older bounties), which the platform does not need. K43 decides how much task text to show and how it is marked as the poster's words.
 
 ### 3.2 Accounts
 

@@ -75,11 +75,11 @@ it('a solution the agent merges itself is recognised and closes the bounty exact
   expect(state().issues[0]!.state).toBe('closed');
   expect(state().comments.some(comment => comment.body.includes(`<!-- box-bounty:${id}:merged -->`) && comment.body.includes(merge))).toBe(true);
   expect(git(bare, ['show-ref'])).not.toContain(`refs/heads/box-bounty/${id}`); // BT32: the chain ref stays; the solver branch is what close removes
-  // BT32: the chain ref `refs/box-bounty/<id>` stays — it is the shared
+  // BT32: the chain ref `refs/box-bounty-records/<id>` stays — it is the shared
   // memory, not a durability pin. What end-stage drops is every other ref
   // under the namespace (the legacy snapshot, the `-answer-<n>` pins).
-  const under = git(repo, ['for-each-ref', '--format=%(refname)', `refs/box-bounty/`]).split('\n').filter(l => l !== '');
-  expect(under).toEqual([`refs/box-bounty/${id}`]);
+  const under = git(repo, ['for-each-ref', '--format=%(refname)', `refs/box-bounty-records/`]).split('\n').filter(l => l !== '');
+  expect(under).toEqual([`refs/box-bounty-records/${id}`]);
   // Quiet afterwards — closing happens once.
   noticedLines.length = 0;
   checkMergedSolutions(repo);

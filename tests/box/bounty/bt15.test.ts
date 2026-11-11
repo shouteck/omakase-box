@@ -10,7 +10,7 @@ import { settleScanFindings } from '../../../packages/box-bounty/record.js';
 const cli = (repo: string, args: string[], input?: string) => spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args], { cwd: repo, encoding: 'utf8', env: process.env, ...(input === undefined ? {} : { input }) });
 const state = (repo: string) => ({
   files: fingerprint(repo),
-  refs: git(repo, ['for-each-ref', '--format=%(refname) %(objectname)', 'refs/box-bounty/']),
+  refs: git(repo, ['for-each-ref', '--format=%(refname) %(objectname)', 'refs/box-bounty-records/']),
   settings: existsSync(settingsFile()) ? readFileSync(settingsFile(), 'utf8') : null,
   records: recordIds(repo).map(id => [`${id}.json`, readRecordRaw(repo, id)])
 });
@@ -186,7 +186,7 @@ it('standard input keeps the exact task in the record, creates no task file and 
   expect(readFileSync(join(old, 'keep.txt'), 'utf8')).toBe('owner folder stays\n');
   expect(readdirSync(old)).toEqual(['keep.txt']);
   expect(record.snapshot).toBeUndefined(); // a draft made now keeps no snapshot
-  expect(git(repo, ['for-each-ref', '--format=%(refname)', `refs/box-bounty/${id}`])).toBe('');
+  expect(git(repo, ['for-each-ref', '--format=%(refname)', `refs/box-bounty-records/${id}`])).toBe('');
 });
 
 it('empty standard input is missing-task and writes no new draft or bookmark', () => {

@@ -244,7 +244,11 @@ const decode = (base64: string): string => new TextDecoder().decode(Uint8Array.f
 
 async function readEvents(env: Env, github: GitHub, id: string, repository: string): Promise<void> {
   const db = env.DB;
-  const commits = await github.get(`/repos/${repository}/commits?sha=refs/box-bounty/${id}&per_page=50`);
+  // BT58: a bounty's record lives at refs/box-bounty-records/<id>; one posted before version 0.2.0 at refs/box-bounty/<id>.
+  // The new name first; only a 404 asks for the old one. A bounty with an old-name record therefore costs two reads per
+  // events step, every other bounty one (no column to say which: that would be a migration of the live board).
+  let commits = await github.get(`/repos/${repository}/commits?sha=refs/box-bounty-records/${id}&per_page=50`);
+  if (commits.status === 404) commits = await github.get(`/repos/${repository}/commits?sha=refs/box-bounty/${id}&per_page=50`);
   if (commits.status !== 200 || !Array.isArray(commits.json)) return; // no chain: GitHub's facts still show
   const seen = new Set((await db.prepare('SELECT sha FROM events WHERE bounty_id = ?').bind(id).all<{ sha: string }>()).results.map(row => row.sha));
   const writes: Statement[] = [];

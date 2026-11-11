@@ -1,13 +1,14 @@
 // The shared bounty memory (BT32): one Git ref per bounty,
-// `refs/box-bounty/<id>`, each event one commit whose tree holds a single
+// `refs/box-bounty-records/<id>` (BT58; `refs/box-bounty/<id>` for bounties
+// posted before version 0.2.0), each event one commit whose tree holds a single
 // blob `event.json`. The shape is git-bug's DAG entity as K28 designed it —
 // append-only event commits, empty `merge` events joining diverged tips,
-// fast-forward pushes only, fetched into `refs/remotes/origin/box-bounty/*`.
+// fast-forward pushes only, fetched into `refs/box-bounty-records-origin/*`.
 // Step 0 proved every operation on real GitHub (kitchen/memory/delegation/
 // evidence/bt32-step0.txt).
 //
 // Trust (brief decision 2): only chains fetched from the configured remote
-// count — a local ref under refs/box-bounty/ that never came from it is
+// count — a local ref under the record namespaces that never came from it is
 // ignored, and every event off the remote is validated against the
 // allow-list, its field types and the 8,000-character bound before it is
 // imported. The same boundary gates WRITES: a local chain ref may be

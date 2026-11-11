@@ -73,13 +73,13 @@ describe('BT38 contract guarantees proven directly', () => {
     const world = sharedPostedFixture({ collected: true });
     world.run(() => {
       const draft = createBounty({ repoPath: world.repo, taskPath: join(world.repo, 'TASK.md'), why: 'a second hand-off', title: 'Second task' });
-      const remoteRefs = () => execFileSync('git', ['-c', `safe.directory=${world.bare}`, 'ls-remote', world.bare, 'refs/box-bounty/*'], { encoding: 'utf8' });
-      const localRefs = () => git(world.repo, ['for-each-ref', 'refs/box-bounty', '--format=%(refname) %(objectname)']);
+      const remoteRefs = () => execFileSync('git', ['-c', `safe.directory=${world.bare}`, 'ls-remote', world.bare, 'refs/box-bounty-records/*'], { encoding: 'utf8' });
+      const localRefs = () => git(world.repo, ['for-each-ref', 'refs/box-bounty', 'refs/box-bounty-records', '--format=%(refname) %(objectname)']);
       const remoteBefore = remoteRefs();
       const localBefore = localRefs();
       // The fixture posted: a chain exists on both sides before any read.
-      expect(remoteBefore).toContain(`refs/box-bounty/${world.id}`);
-      expect(localBefore).toContain(`refs/box-bounty/${world.id}`);
+      expect(remoteBefore).toContain(`refs/box-bounty-records/${world.id}`);
+      expect(localBefore).toContain(`refs/box-bounty-records/${world.id}`);
       for (const args of readCommands(world.id, draft.id)) {
         const result = cli(world.repo, args);
         expect(result.status, `omakase-box ${args.join(' ')} exited ${result.status}: ${result.stderr}`).toBe(0);
@@ -109,7 +109,7 @@ describe('BT38 contract guarantees proven directly', () => {
     // is a cache of the capture, not a guaranteed rebuild point.
     const { id } = finalizeBounty(plan);
     expect('snapshot' in readRecord(repo, id)).toBe(false);
-    expect(git(repo, ['for-each-ref', `refs/box-bounty/${id}`])).toBe('');
+    expect(git(repo, ['for-each-ref', `refs/box-bounty-records/${id}`])).toBe('');
     expect(git(repo, ['cat-file', '-t', plan.snapshot.commit])).toBe('commit');
   });
 
