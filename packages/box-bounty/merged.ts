@@ -95,16 +95,21 @@ function scan(repoRoot: string): void {
 // an uncollected PR the agent merged itself is still its solution landing.
 // A pull request the tool never listed leaves no commit to check; the next
 // `answer` listing records it and the command after that closes the bounty.
+//
+// BT56: a commit that was already on the branch when its pull request was first recorded here is no solution's landing
+// (the owner may have pushed it after posting): it is skipped in both lists, so an attempt collected from such a pull
+// request is skipped too.
 function candidatesOf(record: BountyRecord): MergeCandidate[] {
   const candidates: MergeCandidate[] = [];
   const seen = new Set<string>();
+  const alreadyThere = new Set((record.github?.seenPullRequests ?? []).filter(pr => pr.onBranch === true).map(pr => pr.commit));
   for (const attempt of attemptsOf(record)) {
-    if (seen.has(attempt.commit)) continue;
+    if (seen.has(attempt.commit) || alreadyThere.has(attempt.commit)) continue;
     seen.add(attempt.commit);
     candidates.push({ commit: attempt.commit, attempt });
   }
   for (const pr of record.github?.seenPullRequests ?? []) {
-    if (seen.has(pr.commit)) continue;
+    if (seen.has(pr.commit) || alreadyThere.has(pr.commit)) continue;
     seen.add(pr.commit);
     candidates.push({ commit: pr.commit, pr: pr.n });
   }

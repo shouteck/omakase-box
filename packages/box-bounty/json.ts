@@ -108,7 +108,9 @@ const pullRequestEntry = (pr: NonNullable<GitHubPublication['availablePullReques
   author: pr.author ?? null,
   seenAt: publication.seenPullRequests?.find(seen => seen.n === pr.n && seen.commit === pr.commit)?.at ?? null,
   payTo: pr.payTo?.state ?? null,
-  collectedAs: attempts.find(attempt => attempt.pullRequest === pr.n && attempt.commit === pr.commit)?.n ?? null
+  collectedAs: attempts.find(attempt => attempt.pullRequest === pr.n && attempt.commit === pr.commit)?.n ?? null,
+  // BT56: only when set, so a document for an old record is unchanged.
+  ...(pr.onBranch === true ? { onBranch: true } : {})
 });
 
 const githubEntry = (publication: GitHubPublication, attempts: readonly Attempt[]): JsonObject => ({

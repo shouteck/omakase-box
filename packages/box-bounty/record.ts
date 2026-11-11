@@ -573,6 +573,7 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
       for (const pr of list) {
         if (pr === null || typeof pr !== 'object' || !Number.isInteger(pr.n) || pr.n < 1 || typeof pr.commit !== 'string' || !sha.test(pr.commit) || typeof pr.at !== 'string' || !stamp.test(pr.at)) return null;
         if (pr.payTo !== undefined && !payToFactShape(pr.payTo)) return null;
+        if (pr.onBranch !== undefined && pr.onBranch !== true) return null;
       }
     }
     if (github.outside !== undefined && (github.outside === null || typeof github.outside !== 'object'

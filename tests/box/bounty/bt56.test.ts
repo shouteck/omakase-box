@@ -9,8 +9,10 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import './support.js';
 import { answerGitHub, applyBounty, checkMergedSolutions, closeBounty, listGitHubAnswers, loadRecord, postBounty, renderStatus, setMergeNoticeListener, statusDocument } from '../../../packages/box-bounty/index.js';
+import { execFileSync } from 'node:child_process';
+import { mkdirSync } from 'node:fs';
 import { fixture, type GithubFixture } from './github-fixture.js';
-import { git, rewriteRecordRaw, write } from './support.js';
+import { git, rewriteRecordRaw, runRoot, write } from './support.js';
 
 const STRIPE_LIVE = 'https://buy.stripe.com/9AQ00deadbeef0000';
 const noticed: string[] = [];
@@ -197,3 +199,47 @@ describe('9, 10. a head that moves, and two pull requests on one commit', () => 
   }));
 });
 
+
+describe('11, 12. what the rule does not do, pinned so a change is a deliberate edit', () => {
+  it('11. a commit that reaches the branch only by a later pull is not on it at first sight, so it is still recognised when pulled (a stated limit)', () => posted(world => {
+    const { repo, bare, id, prCommit } = world;
+    // The owner's commit is made elsewhere and pushed to the remote's main; this machine's main does not have it yet.
+    git(repo, ['switch', '-q', '-c', 'elsewhere']);
+    const own = ownerCommit(repo, 'own11.txt');
+    git(repo, ['push', bare, 'HEAD:refs/heads/main']);
+    git(repo, ['switch', '-q', 'main']);
+    prCommit(own, 'stranger');
+    listGitHubAnswers(repo, id);
+    expect(seen(world).some(entry => entry.commit === own && entry.onBranch === true)).toBe(false); // not on this machine's branch at first sight
+    git(repo, ['merge', '--ff-only', own]); // the owner pulls
+    checkMergedSolutions(repo);
+    // Only authorship could tell this from a solver's head landing by hand, and the rule compares no authors (CONTRACTS.md states the limit).
+    expect(loadRecord(repo, id).stage).toBe('applied');
+  }));
+
+  it('12. a second machine carries the same branch and applies the rule with its own first sight', () => posted(world => {
+    const { repo, bare, id, prCommit } = world;
+    git(bare, ['symbolic-ref', 'HEAD', 'refs/heads/main']);
+    const own = ownerCommit(repo, 'own12.txt');
+    git(repo, ['push', bare, 'HEAD:refs/heads/main']);
+    prCommit(own, 'stranger');
+    // The second machine clones after the owner's push, so the commit is on its main at first sight.
+    const other = join(runRoot('bt56-machine-b'), 'repo');
+    execFileSync('git', ['-c', `safe.directory=${bare}`, 'clone', '--no-local', bare, other], { encoding: 'utf8', stdio: 'pipe' });
+    git(other, ['remote', 'set-url', 'origin', 'git@github.com:owner/project.git']);
+    const settings = join(runRoot('bt56-settings-b'), 'settings');
+    mkdirSync(settings, { recursive: true });
+    writeFileSync(join(settings, 'settings.json'), JSON.stringify({ kind: 'box-owner-settings', repositories: { 'owner/project': { bounty: 'allowed', at: '2026-10-01T00:00:00.000Z', changes: [] } } }));
+    const before = process.env.BOX_BOUNTY_SETTINGS_DIR;
+    process.env.BOX_BOUNTY_SETTINGS_DIR = settings;
+    try {
+      renderStatus(other); // adopts the shared record
+      const adopted = loadRecord(other, id);
+      expect(adopted.resume?.kind === 'recorded' ? adopted.resume.branch : null).toBe('main'); // the branch travels with the record
+      listGitHubAnswers(other, id);
+      expect((loadRecord(other, id).github!.seenPullRequests ?? []).some(entry => entry.commit === own && entry.onBranch === true)).toBe(true);
+      checkMergedSolutions(other);
+      expect(loadRecord(other, id).stage).toBe('posted');
+    } finally { process.env.BOX_BOUNTY_SETTINGS_DIR = before; }
+  }));
+});
