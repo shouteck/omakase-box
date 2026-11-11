@@ -1,8 +1,12 @@
 # Status
 
-Updated by the CTO on 11 November 2026, when K59 (a timeout margin for the hosted Windows runner) closed.
+Updated by the CTO on 12 November 2026, when K60 (hook timeout, Chromium libraries) closed.
 
 ## Now
+
+- **K60 is merged:** a setup hook may take 30 s on Windows (Vitest's 10 s elsewhere; `scripts/test-timeout.mjs`, pinned by a kitchen test): K59 had raised only the test limit, and master's K59 merge run failed on a hook. The Chromium install is two steps, the browser (must succeed) and the Linux system libraries (5 minutes, one retry, may fail): a dead apt mirror had cancelled BT56's Ubuntu job three times before any test ran. Hosted run green on all three systems, with one Windows page-test flake rerun. See [K60](waves/K60.md).
+
+- **BT56 is built, not merged:** a stranger's pull request can no longer close a bounty by pointing at the owner's own commit (`wave/BT56`, [BT56](waves/BT56.md)). Its code commit is green on all three hosted systems; its Result commit lacks Ubuntu (the mirror outage above), so master is merged into the branch and the hosted run read again before the merge.
 
 - **BT63 is merged: the command is `omakase-box`.** `box` is gone from the package: with Box's own `@box/cli` present npm refuses to install ours while the manifest names `box` (owner: D-2026-11-11-drop-box-command), so `omakase-box bounty <x>` still works but `box bounty` does not. Everything printed, the skill, the instruction block, the site and the guide say the new command; the label, title prefix, markers and schema names did not change. Proven by three local full runs and the platform suite, and a real run on the sandbox (post, status, look, apply, close). **Fresh-session check done** (two real sessions on the sandbox): with only the new skill an agent typed `omakase-box` and never `box`; given the old block it typed `box bounty` first, failed, then found the installed `omakase-box` by itself. **Not proven:** `take` and `submit` on the real sandbox (the board never lists it), and Linux and macOS installs. **After release, a hook 0.1.x wrote into a host's settings fails until `omakase-box hook on` rewrites it.** Read the hosted run on the merge at the next kickoff. See [BT63](waves/BT63.md).
 
@@ -47,7 +51,7 @@ Updated by the CTO on 11 November 2026, when K59 (a timeout margin for the hoste
 
 ## Next
 
-- **Order (owner, 10 November 2026; each wave still on the owner's go):** BT56, BT58 and BT60, then BT53 and the owner's npm publish (BT63 is done); BT55, BT57, PF34 to PF38 and K51 any time (BT57 best before the publish); BT59 and BT61 after the publish; K52 before PF6; PF39, K54 and BT62 any time. Design order: PF40, PF41 (before PF39), PF42 (before PF35), PF43 (before K41). Then **PF6** (the listings for both sides), **K41** (the film, last), then the owner's launch. PF23 is deferred.
+- **Order (owner, 10 November 2026; on 12 November 2026 the owner said to run the upcoming waves in this order without stopping, and to carry on with any wave a blocker does not touch):** BT56, BT58 and BT60, then BT53 and the owner's npm publish (BT63 is done); BT55, BT57, PF34 to PF38 and K51 any time (BT57 best before the publish); BT59 and BT61 after the publish; K52 before PF6; PF39, K54 and BT62 any time. Design order: PF40, PF41 (before PF39), PF42 (before PF35), PF43 (before K41). Then **PF6** (the listings for both sides), **K41** (the film, last), then the owner's launch. PF23 is deferred.
 - **The next tool release:** the guide gains the PowerShell line (`npx.cmd`, `box.cmd`); a new version goes to npm by the owner, and to GitHub by a `v*` tag.
 - Unbriefed (BACKLOG): `rmSync` and non-ASCII names on Windows (BT48); solvers' account age (PF4); a private organisation member counts as an outside solver, a squash-merged head reads as off the default branch (PF8); PF18's leftovers; fewer words, more showing, across the site.
 - **Direction:** agents run the common case; installing is the only required human step. The platform may start a charge but never holds money; no reminders. Site looks need before-and-after screenshots and the owner's approval.
