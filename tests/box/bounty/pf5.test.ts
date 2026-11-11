@@ -363,10 +363,10 @@ describe('config set paid', { timeout: 180000 }, () => {
     merged(repo, id, pr);
     flushBoardHints(repo);
     writeFileSync(join(folder, 'requests.jsonl'), '');
-    const before = git(repo, ['rev-parse', `refs/box-bounty/${id}`]);
+    const before = git(repo, ['rev-parse', `refs/box-bounty-records/${id}`]);
     expect(changeConfig(repo, 'set', 'paid', id)).toContain('paid $5 to solver1');
-    expect(git(repo, ['rev-parse', `refs/box-bounty/${id}`])).not.toBe(before);
-    expect(JSON.parse(git(repo, ['show', `refs/box-bounty/${id}:event.json`]))).toMatchObject({ type: 'paid', amount: 5, by: 'owner' });
+    expect(git(repo, ['rev-parse', `refs/box-bounty-records/${id}`])).not.toBe(before);
+    expect(JSON.parse(git(repo, ['show', `refs/box-bounty-records/${id}:event.json`]))).toMatchObject({ type: 'paid', amount: 5, by: 'owner' });
     flushBoardHints(repo);
     expect(requests().map(request => JSON.parse(request.body).event)).toEqual(['paid']);
   }));
@@ -468,8 +468,8 @@ describe('the CLI, end to end, with the board on', () => {
       metaSet(world.repo, `board_hint:${world.id}:posted`, JSON.stringify({ repository: 'owner/project', issue: 1, bounty: world.id, event: 'posted' }));
       const file = join(world.repo, 'AGENTS.md');
       const block = readFileSync(file);
-      const remoteRefs = () => execFileSync('git', ['-c', `safe.directory=${world.bare}`, 'ls-remote', world.bare, 'refs/box-bounty/*'], { encoding: 'utf8' });
-      const localRefs = () => git(world.repo, ['for-each-ref', 'refs/box-bounty', '--format=%(refname) %(objectname)']);
+      const remoteRefs = () => execFileSync('git', ['-c', `safe.directory=${world.bare}`, 'ls-remote', world.bare, 'refs/box-bounty-records/*'], { encoding: 'utf8' });
+      const localRefs = () => git(world.repo, ['for-each-ref', 'refs/box-bounty', 'refs/box-bounty-records', '--format=%(refname) %(objectname)']);
       const remote = remoteRefs();
       const local = localRefs();
       for (const args of readCommands(world.id, draft.id)) {

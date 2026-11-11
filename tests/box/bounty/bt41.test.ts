@@ -156,7 +156,7 @@ describe('BT41 — a stranger reads what the tool does', () => {
 
     // The row and the chain stay untouched — this is a read.
     expect(recordExists(repo, id)).toBe(false);
-    expect(git(repo, ['for-each-ref', 'refs/box-bounty'])).toBe('');
+    expect(git(repo, ['for-each-ref', 'refs/box-bounty', 'refs/box-bounty-records'])).toBe('');
     expect(JSON.stringify(sharedRead(repo, id))).toBe(rowBefore);
   });
 });

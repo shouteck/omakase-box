@@ -293,7 +293,7 @@ describe('a shared-only stale bounty', () => {
     // Nothing written back: no local record, no chain ref, the shared row
     // itself byte-identical.
     expect(recordExists(repo, rid)).toBe(false);
-    expect(git(repo, ['for-each-ref', 'refs/box-bounty'])).toBe('');
+    expect(git(repo, ['for-each-ref', 'refs/box-bounty', 'refs/box-bounty-records'])).toBe('');
     expect(JSON.stringify(sharedRead(repo, rid))).toBe(rowBefore);
   });
 });

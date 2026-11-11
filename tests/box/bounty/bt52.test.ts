@@ -32,7 +32,7 @@ function machineB(world: GithubFixture, bounty: 'allowed' | 'ask' | null | 'noth
   return { repo, on };
 }
 
-const chainRefOf = (id: string) => `refs/box-bounty/${id}`;
+const chainRefOf = (id: string) => `refs/box-bounty-records/${id}`;
 const eventsOn = (bare: string, id: string): Record<string, unknown>[] =>
   git(bare, ['rev-list', '--topo-order', '--reverse', chainRefOf(id)]).split('\n').filter(line => line !== '').map(commit => JSON.parse(git(bare, ['cat-file', 'blob', `${commit}:event.json`])) as Record<string, unknown>);
 

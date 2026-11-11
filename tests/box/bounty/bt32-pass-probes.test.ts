@@ -16,7 +16,7 @@ const SECRET = 'ghp_' + 'A'.repeat(36);
 const MARKER = 'PROBE-NEVER-SHOWN-7f3c';
 
 const bareTip = (world: { bare: string }, id: string): string | null => {
-  const out = execFileSync('git', ['-c', `safe.directory=${world.bare}`, 'ls-remote', world.bare, `refs/box-bounty/${id}`], { encoding: 'utf8' }).trim();
+  const out = execFileSync('git', ['-c', `safe.directory=${world.bare}`, 'ls-remote', world.bare, `refs/box-bounty-records/${id}`], { encoding: 'utf8' }).trim();
   return out === '' ? null : out.split('\t')[0]!;
 };
 const looseObjects = (repo: string): number =>
@@ -41,8 +41,8 @@ function writerOf(world: GithubFixture) {
     const tree = run(['mktree'], `100644 blob ${blob}\tevent.json\n`);
     return run(['commit-tree', tree, '-m', `box-bounty ${id} chain event`, ...parents.flatMap(p => ['-p', p])]);
   };
-  const setRef = (id: string, sha: string) => run(['update-ref', `refs/box-bounty/${id}`, sha]);
-  const push = (id: string) => run(['push', 'origin', `refs/box-bounty/${id}:refs/box-bounty/${id}`]);
+  const setRef = (id: string, sha: string) => run(['update-ref', `refs/box-bounty-records/${id}`, sha]);
+  const push = (id: string) => run(['push', 'origin', `refs/box-bounty-records/${id}:refs/box-bounty-records/${id}`]);
   return { commitEvent, setRef, push };
 }
 const postedEvent = (id: string, extra: Record<string, unknown> = {}): string =>
@@ -60,7 +60,7 @@ describe('BT32 pass probes', { timeout: 120000 }, () => {
       };
       // Each leg: the scan fires BEFORE hash-object — the loose-object count
       // must not move, no local chain ref may appear, nothing reaches the remote.
-      const chainTipNow = () => git(world.repo, ['for-each-ref', `refs/box-bounty/${world.id}`]);
+      const chainTipNow = () => git(world.repo, ['for-each-ref', `refs/box-bounty-records/${world.id}`]);
       const expectHeld = (label: string, action: () => unknown) => {
         const before = looseObjects(world.repo);
         const refBefore = chainTipNow();
@@ -147,12 +147,12 @@ describe('BT32 pass probes', { timeout: 120000 }, () => {
       const run = (args: string[], input?: string) =>
         execFileSync('git', ['-c', `safe.directory=${other}`, '-c', 'user.name=x', '-c', 'user.email=x@x', '-C', other, ...args], { input, encoding: 'utf8' }).trim();
       // A perfectly valid posted event — planted directly under
-      // refs/box-bounty/ on this machine, never fetched from the remote and
+      // refs/box-bounty-records/ on this machine, never fetched from the remote and
       // never tool-authored. Decision 2: it must be ignored entirely.
       const blob = run(['hash-object', '-w', '--stdin'], postedEvent(fake, { title: MARKER }));
       const tree = run(['mktree'], `100644 blob ${blob}\tevent.json\n`);
       const commit = run(['commit-tree', tree, '-m', 'forged']);
-      run(['update-ref', `refs/box-bounty/${fake}`, commit]);
+      run(['update-ref', `refs/box-bounty-records/${fake}`, commit]);
       // Observations before assertions — demonstrate the laundering path:
       // first sync, remote state, a SECOND forced sync, then reads again.
       syncChains(other, true);

@@ -25,6 +25,8 @@ export type StandinIssue = {
   pulls?: StandinPull[]; events?: StandinEvent[];
   /** PF32: a plain issue (no block, no label), as a person writes one; its pull requests reference it, read from its timeline. */
   plain?: boolean;
+  /** BT58: where this bounty's record lives on the repository: `refs/box-bounty-records/<id>` (default) or, for a bounty posted before version 0.2.0, `refs/box-bounty/<id>`. */
+  chain?: 'old';
 };
 export type StandinRepository = { language: string | null; visibility: 'public' | 'private'; default_branch?: string;
   /** PF32: the repository's owner (a user by default, named by the repository) and who can write to it, by account id. */
@@ -42,6 +44,8 @@ export class Standin {
   repositories = new Map<string, StandinRepository>();
   issues: StandinIssue[] = [];
   requests: string[] = [];
+  /** BT58: the `sha` of every read of a repository's commits, in order: which record name the board asked for. */
+  commitRefs: string[] = [];
   /** Requests left before GitHub answers 403 with x-ratelimit-remaining: 0. */
   rateLimitAfter: number | null = null;
   resetAt = 0;
@@ -147,7 +151,8 @@ export class Standin {
     match = /^\/repos\/([^/]+\/[^/]+)\/commits$/.exec(path);
     if (match) {
       const ref = query.get('sha') ?? '';
-      const issue = this.issues.find(entry => entry.repository === match![1] && ref === `refs/box-bounty/${entry.id}`);
+      this.commitRefs.push(ref);
+      const issue = this.issues.find(entry => entry.repository === match![1] && ref === `${entry.chain === 'old' ? 'refs/box-bounty' : 'refs/box-bounty-records'}/${entry.id}`);
       if (!issue?.events) return { status: 404 };
       return { status: 200, json: issue.events.map((_, index) => ({ sha: this.eventSha(issue, index) })) };
     }

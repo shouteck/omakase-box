@@ -86,7 +86,7 @@ const BUDGET: Record<string, { git: number; gh: number }> = {
   // start fewer than BT20's 15.
   'create': { git: 14, gh: 0 }, // BT32: create is not a fetching surface and writes no chain — count unchanged.
   // BT32: `status` refreshes shared memory once a minute — one config read
-  // and one `fetch +refs/box-bounty/*`; an empty shared memory skips the
+  // and one `fetch +refs/box-bounty-records/*`; an empty shared memory skips the
   // ref listings entirely (measured +2 over BT16's count).
   'status-drafted': { git: 6, gh: 0 },
   'close-draft': { git: 4, gh: 0 }, // BT32: +1 — the withdrawn milestone appends a chain event (object write); nothing is pushed while unposted.
@@ -117,7 +117,7 @@ const BUDGET: Record<string, { git: number; gh: number }> = {
   'close-reason': { git: 4, gh: 0 },
   'status-end': { git: 9, gh: 0 }, // BT32: +6 — same refresh + import as status-posted
   // BT32: `hook start` is a fetching surface — the shared-memory refresh
-  // pays one `fetch +refs/box-bounty/*` plus the batched ref listings and
+  // pays one `fetch +refs/box-bounty-records/*` plus the batched ref listings and
   // adoption work, on top of resolving the checkout. No record writes.
   'hook-start': { git: 4, gh: 0 }
 };

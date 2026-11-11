@@ -17,7 +17,7 @@ A refusal is a `BountyRefused` (`errors.ts:5`) whose first argument is a stable 
 **Guarantees.**
 - C1. No never-ship file enters the draft's captured files; removed files are named only as `(rule 'name')` removals (`snapshot.ts`, never-ship.test.ts).
 - C2. Links and junctions resolving outside the repository are refused, never followed (`snapshot.ts:112` `link-escape`).
-- C3. `create` performs no network I/O and writes no `refs/box-bounty/<id>` ref — the draft is local (`bt32.test.ts` case 1, `record.test.ts:54`).
+- C3. `create` performs no network I/O and writes no `refs/box-bounty-records/<id>` ref (nor the old `refs/box-bounty/<id>`) — the draft is local (`bt32.test.ts` case 1, `record.test.ts:54`).
 - C4. `--why` is required and stored only in the record — never in any shipped artifact (`create.ts:129`, `missing-why`).
 - C5. `planBounty` builds a resolvable snapshot commit whose tree is the captured working state (`snapshot.ts`, `plan.snapshot.commit`; since BT24, new drafts do not pin `refs/box-bounty/<id>` or store `record.snapshot` — corrected by BT38).
 - C6. The snapshot tree emits bytes from the pinned commit (`git cat-file blob`), never the live worktree (packaging card, BT6a-era; `snapshot.ts`).
@@ -32,7 +32,7 @@ A refusal is a `BountyRefused` (`errors.ts:5`) whose first argument is a stable 
 
 **Commands and options.** `omakase-box post <id>` (`bounty.ts:218`, `commands.ts` `postBounty` → `post.ts:180` `postGitHub`), `--preview` (`post.ts:175` `previewGitHub`), choices `--with-changes`, `--include <file>` (repeatable). `approveGitHub` (`post.ts:146`) records the owner answer.
 
-**Inputs and outputs.** Reads the record, the owner decision (`gate.ts` `ownerGate`), remotes (`repository.ts` identity), Git history (`publish-plan.ts`), the never-ship rules and the secret-scan rules (`scan.ts` `scanText`). Writes `record.github` (issue, branch, account, bound amount), pushes the branch, creates the issue via `gh`, and appends the `posted` chain event pushed to `refs/box-bounty/<id>` (`chain.ts:292` `sharePosted`).
+**Inputs and outputs.** Reads the record, the owner decision (`gate.ts` `ownerGate`), remotes (`repository.ts` identity), Git history (`publish-plan.ts`), the never-ship rules and the secret-scan rules (`scan.ts` `scanText`). Writes `record.github` (issue, branch, account, bound amount), pushes the branch, creates the issue via `gh`, and appends the `posted` chain event pushed to `refs/box-bounty-records/<id>` (`chain.ts` `sharePosted`; Bounties posted before version 0.2.0 keep their record at `refs/box-bounty/<id>` and are continued there (BT58).)
 
 **States.** `drafted | confirmed` → `posted`; on a held post → `waiting` (record.waiting for `post`).
 
@@ -144,7 +144,7 @@ A refusal is a `BountyRefused` (`errors.ts:5`) whose first argument is a stable 
 
 **Job.** For every agent on the project, on any machine and host: remember where each bounty is and what to do next — the delegation record. Contract: `docs/box-v4/MEMORY-SPEC.md` (owner-approved, living).
 
-**Commands and options.** Every command writes through `record.ts`/`store.ts`; the shared part travels as per-bounty Git event chains under `refs/box-bounty/<id>` (`chain.ts`), explicitly fetched (`syncChains`) and imported into the shared table; `sharedRead` answers cross-machine reads.
+**Commands and options.** Every command writes through `record.ts`/`store.ts`; the shared part travels as per-bounty Git event chains under `refs/box-bounty-records/<id>` (`chain.ts`; Bounties posted before version 0.2.0 keep their record at `refs/box-bounty/<id>` and are continued there (BT58). Why the name: Git resolves a short name to `refs/<name>` before `refs/heads/<name>`, so a record at `refs/box-bounty/<id>` answered `git fetch origin box-bounty/<id>`, the bounty branch's own name. The choice of name is stored per bounty (`chain_ns:<id>`); an old chain is never moved, deleted or force-pushed), explicitly fetched (`syncChains`) and imported into the shared table; `sharedRead` answers cross-machine reads.
 
 **Inputs and outputs.** Writes one event per stage transition (`record.ts` `transitionTo`, `events` append-only); the store is `.box/local/box.db` (node:sqlite WAL, `store.ts`) with `.box/bounties/*.json` import compatibility; chain events are `{event.json}` commits, validated on import (`chain.ts:89` `validEvent`).
 

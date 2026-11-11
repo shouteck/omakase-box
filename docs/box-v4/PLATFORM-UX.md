@@ -27,7 +27,7 @@ Written by the K43 cook on 21 October 2026 for milestone PF, under D-2026-10-21-
 
 ## 2. The machine interface first
 
-The feed and MCP carry **the same facts and wording as the pages**, built from three sources only (K42 section 3.1): the issue's `box-bounty-format` block (BOUNTY-FORMAT.md), GitHub's public API (issue, repository, pull requests on `box-bounty/<id>` with `state=all`, the compare API for "head on the default branch"), and the shared-memory events under `refs/box-bounty/<id>` (MEMORY-SPEC.md section 6: `posted`, `solution`, `merged`, `closed`, `paid`); plus the board's own records of what a signed-in person chose (payment methods, the owner's "paid" click, the solver's "received" click). Nothing the board cannot read appears.
+The feed and MCP carry **the same facts and wording as the pages**, built from three sources only (K42 section 3.1): the issue's `box-bounty-format` block (BOUNTY-FORMAT.md), GitHub's public API (issue, repository, pull requests on `box-bounty/<id>` with `state=all`, the compare API for "head on the default branch"), and the shared-memory events under `refs/box-bounty-records/<id>` (`refs/box-bounty/<id>` for bounties posted before version 0.2.0; MEMORY-SPEC.md section 6: `posted`, `solution`, `merged`, `closed`, `paid`); plus the board's own records of what a signed-in person chose (payment methods, the owner's "paid" click, the solver's "received" click). Nothing the board cannot read appears.
 
 ### 2.1 `GET /bounties.json`
 
@@ -67,7 +67,7 @@ Example entry:
  "links":{"page":"…/b/bt-0d7e4a3c8b65/","issue":"…/issues/44","detail":"…/bounties/bt-0d7e4a3c8b65.json"}}
 ```
 
-**Sources.** Every fact with a `source` uses one of three names, defined in the legend: `github` (read from GitHub's public API), `project-record` (an event the poster's tool pushed to `refs/box-bounty/<id>` on GitHub; only someone with push access can push it, so it is read as the owner's word), `board` (a click on the board by the signed-in person named in `by`). Payment words also carry `whose_word` ("the owner's", "the solver's").
+**Sources.** Every fact with a `source` uses one of three names, defined in the legend: `github` (read from GitHub's public API), `project-record` (an event the poster's tool pushed to `refs/box-bounty-records/<id>` on GitHub; only someone with push access can push it, so it is read as the owner's word), `board` (a click on the board by the signed-in person named in `by`). Payment words also carry `whose_word` ("the owner's", "the solver's").
 
 **Caching.** Each page carries an `ETag`; `If-None-Match` returns 304. `read_at` says how old the facts are; the board reads GitHub every 15 minutes within its budget (PF1), so polling more than every 5 minutes gains nothing. Static JSON per filter set is cacheable at the edge.
 

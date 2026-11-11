@@ -73,7 +73,7 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     expect(result.record.github!.commit).toBe(head);
     expect(result.record.github!.wipCommit).toBeUndefined();
     // The branch is the public commit only; the worktree keeps its change.
-    // refs/heads/ is spelled out: BT32's chain ref `refs/box-bounty/<id>`
+    // refs/heads/ is spelled out: BT32's chain ref `refs/box-bounty-records/<id>` (BT58)
     // makes the bare `box-bounty/<id>` shorthand ambiguous to rev-parse.
     expect(git(bare, ['show', `refs/heads/${result.record.github!.branch}:app.txt`])).toBe('broken');
     expect(readFileSync(join(repo, 'app.txt'), 'utf8')).toBe('uncommitted\n');
