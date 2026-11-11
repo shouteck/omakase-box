@@ -41,7 +41,8 @@ describe('take on a listed bounty', { timeout: 120000 }, () => {
     expect(git(bare, ['rev-parse', `${pushed}^`])).toBe(head);
     const draft = state().prs.at(-1)!;
     expect(draft).toMatchObject({ draft: true, base: { ref: main } });
-    expect(draft.body).toMatch(/\n\nFixes #7$/);
+    // BT57: the closing line stays on its own line; the credit line follows it.
+    expect(draft.body).toMatch(/\n\nFixes #7\n\nMade with omakase-box/);
   }));
 
   it('a posted bounty still needs its bounty branch: an answer naming another branch without closing an issue is refused', () => postedFixture(({ id }) => {
