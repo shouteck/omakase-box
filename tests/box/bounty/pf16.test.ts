@@ -82,9 +82,9 @@ describe('omakase-box setup', { timeout: 60000 }, () => {
   it('a failed install says why and what to run, and the skill is still written', () => {
     mkdirSync(join(home, '.claude'));
     rmSync(bin, { recursive: true });
-    const run = spawnSync(process.execPath, [CLI_DIST, 'setup'], { encoding: 'utf8', env: { ...process.env, HOME: home, USERPROFILE: home, BOX_SETUP_PACKAGE: join(home, 'no-such-package.tgz'), npm_config_prefix: join(home, 'prefix'), PATH: (process.env['PATH'] ?? '').split(delimiter).filter(dir => !existsSync(join(dir, 'box')) && !existsSync(join(dir, 'box.cmd'))).join(delimiter) } });
+    const run = spawnSync(process.execPath, [CLI_DIST, 'setup'], { encoding: 'utf8', env: { ...process.env, HOME: home, USERPROFILE: home, BOX_SETUP_PACKAGE: join(home, 'no-such-package.tgz'), npm_config_prefix: join(home, 'prefix'), PATH: (process.env['PATH'] ?? '').split(delimiter).filter(dir => !existsSync(join(dir, 'omakase-box')) && !existsSync(join(dir, 'omakase-box.cmd'))).join(delimiter) } });
     expect(run.status).toBe(0);
-    expect(run.stdout).toContain('box: not installed (');
+    expect(run.stdout).toContain('omakase-box: not installed (');
     expect(run.stdout).toContain('next: npm install -g');
     expect(existsSync(claude())).toBe(true);
   });
