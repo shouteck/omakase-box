@@ -75,3 +75,4 @@ Windows wall time is unchanged (24.6 to 27.6 min against 22.3 to 25.7 before): t
 - A test that is entirely synchronous and over the limit still passes, as before; nothing here makes such a test fail.
 - A real hang on Windows is now reported 30 s later than before.
 - Tests with their own timeout are untouched.
+- Setup hooks have their own limit, `hookTimeout`, which K59 left at Vitest's 10 s default: master's K59 merge run 43024146368 failed on Windows with `Hook timed out in 10000ms` in `bt8c.test.ts` and `pf26.test.ts`. Raised on Windows by [K60](../../waves/K60.md).

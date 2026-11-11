@@ -4,6 +4,7 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 ## Kitchen tooling
 
+- **A Windows test cleanup can fail with `EPERM`** (K60, 11 November 2026): run 43027294715 attempt 1, `github.test.ts:111` "refuses missing gh, a non-GitHub remote and mismatched pushurl" passed its assertions, then `rm` of its temp folder (`box-bt1-BT6a-ci-no-gh-...`) failed `EPERM` because another process still held it; the rerun passed. A different kind from the timeouts of K59 and K60. If it recurs, the fix is a bounded retry in the tests' shared cleanup, not in any one test.
 - **Deploy guide (PF10):** in Git Bash `node ../../scripts/pnpm.mjs exec wrangler deploy` (`packages/box-platform/DEPLOY.md`) failed with "wrangler not recognized"; `node node_modules/wrangler/bin/wrangler.js deploy` worked. Cause not traced; PF6 should recheck the guide's commands.
 - **From the K43 inbox (22 October 2026 kickoff):** (a) one command that runs the AGENTS.md + KITCHEN.md size rule and `brief-check` on every changed brief before a kitchen-document push (today two manual steps in `kitchen/roles/cto.md`); (b) verify runs made in a disposable worktree are lost when it is removed — let verify take a runs directory, or copy `.kitchen/runs/*` into the main checkout first, so kitchen-stats counts them (K43 lost four of seven).
 
