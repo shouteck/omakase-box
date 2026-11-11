@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// box bounty demo replay — the product's story, walked step by step.
+// omakase-box demo replay — the product's story, walked step by step.
 //
 //   node kitchen/demo/bt11b-replay.mjs [--standin | --real] [--auto]
 //     [--pause <seconds>] [--per-line <seconds>] [--max-pause <seconds>]
@@ -166,7 +166,7 @@ process.on('SIGINT', () => cleanupAndExit(130));
 process.on('uncaughtException', error => { console.log(`!! ${error.message}`); cleanupAndExit(1); });
 
 async function main() {
-  console.log(`box bounty — an agent hands a task to outside solvers, a walkthrough`);
+  console.log(`omakase-box — an agent hands a task to outside solvers, a walkthrough`);
   console.log(`mode: ${real ? 'REAL — posts on github.com in ' + REAL_REPO : 'stand-in — a fake GitHub on this machine, nothing leaves it'}`);
   if (!existsSync(CLI)) { console.log(`!! the tool is not built — run the workspace build first (node scripts/workspace.mjs build)`); process.exit(1); }
 

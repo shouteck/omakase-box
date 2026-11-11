@@ -1,4 +1,4 @@
-# `box bounty` — the first five minutes
+# `omakase-box` — the first five minutes
 
 **What it does.** An agent hands a task it cannot or should not do to outside
 solvers: the tool packages the task, what the agent tried, and the code into a
@@ -21,11 +21,11 @@ Run this once:
     npx -y omakase-box setup
 
 If Windows PowerShell says running scripts is disabled, use `npx.cmd` in place of
-`npx`, and `box.cmd` in place of `box`. You need not change the policy.
+`npx`, and `omakase-box.cmd` in place of `omakase-box`. You need not change the policy.
 
-It puts `box` on this machine and a small skill where your agents look, says
-exactly what it wrote, and `box setup --remove` takes the skill away. Your next
-agent session finds the tool. Run `box bounty` in a project to see where things stand.
+It puts `omakase-box` on this machine and a small skill where your agents look, says
+exactly what it wrote, and `omakase-box setup --remove` takes the skill away. Your next
+agent session finds the tool. Run `omakase-box` in a project to see where things stand.
 
 The tool reads the project it runs in, so run it only in projects you trust. Node is from
 <https://nodejs.org>, Git from <https://git-scm.com>, `gh` from
@@ -37,19 +37,19 @@ The tool uses that sign-in; it never sees, stores or asks for a credential.
 
 ## Agents that read neither skills folder
 
-`box setup` covers Claude Code, Codex, Cursor and Gemini CLI. For any other agent,
+`omakase-box setup` covers Claude Code, Codex, Cursor and Gemini CLI. For any other agent,
 write the tool into the instructions it reads, inside the project:
 
-    box bounty config set instructions true
+    omakase-box config set instructions true
 
-That writes the fixed block `box bounty describe --rules` prints, between its
+That writes the fixed block `omakase-box describe --rules` prints, between its
 `<!-- box-bounty -->` markers, into the project's existing instruction files
 (`AGENTS.md`, `CLAUDE.md`, `.cursor/rules` and the like; name another existing
-file with `box bounty config set instruction-file <path>`). It never creates
+file with `omakase-box config set instruction-file <path>`). It never creates
 an instruction file. Instructions stay off until you run that: writing into
 your files is your choice. Undo it with:
 
-    box bounty config set instructions false
+    omakase-box config set instructions false
 
 The tool then stops maintaining the block; text already written stays until
 you delete it.
@@ -59,25 +59,25 @@ you delete it.
 In a public GitHub repository you own or may post to, write the task for the
 solver in a file, then:
 
-    box bounty create --task TASK.md --why "why you are handing it off"
-    box bounty post <id> --preview
+    omakase-box create --task TASK.md --why "why you are handing it off"
+    omakase-box post <id> --preview
 
 `--preview` shows exactly what becomes public: the issue text, the branch, and
 any of your commits that were not already on GitHub. Posting needs the owner's
 one-time permission; if it is missing, `post` waits and prints the line to put
 to them — for a repository they own the answer is:
 
-    box bounty allow owner/project
+    omakase-box allow owner/project
 
-Then `box bounty post <id>` posts the issue and pushes the branch. Solutions
-arrive as pull requests: `box bounty status` lists them, `box bounty look <id>
+Then `omakase-box post <id>` posts the issue and pushes the branch. Solutions
+arrive as pull requests: `omakase-box status` lists them, `omakase-box look <id>
 <n>` collects one and shows its change (marked as the solver's words, never the
-tool's), `box bounty apply <id> <n>` merges it onto the current code, and
-`box bounty close <id>` ends a bounty with nothing merged.
+tool's), `omakase-box apply <id> <n>` merges it onto the current code, and
+`omakase-box close <id>` ends a bounty with nothing merged.
 
 When a merged solution states a reward, `apply` ends with a block meant for
 the owner — pass it on in those words. `status` keeps naming the payment owed
-until it is recorded paid with `box bounty config set paid <id>`.
+until it is recorded paid with `omakase-box config set paid <id>`.
 
 ## What becomes public, and what never does
 
@@ -112,20 +112,20 @@ the tool at all, what the task is, and which solution to take.
 
 ## The session hook
 
-`box bounty hook on --host <name>` (`<name>` is `devin` or `claude`) writes a
+`omakase-box hook on --host <name>` (`<name>` is `devin` or `claude`) writes a
 small entry for your agent host so sessions are told when a bounty has news;
 it asks what it will do first and writes only after `--confirm`. It costs a
-bounded number of `gh` calls at session start, pause and finish. `box bounty hook off --host <name>` removes
-it; `box bounty hook` shows whether it is on.
+bounded number of `gh` calls at session start, pause and finish. `omakase-box hook off --host <name>` removes
+it; `omakase-box hook` shows whether it is on.
 
 ## How to stop it
 
-- `box bounty deny owner/project` — stop posting for that repository and
+- `omakase-box deny owner/project` — stop posting for that repository and
   leave its open bounties untouched; drafts can still be made, nothing more is
-  posted until `box bounty allow`.
-- `box bounty close <id> --reason "<why>"` — end one open bounty with nothing
+  posted until `omakase-box allow`.
+- `omakase-box close <id> --reason "<why>"` — end one open bounty with nothing
   merged; without `--reason` it is recorded as withdrawn.
-- `box bounty hook off --host <name>` — sessions are no longer told about
+- `omakase-box hook off --host <name>` — sessions are no longer told about
   bounties.
 - `npm uninstall -g box-bounty` — the tool is gone (below).
 
@@ -133,6 +133,16 @@ There is no command that stops everything. `deny` removes a permission and
 `close` ends one bounty; deleting the local records removes only this
 machine's copy. Issues, pull requests and the shared refs a post already
 published stay until removed by hand.
+
+## The command's name
+
+The command is `omakase-box`; in 0.1.x it was `box bounty`. Box, the storage company, ships its own
+command called `box`, and npm refuses to install two packages that both claim it, so this tool does
+not. `omakase-box bounty <command>` still works. These names did not change, because other programs
+or stored data depend on them: the issue label `box-bounty`, the issue title's `[box bounty <id>]`
+prefix, the `<!-- box-bounty -->` markers, the schema names in `--json` documents
+(`box-bounty/status@1`), the Git branch and shared record names, the project's `.box/` folder, the
+settings folder, and the `BOX_BOUNTY_*` environment variables.
 
 ## Removing it from this machine
 

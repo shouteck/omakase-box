@@ -22,7 +22,7 @@ const cli = (cwd: string, args: readonly string[]) =>
 const ROOT = join(__dirname, '..', '..', '..');
 const SCAN_DIRS = ['packages/box-bounty', 'packages/box-cli/src'];
 // The dispatcher's real branches in packages/box-cli/src/bounty.ts — a `next:`
-// that names a `box bounty <word>` outside this list sends the reader to a
+// that names a `omakase-box <word>` outside this list sends the reader to a
 // command that does not exist.
 const COMMANDS = new Set(['allow', 'apply', 'close', 'config', 'create', 'deny', 'describe', 'discover', 'find', 'take', 'submit', 'help', 'hook', 'look', 'post', 'status']);
 
@@ -103,21 +103,21 @@ describe('BT40 every refusal names its next step', () => {
     for (const args of removed) {
       const result = cli(repo, args);
       const out = `${result.stdout}\n${result.stderr}`;
-      expect(result.status, `box bounty ${args.join(' ')} exited ${result.status} —\n${out}`).toBe(3);
-      expect(out, `box bounty ${args.join(' ')} —\n${out}`).toContain('(command-removed)');
-      expect(out, `box bounty ${args.join(' ')} names no next step —\n${out}`).toContain('next: ');
+      expect(result.status, `omakase-box ${args.join(' ')} exited ${result.status} —\n${out}`).toBe(3);
+      expect(out, `omakase-box ${args.join(' ')} —\n${out}`).toContain('(command-removed)');
+      expect(out, `omakase-box ${args.join(' ')} names no next step —\n${out}`).toContain('next: ');
     }
   });
 
-  it('every `box bounty <word>` written after `next:` is a real command', () => {
+  it('every `omakase-box <word>` written after `next:` is a real command', () => {
     const bad: string[] = [];
     for (const site of collectSites()) {
       if (site.excepted) continue;
       let from = site.message.indexOf('next: ');
       while (from !== -1) {
         const tail = site.message.slice(from).split('\n')[0]!;
-        for (const match of tail.matchAll(/box bounty ([a-z][a-z-]*)/g)) {
-          if (!COMMANDS.has(match[1]!)) bad.push(`${site.file}:${site.line} ${site.reason} names 'box bounty ${match[1]}'`);
+        for (const match of tail.matchAll(/omakase-box ([a-z][a-z-]*)/g)) {
+          if (!COMMANDS.has(match[1]!)) bad.push(`${site.file}:${site.line} ${site.reason} names 'omakase-box ${match[1]}'`);
         }
         from = site.message.indexOf('next: ', from + 1);
       }
@@ -149,7 +149,7 @@ describe('BT40 every refusal names its next step', () => {
     for (const entry of cases) {
       const result = cli(entry.cwd, entry.args);
       const out = `${result.stdout}\n${result.stderr}`;
-      expect(result.status, `${entry.family}: box bounty ${entry.args.join(' ')} exited ${result.status} —\n${out}`).toBe(3);
+      expect(result.status, `${entry.family}: omakase-box ${entry.args.join(' ')} exited ${result.status} —\n${out}`).toBe(3);
       expect(out, `${entry.family}: expected ${entry.reason} —\n${out}`).toContain(`(${entry.reason})`);
       expect(out, `${entry.family}: refusal names no next step —\n${out}`).toContain('next: ');
     }
@@ -178,16 +178,16 @@ describe('BT40 every refusal names its next step', () => {
     const repo = makeRepo({ 'TASK.md': 'Fix the sum.\n' });
     const result = cli(repo, ['config', 'set', 'bogus-hardstop-x1', '1']);
     const out = `${result.stdout}\n${result.stderr}`;
-    expect(result.status, `box bounty config set bogus-hardstop-x1 1 exited ${result.status} —\n${out}`).toBe(3);
+    expect(result.status, `omakase-box config set bogus-hardstop-x1 1 exited ${result.status} —\n${out}`).toBe(3);
     expect(out, `expected settings-hard-stop —\n${out}`).toContain('(settings-hard-stop)');
     // Rule 3: the text after `next:` is a step the reader can do now, not a
     // fact about the rule — the pass caught "a hard stop cannot be configured
     // — it is enforced" (no action) at 250edc8.
-    expect(out, `hard-stop next carries no action —\n${out}`).toMatch(/next: [^\n]*(choose|omit)[^\n]*box bounty config/);
-    // Follow the printed step: `box bounty config` runs and lists real settings.
+    expect(out, `hard-stop next carries no action —\n${out}`).toMatch(/next: [^\n]*(choose|omit)[^\n]*omakase-box config/);
+    // Follow the printed step: `omakase-box config` runs and lists real settings.
     const listed = cli(repo, ['config']);
     const listedOut = `${listed.stdout}\n${listed.stderr}`;
-    expect(listed.status, `box bounty config exited ${listed.status} —\n${listedOut}`).toBe(0);
-    expect(listedOut, `config lists no configurable settings —\n${listedOut}`).toContain('box bounty config set instructions');
+    expect(listed.status, `omakase-box config exited ${listed.status} —\n${listedOut}`).toBe(0);
+    expect(listedOut, `config lists no configurable settings —\n${listedOut}`).toContain('omakase-box config set instructions');
   });
 });

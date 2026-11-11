@@ -35,10 +35,10 @@ describe('a checkout with several GitHub remotes resolves through the owner list
     expect(run.status).toBe(0);
     expect(run.stderr).toBe('');
     expect(run.stdout.split('\n')[0]).toContain('waiting for the owner');
-    expect(run.stdout).toContain('allow me/project (remote origin): box bounty allow me/project');
-    expect(run.stdout).toContain('allow owner/project (remote upstream): box bounty allow owner/project');
+    expect(run.stdout).toContain('allow me/project (remote origin): omakase-box allow me/project');
+    expect(run.stdout).toContain('allow owner/project (remote upstream): omakase-box allow owner/project');
     expect(run.stdout).toContain('or ask me each time: add --ask');
-    expect(run.stdout).not.toContain(`box bounty allow ${id}`);
+    expect(run.stdout).not.toContain(`omakase-box allow ${id}`);
     expect(loadRecord(root, id).stage).toBe('waiting');
     expect(saved()).toBe(before);
   });
@@ -70,8 +70,8 @@ describe('a checkout with several GitHub remotes resolves through the owner list
       expect(error).toMatchObject({ reason: 'repository-choice-needed' });
       expect(String(error)).toContain('me/project');
       expect(String(error)).toContain('owner/project');
-      expect(String(error)).toContain('box bounty allow me/project');
-      expect(String(error)).toContain('box bounty allow owner/project');
+      expect(String(error)).toContain('omakase-box allow me/project');
+      expect(String(error)).toContain('omakase-box allow owner/project');
     }
     expect(loadSettings().repositories).toEqual({});
     expect(saved()).toBe(before);

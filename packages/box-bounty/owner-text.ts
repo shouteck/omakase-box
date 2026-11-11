@@ -47,10 +47,10 @@ export function firstUseBlock(repoRoot: string): string[] {
 
 // The lines a held post prints: the owner block first, then the agent's
 // mapping to the one command they run. Owner commands live under
-// `box bounty allow`/`deny`, plainly named.
+// `omakase-box allow`/`deny`, plainly named.
 export function ownerWaitLines(repoRoot: string, record: BountyRecord, read: DecisionRead): string[] {
   const id = record.id;
-  if (retiredRoute(record) !== null) return [`This delivery route was retired; end it with box bounty close ${id}`];
+  if (retiredRoute(record) !== null) return [`This delivery route was retired; end it with omakase-box close ${id}`];
   if (read.decision === 'ask' || read.decision === 'off') {
     const target = record.waiting?.to;
     const { amount } = repoReward(repoRoot);
@@ -60,7 +60,7 @@ export function ownerWaitLines(repoRoot: string, record: BountyRecord, read: Dec
         `Each bounty on this repository states $${amount}, a promise in your name that you pay.`,
         `The owner ${read.decision === 'ask' ? 'asked to be asked each time' : 'turned the permission off'} — may this one ${target === 'github' || target === undefined ? 'be posted' : 'be delivered'}? A yes or no is enough.`
       ]),
-      `for you — the owner answers this one with: box bounty allow ${id}`
+      `for you — the owner answers this one with: omakase-box allow ${id}`
     ];
   }
   // Several GitHub remotes and none on the owner's list (BT16 rule 6): the
@@ -78,9 +78,9 @@ export function ownerWaitLines(repoRoot: string, record: BountyRecord, read: Dec
   return [
     ...firstUseBlock(repoRoot),
     'for you — the owner picks one; you run the matching command:',
-    `  ${DECISION_WORDS.allow}: box bounty allow`,
-    `  ${DECISION_WORDS.ask}: box bounty allow --ask`,
-    `  ${DECISION_WORDS.once}: box bounty allow ${id}`
+    `  ${DECISION_WORDS.allow}: omakase-box allow`,
+    `  ${DECISION_WORDS.ask}: omakase-box allow --ask`,
+    `  ${DECISION_WORDS.once}: omakase-box allow ${id}`
   ];
 }
 
@@ -98,7 +98,7 @@ export function mergeWaitLines(record: BountyRecord, attempt: Attempt): string[]
       'Nothing has been merged yet.',
       'May it be merged? A yes or no is enough.'
     ]),
-    `for you — the owner answers this one with: box bounty allow ${id}`,
+    `for you — the owner answers this one with: omakase-box allow ${id}`,
     'the answer is bound to this solution at this commit on this branch\'s state — a change underneath it asks again'
   ];
 }

@@ -72,8 +72,8 @@ function readAttempt(taken: Taken): Attempt {
 
 function takenOrRefuse(id: string): Taken {
   const taken = loadTaken(id);
-  if (taken === null) throw new BountyRefused('not-taken', `${id} is not a bounty you took; nothing changed; next: box bounty take ${id}, or box bounty status inside the checkout that posted it`);
-  if (taken.stage === 'waiting') throw new BountyRefused('not-taken-yet', `${id} waits on the owner's yes and is not taken yet; nothing changed; next: once the owner has answered, box bounty take ${id}`);
+  if (taken === null) throw new BountyRefused('not-taken', `${id} is not a bounty you took; nothing changed; next: omakase-box take ${id}, or omakase-box status inside the checkout that posted it`);
+  if (taken.stage === 'waiting') throw new BountyRefused('not-taken-yet', `${id} waits on the owner's yes and is not taken yet; nothing changed; next: once the owner has answered, omakase-box take ${id}`);
   return taken;
 }
 
@@ -82,15 +82,15 @@ const retargeted = (taken: Taken, attempt: Attempt): string => `pull request #${
 /** `submit`: the draft becomes ready for the poster's review. Only work already pushed counts. */
 export function submitTaken(id: string): string {
   const taken = takenOrRefuse(id);
-  if (taken.stage === 'withdrawn') throw new BountyRefused('attempt-withdrawn', `${id} was withdrawn; nothing changed; next: box bounty take ${id} starts a new attempt`);
+  if (taken.stage === 'withdrawn') throw new BountyRefused('attempt-withdrawn', `${id} was withdrawn; nothing changed; next: omakase-box take ${id} starts a new attempt`);
   const attempt = readAttempt(taken);
   const number = taken.pullRequest!.number;
-  if (attempt.state !== 'open') throw new BountyRefused('attempt-ended', `pull request #${number} is already ${attempt.state} on GitHub; nothing changed; next: box bounty status ${id}`);
+  if (attempt.state !== 'open') throw new BountyRefused('attempt-ended', `pull request #${number} is already ${attempt.state} on GitHub; nothing changed; next: omakase-box status ${id}`);
   if (attempt.base !== taken.bountyBranch) throw new BountyRefused('attempt-retargeted', `${retargeted(taken, attempt)}; nothing changed; next: set its base back to ${taken.bountyBranch} at ${taken.pullRequest!.url}, then submit again`);
-  if (attempt.changedFiles === 0) throw new BountyRefused('nothing-to-submit', `pull request #${number} changes no file on GitHub — only the empty start commit is there; nothing changed; next: commit in ${taken.workspace ?? 'your workspace'} and push to ${taken.target} ${taken.branch}, then box bounty submit ${id}`);
+  if (attempt.changedFiles === 0) throw new BountyRefused('nothing-to-submit', `pull request #${number} changes no file on GitHub — only the empty start commit is there; nothing changed; next: commit in ${taken.workspace ?? 'your workspace'} and push to ${taken.target} ${taken.branch}, then omakase-box submit ${id}`);
   if (!attempt.draft) {
     if (taken.stage !== 'submitted') saveTaken({ ...taken, stage: 'submitted', at: new Date().toISOString() });
-    return `${id} — pull request #${number} is already ready for review; nothing more to do. next: box bounty status ${id}`;
+    return `${id} — pull request #${number} is already ready for review; nothing more to do. next: omakase-box status ${id}`;
   }
   // The tool's own draft sentence is replaced; words the solver wrote in the description stay as they are.
   const draftText = DRAFT_BODY(id);
@@ -100,11 +100,11 @@ export function submitTaken(id: string): string {
     variables: { id: attempt.nodeId, ...(body === null ? {} : { body }) }
   });
   const ready = isObject(data) && isObject(data['data']) && isObject(data['data']['ready']) && isObject(data['data']['ready']['pullRequest']) ? data['data']['ready']['pullRequest']['isDraft'] : undefined;
-  if (ready !== false) return invalid('github-response-invalid', `GitHub did not say pull request #${number} is ready for review; the attempt stays a draft on record; next: mark it ready at ${taken.pullRequest!.url}, then box bounty submit ${id}`);
+  if (ready !== false) return invalid('github-response-invalid', `GitHub did not say pull request #${number} is ready for review; the attempt stays a draft on record; next: mark it ready at ${taken.pullRequest!.url}, then omakase-box submit ${id}`);
   saveTaken({ ...taken, stage: 'submitted', at: new Date().toISOString() });
   return [
     `${id} — submitted: pull request #${number} is ready for the poster's review, ${attempt.changedFiles} file(s) changed · ${taken.pullRequest!.url}`,
-    `next: box bounty status ${id} follows it — review comments, merged or closed, and payment; to answer a review, push to ${taken.target} ${taken.branch}`
+    `next: omakase-box status ${id} follows it — review comments, merged or closed, and payment; to answer a review, push to ${taken.target} ${taken.branch}`
   ].join('\n');
 }
 
@@ -113,7 +113,7 @@ export function submitTaken(id: string): string {
 const day = (at: string | null): string => at?.slice(0, 10) ?? 'an unstated date';
 
 function paymentLine(fact: BoardFact, solver: string | null, paysOnMerge: boolean | null): string {
-  if (fact.kind === 'unreachable') return `board: not read (${fact.reason}); next: box bounty status again when online`;
+  if (fact.kind === 'unreachable') return `board: not read (${fact.reason}); next: omakase-box status again when online`;
   if (fact.kind === 'not-listed') return 'board: not listed yet — it reads GitHub every 15 minutes';
   const you = (login: string | null): string => login !== null && solver !== null && login.toLowerCase() === solver.toLowerCase() ? 'you' : solverAccountOr(login, 'an account whose name could not be read');
   const state = fact.charge as keyof typeof CHARGE_WORDS | null | undefined;
@@ -204,17 +204,17 @@ export function attemptStatus(id: string, options: { readonly comments?: boolean
   if (board !== null) {
     lines.push(`  ${paymentLine(board.fact, solver, board.paysOnMerge)}`);
     if ((board.reward ?? 0) > 0 && attempt.state !== 'closed') lines.push(...payWayLines(solver).map(line => `  ${line}`));
-  } else lines.push('  board: off on this machine, so payment is not read; box bounty config set board <address> names one');
+  } else lines.push('  board: off on this machine, so payment is not read; omakase-box config set board <address> names one');
   lines.push(`next: ${nextStep(taken, attempt, options.comments === true)}`);
   return lines.join('\n');
 }
 
 function nextStep(taken: Taken, attempt: Attempt, read: boolean): string {
   const id = taken.id;
-  if (attempt.state === 'merged') return `nothing more to do on GitHub; box bounty status ${id} later shows payment`;
-  if (attempt.state === 'closed') return `the attempt ended without a merge; box bounty close ${id} withdraws it on record`;
-  if (attempt.draft) return `work in ${taken.workspace ?? 'your workspace'}, push to ${taken.target} ${taken.branch}, then box bounty submit ${id}`;
-  return attempt.notes.length > 0 && !read ? `read what was written: box bounty status ${id} --comments; push to ${taken.target} ${taken.branch} to answer` : `wait for the poster's review; box bounty status ${id} reads it again`;
+  if (attempt.state === 'merged') return `nothing more to do on GitHub; omakase-box status ${id} later shows payment`;
+  if (attempt.state === 'closed') return `the attempt ended without a merge; omakase-box close ${id} withdraws it on record`;
+  if (attempt.draft) return `work in ${taken.workspace ?? 'your workspace'}, push to ${taken.target} ${taken.branch}, then omakase-box submit ${id}`;
+  return attempt.notes.length > 0 && !read ? `read what was written: omakase-box status ${id} --comments; push to ${taken.target} ${taken.branch} to answer` : `wait for the poster's review; omakase-box status ${id} reads it again`;
 }
 
 /** The attempts this account took, from the local record alone: no GitHub read. */
@@ -224,6 +224,6 @@ export function takenOverview(): string[] {
   return [
     `bounties you took (${all.length}):`,
     ...all.map(taken => `  ${taken.id} on ${taken.repository} — ${stageWords(taken)}${taken.pullRequest === undefined ? '' : `, pull request #${taken.pullRequest.number} ${taken.pullRequest.url}`}`),
-    'next: box bounty status <id> reads one: the pull request, what was written on it, and payment'
+    'next: omakase-box status <id> reads one: the pull request, what was written on it, and payment'
   ];
 }

@@ -141,7 +141,7 @@ describe('BT50 through a stand-in gh', () => {
     expect(refusal.reason).toBe('github-post-incomplete');
     expect(refusal.message).toContain('github-rate-limited');
     expect(refusal.message).toContain(RESET_TIME);
-    expect(refusal.message).toContain(`next: retry box bounty post ${id}`);
+    expect(refusal.message).toContain(`next: retry omakase-box post ${id}`);
     expect(refusal.message).not.toContain(leakCanary);
     expect(JSON.stringify(loadRecord(repo, id))).not.toContain(leakCanary);
     expect(state().issues).toEqual([]);

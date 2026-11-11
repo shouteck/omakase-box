@@ -247,7 +247,7 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(renderStatus(repo, { full: true })).toContain('issue open');
     // BT17: the per-request collect commands are said once — the bounty's one
     // `next:` names the command shape and the listing names the request.
-    expect(refreshed).toContain(`box bounty look ${id} <number>`);
+    expect(refreshed).toContain(`omakase-box look ${id} <number>`);
     expect(renderOpenLine(repo)).toContain('#1 by owner');
     const observedAt = loadRecord(repo, id).github!.outside!.at;
     update({ fail: '/issues' });
@@ -255,7 +255,7 @@ describe('GitHub bounty destination, entirely offline', () => {
     // A failed refresh names its reason (BT14) and offers the retry that
     // could read a different answer.
     expect(stale).toContain('github-command-failed');
-    expect(stale).toContain('retry box bounty status');
+    expect(stale).toContain('retry omakase-box status');
     expect(stale).toContain(observedAt);
     expect(stale).toContain('#1 by owner');
   }));

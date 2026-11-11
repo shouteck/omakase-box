@@ -30,8 +30,8 @@ needs a screen, a browser and the recorder). It is the whole job.
 > 2. Clone `shouteck/box-bounty-sandbox` beside it.
 > 3. Sign `gh` in with the token the owner provides as a secret — it is scoped
 >    to the sandbox repository and used only there.
-> 4. On the owner's instruction, allow the sandbox repository for box bounty on
->    this machine — and nothing else (`box bounty allow`).
+> 4. On the owner's instruction, allow the sandbox repository for omakase-box on
+>    this machine — and nothing else (`omakase-box allow`).
 > 5. Start recording with the terminal and a browser both visible.
 > 6. Run `node kitchen/demo/bt11b-replay.mjs --real --auto`. It prints one line
 >    before each step saying who is acting, and each public page it creates on

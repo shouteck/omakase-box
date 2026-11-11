@@ -1,5 +1,6 @@
-import { lstatSync, readFileSync, realpathSync, statSync } from 'node:fs';
+import { lstatSync, readFileSync, statSync } from 'node:fs';
 import { isAbsolute, join, relative } from 'node:path';
+import { canonicalFolder } from './folder.js';
 import { BountyRefused } from './errors.js';
 import { git, gitIndexWrite, gitOutcome, gitStdin, ownerGit } from './git.js';
 import type { IndexChange } from './git.js';
@@ -178,7 +179,7 @@ export function createSnapshotCommit(repoRoot: string, workDir: string, statFrom
 // reproduces the baseline result byte-for-byte. Links are rare; the fast
 // path pays for the common case and the checks see nothing new.
 export function classifySnapshot(repoRoot: string, commit: string, rules: readonly NeverShipRule[]): { files: SnapshotFile[]; removed: SnapshotRemoval[]; blobs: Set<string>; links: Set<string> } {
-  const realRoot = realpathSync(repoRoot);
+  const realRoot = canonicalFolder(repoRoot);
   // -c core.quotepath=false: without it ls-tree C-quotes non-ASCII names even under -z.
   const listing = git(repoRoot, ['-c', 'core.quotepath=false', 'ls-tree', '-r', '-z', '--format=%(objecttype) %(objectsize) %(path)', commit]);
   const escapes: string[] = [];
@@ -201,10 +202,10 @@ export function classifySnapshot(repoRoot: string, commit: string, rules: readon
     let real: string;
     let sizeOnDisk = 0;
     try {
-      const resolved = realpathSync.native(absolute);
+      const resolved = canonicalFolder(absolute);
       real = toPosix(relative(realRoot, resolved)).toLowerCase() === toPosix(relative(realRoot, absolute)).toLowerCase()
         ? absolute // no link, same name modulo case — the JS walk's answer is this spelling
-        : realpathSync(absolute); // a link/junction redirected: the baseline resolver decides
+        : resolved; // a link/junction redirected: judged by where it lands, in the root's one spelling (BT64)
       const stat = statSync(real);
       if (!stat.isFile()) { unreadable.push(path); continue; }
       sizeOnDisk = stat.size;

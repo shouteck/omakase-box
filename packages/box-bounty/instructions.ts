@@ -1,7 +1,8 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { existsSync, lstatSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, lstatSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import type { Stats } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { canonicalFolder } from './folder.js';
 import { BountyRefused } from './errors.js';
 import { gitOutcome } from './git.js';
 import { showPath } from './notice.js';
@@ -19,7 +20,7 @@ export const INSTRUCTION_HOSTS = [
   { host: 'GitHub Copilot', files: ['.github/copilot-instructions.md'], directory: null, imports: 'none' }
 ] as const;
 
-// Each host's documented user-level skills folder, read on 2 November 2026, for `box setup`.
+// Each host's documented user-level skills folder, read on 2 November 2026, for `omakase-box setup`.
 // Cursor, Gemini CLI and Codex all read ~/.agents/skills, so one folder serves them.
 export const SKILL_TARGETS = [
   { names: 'Claude Code', homes: ['.claude'], skills: ['.claude', 'skills'] },
@@ -84,11 +85,11 @@ function onDiskName(dir: string, declared: string, stat: Stats): string {
 }
 
 export function walkProjectPath(repoRoot: string, named: string): ProjectPathWalk {
-  const root = realpathSync(repoRoot);
+  const root = canonicalFolder(repoRoot);
   const path = resolve(root, named);
   const rel = relative(root, path);
   let canonical: string | null = null;
-  try { canonical = realpathSync(path); } catch { /* missing or unresolvable — the walk still reports what it found */ }
+  try { canonical = canonicalFolder(path); } catch { /* missing or unresolvable — the walk still reports what it found */ }
   if (rel === '' || rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel)) {
     return { root, path, rel, problem: { kind: 'outside' }, actual: rel, leaf: undefined, canonical };
   }
@@ -122,7 +123,7 @@ function projectGitDir(root: string): string | null {
     const found = gitOutcome(root, ['rev-parse', '--git-dir']);
     if (found.status === 0 && found.error === undefined) {
       const resolved = resolve(root, found.stdout.trim());
-      try { dir = realpathSync(resolved); } catch { dir = resolved; }
+      try { dir = canonicalFolder(resolved); } catch { dir = resolved; }
     }
   }
   gitDirByRoot.set(root, dir);
@@ -304,7 +305,7 @@ export function syncInstructions(repoRoot: string, add = false): string[] {
         }
         if (terminal === undefined || span(readFileSync(checkInstructionFile(repoRoot, terminal.path))) === null) {
           if (add) throw new BountyRefused('instruction-import-unmaintained', 'instruction-import-unmaintained; nothing changed; next: add the imported file to the maintained list or remove the import');
-          messages.push(`${named}: imported file lacks the block; existing bytes kept. Add it with box bounty config set instructions true`);
+          messages.push(`${named}: imported file lacks the block; existing bytes kept. Add it with omakase-box config set instructions true`);
           continue;
         }
         if (marked !== null) replaceFile(path, before, Buffer.concat([before.subarray(0, marked.openAt), before.subarray(marked.closeAt + Buffer.byteLength(RULES_MARKERS.close))]));
@@ -334,7 +335,7 @@ export function instructionNotices(repoRoot: string, includeMissing = true): str
   const lines: string[] = [];
   let retired = noted.retired;
   if (existsSync(join(repoRoot, '.box', 'limits.json')) && retired !== true) {
-    lines.push('.box/limits.json is no longer read and can be deleted. If you used rulesFile, re-set maintenance with box bounty config set instructions true and any custom file with box bounty config set instruction-file <existing-path>. allowedDestinations and reminders are dropped; cost and expectedAnswer now come from facts.');
+    lines.push('.box/limits.json is no longer read and can be deleted. If you used rulesFile, re-set maintenance with omakase-box config set instructions true and any custom file with omakase-box config set instruction-file <existing-path>. allowedDestinations and reminders are dropped; cost and expectedAnswer now come from facts.');
     retired = true;
   }
   const files = discoverInstructions(repoRoot);
@@ -346,7 +347,7 @@ export function instructionNotices(repoRoot: string, includeMissing = true): str
       if (span(readFileSync(checkInstructionFile(repoRoot, file.path))) !== null || imports(repoRoot, file, files) !== null) continue;
       const key = createHash('sha256').update(file.path).digest('hex');
       if (notices.includes(key)) continue;
-      lines.push(`${named} lacks the block; add it with box bounty config set instructions true`);
+      lines.push(`${named} lacks the block; add it with omakase-box config set instructions true`);
       notices.push(key);
     } catch (error) { lines.push(`${named}: refused (${error instanceof BountyRefused ? error.reason : 'instruction-file-unreadable'}); nothing changed`); }
   }

@@ -20,8 +20,8 @@ it('global help advertises only supported create options and retains post previe
   const result = spawnSync(process.execPath, [CLI_DIST, '--help'], { encoding: 'utf8', env: process.env });
   expect(result.status, result.stderr).toBe(0);
   const lines = result.stdout.split('\n');
-  expect(lines.find(line => line.startsWith('usage: box bounty create '))).toBe('usage: box bounty create --task <file|-> --why "<one line>" [--title "<one line>"] [--resume "<context>"] [--repo <path>]');
-  expect(lines.find(line => line.includes('box bounty post '))).toContain('[--preview]');
+  expect(lines.find(line => line.startsWith('usage: omakase-box create '))).toBe('usage: omakase-box create --task <file|-> --why "<one line>" [--title "<one line>"] [--resume "<context>"] [--repo <path>]');
+  expect(lines.find(line => line.includes('omakase-box post '))).toContain('[--preview]');
 });
 
 it('an old folder post waiting for owner permission refuses before either saved file changes', () => {
@@ -35,7 +35,7 @@ it('an old folder post waiting for owner permission refuses before either saved 
   const result = cli(repo, ['allow', made.id]);
   expect(result.status).toBe(3);
   expect(result.stderr).toContain('(legacy-delivery-retired)');
-  expect(result.stderr).toContain(`box bounty close ${made.id}`);
+  expect(result.stderr).toContain(`omakase-box close ${made.id}`);
   expect(state(repo)).toEqual(before);
   expect(loadRecord(repo, made.id).waiting?.answered).toBeUndefined();
 });
@@ -63,16 +63,16 @@ it('old confirmed drafts name GitHub post while every retired posted stage names
   writeRecordRaw(repo, made.id, JSON.stringify({ ...record, stage: 'confirmed' }));
   const before = readRecordRaw(repo, made.id);
   const confirmed = renderStatus(repo, { id: made.id });
-  expect(confirmed).toContain(`next: deliver it — box bounty post ${made.id} (preview first with --preview)`);
+  expect(confirmed).toContain(`next: deliver it — omakase-box post ${made.id} (preview first with --preview)`);
   expect(confirmed).not.toContain('--to');
   expect(readRecordRaw(repo, made.id)).toEqual(before);
   for (const stage of ['posted', 'taken', 'answered', 'verified']) {
     writeRecordRaw(repo, made.id, JSON.stringify({ ...record, stage }));
     const saved = readRecordRaw(repo, made.id);
     const status = renderStatus(repo, { id: made.id });
-    expect(status).toContain(`next: this delivery route was retired; end it with box bounty close ${made.id}`);
+    expect(status).toContain(`next: this delivery route was retired; end it with omakase-box close ${made.id}`);
     expect(status).not.toContain('--to');
-    expect(status).not.toContain(`box bounty apply ${made.id}`);
+    expect(status).not.toContain(`omakase-box apply ${made.id}`);
     expect(readRecordRaw(repo, made.id)).toEqual(saved);
   }
 });
@@ -264,7 +264,7 @@ it('create shows no publication plan; post --preview describes it and keeps unco
   expect(created.stdout).not.toContain('Publication plan');
   expect(created.stdout).not.toContain('stay home');
   expect(created.stdout).not.toContain('would ship:');
-  expect(created.stdout).toContain(`next: box bounty post ${id} (--preview shows what becomes public)`);
+  expect(created.stdout).toContain(`next: omakase-box post ${id} (--preview shows what becomes public)`);
   const posted = cli(repo, ['post', id, '--preview']);
   expect(posted.status, posted.stderr).toBe(0);
   expect(posted.stdout).toContain('Issue title:');
@@ -283,7 +283,7 @@ it('an old folder-posted record is readable and closes offline, while collection
   writeRecordRaw(repo, made.id, JSON.stringify(record));
   const before = readRecordRaw(repo, made.id);
   withoutGh(() => {
-    expect(renderStatus(repo, { id: made.id })).toContain(`box bounty close ${made.id}`);
+    expect(renderStatus(repo, { id: made.id })).toContain(`omakase-box close ${made.id}`);
     refused(() => lookBounty(repo, made.id, 1), 'legacy-delivery-retired');
     refused(() => applyBounty(repo, made.id, 1), 'legacy-delivery-retired');
     expect(readRecordRaw(repo, made.id)).toEqual(before);

@@ -55,8 +55,8 @@ function adoptShared(root: string, id: string, shared: BountyRecord): BountyReco
   if (typeof issue['body'] !== 'string' || !issue['body'].includes(`<!-- box-bounty:${id} -->`)) return mismatch(`issue ${claimed.issue.number} is not this bounty's`);
   if (!isObject(issue['user']) || issue['user']['login'] !== claimed.account) return mismatch(`issue ${claimed.issue.number} was not opened by the account the record names`);
   if (!isOpenStage(shared.stage)) {
-    if (issue['state'] === 'open') return invalid('shared-record-disputed', `the shared record says ${id} ended, but its issue ${url} is still open; nothing was collected; next: finish it on the machine that ended it with box bounty close ${id}, or ask the owner`);
-    return invalid('shared-only', `${id} ended on another machine; its issue is ${url}; nothing is left to do here; next: box bounty status ${id}`);
+    if (issue['state'] === 'open') return invalid('shared-record-disputed', `the shared record says ${id} ended, but its issue ${url} is still open; nothing was collected; next: finish it on the machine that ended it with omakase-box close ${id}, or ask the owner`);
+    return invalid('shared-only', `${id} ended on another machine; its issue is ${url}; nothing is left to do here; next: omakase-box status ${id}`);
   }
   if (issue['state'] !== 'open') return invalid('shared-issue-closed', `the issue of ${id} is closed on GitHub, but its shared record does not say it ended; nothing was collected; next: read ${url}, and ask the owner whether to continue`);
   const format = readFormat(issue['body']);

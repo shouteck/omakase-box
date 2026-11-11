@@ -1,6 +1,7 @@
-import { existsSync, lstatSync, readFileSync, realpathSync } from 'node:fs';
+import { existsSync, lstatSync, readFileSync } from 'node:fs';
 import { basename as pathBasename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { BountyRefused } from './errors.js';
+import { canonicalFolder, folderEntry, withFolderEntry } from './folder.js';
 import { showPath } from './notice.js';
 import { loadSettings, saveSettings, settingsFile } from './settings.js';
 
@@ -236,7 +237,7 @@ export function checkProjectClaims(repoRoot: string): void {
 // grants nothing, everywhere the lists are consulted.
 export function publishLists(repoRoot: string): PublishLists {
   checkProjectClaims(repoRoot);
-  const found = loadSettings().publishing?.[realpathSync(repoRoot)];
+  const found = folderEntry(loadSettings().publishing, repoRoot);
   return { never: found?.never ?? [], safe: found?.safe ?? [] };
 }
 
@@ -258,7 +259,7 @@ export function shipRules(repoRoot: string): readonly NeverShipRule[] {
 // the scans and the rule table speak. A link at any existing component of
 // the spelled path is refused by name; so is a path that lands outside.
 function publishEntryPath(repoRoot: string, which: string, named: string): string {
-  const root = realpathSync(repoRoot);
+  const root = canonicalFolder(repoRoot);
   const absolute = resolve(root, named);
   // The typed path is quoted wherever it is named (BT43 correction 5): it is
   // often a name a scan hold showed, which after an apply can be a solver's.
@@ -271,7 +272,7 @@ function publishEntryPath(repoRoot: string, which: string, named: string): strin
     tail.unshift(pathBasename(ancestor));
     ancestor = parent;
   }
-  const canon = join(realpathSync(ancestor), ...tail);
+  const canon = join(canonicalFolder(ancestor), ...tail);
   const offset = toPosix(relative(root, canon));
   if (offset === '' || offset === '..' || offset.startsWith('../') || isAbsolute(offset)) {
     throw new BountyRefused('publish-list-outside', `${which} ${shown} resolves to ${showPath(canon)}${offset === '' ? '' : ', outside the repository'} — a listed path names a path inside the repository; nothing changed; next: remove ${shown} from ${which} or name a path inside the repository`);
@@ -293,7 +294,6 @@ function publishEntryPath(repoRoot: string, which: string, named: string): strin
 // entry that names a never-ship path is refused — the safe list cannot carry
 // what the table keeps out.
 export function changePublishList(repoRoot: string, which: 'never-publish' | 'safe-to-publish', verb: 'add' | 'remove', named: string): string {
-  const root = realpathSync(repoRoot);
   const offset = publishEntryPath(repoRoot, which, named);
   const listed = showPath(offset);
   if (which === 'safe-to-publish' && verb === 'add') {
@@ -303,7 +303,7 @@ export function changePublishList(repoRoot: string, which: 'never-publish' | 'sa
     // settings write that keeps the tool honest.
     const ownerList = loadOwnerList(repoRoot);
     const rules: NeverShipRule[] = [...BUILTIN_RULES, ...(ownerList === null ? [] : [ownerList.rule])];
-    const existing = loadSettings().publishing?.[root]?.never ?? [];
+    const existing = folderEntry(loadSettings().publishing, repoRoot)?.never ?? [];
     if (existing.length > 0) rules.push({ name: 'owner-never-publish', match: path => neverListed(existing, path) });
     const rule = rules.find(candidate => candidate.match(offset.toLowerCase()));
     if (rule !== undefined) throw new BountyRefused('publish-list-never-ship', `safe to publish ${listed} names a path the never-ship rule '${rule.name}' keeps out — the safe list cannot carry a never-ship path; nothing changed; next: remove ${listed} from the safe list — never-ship paths cannot be listed`);
@@ -312,7 +312,7 @@ export function changePublishList(repoRoot: string, which: 'never-publish' | 'sa
   if (stat !== undefined && (stat.isSymbolicLink() || !stat.isFile())) throw new BountyRefused('publish-list-settings-link', 'the owner settings file is a link or not a plain file; nothing changed; next: make the owner settings file a plain file, then rerun the same command');
   const settings = loadSettings();
   const key = which === 'never-publish' ? 'never' : 'safe';
-  const previous = settings.publishing?.[root] ?? { never: [], safe: [] };
+  const previous = folderEntry(settings.publishing, repoRoot) ?? { never: [], safe: [] };
   const list = [...previous[key]];
   if (verb === 'add') {
     if (list.some(entry => entry.toLowerCase() === offset.toLowerCase())) return `${which}: ${listed} was already listed; nothing changed`;
@@ -323,6 +323,6 @@ export function changePublishList(repoRoot: string, which: 'never-publish' | 'sa
     list.splice(index, 1);
   }
   const next = { never: [...(key === 'never' ? list : previous.never)], safe: [...(key === 'safe' ? list : previous.safe)] };
-  saveSettings({ ...settings, publishing: { ...settings.publishing, [root]: next } });
+  saveSettings({ ...settings, publishing: withFolderEntry(settings.publishing, repoRoot, next) });
   return `${which}: ${listed} ${verb === 'add' ? 'added' : 'removed'}, written to ${settingsFile()}`;
 }

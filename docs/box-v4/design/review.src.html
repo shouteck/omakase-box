@@ -1,0 +1,131 @@
+<title>omakase-box site review</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400&display=swap">
+<style>
+/* Layout: one reading column for the reasons; under each, a full-width pair of frames, before left and after right, each scrolling on its own. The site's own tokens and typeface, so the review does not argue with the thing it reviews. */
+:root {
+  --paper: #fbfbf9; --surface: #f3f2ee; --card: #ffffff; --ink: #1b1b18; --soft: #66655f; --line: #e4e3dd; --accent: #1d4f91;
+  --keep: #1f6b3a; --keep-bg: #e3f1e7; --change: #7a5a00; --change-bg: #f6eccd;
+  --sans: "Geist", ui-sans-serif, system-ui, sans-serif; --mono: "Geist Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper: #111110; --surface: #1b1b19; --card: #232320; --ink: #f1f0ec; --soft: #a6a59e; --line: #31312d; --accent: #9dbfec; --keep: #8fd3a5; --keep-bg: #1d3326; --change: #e8c870; --change-bg: #3a321a; color-scheme: dark } }
+:root[data-theme="dark"] { --paper: #111110; --surface: #1b1b19; --card: #232320; --ink: #f1f0ec; --soft: #a6a59e; --line: #31312d; --accent: #9dbfec; --keep: #8fd3a5; --keep-bg: #1d3326; --change: #e8c870; --change-bg: #3a321a; color-scheme: dark }
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 78rem; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.col { max-width: 42rem; }
+h1 { font-size: clamp(2rem, 5vw, 3.25rem); line-height: 1.08; font-weight: 500; letter-spacing: -0.035em; margin: 0; text-wrap: balance; }
+h2 { font-size: 1.75rem; line-height: 1.2; font-weight: 500; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+h3 { font-size: 1rem; font-weight: 500; margin: 0; }
+p { margin: 0; } a { color: var(--accent); }
+code { font-family: var(--mono); font-size: 0.875em; }
+.soft { color: var(--soft); } .sm { font-size: 0.8125rem; line-height: 1.4; }
+header.top { padding-block: 4rem 2.5rem; display: grid; gap: 1rem; }
+.lede { font-size: 1.25rem; line-height: 1.5; color: var(--soft); max-width: 40rem; }
+.wrong { background: var(--surface); border-radius: 1.25rem; padding: 1.5rem; display: grid; gap: 0.75rem; max-width: 48rem; }
+.wrong ul, .why { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.6rem; }
+.wrong li { padding-left: 1.1rem; position: relative; } .wrong li::before { content: "·"; position: absolute; left: 0.25rem; color: var(--soft); }
+table { border-collapse: collapse; width: 100%; font-size: 0.9375rem; }
+.scroll { overflow-x: auto; }
+th { text-align: left; font-weight: 400; color: var(--soft); font-size: 0.8125rem; padding: 0.5rem 1rem 0.5rem 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 0.7rem 1rem 0.7rem 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+.tag { display: inline-block; border-radius: 999px; padding: 0.05rem 0.6rem; font-size: 0.8125rem; font-weight: 500; white-space: nowrap; }
+.tag.keep { background: var(--keep-bg); color: var(--keep); } .tag.change { background: var(--change-bg); color: var(--change); }
+section.page { border-top: 1px solid var(--line); padding-block: 3.5rem; display: grid; gap: 1.75rem; }
+.head { display: grid; gap: 0.5rem; }
+.why li { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr); gap: 0.25rem; }
+.why .n { font-size: 0.8125rem; color: var(--soft); font-variant-numeric: tabular-nums; padding-top: 0.15rem; }
+.why b { font-weight: 500; } .why .ref { color: var(--soft); font-size: 0.875rem; display: block; margin-top: 0.15rem; }
+.bar { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center; justify-content: space-between; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 2px; background: var(--card); }
+.seg button { font: inherit; font-size: 0.8125rem; border: 0; background: none; color: var(--soft); padding: 0.25rem 0.85rem; border-radius: 999px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.pair.phone { grid-template-columns: repeat(2, minmax(0, 24.5rem)); justify-content: center; }
+figure { margin: 0; min-width: 0; display: grid; gap: 0.4rem; grid-template-rows: auto 1fr; }
+figcaption { font-size: 0.8125rem; color: var(--soft); display: flex; justify-content: space-between; gap: 0.5rem; }
+figcaption b { color: var(--ink); font-weight: 500; }
+.frame { border: 1px solid var(--line); border-radius: 0.75rem; overflow-y: auto; max-height: 46rem; background: #fbfbf9; }
+.frame img { display: block; width: 100%; height: auto; }
+.frame:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ask { background: var(--surface); border-radius: 1.25rem; padding: 1.5rem; }
+.ask ol { margin: 0.75rem 0 0; padding-left: 1.25rem; display: grid; gap: 0.6rem; }
+footer { border-top: 1px solid var(--line); padding-block: 2rem 4rem; color: var(--soft); font-size: 0.8125rem; }
+@media (max-width: 720px) { .pair, .pair.phone { grid-template-columns: minmax(0, 1fr); } .frame { max-height: 30rem; } header.top { padding-block: 2.5rem 2rem; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <p class="sm soft">Fifth pass · 11 November 2026</p>
+    <h1>How it works, tidied; the rest as you asked</h1>
+    <p class="lede">One thing to decide: How it works. The empty board and the front page are shown as you asked for them, for a last look.</p>
+  </header>
+
+  <section class="page" data-shot="how-tool" style="border-top:0">
+    <div class="head col"><p class="sm soft">1 of 4 · redone, for your decision</p><h2>How it works, as it opens</h2>
+      <p class="soft">The two-ways idea stays. How it is drawn is new.</p></div>
+    <ol class="why col">
+      <li><span class="n">1</span><div><b>The switch is a small two-part control beside each heading,</b> in place of the two wide tabs. It takes one line, sits where the eye already is, and uses the site's own rounded shapes: a soft track with a white pill for the chosen way.</div></li>
+      <li><span class="n">2</span><div><b>The payment cards are gone from this page.</b> They stay on the front page, where they matter. Here there is one quiet line under the first half, with a link to them.</div></li>
+      <li><span class="n">3</span><div><b>The tool's way is what it was:</b> the one thing you run, then the "Your agent takes it from there" panel. The solver's half has the same two parts.</div></li>
+    </ol>
+  </section>
+
+  <section class="page" data-shot="how-hand">
+    <div class="head col"><p class="sm soft">2 of 4 · redone, for your decision</p><h2>How it works, the other way chosen</h2>
+      <p class="soft">What a person sees after choosing "Without it" and "By hand".</p></div>
+    <ol class="why col">
+      <li><span class="n">1</span><div><b>Each way is one row of short steps:</b> a number, what to do, one line. Three steps to list an issue, four to answer by hand. No paragraphs and no blocks of commands.</div></li>
+      <li><span class="n">2</span><div><b>Every step says where.</b> "Open Your page", then "choose List an issue", then "paste the link to your GitHub issue and type the amount". The words that said nothing ("Nothing is installed") are gone.</div></li>
+      <li><span class="n">3</span><div><b>By hand points at the bounty's page for the exact branch,</b> where it already sits with a copy button, so this page does not have to spell out Git commands or our naming.</div></li>
+      <li><span class="n">4</span><div><b>For you to check:</b> the step wording is mine.</div></li>
+    </ol>
+  </section>
+
+  <section class="page" data-shot="board-empty">
+    <div class="head col"><p class="sm soft">3 of 4 · as you asked</p><h2>The board, when it is empty</h2>
+      <p class="soft">Back to the site's blue links for the two ways in. Nothing else changed from the layout you agreed to.</p></div>
+  </section>
+
+  <section class="page" data-shot="front">
+    <div class="head col"><p class="sm soft">4 of 4 · as you asked</p><h2>The front page</h2>
+      <p class="soft">Today's picture stays. The install line and the third way in are the ones you approved. Every command now reads omakase-box.</p></div>
+    <ol class="why col">
+      <li><span class="n">1</span><div><b>The name changes in every command the site prints,</b> in the picture, the tiles and How it works: <code>omakase-box post</code>, <code>omakase-box apply</code>.</div></li>
+      <li><span class="n">2</span><div><b>On the real site this cannot be done by editing the pages alone.</b> The site's commands are checked against the real tool, line by line, so they change when the tool's command is renamed. That is the rename wave you already agreed to (BT63). It does the tool and the site together.</div></li>
+    </ol>
+  </section>
+
+  <section class="page">
+    <div class="ask col" style="max-width:48rem">
+      <h3>What I need from you</h3>
+      <ol>
+        <li><b style="font-weight:500">How it works:</b> approve it as drawn, or tell me what still reads wrong.</li>
+        <li><b style="font-weight:500">The name on the site:</b> shall the rename wave run, so the tool and the site say omakase-box together?</li>
+      </ol>
+    </div>
+  </section>
+
+  <footer>Before: the pages as the code builds them today, on this machine with sample data. After: the same pages with the proposal applied. Made by <code>docs/box-v4/design/review.mjs</code>.</footer>
+</div>
+
+<script>
+const NAMES = { desktop: 'Laptop, 1440 wide', phone: 'Phone, 390 wide' };
+for (const section of document.querySelectorAll('section[data-shot]')) {
+  const shot = section.dataset.shot;
+  const bar = document.createElement('div'); bar.className = 'bar';
+  bar.innerHTML = `<p class="sm soft">Each frame scrolls on its own.</p><div class="seg" role="group" aria-label="Screen size">${Object.keys(NAMES).map((key, i) => `<button type="button" id="${shot}-${key}" data-size="${key}" aria-pressed="${i === 0}">${NAMES[key]}</button>`).join('')}</div>`;
+  const pair = document.createElement('div'); pair.className = 'pair';
+  const figure = when => `<figure><figcaption><b>${when === 'before' ? 'Before' : 'After'}</b><span>${when === 'before' ? 'today' : 'proposed'}</span></figcaption><div class="frame" tabindex="0"><img alt="${shot} page, ${when}" loading="lazy" data-when="${when}"></div></figure>`;
+  pair.innerHTML = figure('before') + figure('after');
+  const show = size => {
+    pair.classList.toggle('phone', size === 'phone');
+    for (const img of pair.querySelectorAll('img')) img.src = `review/${shot}-${size}-${img.dataset.when}.jpg`;
+    for (const button of bar.querySelectorAll('button')) button.setAttribute('aria-pressed', String(button.dataset.size === size));
+  };
+  bar.addEventListener('click', event => { const size = event.target.dataset?.size; if (size) show(size); });
+  section.append(bar, pair);
+  show('desktop');
+}
+</script>

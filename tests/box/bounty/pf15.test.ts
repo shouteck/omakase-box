@@ -84,13 +84,13 @@ describe('a hostile board', () => {
 });
 
 describe('setting up with only an install', { timeout: 120000 }, () => {
-  it('box bounty tells the agent what to ask and what to run, until the owner has answered', () => fixture(({ repo, scratch }) => {
+  it('omakase-box tells the agent what to ask and what to run, until the owner has answered', () => fixture(({ repo, scratch }) => {
     const path = join(scratch, 'settings', 'settings.json');
     const settings = JSON.parse(readFileSync(path, 'utf8'));
     delete settings.default;
     writeFileSync(path, JSON.stringify({ ...settings, repositories: {} }));
     const unset = renderOverview(repo);
-    for (const words of ['not set up for this repository yet', 'gh auth status', 'the owner runs gh auth login', 'What reward does each state', 'box bounty allow <owner>/<repository> --reward <reward> --reward-limit <limit>', 'so that their yes names it', 'give the owner that exact command to run themselves', 'run box setup once']) expect(unset).toContain(words);
+    for (const words of ['not set up for this repository yet', 'gh auth status', 'the owner runs gh auth login', 'What reward does each state', 'omakase-box allow <owner>/<repository> --reward <reward> --reward-limit <limit>', 'so that their yes names it', 'give the owner that exact command to run themselves', 'run omakase-box setup once']) expect(unset).toContain(words);
     // The boundary is stated: the amount is the owner's, and silence promises nothing.
     expect(unset).toContain('the answers are the owner\'s to give, unless they leave them to you');
     expect(unset).toContain('With no answer nothing is promised');
@@ -139,7 +139,7 @@ describe('asked-for and unasked text', () => {
     expect(help).not.toMatch(/\blevels?\b|monid/i);
   });
   it('describe gains one sentence, only where a reward exists', () => {
-    expect(describeRewardLine(5)).toContain('three ways to pay it: by hand, one click and on merge (box bounty help)');
+    expect(describeRewardLine(5)).toContain('three ways to pay it: by hand, one click and on merge (omakase-box help)');
     expect(describeRewardLine(0)).not.toContain('three ways');
     expect(DESCRIBE_LINES.join('\n')).not.toContain('three ways');
   });
@@ -178,7 +178,7 @@ describe('against a board', { timeout: 180000 }, () => {
     // GitHub joins lines with no blank line between: each fact stands as its own paragraph.
     expect(body).toMatch(/posted \d{1,2} [A-Z][a-z]{2} \d{4}\n\nOn the board: /);
     expect(body).toMatch(/earn nothing\.\n\nTo be paid: [^\n]+\n\nPosting an answer [^\n]+\n\nLicence: /);
-    expect(body).toMatch(/^Agents: `box bounty take bt-[a-f\d]{12}` does steps 1 and 2/m);
+    expect(body).toMatch(/^Agents: `omakase-box take bt-[a-f\d]{12}` does steps 1 and 2/m);
     expect(body).not.toContain('pay-to');
     const read = readFormat(body);
     expect(read.kind === 'present' && read.value.schemaVersion).toBe(2);

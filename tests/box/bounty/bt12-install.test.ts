@@ -34,7 +34,7 @@ let state = '';
 let bare = '';
 
 const box = (args: string[], cwd: string) => {
-  const bin = process.platform === 'win32' ? join(prefix, 'box.cmd') : join(prefix, 'bin', 'box');
+  const bin = process.platform === 'win32' ? join(prefix, 'omakase-box.cmd') : join(prefix, 'bin', 'omakase-box');
   const run = process.platform === 'win32'
     ? spawnSync('cmd.exe', ['/d', '/s', '/c', bin, ...args], { cwd, encoding: 'utf8', env, windowsHide: true, input: '' })
     : spawnSync(bin, args, { cwd, encoding: 'utf8', env, input: '' });
@@ -112,7 +112,7 @@ beforeAll(() => {
 }, 300000);
 
 describe('one install command on an empty machine', () => {
-  it('npm install -g exposes a working `box`, and npx runs it with no install', () => {
+  it('npm install -g exposes a working `omakase-box`, and npx runs it with no install', () => {
     prefix = join(root, 'prefix');
     const install = npm(['i', '-g', '--prefix', prefix, tarball]);
     expect(install.status, `${install.stdout}\n${install.stderr}`).toBe(0);
@@ -120,30 +120,30 @@ describe('one install command on an empty machine', () => {
     expect(help.status, `${help.stdout}\n${help.stderr}`).toBe(0);
     expect(help.stdout).toContain('the journey');
     const ver = box(['bounty', '--version'], root);
-    expect(ver.stdout.trim()).toMatch(/^box \d+\.\d+\.\d+$/);
+    expect(ver.stdout.trim()).toMatch(/^omakase-box \d+\.\d+\.\d+$/);
 
     // `npx <tarball>` treats the tarball itself as the command; for a spec
-    // the bin is named through --package — `npx -p <tgz> box …`. Once the
+    // the bin is named through --package — `npx -p <tgz> omakase-box …`. Once the
     // name is published it is `npx box-bounty bounty …` with nothing added.
     const npxCmd = process.platform === 'win32'
-      ? spawnSync('cmd.exe', ['/d', '/s', '/c', 'npx', '-y', '--package', tarball, 'box', 'bounty', 'help'], { cwd: root, encoding: 'utf8', env, windowsHide: true, input: '' })
-      : spawnSync('npx', ['-y', '--package', tarball, 'box', 'bounty', 'help'], { cwd: root, encoding: 'utf8', env, input: '' });
+      ? spawnSync('cmd.exe', ['/d', '/s', '/c', 'npx', '-y', '--package', tarball, 'omakase-box', 'help'], { cwd: root, encoding: 'utf8', env, windowsHide: true, input: '' })
+      : spawnSync('npx', ['-y', '--package', tarball, 'omakase-box', 'help'], { cwd: root, encoding: 'utf8', env, input: '' });
     expect(npxCmd.status, `${npxCmd.stdout}\n${npxCmd.stderr}`).toBe(0);
     expect(npxCmd.stdout).toContain('the journey');
   }, 120000);
 
-  it('the site\'s one line: npx runs box setup, which leaves a real box and a skill behind', () => {
+  it('the site\'s one line: npx runs omakase-box setup, which leaves a real box and a skill behind', () => {
     const away = join(root, 'setup-home');
     const installed = join(away, 'prefix');
     mkdirSync(join(away, '.claude'), { recursive: true });
     const setupEnv = { ...env, HOME: away, USERPROFILE: away, npm_config_prefix: installed, BOX_SETUP_PACKAGE: tarball };
     const setup = process.platform === 'win32'
-      ? spawnSync('cmd.exe', ['/d', '/s', '/c', 'npx', '-y', '--package', tarball, 'box', 'setup'], { cwd: root, encoding: 'utf8', env: setupEnv })
-      : spawnSync('npx', ['-y', '--package', tarball, 'box', 'setup'], { cwd: root, encoding: 'utf8', env: setupEnv });
+      ? spawnSync('cmd.exe', ['/d', '/s', '/c', 'npx', '-y', '--package', tarball, 'omakase-box', 'setup'], { cwd: root, encoding: 'utf8', env: setupEnv })
+      : spawnSync('npx', ['-y', '--package', tarball, 'omakase-box', 'setup'], { cwd: root, encoding: 'utf8', env: setupEnv });
     expect(setup.status, `${setup.stdout}\n${setup.stderr}`).toBe(0);
     expect(setup.stdout).toContain('box: installed on this machine.');
     expect(existsSync(join(away, '.claude', 'skills', 'omakase-box', 'SKILL.md'))).toBe(true);
-    const bin = process.platform === 'win32' ? join(installed, 'box.cmd') : join(installed, 'bin', 'box');
+    const bin = process.platform === 'win32' ? join(installed, 'omakase-box.cmd') : join(installed, 'bin', 'omakase-box');
     expect(existsSync(bin), bin).toBe(true);
   }, 120000);
 

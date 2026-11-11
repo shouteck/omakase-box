@@ -126,7 +126,7 @@ async function main() {
       : {};
     const entry = settings?.repositories?.[REAL_REPO];
     if (entry?.bounty !== 'allowed' && settings?.default?.bounty !== 'allowed') {
-      refuse(`${REAL_REPO} is not allowed for bounties on this machine — nothing was posted; the owner allows it with: box bounty allow ${REAL_REPO}`);
+      refuse(`${REAL_REPO} is not allowed for bounties on this machine — nothing was posted; the owner allows it with: omakase-box allow ${REAL_REPO}`);
     }
     const repo = spawnSync('gh', ['api', `repos/${REAL_REPO}`], { encoding: 'utf8' });
     if (repo.status !== 0) refuse(`the sandbox ${REAL_REPO} is not reachable — nothing was posted`);
@@ -209,7 +209,7 @@ async function main() {
     if (/^\{.*\}$/.test(line)) return null; // a single-line API reply — the transcript keeps it
     // A tool command runs unchanged; only the display shortens it to `box …`.
     const cli = line.indexOf('cli.js bounty ');
-    if (line.startsWith('$ ') && cli !== -1) return `$ box bounty ${line.slice(cli + 'cli.js bounty '.length)}`;
+    if (line.startsWith('$ ') && cli !== -1) return `$ omakase-box ${line.slice(cli + 'cli.js bounty '.length)}`;
     const shim = line.indexOf('gh-standin.cjs api ');
     if (line.startsWith('$ ') && shim !== -1) return `$ gh api ${line.slice(shim + 'gh-standin.cjs api '.length)}`;
     return line;
@@ -230,7 +230,7 @@ async function main() {
     page = await context.newPage();
 
     // Title card — plain words about what the viewer is about to see.
-    await page.setContent(card('box bounty — an agent hands a task to outside solvers', [
+    await page.setContent(card('omakase-box — an agent hands a task to outside solvers', [
       `Recorded ${new Date().toISOString().slice(0, 10)} — tool commit ${commit.slice(0, 12)}.`,
       'The tool packages a task an agent cannot or should not do, posts it as a public bounty, and tells the owner whom to pay when a solution is merged.',
       real

@@ -85,7 +85,7 @@ describe('collection — every solution is a numbered attempt, and nothing in it
     expect(git(repo, ['rev-parse', 'HEAD'])).toBe(headBefore);
     expect(readFileSync(join(repo, 'src', 'app.py'), 'utf8')).toBe('x\n');
     // The report is stored on the attempt and names the next command.
-    expect(result.attempt.report.join('\n')).toContain(`box bounty apply ${id} 1`);
+    expect(result.attempt.report.join('\n')).toContain(`omakase-box apply ${id} 1`);
     expect(result.attempt.report.join('\n')).toContain('nothing in the solution was run and this report says nothing about whether it works');
 
     const applied = applyGitHub(repo, id);
@@ -158,7 +158,7 @@ describe('collection — every solution is a numbered attempt, and nothing in it
     // status repeats the conflict paths as the next step.
     const status = statusGitHub(resolveRepoRoot(repo));
     expect(status).toContain('src/app.py');
-    expect(status).toContain(`box bounty apply ${id}`);
+    expect(status).toContain(`omakase-box apply ${id}`);
 
     // The real merge on apply still aborts byte-identical; close --reason still ends it.
     expect(applyGitHub(repo, id).outcome).toBe('conflict');
@@ -200,10 +200,10 @@ describe('collection — every solution is a numbered attempt, and nothing in it
 
     const status = statusGitHub(resolveRepoRoot(repo));
     expect(status).toContain('src/app.py');
-    expect(status).toContain(`box bounty look ${id}`);
+    expect(status).toContain(`omakase-box look ${id}`);
     // BT7b: a clash names the manual path — the owner's own merge lands it,
     // never "resolve the paths and run apply again".
-    expect(statusGitHub(repo, { id, full: true })).toContain(`box bounty close ${id}`);
+    expect(statusGitHub(repo, { id, full: true })).toContain(`omakase-box close ${id}`);
 
     // Retry still conflicts; after the owner resolves the file by hand it lands.
     expect(applyGitHub(repo, id).outcome).toBe('conflict');
@@ -230,8 +230,8 @@ describe('collection — an answered bounty waits on a decision', () => {
     // No check-only stage ever exists: nothing claims a run that did not happen.
     expect(record.events.some(event => (event.stage as string) === 'verified')).toBe(false);
     const status = statusGitHub(resolveRepoRoot(repo));
-    expect(status).toContain(`box bounty apply ${id}`);
-    expect(status).toContain(`box bounty close ${id}`);
+    expect(status).toContain(`omakase-box apply ${id}`);
+    expect(status).toContain(`omakase-box close ${id}`);
 
     const applied = applyGitHub(repo, id);
     expect(applied.outcome).toBe('applied');

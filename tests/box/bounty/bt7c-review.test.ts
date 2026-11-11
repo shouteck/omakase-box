@@ -30,6 +30,8 @@ it('a stored outside-answers text written before BT7c names no removed command',
     expect(statusGitHub(context.repo, { id: context.id })).not.toContain(`bounty ${gone}`);
     expect(statusGitHub(context.repo, { id: context.id, full: true })).not.toContain(`bounty ${gone}`);
     expect(renderOpenLine(context.repo)).not.toContain(`bounty ${gone}`);
+    // BT63: the removed command is named in the new spelling too.
+    for (const text of [statusGitHub(context.repo, { id: context.id }), statusGitHub(context.repo, { id: context.id, full: true }), renderOpenLine(context.repo)]) expect(text).not.toContain(`omakase-box ${gone}`);
   }
 }));
 
@@ -39,11 +41,12 @@ it('a stored outside-answers text written before BT7c names no removed command',
 // block, the open-bounties line, status in each mode), status over records
 // in every reachable stage — including planted pre-wave stored text — every
 // refusal a command path can raise, and the built CLI's own output for the
-// journey and its usage errors. `box bounty <removed>` is the pattern: a
+// journey and its usage errors. `omakase-box <removed>` is the pattern: a
 // command name the output *recommends*. The refusal echo `bounty answer
 // refused (command-removed)` lacks the `box ` prefix and stays a statement
 // of what was typed, never a suggestion.
-const REMOVED_NAME = /\bbox bounty (?:answer|questions|reply|undo|reject|withdraw|remind|confirm)\b/;
+// BT63: a removed command is named by either spelling: `omakase-box <removed>` now, `box bounty <removed>` in old stored text.
+const REMOVED_NAME = /\b(?:box bounty|omakase-box) (?:answer|questions|reply|undo|reject|withdraw|remind|confirm)\b/;
 
 describe('no output names a removed command', () => {
   // One posted world for the whole scan (K24): the single corpus `it` ran

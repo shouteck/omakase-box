@@ -12,19 +12,19 @@ const INSTALL = ['npx -y omakase-box setup'];
 // so the cards and the commands under them cannot drift apart.
 const AGENT_DOES = [
   ['Asks you a few things', 'The repository, the reward and limit, and whether to check with you first.', [
-    'box bounty allow <owner>/<repository> --reward <reward> --reward-limit <limit>'
+    'omakase-box allow <owner>/<repository> --reward <reward> --reward-limit <limit>'
   ]],
   ['Packs and posts', 'The task, what it tried, and the code. A preview first shows what becomes public.', [
-    'box bounty create --task TASK.md --why "beyond what this agent can do"',
-    'box bounty post <id> --preview',
-    'box bounty post <id>'
+    'omakase-box create --task TASK.md --why "beyond what this agent can do"',
+    'omakase-box post <id> --preview',
+    'omakase-box post <id>'
   ]],
   ['Reads the solutions', 'As facts. Nothing a solver wrote is run.', [
-    'box bounty status <id>',
-    'box bounty look <id> <n>'
+    'omakase-box status <id>',
+    'omakase-box look <id> <n>'
   ]],
   ['Merges one', 'It picks one, merges it and pushes, as with any other change.', [
-    'box bounty apply <id> <n>'
+    'omakase-box apply <id> <n>'
   ]]
 ];
 
@@ -84,7 +84,7 @@ export default function Page() {
           <details className="mt-4">
             <summary className="font-medium">The commands, if you&apos;d rather run any yourself</summary>
             <CommandWindow className="mt-4" what="commands" groups={AGENT_DOES.map(([title, , commands]) => [title, commands])} />
-            <p className="mt-3 text-sm text-soft"><code>box bounty help</code> explains each one.</p>
+            <p className="mt-3 text-sm text-soft"><code>omakase-box help</code> explains each one.</p>
           </details>
         </div>
 

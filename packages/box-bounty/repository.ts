@@ -35,7 +35,7 @@ export type RepositoryChoice =
 // settles it — plus the once-written ask form (rule 6).
 export function repositoryChoiceLines(candidates: readonly RemoteCandidate[]): string[] {
   return [
-    ...candidates.map(candidate => `  allow ${candidate.address} (remote ${candidate.remotes.join(', ')}): box bounty allow ${candidate.address}`),
+    ...candidates.map(candidate => `  allow ${candidate.address} (remote ${candidate.remotes.join(', ')}): omakase-box allow ${candidate.address}`),
     '  or ask me each time: add --ask'
   ];
 }
@@ -66,7 +66,7 @@ function remoteCandidates(config: ConfigEntries): RemoteCandidate[] | null {
     candidate.urls.push(...urls.filter(url => repositoryAddress(url) === address));
     found.set(address, candidate);
   }
-  if (found.size === 0) throw new BountyRefused('github-remote-required', 'no remote names a GitHub repository; next: add a GitHub remote, then run box bounty allow');
+  if (found.size === 0) throw new BountyRefused('github-remote-required', 'no remote names a GitHub repository; next: add a GitHub remote, then run omakase-box allow');
   return [...found.entries()].map(([address, candidate]) => ({ address, remotes: candidate.remotes, urls: candidate.urls }));
 }
 
@@ -94,7 +94,7 @@ export function chooseRepository(root: string, listed: ReadonlySet<string>): Rep
     if (onList.length === 0) return { kind: 'unlisted', candidates };
     if (onList.length > 1) {
       const named = onList.map(candidate => `${candidate.address} (remote ${candidate.remotes.join(', ')})`).join(' and ');
-      throw new BountyRefused('repository-several-allowed', `remotes ${named} are all on the list; the tool cannot tell which one this checkout is — a yes for one repository never covers another; next: the owner takes all but one off the list with box bounty deny <owner/name>, or works from a checkout whose remotes name one`);
+      throw new BountyRefused('repository-several-allowed', `remotes ${named} are all on the list; the tool cannot tell which one this checkout is — a yes for one repository never covers another; next: the owner takes all but one off the list with omakase-box deny <owner/name>, or works from a checkout whose remotes name one`);
     }
     chosen = onList[0]!;
   }

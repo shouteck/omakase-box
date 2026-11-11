@@ -39,7 +39,7 @@ it('names and runs the whole CLI journey with omitted ids, preserving unrelated 
   expect(look.stdout).toContain('written by the solver');
   expect(look.stdout).toContain('nothing in it was run or checked out');
   expect(look.stdout).toContain('+fixed');
-  expect(look.stdout).toContain(`box bounty apply ${context.id} 1`);
+  expect(look.stdout).toContain(`omakase-box apply ${context.id} 1`);
   // Nothing is created to remove: no copy, no unlook.
   expect(look.stdout).not.toContain('unlook');
   expect(cli(context.repo, 'unlook', '1').status).toBe(2);
@@ -59,7 +59,7 @@ it('names and runs the whole CLI journey with omitted ids, preserving unrelated 
 
 it('names and runs the whole CLI journey with omitted ids, preserving unrelated dirty and staged owner files — the clash, the land and the revert', () => journey.run(() => {
   const apply = cli(context.repo, 'apply', '1');
-  expect(apply.status).toBe(0); expect(apply.stdout).toContain('conflict'); expect(apply.stdout).toContain(`box bounty look ${context.id} 1`);
+  expect(apply.status).toBe(0); expect(apply.stdout).toContain('conflict'); expect(apply.stdout).toContain(`omakase-box look ${context.id} 1`);
   // Resolving a clash is the agent's own work: resolve the path, commit, apply again.
   write(context.repo, 'app.txt', 'fixed\n'); git(context.repo, ['add', 'app.txt']);
   git(context.repo, ['-c', 'user.name=owner', '-c', 'user.email=owner@example.invalid', 'commit', '-qm', 'resolved for the solution']);

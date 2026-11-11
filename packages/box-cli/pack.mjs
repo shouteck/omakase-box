@@ -31,9 +31,9 @@ if (NODE_MINIMUM === undefined) { console.error('pack: could not read NODE_MINIM
 const MANIFEST = {
   name: 'omakase-box',
   version: '0.1.3',
-  description: 'box bounty — an agent hands a task to outside solvers: the task and what it tried, as a GitHub issue on the repository; solutions return as facts the agent judges. Nothing a solver wrote is ever run.',
+  description: 'omakase-box — an agent hands a task to outside solvers: the task and what it tried, as a GitHub issue on the repository; solutions return as facts the agent judges. Nothing a solver wrote is ever run.',
   type: 'module',
-  bin: { box: 'dist/box.js' },
+  bin: { 'omakase-box': 'dist/box.js' }, // never `box`: Box owns it, and npm then refuses to install beside @box/cli (BT63)
   files: ['dist/box.js', 'LICENSE', 'NOTICE', 'README.md'],
   engines: { node: `>=${NODE_MINIMUM}` },
   license: 'Apache-2.0',

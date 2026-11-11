@@ -1,4 +1,4 @@
-// The `box bounty` command dispatch, shared by both entrypoints: the
+// The `omakase-box` command dispatch, shared by both entrypoints: the
 // kitchen build (src/cli.ts, which also carries the older platform
 // commands) and the published artifact (src/box.ts, the bounty tool alone).
 // One code path — the tool behaves identically installed and from this
@@ -36,7 +36,7 @@ const remoteNamed = (repoRoot: string, name: string): boolean => {
 export interface BountyHost {
   /** print the message plus usage lines and exit 2 — the entrypoint's usage(). */
   readonly usage: (message?: string, lines?: readonly string[]) => never;
-  /** `box --version`'s answer. */
+  /** `omakase-box --version`'s answer. */
   readonly version: () => string;
 }
 
@@ -70,7 +70,7 @@ const oneLine = (message: string): string => message.replaceAll('\n', '\\n');
 export async function runBounty(rest: readonly string[], host: BountyHost): Promise<void> {
   const printDocument = guardOutput();
   const [requested, ...commandArgs] = rest;
-  // A leading option means the overview: `box bounty --repo <path>` (and
+  // A leading option means the overview: `omakase-box --repo <path>` (and
   // --help/--version below). Anything else is a subcommand name.
   const subcommand = requested !== undefined && !requested.startsWith('-') ? requested : undefined;
   const bountyArgs = subcommand === undefined ? rest : commandArgs;
@@ -118,7 +118,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       ...openRecords(root),
       ...(subcommand === 'close' ? endedContaining(root, '"pending": "') : [])
     ];
-    if (eligible.length !== 1) throw new BountyRefused('bounty-ambiguous', `name a bounty: ${eligible.map(record => `${record.id} ${JSON.stringify(record.title)}`).join(', ') || 'none open'}; next: box bounty status`);
+    if (eligible.length !== 1) throw new BountyRefused('bounty-ambiguous', `name a bounty: ${eligible.map(record => `${record.id} ${JSON.stringify(record.title)}`).join(', ') || 'none open'}; next: omakase-box status`);
     return [eligible[0]!.id, ...positional];
   };
 
@@ -139,24 +139,24 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
     // what replaced it — never a silent drop, never an alias that runs the
     // old operation. The refusal line above names what was typed.
     const removed: Record<string, string> = {
-      answer: 'collection is a step inside look and apply, not a command; next: box bounty look <id> <number> collects a pull request and shows its change; box bounty apply <id> <number> collects and merges',
-      questions: 'reading what other accounts wrote is part of status; next: box bounty status <id> --comments',
+      answer: 'collection is a step inside look and apply, not a command; next: omakase-box look <id> <number> collects a pull request and shows its change; omakase-box apply <id> <number> collects and merges',
+      questions: 'reading what other accounts wrote is part of status; next: omakase-box status <id> --comments',
       reply: 'the tool no longer writes comments for you; next: comment on the issue in your own words with your own gh, for example gh issue comment <number> --body "<your own words>"',
       undo: 'the tool no longer reverses an applied merge — the merge is one ordinary commit and ordinary Git reverses it; next: git revert -m 1 <merge>',
-      reject: 'ending a bounty with nothing merged is one command now; next: box bounty close <id> --reason "<why>" keeps the reason on the record',
-      withdraw: 'ending a bounty with nothing merged is one command now; next: box bounty close <id>',
-      remind: 'the tool no longer supplies reminders; next: box bounty status shows the current overview',
-      confirm: 'the owner allows the tool once, not each bounty; next: preview with box bounty post <id> --preview, publish with box bounty post <id>; the owner uses box bounty allow, deny and config'
+      reject: 'ending a bounty with nothing merged is one command now; next: omakase-box close <id> --reason "<why>" keeps the reason on the record',
+      withdraw: 'ending a bounty with nothing merged is one command now; next: omakase-box close <id>',
+      remind: 'the tool no longer supplies reminders; next: omakase-box status shows the current overview',
+      confirm: 'the owner allows the tool once, not each bounty; next: preview with omakase-box post <id> --preview, publish with omakase-box post <id>; the owner uses omakase-box allow, deny and config'
     };
     if (removed[subcommand!] !== undefined) {
       throw new BountyRefused('command-removed', removed[subcommand!]!);
     }
     if (subcommand === 'owner') {
-      const replacements: Record<string, string> = { setup: 'box bounty config', allow: 'box bounty allow', ask: 'box bounty allow --ask', off: 'box bounty deny', on: 'box bounty allow', answer: 'box bounty allow <waiting-bounty-id>', summary: 'box bounty status --since <iso>' };
-      throw new BountyRefused('command-removed', `owner ${bountyArgs[0] ?? ''} was removed. Nothing changed; next: ${replacements[bountyArgs[0] ?? ''] ?? 'box bounty allow, box bounty deny or box bounty config'}`);
+      const replacements: Record<string, string> = { setup: 'omakase-box config', allow: 'omakase-box allow', ask: 'omakase-box allow --ask', off: 'omakase-box deny', on: 'omakase-box allow', answer: 'omakase-box allow <waiting-bounty-id>', summary: 'omakase-box status --since <iso>' };
+      throw new BountyRefused('command-removed', `owner ${bountyArgs[0] ?? ''} was removed. Nothing changed; next: ${replacements[bountyArgs[0] ?? ''] ?? 'omakase-box allow, omakase-box deny or omakase-box config'}`);
     }
     if (subcommand === undefined) {
-      // `box bounty --version` — the package version, like `box --version`.
+      // `omakase-box --version` — the package version, like `omakase-box --version`.
       if (bountyArgs.includes('--version')) {
         console.log(host.version());
         process.exit(0);
@@ -195,7 +195,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       }
       // --task stays a usage error; a missing --why is the named refusal
       // missing-why, thrown by planBounty — not a usage wall.
-      if (parsed.task === undefined) host.usage('bounty create needs --task <file|-> (and --why "<one line>") — run box bounty help');
+      if (parsed.task === undefined) host.usage('create needs --task <file|-> (and --why "<one line>") — run omakase-box help');
       const result = createBounty({
         repoPath: resolve(parsed.repo ?? process.cwd()), why: parsed.why ?? '',
         ...(parsed.title !== undefined ? { title: parsed.title } : {}),
@@ -224,13 +224,13 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       try {
         const address = requireRepository(plan.repoRoot);
         const decision = readDecision(plan.repoRoot).decision;
-        if (decision !== 'allowed') lines.push(`  a GitHub post waits for the owner — ${decision === 'ask' ? 'they asked to be asked each time' : 'they have not allowed the tool'}; box bounty allow ${address} is their answer`);
+        if (decision !== 'allowed') lines.push(`  a GitHub post waits for the owner — ${decision === 'ask' ? 'they asked to be asked each time' : 'they have not allowed the tool'}; omakase-box allow ${address} is their answer`);
       } catch { /* an unlistable repository leaves permission unsaid — post names it */ }
       if (full) {
         lines.push(`  record: ${result.recordPath}`);
         if (plan.task.file !== 'standard input') lines.push('  the task file stays where it is — the tool reads it and never commits or removes it');
       }
-      lines.push(`next: box bounty post ${result.id} (--preview shows what becomes public)`);
+      lines.push(`next: omakase-box post ${result.id} (--preview shows what becomes public)`);
       console.log(lines.join('\n'));
     } else if (subcommand === 'discover') {
       // The solver's half (PF24): no checkout needed; the owner's word and the agent's bookmark live outside every repository.
@@ -238,7 +238,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       const minReward = parsed.values['--min-reward'];
       if (minReward !== undefined && !/^\d+$/.test(minReward)) throw new BountyRefused('reward-amount-invalid', `--min-reward "${minReward}" is not a whole dollar amount at or above 0; nothing was read or changed; next: pass a whole dollar amount`);
       const from = parsed.values['--from'];
-      if (from !== undefined && from !== 'start' && from !== 'now') throw new BountyRefused('discover-from-invalid', '--from takes start or now; nothing was read or changed; next: box bounty discover --from start, or --from now');
+      if (from !== undefined && from !== 'start' && from !== 'now') throw new BountyRefused('discover-from-invalid', '--from takes start or now; nothing was read or changed; next: omakase-box discover --from start, or --from now');
       const languages = parsed.repeated['--language'];
       const result = discover({
         ...(languages === undefined ? {} : { languages: [...languages] }),
@@ -254,7 +254,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       // The solver's half (PF25): no checkout needed; the workspace is a new folder outside every repository.
       const parsed = parse('take');
       const [id] = parsed.positionals;
-      if (id === undefined) host.usage('box bounty take <id> [--into <new folder>]');
+      if (id === undefined) host.usage('omakase-box take <id> [--into <new folder>]');
       const into = parsed.values['--into'];
       const result = takeBounty(id, into === undefined ? {} : { into: resolve(into) });
       console.log(result.lines.join('\n'));
@@ -262,7 +262,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       // The solver's half (PF26): the draft becomes ready for review; no checkout needed.
       const parsed = parse('submit');
       const [id] = parsed.positionals;
-      if (id === undefined) host.usage('box bounty submit <id>');
+      if (id === undefined) host.usage('omakase-box submit <id>');
       console.log(submitTaken(id));
     } else if (subcommand === 'find') {
       // Recall by purpose (BT28): one query over every readable record.
@@ -282,7 +282,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       const [id] = parsed.positionals;
       // PF26: a bounty this account took is read from GitHub and the board's public answers; it needs no checkout.
       if (id !== undefined && loadTaken(id) !== null) {
-        if (parsed.switches.has('--json') || parsed.switches.has('--full') || parsed.values['--since'] !== undefined) throw new BountyRefused('taken-status-options', `${id} is a bounty you took: its status prints text, and --comments adds what was written on its pull request; nothing was read; next: box bounty status ${id} --comments`);
+        if (parsed.switches.has('--json') || parsed.switches.has('--full') || parsed.values['--since'] !== undefined) throw new BountyRefused('taken-status-options', `${id} is a bounty you took: its status prints text, and --comments adds what was written on its pull request; nothing was read; next: omakase-box status ${id} --comments`);
         console.log(attemptStatus(id, { comments: parsed.switches.has('--comments') }));
         return;
       }
@@ -303,7 +303,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         // the text view prints — the acting-on line, the once-only notices,
         // a recognised merge — is stderr here; --since is a text report
         // the document does not carry, so it is refused by name.
-        if (since !== undefined) throw new BountyRefused('json-not-supported', '--since prints a text report; next: run box bounty status --since <iso> without --json');
+        if (since !== undefined) throw new BountyRefused('json-not-supported', '--since prints a text report; next: run omakase-box status --since <iso> without --json');
         setInstructionNoticeListener(line => console.error(line));
         setMergeNoticeListener(line => console.error(line));
         printDocument(statusDocument(root, { ...(id === undefined ? {} : { id }), comments: parsed.switches.has('--comments') }, line => console.error(line)));
@@ -324,7 +324,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       // show in --preview, and each makes the post wait for the owner.
       const withChanges = parsed.switches.has('--with-changes');
       const include = [...(parsed.repeated['--include'] ?? [])];
-      if (id === undefined || extraIds.length > 0) host.usage('box bounty post <id> [--with-changes] [--include <file>] [--preview] [--repo <path>]');
+      if (id === undefined || extraIds.length > 0) host.usage('omakase-box post <id> [--with-changes] [--include <file>] [--preview] [--repo <path>]');
       const repoRoot = resolveRepoRoot(repoPath(parsed), 'post');
       sayActingOn(repoRoot);
       if (parsed.switches.has('--preview')) {
@@ -337,7 +337,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       if (record.github?.scanBinary !== undefined && record.github.scanBinary.length > 0) console.log(`scan: not scanned — Git treats them as binary: ${record.github.scanBinary.map(showPath).join(', ')}`);
       // Which written owner answer allowed the post is an audit fact —
       // `status <id> --full` carries it; the compact post stays at three lines.
-      console.log(`next: box bounty status reads the pull requests; box bounty look ${record.id} <number> collects one and shows its change`);
+      console.log(`next: omakase-box status reads the pull requests; omakase-box look ${record.id} <number> collects one and shows its change`);
     } else if (subcommand === 'apply') {
       // Approval is the owner's, never the agent's (BT13): a flag that tries
       // to mark a merge as asked-for or approved is a named refusal that
@@ -347,7 +347,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       const attempt = attemptText !== undefined && /^\d+$/.test(attemptText) ? Number.parseInt(attemptText, 10) : undefined;
       if (id === undefined || extraIds.length > 0
         || (attemptText !== undefined && attempt === undefined)) {
-        host.usage('box bounty apply [id] [<n>] [--repo <path>]');
+        host.usage('omakase-box apply [id] [<n>] [--repo <path>]');
       }
       const applyRoot = resolveRepoRoot(repoPath(parsed), 'apply');
       sayActingOn(applyRoot);
@@ -396,7 +396,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
           for (const line of commits) console.log(`  ${line}`);
         }
         console.log('a merge the agent performs itself runs under the owner\'s own Git settings — the tool\'s pins are not part of it');
-        console.log(`next: read the solution with box bounty look ${result.record.id} ${result.attempt}; once the solution's commit is merged on ${branch} the next bounty command closes the bounty, or end it with box bounty close ${result.record.id} --reason "<why>"`);
+        console.log(`next: read the solution with omakase-box look ${result.record.id} ${result.attempt}; once the solution's commit is merged on ${branch} the next bounty command closes the bounty, or end it with omakase-box close ${result.record.id} --reason "<why>"`);
       }
     } else if (subcommand === 'look') {
       const parsed = parse('look');
@@ -405,7 +405,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       if (id === undefined || extraIds.length > 0
         || n === undefined
         || (text !== undefined && n === undefined)) {
-        host.usage('box bounty look [id] <n> [--full] [--export] [--json] [--repo <path>]');
+        host.usage('omakase-box look [id] <n> [--full] [--export] [--json] [--repo <path>]');
       }
       const root = resolveRepoRoot(repoPath(parsed), subcommand);
       const asJson = parsed.switches.has('--json');
@@ -420,7 +420,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       const exporting = parsed.switches.has('--export');
       // The quarantined path prints none of the change; a JSON document
       // would carry the whole diff on standard output, so the two do not mix.
-      if (exporting && asJson) throw new BountyRefused('json-not-supported', '--export writes the change to a file and prints none of it — --json prints it; nothing was written; next: run box bounty look <id> <n> --export without --json, or --json without --export');
+      if (exporting && asJson) throw new BountyRefused('json-not-supported', '--export writes the change to a file and prints none of it — --json prints it; nothing was written; next: run omakase-box look <id> <n> --export without --json, or --json without --export');
       const result = lookBounty(root, id, n!, { full: parsed.switches.has('--full'), whole: exporting });
       if (asJson) {
         printDocument(lookDocument(result));
@@ -431,7 +431,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       // standing explanation (BT17).
       console.log(`${id} solution ${label} — ${result.collected ? 'collected — ' : ''}written by the solver, not by the tool; nothing in it was run or checked out.`);
       // PF27: a pull request collected again at a new head: its number shows the latest version, which has its own solution number.
-      if (result.attempt.pullRequest !== undefined && result.attempt.n !== result.attempt.pullRequest) console.log(`this is pull request #${result.attempt.pullRequest}'s latest version collected, solution ${label}; box bounty apply ${id} ${result.attempt.pullRequest} takes this version.`);
+      if (result.attempt.pullRequest !== undefined && result.attempt.n !== result.attempt.pullRequest) console.log(`this is pull request #${result.attempt.pullRequest}'s latest version collected, solution ${label}; omakase-box apply ${id} ${result.attempt.pullRequest} takes this version.`);
       if (result.attempt.payTo !== undefined && (boundAmount(result.record) ?? 0) > 0) console.log(payToLine(result.attempt.payTo));
       // BT43: the solver's lines leave through the one renderer, inside its
       // labelled block, and the tool's own `next:` comes after the footer.
@@ -440,17 +440,17 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         console.log(`exported, not printed — the file holds ${SOLVER_WORDS}: ${written.diffPath}`);
         console.log(`  sha256 ${written.sha256}; ${written.fileCount} file(s), ${written.lines} line(s), ${written.bytes} byte(s); manifest ${written.manifestPath}`);
         console.log('advice only: read the file in a session that has no write access to this checkout, then choose and apply from your own session; the file holds the change\'s raw bytes, so open it as text, not with cat in a terminal');
-        console.log(`next: box bounty apply ${id} ${label} chooses this solution; box bounty status ${id} shows what else waits`);
+        console.log(`next: omakase-box apply ${id} ${label} chooses this solution; omakase-box status ${id} shows what else waits`);
       } else if (result.diff === null) {
         const tooLarge = result.tooLarge;
         if (tooLarge !== null) console.log(`${tooLarge.reason}: the change is ${tooLarge.bytes} bytes, over the ${tooLarge.limit} the tool prints; none of the diff is shown.`);
         console.log(`${tooLarge?.fileCount ?? result.files.length} file(s) changed:`);
         for (const line of solverBlock('solver', result.files)) console.log(line);
         if (tooLarge !== null && tooLarge.filesOmitted > 0) console.log(`${tooLarge.filesOmitted} more file name(s) are not listed; the list has the same limit.`);
-        console.log(`next: ${tooLarge?.next ?? `box bounty look ${id} ${label} --full prints the whole change; box bounty apply ${id} ${label} chooses this solution`}`);
+        console.log(`next: ${tooLarge?.next ?? `omakase-box look ${id} ${label} --full prints the whole change; omakase-box apply ${id} ${label} chooses this solution`}`);
       } else {
         for (const line of solverBlock('solver', result.diff.split('\n'))) console.log(line);
-        console.log(`next: box bounty apply ${id} ${label} chooses this solution; box bounty status ${id} shows what else waits`);
+        console.log(`next: omakase-box apply ${id} ${label} chooses this solution; omakase-box status ${id} shows what else waits`);
       }
       }
     } else if (subcommand === 'close') {
@@ -460,7 +460,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       const named = parsed.positionals[0];
       if (named !== undefined && parsed.positionals.length === 1 && loadTaken(named) !== null) { console.log(closeTaken(named)); return; }
       const [id, ...extraIds] = commandIds(parsed);
-      if (id === undefined || extraIds.length > 0) host.usage('box bounty close [id] [--reason "<text>"] [--repo <path>]');
+      if (id === undefined || extraIds.length > 0) host.usage('omakase-box close [id] [--reason "<text>"] [--repo <path>]');
       const closeRoot = resolveRepoRoot(repoPath(parsed), 'close');
       sayActingOn(closeRoot);
       const { record, outcome, payMessage } = closeBounty(closeRoot, id, reason);
@@ -486,7 +486,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       // `config set <name> <value>` is three words; four is allowed only for
       // `reward`/`reward-limit`'s repository target and for `paid`'s `no`.
       const withTarget = values[0] === 'set' && (values[1] === 'reward' || values[1] === 'reward-limit' || values[1] === 'paid');
-      if (subcommand === 'config' && values.length !== 0 && values.length !== 3 && !(values.length === 4 && withTarget)) throw new BountyRefused('authority-arguments', 'unexpected arguments. Nothing changed; next: box bounty allow [owner/name|waiting-id] [--ask] [--reward <whole dollars> --reward-limit <whole dollars>], box bounty deny [owner/name], or box bounty config [set|add|remove <setting> <value>]');
+      if (subcommand === 'config' && values.length !== 0 && values.length !== 3 && !(values.length === 4 && withTarget)) throw new BountyRefused('authority-arguments', 'unexpected arguments. Nothing changed; next: omakase-box allow [owner/name|waiting-id] [--ask] [--reward <whole dollars> --reward-limit <whole dollars>], omakase-box deny [owner/name], or omakase-box config [set|add|remove <setting> <value>]');
       let root: string | null = null;
       try { root = resolveRepoRoot(repoPath(parsed), subcommand); }
       catch (error) { if (!(error instanceof BountyRefused) || error.reason !== 'not-a-repository' || parsed.values['--repo'] !== undefined) throw error; }
@@ -498,7 +498,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         setMergeNoticeListener(line => console.error(line));
         printDocument(configDocument(root, line => console.error(line)));
       }
-      else if (parsed.switches.has('--json')) throw new BountyRefused('json-not-supported', '--json reads the settings — config set|add|remove writes them. Nothing changed; next: run box bounty config without --json to read the settings');
+      else if (parsed.switches.has('--json')) throw new BountyRefused('json-not-supported', '--json reads the settings — config set|add|remove writes them. Nothing changed; next: run omakase-box config without --json to read the settings');
       else console.log(values.length === 0 ? renderConfig(root, { full: parsed.switches.has('--full') }) : changeConfig(root, values[0]!, values[1]!, values[2]!, text => console.log(text), values.length === 4 ? values[3] : undefined));
     } else if (subcommand === 'hook') {
       // BT9: the owner switches the hook on and off; hosts run the slot
@@ -511,7 +511,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       const explain = parsed.switches.has('--explain');
       const confirm = parsed.switches.has('--confirm');
       if (action === 'start' || action === 'pause' || action === 'finish') {
-        if (hostName !== undefined || confirm) host.usage(`box bounty hook ${action} [--explain] [--repo <path>]`);
+        if (hostName !== undefined || confirm) host.usage(`omakase-box hook ${action} [--explain] [--repo <path>]`);
         let root: string | null = null;
         let rootRefusal: string | null = null;
         // Any refusal here (no checkout, Git itself unreadable or refusing)
@@ -549,13 +549,13 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         // its last line names the outcome and the confirming command.
         console.log(confirm ? hookOn(root, host) : hookDisclosure(root, host));
       } else if (action === 'off') {
-        if (confirm || explain) host.usage('box bounty hook off --host <name>');
+        if (confirm || explain) host.usage('omakase-box hook off --host <name>');
         console.log(hookOff(resolveRepoRoot(repoPath(parsed), 'hook off'), hookHost(hostName)));
       } else {
-        host.usage('box bounty hook | box bounty hook on|off --host <name> | box bounty hook start|pause|finish [--explain]');
+        host.usage('omakase-box hook | omakase-box hook on|off --host <name> | omakase-box hook start|pause|finish [--explain]');
       }
     } else {
-      host.usage(`box bounty ${subcommand} is not a bounty command — run box bounty help for the journey`);
+      host.usage(`omakase-box ${subcommand} is not a bounty command — run omakase-box help for the journey`);
     }
   } catch (error) {
     if (error instanceof BountyUsage) host.usage(error.message, error.lines);
@@ -564,10 +564,10 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         console.log(error.message);
         process.exit(0);
       }
-      console.error(`bounty ${subcommand ?? 'overview'} refused (${error.reason}): ${MULTI_LINE_REFUSALS.has(error.reason) ? error.message : oneLine(error.message)}`);
+      console.error(`${subcommand ?? 'overview'} refused (${error.reason}): ${MULTI_LINE_REFUSALS.has(error.reason) ? error.message : oneLine(error.message)}`);
       process.exit(3);
     }
-    console.error(`bounty ${subcommand ?? 'overview'} failed: ${oneLine(error instanceof Error ? error.message : String(error))}`);
+    console.error(`${subcommand ?? 'overview'} failed: ${oneLine(error instanceof Error ? error.message : String(error))}`);
     process.exit(1);
   }
 }

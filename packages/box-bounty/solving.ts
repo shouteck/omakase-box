@@ -30,24 +30,24 @@ export function changeSolving(verb: string, name: string, value: string): string
   const current = solvingOf();
   const save = (next: Omit<SolvingSettings, 'at'>): void => saveSettings({ ...loadSettings(), solving: { ...next, at: now } });
   if (name === 'solving') {
-    if (verb !== 'set' || (value !== 'off' && value !== 'ask' && value !== 'allowed')) throw new BountyRefused('config-value-invalid', 'nothing changed; next: box bounty config set solving <off|ask|allowed>');
+    if (verb !== 'set' || (value !== 'off' && value !== 'ask' && value !== 'allowed')) throw new BountyRefused('config-value-invalid', 'nothing changed; next: omakase-box config set solving <off|ask|allowed>');
     save({ ...current, mode: value });
     return [`solving: ${MODE_WORDS[value]}; written ${now} to the owner's settings, outside every repository.`,
-      ...(value === 'off' ? [] : ['Taking a bounty means your agent runs a stranger\'s code from that repository; it should work only in a throwaway copy, with none of your credentials in reach.', `limits in force: ${limitWords({ ...current, mode: value, at: now })}; change: box bounty config set solving-floor <whole dollars>, config set solving-pays-on-merge <true|false>, config add solving-skip <owner/name>`])].join('\n');
+      ...(value === 'off' ? [] : ['Taking a bounty means your agent runs a stranger\'s code from that repository; it should work only in a throwaway copy, with none of your credentials in reach.', `limits in force: ${limitWords({ ...current, mode: value, at: now })}; change: omakase-box config set solving-floor <whole dollars>, config set solving-pays-on-merge <true|false>, config add solving-skip <owner/name>`])].join('\n');
   }
   if (name === 'solving-floor') {
-    if (verb !== 'set' || !/^\d+$/.test(value) || !Number.isSafeInteger(Number(value))) throw new BountyRefused('config-value-invalid', 'nothing changed; next: box bounty config set solving-floor <whole dollars>');
+    if (verb !== 'set' || !/^\d+$/.test(value) || !Number.isSafeInteger(Number(value))) throw new BountyRefused('config-value-invalid', 'nothing changed; next: omakase-box config set solving-floor <whole dollars>');
     save({ ...current, floor: Number(value) });
     return `solving-floor: $${Number(value)} — your agents never take a bounty stating less; written ${now}.`;
   }
   if (name === 'solving-pays-on-merge') {
-    if (verb !== 'set' || (value !== 'true' && value !== 'false')) throw new BountyRefused('config-value-invalid', 'nothing changed; next: box bounty config set solving-pays-on-merge <true|false>');
+    if (verb !== 'set' || (value !== 'true' && value !== 'false')) throw new BountyRefused('config-value-invalid', 'nothing changed; next: omakase-box config set solving-pays-on-merge <true|false>');
     save({ ...current, paysOnMergeOnly: value === 'true' });
     return `solving-pays-on-merge: ${value} — ${value === 'true' ? 'your agents take only bounties the board says pay on merge' : 'your agents may take bounties whatever way they pay'}; written ${now}.`;
   }
   // solving-skip
   const address = repositoryAddress(value);
-  if ((verb !== 'add' && verb !== 'remove') || address === null) throw new BountyRefused('config-value-invalid', 'nothing changed; next: box bounty config add solving-skip <owner/name>, or remove solving-skip <owner/name>');
+  if ((verb !== 'add' && verb !== 'remove') || address === null) throw new BountyRefused('config-value-invalid', 'nothing changed; next: omakase-box config add solving-skip <owner/name>, or remove solving-skip <owner/name>');
   const skip = verb === 'add' ? [...new Set([...current.skip, address])] : current.skip.filter(entry => entry !== address);
   save({ ...current, skip });
   return `solving-skip: ${skip.length === 0 ? 'none' : skip.join(', ')} — your agents never take a bounty from ${skip.length === 1 ? 'it' : 'these'}; written ${now}.`;
@@ -59,11 +59,11 @@ const limitWords = (solving: SolvingSettings): string =>
 /** The owner's solving lines in `config`. */
 export function solvingLines(full: boolean): string[] {
   const solving = loadSettings().solving;
-  if (solving === undefined && !full) return ['solving: off (nothing written) — your agents do not take bounties; change: box bounty config set solving <off|ask|allowed>'];
+  if (solving === undefined && !full) return ['solving: off (nothing written) — your agents do not take bounties; change: omakase-box config set solving <off|ask|allowed>'];
   const now = solving ?? OFF;
   return [
-    `solving: ${MODE_WORDS[now.mode]}${solving === undefined ? ' (nothing written)' : `, changed ${now.at}`}; change: box bounty config set solving <off|ask|allowed>`,
-    `  limits your agents cannot loosen: ${limitWords(now)}; change: box bounty config set solving-floor <whole dollars>, config set solving-pays-on-merge <true|false>, config add|remove solving-skip <owner/name>`
+    `solving: ${MODE_WORDS[now.mode]}${solving === undefined ? ' (nothing written)' : `, changed ${now.at}`}; change: omakase-box config set solving <off|ask|allowed>`,
+    `  limits your agents cannot loosen: ${limitWords(now)}; change: omakase-box config set solving-floor <whole dollars>, config set solving-pays-on-merge <true|false>, config add|remove solving-skip <owner/name>`
   ];
 }
 
@@ -161,9 +161,9 @@ function entryOf(raw: unknown): DiscoveredBounty | null {
 
 export function discover(options: DiscoverOptions): DiscoverResult {
   const limits = solvingOf();
-  if (limits.mode === 'off') throw new BountyRefused('solving-off', 'solving is off — the owner has not allowed your agents to take bounties, so nothing was read; next: ask the owner to run box bounty config set solving allowed (or ask, to be asked before each one)');
+  if (limits.mode === 'off') throw new BountyRefused('solving-off', 'solving is off — the owner has not allowed your agents to take bounties, so nothing was read; next: ask the owner to run omakase-box config set solving allowed (or ask, to be asked before each one)');
   const board = boardAddress();
-  if (board === '') throw new BountyRefused('board-off', 'the board is off in the owner\'s settings, so there is nothing to discover from; nothing was read; next: the owner names it with box bounty config set board <address>');
+  if (board === '') throw new BountyRefused('board-off', 'the board is off in the owner\'s settings, so there is nothing to discover from; nothing was read; next: the owner names it with omakase-box config set board <address>');
   if (options.minReward !== undefined && options.minReward < limits.floor) throw new BountyRefused('below-owner-floor', `--min-reward $${options.minReward} is below the owner's floor of $${limits.floor}, which you cannot loosen; nothing was read or changed; next: give --min-reward ${limits.floor} or more, or leave it out`);
   for (const language of options.languages ?? []) if (!LANGUAGE.test(language)) throw new BountyRefused('language-invalid', `--language ${quoteForeign(language)} is not a language name; nothing was read or changed; next: a name GitHub uses, such as TypeScript`);
   const saved = loadDiscovered();
@@ -176,10 +176,10 @@ export function discover(options: DiscoverOptions): DiscoverResult {
   if (minReward > 0) query.set('min_reward', String(minReward));
   if (languages.length === 1) query.set('language', languages[0]!);
   const read = readFeedPage(query.toString());
-  if ('failed' in read) throw new BountyRefused('board-unread', `the board could not be read: ${read.failed}; nothing changed and the bookmark stays; next: run box bounty discover again later`);
+  if ('failed' in read) throw new BountyRefused('board-unread', `the board could not be read: ${read.failed}; nothing changed and the bookmark stays; next: run omakase-box discover again later`);
   const next = read.page['since_next'];
   const entries = read.page['bounties'];
-  if (typeof next !== 'string' || !/^[A-Za-z\d_-]{1,200}$/.test(next) || !Array.isArray(entries)) throw new BountyRefused('board-unread', 'the board\'s answer did not carry a bookmark or a list; nothing changed and the bookmark stays; next: run box bounty discover again later');
+  if (typeof next !== 'string' || !/^[A-Za-z\d_-]{1,200}$/.test(next) || !Array.isArray(entries)) throw new BountyRefused('board-unread', 'the board\'s answer did not carry a bookmark or a list; nothing changed and the bookmark stays; next: run omakase-box discover again later');
   let unreadable = 0;
   let skipped = 0;
   const bounties: DiscoveredBounty[] = [];
@@ -220,7 +220,7 @@ export function renderDiscover(result: DiscoverResult): string[] {
   }
   if (result.skipped > 0) lines.push('', `${plural(result.skipped, 'bounty', 'bounties')} new on the board did not pass your filter or the owner's limits.`);
   if (result.unreadable > 0) lines.push(`${plural(result.unreadable, 'entry', 'entries')} from the board did not read as the board's own shape and were left out.`);
-  lines.push('', result.more ? 'more new bounties are waiting; next: box bounty discover again now' : `bookmark saved; next: ${SCHEDULE}`);
+  lines.push('', result.more ? 'more new bounties are waiting; next: omakase-box discover again now' : `bookmark saved; next: ${SCHEDULE}`);
   return lines;
 }
 
@@ -229,6 +229,6 @@ export const discoverDocument = (result: DiscoverResult): object => ({
   schema: 'box-bounty/discover@1', board: result.board, solving: { mode: result.mode, floor: result.limits.floor, paysOnMergeOnly: result.limits.paysOnMergeOnly, skip: result.limits.skip },
   filter: result.filter, began: result.began, resetNote: result.resetNote, notRun: NOT_RUN, numbers: result.numbers,
   bounties: result.bounties, skipped: result.skipped, unreadable: result.unreadable, more: result.more,
-  next: result.more ? 'box bounty discover' : SCHEDULE,
+  next: result.more ? 'omakase-box discover' : SCHEDULE,
   foreignFields: [{ field: 'bounties[].title', source: 'other account' }, { field: 'bounties[].owner', source: 'other account' }]
 });

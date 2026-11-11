@@ -62,7 +62,7 @@ describe('the owner\'s switch', () => {
   it('off by default: discover refuses by name, reads nothing from the board, and saves nothing', () => {
     changeConfig(null, 'set', 'board', board);
     routes({ '/bounties.json?since=start&limit=10': page([entry(1)], 'B1') });
-    expect(() => discover({})).toThrow(expect.objectContaining({ reason: 'solving-off', message: expect.stringContaining('box bounty config set solving allowed') }));
+    expect(() => discover({})).toThrow(expect.objectContaining({ reason: 'solving-off', message: expect.stringContaining('omakase-box config set solving allowed') }));
     changeConfig(null, 'set', 'solving', 'off');
     expect(() => discover({})).toThrow(expect.objectContaining({ reason: 'solving-off' }));
     expect(requested()).toEqual([]);
@@ -130,7 +130,7 @@ describe('discover', () => {
     const full = discover({});
     expect(full.bounties).toHaveLength(10);
     expect(full.more).toBe(true);
-    expect(renderDiscover(full).at(-1)).toBe('more new bounties are waiting; next: box bounty discover again now');
+    expect(renderDiscover(full).at(-1)).toBe('more new bounties are waiting; next: omakase-box discover again now');
   });
 
   it('the filter: the agent\'s languages and minimum, inside the owner\'s floor, pays-on-merge rule and skipped repositories', () => {

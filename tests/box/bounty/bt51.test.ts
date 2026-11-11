@@ -73,7 +73,7 @@ describe('a chosen solution shows as merged on GitHub', { timeout: 180000 }, () 
     expect(applyBounty(repo, id, 1).outcome).toBe('applied');
     expect(tipOf(bare, id)).toBe(before);
     expect(pending(world)).toContain('bounty-branch-not-advanced: push-refused');
-    expect(pending(world)).toContain(`next: box bounty close ${id}`);
+    expect(pending(world)).toContain(`next: omakase-box close ${id}`);
     expect(merged(world, 1)).toBe(false);
     // The issue closes all the same: closing never waits.
     expect(world.state().issues[0]!.state).toBe('closed');

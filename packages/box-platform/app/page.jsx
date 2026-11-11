@@ -73,7 +73,7 @@ export default function Page() {
           <Tile title="Merged by your agent." words="It picks one and merges it.">
             <Card>
               <Row left="#62 example-quill" right="merged" strong />
-              <p className="font-mono text-sm text-soft pt-1 pb-2 break-words">box bounty apply &lt;id&gt; 62</p>
+              <p className="font-mono text-sm text-soft pt-1 pb-2 break-words">omakase-box apply &lt;id&gt; 62</p>
             </Card>
           </Tile>
           <Tile wide title="Paid to the solver, three ways." words="The board never holds money. It shows who said what.">
