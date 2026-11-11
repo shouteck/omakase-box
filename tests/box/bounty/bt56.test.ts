@@ -243,3 +243,28 @@ describe('11, 12. what the rule does not do, pinned so a change is a deliberate 
     } finally { process.env.BOX_BOUNTY_SETTINGS_DIR = before; }
   }));
 });
+
+describe('13, 14. two more attacks from the Security lens', () => {
+  it('13. the head is an older owner commit, not the latest: flagged all the same', () => posted(world => {
+    const { repo, bare, id, prCommit } = world;
+    const older = ownerCommit(repo, 'own13a.txt');
+    ownerCommit(repo, 'own13b.txt');
+    git(repo, ['push', bare, 'HEAD:refs/heads/main']);
+    prCommit(older, 'stranger');
+    listGitHubAnswers(repo, id);
+    stayedOpen(world);
+    expect(seen(world).some(entry => entry.commit === older && entry.onBranch === true)).toBe(true);
+  }));
+
+  it('14. a commit that only wraps the owner commit (same tree, the owner commit as its parent) is new work: not flagged, and it closes nothing until the owner lands it', () => posted(world => {
+    const { repo, bare, id, prCommit } = world;
+    const own = ownerCommit(repo, 'own14.txt');
+    git(repo, ['push', bare, 'HEAD:refs/heads/main']);
+    const wrapped = git(repo, ['-c', 'user.name=stranger', '-c', 'user.email=stranger@test.invalid', 'commit-tree', `${own}^{tree}`, '-p', own, '-m', 'a commit that changes nothing']);
+    prCommit(wrapped, 'stranger');
+    listGitHubAnswers(repo, id);
+    expect(seen(world).some(entry => entry.commit === wrapped)).toBe(true);
+    expect(seen(world).some(entry => entry.commit === wrapped && entry.onBranch === true)).toBe(false); // not on the branch: a head the owner may land
+    stayedOpen(world); // and until the owner does, it is not a landing
+  }));
+});
