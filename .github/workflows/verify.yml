@@ -172,8 +172,11 @@ jobs:
             | perl -ne '/✓ (.*?)\s+(\d+)ms\s*$/ and printf "%7d ms  %.110s\n", $2, $1' \
             | sort -rn | head -8 || true
 
+      # K61: the logs are a diagnostic aid. GitHub's own artifact storage failed one run (43088503658, attempt 2) after every
+      # test step had passed, so a failed upload must not fail the job; the step still shows its failure in the log.
       - name: Upload verify run logs
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
           name: kitchen-runs-${{ matrix.os }}-${{ github.run_id }}

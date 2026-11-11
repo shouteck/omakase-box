@@ -5,6 +5,7 @@ import { chmodSync, copyFileSync, cpSync, existsSync, linkSync, mkdirSync, readF
 import { delimiter, join } from 'node:path';
 import { expect, vi } from 'vitest';
 import { BountyRefused, finalizeBounty, lookBounty, planBounty, postBounty } from '../../../packages/box-bounty/index.js';
+import { removeTree } from './remove-tree.js';
 import { git, makeRepo, readRecordRaw, recordFilePath, runRoot, write, writeRecordRaw } from './support.js';
 import { requireRepository } from '../../../packages/box-bounty/settings.js';
 import { resolveProgram } from '../../../packages/box-bounty/program.js';
@@ -55,7 +56,7 @@ export function withoutGh(run: () => void): void {
   } finally {
     if (parentPath === undefined) delete process.env.PATH; else process.env.PATH = parentPath;
     if (parentExecPath === undefined) delete process.env.GIT_EXEC_PATH; else process.env.GIT_EXEC_PATH = parentExecPath;
-    rmSync(bin, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
+    removeTree(bin); // K61: a folder Windows still holds is left behind, not a failure of the test
   }
 }
 

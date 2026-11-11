@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, beforeEach } from 'vitest';
 import { closeStores, dropStored, forgetFileSha, readDecision, recordExists as storeRecordExists, recordIds as storeRecordIds, storeDbPath, storedRaw, writeDecision } from '../../../packages/box-bounty/index.js';
 import type { BountyRecord, OwnerDecision } from '../../../packages/box-bounty/index.js';
+import { removeTree } from './remove-tree.js';
 
 export const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 export const CLI_DIST = join(ROOT, 'packages', 'box-cli', 'dist', 'cli.js');
@@ -27,7 +28,8 @@ function cleanupOwned(): void {
   // SQLite connections are cached per checkout: they must close before the
   // folders go, or Windows refuses to delete the still-open WAL files.
   closeStores();
-  for (const dir of runDirectories.splice(0)) rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
+  // K61: a folder Windows still holds is retried for a few seconds, then left in the temp area; other faults still throw.
+  for (const dir of runDirectories.splice(0)) removeTree(dir);
 }
 afterAll(cleanupOwned);
 process.once('exit', cleanupOwned);
