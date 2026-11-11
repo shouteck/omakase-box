@@ -1,9 +1,9 @@
 # `omakase-box` — a bounty, complete and safe, remembered in the project
 
 GitHub posting is public and free, only to the project's own repository when
-it is already public. Anyone can read the issue and the bounty branch. Nobody
-is known to be watching these issues yet; the wait is unknown and every bounty
-states the owner's reward — $0 by default, so no payment is promised. The tool is for public repositories on GitHub and has no other route.
+it is already public. Anyone can read the issue and the bounty branch. The wait
+is unknown, and every bounty states the owner's reward — a bounty is not posted
+without one (BT60). The tool is for public repositories on GitHub and has no other route.
 Private repositories and unreadable visibility are refused with no override.
 
 GitHub issues carry the [versioned public format](BOUNTY-FORMAT.md) for readers
