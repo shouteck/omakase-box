@@ -39,10 +39,38 @@ import { loadState, requireRepository, saveState } from './settings.js';
 import { importShared, metaGet, metaKeys, metaSet } from './store.js';
 import type { SharedRow } from './store.js';
 
-export const CHAIN_NS = 'refs/box-bounty';
-export const CHAIN_REMOTE_NS = 'refs/remotes/origin/box-bounty';
-export const chainRef = (id: string): string => `${CHAIN_NS}/${id}`;
-const remoteRef = (id: string): string => `${CHAIN_REMOTE_NS}/${id}`;
+// BT58: where a bounty's shared record lives. A bounty has two things on GitHub with almost the same name: its branch,
+// `refs/heads/box-bounty/<id>`, and its record. Git resolves a short name to `refs/<name>` before `refs/heads/<name>`
+// (gitrevisions, "<refname>"), so a record at `refs/box-bounty/<id>` answered `git fetch origin box-bounty/<id>`, and
+// its tracking ref `refs/remotes/origin/box-bounty/<id>` is the very name a clone gives the branch. Bounties posted
+// from now keep the record at `refs/box-bounty-records/<id>` and its tracking copy outside `refs/remotes/`; no short
+// name anyone types reaches either. A chain written before stays at the old name and is continued there, never moved,
+// deleted or force-pushed; its tracking copy now lives in a namespace of its own, so this tool's fetch no longer
+// touches the place a clone keeps the branch's tracking ref.
+export const CHAIN_NS = 'refs/box-bounty-records';
+export const CHAIN_REMOTE_NS = 'refs/box-bounty-records-origin';
+export const CHAIN_NS_OLD = 'refs/box-bounty';
+export const CHAIN_REMOTE_NS_OLD = 'refs/box-bounty-records-origin-old';
+
+// Which name one bounty uses is chosen once and stored (`chain_ns:<id>`), so no command pays a Git start to decide. A
+// bounty this machine already holds chain state for (the four keys master's code wrote) is old; one with none is new.
+// A remote chain first seen at the old name only is old; seen at both, old, and the new name is never written.
+const LEGACY_KEYS = ['chain_authored', 'chain_pending', 'chain_pushed', 'chain_tip'] as const;
+const nsKey = (id: string): string => `chain_ns:${id}`;
+// null: nothing decided and nothing marks it old yet.
+const knownLayout = (root: string, id: string): 'old' | 'new' | null => {
+  const chosen = metaGet(root, nsKey(id));
+  if (chosen === 'old' || chosen === 'new') return chosen;
+  if (LEGACY_KEYS.some(key => metaGet(root, `${key}:${id}`) !== null)) { metaSet(root, nsKey(id), 'old'); return 'old'; }
+  return null;
+};
+const isOldChain = (root: string, id: string): boolean => knownLayout(root, id) === 'old';
+// Decide a bounty whose chain this machine is about to write or adopt, once.
+const settleLayout = (root: string, id: string, old: boolean): void => {
+  if (knownLayout(root, id) === null) metaSet(root, nsKey(id), old ? 'old' : 'new');
+};
+export const chainRef = (root: string, id: string): string => `${isOldChain(root, id) ? CHAIN_NS_OLD : CHAIN_NS}/${id}`;
+const remoteRef = (root: string, id: string): string => `${isOldChain(root, id) ? CHAIN_REMOTE_NS_OLD : CHAIN_REMOTE_NS}/${id}`;
 const FETCH_INTERVAL_MS = 60000;
 const FIELD_LIMIT = 8000;
 const PUSH_TRIES = 3;
@@ -145,12 +173,13 @@ const provenTip = (root: string, id: string, tip: string): boolean =>
 // The commit is recorded as this machine's authored tip — the provenance
 // that later authorizes pushing it.
 function commitEvent(root: string, id: string, eventJson: string, parents: readonly string[]): string {
+  settleLayout(root, id, false); // a chain this machine starts is a new one; an old one was settled before
   const blob = gitWriteBlob(root, Buffer.from(eventJson, 'utf8'));
   const tree = gitStdin(root, ['mktree'], `100644 blob ${blob}\tevent.json\n`);
   const args = [...IDENTITY, 'commit-tree', tree, '-m', `box-bounty ${id} chain event`];
   for (const parent of parents) args.push('-p', parent);
   const commit = git(root, args);
-  gitRefsWrite(root, [{ update: chainRef(id), sha: commit }]);
+  gitRefsWrite(root, [{ update: chainRef(root, id), sha: commit }]);
   metaSet(root, `chain_authored:${id}`, commit);
   return commit;
 }
@@ -161,7 +190,7 @@ function commitEvent(root: string, id: string, eventJson: string, parents: reado
 // history, and a planted or swapped local ref is never a parent either: a
 // forged tip would otherwise launder its graph under a tool-authored event.
 export function appendEvent(root: string, id: string, event: ChainEvent): string {
-  const tip = tipOf(root, chainRef(id));
+  const tip = tipOf(root, chainRef(root, id));
   const parent = tip !== null && provenTip(root, id, tip) && isChainCommit(root, tip) ? [tip] : [];
   const commit = commitEvent(root, id, JSON.stringify(event) + '\n', parent);
   // From this moment the authored tip is a pending push — a crash before
@@ -174,24 +203,24 @@ export function appendEvent(root: string, id: string, event: ChainEvent): string
 // identical/ahead do nothing, behind fast-forwards, diverged writes one
 // empty merge event with both tips as parents.
 function mergeRemoteTip(root: string, id: string): 'new' | 'identical' | 'ahead' | 'ff' | 'merged' | 'none' {
-  const local = tipOf(root, chainRef(id));
-  const remote = tipOf(root, remoteRef(id));
+  const local = tipOf(root, chainRef(root, id));
+  const remote = tipOf(root, remoteRef(root, id));
   if (remote === null) return 'none';
   if (local === null || !isChainCommit(root, local)) {
-    gitRefsWrite(root, [{ update: chainRef(id), sha: remote }]);
+    gitRefsWrite(root, [{ update: chainRef(root, id), sha: remote }]);
     return 'new';
   }
   if (local === remote) return 'identical';
   if (gitOutcome(root, ['merge-base', '--is-ancestor', remote, local]).status === 0) return 'ahead';
   if (gitOutcome(root, ['merge-base', '--is-ancestor', local, remote]).status === 0) {
-    gitRefsWrite(root, [{ update: chainRef(id), sha: remote }]);
+    gitRefsWrite(root, [{ update: chainRef(root, id), sha: remote }]);
     return 'ff';
   }
   if (!provenTip(root, id, local)) {
     // A diverged local tip with no provenance is foreign: never graft its
     // graph onto the remote chain under an authorized merge commit. Adopt
     // the remote tip and leave the planted objects unreferenced.
-    gitRefsWrite(root, [{ update: chainRef(id), sha: remote }]);
+    gitRefsWrite(root, [{ update: chainRef(root, id), sha: remote }]);
     return 'ff';
   }
   const merge = commitEvent(root, id, JSON.stringify({ v: 1, type: 'merge' }) + '\n', [local, remote]);
@@ -214,10 +243,10 @@ const remoteUrl = (root: string): string | null => {
 // The pushed object is always the EXACT sha that was just proven — never the
 // ref name, which git would re-resolve inside the push after a swap.
 const pushOnce = (root: string, url: string, id: string, sha: string): boolean =>
-  gitOutcome(root, ['push', url, `${sha}:${chainRef(id)}`]).status === 0;
+  gitOutcome(root, ['push', url, `${sha}:${chainRef(root, id)}`]).status === 0;
 
 const fetchOne = (root: string, url: string, id: string): void => {
-  gitOutcome(root, ['fetch', '--no-tags', '--prune', url, `+${chainRef(id)}:${remoteRef(id)}`]);
+  gitOutcome(root, ['fetch', '--no-tags', '--prune', url, `+${chainRef(root, id)}:${remoteRef(root, id)}`]);
 };
 
 export interface PushResult { readonly pushed: boolean; readonly reason?: string; readonly restored?: boolean }
@@ -229,7 +258,7 @@ export interface PushResult { readonly pushed: boolean; readonly reason?: string
 export function pushChain(root: string, id: string, knownTip?: string): PushResult {
   const url = remoteUrl(root);
   const proven = (known?: string): string | null => {
-    const tip = known ?? tipOf(root, chainRef(id));
+    const tip = known ?? tipOf(root, chainRef(root, id));
     return tip !== null && provenTip(root, id, tip) ? tip : null;
   };
   const firstTip = proven(knownTip);
@@ -257,7 +286,7 @@ export function pushChain(root: string, id: string, knownTip?: string): PushResu
       return { pushed: true, restored };
     }
     fetchOne(root, url, id);
-    const remote = tipOf(root, remoteRef(id));
+    const remote = tipOf(root, remoteRef(root, id));
     if (remote === null) {
       // The remote ref is gone while this machine pushed it before: the
       // next push attempt restores it (recovery), and the caller says so once.
@@ -397,7 +426,9 @@ export function syncChains(root: string, force = false): void {
   }
   const url = remoteUrl(root);
   if (url === null) return;
-  const fetched = gitOutcome(root, ['fetch', '--no-tags', '--prune', url, `+${CHAIN_NS}/*:${CHAIN_REMOTE_NS}/*`]);
+  // Both names in one Git call (BT58): the new record namespace and the old one, each into a tracking namespace of its
+  // own. --prune acts only on those two destinations, never on a branch's.
+  const fetched = gitOutcome(root, ['fetch', '--no-tags', '--prune', url, `+${CHAIN_NS}/*:${CHAIN_REMOTE_NS}/*`, `+${CHAIN_NS_OLD}/*:${CHAIN_REMOTE_NS_OLD}/*`]);
   if (fetched.status !== 0 || fetched.error !== undefined) {
     // Offline, throttled or refusing: answer from the cache, and say so once
     // per failing spell — a success below clears the recorded error.
@@ -437,13 +468,37 @@ interface ChainView {
   readonly ancestorsOf: (tip: string) => ReadonlySet<string>;
 }
 
-const refTips = (root: string, ns: string): ReadonlyMap<string, string> =>
-  new Map(
-    gitOutcome(root, ['for-each-ref', '--format=%(refname) %(objectname)', ns]).stdout
-      .split('\n').filter(line => line !== '')
-      .map(line => { const [ref, sha] = line.split(' '); return [ref!.slice(`${ns}/`.length), sha!] as const; })
-      .filter(([id, sha]) => CHAIN_ID.test(id) && /^[a-f\d]{40}$/.test(sha))
-  );
+// One listing for a namespace pair (the new name and the old name), so the read costs the Git starts it did before.
+interface TipLists { readonly fresh: ReadonlyMap<string, string>; readonly old: ReadonlyMap<string, string> }
+const listTips = (root: string, freshNs: string, oldNs: string): TipLists => {
+  const fresh = new Map<string, string>();
+  const old = new Map<string, string>();
+  for (const line of gitOutcome(root, ['for-each-ref', '--format=%(refname) %(objectname)', freshNs, oldNs]).stdout.split('\n')) {
+    if (line === '') continue;
+    const [ref, sha] = line.split(' ');
+    if (ref === undefined || sha === undefined || !/^[a-f\d]{40}$/.test(sha)) continue;
+    const into = ref.startsWith(`${freshNs}/`) ? fresh : ref.startsWith(`${oldNs}/`) ? old : null;
+    const id = into === null ? '' : ref.slice(`${into === fresh ? freshNs : oldNs}/`.length);
+    if (into !== null && CHAIN_ID.test(id)) into.set(id, sha);
+  }
+  return { fresh, old };
+};
+
+// Which of the two names answers for each id, and the tip there. Chosen already: that name (the other is ignored). Not
+// chosen: the old name if the remote or this machine has it, else the new; both: the old. The choice is stored when the
+// tip is adopted (see adoptAndImport), never here.
+const resolveTips = (root: string, lists: TipLists, decide: boolean): Map<string, string> => {
+  const tips = new Map<string, string>();
+  for (const id of new Set([...lists.fresh.keys(), ...lists.old.keys()])) {
+    const known = knownLayout(root, id);
+    const old = known === 'old' || (known === null && lists.old.has(id));
+    const tip = (old ? lists.old : lists.fresh).get(id);
+    if (tip === undefined) continue;
+    if (decide && known === null) settleLayout(root, id, old);
+    tips.set(id, tip);
+  }
+  return tips;
+};
 
 // Parent edges for the union of the given tips' histories — chunked so the
 // argument list stays short, one process per chunk (never one per chain).
@@ -509,13 +564,14 @@ function chainOrder(view: ChainView, tip: string): string[] {
 // Returns the collected view for retryPending — the post-fetch push pass
 // reads the same listings instead of listing refs and probing tips again.
 function adoptAndImport(root: string): ChainView {
-  const remoteTips = refTips(root, CHAIN_REMOTE_NS);
+  const remoteLists = listTips(root, CHAIN_REMOTE_NS, CHAIN_REMOTE_NS_OLD);
+  const remoteTips = resolveTips(root, remoteLists, true);
   // A local listing is skipped only when nothing could be there to compare
   // or retry: no remote chains and no chain meta keys at all (K14: a plain
   // read on an empty shared memory costs no extra git start).
   const localTips = remoteTips.size === 0 && metaKeys(root, 'chain_').length === 0
     ? new Map<string, string>()
-    : refTips(root, CHAIN_NS);
+    : resolveTips(root, listTips(root, CHAIN_NS, CHAIN_NS_OLD), false);
 
   // History walks only where a decision needs them: tips that differ, tips
   // not yet imported, and local-only chains (isChainCommit for the retry).
@@ -574,13 +630,13 @@ function adoptAndImport(root: string): ChainView {
     const local = localTips.get(id);
     if (local === remote) continue;
     if (local === undefined || !chainCommits.has(local)) {
-      writes.push({ update: chainRef(id), sha: remote });
+      writes.push({ update: chainRef(root, id), sha: remote });
     } else if (ancestorsOf(local).has(remote)) {
       // local strictly ahead — pushChain's pending/retry side handles it,
       // and only when the tip has provenance; a planted descendant is
       // never uploaded.
     } else if (ancestorsOf(remote).has(local)) {
-      writes.push({ update: chainRef(id), sha: remote }); // fast-forward
+      writes.push({ update: chainRef(root, id), sha: remote }); // fast-forward
     } else if (provenTip(root, id, local)) {
       // A genuinely diverged chain this machine is entitled to publish:
       // join the tips under an empty merge event and owe the push.
@@ -589,7 +645,7 @@ function adoptAndImport(root: string): ChainView {
     } else {
       // A foreign diverged tip is never grafted onto the remote graph —
       // adopt the remote tip and leave its objects unreferenced.
-      writes.push({ update: chainRef(id), sha: remote });
+      writes.push({ update: chainRef(root, id), sha: remote });
     }
   }
   gitRefsWrite(root, writes);
@@ -629,9 +685,9 @@ function retryPending(root: string, url?: string, view?: ChainView): void {
   // one fresh rev-parse for that id only — reads stay at a fixed handful of
   // Git starts on machines with no pending work.
   const localTip = (id: string): string | null =>
-    view !== undefined ? view.localTips.get(id) ?? null : tipOf(root, chainRef(id));
+    view !== undefined ? view.localTips.get(id) ?? null : tipOf(root, chainRef(root, id));
   const remoteTip = (id: string): string | null =>
-    view !== undefined ? view.remoteTips.get(id) ?? null : tipOf(root, remoteRef(id));
+    view !== undefined ? view.remoteTips.get(id) ?? null : tipOf(root, remoteRef(root, id));
   const ids = new Set<string>();
   for (const key of metaKeys(root, 'chain_pending:')) {
     const id = key.slice('chain_pending:'.length);
@@ -643,7 +699,7 @@ function retryPending(root: string, url?: string, view?: ChainView): void {
     // one fresh read settles it — a rev-parse only for ids that actually
     // owe a push.
     const seen = localTip(id);
-    const local = seen === expected ? seen : tipOf(root, chainRef(id));
+    const local = seen === expected ? seen : tipOf(root, chainRef(root, id));
     if (local !== expected) continue; // swapped-in tip: never pushed
     const remote = remoteTip(id);
     if (remote !== null && remote !== expected &&
