@@ -55,4 +55,23 @@ Leaving out the one run with real failures and the two scratch runs red or green
 
 ## After
 
-To be filled when the proof runs finish (the same commit pushed to three scratch branches, three parallel hosted runs).
+The same code (`5110411`: 60 s per test on Windows, 30 s elsewhere, plus the report step) on the wave branch and, with one marker file each so the push starts a run (a branch pointing at a commit already on the remote starts none), on three scratch branches, four hosted runs in parallel, 11 November 11:55 to 12:25 UTC. Linux, macOS, the install tests and the audit were green in all four.
+
+| Run | Branch | Windows verify | Minutes |
+|---|---|---|---|
+| 43015911523 | `wave/K59` | **green** | 25.5 |
+| 43016075721 | `wave/K59-try-1` | **green** | 27.6 |
+| 43016081826 | `wave/K59-try-2` | **green** | 27.2 |
+| 43016088251 | `wave/K59-try-3` | **green** | 24.6 |
+
+**Four green Windows jobs, no timeout, against two timeouts in ten before.** That cannot prove a one-in-five flake is gone: four runs would all be green about 40 % of the time even if nothing had changed. It shows the flake did not recur, and the table below shows why it should not.
+
+The report step's "Slowest tests on windows-2025", the same four runs: 31.5 to 37.2 s for `independent bounties in same-address copies…` (synchronous, no timeout of its own, passes whatever the limit), 30.0 to 33.7 s for `T1: a run that changes nothing…` (its own 180000), 26 to 28 s for the k16 recording (its own 290000), then the default-limit tests at 20 to 25 s: `every bounty command stays within its Git and gh start budget` 21.6 to 24.9 s, and **`records a waiting PR as new then seen before collection…` 23.4 s, the test that failed in BT54** (`bt7.test.ts:169`), which now has 60 s: 39 % of its limit instead of 78 %. Linux's slowest in the same runs: 15 to 16 s (the recording, its own timeout), then 11.7 s, then 8 s or less: a margin of two or more on a limit that stays 30 s.
+
+Windows wall time is unchanged (24.6 to 27.6 min against 22.3 to 25.7 before): this wave buys reliability, not speed.
+
+## What the change does not do
+
+- A test that is entirely synchronous and over the limit still passes, as before; nothing here makes such a test fail.
+- A real hang on Windows is now reported 30 s later than before.
+- Tests with their own timeout are untouched.
