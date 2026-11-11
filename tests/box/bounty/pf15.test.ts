@@ -114,7 +114,7 @@ describe('the built tool, as an agent first meets it', { timeout: 120000 }, () =
     expect(allowed.stdout).toContain('state $5');
     const config = run(repo, scratch, ['config']);
     expect(config.stdout).toContain('reward $5');
-    expect(allowed.stdout + config.stdout).not.toContain('every bounty states $0');
+    expect(allowed.stdout + config.stdout).not.toContain('Until then no bounty is posted');
   }));
   it('says what to run if box is not found', () => fixture(({ repo, scratch }) => {
     unset(scratch);

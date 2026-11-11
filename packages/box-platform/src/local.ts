@@ -39,7 +39,9 @@ export async function startLocal(options: { schema: string; out: string; port?: 
   const api = await standin.start();
   (options.seed ?? (s => seedDemo(s, Date.now())))(standin);
   const db = localDb(options.schema);
-  const env: Env = { DB: db, GITHUB_API: api, GITHUB_WEB: api, GITHUB_OAUTH_CLIENT_ID: standin.oauthClientId, GITHUB_OAUTH_CLIENT_SECRET: standin.oauthClientSecret, ASSETS: assetsFrom(options.out), SAMPLE: true, ...(options.now ? { now: options.now } : {}) };
+  const env: Env = { DB: db, GITHUB_API: api, GITHUB_WEB: api, GITHUB_OAUTH_CLIENT_ID: standin.oauthClientId, GITHUB_OAUTH_CLIENT_SECRET: standin.oauthClientSecret, ASSETS: assetsFrom(options.out), SAMPLE: true,
+    // BT60: this board runs on invented data and is never deployed; its designed states include a bounty with no reward, so it keeps the testing allowance (the live board never has it: wrangler.toml, and a test).
+    ALLOW_ZERO_FOR_TESTING: '1', ...(options.now ? { now: options.now } : {}) };
   const server = createServer(async (request, response) => {
     try {
       const method = request.method ?? 'GET';

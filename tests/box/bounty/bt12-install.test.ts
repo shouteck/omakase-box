@@ -107,6 +107,8 @@ beforeAll(() => {
     APPDATA: join(home, 'AppData', 'Roaming'),
     LOCALAPPDATA: join(home, 'AppData', 'Local'),
     BOX_BOUNTY_SETTINGS_DIR: settings,
+    // BT60: the scrubbed environment still carries the testing allowance, so this $0 journey posts as before.
+    BOX_BOUNTY_ALLOW_ZERO_FOR_TESTING: '1',
     NODE_OPTIONS: `--require ${shim.replaceAll(BS, '/')}`,
     REPLAY_STATE: state,
     REPLAY_BARE: bare,

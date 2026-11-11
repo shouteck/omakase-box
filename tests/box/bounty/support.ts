@@ -75,6 +75,8 @@ afterAll(() => {
   if (previousNodeOptions === undefined) delete process.env['NODE_OPTIONS'];
   else process.env['NODE_OPTIONS'] = previousNodeOptions;
 });
+// BT60: set at load as well, for a file that posts while it is being collected (a world built at module level).
+process.env['BOX_BOUNTY_ALLOW_ZERO_FOR_TESTING'] = '1';
 beforeEach(() => {
   // BT22: both files the folder holds — the owner's settings and the tool's
   // own state beside it.
