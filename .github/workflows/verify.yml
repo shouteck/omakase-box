@@ -143,6 +143,18 @@ jobs:
             echo
           done
 
+      # K59: the eight slowest tests here, so a test creeping toward its limit shows before it fails. The limit is 60 s on
+      # Windows and 30 s elsewhere (scripts/test-timeout.mjs); a test that sets its own is not bound by it. Reports only:
+      # `|| true`, and always(), so it can never fail a job. The runner's log holds real escape bytes, hence `perl`.
+      - name: Slowest tests on ${{ matrix.os }}
+        if: always()
+        run: |
+          for log in .kitchen/runs/*/test_box-bounty.log .kitchen/runs/*/test_kitchen.log "$RUNNER_TEMP/platform.log"; do
+            [ -f "$log" ] && perl -pe 's/\e\[[0-9;]*m//g' "$log"
+          done | grep -aE '^\s+✓ ' | grep -avE '^\s+✓ tests/' \
+            | perl -ne '/✓ (.*?)\s+(\d+)ms\s*$/ and printf "%7d ms  %.110s\n", $2, $1' \
+            | sort -rn | head -8 || true
+
       - name: Upload verify run logs
         if: always()
         uses: actions/upload-artifact@v7
