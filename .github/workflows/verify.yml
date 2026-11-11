@@ -127,14 +127,30 @@ jobs:
       # PF1: the board's own suite, apart from the kitchen's acceptance profile,
       # whose duration budget measures the two suites above.
       - name: platform suite
-        run: node scripts/suite.mjs platform
+        run: |
+          set -o pipefail
+          node scripts/suite.mjs platform 2>&1 | tee "$RUNNER_TEMP/platform.log"
+
+      # K50: skips are counted per system, never silent. Each skipped test is named beside its assertion in the
+      # tests, with the reason (grep the tests for "Host-only"); this prints how many each suite skipped here.
+      - name: Skips on ${{ matrix.os }}
+        if: always()
+        run: |
+          for log in .kitchen/runs/*/test_box-bounty.log .kitchen/runs/*/test_kitchen.log "$RUNNER_TEMP/platform.log"; do
+            [ -f "$log" ] || continue
+            printf '%s on ${{ matrix.os }}: ' "$(basename "$log")"
+            perl -pe 's/\e\[[0-9;]*m//g' "$log" | grep -aE '^\s+Tests ' | tr -s ' ' | tr '\n' ' '
+            echo
+          done
 
       - name: Upload verify run logs
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: kitchen-runs-${{ matrix.os }}-${{ github.run_id }}
-          path: .kitchen/runs/
+          path: |
+            .kitchen/runs/
+            ${{ runner.temp }}/platform.log
           retention-days: 7
           if-no-files-found: ignore
 
