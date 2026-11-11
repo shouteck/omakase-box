@@ -113,7 +113,7 @@ describe('a stand-in run', () => {
     }
     // Every tool command is shown as `omakase-box …`; the transcript keeps the
     // full command beside it, paths shortened.
-    const shownCommands = screen.split('\n').filter(line => line.startsWith('$ box '));
+    const shownCommands = screen.split('\n').filter(line => line.startsWith('$ omakase-box '));
     expect(shownCommands.length).toBeGreaterThanOrEqual(6);
     for (const line of shownCommands) expect(line).toMatch(/^\$ omakase-box /);
     expect(transcript).toContain('cli.js bounty create');
