@@ -12,6 +12,32 @@ import { parsePayTo,payToLine,type PayToFact } from './pay.js';
 import { shareSolution,syncChains } from './chain.js';
 import { adoptedWithoutPermission,settleFromChain } from './adopt.js';
 
+// BT56: the merge scan must not take a commit the owner pushed after posting for a solution's landing. When a pull
+// request's head is first recorded here, record whether that commit was already on the branch the bounty was
+// created on: ancestry and nothing else (no authors, no messages). A head recorded that way is never a merge
+// candidate. The branch is the record's own fact; a record that names none, or a commit this clone does not hold,
+// answers false (a head not here cannot be on the branch here).
+const creatingBranch = (record: BountyRecord): string | null => {
+  const branch = record.resume?.kind === 'recorded' ? record.resume.branch : null;
+  return branch === null || branch === '(detached HEAD)' ? null : branch;
+};
+function alreadyOnBranch(root: string, record: BountyRecord, commit: string): boolean {
+  const branch = creatingBranch(record);
+  if (branch === null) return false;
+  return gitOutcome(root, ['merge-base', '--is-ancestor', commit, `refs/heads/${branch}`]).status === 0;
+}
+// The answer is fixed at first sight: an entry already recorded (listed or seen) keeps its stored flag and costs no
+// Git start; only a new (n, commit) is asked. A moved head is a new (n, commit), so it is asked again.
+function firstSightFlag(root: string, record: BountyRecord, n: number, commit: string): { readonly onBranch?: true } {
+  const known = record.github!.seenPullRequests?.find(entry => entry.n === n && entry.commit === commit)
+    ?? record.github!.availablePullRequests?.find(entry => entry.n === n && entry.commit === commit);
+  if (known !== undefined) return known.onBranch === true ? { onBranch: true } : {};
+  return alreadyOnBranch(root, record, commit) ? { onBranch: true } : {};
+}
+// What a listing says of a head that was already there: a fact, with the one step that is left.
+const alreadyThereLine = (record: BountyRecord, id: string): string =>
+  `already on ${creatingBranch(record) ?? 'the branch the bounty was created on'} when first seen here; it adds nothing and is not counted as a merge; if this is the merged solution, close the bounty: omakase-box close ${id}`;
+
 export function listGitHubAnswers(root: string, id: string, record = loadRecord(root, id), shown = true): string {
   if (record.github === undefined) return invalid('not-github-posted', `this bounty has no GitHub post; next: post it with omakase-box post ${id}, or end it with omakase-box close ${id}`);
   if (retiredRoute(record) !== null) return `This bounty used a retired delivery route; end it with omakase-box close ${id}`;
@@ -46,10 +72,10 @@ export function listGitHubAnswers(root: string, id: string, record = loadRecord(
       ?? record.github!.availablePullRequests?.find(pr => pr.n === fact.n && pr.commit === fact.commit)?.at
       ?? new Date().toISOString();
   if (record.github.outside !== undefined && record.github.answersKey === key) {
-    record.github.availablePullRequests = facts.map(fact => ({ n: fact.n, commit: fact.commit, at: stamp(fact), author: fact.author, payTo: fact.payTo }));
+    record.github.availablePullRequests = facts.map(fact => ({ n: fact.n, commit: fact.commit, at: stamp(fact), author: fact.author, payTo: fact.payTo, ...firstSightFlag(root, record, fact.n, fact.commit) }));
     for (const fact of facts) {
       if (shown && record.github.seenPullRequests?.find(seen => seen.n === fact.n && seen.commit === fact.commit) === undefined) {
-        record.github.seenPullRequests = [...record.github.seenPullRequests ?? [], { n: fact.n, commit: fact.commit, at: stamp(fact), author: fact.author, payTo: fact.payTo }];
+        record.github.seenPullRequests = [...record.github.seenPullRequests ?? [], { n: fact.n, commit: fact.commit, at: stamp(fact), author: fact.author, payTo: fact.payTo, ...firstSightFlag(root, record, fact.n, fact.commit) }];
       }
     }
     persistRecord(root, record);
@@ -67,13 +93,14 @@ export function listGitHubAnswers(root: string, id: string, record = loadRecord(
     const files = pages(root, `repos/${repository}/pulls/${n}/files`);
     const names = files.map(file => isObject(file) && typeof file['filename'] === 'string' ? redact(quoteForeign(file['filename'])) : invalid('github-response-invalid', 'GitHub returned unreadable changed files; next: check gh and rerun the same command'));
     const collected = record.attempts?.find(attempt => attempt.commit === commit);
-    const next = collected === undefined ? `collect: omakase-box look ${id} ${n} or omakase-box apply ${id} ${n}` : `collected as solution ${collected.n}; look: omakase-box look ${id} ${collected.n}`;
+    const flag = firstSightFlag(root, record, n, commit);
+    const next = flag.onBranch === true ? alreadyThereLine(record, id) : collected === undefined ? `collect: omakase-box look ${id} ${n} or omakase-box apply ${id} ${n}` : `collected as solution ${collected.n}; look: omakase-box look ${id} ${collected.n}`;
     // The `pay-to:` line is read only from the pull request description — a
     // comment or a changed file never carries it — and only the fact is kept.
     const payTo = parsePayTo(typeof entry['body'] === 'string' ? entry['body'] : '');
     const paid = boundAmount(record) !== undefined && boundAmount(record)! > 0 ? `; ${payToLine(payTo)}` : '';
     lines.push(`  #${n} by ${login(entry['user']['login'])}: ${names.join(', ')}; ${seen === undefined ? 'new' : `seen since ${seen.at}`}; ${next}${paid}`);
-    const fact = { n, commit, at: seen?.at ?? record.github.availablePullRequests?.find(pr => pr.n === n && pr.commit === commit)?.at ?? new Date().toISOString(), author: login(entry['user']['login']), payTo };
+    const fact = { n, commit, at: seen?.at ?? record.github.availablePullRequests?.find(pr => pr.n === n && pr.commit === commit)?.at ?? new Date().toISOString(), author: login(entry['user']['login']), payTo, ...flag };
     available.push(fact);
     if (shown && seen === undefined) record.github.seenPullRequests = [...record.github.seenPullRequests ?? [], fact];
   }
@@ -273,7 +300,7 @@ export function answerGitHub(root: string, id: string, pr: number, via?: 'look' 
   requireCurrentDelivery(record);
   const result = collectHistoryPullRequest(root, record, publication, commit, author, pr, via, payTo, redact(body));
   if (publication.seenPullRequests?.some(entry => entry.n === pr && entry.commit === commit) !== true) {
-    publication.seenPullRequests = [...publication.seenPullRequests ?? [], { n: pr, commit, at: result.record.attempts?.find(attempt => attempt.commit === commit)?.seenAt ?? new Date().toISOString() }];
+    publication.seenPullRequests = [...publication.seenPullRequests ?? [], { n: pr, commit, at: result.record.attempts?.find(attempt => attempt.commit === commit)?.seenAt ?? new Date().toISOString(), ...(alreadyOnBranch(root, result.record, commit) ? { onBranch: true as const } : {}) }];
     persistRecord(root, result.record);
   }
   return result;
