@@ -84,22 +84,70 @@ export function scanFields(fields: readonly (readonly [TextField, string])[]): S
 export const hitPlace = (hit: { readonly path: string; readonly line: number }): string =>
   isTextField(hit.path) ? `${hit.path} line ${hit.line}` : `${showPath(hit.path)}:${hit.line}`;
 
+// A file name as a patch header spells it (BT54): Git quotes a name holding a
+// quote, a backslash, a control byte or (unless core.quotepath is off) a
+// non-ASCII byte as "caf\303\251.txt". Undo that into the real name, then
+// drop one leading a/ or b/ — only one, so a file literally named b/x stays.
+const SIMPLE_ESCAPES: Readonly<Record<string, number>> = { a: 7, b: 8, t: 9, n: 10, v: 11, f: 12, r: 13, '"': 34, '\\': 92 };
+function fileName(text: string): string {
+  let name = text.trim();
+  if (name.length >= 2 && name.startsWith('"') && name.endsWith('"')) {
+    const inner = name.slice(1, -1);
+    const bytes: number[] = [];
+    for (let at = 0; at < inner.length; at += 1) {
+      const char = inner[at]!;
+      const octal = char === '\\' ? /^[0-7]{3}/.exec(inner.slice(at + 1)) : null;
+      if (octal !== null) { bytes.push(Number.parseInt(octal[0], 8)); at += 3; continue; }
+      const simple = char === '\\' ? SIMPLE_ESCAPES[inner[at + 1] ?? ''] : undefined;
+      if (simple !== undefined) { bytes.push(simple); at += 1; continue; }
+      bytes.push(...Buffer.from(char, 'utf8'));
+    }
+    name = Buffer.from(bytes).toString('utf8');
+  }
+  return name.replace(/^[ab]\//, '');
+}
+
 // Scan a unified diff's added lines — the bytes being published for the
 // first time — tracking the new file's path and line numbers. Context and
 // removed lines are already public or are leaving, never arriving.
+//
+// Read the way `git apply` reads a patch (BT54): file headers only between
+// `diff --git` and the first `@@` of that file, and inside a hunk the counts
+// from its `@@` line say what each line is. So an added line whose text is
+// `++ x` (written `+++ x`) is an added line and is scanned, never a header.
 export function scanPatch(diff: string): ScanHit[] {
   const hits: ScanHit[] = [];
   let path = '(unknown)';
   let lineNo = 0;
+  let oldLeft = 0;
+  let newLeft = 0;
+  let inHeader = false;
   for (const line of diff.split('\n')) {
-    if (line.startsWith('+++ ')) {
-      path = line.slice(4).trim().replace(/^b\//, '').replace(/^"(.*)"$/, '$1');
+    if (line.startsWith('diff --git ')) { inHeader = true; path = '(unknown)'; oldLeft = 0; newLeft = 0; continue; }
+    if (inHeader && line.startsWith('+++ ')) {
+      const rest = line.slice(4);
+      if (rest.trim() !== '/dev/null') path = fileName(rest);
       continue;
     }
-    const hunk = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/.exec(line);
-    if (hunk !== null) { lineNo = Number.parseInt(hunk[1]!, 10) - 1; continue; }
-    if (line.startsWith('+')) { lineNo += 1; scanLine(path, lineNo, line.slice(1), hits); continue; }
-    if (line.startsWith(' ')) lineNo += 1;
+    if (inHeader && line.startsWith('--- ')) {
+      const rest = line.slice(4);
+      if (path === '(unknown)' && rest.trim() !== '/dev/null') path = fileName(rest);
+      continue;
+    }
+    if (inHeader || (oldLeft === 0 && newLeft === 0)) {
+      const hunk = /^@@ -\d+(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/.exec(line);
+      if (hunk !== null) {
+        oldLeft = hunk[1] === undefined ? 1 : Number.parseInt(hunk[1], 10);
+        newLeft = hunk[3] === undefined ? 1 : Number.parseInt(hunk[3], 10);
+        lineNo = Number.parseInt(hunk[2]!, 10) - 1;
+        inHeader = false;
+      }
+      continue;
+    }
+    if (line.startsWith('\\')) continue; // `\ No newline at end of file`
+    if (line.startsWith('+') && newLeft > 0) { newLeft -= 1; lineNo += 1; scanLine(path, lineNo, line.slice(1), hits); continue; }
+    if (line.startsWith('-') && oldLeft > 0) { oldLeft -= 1; continue; }
+    if ((line.startsWith(' ') || line === '') && oldLeft > 0 && newLeft > 0) { oldLeft -= 1; newLeft -= 1; lineNo += 1; }
   }
   return hits;
 }
@@ -108,11 +156,17 @@ export function scanPatch(diff: string): ScanHit[] {
 // binary and no added-line text for it — the scan has nothing to read there.
 // The path is named as a fact: it was not scanned. That is never a hold —
 // the owner's never publish list is the way to keep such a file out.
+// Read only where Git writes it, in a file's header (BT54): a content line
+// that happens to read `Binary files … differ` is text, not a binary file.
 export function binaryPatchPaths(diff: string): string[] {
   const paths: string[] = [];
+  let inHeader = false;
   for (const line of diff.split('\n')) {
-    const found = /^Binary files .* and b\/(.+) differ$/.exec(line);
-    if (found !== null) paths.push(found[1]!.replace(/^"(.*)"$/, '$1'));
+    if (line.startsWith('diff --git ')) { inHeader = true; continue; }
+    if (inHeader && line.startsWith('@@ ')) { inHeader = false; continue; }
+    if (!inHeader) continue;
+    const found = /^Binary files (".*"|\S+) and (".*"|.+) differ$/.exec(line);
+    if (found !== null) paths.push(fileName(found[2]!.trim() === '/dev/null' ? found[1]! : found[2]!));
   }
   return paths;
 }

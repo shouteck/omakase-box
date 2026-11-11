@@ -446,14 +446,16 @@ export function planGitHub(root: string, repository: string, record: BountyRecor
     const publish = publishLists(root);
     const found: ScanHit[] = [];
     const binary: string[] = [];
+    // BT54: -c core.quotepath=false, so a non-ASCII name arrives as written; scanPatch still undoes the quoting Git keeps for a
+    // quote, a backslash or a control byte in a name.
     for (const sha of unpushed) {
-      const patch = gitOutcome(root, ['diff', '-p', '--no-renames', firstParents.get(sha) ?? EMPTY_TREE, sha]);
+      const patch = gitOutcome(root, ['-c', 'core.quotepath=false', 'diff', '-p', '--no-renames', firstParents.get(sha) ?? EMPTY_TREE, sha]);
       if (patch.status !== 0) return invalid('github-git-failed', `Git could not read commit ${sha.slice(0, 12)} for the pre-publish scan; nothing was posted; next: check signed-in Git and rerun the same command`);
       found.push(...scanPatch(patch.stdout).map(hit => ({ ...hit, commit: sha })));
       binary.push(...binaryPatchPaths(patch.stdout));
     }
     if (wip !== null) {
-      const patch = gitOutcome(root, ['diff', '-p', '--no-renames', 'HEAD', wip.tree]);
+      const patch = gitOutcome(root, ['-c', 'core.quotepath=false', 'diff', '-p', '--no-renames', 'HEAD', wip.tree]);
       if (patch.status !== 0) return invalid('github-git-failed', 'Git could not read the work-in-progress diff for the pre-publish scan; nothing was posted; next: check signed-in Git and rerun the same command');
       found.push(...scanPatch(patch.stdout).map(hit => ({ ...hit, commit: wip.commit })));
       binary.push(...binaryPatchPaths(patch.stdout));
