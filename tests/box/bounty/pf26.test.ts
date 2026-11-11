@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { attemptStatus, changeConfig, loadTaken, submitTaken, takeBounty } from '../../../packages/box-bounty/index.js';
 import { postedFixture, type GhState } from './github-fixture.js';
+import { creditLine } from '../../../packages/box-bounty/wording.js';
 import { CLI_DIST, git, runRoot } from './support.js';
 
 const STANDIN = fileURLToPath(new URL('./board-standin.cjs', import.meta.url));
@@ -64,7 +65,8 @@ describe('submit', { timeout: 120000 }, () => {
     expect(said).toContain(`next: omakase-box status ${id}`);
     const pr = state().prs.find(entry => entry.number === number)!;
     expect(pr.draft).toBe(false);
-    expect(pr.body).toBe(`A solution to bounty ${id}, ready for review.\n\nFixed the off-by-one in app.txt.`);
+    // BT57: the draft's credit line stays between the ready sentence and the solver's own words.
+    expect(pr.body).toBe(`A solution to bounty ${id}, ready for review.\n\n${creditLine(board)}\n\nFixed the off-by-one in app.txt.`);
     expect(loadTaken(id)?.stage).toBe('submitted');
     expect(submitTaken(id)).toContain('already ready for review; nothing more to do');
   }));

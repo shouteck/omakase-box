@@ -8,13 +8,14 @@
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { readBountyDetail } from './board.js';
+import { boardAddress, readBountyDetail } from './board.js';
 import { BountyRefused } from './errors.js';
 import { api, invalid, isObject, remoteGit, signedAccount } from './gh.js';
 import { git } from './git.js';
 import { repositoryAddress } from './repository.js';
 import { loadSettings, saveSettings, settingsDir, writeToolFile } from './settings.js';
 import { solvingOf } from './solving.js';
+import { creditLine } from './wording.js';
 
 export type TakenStage = 'waiting' | 'taken' | 'submitted' | 'withdrawn';
 export interface Taken {
@@ -136,7 +137,8 @@ export function takeBounty(id: string, options: TakeOptions = {}): TakeResult {
     base: facts.bountyBranch,
     draft: true,
     // A listed bounty's draft closes its issue, so GitHub links it and the board reads it as this bounty's.
-    body: facts.closesIssue === null ? DRAFT_BODY(id) : `${DRAFT_BODY(id)}\n\n${facts.closesIssue}`
+    // The credit line goes last (BT57), after the closing line when there is one, which stays alone on its own line.
+    body: `${facts.closesIssue === null ? DRAFT_BODY(id) : `${DRAFT_BODY(id)}\n\n${facts.closesIssue}`}\n\n${creditLine(boardAddress())}`
   });
   const number = isObject(opened) ? opened['number'] : undefined;
   const url = isObject(opened) ? opened['html_url'] : undefined;

@@ -112,6 +112,15 @@ export const describeRewardLine = (amount: number): string => amount === 0
   ? 'No reward is set: a bounty is not posted without one.'
   : `Every bounty states a reward of $${amount} — a promise in the owner's name; posting an answer does not guarantee it. There are three ways to pay it: by hand, one click and on merge (omakase-box help).`;
 
+// BT57: the one line a pull request made with `take` ends with, so a use of the tool points to it. It names the product,
+// not the command, so renaming the command never rewords text already public. The board address comes from this machine's
+// settings, so it is accepted only as a plain lower-case https origin (no path, query, newline or Markdown): anything
+// else counts as no address and the line names the package instead. The tool writes it once; it does not enforce it and
+// never puts it back after the solver deletes it.
+const CREDIT_ORIGIN = /^https:\/\/[a-z0-9.-]+(?::\d{1,5})?$/;
+export const creditLine = (board: string | null): string =>
+  board !== null && CREDIT_ORIGIN.test(board) ? `Made with omakase-box: ${board}/agents/` : 'Made with omakase-box (npm: omakase-box)';
+
 // The name the published package answers to — provisional until the owner's
 // Part-B decision picks it for real (BT12). The artifact manifest carries
 // the same name; the packaging test pins them equal. The notice does not
