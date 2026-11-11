@@ -105,9 +105,26 @@ jobs:
 
       # Chromium into the path suite.mjs sets as PLAYWRIGHT_BROWSERS_PATH — needed by
       # tests/kitchen/k16-record.test.ts, which drives the demo recorder's browser.
-      # --with-deps installs Linux system libraries; Windows and macOS need none.
+      # K60: the browser itself and its system libraries are two steps. The browser is fetched from Playwright's own
+      # download and must succeed. The libraries come from the runner's apt mirror, which was dead on run 43035172554
+      # (three attempts cancelled ten minutes in, the verify step never ran), so that step is bounded and may fail:
+      # the browser-backed test still runs and says by itself if a library is missing. Windows and macOS need none.
       - name: Install Chromium for browser-backed tests
-        run: node scripts/pnpm.mjs exec playwright install ${{ runner.os == 'Linux' && '--with-deps' || '' }} chromium
+        run: node scripts/pnpm.mjs exec playwright install chromium
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: .runtime/browsers
+
+      - name: Install Chromium system libraries (Linux)
+        if: runner.os == 'Linux'
+        timeout-minutes: 5
+        continue-on-error: true
+        run: |
+          for attempt in 1 2; do
+            if timeout 150 node scripts/pnpm.mjs exec playwright install-deps chromium; then exit 0; fi
+            echo "attempt $attempt did not finish"
+          done
+          echo "system libraries not installed: the browser-backed test says if one is missing"
+          exit 1
         env:
           PLAYWRIGHT_BROWSERS_PATH: .runtime/browsers
 

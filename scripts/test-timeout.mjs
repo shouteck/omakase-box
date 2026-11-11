@@ -6,3 +6,9 @@
 // the report of a real hang. A test that needs more names its own timeout, as before. No environment override: a
 // hidden knob is how a limit drifts.
 export const testTimeoutMs = (platform = process.platform) => (platform === 'win32' ? 60000 : 30000);
+
+// K60: the same rule for a setup hook (a beforeAll or beforeEach that builds a fixture). K59 raised the limit on a test and
+// left Vitest's hook limit at its 10 s default; on run 43024146368 (master, the K59 merge commit) the Windows job failed
+// with "Hook timed out in 10000ms" in bt8c and pf26. A fixture is Git and Node starts, which cost three to six times as
+// much on Windows, so Windows gets three times the limit and the other systems keep 10 s. No environment override.
+export const hookTimeoutMs = (platform = process.platform) => (platform === 'win32' ? 30000 : 10000);
