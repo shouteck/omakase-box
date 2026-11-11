@@ -1,8 +1,10 @@
 # Status
 
-Updated by the CTO on 12 November 2026, when BT53 (the release 0.2.0 is ready) closed.
+Updated by the CTO on 12 November 2026, when K61 (cleanup flake) closed.
 
 ## Now
+
+- **K61 is merged:** a scratch folder Windows still holds (a copied `node.exe` or `git.exe` in `withoutGh()`) is retried for about seven seconds and then left behind instead of failing a test whose assertions passed (`removeTree`, any other fault still throws); the hosted log upload may fail without failing the run (GitHub's own artifact outage had). Hosted Windows since K60: 12 runs, no hook timeout, one cleanup `EPERM`, one upload outage. One run cannot prove a flake gone. See [K61](waves/K61.md).
 
 - **BT53 is merged: release 0.2.0 is ready and nothing is published.** The package's manifest and README say both halves (posting and solving), the version is 0.2.0 (npm serves 0.1.3), "nobody is known to be watching these issues" is gone from every place, and the README names only commands the build has (a test reads it as an agent would). **Your command:** `node packages/box-cli/pack.mjs`, then `npm publish packages/box-cli/dist-package/omakase-box-0.2.0.tgz`. The release carries BT54, BT56, BT57, BT58, BT60 and BT63. Found on the way: `omakase-box setup --help` runs the setup instead of printing usage (BACKLOG). See [BT53](waves/BT53.md).
 
