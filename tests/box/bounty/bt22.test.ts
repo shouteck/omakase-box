@@ -69,7 +69,7 @@ describe('the owner\'s settings file holds only the owner\'s choices', () => {
     const memory = JSON.parse(readFileSync(state, 'utf8'));
     expect(memory['kind']).toBe('box-tool-state');
     expect(memory['said']['*#settings-not-a-lock']).toEqual(expect.any(String));
-    expect(memory['said'][`${realpathSync(repo)}#reward-is-a-promise`]).toEqual(expect.any(String));
+    expect(memory['said'][`${realpathSync.native(repo)}#reward-is-a-promise`]).toEqual(expect.any(String));
     expect(memory['rewardNoticeAt']).toEqual(expect.any(String));
     expect(memory['firstMerges']['owner/project']['commit']).toEqual(expect.any(String));
     // And none of it is in the owner's file.
@@ -223,7 +223,7 @@ describe('the owner\'s settings file holds only the owner\'s choices', () => {
     once(['config']);
     once(['config', '--json']);
     // The marks landed in the tool's own file, under the checkout's real path.
-    const notes = JSON.parse(readFileSync(stateFile(), 'utf8'))['instructionNotes'][realpathSync(root)];
+    const notes = JSON.parse(readFileSync(stateFile(), 'utf8'))['instructionNotes'][realpathSync.native(root)]; // K50: the tool keys a folder by its native spelling (BT64); the JavaScript spelling differs under an 8.3 temp folder, as on GitHub's Windows runner
     expect(notes['retired']).toBe(true);
     expect(notes['notices']).toContain(createHash('sha256').update('AGENTS.md').digest('hex'));
     // Said once, honoured: a repeat says neither line and writes neither file.
@@ -249,8 +249,11 @@ describe('the owner\'s settings file holds only the owner\'s choices', () => {
     const state = JSON.parse(readFileSync(stateFile(), 'utf8'));
     // The owner's fields stand; the tool's marks moved out.
     expect(settings['instructions'][key]).toEqual({ enabled: true, file: 'AGENTS.md' });
-    expect(state['instructionNotes'][key]['notices']).toContain('oldhash');
-    expect(state['instructionNotes'][key]['retired']).toBe(true);
+    // K50: the planted key is the old tool's spelling (JavaScript realpath); the tool re-keys the moved marks under the
+    // folder's native spelling when it writes them (BT64), and the two differ only under an 8.3 temp folder.
+    const native = realpathSync.native(root);
+    expect(state['instructionNotes'][native]['notices']).toContain('oldhash');
+    expect(state['instructionNotes'][native]['retired']).toBe(true);
     // Once: a second read writes neither file.
     const settingsBytes = readFileSync(settingsFile(), 'utf8');
     const stateBytes = readFileSync(stateFile(), 'utf8');

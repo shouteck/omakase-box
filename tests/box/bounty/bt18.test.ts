@@ -51,7 +51,7 @@ it('3. create --task=TASK.md --why=x is the same as the spaced form', () => {
   const equals = bounty(repoB, ['create', '--task=TASK.md', '--why=x']);
   expect(spaced.status, spaced.stderr).toBe(0);
   expect(equals.status, equals.stderr).toBe(0);
-  const norm = (text: string) => text.replace(/bt-[a-f0-9]{12}/g, 'bt-<id>').split(repoA).join('<repo>').split(realpathSync(repoA)).join('<repo>').split(repoB).join('<repo>').split(realpathSync(repoB)).join('<repo>');
+  const norm = (text: string) => text.replace(/bt-[a-f0-9]{12}/g, 'bt-<id>').split(repoA).join('<repo>').split(realpathSync(repoA)).join('<repo>').split(repoB).join('<repo>').split(realpathSync(repoB)).join('<repo>').split(realpathSync.native(repoA)).join('<repo>').split(realpathSync.native(repoB)).join('<repo>');
   expect(norm(equals.stdout)).toBe(norm(spaced.stdout));
 });
 
