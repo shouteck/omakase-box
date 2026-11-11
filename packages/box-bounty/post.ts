@@ -9,10 +9,10 @@ import { allowedByFor,ownerGate,sameShown,waitForOwner } from './gate.js';
 import { boardAddress } from './board.js';
 import { sharePosted } from './chain.js';
 import { loadRecord,persistRecord,recordScanFinding,retiredRoute,settleScanFindings,transitionTo } from './record.js';
-import { assertPromiseRoom,rewardForPost,withPromiseLock } from './money.js';
+import { assertMinimumReward, assertPromiseRoom, rewardForPost, withPromiseLock } from './money.js';
 import type { BountyRecord } from './record.js';
 import { repositoryAddress } from './repository.js';
-import { readReward } from './settings.js';
+import { readReward, repoReward } from './settings.js';
 import { boundAmount,formatFor,publicText,renderFormat } from './format.js';
 import { showPath } from './notice.js';
 import { hitPlace, isTextField, scanFields } from './scan.js';
@@ -239,6 +239,8 @@ export function approveGitHub(root: string, record: BountyRecord, choice: GitHub
 
 export function previewGitHub(root: string, id: string, choice: GitHubChoice = { withChanges: false, include: [] }): string {
   const record = loadRecord(root, id);
+  // BT60: the preview of a post that would be refused is refused the same way, before GitHub is asked anything.
+  if (record.github === undefined && record.githubApproval === undefined) assertMinimumReward(repoReward(root).amount);
   return approveGitHub(root, record, choice).preview;
 }
 
@@ -370,6 +372,7 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
     // record and refuses by name, before anything of it was written (BT11a
     // fix round). A $0 post promises nothing, so it never takes the lock.
     const bind = () => {
+      assertMinimumReward(reward!.amount); // BT60: a reward lowered to 0 since the early check cannot pass here
       assertPromiseRoom(root, reward!.amount);
       record.allowedBy = allowedByFor(root, record, opts?.answered === true || reusedAnswer, legacyConfirmed);
       record.reward = { amount: reward!.amount };

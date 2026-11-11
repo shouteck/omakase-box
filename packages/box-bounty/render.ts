@@ -268,7 +268,7 @@ function rewardStatusLine(repoRoot: string, open: readonly BountyRecord[], full:
   const { amount, limit } = repoReward(repoRoot);
   const promised = promisedTotal(open);
   if (!full && amount === 0 && promised === 0 && limit === null) return null;
-  const stated = amount === 0 ? 'each new bounty states $0' : `each new bounty states $${amount}`;
+  const stated = amount === 0 ? 'no reward is set: a bounty is not posted without one' : `each new bounty states $${amount}`;
   const counted = limit === null ? `open bounties here promise $${promised}` : `open bounties here promise $${promised} of a $${limit} limit — ${promised <= limit ? `$${limit - promised} left` : `$${promised - limit} over`}`;
   const once = !full && amount > 0 && saidOnce(repoRoot, 'reward-is-a-promise')
     ? " — a promise in the owner's name, which they pay; the owner sets it in omakase-box config"
@@ -657,6 +657,7 @@ export function renderHelp(): string {
     'nothing a solver wrote is ever run — checks were removed on 11 October 2026: a solution arrives as a',
     'numbered attempt, the report states facts about the change, and apply/close is always your call.',
     '',
+    'a bounty is not posted without a reward, which the owner sets (at least $1, whole dollars). Setting BOX_BOUNTY_ALLOW_ZERO_FOR_TESTING=1 posts without one — for testing the tool; such a bounty is never listed.',
     boardAddress() === '' ? 'three ways to pay a reward: by hand, one click, on merge.' : `three ways to pay a reward: by hand, one click, on merge. See ${boardAddress()}/how/`,
     '',
     'what ends a bounty: apply, or close — or a solution merged onto the bounty\'s branch with your own',

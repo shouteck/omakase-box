@@ -632,14 +632,14 @@ export function rewardNoticeLine(): string | null {
     const retired = state.retiredReward;
     saveState({ ...state, retiredReward: { ...retired, toldAt: at } });
     const was = retired.reward === null && retired.limit === null ? 'a shared reward entry without readable amounts' : `a shared reward of $${retired.reward?.amount ?? 0}${retired.limit === null ? '' : ` and a $${retired.limit.amount} limit`}`;
-    return `one fact about money: ${was} applied to every repository — it applies to nothing now. Each repository states $0 until you set its own: omakase-box config set reward <whole dollars> [owner/name]. Open bounties keep the amount they were posted with (noted ${at})`;
+    return `one fact about money: ${was} applied to every repository — it applies to nothing now. Each repository has no reward until you set its own, and a bounty is not posted without one: omakase-box config set reward <whole dollars> [owner/name]. Open bounties keep the amount they were posted with (noted ${at})`;
   }
   if (state.rewardNoticeAt !== undefined) return null;
   if (settings.default === undefined && Object.keys(settings.repositories).length === 0) return null;
   saveState({ ...state, rewardNoticeAt: at });
   // A reward already set has nothing to be told; it counts as told, so it cannot surface later.
   if (Object.values(settings.repositories).some(entry => entry.reward !== undefined)) return null;
-  return `each repository can state its own reward — the owner sets it inside its checkout or by name: omakase-box config set reward <whole dollars> [owner/name]. Until then every bounty states $0 (noted ${at})`;
+  return `each repository can state its own reward — the owner sets it inside its checkout or by name: omakase-box config set reward <whole dollars> [owner/name]. Until then no bounty is posted (noted ${at})`;
 }
 
 /** The once-only fact owed to an owner carrying an `ask` written before

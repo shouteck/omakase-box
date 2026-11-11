@@ -38,7 +38,7 @@ const disclosure = (address: string, amount: number, limit: number | null, ask: 
     'A bounty asks people outside the project to fix something, and it is posted publicly on GitHub under your account.',
     'Your answer covers this repository only. A solution your agent chooses is merged into your code.',
     amount === 0
-      ? `Each bounty on ${address} states $0 — no payment is promised.`
+      ? `No reward is set on ${address}: a bounty is not posted without one.`
       : `Each bounty on ${address} promises $${amount}, which you pay — at most $${limit} promised across its open bounties at once.`,
     ask
       ? 'You will be asked before each post and before each merge.'
@@ -99,7 +99,7 @@ export function allowRepository(repoRoot: string | null, name?: string, ask = fa
       currentAddress = repositoryIdentity(repoRoot);
     } catch { /* named addresses work outside this checkout */ }
   }
-  const lines = [...(emitDisclosure === undefined ? wordsForOwner : []), `${ask ? 'ask me each time' : 'allowed'}: ${address} — written to the owner's settings.`, reward === 0 ? `bounties on ${address} state $0 — no payment is promised; set one with omakase-box config set reward <whole dollars> ${address}` : `bounties on ${address} state $${reward} — a promise you pay; at most $${limit} promised open at once`];
+  const lines = [...(emitDisclosure === undefined ? wordsForOwner : []), `${ask ? 'ask me each time' : 'allowed'}: ${address} — written to the owner's settings.`, reward === 0 ? `no reward is set on ${address}: a bounty is not posted without one — set its limit with omakase-box config set reward-limit <whole dollars> ${address}, then the reward with omakase-box config set reward <whole dollars> ${address}` : `bounties on ${address} state $${reward} — a promise you pay; at most $${limit} promised open at once`];
   // Instructions stay off unless the owner turns them on (BT41): the tool
   // offers the one command here and never writes the block itself.
   if (repoRoot !== null && !readInstructions(repoRoot).enabled) lines.push('an agent omakase-box setup does not cover learns of the tool only once instructions are on — omakase-box config set instructions true writes the block into this project\'s instruction files');
@@ -258,7 +258,7 @@ export function renderConfig(repoRoot: string | null, options?: { readonly full?
     ] : []),
     `repositories: ${active.length} active — each entry carries its own reward and its own limit; allow: omakase-box allow <owner/name>; deny: omakase-box deny <owner/name>`,
     ...(full ? [
-      '  a repository with no reward written states $0. Set one: omakase-box config set reward <whole dollars> [owner/name]; its limit: omakase-box config set reward-limit <whole dollars> [owner/name] — run inside its checkout or name the repository. The all-projects extra never carries a reward.',
+      '  a repository with no reward written has none set, and a bounty is not posted there without one. Set one: omakase-box config set reward <whole dollars> [owner/name]; its limit: omakase-box config set reward-limit <whole dollars> [owner/name] — run inside its checkout or name the repository. The all-projects extra never carries a reward.',
       'ask me each time covers each post and each merge: the tool\'s own post or merge waits for the owner\'s answer; a merge the agent lands by hand still closes the bounty and is stated as not asked. Closing never waits.'
     ] : []),
     `not decided yet: ${undecided.length === 0 ? 'nothing among the settings shown' : undecided.join('; ')}`
@@ -292,7 +292,7 @@ export function renderConfig(repoRoot: string | null, options?: { readonly full?
     else if (full) lines.push('legacy record files: none in .box/bounties/ are tracked in Git (local to this checkout)');
     const listed = openRecords(repoRoot);
     if (address === null || settings.repositories[address] === undefined) {
-      lines.push(`promised across this repository's open bounties: $${promisedHere ?? 0} — this repository is not listed, so its bounties state $0`);
+      lines.push(`promised across this repository's open bounties: $${promisedHere ?? 0} — this repository is not listed, so no bounty is posted here until the owner allows it with a reward`);
     }
     const waiting = listed.flatMap(record => record.stage === 'waiting' ? [record] : []);
     for (const record of waiting) {

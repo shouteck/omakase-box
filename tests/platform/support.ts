@@ -17,7 +17,8 @@ export async function rig(token?: string): Promise<Rig> {
   const clock = { at: NOW };
   return {
     standin, clock,
-    env: { DB: db, GITHUB_API: url, now: () => clock.at, ...(token === undefined ? {} : { GITHUB_TOKEN: token }) },
+    // BT60: the test board lists a bounty at $0 unless a test removes this (tests/platform/bt60.test.ts).
+    env: { DB: db, GITHUB_API: url, now: () => clock.at, ALLOW_ZERO_FOR_TESTING: '1', ...(token === undefined ? {} : { GITHUB_TOKEN: token }) },
     close: async () => { db.close(); await standin.stop(); }
   };
 }

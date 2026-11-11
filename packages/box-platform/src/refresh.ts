@@ -1,7 +1,7 @@
 // One refresh: search, then repositories (the private rule comes first), then
 // the stalest bounties' details, until the budget ends. Whatever is left waits
 // for the next refresh, which starts from the same stalest-first order.
-import { readFormat } from '../../box-bounty/format.js';
+import { MINIMUM_REWARD_USD, readFormat } from '../../box-bounty/format.js';
 import { BudgetSpent, type Env, GitHub, GitHubUnavailable, isPublicRepository, TICK_MINUTES } from './github.js';
 import { type Db, getMetas, log, logStatements, metaStatement, purgeRepository, removeBounty, runAll, setMeta, type Statement } from './store.js';
 
@@ -74,11 +74,27 @@ function issueStatement(db: Db, listed: Listed, now: number): Statement | null {
       typeof issue['closed_at'] === 'string' ? issue['closed_at'] : null, value.reward.amount, value.createdAt, value.workCommit, now);
 }
 
-/** False when the issue may not hold this id. */
-async function storeIssue(db: Db, listed: Listed, now: number): Promise<boolean> {
+/**
+ * BT60: the board lists no bounty whose block states a reward below the minimum. The block is the fact (its text may say
+ * anything). Only the test board sets ALLOW_ZERO_FOR_TESTING; it is never in wrangler.toml, and a test says so.
+ */
+const rewardTooLow = (env: Env, listed: Listed): boolean => {
+  if (env.ALLOW_ZERO_FOR_TESTING === '1') return false;
+  const format = readFormat(listed.issue['body'] as string);
+  return format.kind === 'present' && format.value.reward.amount < MINIMUM_REWARD_USD;
+};
+
+/** False when the issue may not hold this id, or states no reward: a row already stored for it is removed. */
+async function storeIssue(env: Env, listed: Listed, now: number): Promise<boolean> {
+  const db = env.DB;
   const held = await db.prepare('SELECT id, repository, issue_number FROM bounties WHERE id = ?').bind(listed.id).first<Held>();
   if (claimedElsewhere(held ?? undefined, listed)) {
     await log(db, now, 'id-claimed-by-another-issue', listed.issue['html_url'] as string);
+    return false;
+  }
+  if (rewardTooLow(env, listed)) {
+    await removeBounty(db, listed.id);
+    await log(db, now, 'reward-below-minimum', listed.issue['html_url'] as string);
     return false;
   }
   const statement = issueStatement(db, listed, now);
@@ -143,6 +159,7 @@ async function search(env: Env, github: GitHub, now: number): Promise<{ readonly
       known.set(listed.repository.toLowerCase(), isPublic);
       if (!isPublic) continue;
       if (claimedElsewhere(held.get(listed.id), listed)) { writes.push(...logStatements(db, now, 'id-claimed-by-another-issue', listed.issue['html_url'] as string)); continue; }
+      if (rewardTooLow(env, listed)) { await removeBounty(db, listed.id); writes.push(...logStatements(db, now, 'reward-below-minimum', listed.issue['html_url'] as string)); continue; }
       const statement = issueStatement(db, listed, now);
       if (statement === null) continue;
       writes.push(statement);
@@ -328,8 +345,7 @@ async function readIssueAgain(env: Env, github: GitHub, id: string, repository: 
     await log(env.DB, now, 'refused' in listed ? listed.refused : 'id-changed', 'refused' in listed ? listed.url : null);
     return false;
   }
-  await storeIssue(env.DB, listed, now);
-  return true;
+  return await storeIssue(env, listed, now);
 }
 
 export type Look = 'read' | 'not-public' | 'not-this-bounty' | 'budget-spent' | 'github-unavailable';
@@ -348,7 +364,7 @@ export async function lookNow(env: Env, repository: string, number: number, id: 
     const listed = readIssue(answer.json);
     if ('refused' in listed || listed.id !== id || listed.repository.toLowerCase() !== repository.toLowerCase()) return 'not-this-bounty';
     // A copy of another repository's bounty must not read its pull requests into that bounty.
-    if (!await storeIssue(env.DB, listed, now)) return 'not-this-bounty';
+    if (!await storeIssue(env, listed, now)) return 'not-this-bounty';
     if (held === null) await readPullRequests(env, github, id, listed.repository);
     await readEvents(env, github, id, listed.repository);
     await readOnDefault(env, github, id, listed.repository);

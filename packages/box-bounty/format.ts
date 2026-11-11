@@ -62,6 +62,10 @@ export function readFormat(body: string): FormatRead {
   try { const value = parse(JSON.parse(match[1])); return value === null ? { kind: 'invalid' } : { kind: 'present', value, start }; }
   catch { return { kind: 'invalid' }; }
 }
+// BT60: the least reward, in whole US dollars, a bounty is posted or listed with. The tool refuses to post below it and
+// the board does not list below it; both read this one number, so raising it later is this one line. A reader may still
+// meet a 0 in an older issue: it is read as the fact it states and never listed.
+export const MINIMUM_REWARD_USD = 1;
 export const renderFormat = (value: BountyFormat): string => `${FORMAT_MARKER}\n${JSON.stringify(value)}\n-->\n`;
 export const publicText = (text: string): string => text.replaceAll('<', '&lt;');
 // The amount a posted bounty is bound to state. It lives in the format block

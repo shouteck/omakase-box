@@ -83,6 +83,9 @@ beforeEach(() => {
   // PF24: the agent's discover bookmark sits beside them.
   rmSync(join(ownerSettingsRoot, 'discover.json'), { force: true, recursive: true });
   if (process.env['BOX_BOUNTY_SETTINGS_DIR'] !== ownerSettingsRoot) process.env['BOX_BOUNTY_SETTINGS_DIR'] = ownerSettingsRoot;
+  // BT60: no bounty is posted without a reward. This one lever lets every test that posts at $0 run as before; the BT60
+  // tests remove it. Spawned tools inherit it with the rest of the environment.
+  process.env['BOX_BOUNTY_ALLOW_ZERO_FOR_TESTING'] = '1';
 });
 // Write one level of the owner's decision inside the temp folder — the same
 // bytes `omakase-box owner allow/ask/off` writes.
