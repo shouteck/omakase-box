@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,7 +15,11 @@ const BS = String.fromCharCode(92);
 
 const runDirectories: string[] = [];
 export function runRoot(label: string): string {
-  const dir = mkdtempSync(join(tmpdir(), `box-bt1-${label}-`));
+  // K50: the folder in its one canonical spelling, which is what the CLI hands the library (resolveRepoRoot). The
+  // hosted runners spell a temp folder otherwise (GitHub's Windows: C:UsersRUNNER~1; macOS: /var, a link to
+  // /private/var), and a test that gave the library the other spelling failed on them, not on this host.
+  // bt64.test.ts makes its own alias spellings on purpose.
+  const dir = realpathSync.native(mkdtempSync(join(tmpdir(), `box-bt1-${label}-`)));
   runDirectories.push(dir);
   return dir;
 }
