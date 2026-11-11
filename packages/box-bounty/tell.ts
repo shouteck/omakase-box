@@ -47,12 +47,12 @@ export function renderDescribe(repoRoot: string | null): string {
   const owner = ownerStatusLine(repoRoot, true); // describe is the standing-explanation surface — the line always prints
   if (owner !== null) lines.push(`  ${owner}`);
   lines.push(renderOpenLine(repoRoot));
-  lines.push('', 'next: box bounty create --task <file> --why "<one line>" or box bounty help for the whole journey');
+  lines.push('', 'next: omakase-box create --task <file> --why "<one line>" or omakase-box help for the whole journey');
   return lines.join('\n');
 }
 
 export function renderRules(repoRoot: string | null): string {
-  return ['the tool keeps this fixed block in existing instruction files after box bounty config set instructions true:', '', repoRoot === null ? renderRulesBlock('idle', solvingAllowed()) : instructionBlock(repoRoot)].join('\n');
+  return ['the tool keeps this fixed block in existing instruction files after omakase-box config set instructions true:', '', repoRoot === null ? renderRulesBlock('idle', solvingAllowed()) : instructionBlock(repoRoot)].join('\n');
 }
 
 /** `describe --solving` (PF27): the solving half, then where this machine stands. It reads no repository. */
@@ -62,11 +62,11 @@ export function renderDescribeSolving(): string {
     ...SOLVING_LINES,
     '',
     ...solvingLines(false),
-    board === '' ? 'board: none named, so there is nothing to discover; the owner names one with box bounty config set board <address>' : `board: ${board} — discover reads its public feed`,
+    board === '' ? 'board: none named, so there is nothing to discover; the owner names one with omakase-box config set board <address>' : `board: ${board} — discover reads its public feed`,
     ...(board === '' ? [] : [readBoardNumbers() ?? '']),
     '',
     solvingOf().mode === 'off'
-      ? 'next: ask the owner to run box bounty config set solving allowed (or ask, to be asked before each bounty)'
-      : 'next: box bounty discover --language <a language you work in>, then box bounty take <id>'
+      ? 'next: ask the owner to run omakase-box config set solving allowed (or ask, to be asked before each bounty)'
+      : 'next: omakase-box discover --language <a language you work in>, then omakase-box take <id>'
   ].join('\n');
 }

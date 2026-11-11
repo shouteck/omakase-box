@@ -26,8 +26,8 @@ import { version } from './version.js';
 const HELP_LINES = [
   ...(['create', 'help', 'describe', 'status', 'post', 'look', 'apply', 'close', 'discover', 'take', 'submit'] as const)
     .map((name, index) => `${index === 0 ? 'usage: ' : '       '}${BOUNTY_COMMANDS[name]!.usage}`),
-  '       box setup [--remove] — put box on this machine and a skill where agents look',
-  '       box bounty allow|deny|config — the owner\'s settings',
+  '       omakase-box setup [--remove] — put omakase-box on this machine and a skill where agents look',
+  '       omakase-box allow|deny|config — the owner\'s settings',
   '       <id> may be left out when exactly one bounty can take the command'
 ];
 
@@ -38,9 +38,9 @@ function usage(message?: string, lines: readonly string[] = HELP_LINES): never {
 }
 
 const [command, ...rest] = process.argv.slice(2);
-// `box --help` is a request for help, not a wrong command — the list on
+// `omakase-box --help` is a request for help, not a wrong command — the list on
 // stdout, exit 0, bounty first (BT14).
-if (command === '--help' || command === '-h' || command === 'help') {
+if (command === '--help' || command === '-h') {
   for (const line of HELP_LINES) console.log(line);
   process.exit(0);
 }
@@ -51,17 +51,15 @@ if (command === '--version') {
 // The older platform's commands are gone, not silent (the tool's rule: never
 // fail silently) — each refuses by name with `command-removed`, matching the
 // wording the published box already used for them.
-const REMOVED = ['export', 'submit', 'verify', 'trace'];
+const REMOVED = ['export', 'verify', 'trace'];
 if (command !== undefined && REMOVED.includes(command)) {
-  console.error(`box ${command}: command-removed — this command belonged to the older Box platform, retired on 18 October 2026; box bounty is the product`);
+  console.error(`omakase-box ${command}: command-removed — this command belonged to the older Box platform, retired on 18 October 2026; omakase-box is the product`);
   process.exit(2);
 }
 if (command === 'setup') {
   for (const line of rest[0] === '--remove' ? runSetupRemove() : runSetup()) console.log(line);
   process.exit(0);
 }
-if (command === 'bounty') {
-  await runBounty(rest, { usage, version });
-} else {
-  usage();
-}
+// BT63: the command is the product's name, so the words after it are the bounty commands. `omakase-box bounty <x>`
+// stays accepted, silently: a script or an instruction block written against the old form keeps working.
+await runBounty(command === 'bounty' ? rest : process.argv.slice(2), { usage, version });

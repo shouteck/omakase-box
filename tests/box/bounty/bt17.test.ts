@@ -66,7 +66,7 @@ describe('every normal output on the journey stays inside its budget', () => {
     const created = budget('create', box(repo, ['create', '--task', 'TASK.md', '--why', 'beyond this agent']));
     // The contract: the first line says what happened and names the bounty.
     expect(visible(created)[0]).toMatch(/^bt-[a-f\d]{12} — drafted/);
-    expect(created).toContain('next: box bounty post');
+    expect(created).toContain('next: omakase-box post');
     budget('status (drafted)', box(repo, ['status']));
     const held = budget('post (held)', box(repo, ['post', id]));
     // The owner's block still relays every fact (BT13): permission, scope,

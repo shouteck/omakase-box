@@ -184,7 +184,7 @@ describe('the board unreachable or off', { timeout: 180000 }, () => {
   it('the setting takes only a bare address, and config shows it', () => fixture(({ repo, scratch }) => {
     rewarded(scratch, board);
     for (const bad of ['http://evil.example', 'https://user:word@example.com', 'https://example.com/path', 'https://example.com/?a=1', 'file:///etc/passwd', 'not an address']) {
-      expect(() => changeConfig(repo, 'set', 'board', bad)).toThrow(/next: box bounty config set board/);
+      expect(() => changeConfig(repo, 'set', 'board', bad)).toThrow(/next: omakase-box config set board/);
     }
     expect(changeConfig(repo, 'set', 'board', 'https://board.example/')).toContain('board: https://board.example — ');
     expect(renderConfig(repo)).toContain('board: https://board.example — after a post, a merge, a close or a paid record the tool sends it the repository, issue number, bounty id and event name, and nothing else');
@@ -212,7 +212,7 @@ describe('pay on merge, as the board reports it', { timeout: 180000 }, () => {
     expect(said).toMatch(line);
     expect(requests().filter(request => request.path.startsWith('/api/pay-on-merge')).map(request => [request.method, request.path])).toEqual([['GET', PATH]]);
     // Nothing offers to change it from here: no command, and nothing but the page.
-    expect(said.split('\n').filter(text => text.startsWith('pay on merge')).join('\n')).not.toMatch(/box bounty|--|config set/);
+    expect(said.split('\n').filter(text => text.startsWith('pay on merge')).join('\n')).not.toMatch(/omakase-box|--|config set/);
   }));
 
   it('a login the board sends that is not a login is never printed', () => fixture(({ repo, scratch }) => {
@@ -271,7 +271,7 @@ describe('the owner message', { timeout: 180000 }, () => {
     expect(renderStatus(repo)).toContain('accepts: PayPal.me https://paypal.me/solver1');
     metaSet(repo, `board_read:${id}`, JSON.stringify({ ...fact, accepts: { methods: [{ kind: 'paypal', label: 'PayPal.me', shown: 'https://paypal.me.evil.invalid/x' }], more: 0 } }));
     expect(renderStatus(repo)).not.toContain('evil.invalid');
-    expect(renderStatus(repo)).toContain(`board: not read yet; next: box bounty status ${id}`);
+    expect(renderStatus(repo)).toContain(`board: not read yet; next: omakase-box status ${id}`);
   }));
 
   it('with none listed falls back to the pay-to line', () => fixture(({ repo, id, scratch, pr, state, update }) => {
@@ -398,14 +398,14 @@ describe('status', { timeout: 180000 }, () => {
     rewarded(scratch, board);
     postBounty(repo, id, 'github');
     readBoardFacts(repo);
-    expect(renderStatus(repo)).toContain(`board: not listed yet — it reads GitHub every 15 minutes; next: box bounty status ${id} later`);
+    expect(renderStatus(repo)).toContain(`board: not listed yet — it reads GitHub every 15 minutes; next: omakase-box status ${id} later`);
     rewarded(scratch, CLOSED_PORT);
     readBoardFacts(repo);
     expect(renderStatus(repo)).toContain('board: not reachable (it could not be reached); next: any command when online');
   }));
 
   it.each([
-    ['owed', { state: 'owed', owed: { to: 'solver1', amount: 5, since: '2026-10-15T00:00:00Z' } }, 'board: owed $5 to solver1 since 2026-10-15 (merged PR #1); accepts: PayPal.me https://paypal.me/solver1; 1 more shown to you on the bounty page; record it: box bounty config set paid '],
+    ['owed', { state: 'owed', owed: { to: 'solver1', amount: 5, since: '2026-10-15T00:00:00Z' } }, 'board: owed $5 to solver1 since 2026-10-15 (merged PR #1); accepts: PayPal.me https://paypal.me/solver1; 1 more shown to you on the bounty page; record it: omakase-box config set paid '],
     ['recorded paid', { state: 'recorded', owed: { to: 'solver1', amount: 5 }, recorded_paid: { by: 'owner', at: '2026-10-16T00:00:00Z' } }, 'board: recorded paid $5 by owner on 2026-10-16, the owner\'s word; not confirmed by solver1'],
     ['confirmed received', { state: 'confirmed', owed: { to: 'solver1', amount: 5 }, recorded_paid: { by: 'owner', at: '2026-10-16T00:00:00Z' }, solver_says: { by: 'solver1', word: 'received', at: '2026-10-17T00:00:00Z' } }, 'confirmed received by solver1 on 2026-10-17, the solver\'s word'],
     ['disputed', { state: 'says-not-received', owed: { to: 'solver1', amount: 5 }, recorded_paid: { by: 'owner', at: '2026-10-16T00:00:00Z' }, solver_says: { by: 'solver1', word: 'not-received', at: '2026-10-17T00:00:00Z' } }, 'solver1 says not received, on 2026-10-17; the board does not decide']
@@ -433,7 +433,7 @@ describe('status', { timeout: 180000 }, () => {
     writeFileSync(join(folder, 'requests.jsonl'), '');
     readBoardFacts(repo);
     expect(requests().filter(request => request.path.startsWith('/bounties/')).length).toBe(5);
-    expect(renderStatus(repo)).toContain('board: not read yet; next: box bounty status ');
+    expect(renderStatus(repo)).toContain('board: not read yet; next: omakase-box status ');
   }));
 
   it('--json carries the same facts and the hint state, on stdout alone', () => {
@@ -474,8 +474,8 @@ describe('the CLI, end to end, with the board on', () => {
       const local = localRefs();
       for (const args of readCommands(world.id, draft.id)) {
         const result = cli(world.repo, args);
-        expect(result.status, `box bounty ${args.join(' ')} exited ${result.status}: ${result.stderr}`).toBe(0);
-        expect(readFileSync(file).equals(block), `box bounty ${args.join(' ')} changed the instruction block`).toBe(true);
+        expect(result.status, `omakase-box ${args.join(' ')} exited ${result.status}: ${result.stderr}`).toBe(0);
+        expect(readFileSync(file).equals(block), `omakase-box ${args.join(' ')} changed the instruction block`).toBe(true);
       }
       expect(localRefs(), 'a read moved a chain').toBe(local);
       expect(remoteRefs(), 'a read pushed').toBe(remote);

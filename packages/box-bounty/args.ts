@@ -1,4 +1,4 @@
-// Argument parsing for `box bounty`, pure and testable (BT18).
+// Argument parsing for `omakase-box`, pure and testable (BT18).
 //
 // One table — BOUNTY_COMMANDS — is every option each command accepts: an
 // option is either listed there and understood, or refused by name. One
@@ -59,9 +59,9 @@ export interface OptionRule {
 }
 
 export interface CommandSpec {
-  /** 'box bounty status' — how errors and refusals name the command. */
+  /** 'omakase-box status' — how errors and refusals name the command. */
   readonly label: string;
-  /** 'box bounty status [<id>] ...' — the usage line --help and usage errors print. */
+  /** 'omakase-box status [<id>] ...' — the usage line --help and usage errors print. */
   readonly usage: string;
   /** One line on what the command does — its line from `bounty help`. */
   readonly blurb: string;
@@ -97,39 +97,39 @@ const REMOVED_FLAGS = new Set(['--setup', '--check', '--guard']);
 const AMOUNT_FLAGS = new Set(['--reward', '--amount', '--price', '--pay', '--payment', '--limit', '--budget', '--dollars']);
 const amountRefusal = (flag: string, command: string): BountyRefused | undefined =>
   AMOUNT_FLAGS.has(flag)
-    ? new BountyRefused('reward-agent-set', `${flag} names money — the reward is the owner's to set, never the agent's; ${command} takes no amount; next: the owner sets it with box bounty config set reward <whole dollars>`)
+    ? new BountyRefused('reward-agent-set', `${flag} names money — the reward is the owner's to set, never the agent's; ${command} takes no amount; next: the owner sets it with omakase-box config set reward <whole dollars>`)
     : undefined;
 const folderRefusal = (flag: string): BountyRefused | undefined =>
   flag === '--from'
-    ? new BountyRefused('folder-delivery-retired', 'folder solutions were retired; next: collect a pull request with box bounty look <id> <number> or box bounty apply <id> <number>. Nothing changed')
+    ? new BountyRefused('folder-delivery-retired', 'folder solutions were retired; next: collect a pull request with omakase-box look <id> <number> or omakase-box apply <id> <number>. Nothing changed')
     : undefined;
 
 export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
   overview: {
-    label: 'box bounty', usage: 'box bounty [--repo <path>]',
+    label: 'omakase-box', usage: 'omakase-box [--repo <path>]',
     blurb: 'the standing picture — every open bounty, what each waits on, and the next step',
-    example: 'box bounty',
+    example: 'omakase-box',
     positionals: 0,
     values: { '--repo': REPO }
   },
   help: {
-    label: 'box bounty help', usage: 'box bounty help',
+    label: 'omakase-box help', usage: 'omakase-box help',
     blurb: 'the whole journey on one screen — what each command does and the stage it leaves',
-    example: 'box bounty help',
+    example: 'omakase-box help',
     positionals: 0
   },
   describe: {
-    label: 'box bounty describe', usage: 'box bounty describe [--rules] [--solving] [--repo <path>]',
+    label: 'omakase-box describe', usage: 'omakase-box describe [--rules] [--solving] [--repo <path>]',
     blurb: 'what the tool does, when it is worth using and when not, plus the facts to choose',
-    example: 'box bounty describe',
+    example: 'omakase-box describe',
     positionals: 0,
     values: { '--repo': REPO },
     switches: { '--rules': { help: "print the block for a project's rules file" }, '--solving': { help: 'the solving half: when taking a bounty is worth it, and how' } }
   },
   create: {
-    label: 'box bounty create', usage: 'box bounty create --task <file|-> --why "<one line>" [--title "<one line>"] [--resume "<context>"] [--repo <path>]',
+    label: 'omakase-box create', usage: 'omakase-box create --task <file|-> --why "<one line>" [--title "<one line>"] [--resume "<context>"] [--repo <path>]',
     blurb: 'save the task and private context and snapshot the working state → drafted',
-    example: 'box bounty create --task TASK.md --why "beyond what this agent can do"',
+    example: 'omakase-box create --task TASK.md --why "beyond what this agent can do"',
     positionals: 0,
     values: {
       '--task': { arg: '<file|->', help: 'the task file written for the solver; "-" reads standard input' },
@@ -142,15 +142,15 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
     switches: { '--full': { help: 'print the draft preview' } },
     refused: (flag) => {
       if (RETIRED_FLAGS[flag] !== undefined) return new BountyRefused('create-option-retired', `${flag} was retired. Nothing changed; next: ${RETIRED_FLAGS[flag]}`);
-      if (flag === '--out') return new BountyRefused('folder-delivery-retired', 'create writes a local record only; next: post to GitHub with box bounty post <id>. A private repository cannot be handed off with this tool');
-      if (REMOVED_FLAGS.has(flag)) return new BountyRefused('checks-removed', `${flag} names a check — checks were removed on 11 October 2026. A bounty carries no command and the tool runs nothing a solver wrote; next: box bounty create --task <file> --why "<one line>"`);
+      if (flag === '--out') return new BountyRefused('folder-delivery-retired', 'create writes a local record only; next: post to GitHub with omakase-box post <id>. A private repository cannot be handed off with this tool');
+      if (REMOVED_FLAGS.has(flag)) return new BountyRefused('checks-removed', `${flag} names a check — checks were removed on 11 October 2026. A bounty carries no command and the tool runs nothing a solver wrote; next: omakase-box create --task <file> --why "<one line>"`);
       return amountRefusal(flag, 'create');
     }
   },
   status: {
-    label: 'box bounty status', usage: 'box bounty status [<id>] [--full] [--comments] [--since <iso>] [--json] [--repo <path>]',
+    label: 'omakase-box status', usage: 'omakase-box status [<id>] [--full] [--comments] [--since <iso>] [--json] [--repo <path>]',
     blurb: 'every open bounty, the pull requests waiting, the attempts and the next step',
-    example: 'box bounty status bt-a1b2c3d4e5f6 --comments',
+    example: 'omakase-box status bt-a1b2c3d4e5f6 --comments',
     positionals: 1,
     values: {
       '--since': { arg: '<iso>', help: 'also print the summary of what changed since that time' },
@@ -163,9 +163,9 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
     }
   },
   post: {
-    label: 'box bounty post', usage: 'box bounty post [<id>] [--with-changes] [--include <file>] [--preview] [--repo <path>]',
+    label: 'omakase-box post', usage: 'omakase-box post [<id>] [--with-changes] [--include <file>] [--preview] [--repo <path>]',
     blurb: 'publishes the GitHub issue and branch → posted — or waits on the owner',
-    example: 'box bounty post bt-a1b2c3d4e5f6 --preview',
+    example: 'omakase-box post bt-a1b2c3d4e5f6 --preview',
     positionals: 1,
     values: {
       '--include': { arg: '<file>', repeatable: true, help: 'publish this untracked file too; once per file' },
@@ -177,14 +177,14 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
       '--preview': { help: 'show exactly what becomes public; posts nothing' }
     },
     refused: (flag, value) => {
-      if (flag === '--to' && value !== 'github') return new BountyRefused('folder-delivery-retired', 'folder delivery was retired; next: post to GitHub with box bounty post <id>. A private repository cannot be handed off with this tool');
+      if (flag === '--to' && value !== 'github') return new BountyRefused('folder-delivery-retired', 'folder delivery was retired; next: post to GitHub with omakase-box post <id>. A private repository cannot be handed off with this tool');
       return amountRefusal(flag, 'post');
     }
   },
   look: {
-    label: 'box bounty look', usage: 'box bounty look [<id>] <n> [--full] [--export] [--json] [--repo <path>]',
+    label: 'omakase-box look', usage: 'omakase-box look [<id>] <n> [--full] [--export] [--json] [--repo <path>]',
     blurb: 'collect pull request <n> (or show solution <n> already collected) — its change, written by the solver and marked as theirs',
-    example: 'box bounty look bt-a1b2c3d4e5f6 2',
+    example: 'omakase-box look bt-a1b2c3d4e5f6 2',
     positionals: 2,
     values: { '--repo': REPO },
     switches: {
@@ -195,20 +195,20 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
     refused: folderRefusal
   },
   apply: {
-    label: 'box bounty apply', usage: 'box bounty apply [<id>] [<n>] [--repo <path>]',
+    label: 'omakase-box apply', usage: 'omakase-box apply [<id>] [<n>] [--repo <path>]',
     blurb: 'merge a solution onto the current code — collects like look when <n> names a pull request → applied',
-    example: 'box bounty apply bt-a1b2c3d4e5f6 2',
+    example: 'omakase-box apply bt-a1b2c3d4e5f6 2',
     positionals: 2,
     values: { '--repo': REPO },
     refused: (flag) => folderRefusal(flag)
       ?? (/^--(yes|ok|approve|approved|allow|allowed|owner|force|confirm|answered|permit|accept|asked|skip-ask|no-ask|without-ask|i-asked)/.test(flag)
-        ? new BountyRefused('merge-approval-agent', `${flag} tries to mark a merge approved — an agent cannot approve a merge. Nothing changed; next: the owner answers a waiting merge with box bounty allow <id>`)
+        ? new BountyRefused('merge-approval-agent', `${flag} tries to mark a merge approved — an agent cannot approve a merge. Nothing changed; next: the owner answers a waiting merge with omakase-box allow <id>`)
         : undefined)
   },
   close: {
-    label: 'box bounty close', usage: 'box bounty close [<id>] [--reason "<text>"] [--repo <path>]',
+    label: 'omakase-box close', usage: 'omakase-box close [<id>] [--reason "<text>"] [--repo <path>]',
     blurb: 'end a bounty with nothing merged → rejected with --reason, withdrawn without',
-    example: 'box bounty close bt-a1b2c3d4e5f6 --reason "solved it myself"',
+    example: 'omakase-box close bt-a1b2c3d4e5f6 --reason "solved it myself"',
     positionals: 1,
     values: {
       '--reason': { arg: '"<text>"', help: 'the why, kept on the record' },
@@ -216,9 +216,9 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
     }
   },
   allow: {
-    label: 'box bounty allow', usage: 'box bounty allow [owner/name|waiting-id] [--ask] [--reward <whole dollars> --reward-limit <whole dollars>] [--repo <path>]',
+    label: 'omakase-box allow', usage: 'omakase-box allow [owner/name|waiting-id] [--ask] [--reward <whole dollars> --reward-limit <whole dollars>] [--repo <path>]',
     blurb: 'the owner allows the tool — for this repository, or by default; answers a waiting bounty or merge',
-    example: 'box bounty allow owner/project',
+    example: 'omakase-box allow owner/project',
     positionals: 1,
     authority: true,
     values: {
@@ -229,17 +229,17 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
     switches: { '--ask': { help: 'the tool asks before each post and each merge' } }
   },
   deny: {
-    label: 'box bounty deny', usage: 'box bounty deny [owner/name] [--repo <path>]',
+    label: 'omakase-box deny', usage: 'omakase-box deny [owner/name] [--repo <path>]',
     blurb: 'the owner refuses the tool for this repository',
-    example: 'box bounty deny owner/project',
+    example: 'omakase-box deny owner/project',
     positionals: 1,
     authority: true,
     values: { '--repo': REPO }
   },
   config: {
-    label: 'box bounty config', usage: 'box bounty config [set|add|remove <setting> <value> [owner/name]] [--full] [--json] [--repo <path>]',
+    label: 'omakase-box config', usage: 'omakase-box config [set|add|remove <setting> <value> [owner/name]] [--full] [--json] [--repo <path>]',
     blurb: "the owner's settings — the reward, the repository list, what the tool may do",
-    example: 'box bounty config set reward 10',
+    example: 'omakase-box config set reward 10',
     positionals: 4,
     authority: true,
     values: { '--repo': REPO },
@@ -249,9 +249,9 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
     }
   },
   find: {
-    label: 'box bounty find', usage: 'box bounty find <query> [--json] [--repo <path>]',
+    label: 'omakase-box find', usage: 'omakase-box find <query> [--json] [--repo <path>]',
     blurb: 'search every record\'s id, title, why, part-of and task text — open matches first, bounded',
-    example: 'box bounty find parser',
+    example: 'omakase-box find parser',
     positionals: 24,
     values: { '--repo': REPO },
     switches: {
@@ -260,9 +260,9 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
   },
   // The solver's half (PF24): only once the owner allowed solving. Monid's verb for finding, so agents know it.
   discover: {
-    label: 'box bounty discover', usage: 'box bounty discover [--language <name>]... [--any-language] [--min-reward <whole dollars>] [--from <start|now>] [--json]',
+    label: 'omakase-box discover', usage: 'omakase-box discover [--language <name>]... [--any-language] [--min-reward <whole dollars>] [--from <start|now>] [--json]',
     blurb: 'new bounties since your own bookmark that pass your filter and the owner\'s limits — each once, with the facts to judge it',
-    example: 'box bounty discover --language TypeScript --min-reward 40',
+    example: 'omakase-box discover --language TypeScript --min-reward 40',
     positionals: 0,
     values: {
       '--language': { arg: '<name>', missing: 'a language name', repeatable: true, help: 'a language you take, as GitHub names it; once per language; saved for next time' },
@@ -275,22 +275,22 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
     }
   },
   take: {
-    label: 'box bounty take', usage: 'box bounty take <id> [--into <new folder>]',
+    label: 'omakase-box take', usage: 'omakase-box take <id> [--into <new folder>]',
     blurb: 'start an attempt: fork if needed, a throwaway workspace, and a draft pull request others can see → taken',
-    example: 'box bounty take bt-a1b2c3d4e5f6',
+    example: 'omakase-box take bt-a1b2c3d4e5f6',
     positionals: 1,
     values: { '--into': { arg: '<new folder>', missing: 'a folder', help: 'clone here instead of a fresh folder under the system\'s temporary folder; it must not exist yet' } }
   },
   submit: {
-    label: 'box bounty submit', usage: 'box bounty submit <id>',
+    label: 'omakase-box submit', usage: 'omakase-box submit <id>',
     blurb: 'mark a taken bounty\'s draft ready for the poster\'s review, once your work is pushed → submitted',
-    example: 'box bounty submit bt-a1b2c3d4e5f6',
+    example: 'omakase-box submit bt-a1b2c3d4e5f6',
     positionals: 1
   },
   hook: {
-    label: 'box bounty hook', usage: 'box bounty hook | box bounty hook on|off --host <name> | box bounty hook start|pause|finish [--explain] [--repo <path>]',
+    label: 'omakase-box hook', usage: 'omakase-box hook | omakase-box hook on|off --host <name> | omakase-box hook start|pause|finish [--explain] [--repo <path>]',
     blurb: 'owner-opt-in awareness at session moments: on|off per host; start|pause|finish is what a host entry runs',
-    example: 'box bounty hook on --host devin',
+    example: 'omakase-box hook on --host devin',
     positionals: 1,
     values: {
       '--host': { arg: '<name>', help: 'the host the hook is for' },

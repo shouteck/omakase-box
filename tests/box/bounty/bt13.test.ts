@@ -40,7 +40,7 @@ describe('ask me each time covers merges', () => {
     expect(held.stdout).toContain('from GitHub account solver');
     expect(held.stdout).toContain('Nothing has been merged yet');
     expect(held.stdout).toContain('May it be merged?');
-    expect(held.stdout).toContain(`box bounty allow ${id}`);
+    expect(held.stdout).toContain(`omakase-box allow ${id}`);
     const waiting = loadRecord(repo, id).waiting;
     expect(waiting?.for).toBe('merge');
     expect(waiting?.merge).toMatchObject({ n: 1, commit: prSha, head: headBefore });
@@ -185,7 +185,7 @@ describe('messages meant for the owner', () => {
     expect(held.stdout).toContain('Do you allow this?');
     // The agent's mapping stays outside the owner block.
     const block = held.stdout.slice(held.stdout.indexOf('for the owner — pass'), held.stdout.indexOf('for you —'));
-    expect(block).not.toContain('box bounty');
+    expect(block).not.toContain('omakase-box');
     expect(block).not.toMatch(/[0-9a-f]{12,}/); // no hashes
     expect(block).not.toMatch(/\bgit\b|\bcommit\b|\bmerge --|\bpush\b/i);
     expect(loadRecord(repo, id).waiting?.for).toBe('post');
@@ -198,7 +198,7 @@ describe('messages meant for the owner', () => {
     expect(held.stdout).toContain('for the owner — pass this on in these words:');
     expect(held.stdout).toContain('is ready to post publicly on GitHub under your account');
     expect(held.stdout).toContain('may this one be posted? A yes or no is enough');
-    expect(held.stdout).toContain(`box bounty allow ${id}`);
+    expect(held.stdout).toContain(`omakase-box allow ${id}`);
   }));
 
   it('the secret-scan hold tells the owner what was found, where, that nothing was published, and their choices', () => fixture(({ repo, id, scratch }) => {

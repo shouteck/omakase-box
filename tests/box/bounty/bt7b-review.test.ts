@@ -38,9 +38,9 @@ it('drives the post-refusal path: clashing apply, own merge, a later command clo
   expect(conflict.stdout).toContain('aborted; worktree and index are exactly as before');
   expect(conflict.stdout).toContain('owner moved app');
   expect(conflict.stdout).toContain("owner's own Git settings");
-  expect(conflict.stdout).toContain(`box bounty look ${id} 1`);
+  expect(conflict.stdout).toContain(`omakase-box look ${id} 1`);
   // No resolving command is offered — nothing says "run apply again".
-  expect(conflict.stdout).not.toMatch(/run box bounty apply/);
+  expect(conflict.stdout).not.toMatch(/run omakase-box apply/);
   expect(git(repo, ['rev-parse', 'HEAD'])).toBe(head);
   // The agent merges the solution commit itself, then any later command ends it.
   const merge = mergeSolution(repo, waitingPr);

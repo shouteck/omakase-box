@@ -22,21 +22,21 @@ describe('the solving half, described', () => {
     expect(off).toContain('no more often than every\n15 minutes');
     expect(off).toContain('Work only in the folder take gives you');
     expect(off).toContain('solving: off');
-    expect(off.split('\n').at(-1)).toBe('next: ask the owner to run box bounty config set solving allowed (or ask, to be asked before each bounty)');
+    expect(off.split('\n').at(-1)).toBe('next: ask the owner to run omakase-box config set solving allowed (or ask, to be asked before each bounty)');
     changeConfig(null, 'set', 'solving', 'allowed');
     const allowed = renderDescribeSolving();
     expect(allowed).toContain('solving: allowed');
-    expect(allowed.split('\n').at(-1)).toBe('next: box bounty discover --language <a language you work in>, then box bounty take <id>');
+    expect(allowed.split('\n').at(-1)).toBe('next: omakase-box discover --language <a language you work in>, then omakase-box take <id>');
   });
 
   it('describe gives the solving half one line, worded by the owner\'s word', () => {
     changeConfig(null, 'set', 'solving', 'off');
     const off = renderDescribe(null).split('\n');
     // PF29 folded this line into the modes line.
-    expect(off.filter(line => line.includes('describe --solving'))).toEqual(['modes: posting and merging: needs a repository to say; taking others\' bounties: off (box bounty describe --solving).']);
+    expect(off.filter(line => line.includes('describe --solving'))).toEqual(['modes: posting and merging: needs a repository to say; taking others\' bounties: off (omakase-box describe --solving).']);
     expect(off.some(line => line.startsWith('worth taking when'))).toBe(false);
     changeConfig(null, 'set', 'solving', 'ask');
-    expect(renderDescribe(null)).toContain('taking others\' bounties: the owner is asked each time (box bounty describe --solving).');
+    expect(renderDescribe(null)).toContain('taking others\' bounties: the owner is asked each time (omakase-box describe --solving).');
   });
 
   it('the instruction block carries the solving line only while the owner allows solving', () => {
@@ -58,8 +58,8 @@ describe('the solving half, described', () => {
 
   it('the board\'s For agents page shows the solving path, with the board\'s own floor', () => {
     const page = readFileSync(AGENTS_PAGE, 'utf8');
-    for (const command of ['box bounty discover --language TypeScript', 'box bounty take <id>', 'box bounty submit <id>', 'box bounty status <id>']) expect(page).toContain(`'${command}'`);
-    expect(page).toContain('box bounty config set solving allowed');
+    for (const command of ['omakase-box discover --language TypeScript', 'omakase-box take <id>', 'omakase-box submit <id>', 'omakase-box status <id>']) expect(page).toContain(`'${command}'`);
+    expect(page).toContain('omakase-box config set solving allowed');
     expect(page).toContain('every 15 minutes at most');
     expect(page).not.toContain('more than every 5');
     expect(page).toContain('cursor, since, limit');
@@ -83,7 +83,7 @@ describe('a pull request that moved after it was collected', { timeout: 120000 }
     git(solver, ['push', '--quiet', 'origin', 'HEAD:refs/pull/1/head']);
     update({ prs: state().prs.map(pr => pr.number === 1 ? { ...pr, head: { sha: second } } : pr) });
     const before = git(repo, ['rev-parse', 'HEAD']);
-    expect(() => applyBounty(repo, id, 1)).toThrow(expect.objectContaining({ reason: 'pull-request-moved', message: expect.stringContaining(`nothing was merged; next: box bounty look ${id} 1 shows it`) }));
+    expect(() => applyBounty(repo, id, 1)).toThrow(expect.objectContaining({ reason: 'pull-request-moved', message: expect.stringContaining(`nothing was merged; next: omakase-box look ${id} 1 shows it`) }));
     expect(git(repo, ['rev-parse', 'HEAD'])).toBe(before);
     // The pull request's number now shows its latest version, with no GitHub read.
     const ghBefore = state().calls.length;

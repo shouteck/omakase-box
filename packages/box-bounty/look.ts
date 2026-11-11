@@ -20,7 +20,7 @@ import type { Attempt,BountyRecord } from './record.js';
 // the bounty is posted on GitHub, `look` collects the pull request first.
 
 // A diff longer than this is large: `look` prints the changed-file list and
-// names `box bounty look <id> <n> --full` for the whole change instead of
+// names `omakase-box look <id> <n> --full` for the whole change instead of
 // flooding the agent's context with hundreds of lines it may not need.
 export const LOOK_DIFF_LIMIT = 200;
 
@@ -90,14 +90,14 @@ export function lookBounty(root: string, id: string, target: LookTarget, options
   const own = `git diff --no-ext-diff --no-textconv --stat ${from} ${attempt.commit}`;
   const outcome = gitOutcome(root, ['diff', ...diffArgs, from, attempt.commit]);
   // A failed read, the output buffer's limit included, leaves part of a diff.
-  if (outcome.error !== undefined || outcome.status !== 0) throw new BountyRefused('solution-unreadable', `Git could not produce the whole change, or it is larger than the tool can read; nothing of it is shown; next: inspect it with your own git (${own}), or box bounty apply ${id} ${attempt.n} chooses this solution`);
+  if (outcome.error !== undefined || outcome.status !== 0) throw new BountyRefused('solution-unreadable', `Git could not produce the whole change, or it is larger than the tool can read; nothing of it is shown; next: inspect it with your own git (${own}), or omakase-box apply ${id} ${attempt.n} chooses this solution`);
   const diff = outcome.stdout;
   const bytes = Buffer.byteLength(diff, 'utf8');
   if (options.whole !== true && bytes > LOOK_BYTES_MAX) {
     const listed = namesWithinCap(files);
     return {
       record, attempt, collected, files: listed, large: true, diff: null,
-      tooLarge: { reason: 'solution-too-large-to-show', bytes, limit: LOOK_BYTES_MAX, fileCount: files.length, filesOmitted: files.length - listed.length, next: `inspect it with your own git (${own}), or box bounty look ${id} ${attempt.n} --export writes it to a file; box bounty apply ${id} ${attempt.n} chooses this solution` }
+      tooLarge: { reason: 'solution-too-large-to-show', bytes, limit: LOOK_BYTES_MAX, fileCount: files.length, filesOmitted: files.length - listed.length, next: `inspect it with your own git (${own}), or omakase-box look ${id} ${attempt.n} --export writes it to a file; omakase-box apply ${id} ${attempt.n} chooses this solution` }
     };
   }
   const large = diff.split('\n').length > LOOK_DIFF_LIMIT;

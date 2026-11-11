@@ -174,7 +174,7 @@ it('applying a solution with a recognised link tells the owner whom to pay, twic
   const status = renderStatus(repo, { id });
   expect(status).toContain(`payment owed $5 to solver1`);
   expect(status).toContain('payment: owed $5 to solver1 (at the link they supplied)');
-  expect(status).toContain(`the owner records it: box bounty config set paid ${id}`);
+  expect(status).toContain(`the owner records it: omakase-box config set paid ${id}`);
   // The finish hook repeats it once.
   const hook = runHook(repo, 'finish', []).output!;
   expect(hook).toContain('Pay solver1 at');

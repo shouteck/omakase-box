@@ -1,4 +1,4 @@
-// The box bounty commands that live one level above the store: post and
+// The omakase-box commands that live one level above the store: post and
 // close. They compose record writes and outside sync — nothing here is read
 // by record.ts. Moved out of record.ts unchanged (BT25); postBounty stays
 // the two-line forwarder to postGitHub it was. (retiredRoute and
@@ -18,7 +18,7 @@ import { shareClosed } from './chain.js';
 import type { BountyRecord } from './record.js';
 
 export function postBounty(repoRoot: string, id: string, to = 'github', opts?: { answered?: boolean; choice?: import('./gh.js').GitHubChoice }): { record: BountyRecord; destination: string } {
-  if (to !== 'github') throw new BountyRefused('folder-delivery-retired', 'folder delivery was retired; next: post to GitHub with box bounty post <id>. A private repository cannot be handed off with this tool');
+  if (to !== 'github') throw new BountyRefused('folder-delivery-retired', 'folder delivery was retired; next: post to GitHub with omakase-box post <id>. A private repository cannot be handed off with this tool');
   return postGitHub(repoRoot, id, opts);
 }
 
@@ -39,12 +39,12 @@ export interface CloseOutcome {
 export function closeBounty(repoRoot: string, id: string, reason?: string): CloseOutcome {
   const text = reason?.trim() ?? '';
   if (reason !== undefined && text === '') {
-    throw new BountyRefused('missing-reason', `close needs a nonempty reason or none; next: box bounty close ${id}, or box bounty close ${id} --reason "<why the bounty ended without a merge>"`);
+    throw new BountyRefused('missing-reason', `close needs a nonempty reason or none; next: omakase-box close ${id}, or omakase-box close ${id} --reason "<why the bounty ended without a merge>"`);
   }
   syncBeforeAction(repoRoot, id);
   const record = loadRecord(repoRoot, id);
   if (isOpenStage(record.stage) && adoptedWithoutPermission(repoRoot, record)) {
-    throw new BountyRefused('owner-permission-needed', `${id} was posted from another machine, and this machine's owner has given no permission for this repository; a shared record grants none; nothing changed; next: ask the owner — box bounty allow <owner/name> gives it`);
+    throw new BountyRefused('owner-permission-needed', `${id} was posted from another machine, and this machine's owner has given no permission for this repository; a shared record grants none; nothing changed; next: ask the owner — omakase-box allow <owner/name> gives it`);
   }
   if (!isOpenStage(record.stage)) {
     if (record.github !== undefined) syncGitHubDecision(repoRoot, record);

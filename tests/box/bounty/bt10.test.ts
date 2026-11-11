@@ -173,7 +173,7 @@ it('ended full status rereads edited metadata; compact status omits the per-reco
   // fact is said once in help, not once per ended bounty.
   expect(compact).not.toContain('cached last observation');
   expect(renderHelp()).toContain('cached GitHub observation');
-  expect(compact).toContain(`box bounty status ${id} --full`);
+  expect(compact).toContain(`omakase-box status ${id} --full`);
   expect(renderStatus(repo, { id, full: true })).toContain('differs-from-record');
   expect(loadRecord(repo, id).stage).toBe('withdrawn');
   update({ issues: [{ ...state().issues[0]!, body: body + FORMAT_MARKER + '\nforged\n-->\n' }] });

@@ -22,7 +22,7 @@ describe('BT41 — a stranger reads what the tool does', () => {
     const readme = readFileSync(join(ROOT, 'FIRST-FIVE-MINUTES.md'), 'utf8');
     const openSummary = '.' + 'box/' + 'bounties/OPEN';
     const firstMerge = '.' + 'box/' + 'bounties/FIRST_MERGE';
-    for (const fact of ['config set instructions true', 'refs/box-bounty', '.box/local', 'box bounty deny', openSummary, firstMerge]) {
+    for (const fact of ['config set instructions true', 'refs/box-bounty', '.box/local', 'omakase-box deny', openSummary, firstMerge]) {
       expect(readme, `README lacks ${fact}`).toContain(fact);
     }
     expect(readme).toContain('each project\'s own bounty records are in `.box/local/box.db`');
@@ -46,8 +46,8 @@ describe('BT41 — a stranger reads what the tool does', () => {
     const repo = makeRepo({ 'app.txt': 'seed\n' });
     const off = box(repo, ['allow', 'owner/project']);
     expect(off.status, off.stderr).toBe(0);
-    expect(off.stdout).toContain('an agent box setup does not cover learns of the tool only once instructions are on');
-    expect(off.stdout).toContain('box bounty config set instructions true');
+    expect(off.stdout).toContain('an agent omakase-box setup does not cover learns of the tool only once instructions are on');
+    expect(off.stdout).toContain('omakase-box config set instructions true');
     expect(box(repo, ['config']).stdout).toContain('instructions: off');
 
     const on = box(repo, ['config', 'set', 'instructions', 'true']);
@@ -148,8 +148,8 @@ describe('BT41 — a stranger reads what the tool does', () => {
     const nextText = nextLine!.trimStart().slice('next: '.length);
     expect(nextText).toContain('GitHub');
     expect(nextText).toContain('checkout');
-    expect(nextText).not.toContain('box bounty look');
-    expect(nextText).not.toContain('box bounty apply');
+    expect(nextText).not.toContain('omakase-box look');
+    expect(nextText).not.toContain('omakase-box apply');
 
     const doc = JSON.parse(box(repo, ['status', '--json']).stdout) as { bounties: { id: string; next: string }[] };
     expect(doc.bounties.find(entry => entry.id === id)?.next).toBe(nextText);

@@ -410,13 +410,13 @@ describe('the pages', () => {
     // One window: each command sits under a comment naming the card it belongs to.
     const groups = await page.locator('#hand-off details [data-group]').evaluateAll(elements => elements.map(element => ({
       title: element.querySelector('[data-comment]')?.textContent,
-      commands: [...element.querySelectorAll('code[data-command]')].map(code => code.textContent!.split(' ').slice(0, 3).join(' '))
+      commands: [...element.querySelectorAll('code[data-command]')].map(code => code.textContent!.split(' ').slice(0, 2).join(' '))
     })));
     expect(groups).toEqual([
-      { title: '# Asks you a few things', commands: ['box bounty allow'] },
-      { title: '# Packs and posts', commands: ['box bounty create', 'box bounty post', 'box bounty post'] },
-      { title: '# Reads the solutions', commands: ['box bounty status', 'box bounty look'] },
-      { title: '# Merges one', commands: ['box bounty apply'] }
+      { title: '# Asks you a few things', commands: ['omakase-box allow'] },
+      { title: '# Packs and posts', commands: ['omakase-box create', 'omakase-box post', 'omakase-box post'] },
+      { title: '# Reads the solutions', commands: ['omakase-box status', 'omakase-box look'] },
+      { title: '# Merges one', commands: ['omakase-box apply'] }
     ]);
     const cards = await page.locator('#hand-off ol > li p.font-medium').allTextContents();
     expect(groups.map(group => group.title)).toEqual(cards.map(card => `# ${card}`));
@@ -572,7 +572,7 @@ describe('the pages', () => {
 
     it('with no bounties posted, pay on merge says to post one first, and offers nothing to type', async () => {
       const { page, close } = await open({ ...base, login: 'example-mara', pay: pay({ card: 'visa ending 3155', repositories: [], yours: [] }) }, '/me/#pay');
-      expect(await page.locator('main').innerText()).toMatch(/No repositories yet\.\s+Pay on merge works on repositories where you have posted a bounty\. Post one with your agent \(box bounty\), and it appears here to turn on\./);
+      expect(await page.locator('main').innerText()).toMatch(/No repositories yet\.\s+Pay on merge works on repositories where you have posted a bounty\. Post one with your agent \(omakase-box\), and it appears here to turn on\./);
       expect(await page.locator('text=+ Add a repository').count()).toBe(0);
       await close();
     });
@@ -650,7 +650,7 @@ describe('the pages', () => {
     await block.click();
     await expect.poll(() => block.innerText()).toBe('Copied');
     const copied = await page.evaluate(() => navigator.clipboard.readText());
-    for (const line of ['# Packs and posts', 'box bounty allow <owner>/<repository>', 'box bounty apply <id> <n>']) expect(copied).toContain(line);
+    for (const line of ['# Packs and posts', 'omakase-box allow <owner>/<repository>', 'omakase-box apply <id> <n>']) expect(copied).toContain(line);
     await page.locator('main button[aria-label="Copy install line"]').click();
     const install = await page.locator('main code[data-install]').allInnerTexts();
     // Windows' clipboard hands back \r\n for the \n the page wrote.
@@ -693,19 +693,19 @@ describe('the pages', () => {
     await close();
     // The page's own list: a command added, dropped or reworded fails here.
     expect(lines).toEqual([
-      'box bounty allow <owner>/<repository> --reward <reward> --reward-limit <limit>',
-      'box bounty create --task TASK.md --why "beyond what this agent can do"',
-      'box bounty post <id> --preview',
-      'box bounty post <id>',
-      'box bounty status <id>',
-      'box bounty look <id> <n>',
-      'box bounty apply <id> <n>'
+      'omakase-box allow <owner>/<repository> --reward <reward> --reward-limit <limit>',
+      'omakase-box create --task TASK.md --why "beyond what this agent can do"',
+      'omakase-box post <id> --preview',
+      'omakase-box post <id>',
+      'omakase-box status <id>',
+      'omakase-box look <id> <n>',
+      'omakase-box apply <id> <n>'
     ]);
     const world = journeyWorld();
     try {
       const fill = (line: string, values: Record<string, string>): string[] => {
         const words = wordsOf(line);
-        expect(words.slice(0, 2)).toEqual(['box', 'bounty']);
+        expect(words.slice(0, 1)).toEqual(['omakase-box']); // BT63: the site shows the new command; the words after it are the bounty commands
         return words.slice(1).map(word => Object.entries(values).reduce((out, [key, value]) => out.replaceAll(key, value), word));
       };
       const values: Record<string, string> = { '<owner>': 'owner', '<repository>': 'project', '<reward>': '10', '<limit>': '50' };
@@ -717,7 +717,7 @@ describe('the pages', () => {
         return output;
       };
       const [allow, create, preview, post, status, look, apply] = lines as [string, string, string, string, string, string, string];
-      const paid = 'box bounty config set paid <id>'; // Off the page, since paying is on the bounty's page; the tool still prints it.
+      const paid = 'omakase-box config set paid <id>'; // Off the page, since paying is on the bounty's page; the tool still prints it.
       run(allow, 'owner/project');
       values['<id>'] = /bt-[a-f\d]{12}/.exec(run(create, 'bt-'))![0];
       // A second open bounty: from here a command with no id has to say which one.
@@ -763,7 +763,7 @@ describe('the pages', () => {
     expect(readFileSync(join(clone, 'FIRST-FIVE-MINUTES.md'), 'utf8')).toContain(install[0]!);
     expect(lines).toHaveLength(6);
     expect(lines[0]).toBe('git clone https://github.com/shouteck/omakase-box');
-    expect(lines[5]).toBe('box bounty');
+    expect(lines[5]).toBe('omakase-box');
     for (const script of ['scripts/pnpm.mjs', 'scripts/tooling/package.json']) expect(existsSync(join(clone, script)), script).toBe(true);
     // The printed install line, into a throwaway prefix: it makes a real `box`, and this machine's own commands are untouched.
     const prefix = mkdtempSync(join(tmpdir(), 'kitchen-PF15-prefix-'));
@@ -772,7 +772,7 @@ describe('the pages', () => {
     try {
       const installed = run(`${lines[4]!} --no-audit --no-fund`, clone);
       expect(installed.status, installed.stderr).toBe(0);
-      const box = run('box bounty help', prefix);
+      const box = run('omakase-box help', prefix);
       expect(box.status, box.stderr).toBe(0);
       expect(box.stdout).toContain('the journey');
     } finally {
@@ -849,7 +849,7 @@ describe('the pages', () => {
     // Something is owed to them, so the solver's side opens; the owner's side is one click away.
     await quill.page.click('[aria-label="Your role"] [role=tab]:has-text("Owner")');
     await quill.page.waitForSelector('[data-no-bounties]');
-    expect(await quill.page.locator('[data-no-bounties]').innerText()).toContain('box bounty post');
+    expect(await quill.page.locator('[data-no-bounties]').innerText()).toContain('omakase-box post');
     await quill.close();
   });
 

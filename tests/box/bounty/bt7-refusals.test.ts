@@ -55,7 +55,7 @@ it('a clashing apply aborts the merge, keeps the worktree and index byte-identic
   expect(loadRecord(context.repo, context.id).conflicts?.paths).toEqual(['app.txt']);
   const output = spawnSync(process.execPath, [CLI_DIST, 'bounty', 'apply', context.id, '1', '--repo', context.repo], { encoding: 'utf8' });
   expect(output.status).toBe(0);
-  expect(output.stdout).toContain(`box bounty look ${context.id} 1`);
+  expect(output.stdout).toContain(`omakase-box look ${context.id} 1`);
 }, 'Repair app', files));
 
 it('refuses to read comments on an existing issue that is not this bounty\'s, and posts nothing', () => fixture(context => {

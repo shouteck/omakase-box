@@ -137,7 +137,7 @@ describe('the scan hold — the owner decides in config, the agent cannot answer
     refused(() => postBounty(repo, id, 'github'), 'publish-held');
     const status = statusGitHub(repo);
     expect(status).toContain('keys.txt');
-    expect(status).toContain('box bounty config');
+    expect(status).toContain('omakase-box config');
     expect(status).not.toContain('IOSFODNN');
   }));
 });

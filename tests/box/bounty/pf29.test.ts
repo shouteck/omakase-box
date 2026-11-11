@@ -85,13 +85,13 @@ describe('the board in one line', () => {
 describe('describe names who decides each step', () => {
   it('posting and merging from this repository\'s answer, solving from the owner\'s; outside a checkout it says it needs one', () => {
     changeConfig(null, 'set', 'solving', 'off');
-    expect(renderDescribe(null)).toContain('modes: posting and merging: needs a repository to say; taking others\' bounties: off (box bounty describe --solving).');
+    expect(renderDescribe(null)).toContain('modes: posting and merging: needs a repository to say; taking others\' bounties: off (omakase-box describe --solving).');
     const repo = makeRepo({ 'README.md': 'pf29\n' });
     git(repo, ['remote', 'add', 'origin', 'https://github.com/example-org/pf29.git']);
     expect(renderDescribe(repo)).toContain('modes: posting and merging: not allowed yet;');
     allowRepository(repo, 'example-org/pf29', true);
     changeConfig(null, 'set', 'solving', 'ask');
-    expect(renderDescribe(repo)).toContain('modes: posting and merging: the owner is asked each time; taking others\' bounties: the owner is asked each time (box bounty describe --solving).');
+    expect(renderDescribe(repo)).toContain('modes: posting and merging: the owner is asked each time; taking others\' bounties: the owner is asked each time (omakase-box describe --solving).');
     allowRepository(repo, 'example-org/pf29', false);
     changeConfig(null, 'set', 'solving', 'allowed');
     expect(renderDescribe(repo)).toContain('modes: posting and merging: the agent decides; taking others\' bounties: the agent decides');

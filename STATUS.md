@@ -1,20 +1,19 @@
 # Status
 
-Updated by the CTO on 11 November 2026, when BT63 was parked at its first step.
+Updated by the CTO on 11 November 2026, when BT63 (the command is omakase-box) closed.
 
 ## Now
 
-- **BT63 is parked on `wave/BT63`** (`376b24a1`; **owner answered 11 November 2026: ship without `box`**, D-2026-11-11-drop-box-command); it resumes now, without the old-name notice. See [BT63](waves/BT63.md).
+- **BT63 is merged: the command is `omakase-box`.** `box` is gone from the package: with Box's own `@box/cli` present npm refuses to install ours while the manifest names `box` (owner: D-2026-11-11-drop-box-command), so `omakase-box bounty <x>` still works but `box bounty` does not. Everything printed, the skill, the instruction block, the site and the guide say the new command; the label, title prefix, markers and schema names did not change. Proven by three local full runs and the platform suite, and a real run on the sandbox (post, status, look, apply, close). **Not proven:** `take` and `submit` on the real sandbox (the board never lists it), Linux and macOS installs, and the fresh-session check, which needs you to start two sessions. **After release, a hook 0.1.x wrote into a host's settings fails until `omakase-box hook on` rewrites it.** Read the hosted run on the merge at the next kickoff. See [BT63](waves/BT63.md).
 
 - **K58 is merged:** master's hosted run had been red on every run since the BT64 merge (9 runs), on one platform page test, not on BT64: the fixtures are dated from a fixed 31 October while the page works out ages with the real clock, so "4 days ago" became "2 weeks ago" on 10 November. The test browser now has the fixtures' clock. **Read the hosted run on the merge at the next kickoff;** it should be green. See [K58](waves/K58.md).
-- **BT63 (the rename) is in progress on its branch** (resumed 11 November 2026).
 
 - **BT64 is merged:** a never-publish entry now holds however the repository folder is spelled. Before, an 8.3 short name or **just a different letter case** of the folder made the owner's list miss, and the listed path shipped. `packages/box-bounty/folder.ts` gives the folder one spelling; older stored keys are read by folder, so nothing an owner set is lost; a test fails on any new `realpathSync` outside it. Proven on this host (local verify, the rule in force). The likely cause of K50's macOS miss of `apply-unsafe-config` is fixed too, **unproven until K50's macOS run**. Reaches users with the next npm release. See [BT64](waves/BT64.md).
 - **K50 is parked** on `wave/K50` (`5a2fd5e1`, pushed) at step 3 of its plan, every job of its first run recorded in [K50](waves/K50.md). Resume next: rebase on master (BT64), rerun on three systems. Known open: a second high advisory (`source-map-js`, through the board's `next`) needs a brief edit; `bt18` and `bt22` compute their expected key with JavaScript `realpathSync`, which fails only under a short temp folder (GitHub's Windows), and changing that is an expectation edit to decide with a reason.
 
 - **K57 is merged:** master's hosted run was red from the K48 brief (runs 42743732293 to 42750108726), on kitchen documents only. STATUS.md's length and K48's unanswered question were fixed at kickoff; the sandbox guard now reads `omakase-box` alone as the product and `shouteck/omakase-box` or "on omakase-box" as the repository. **Read the hosted run on the merge at the next kickoff;** it should be green. See [K57](waves/K57.md).
 
-- **One name and one command (owner, 10 November 2026):** the product is omakase-box, on the site, the package and the tool; the command becomes `omakase-box` and drops "bounty", because Box's official tool already owns the command `box` ([BT63](waves/BT63.md), **has the owner's go, runs first**; in the first release, immediately before BT53; `box bounty` kept for one release).
+- **One name and one command (owner, 10 November 2026):** done by [BT63](waves/BT63.md); the release must still publish under it (BT53, immediately after the other release waves).
 
 - **Every waiting brief now says how, step by step** (owner, 10 November 2026: later waves may be cooked by a lower-reasoning model). Each of the 25 has "Steps, in order", a table of tests to write first, the traps, and exactly which test expectations the owner's decision changes. Two brief errors were corrected from the code: the watching line is pinned by `github.test.ts`, not `bt41`; the front page's blank picture is CSS (`opacity: 0` in `rise`), not a script.
 
@@ -46,7 +45,7 @@ Updated by the CTO on 11 November 2026, when BT63 was parked at its first step.
 
 ## Next
 
-- **Order (owner, 10 November 2026; each wave still on the owner's go):** K50 resumed next (it makes the rest faster), then BT54, BT56, BT58 and BT60, then BT63, BT53 and the owner's npm publish; BT55, BT57, PF34 to PF38 and K51 any time (BT57 best before the publish); BT59 and BT61 after the publish; K52 before PF6; PF39, K54 and BT62 any time. Design order: PF40, PF41 (before PF39), PF42 (before PF35), PF43 (before K41). Then **PF6** (the listings for both sides), **K41** (the film, last), then the owner's launch. PF23 is deferred.
+- **Order (owner, 10 November 2026; each wave still on the owner's go):** K50 resumed next (it makes the rest faster; it now also owes `bt18` and `bt22`'s short-temp-folder expectations and the `source-map-js` advisory), then BT54, BT56, BT58 and BT60, then BT53 and the owner's npm publish (BT63 is done); BT55, BT57, PF34 to PF38 and K51 any time (BT57 best before the publish); BT59 and BT61 after the publish; K52 before PF6; PF39, K54 and BT62 any time. Design order: PF40, PF41 (before PF39), PF42 (before PF35), PF43 (before K41). Then **PF6** (the listings for both sides), **K41** (the film, last), then the owner's launch. PF23 is deferred.
 - **The next tool release:** the guide gains the PowerShell line (`npx.cmd`, `box.cmd`); a new version goes to npm by the owner, and to GitHub by a `v*` tag.
 - Unbriefed (BACKLOG): `rmSync` and non-ASCII names on Windows (BT48); solvers' account age (PF4); a private organisation member counts as an outside solver, a squash-merged head reads as off the default branch (PF8); PF18's leftovers; fewer words, more showing, across the site.
 - **Direction:** agents run the common case; installing is the only required human step. The platform may start a charge but never holds money; no reminders. Site looks need before-and-after screenshots and the owner's approval.

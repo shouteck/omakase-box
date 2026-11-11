@@ -3,7 +3,7 @@ bt-22f3b1723a38 current GitHub format read unavailable at <ts>; cached last comp
 bt-22f3b1723a38 GitHub format update: updated
 owner: nothing written — the first post will wait for the owner
 reward: each new bounty states $0; open bounties here promise $0
-box bounty status — no open bounties in <repo>
+omakase-box status — no open bounties in <repo>
 ended: bt-22f3b1723a38 applied — scan finding recorded (job: job.txt)
   Saved job context (bt-22f3b1723a38) — where the work stood when the bounty was created
     branch: "master"; commit: dc71f2ba28a3a988dc174b5aa47e44b27e70d9b3
@@ -45,7 +45,7 @@ ended: bt-22f3b1723a38 applied — scan finding recorded (job: job.txt)
   scan finding (recorded at create): docs/box-v4/delegation/FIRST-IMPLEMENTATION-BRIEF.md:114 (passworded-connection-string) — the flagged content changed — the bounty went out
   scan finding (recorded at create): scripts/verify.mjs:67 (passworded-connection-string) — the flagged content changed — the bounty went out
   scan finding (recorded at create): scripts/verify.mjs:107 (passworded-connection-string) — the flagged content changed — the bounty went out
-  next: continue the saved job; to reverse the merge: git revert -m 1 d493dbe35f0dbdb0724c73ff339e18ce39d56978; inspect: box bounty status bt-22f3b1723a38 --full; or create another with box bounty create --task <file> --why "<one line>"
+  next: continue the saved job; to reverse the merge: git revert -m 1 d493dbe35f0dbdb0724c73ff339e18ce39d56978; inspect: omakase-box status bt-22f3b1723a38 --full; or create another with omakase-box create --task <file> --why "<one line>"
   history: {"stage":"drafted","at":"2026-10-13T12:48:51.187Z"}
   history: {"stage":"waiting","at":"2026-10-13T12:49:08.821Z"}
   history: {"stage":"posted","at":"2026-10-13T13:11:17.831Z","destination":"https://github.com/shouteck/omakase-box/issues/5"}
@@ -71,7 +71,7 @@ bt-26bb9883d6b2 current GitHub format read unavailable at <ts>; cached last comp
 bt-26bb9883d6b2 GitHub format update: updated
 owner: nothing written — the first post will wait for the owner
 reward: each new bounty states $0; open bounties here promise $0
-box bounty status — no open bounties in <repo>
+omakase-box status — no open bounties in <repo>
 ended: bt-26bb9883d6b2 rejected — scan finding recorded (job: Clarify the unresolved BT9 real-host hook evidence in BACKLOG)
   Saved job context (bt-26bb9883d6b2) — where the work stood when the bounty was created
     branch: "master"; commit: dc71f2ba28a3a988dc174b5aa47e44b27e70d9b3
@@ -113,7 +113,7 @@ ended: bt-26bb9883d6b2 rejected — scan finding recorded (job: Clarify the unre
   scan finding (recorded at create): docs/box-v4/delegation/FIRST-IMPLEMENTATION-BRIEF.md:114 (passworded-connection-string) — the flagged content changed — the bounty went out
   scan finding (recorded at create): scripts/verify.mjs:67 (passworded-connection-string) — the flagged content changed — the bounty went out
   scan finding (recorded at create): scripts/verify.mjs:107 (passworded-connection-string) — the flagged content changed — the bounty went out
-  next: continue the saved job; inspect: box bounty status bt-26bb9883d6b2 --full; or create another with box bounty create --task <file> --why "<one line>"
+  next: continue the saved job; inspect: omakase-box status bt-26bb9883d6b2 --full; or create another with omakase-box create --task <file> --why "<one line>"
   history: {"stage":"drafted","at":"2026-10-13T12:54:57.037Z"}
   history: {"stage":"waiting","at":"2026-10-13T12:55:33.311Z"}
   history: {"stage":"posted","at":"2026-10-13T13:11:31.743Z","destination":"https://github.com/shouteck/omakase-box/issues/6"}
@@ -122,11 +122,11 @@ ended: bt-26bb9883d6b2 rejected — scan finding recorded (job: Clarify the unre
 bt-4ad668353616 current GitHub format read unavailable at <ts>; cached last comparison not read at time not recorded; local record governs
 owner: nothing written — the first post will wait for the owner
 reward: each new bounty states $0; open bounties here promise $0
-box bounty status — no open bounties in <repo>
+omakase-box status — no open bounties in <repo>
 ended: bt-4ad668353616 undone (job: Quote solver-supplied paths in the fact report)
   Return to your job
     The branch, commit and changed files were not recorded for this older bounty.
-  next: continue the saved job; inspect: box bounty status bt-4ad668353616 --full; or create another with box bounty create --task <file> --why "<one line>"
+  next: continue the saved job; inspect: omakase-box status bt-4ad668353616 --full; or create another with omakase-box create --task <file> --why "<one line>"
   history: {"stage":"drafted","at":"2026-10-11T06:56:50.745Z"}
   history: {"stage":"confirmed","at":"2026-10-11T06:59:22.432Z"}
   history: {"stage":"posted","at":"2026-10-11T07:01:59.275Z","destination":"https://github.com/shouteck/omakase-box/issues/3"}
@@ -144,11 +144,11 @@ ended: bt-4ad668353616 undone (job: Quote solver-supplied paths in the fact repo
 bt-6b7b1d15d8f0 current GitHub format read unavailable at <ts>; cached last comparison not read at time not recorded; local record governs
 owner: nothing written — the first post will wait for the owner
 reward: each new bounty states $0; open bounties here promise $0
-box bounty status — no open bounties in <repo>
+omakase-box status — no open bounties in <repo>
 ended: bt-6b7b1d15d8f0 applied (job: Explain how to bootstrap a cold copy of this repository)
   Return to your job
     The branch, commit and changed files were not recorded for this older bounty.
-  next: continue the saved job; to reverse the merge: git revert -m 1 48b461cd30b6424fc16dce3fdf3c66eba424f186; inspect: box bounty status bt-6b7b1d15d8f0 --full; or create another with box bounty create --task <file> --why "<one line>"
+  next: continue the saved job; to reverse the merge: git revert -m 1 48b461cd30b6424fc16dce3fdf3c66eba424f186; inspect: omakase-box status bt-6b7b1d15d8f0 --full; or create another with omakase-box create --task <file> --why "<one line>"
   history: {"stage":"drafted","at":"2026-10-11T03:28:02.311Z"}
   history: {"stage":"confirmed","at":"2026-10-11T03:36:56.594Z"}
   history: {"stage":"posted","at":"2026-10-11T03:44:38.802Z","destination":"https://github.com/shouteck/omakase-box/issues/1"}
@@ -164,11 +164,11 @@ ended: bt-6b7b1d15d8f0 applied (job: Explain how to bootstrap a cold copy of thi
 == bt-e197a6998847 ==
 owner: nothing written — the first post will wait for the owner
 reward: each new bounty states $0; open bounties here promise $0
-box bounty status — no open bounties in <repo>
+omakase-box status — no open bounties in <repo>
 ended: bt-e197a6998847 applied (job: # Fix the dangling rendering of an empty `allowedDestinations` list)
   Return to your job
     The branch, commit and changed files were not recorded for this older bounty.
-  next: continue the saved job; to reverse the merge: git revert -m 1 e720caa3cf301a8f1738b6ae8e14568a13224ef5; inspect: box bounty status bt-e197a6998847 --full; or create another with box bounty create --task <file> --why "<one line>"
+  next: continue the saved job; to reverse the merge: git revert -m 1 e720caa3cf301a8f1738b6ae8e14568a13224ef5; inspect: omakase-box status bt-e197a6998847 --full; or create another with omakase-box create --task <file> --why "<one line>"
   history: {"stage":"drafted","at":"2026-10-10T13:17:44.447Z"}
   history: {"stage":"confirmed","at":"2026-10-10T13:17:50.916Z"}
   history: {"stage":"posted","at":"2026-10-10T13:17:55.367Z","destination":"C:\\Users\\shout\\AppData\\Local\\Temp\\bt5-journey\\delivered\\bt-e197a6998847"}

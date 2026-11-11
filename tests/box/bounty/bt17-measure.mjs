@@ -116,7 +116,7 @@ try {
   const postSettings = join(root, 'posting-settings');
   mkdirSync(postSettings, { recursive: true });
   const postEnv = { ...env, BOX_BOUNTY_SETTINGS_DIR: postSettings };
-  measure('box --help', box(posting, ['--help'], postEnv));
+  measure('omakase-box --help', box(posting, ['--help'], postEnv));
   measure('bounty help', box(posting, ['bounty', 'help'], postEnv));
   measure('bounty describe', box(posting, ['bounty', 'describe'], postEnv));
   measure('bounty describe --rules', box(posting, ['bounty', 'describe', '--rules'], postEnv));

@@ -8,7 +8,7 @@ A refusal is a `BountyRefused` (`errors.ts:5`) whose first argument is a stable 
 
 **Job.** For the posting agent: capture the task, the note on what was tried and the one line of why as a local draft — no network, nothing published.
 
-**Commands and options.** `box bounty create` (`cli/src/bounty.ts:143`, `create.ts:396` `createBounty`): `--task <file>` / `--task -` (stdin), `--why`, `--part-of`, `--resume`, retired spellings (`--to folder`, `--job`, `--checks`, `--reward`, folder delivery) refused by name. `planBounty`/`snapshot` build the pinned tree.
+**Commands and options.** `omakase-box create` (`cli/src/bounty.ts:143`, `create.ts:396` `createBounty`): `--task <file>` / `--task -` (stdin), `--why`, `--part-of`, `--resume`, retired spellings (`--to folder`, `--job`, `--checks`, `--reward`, folder delivery) refused by name. `planBounty`/`snapshot` build the pinned tree.
 
 **Inputs and outputs.** Reads the task text (file or stdin), the repository (tracked + untracked files via a temporary `GIT_INDEX_FILE`, `snapshot.ts`), the never-ship rules (`never-ship.ts:35` `BUILTIN_RULES` plus the owner's `.boxignore`/owner list). Writes a record at stage `drafted` into `.box/local/box.db` (`record.ts:647`, `store.ts`) and the instruction-block/OPEN surfaces (`render.ts` sync). No GitHub calls, no pushes, no chain ref.
 
@@ -30,7 +30,7 @@ A refusal is a `BountyRefused` (`errors.ts:5`) whose first argument is a stable 
 
 **Job.** For the posting agent: make public exactly what the bounty needs and nothing else — a GitHub issue on the repository's own project plus the bounty branch — only inside the authority the owner granted.
 
-**Commands and options.** `box bounty post <id>` (`bounty.ts:218`, `commands.ts` `postBounty` → `post.ts:180` `postGitHub`), `--preview` (`post.ts:175` `previewGitHub`), choices `--with-changes`, `--include <file>` (repeatable). `approveGitHub` (`post.ts:146`) records the owner answer.
+**Commands and options.** `omakase-box post <id>` (`bounty.ts:218`, `commands.ts` `postBounty` → `post.ts:180` `postGitHub`), `--preview` (`post.ts:175` `previewGitHub`), choices `--with-changes`, `--include <file>` (repeatable). `approveGitHub` (`post.ts:146`) records the owner answer.
 
 **Inputs and outputs.** Reads the record, the owner decision (`gate.ts` `ownerGate`), remotes (`repository.ts` identity), Git history (`publish-plan.ts`), the never-ship rules and the secret-scan rules (`scan.ts` `scanText`). Writes `record.github` (issue, branch, account, bound amount), pushes the branch, creates the issue via `gh`, and appends the `posted` chain event pushed to `refs/box-bounty/<id>` (`chain.ts:292` `sharePosted`).
 
@@ -54,7 +54,7 @@ A refusal is a `BountyRefused` (`errors.ts:5`) whose first argument is a stable 
 
 **Job.** For the agent (and a later agent): learn the state of the project's bounties — the overview, the per-bounty status, the hook line, the recall search — reading records and outside state without changing anything shared.
 
-**Commands and options.** `box bounty` (overview), `status [--full|--since|--json]`, `status <id>`, `find <query>` (`find.ts`), `hook <slot>` (`hook.ts`), the instruction-file sync (`instructions.ts`), `look <id>` as a read (`look.ts`).
+**Commands and options.** `omakase-box` (overview), `status [--full|--since|--json]`, `status <id>`, `find <query>` (`find.ts`), `hook <slot>` (`hook.ts`), the instruction-file sync (`instructions.ts`), `look <id>` as a read (`look.ts`).
 
 **Inputs and outputs.** Reads records (`record.ts`, `store.ts`), owner settings (`settings.ts`), GitHub when posted (comments, PR heads — `collect.ts`, `gh.ts`), the shared chain cache (`chain.ts` `refreshSharedMemory`). Writes nothing shared; only local cache refreshes and `said`-once marks.
 
@@ -76,7 +76,7 @@ A refusal is a `BountyRefused` (`errors.ts:5`) whose first argument is a stable 
 
 **Job.** For the agent: see each solution with facts about the change — who, what files, how large, whether it merges cleanly today — running nothing the solver wrote.
 
-**Commands and options.** `box bounty look <id> [n] [--full|--export|--json]` (`look.ts`), collection inside `look`/`status`/`apply` (`collect.ts`).
+**Commands and options.** `omakase-box look <id> [n] [--full|--export|--json]` (`look.ts`), collection inside `look`/`status`/`apply` (`collect.ts`).
 
 **Inputs and outputs.** Reads the PR head objects over Git (diffs with `--no-ext-diff`/`--no-textconv`, `look.ts` header), the issue comments, the record. Writes collected attempts onto the record and a `solution` chain event (`chain.ts:316` `shareSolution`).
 
@@ -99,7 +99,7 @@ A refusal is a `BountyRefused` (`errors.ts:5`) whose first argument is a stable 
 
 **Job.** For the agent (or owner): land the chosen solution as one ordinary merge commit on current code — or end the bounty — and let the tool close the loop outside, whatever way the merge happened.
 
-**Commands and options.** `box bounty apply <id> [n]` (`bounty.ts:243`, `answer.ts:160` `applyBounty`), `box bounty close <id> [--reason]` (`commands.ts:38` `closeBounty`), the outside-merge recognition (`merged.ts`), `close.ts` `syncGitHubDecision`.
+**Commands and options.** `omakase-box apply <id> [n]` (`bounty.ts:243`, `answer.ts:160` `applyBounty`), `omakase-box close <id> [--reason]` (`commands.ts:38` `closeBounty`), the outside-merge recognition (`merged.ts`), `close.ts` `syncGitHubDecision`.
 
 **Inputs and outputs.** Reads the record, attempts, owner decision, the worktree state, Git ancestry. Writes the merge commit, `applied`/`rejected`/`withdrawn` stage, `merged`/`closed` chain events (`shareMerged`, `shareClosed`), GitHub decision comment, issue close, branch removal (`close.ts`).
 
@@ -168,7 +168,7 @@ A refusal is a `BountyRefused` (`errors.ts:5`) whose first argument is a stable 
 
 **Job.** For the owner: be involved once — the standing rules in their own settings outside the repository — then answer only what the rules hold.
 
-**Commands and options.** `box bounty allow [owner/name|<id>] [--ask] [--reward $ --reward-limit $]`, `deny`, `config [set|add|remove <setting> <value>|--json]` (`bounty.ts:356-382`, `owner.ts`, `settings.ts`).
+**Commands and options.** `omakase-box allow [owner/name|<id>] [--ask] [--reward $ --reward-limit $]`, `deny`, `config [set|add|remove <setting> <value>|--json]` (`bounty.ts:356-382`, `owner.ts`, `settings.ts`).
 
 **Inputs and outputs.** Writes only the settings file outside the checkout (`settings.ts` `settingsDir`, `BOX_BOUNTY_SETTINGS_DIR`); decisions: `allowed`/`ask`/`off` per repository and `all-projects`, per-bounty once answers (`writeDecision`), money per repository, instruction-file and first-merge notice settings.
 
@@ -191,7 +191,7 @@ A refusal is a `BountyRefused` (`errors.ts:5`) whose first argument is a stable 
 
 **Job.** For every actor: one bundled CLI with no dependencies, on Git and `gh`, refusing by name whatever it cannot do — the shared floor every stage stands on.
 
-**Commands and options.** `box bounty <command>` dispatch (`cli/src/bounty.ts`, `cli.ts`), `--help`/`-h`, `--version`, `--json` where supported, `describe` (`tell.ts`), `help` (`render.ts`), `box` itself (`src/box.ts`), Node floor check (`src/node-check.ts`).
+**Commands and options.** `omakase-box <command>` dispatch (`cli/src/bounty.ts`, `cli.ts`), `--help`/`-h`, `--version`, `--json` where supported, `describe` (`tell.ts`), `help` (`render.ts`), `box` itself (`src/box.ts`), Node floor check (`src/node-check.ts`).
 
 **Inputs and outputs.** Parses arguments by one table (`args.ts` `BOUNTY_COMMANDS`/`parseOptions`); resolves `git`, `gh`, `cmd.exe` safely (`program.ts`); requires `git ≥2.40` (attrs pin) and a signed-in `gh` (`git.ts`, `gh.ts`); enforces a per-run `gh` call budget (`gh.ts:105-129`).
 

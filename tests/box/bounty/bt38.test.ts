@@ -22,7 +22,7 @@ const cli = (cwd: string, args: readonly string[]) =>
 // reads the brief adds: describe (--rules), help, config (--full/--json) and
 // `post --preview`, which only computes what a post would publish.
 const readCommands = (id: string, draftId: string): readonly string[][] => [
-  [], // `box bounty` overview
+  [], // `omakase-box` overview
   ['status'],
   ['status', '--full'],
   ['status', '--json'],
@@ -57,10 +57,10 @@ describe('BT38 contract guarantees proven directly', () => {
       for (const args of readCommands(world.id, draft.id)) {
         for (let run = 0; run < 2; run += 1) {
           const result = cli(world.repo, args);
-          expect(result.status, `box bounty ${args.join(' ')} exited ${result.status}: ${result.stderr}`).toBe(0);
+          expect(result.status, `omakase-box ${args.join(' ')} exited ${result.status}: ${result.stderr}`).toBe(0);
         }
-        expect(readFileSync(file).equals(beforeBytes), `box bounty ${args.join(' ')} changed the instruction block`).toBe(true);
-        expect(statSync(file).mtimeMs, `box bounty ${args.join(' ')} touched the instruction file`).toBe(beforeMtime);
+        expect(readFileSync(file).equals(beforeBytes), `omakase-box ${args.join(' ')} changed the instruction block`).toBe(true);
+        expect(statSync(file).mtimeMs, `omakase-box ${args.join(' ')} touched the instruction file`).toBe(beforeMtime);
       }
       // A changed fact must change the block: a new pull request arrives.
       world.pr('solver');
@@ -82,7 +82,7 @@ describe('BT38 contract guarantees proven directly', () => {
       expect(localBefore).toContain(`refs/box-bounty/${world.id}`);
       for (const args of readCommands(world.id, draft.id)) {
         const result = cli(world.repo, args);
-        expect(result.status, `box bounty ${args.join(' ')} exited ${result.status}: ${result.stderr}`).toBe(0);
+        expect(result.status, `omakase-box ${args.join(' ')} exited ${result.status}: ${result.stderr}`).toBe(0);
       }
       expect(localRefs(), 'a read appended a chain event or moved a chain tip').toBe(localBefore);
       expect(remoteRefs(), 'a read pushed to the shared bounty memory').toBe(remoteBefore);
@@ -141,7 +141,7 @@ describe('BT38 contract guarantees proven directly', () => {
     for (const entry of cases) {
       const result = cli(entry.cwd, entry.args);
       const out = `${result.stdout}\n${result.stderr}`;
-      expect(result.status, `${entry.section}: box bounty ${entry.args.join(' ')} exited 0 —\n${out}`).not.toBe(0);
+      expect(result.status, `${entry.section}: omakase-box ${entry.args.join(' ')} exited 0 —\n${out}`).not.toBe(0);
       expect(out, `${entry.section}: expected ${entry.reason} —\n${out}`).toContain(`(${entry.reason})`);
       expect(out, `${entry.section}: refusal names no next step —\n${out}`).toMatch(/next: /);
     }

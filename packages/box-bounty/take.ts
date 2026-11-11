@@ -48,7 +48,7 @@ interface Facts { readonly repository: string; readonly bountyBranch: string; re
 
 function factsOf(id: string): Facts {
   const read = readBountyDetail(id);
-  if ('failed' in read) throw new BountyRefused('board-unread', `${id} could not be read from the board: ${read.failed}; nothing was taken; next: check the id with box bounty discover`);
+  if ('failed' in read) throw new BountyRefused('board-unread', `${id} could not be read from the board: ${read.failed}; nothing was taken; next: check the id with omakase-box discover`);
   const b = isObject(read.detail['bounty']) ? read.detail['bounty'] : {};
   const repository = isObject(b['repository']) && typeof b['repository']['name'] === 'string' ? repositoryAddress(b['repository']['name']) : null;
   const answer = isObject(b['answer']) ? b['answer'] : {};
@@ -57,7 +57,7 @@ function factsOf(id: string): Facts {
   const listed = b['way_in'] === 'listed' && typeof answer['closes_issue'] === 'string' && /^Fixes #\d{1,9}$/.test(answer['closes_issue']) && typeof answer['branch'] === 'string' && /^[\w./-]{1,255}$/.test(answer['branch']);
   if (b['id'] !== id || repository === null || (!listed && answer['branch'] !== `box-bounty/${id}`) || typeof answer['base_commit'] !== 'string' || !/^[a-f\d]{40}$/.test(answer['base_commit'])
     || typeof reward !== 'number' || !Number.isSafeInteger(reward) || reward < 0 || typeof b['pays_on_merge'] !== 'boolean' || typeof owner !== 'string') {
-    throw new BountyRefused('board-unread', `the board's answer for ${id} did not read as a bounty; nothing was taken; next: check the id with box bounty discover`);
+    throw new BountyRefused('board-unread', `the board's answer for ${id} did not read as a bounty; nothing was taken; next: check the id with omakase-box discover`);
   }
   return { repository, bountyBranch: answer['branch'] as string, baseCommit: answer['base_commit'], reward, paysOnMerge: b['pays_on_merge'], owner, open: b['state'] === 'open' || b['state'] === 'solutions-waiting', closesIssue: listed ? answer['closes_issue'] as string : null };
 }
@@ -80,27 +80,27 @@ function forkOf(root: string, repository: string, login: string): string {
 export const DRAFT_BODY = (id: string): string => `Started on bounty ${id}. A draft: work in progress, opened at once so other agents can see this attempt.`;
 
 export function takeBounty(id: string, options: TakeOptions = {}): TakeResult {
-  if (!ID.test(id)) throw new BountyRefused('bounty-id-invalid', `"${id.slice(0, 40)}" is not a bounty id; nothing was taken; next: an id from box bounty discover, such as bt-0123456789ab`);
+  if (!ID.test(id)) throw new BountyRefused('bounty-id-invalid', `"${id.slice(0, 40)}" is not a bounty id; nothing was taken; next: an id from omakase-box discover, such as bt-0123456789ab`);
   const limits = solvingOf();
-  if (limits.mode === 'off') throw new BountyRefused('solving-off', 'solving is off — the owner has not allowed your agents to take bounties; nothing was taken; next: ask the owner to run box bounty config set solving allowed (or ask, to be asked before each one)');
+  if (limits.mode === 'off') throw new BountyRefused('solving-off', 'solving is off — the owner has not allowed your agents to take bounties; nothing was taken; next: ask the owner to run omakase-box config set solving allowed (or ask, to be asked before each one)');
   const existing = loadTaken(id);
-  if (existing?.stage === 'taken' || existing?.stage === 'submitted') throw new BountyRefused('already-taken', `${id} is already taken, with its draft at ${existing.pullRequest?.url ?? 'its pull request'} and its workspace at ${existing.workspace ?? 'unknown'}; nothing changed; next: work there, or box bounty close ${id} to withdraw`);
+  if (existing?.stage === 'taken' || existing?.stage === 'submitted') throw new BountyRefused('already-taken', `${id} is already taken, with its draft at ${existing.pullRequest?.url ?? 'its pull request'} and its workspace at ${existing.workspace ?? 'unknown'}; nothing changed; next: work there, or omakase-box close ${id} to withdraw`);
   const facts = factsOf(id);
-  if (!facts.open) throw new BountyRefused('bounty-not-open', `${id} is no longer open on the board; nothing was taken; next: box bounty discover for open ones`);
+  if (!facts.open) throw new BountyRefused('bounty-not-open', `${id} is no longer open on the board; nothing was taken; next: omakase-box discover for open ones`);
   const outside = [
     ...(facts.reward < limits.floor ? [`its $${facts.reward} reward is below the owner's $${limits.floor} floor`] : []),
     ...(limits.paysOnMergeOnly && !facts.paysOnMerge ? ['it does not pay on merge, and the owner takes only bounties that do'] : []),
     ...(limits.skip.includes(facts.repository) ? [`the owner never takes from ${facts.repository}`] : [])
   ];
-  if (outside.length > 0) throw new BountyRefused('outside-owner-limits', `${id} is outside the owner's limits: ${outside.join('; ')}; nothing was taken; next: choose another bounty from box bounty discover`);
+  if (outside.length > 0) throw new BountyRefused('outside-owner-limits', `${id} is outside the owner's limits: ${outside.join('; ')}; nothing was taken; next: choose another bounty from omakase-box discover`);
   // "Ask each time": the owner's yes on this one bounty, written by the owner's own command, is used once.
   if (limits.mode === 'ask' && !(limits.approved ?? []).includes(id)) {
     saveTaken({ id, repository: facts.repository, stage: 'waiting', at: new Date().toISOString(), reward: facts.reward });
     return { kind: 'waiting', lines: [
       `${id} waits on the owner — the owner asked to be asked before each bounty taken. Put this to them:`,
       `  Your agent wants to take ${id} on ${facts.repository} ($${facts.reward}, pays on merge: ${facts.paysOnMerge ? 'yes' : 'no'}). It would fork the repository to your GitHub account, run that repository's code in a throwaway folder, and open a draft pull request under your name.`,
-      `  To allow this one bounty: box bounty allow ${id}`,
-      `next: once the owner has answered, run box bounty take ${id} again`
+      `  To allow this one bounty: omakase-box allow ${id}`,
+      `next: once the owner has answered, run omakase-box take ${id} again`
     ] };
   }
   const root = options.into === undefined ? mkdtempSync(join(tmpdir(), `box-take-${id}-`)) : options.into;
@@ -151,14 +151,14 @@ export function takeBounty(id: string, options: TakeOptions = {}): TakeResult {
     `workspace: ${workspace} — ${facts.closesIssue === null ? 'the bounty branch' : `the default branch, ${facts.bountyBranch},`} at ${head.slice(0, 12)}, with an empty start commit`,
     'the tool ran nothing from this repository. Run its tests only here, and keep your credentials out of this folder. The tool pushed with your own gh sign-in, and this machine stays signed in to GitHub; it cannot stop an agent reaching that sign-in.',
     ...(ownBounty ? [`${id} was posted by ${login}, the account taking it: a merge here is not counted in the owner's record.`] : []),
-    `next: work in ${workspace}, commit, and push to ${target} ${branch} — the draft updates as you push; box bounty submit ${id} once it is ready for review; box bounty close ${id} withdraws the attempt`
+    `next: work in ${workspace}, commit, and push to ${target} ${branch} — the draft updates as you push; omakase-box submit ${id} once it is ready for review; omakase-box close ${id} withdraws the attempt`
   ] };
 }
 
-/** The owner's yes on one bounty under "ask each time" (`box bounty allow <id>`). */
+/** The owner's yes on one bounty under "ask each time" (`omakase-box allow <id>`). */
 export function approveTake(id: string): string {
   const waiting = loadTaken(id);
-  if (waiting?.stage !== 'waiting') throw new BountyRefused('not-waiting', `${id} is not waiting on you to be taken; nothing changed; next: box bounty config shows what is waiting`);
+  if (waiting?.stage !== 'waiting') throw new BountyRefused('not-waiting', `${id} is not waiting on you to be taken; nothing changed; next: omakase-box config shows what is waiting`);
   const solving = solvingOf();
   saveSettings({ ...loadSettings(), solving: { ...solving, approved: [...new Set([...(solving.approved ?? []), id])], at: new Date().toISOString() } });
   return `${id} on ${waiting.repository}: allowed once — your agent may take this one bounty; written to the owner's settings. Other bounties still ask.`;
@@ -167,7 +167,7 @@ export function approveTake(id: string): string {
 /** `close` on a taken bounty: the draft is closed and the attempt withdrawn. The fork and the workspace stay; they are the solver's. */
 export function closeTaken(id: string): string {
   const taken = loadTaken(id);
-  if (taken === null) throw new BountyRefused('not-taken', `${id} is not a bounty you took; nothing changed; next: box bounty close inside the checkout that posted it, if it is yours`);
+  if (taken === null) throw new BountyRefused('not-taken', `${id} is not a bounty you took; nothing changed; next: omakase-box close inside the checkout that posted it, if it is yours`);
   if (taken.stage === 'withdrawn') return `${id} — already withdrawn; nothing to do`;
   if (taken.stage === 'waiting') {
     saveTaken({ ...taken, stage: 'withdrawn', at: new Date().toISOString() });
@@ -175,7 +175,7 @@ export function closeTaken(id: string): string {
   }
   const what = taken.stage === 'submitted' ? 'pull request' : 'draft';
   const closed = api(taken.workspace !== undefined && existsSync(taken.workspace) ? taken.workspace : tmpdir(), `repos/${taken.repository}/pulls/${taken.pullRequest!.number}`, { state: 'closed' }, 'PATCH');
-  if (!isObject(closed) || closed['state'] !== 'closed') return invalid('github-response-invalid', `GitHub did not say ${what} #${taken.pullRequest!.number} is closed; the attempt stays taken; next: close it on GitHub at ${taken.pullRequest!.url}, then run box bounty close ${id} again`);
+  if (!isObject(closed) || closed['state'] !== 'closed') return invalid('github-response-invalid', `GitHub did not say ${what} #${taken.pullRequest!.number} is closed; the attempt stays taken; next: close it on GitHub at ${taken.pullRequest!.url}, then run omakase-box close ${id} again`);
   saveTaken({ ...taken, stage: 'withdrawn', at: new Date().toISOString() });
   return `${id} — withdrawn: ${what} #${taken.pullRequest!.number} closed. The branch ${taken.branch} on ${taken.target} and the workspace at ${taken.workspace} are yours to keep or remove.`;
 }

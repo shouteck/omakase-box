@@ -11,7 +11,7 @@
 // the record, the settings, the GitHub refresh — never by parsing the text.
 // Building one starts no process the text read would not start: the GitHub
 // refresh, the comments read, the merged-solution scan and the once-only
-// notices all run for `box bounty status` in its text form too, and the
+// notices all run for `omakase-box status` in its text form too, and the
 // repository's one `git config` read is shared through the command pins.
 // What a text view prints as a line — an owner's notice, a merge
 // recognised, an acting-on line — goes to the `notice` callback instead,
@@ -349,7 +349,7 @@ export function statusDocument(repoRoot: string, options: StatusDocumentOptions,
   // reward read's said-once line, each recognised-merge fact and the
   // instruction-file notices — same wording, same once-only semantics.
   if (amount > 0 && saidOnce(repoRoot, 'reward-is-a-promise')) {
-    notice("a promise in the owner's name, which they pay; the owner sets it in box bounty config");
+    notice("a promise in the owner's name, which they pay; the owner sets it in omakase-box config");
   }
   for (const [address, firstMerge] of Object.entries(loadState().firstMerges)) {
     if (listed.some(entry => entry.record?.events.some(event => event.stage === 'applied' && event.merge === firstMerge.commit))) {
@@ -509,10 +509,10 @@ export function configDocument(repoRoot: string | null, notice: (line: string) =
   if (askNotice !== null) notice(askNotice);
   const toolState = loadState();
   for (const migration of toolState.migrations) {
-    notice(`migration ${migration.at}: ${JSON.stringify(migration.path)} ${migration.detail}; re-add: box bounty allow ${migration.repository ?? '<owner/name>'}`);
+    notice(`migration ${migration.at}: ${JSON.stringify(migration.path)} ${migration.detail}; re-add: omakase-box allow ${migration.repository ?? '<owner/name>'}`);
   }
   for (const [key, firstMerge] of Object.entries(toolState.firstMerges)) {
-    notice(`first outside solution merged in ${key}: commit ${firstMerge.commit} at ${firstMerge.at}; see: box bounty status --full`);
+    notice(`first outside solution merged in ${key}: commit ${firstMerge.commit} at ${firstMerge.at}; see: omakase-box status --full`);
   }
   if (repoRoot !== null) {
     const localMerge = localFirstMergeLine(repoRoot);

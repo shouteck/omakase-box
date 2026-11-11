@@ -1,5 +1,5 @@
 // BT35 — open bounties show their age, and a long wait is said once.
-// For each open bounty, status/box bounty/status --json show how long it has
+// For each open bounty, status/omakase-box/status --json show how long it has
 // been open and how long since anything happened; when a posted bounty has
 // had no new solution for 14 days, the tool says so once — for that bounty,
 // ever — and never again, and never acts on it.
@@ -89,13 +89,13 @@ describe('the age facts on every open bounty', () => {
 });
 
 describe('the once-said long-wait line', () => {
-  it('posted 14 days ago: said on the first status, never again — not on status, not on box bounty', () => {
+  it('posted 14 days ago: said on the first status, never again — not on status, not on omakase-box', () => {
     const repo = makeRepo({ 'app.txt': 'seed\n' });
     const rid = posted(repo, 1, 14);
     const first = box(repo, ['status']);
     expect(first.status).toBe(0);
     expect(first.stdout).toContain(`${rid} has had no new solution for 14 days`);
-    expect(first.stdout).toContain(`box bounty close ${rid} --reason`);
+    expect(first.stdout).toContain(`omakase-box close ${rid} --reason`);
     const second = box(repo, ['status']);
     expect(second.stdout).not.toMatch(REMINDER);
     const overview = box(repo, []);
@@ -120,7 +120,7 @@ describe('the once-said long-wait line', () => {
     expect(run.stdout).not.toMatch(REMINDER);
   });
 
-  it('the line is said once per bounty across both entrypoints: box bounty first, then status stays silent', () => {
+  it('the line is said once per bounty across both entrypoints: omakase-box first, then status stays silent', () => {
     const repo = makeRepo({ 'app.txt': 'seed\n' });
     posted(repo, 1, 20);
     const overview = box(repo, []);
@@ -285,7 +285,7 @@ describe('a shared-only stale bounty', () => {
     const first = box(repo, ['status']);
     expect(first.status).toBe(0);
     expect(first.stdout).toContain(`${rid} has had no new solution for 20 days`);
-    // `box bounty close` on this clone would refuse 'shared-only' — the line
+    // `omakase-box close` on this clone would refuse 'shared-only' — the line
     // names the fact and where ending happens instead of quoting it.
     expect(first.stdout).toContain('posted from another machine');
     expect(box(repo, ['status']).stdout).not.toMatch(REMINDER);

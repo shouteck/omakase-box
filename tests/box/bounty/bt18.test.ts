@@ -12,18 +12,18 @@ const cli = (cwd: string, args: string[], input?: string) =>
   spawnSync(process.execPath, [CLI_DIST, ...args], { cwd, encoding: 'utf8', env: process.env, timeout: 60000, ...(input === undefined ? {} : { input }) });
 const bounty = (cwd: string, args: string[], input?: string) => cli(cwd, ['bounty', ...args], input);
 
-// Every command the option table lists; '' is the bare `box bounty` overview.
+// Every command the option table lists; '' is the bare `omakase-box` overview.
 const COMMANDS = ['', 'help', 'describe', 'create', 'status', 'post', 'look', 'apply', 'close', 'allow', 'deny', 'config', 'hook'];
 const call = (dir: string, command: string, args: string[]) => bounty(dir, [...(command === '' ? [] : [command]), ...args]);
 
 describe('1. --help and -h on every command', () => {
   for (const command of COMMANDS) {
     for (const flag of ['--help', '-h']) {
-      it(`box bounty ${command === '' ? '' : `${command} `}${flag} prints that command's usage`, () => {
+      it(`omakase-box ${command === '' ? '' : `${command} `}${flag} prints that command's usage`, () => {
         const dir = runRoot('bt18-help'); // a plain folder, no checkout — help needs nothing
         const run = call(dir, command, [flag]);
         expect(run.status, run.stderr).toBe(0);
-        expect(run.stdout.startsWith(`usage: box bounty${command === '' ? ' ' : ` ${command}`}`)).toBe(true);
+        expect(run.stdout.startsWith(`usage: omakase-box${command === '' ? ' ' : ` ${command}`}`)).toBe(true);
         expect(run.stderr).toBe('');
         expect(readdirSync(dir)).toEqual([]);
         expect(existsSync(settingsFile())).toBe(false);
@@ -57,12 +57,12 @@ it('3. create --task=TASK.md --why=x is the same as the spaced form', () => {
 
 describe('4. an unknown option on every command is a usage error naming it', () => {
   for (const command of COMMANDS) {
-    it(`box bounty ${command === '' ? '' : `${command} `}--frobnicate`, () => {
+    it(`omakase-box ${command === '' ? '' : `${command} `}--frobnicate`, () => {
       const dir = runRoot('bt18-unknown');
       const run = call(dir, command, ['--frobnicate']);
       expect(run.status, run.stderr).toBe(2);
-      expect(run.stderr).toContain(`unknown option --frobnicate for box bounty${command === '' ? '' : ` ${command}`}`);
-      expect(run.stderr).toContain('usage: box bounty');
+      expect(run.stderr).toContain(`unknown option --frobnicate for omakase-box${command === '' ? '' : ` ${command}`}`);
+      expect(run.stderr).toContain('usage: omakase-box');
     });
   }
 });
@@ -75,7 +75,7 @@ it('5. --json refuses json-not-supported until a command grows it', () => {
     const run = bounty(dir, [command, '--json']);
     expect(run.status, run.stderr).toBe(3);
     expect(run.stderr).toContain('json-not-supported');
-    expect(run.stderr).toContain(`--json is not available on box bounty ${command} yet`);
+    expect(run.stderr).toContain(`--json is not available on omakase-box ${command} yet`);
   }
 });
 
@@ -84,7 +84,7 @@ describe('6. an option that takes a value, given without one', () => {
     ['status', ['--since'], '--since'],
     ['status', ['--since', '--full'], '--since'],
     ['close', ['--reason'], '--reason']
-  ])('box bounty %s %j exits 2 saying needs a value', (command, args, option) => {
+  ])('omakase-box %s %j exits 2 saying needs a value', (command, args, option) => {
     const run = bounty(runRoot('bt18-novalue'), [command, ...args]);
     expect(run.status, run.stderr).toBe(2);
     expect(run.stderr).toContain(`${option} needs a value`);
@@ -107,10 +107,10 @@ it('8. status -h is help; status -x is an unknown option, never an id', () => {
   const dir = runRoot('bt18-dash');
   const help = bounty(dir, ['status', '-h']);
   expect(help.status, help.stderr).toBe(0);
-  expect(help.stdout.startsWith('usage: box bounty status')).toBe(true);
+  expect(help.stdout.startsWith('usage: omakase-box status')).toBe(true);
   const unknown = bounty(dir, ['status', '-x']);
   expect(unknown.status, unknown.stderr).toBe(2);
-  expect(unknown.stderr).toContain('unknown option -x for box bounty status');
+  expect(unknown.stderr).toContain('unknown option -x for omakase-box status');
   expect(unknown.stderr).not.toContain('unknown-bounty');
 });
 
@@ -138,18 +138,18 @@ describe('10. the existing named refusals keep their reason names and exit codes
     [['apply', 'bt-000000000000', '1', '--yes'], 'merge-approval-agent'],
     [['answer'], 'command-removed'],
     [['owner', 'setup'], 'command-removed']
-  ])('box bounty %j refuses (%s) exit 3', (args, reason) => {
+  ])('omakase-box %j refuses (%s) exit 3', (args, reason) => {
     const run = bounty(runRoot('bt18-refusals'), args);
     expect(run.status, run.stderr).toBe(3);
     expect(run.stderr).toContain(`(${reason})`);
   });
 });
 
-it('11. box --version and box bounty --version print the package version', () => {
+it('11. omakase-box --version and omakase-box --version print the package version', () => {
   const pkg = JSON.parse(readFileSync(join(ROOT, 'packages', 'box-cli', 'package.json'), 'utf8')) as { version: string };
   for (const args of [['--version'], ['bounty', '--version']]) {
     const run = cli(runRoot('bt18-version'), args);
     expect(run.status, run.stderr).toBe(0);
-    expect(run.stdout.trim()).toBe(`box ${pkg.version}`);
+    expect(run.stdout.trim()).toBe(`omakase-box ${pkg.version}`);
   }
 });

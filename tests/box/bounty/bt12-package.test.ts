@@ -57,6 +57,12 @@ const bundle = () => files.get('package/dist/box.js')!.toString('utf8');
 const manifest = () => JSON.parse(files.get('package/package.json')!.toString('utf8')) as Record<string, unknown>;
 
 describe('the artifact is the bounty tool and nothing else', () => {
+  // BT63: one command, `omakase-box`. Box (the storage company) owns `box`, and npm refuses to install a package
+  // naming it beside @box/cli (waves/BT63.md, "Stopped at step 1"): never put `box` back in `bin`.
+  it('installs one command, omakase-box, and not box', () => {
+    expect(manifest()['bin']).toEqual({ 'omakase-box': 'dist/box.js' });
+  });
+
   it('carries exactly the allow-listed files', () => {
     expect([...files.keys()].sort()).toEqual(ALLOW);
   });
@@ -68,7 +74,7 @@ describe('the artifact is the bounty tool and nothing else', () => {
     }
     expect(pkg['private']).toBeUndefined();
     expect(pkg['license']).toBe('Apache-2.0');
-    expect((pkg['bin'] as Record<string, string>)['box']).toBe('dist/box.js');
+    expect((pkg['bin'] as Record<string, string>)['omakase-box']).toBe('dist/box.js');
   });
   it('is one file that imports node builtins only', () => {
     const specifiers = [...bundle().matchAll(/from "([^"]+)"/g)].map(match => match[1]);
@@ -102,7 +108,7 @@ describe('the artifact carries no secrets and no machine paths', () => {
       expect(text, name).not.toMatch(/[A-Za-z]:[\\/]Users/i);
     }
   });
-  it('names no command spelling but `box bounty …`', () => {
+  it('names no command spelling but `omakase-box …`', () => {
     // The old spelling was an interpreter plus a repository path.
     for (const [name, body] of files) {
       const text = body.toString('utf8');

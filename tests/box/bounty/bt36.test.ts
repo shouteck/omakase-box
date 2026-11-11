@@ -1,7 +1,7 @@
 // BT36 — the owner records that a merged bounty's solver was paid:
-// `box bounty config set paid <id>` writes the fact on the record (the
+// `omakase-box config set paid <id>` writes the fact on the record (the
 // amount copied from the bound reward, never typed; `by: 'owner'`), `... no`
-// withdraws a mistaken record, status/status --json/the `box bounty`
+// withdraws a mistaken record, status/status --json/the `omakase-box`
 // overview show owed or paid, and the fact travels the shared memory —
 // never the issue (payment stays private between owner and solver).
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -65,13 +65,13 @@ const paidEvents = (repo: string, rid: string) =>
   (JSON.parse(readRecordRaw(repo, rid)) as { events: Record<string, unknown>[] }).events.filter(event => event['stage'] === 'paid');
 
 describe('a merged bounty with a reward reads owed until the owner records paid', () => {
-  it('status <id> names whom is owed; the `box bounty` overview and an unasked status say nothing of it (PF15)', () => {
+  it('status <id> names whom is owed; the `omakase-box` overview and an unasked status say nothing of it (PF15)', () => {
     const repo = makeRepo({ 'app.txt': 'seed\n' });
     const rid = applied(repo, 1);
     const status = box(repo, ['status', rid]);
     expect(status.status).toBe(0);
     expect(status.stdout).toContain('payment: owed $5 to solver (at the link they supplied)');
-    expect(status.stdout).toContain(`box bounty config set paid ${rid}`);
+    expect(status.stdout).toContain(`omakase-box config set paid ${rid}`);
     const overview = box(repo, []);
     expect(overview.status).toBe(0);
     expect(overview.stdout).not.toMatch(/owed/);

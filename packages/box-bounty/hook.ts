@@ -4,7 +4,7 @@
 // owner switches it on, and switching it on shows the owner plainly what it
 // does, what it costs and what it may cause.
 //
-// One output command serves every host — `box bounty hook <slot>` — and each
+// One output command serves every host — `omakase-box hook <slot>` — and each
 // host is a thin adapter that only knows where that host keeps hook settings
 // and what an entry looks like. Hosts implemented here are the ones whose
 // hook format was verified against installed documentation on this machine:
@@ -122,7 +122,7 @@ function arrivalKeys(record: BountyRecord): { key: string; line: string }[] {
   for (const attempt of attemptsOf(record)) {
     if (seenCommits.has(attempt.commit)) continue;
     seenCommits.add(attempt.commit);
-    out.push({ key: `solution:${record.id}:${attempt.commit}`, line: `a solution arrived for ${record.id} — read it: box bounty look ${record.id} ${attempt.n}; merge it: box bounty apply ${record.id} ${attempt.n}` });
+    out.push({ key: `solution:${record.id}:${attempt.commit}`, line: `a solution arrived for ${record.id} — read it: omakase-box look ${record.id} ${attempt.n}; merge it: omakase-box apply ${record.id} ${attempt.n}` });
   }
   const pullRequests = [...record.github?.seenPullRequests ?? [], ...record.github?.availablePullRequests ?? []];
   const seenPrs = new Set<string>();
@@ -130,7 +130,7 @@ function arrivalKeys(record: BountyRecord): { key: string; line: string }[] {
     const key = `solution:${record.id}:pr${pr.n}:${pr.commit}`;
     if (seenCommits.has(pr.commit) || seenPrs.has(key)) continue;
     seenPrs.add(key);
-    out.push({ key, line: `a solution arrived for ${record.id} — collect pull request #${pr.n}: box bounty look ${record.id} ${pr.n}; merge it: box bounty apply ${record.id} ${pr.n}` });
+    out.push({ key, line: `a solution arrived for ${record.id} — collect pull request #${pr.n}: omakase-box look ${record.id} ${pr.n}; merge it: omakase-box apply ${record.id} ${pr.n}` });
   }
   return out;
 }
@@ -141,7 +141,7 @@ function arrivalKeys(record: BountyRecord): { key: string; line: string }[] {
 function conflictKeys(record: BountyRecord): { key: string; line: string }[] {
   const paths = record.conflicts?.paths;
   if (paths === undefined || paths === null || paths.length === 0) return [];
-  return [{ key: `conflict:${record.id}:${paths.join(',')}`, line: `a merge try on ${record.id} conflicts in ${paths.length} path(s) — see: box bounty status ${record.id}` }];
+  return [{ key: `conflict:${record.id}:${paths.join(',')}`, line: `a merge try on ${record.id} conflicts in ${paths.length} path(s) — see: omakase-box status ${record.id}` }];
 }
 
 export interface HookRun {
@@ -185,9 +185,9 @@ export function runHook(repoRoot: string, slot: HookSlot, notices: readonly stri
     // the store's substring query finds exactly those.
     if (slot === 'finish') ended = endedContaining(repoRoot, '"pay":');
   } catch (error) {
-    return envelope(slot, [...notices, `box bounty: the records could not be read (${error instanceof BountyRefused ? error.reason : 'read-failed'}) — see: box bounty status`]);
+    return envelope(slot, [...notices, `omakase-box: the records could not be read (${error instanceof BountyRefused ? error.reason : 'read-failed'}) — see: omakase-box status`]);
   }
-  if (corrupt > 0) lines.push(`box bounty: ${corrupt} record file(s) under .box/bounties could not be read — see: box bounty status`);
+  if (corrupt > 0) lines.push(`omakase-box: ${corrupt} record file(s) under .box/bounties could not be read — see: omakase-box status`);
 
   // GitHub is asked at most once per interval, only while an open bounty is
   // posted there. Each call carries a hard limit (limitGitHubCalls, applied
@@ -223,7 +223,7 @@ export function runHook(repoRoot: string, slot: HookSlot, notices: readonly stri
         else if (record.github?.state === 'posted' && record.github.unavailableAt !== null && record.github.unavailableAt !== undefined) suffixes.push(`GitHub unreachable at ${record.github.unavailableAt}`);
         return `${record.id} ${record.stage}${suffixes.length > 0 ? ` (${suffixes.join(', ')})` : ''}`;
       }).join('; ');
-      lines.push(`box bounty: ${open.length} open ${open.length === 1 ? 'bounty' : 'bounties'} — ${summary}${open.length > HOOK_START_OPEN_LIMIT ? `; and ${open.length - HOOK_START_OPEN_LIMIT} more` : ''} — see: box bounty status`);
+      lines.push(`omakase-box: ${open.length} open ${open.length === 1 ? 'bounty' : 'bounties'} — ${summary}${open.length > HOOK_START_OPEN_LIMIT ? `; and ${open.length - HOOK_START_OPEN_LIMIT} more` : ''} — see: omakase-box status`);
     }
     // Whatever the start already shows counts as told: a mid-session line is
     // only for what arrives while the session runs.
@@ -251,7 +251,7 @@ export function runHook(repoRoot: string, slot: HookSlot, notices: readonly stri
   }
   for (const event of fresh) { told.told[event.key] = new Date().toISOString(); dirty = true; }
   if (dirty) writeTold(repoRoot, told);
-  lines.push(...fresh.map(event => `box bounty: ${event.line}`));
+  lines.push(...fresh.map(event => `omakase-box: ${event.line}`));
   return envelope(slot, [...notices, ...lines]);
 }
 
@@ -287,12 +287,12 @@ export const HOOK_HOSTS: readonly HookHost[] = [
 export function hookHost(name: string | undefined): HookHost {
   const found = HOOK_HOSTS.find(host => host.name === name);
   if (found === undefined) {
-    throw new BountyRefused('hook-unknown-host', `${name === undefined ? 'no host named' : `${JSON.stringify(name)} is not a host the hook can be installed for`} — known hosts: ${HOOK_HOSTS.map(host => host.name).join(', ')}; nothing changed; next: name a known host with box bounty hook on --host <name>`);
+    throw new BountyRefused('hook-unknown-host', `${name === undefined ? 'no host named' : `${JSON.stringify(name)} is not a host the hook can be installed for`} — known hosts: ${HOOK_HOSTS.map(host => host.name).join(', ')}; nothing changed; next: name a known host with omakase-box hook on --host <name>`);
   }
   return found;
 }
 
-export const HOOK_COMMAND = 'box bounty hook';
+export const HOOK_COMMAND = 'omakase-box hook';
 const slotCommand = (slot: HookSlot): string => `${HOOK_COMMAND} ${slot}`;
 
 // The groups one `hook on` writes — one per wired slot, under the event name
@@ -313,7 +313,8 @@ const isOurs = (group: unknown): boolean => {
   return hooks.every(hook => hook !== null && typeof hook === 'object' && !Array.isArray(hook)
     && (hook as { type?: unknown }).type === 'command'
     && typeof (hook as { command?: unknown }).command === 'string'
-    && /^box bounty hook (start|pause|finish)( |$)/.test((hook as { command: string }).command));
+    // BT63: a hook written by 0.1.x names `box bounty hook`; it is still ours, so `hook off` removes it and `hook on` replaces it.
+    && /^(?:omakase-box|box bounty) hook (start|pause|finish)( |$)/.test((hook as { command: string }).command));
 };
 
 // ---------------------------------------------------------------------------
@@ -399,7 +400,7 @@ function readSettings(path: string): { text: string; root: Span } {
   const tokens = scan(text);
   const parsed = tokens.length === 0 ? null : parseSpan(tokens, 0);
   if (parsed === null || parsed.next !== tokens.length || parsed.span.kind !== 'object') {
-    throw new BountyRefused('hook-settings-malformed', `${path} is not a readable JSON object; nothing changed; next: fix the file or remove it, then run box bounty hook on again`);
+    throw new BountyRefused('hook-settings-malformed', `${path} is not a readable JSON object; nothing changed; next: fix the file or remove it, then run omakase-box hook on again`);
   }
   return { text, root: parsed.span };
 }
@@ -410,7 +411,7 @@ function reparse(text: string, path: string): Span {
   const tokens = scan(text);
   const parsed = parseSpan(tokens, 0);
   if (parsed === null || parsed.next !== tokens.length || parsed.span.kind !== 'object') {
-    throw new BountyRefused('hook-settings-malformed', `${path}: the file could not be re-read while being edited; nothing changed; next: run box bounty hook on again`);
+    throw new BountyRefused('hook-settings-malformed', `${path}: the file could not be re-read while being edited; nothing changed; next: run omakase-box hook on again`);
   }
   return parsed.span;
 }
@@ -484,7 +485,7 @@ function addEntries(path: string, host: HookHost, groups: Record<string, unknown
   let root = reparse(text, path);
   let box = container(root, host);
   if (host.nested && box === null && root.members!.find(entry => entry.key === 'hooks') !== undefined) {
-    throw new BountyRefused('hook-settings-malformed', `${path}: "hooks" is not an object; nothing changed; next: fix the file, then run box bounty hook on again`);
+    throw new BountyRefused('hook-settings-malformed', `${path}: "hooks" is not an object; nothing changed; next: fix the file, then run omakase-box hook on again`);
   }
   // Refuse to double-install — scanning only what was already there: a
   // container the tool is about to create holds only our entries and would
@@ -495,7 +496,7 @@ function addEntries(path: string, host: HookHost, groups: Record<string, unknown
       let group: unknown = null;
       try { group = JSON.parse(text.slice(element.start, element.end)); } catch { continue; }
       if (isOurs(group)) {
-        throw new BountyRefused('hook-already-on', `the hook is already installed in ${host.file} ("${member.key}"); nothing changed; next: remove it with box bounty hook off --host ${host.name} if it should be off`);
+        throw new BountyRefused('hook-already-on', `the hook is already installed in ${host.file} ("${member.key}"); nothing changed; next: remove it with omakase-box hook off --host ${host.name} if it should be off`);
       }
     }
   }
@@ -506,7 +507,7 @@ function addEntries(path: string, host: HookHost, groups: Record<string, unknown
     root = reparse(text, path);
     box = container(root, host);
   }
-  if (box === null) throw new BountyRefused('hook-settings-malformed', `${path}: the hooks object could not be found; nothing changed; next: fix the file or remove it, then run box bounty hook on again`);
+  if (box === null) throw new BountyRefused('hook-settings-malformed', `${path}: the hooks object could not be found; nothing changed; next: fix the file or remove it, then run omakase-box hook on again`);
   for (const event of Object.keys(groups)) {
     const current = reparse(text, path);
     const currentBox = container(current, host)!;
@@ -515,7 +516,7 @@ function addEntries(path: string, host: HookHost, groups: Record<string, unknown
       createdMembers.push(event);
       text = insertLast(text, currentBox, `\n    "${event}": ${JSON.stringify(groups[event], null, 2).replaceAll('\n', '\n    ')}`);
     } else if (member.value.kind !== 'array') {
-      throw new BountyRefused('hook-settings-malformed', `${path}: "${event}" is not a list of hook entries; nothing changed; next: fix the file, then run box bounty hook on again`);
+      throw new BountyRefused('hook-settings-malformed', `${path}: "${event}" is not a list of hook entries; nothing changed; next: fix the file, then run omakase-box hook on again`);
     } else {
       for (const group of groups[event]!) {
         const again = reparse(text, path);
@@ -612,19 +613,19 @@ function checkedSettingsPath(repoRoot: string, host: HookHost): string {
   const { root, path, problem, leaf, canonical } = walkProjectPath(repoRoot, host.file);
   if (problem !== null) {
     if (problem.kind === 'link') {
-      throw new BountyRefused('hook-settings-escape', `${problem.at} is a link — the hook only writes settings that stay inside the project; nothing changed; next: replace the link with a real directory inside the project, then run box bounty hook on again`);
+      throw new BountyRefused('hook-settings-escape', `${problem.at} is a link — the hook only writes settings that stay inside the project; nothing changed; next: replace the link with a real directory inside the project, then run omakase-box hook on again`);
     }
     if (problem.kind === 'outside') {
       throw new BountyRefused('hook-settings-escape', `${path} resolves outside this project — the hook only writes settings inside the project; nothing changed; next: name a settings path inside the project`);
     }
     if (problem.kind === 'blocked') {
-      throw new BountyRefused('hook-settings-blocked', `${problem.at} is not a directory — the hook cannot write ${host.file}; nothing changed; next: make ${problem.at} a directory or move it aside, then run box bounty hook on again`);
+      throw new BountyRefused('hook-settings-blocked', `${problem.at} is not a directory — the hook cannot write ${host.file}; nothing changed; next: make ${problem.at} a directory or move it aside, then run omakase-box hook on again`);
     }
     // 'missing': below the last existing component the tool creates inside the project.
   }
   if (leaf !== undefined) {
-    if (leaf.isDirectory()) throw new BountyRefused('hook-settings-blocked', `${path} is a directory — ${host.file} must be a settings file; nothing changed; next: move ${path} aside or choose a different settings file, then run box bounty hook on again`);
-    if (leaf.nlink > 1) throw new BountyRefused('hook-settings-escape', `${path} is linked from more than one place — the hook only writes a file the project owns; nothing changed; next: remove the extra links to ${path}, then run box bounty hook on again`);
+    if (leaf.isDirectory()) throw new BountyRefused('hook-settings-blocked', `${path} is a directory — ${host.file} must be a settings file; nothing changed; next: move ${path} aside or choose a different settings file, then run omakase-box hook on again`);
+    if (leaf.nlink > 1) throw new BountyRefused('hook-settings-escape', `${path} is linked from more than one place — the hook only writes a file the project owns; nothing changed; next: remove the extra links to ${path}, then run omakase-box hook on again`);
     const resolved = folded(canonical!);
     if (resolved !== folded(root) && !resolved.startsWith(`${folded(root)}/`)) {
       throw new BountyRefused('hook-settings-escape', `${path} resolves outside this project — the hook only writes settings inside the project; nothing changed; next: name a settings path inside the project`);
@@ -718,16 +719,16 @@ export function hookStatus(repoRoot: string): string {
       lines.push(`${host.name}: ${host.file} cannot be read (${error instanceof BountyRefused ? error.reason : 'unreadable'}) — fix the file by hand`);
     }
   }
-  lines.push(`switch on: box bounty hook on --host <${HOOK_HOSTS.map(host => host.name).join('|')}> — prints the disclosure first and changes nothing until --confirm`);
+  lines.push(`switch on: omakase-box hook on --host <${HOOK_HOSTS.map(host => host.name).join('|')}> — prints the disclosure first and changes nothing until --confirm`);
   return lines.join('\n');
 }
 
 export function hookOff(repoRoot: string, host: HookHost): string {
   const path = checkedSettingsPath(repoRoot, host);
-  if (!existsSync(path)) throw new BountyRefused('hook-not-on', `the hook is not on for ${host.name} — ${host.file} does not exist; nothing changed; next: install it with box bounty hook on --host ${host.name}`);
+  if (!existsSync(path)) throw new BountyRefused('hook-not-on', `the hook is not on for ${host.name} — ${host.file} does not exist; nothing changed; next: install it with omakase-box hook on --host ${host.name}`);
   const installs = readInstalls(repoRoot);
   const { text, removed } = removeEntries(path, host, installs[host.name] ?? null);
-  if (removed === 0) throw new BountyRefused('hook-not-on', `the hook is not on for ${host.name} — no box entries in ${host.file}; nothing changed; next: install it with box bounty hook on --host ${host.name}`);
+  if (removed === 0) throw new BountyRefused('hook-not-on', `the hook is not on for ${host.name} — no box entries in ${host.file}; nothing changed; next: install it with omakase-box hook on --host ${host.name}`);
   if (text === null) rmSync(path, { force: true });
   else writeFileSync(path, text);
   delete installs[host.name];
@@ -743,7 +744,7 @@ export function hookDisclosure(repoRoot: string, host: HookHost): string {
   const groups = hookGroups();
   const entriesText = Object.entries(groups).map(([event, value]) => `  "${event}": ${JSON.stringify(value)}`).join('\n');
   const lines = [
-    `switching on the box bounty hook for ${host.name}`,
+    `switching on the omakase-box hook for ${host.name}`,
     '',
     'what it does:',
     '- at the start of each session it shows the agent the state of open bounties (ids and stages only), once',
@@ -773,13 +774,13 @@ export function hookDisclosure(repoRoot: string, host: HookHost): string {
     'what it never does:',
     "- never runs a solver's code, never shows a stranger's text (no titles, account names, branch names or issue bodies), never tells the agent what to do beyond naming the command that shows more, never blocks or waits on anything",
     '',
-    `how to stop it: box bounty hook off --host ${host.name} — removes exactly these entries`,
+    `how to stop it: omakase-box hook off --host ${host.name} — removes exactly these entries`,
     '',
     `the entries that would be added to ${path}:`,
     host.nested ? '  under the "hooks" key:' : '  the file is the hooks object itself:',
     entriesText,
     '',
-    `nothing was written (hook-unconfirmed) — switch it on with: box bounty hook on --host ${host.name} --confirm`
+    `nothing was written (hook-unconfirmed) — switch it on with: omakase-box hook on --host ${host.name} --confirm`
   );
   return lines.join('\n');
 }
@@ -805,5 +806,5 @@ export function hookOn(repoRoot: string, host: HookHost): string {
     createdMembers: added.createdMembers
   };
   writeInstalls(repoRoot, installs);
-  return `hook on — wrote ${Object.keys(hookGroups()).length} hook entrie(s) for ${host.name} to ${host.file}\n  sessions on this host now see open-bounty state at start and new arrivals once, until: box bounty hook off --host ${host.name}`;
+  return `hook on — wrote ${Object.keys(hookGroups()).length} hook entrie(s) for ${host.name} to ${host.file}\n  sessions on this host now see open-bounty state at start and new arrivals once, until: omakase-box hook off --host ${host.name}`;
 }

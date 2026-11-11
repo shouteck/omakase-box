@@ -2,7 +2,7 @@
 // agents read "what it costs" as a fee and the tool as "an outside service";
 // the block now states, in constant words, that posting is free, that a
 // bounty goes only to this repository's own public GitHub, and that the
-// owner's permission applies (`box bounty config` shows it). Two assertions
+// owner's permission applies (`omakase-box config` shows it). Two assertions
 // over the real surfaces: the rendered block in every state, and the block
 // the tool writes into two projects whose owner settings differ. BT17's
 // `describe --rules` budget is held by bt17.test.ts. The bites (put "what it
@@ -29,10 +29,10 @@ const interior = (text: string): string => {
 };
 
 describe('BT42 — the instruction block states the decision facts in constant words', () => {
-  it('every state says free, public and `box bounty config`, and nothing that reads as a price', () => {
+  it('every state says free, public and `omakase-box config`, and nothing that reads as a price', () => {
     for (const state of STATES) {
       const block = renderRulesBlock(state);
-      for (const fact of ['free', 'public', '`box bounty config`']) expect(block, `${state} block lacks ${fact}`).toContain(fact);
+      for (const fact of ['free', 'public', '`omakase-box config`']) expect(block, `${state} block lacks ${fact}`).toContain(fact);
       for (const price of ['cost', 'fee', 'price', 'paid']) expect(block.toLowerCase(), `${state} block reads as a price (${price})`).not.toContain(price);
     }
   });

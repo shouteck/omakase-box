@@ -202,7 +202,7 @@ export function staleReminderLines(repoRoot: string, open: readonly BountyRecord
       const days = dayWord(daysSince(lastActivityAt, now));
       lines.push(record.shared === true
         ? `${record.id} has had no new solution for ${days} — posted from another machine; keep waiting, or end it on that machine or on GitHub`
-        : `${record.id} has had no new solution for ${days} — keep waiting, or end it: box bounty close ${record.id} --reason "<why>"`);
+        : `${record.id} has had no new solution for ${days} — keep waiting, or end it: omakase-box close ${record.id} --reason "<why>"`);
     }
   }
   return lines;
@@ -220,18 +220,18 @@ export const nextStep = (record: BountyRecord): string => {
       : 'posted from another machine — continue in the checkout that posted it, or on GitHub';
   }
   if (retiredRoute(record) !== null) {
-    return `this delivery route was retired; end it with box bounty close ${record.id}`;
+    return `this delivery route was retired; end it with omakase-box close ${record.id}`;
   }
   switch (record.stage) {
     case 'drafted':
-    case 'confirmed': return `deliver it — box bounty post ${record.id} (preview first with --preview)`;
+    case 'confirmed': return `deliver it — omakase-box post ${record.id} (preview first with --preview)`;
     case 'waiting': return `waiting for the owner — ${waitingSummary(record)}`;
-    case 'posted': return `box bounty look ${record.id} <number> collects a pull request and shows its change; box bounty apply ${record.id} <number> collects and merges`;
-    case 'taken': return 'a solution is being read against the snapshot it was made for — run box bounty status again in a moment';
+    case 'posted': return `omakase-box look ${record.id} <number> collects a pull request and shows its change; omakase-box apply ${record.id} <number> collects and merges`;
+    case 'taken': return 'a solution is being read against the snapshot it was made for — run omakase-box status again in a moment';
     case 'answered': {
       const conflicts = record.conflicts?.paths;
-      if (conflicts !== undefined && conflicts.length > 0) return `the last merge try conflicted in ${conflicts.map(showPath).join(', ')} — read the solution with box bounty look ${record.id} <n>; once its commit is merged on the bounty's branch the next bounty command closes it, or end it with box bounty close ${record.id} --reason "<why>"`;
-      return `box bounty apply ${record.id} <n> chooses a solution (box bounty look ${record.id} <n> reads it first); box bounty close ${record.id} ends it`;
+      if (conflicts !== undefined && conflicts.length > 0) return `the last merge try conflicted in ${conflicts.map(showPath).join(', ')} — read the solution with omakase-box look ${record.id} <n>; once its commit is merged on the bounty's branch the next bounty command closes it, or end it with omakase-box close ${record.id} --reason "<why>"`;
+      return `omakase-box apply ${record.id} <n> chooses a solution (omakase-box look ${record.id} <n> reads it first); omakase-box close ${record.id} ends it`;
     }
     default: return 'ended — nothing to do';
   }
@@ -241,7 +241,7 @@ export const nextStep = (record: BountyRecord): string => {
 // revert when its merge landed, and the ways to look again or start fresh.
 // Shared by the text status and the status --json document (BT19).
 export const endedNextStep = (record: BountyRecord): string =>
-  `${record.adopted !== undefined ? 'the saved job stayed on the machine that posted it' : 'continue the saved job'}${record.stage === 'applied' ? `; to reverse the merge: git revert -m 1 ${record.events.find(event => event.stage === 'applied')?.merge ?? '<merge>'}` : ''}; inspect: box bounty status ${record.id} --full; or create another with box bounty create --task <file> --why "<one line>"`;
+  `${record.adopted !== undefined ? 'the saved job stayed on the machine that posted it' : 'continue the saved job'}${record.stage === 'applied' ? `; to reverse the merge: git revert -m 1 ${record.events.find(event => event.stage === 'applied')?.merge ?? '<merge>'}` : ''}; inspect: omakase-box status ${record.id} --full; or create another with omakase-box create --task <file> --why "<one line>"`;
 
 // History events record the command that drove them, and records written
 // while older commands existed keep those names on disk — history is never
@@ -260,7 +260,7 @@ const historyJson = (event: StageEvent): string =>
 // the amount it was posted with.
 // The reward line says what money is in force and what is already promised —
 // money owed is a fact every call. The standing explanation of what a reward
-// is (a promise in the owner's name, which they pay, set in box bounty config)
+// is (a promise in the owner's name, which they pay, set in omakase-box config)
 // is said once per repository, recorded in the owner's settings, and lives in
 // help and describe (BT17). With no amount, nothing promised and no limit
 // there is nothing to say and the compact form stays silent.
@@ -271,7 +271,7 @@ function rewardStatusLine(repoRoot: string, open: readonly BountyRecord[], full:
   const stated = amount === 0 ? 'each new bounty states $0' : `each new bounty states $${amount}`;
   const counted = limit === null ? `open bounties here promise $${promised}` : `open bounties here promise $${promised} of a $${limit} limit — ${promised <= limit ? `$${limit - promised} left` : `$${promised - limit} over`}`;
   const once = !full && amount > 0 && saidOnce(repoRoot, 'reward-is-a-promise')
-    ? " — a promise in the owner's name, which they pay; the owner sets it in box bounty config"
+    ? " — a promise in the owner's name, which they pay; the owner sets it in omakase-box config"
     : '';
   return `reward: ${stated}${once}; ${counted}`;
 }
@@ -418,10 +418,10 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
   lines.push(...instructionNotices(repoRoot));
   lines.push(...staleReminderLines(repoRoot, open.map(entry => entry.record!)));
   if (open.length === 0) {
-    lines.push(`box bounty status — no open bounties in ${repoRoot}`);
-    if (options.id === undefined && endedTotal === 0) lines.push('next: create one with box bounty create --task <file> --why "<one line>"');
+    lines.push(`omakase-box status — no open bounties in ${repoRoot}`);
+    if (options.id === undefined && endedTotal === 0) lines.push('next: create one with omakase-box create --task <file> --why "<one line>"');
   } else {
-    lines.push(`box bounty status — ${open.length} open ${open.length === 1 ? 'bounty' : 'bounties'} in ${repoRoot}`);
+    lines.push(`omakase-box status — ${open.length} open ${open.length === 1 ? 'bounty' : 'bounties'} in ${repoRoot}`);
     for (const entry of open) {
       const record = entry.record!;
       lines.push(`  ${record.id}  ${record.stage}  "${record.title}"${record.partOf !== undefined ? `  (part of: ${record.partOf})` : ''}  — ${ageClause(record)}`);
@@ -439,7 +439,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
         // request — in the compact view that is this bounty's one `next:`
         // line below, so the commands are dropped from the listed lines and
         // kept in the record (BT17).
-        const noCommands = (line: string): string => line.replace(/; (?:collect|look): box bounty [^;]+/g, '');
+        const noCommands = (line: string): string => line.replace(/; (?:collect|look): (?:box bounty|omakase-box) [^;]+/g, '');
         for (const line of record.github.outside.answers.split('\n')) {
           if (!options.full && (line.startsWith('GitHub answers for ') || line.includes('collected as solution'))) continue;
           lines.push(`      ${options.full ? line : noCommands(line)}`);
@@ -452,8 +452,8 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
           lines.push(`      scan hit: ${hitPlace(hit)} (${hit.rule})`);
         }
         lines.push(record.waiting.reason === 'secrets'
-          ? '      the owner decides in box bounty config — the path goes on safe to publish or never publish there'
-          : `      the owner answers this one with: box bounty allow ${record.id}`);
+          ? '      the owner decides in omakase-box config — the path goes on safe to publish or never publish there'
+          : `      the owner answers this one with: omakase-box allow ${record.id}`);
       }
       lines.push(...scanFindingLines(record, '      '));
       // This is the bounty's one `next:`; the collected count only says
@@ -478,11 +478,11 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
         const reason = record.github.unavailableReason ?? 'github-status-unavailable';
         lines.push(`      the outside state could not be refreshed — ${reason} at ${record.github.unavailableAt}; last recorded outside state ${record.github.outside?.at ?? 'not yet read'}`);
         lines.push(reason === 'github-issue-mismatch'
-          ? `      rerunning box bounty status reads the same answer — if the recorded issue is not this bounty's, end it with box bounty close ${record.id}`
-          : '      retry box bounty status');
+          ? `      rerunning omakase-box status reads the same answer — if the recorded issue is not this bounty's, end it with omakase-box close ${record.id}`
+          : '      retry omakase-box status');
       }
       // A zero count is nothing to say; comments that exist need attention.
-      if (record.github?.questions !== undefined && (record.github.questions.count > 0 || options.full === true)) lines.push(`      comments from other accounts: ${record.github.questions.count - (record.github.questions.fromPoster ?? 0)}${record.github.questions.fromPoster === undefined ? '' : `; from the account that posted this bounty: ${record.github.questions.fromPoster}`}${record.github.questions.unnamed === undefined ? '' : ` (${record.github.questions.unnamed} from an account whose name could not be read)`}; latest: ${record.github.questions.latestAt ?? 'none'}; read: box bounty status ${record.id} --comments`);
+      if (record.github?.questions !== undefined && (record.github.questions.count > 0 || options.full === true)) lines.push(`      comments from other accounts: ${record.github.questions.count - (record.github.questions.fromPoster ?? 0)}${record.github.questions.fromPoster === undefined ? '' : `; from the account that posted this bounty: ${record.github.questions.fromPoster}`}${record.github.questions.unnamed === undefined ? '' : ` (${record.github.questions.unnamed} from an account whose name could not be read)`}; latest: ${record.github.questions.latestAt ?? 'none'}; read: omakase-box status ${record.id} --comments`);
       // `--comments` prints the issue's comments, each line marked as written
       // by another account — the issue is bound to this bounty first, so a
       // record pointed at the wrong issue is a named refusal, not a leak.
@@ -493,7 +493,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
           lines.push(`        ${comment.author === null ? 'an account whose name could not be read' : quoteForeign(comment.author)}${comment.fromPoster ? ' (the account that posted this bounty)' : ''} at ${comment.at}:`);
           lines.push(...solverBlock('other account', comment.body.split('\n'), '          '));
         }
-        lines.push(`      next: answer on issue ${record.github.issue.number} in your own words with your own gh — gh issue comment ${record.github.issue.number} --body "<your own words>"; or box bounty status ${record.id}`);
+        lines.push(`      next: answer on issue ${record.github.issue.number} in your own words with your own gh — gh issue comment ${record.github.issue.number} --body "<your own words>"; or omakase-box status ${record.id}`);
       }
       // Saved context follows the work it explains (BT14).
       lines.push(renderResume(record, '      ', options.full === true));
@@ -577,7 +577,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
   // Past the limit the compact view joins only the most recently ended —
   // `status --full` (and `status <id>`) keeps the whole list (BT28).
   else if (!options.full && options.id === undefined && endedTotal > ENDED_OVERVIEW_LIMIT) {
-    lines.push(`ended (${endedTotal} total, ${ENDED_OVERVIEW_LIMIT} most recent): ${recent.map(endedItem).join(', ')}; all ${endedTotal}: box bounty status --full`);
+    lines.push(`ended (${endedTotal} total, ${ENDED_OVERVIEW_LIMIT} most recent): ${recent.map(endedItem).join(', ')}; all ${endedTotal}: omakase-box status --full`);
   }
   else lines.push(`ended: ${[...ended].sort((a, b) => (a.record!.createdAt).localeCompare(b.record!.createdAt) || a.record!.id.localeCompare(b.record!.id)).map(endedItem).join(', ')}`);
   // The job to go back to stays on show after a bounty ends: for the bounty that
@@ -602,7 +602,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
           : payment.link === 'none' ? 'no recognised payment link was given'
           : 'no payment link recorded';
         lines.push(payment.paidAt === null
-          ? `  payment: owed $${payment.amount} to ${solver} (${link})${entry.record.shared === true ? ' — recording happens on the machine that posted this bounty' : ` — the owner records it: box bounty config set paid ${entry.record.id}`}`
+          ? `  payment: owed $${payment.amount} to ${solver} (${link})${entry.record.shared === true ? ' — recording happens on the machine that posted this bounty' : ` — the owner records it: omakase-box config set paid ${entry.record.id}`}`
           : `  payment: paid $${payment.amount} on ${validAt(payment.paidAt)?.slice(0, 10) ?? 'an unrecorded date'} — the owner's word, recorded`);
       } else if (asked && pay !== undefined) {
         lines.push(`  pay: ${pay.pr !== null ? `pull request ${pay.pr}` : 'the returned folder'}${pay.solver !== null ? ` by ${solverAccount(pay.solver)}` : ''} was merged — pay $${boundAmount(entry.record) ?? '?'} to ${solverAccountOr(pay.solver, 'the solver')}${pay.link !== null ? ' at the link they supplied' : ' — no recognised payment link was given'} — a record, not a reminder`);
@@ -625,15 +625,15 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
   return lines.join('\n');
 }
 
-// `box bounty help` — the whole journey on one screen, for an agent that has
+// `omakase-box help` — the whole journey on one screen, for an agent that has
 // never seen the tool: what each command does and the stage it leaves, what
 // ends a bounty, and the minimum create needs. It reads no repository, so it
 // works outside a checkout too. Keep it in step with BOUNTY.md.
 export function renderHelp(): string {
   return [
-    'box bounty — hand off work you cannot or should not do: packaged safely, remembered in the project, returned as facts.',
+    'omakase-box — hand off work you cannot or should not do: packaged safely, remembered in the project, returned as facts.',
     'GitHub posting is free and public, only to this project\'s already-public repository. Nobody is known to be watching these issues.',
-    'the owner allows the tool once — a decision kept in the owner\'s own settings outside the repository. Those settings stop accidents and record changes; they are not a lock against an agent that deliberately changes them. Until then the first post waits and prints the few lines to put to them. post <id> --preview shows exactly what becomes public — the commit already there, unpushed commits, and only the uncommitted work you ask for (--with-changes, --include <file>). status reads the pull requests waiting; look <id> <n> collects one and shows its change, read from fetched objects — nothing is checked out, nothing is left behind. Every bounty states the reward the owner set for its repository — $0 until the owner sets one in box bounty config.',
+    'the owner allows the tool once — a decision kept in the owner\'s own settings outside the repository. Those settings stop accidents and record changes; they are not a lock against an agent that deliberately changes them. Until then the first post waits and prints the few lines to put to them. post <id> --preview shows exactly what becomes public — the commit already there, unpushed commits, and only the uncommitted work you ask for (--with-changes, --include <file>). status reads the pull requests waiting; look <id> <n> collects one and shows its change, read from fetched objects — nothing is checked out, nothing is left behind. Every bounty states the reward the owner set for its repository — $0 until the owner sets one in omakase-box config.',
     '',
     'the journey (what each command does → the stage it leaves):',
     '  create    save the task and private context and snapshot the working state → drafted',
@@ -677,7 +677,7 @@ export function renderOpenLine(repoRoot: string): string {
   return `open bounties: ${shown.map(record => {
     const github = record.github;
     return `${record.id} "${record.title}" (${record.stage})${github !== undefined ? ` ${github.issue?.url ?? 'github issue pending'} ${github.branch}${github.outside !== undefined ? `; ${github.outside.answers.replaceAll('\n', ' ')}` : ''}` : ''}`;
-  }).join(', ')}${open.length > HOOK_START_OPEN_LIMIT ? `, and ${open.length - HOOK_START_OPEN_LIMIT} more (see: box bounty status)` : ''}`;
+  }).join(', ')}${open.length > HOOK_START_OPEN_LIMIT ? `, and ${open.length - HOOK_START_OPEN_LIMIT} more (see: omakase-box status)` : ''}`;
 }
 
 // Keep the detailed local listing separate from the fixed instruction block.
@@ -716,7 +716,7 @@ export function renderOverview(repoRoot: string): string {
   // Until the tool is published no `box` is on the path: say what it means here, from how this ran.
   const ran = process.argv[1];
   const means = !setUp && ran !== undefined && basename(ran) === 'cli.js' ? [`if box is not found here, use: node ${JSON.stringify(resolve(ran))}`] : [];
-  return ['box bounty can hand work to an outside solver; box bounty describe says when it is worth using.', ...(setUp ? [] : [...SETUP_LINES, ...means]), renderStatus(repoRoot)].join('\n');
+  return ['omakase-box can hand work to an outside solver; omakase-box describe says when it is worth using.', ...(setUp ? [] : [...SETUP_LINES, ...means]), renderStatus(repoRoot)].join('\n');
 }
 
 // The write side of the surfaces: every record write re-renders them. The

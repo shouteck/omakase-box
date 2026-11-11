@@ -134,7 +134,7 @@ describe('take', { timeout: 120000 }, () => {
     listed(bare, id);
     const waiting = takeBounty(id);
     expect(waiting.kind).toBe('waiting');
-    expect(waiting.lines.join('\n')).toContain(`To allow this one bounty: box bounty allow ${id}`);
+    expect(waiting.lines.join('\n')).toContain(`To allow this one bounty: omakase-box allow ${id}`);
     expect(ghCalls(state())).toEqual([]);
     expect(allowRepository(null, id)).toContain('allowed once');
     expect(loadSettings().solving?.approved).toEqual([id]);

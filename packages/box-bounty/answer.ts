@@ -21,7 +21,7 @@ const TAIL = 2000;
 const tail = (text: string): string => text.slice(-TAIL);
 
 const endedRefusal = (record: BountyRecord): BountyRefused =>
-  new BountyRefused('already-ended', `bounty ${record.id} already ended (${record.stage}) — an ended bounty takes no further transitions; the record is its history; next: box bounty status ${record.id}`);
+  new BountyRefused('already-ended', `bounty ${record.id} already ended (${record.stage}) — an ended bounty takes no further transitions; the record is its history; next: omakase-box status ${record.id}`);
 
 export interface AnswerChange {
   readonly changed: readonly string[];
@@ -186,15 +186,15 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget, 
     const attempts = attemptsOf(record);
     if (attempts.length === 0) {
       throw new BountyRefused('wrong-stage', record.github?.state === 'posted'
-        ? `bounty ${id} is ${record.stage} — nothing has been collected yet; next: box bounty apply ${id} <n>`
-        : `bounty ${id} is ${record.stage} — apply merges a solution that has come back; nothing has arrived for this bounty yet; next: box bounty status ${id}`);
+        ? `bounty ${id} is ${record.stage} — nothing has been collected yet; next: omakase-box apply ${id} <n>`
+        : `bounty ${id} is ${record.stage} — apply merges a solution that has come back; nothing has arrived for this bounty yet; next: omakase-box status ${id}`);
     }
     const applicable = applicableAttempts(attempts);
     if (applicable.length === 0) {
-      throw new BountyRefused('no-applicable-attempt', `no recorded attempt on ${id} can be applied; next: name one anyway with box bounty apply ${id} <n>, or end the bounty with box bounty close ${id} --reason "<why>"`);
+      throw new BountyRefused('no-applicable-attempt', `no recorded attempt on ${id} can be applied; next: name one anyway with omakase-box apply ${id} <n>, or end the bounty with omakase-box close ${id} --reason "<why>"`);
     }
     if (applicable.length > 1) {
-      throw new BountyRefused('apply-ambiguous', `attempts ${applicable.map(candidate => `#${candidate.n}`).join(', ')} could be applied; next: box bounty apply ${id} <n>`);
+      throw new BountyRefused('apply-ambiguous', `attempts ${applicable.map(candidate => `#${candidate.n}`).join(', ')} could be applied; next: omakase-box apply ${id} <n>`);
     }
     attempt = applicable[0]!;
   }
@@ -206,7 +206,7 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget, 
   // a hand merge was always possible, so the gate is a promise kept to
   // owners who asked to be asked — not a barrier the agent could not cross.
   // The answer is read from the owner's settings — outside this repository:
-  // written there only by `box bounty allow`, after the bound state is
+  // written there only by `omakase-box allow`, after the bound state is
   // re-checked; nothing an agent passes, and nothing on the record file
   // inside this checkout, marks a merge approved.
   // A bounty picked up from another machine has no earlier "yes" behind it
@@ -220,11 +220,11 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget, 
     const carried = answer !== null && answer.n === bound.n && answer.commit === bound.commit && answer.head === bound.head;
     if (!carried) {
       waitForOwner(repoRoot, record, { for: 'merge', reason: mergeRead.decision === 'ask' ? 'owner-ask' : mergeRead.decision === 'off' ? 'owner-off' : 'owner-allow', at: new Date().toISOString(), merge: bound });
-      throw new BountyRefused('merge-held', [`waiting for the owner: ${record.id} — ${waitingSummary(record)}`, ...mergeWaitLines(record, attempt), `next: pass the owner block on in its words; box bounty status ${record.id} shows when the answer lands`].join('\n'));
+      throw new BountyRefused('merge-held', [`waiting for the owner: ${record.id} — ${waitingSummary(record)}`, ...mergeWaitLines(record, attempt), `next: pass the owner block on in its words; omakase-box status ${record.id} shows when the answer lands`].join('\n'));
     }
   }
   if (gitOutcome(repoRoot, ['rev-parse', '-q', '--verify', 'MERGE_HEAD']).status === 0) {
-    throw new BountyRefused('merge-in-progress', `a merge is already in progress in ${repoRoot}; next: finish it or run git merge --abort, then run box bounty apply again`);
+    throw new BountyRefused('merge-in-progress', `a merge is already in progress in ${repoRoot}; next: finish it or run git merge --abort, then run omakase-box apply again`);
   }
   // The owner's Git configuration can make this merge run a program a
   // solution supplies or changes: a filter, merge driver, config include or
@@ -235,7 +235,7 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget, 
   // before the working tree, index or branch is touched.
   const unsafe = unsafeOwnerCommands(repoRoot);
   if (unsafe.length > 0) {
-    throw new BountyRefused('apply-unsafe-config', `the owner's Git configuration could run a program a solution supplies or changes during this merge — apply refuses before anything is touched: ${unsafe.map(item => `${item.key} = ${showPath(item.command)} — ${item.detail}`).join('; ')}; next: ask the owner to point the configured commands outside the repository or remove them, or end the bounty with box bounty close ${id} --reason "<why>"`);
+    throw new BountyRefused('apply-unsafe-config', `the owner's Git configuration could run a program a solution supplies or changes during this merge — apply refuses before anything is touched: ${unsafe.map(item => `${item.key} = ${showPath(item.command)} — ${item.detail}`).join('; ')}; next: ask the owner to point the configured commands outside the repository or remove them, or end the bounty with omakase-box close ${id} --reason "<why>"`);
   }
   // HEAD is the attribute view for every read and the merge below: the
   // solver's files have not landed yet, so HEAD is the owner's committed
@@ -248,7 +248,7 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget, 
     : [...attempt.changed, ...attempt.added, ...attempt.deleted];
   const { blocked, dirty } = worktreeBlocks(repoRoot, deltaPaths, [...attempt.changed, ...attempt.added, ...attempt.deleted], ownerAttrs);
   if (blocked.length > 0) {
-    throw new BountyRefused('apply-worktree-dirty', `uncommitted work in ${blocked.map(showPath).join(', ')} would be overwritten by the merge; next: commit it, stash it or move it aside, then run box bounty apply ${id} again`);
+    throw new BountyRefused('apply-worktree-dirty', `uncommitted work in ${blocked.map(showPath).join(', ')} would be overwritten by the merge; next: commit it, stash it or move it aside, then run omakase-box apply ${id} again`);
   }
   const message = [
     `box bounty ${record.id}: ${record.title}`,
@@ -359,9 +359,9 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget, 
   restoreBytes(repoRoot, saved);
   const detail = tail(`${merged.stderr}\n${merged.stdout}`.trim());
   if (/local changes|untracked working tree files|would be overwritten/i.test(detail)) {
-    throw new BountyRefused('apply-worktree-dirty', `git merge refused: ${detail}; next: resolve what git reported, then run box bounty apply again`);
+    throw new BountyRefused('apply-worktree-dirty', `git merge refused: ${detail}; next: resolve what git reported, then run omakase-box apply again`);
   }
-  throw new BountyRefused('merge-failed', `git merge could not land solution ${attempt.commit} on ${repoRoot}: ${detail}; next: resolve the conflict in ${repoRoot} or run git merge --abort, then run box bounty apply again`);
+  throw new BountyRefused('merge-failed', `git merge could not land solution ${attempt.commit} on ${repoRoot}: ${detail}; next: resolve the conflict in ${repoRoot} or run git merge --abort, then run omakase-box apply again`);
 }
 
 // The stated test-file rule, for the flag: a path counts as a test when a
@@ -430,7 +430,7 @@ function renderAttemptReport(record: BountyRecord, n: number, at: string, author
   if (flags.length === 0) lines.push('  flags: none');
   else for (const flag of flags) lines.push(`  flag: ${flag}`);
   lines.push(`  ${NOTHING_RUN}`);
-  lines.push(`  next: box bounty look ${record.id} ${n} to read the change; box bounty apply ${record.id} ${n} to merge it; or box bounty close ${record.id} --reason "<why>"`);
+  lines.push(`  next: omakase-box look ${record.id} ${n} to read the change; omakase-box apply ${record.id} ${n} to merge it; or omakase-box close ${record.id} --reason "<why>"`);
   return lines;
 }
 

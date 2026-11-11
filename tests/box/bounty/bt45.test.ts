@@ -55,8 +55,8 @@ describe('the task text is scanned at create and at post', () => {
     expect(message).toMatch(/Something in this bounty's own text looks like a password or key: issue body, line \d+\./);
     expect(message).toContain('  Nothing has been published.');
     expect(message).not.toContain('say the file is safe to publish');
-    expect(message).toContain(`box bounty close ${created.id} ends this one`);
-    expect(message).toContain(`next: pass the owner block on in its words; box bounty status ${created.id} shows when the answer lands`);
+    expect(message).toContain(`omakase-box close ${created.id} ends this one`);
+    expect(message).toContain(`next: pass the owner block on in its words; omakase-box status ${created.id} shows when the answer lands`);
     expect(message).not.toContain(TOKEN);
   }));
 

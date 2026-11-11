@@ -137,7 +137,7 @@ describe('a value is taken before help', () => {
     for (const args of [['close', '-h'], ['close', '--reason', 'x', '-h']]) {
       const run = bounty(dir, args);
       expect(run.status, run.stderr).toBe(0);
-      expect(run.stdout.startsWith('usage: box bounty close')).toBe(true);
+      expect(run.stdout.startsWith('usage: omakase-box close')).toBe(true);
     }
   });
   it('status --since --help takes --help as the value — which --since refuses as not a time', () => {

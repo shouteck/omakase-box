@@ -364,7 +364,7 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     const removal = state().comments.find(comment => comment.body.includes('is removed'));
     expect(removal).toBeDefined();
     expect(removal!.body).toContain(pub.wipCommit!);
-    expect(removal!.body).toContain('box bounty ' + id + ': work in progress');
+    expect(removal!.body).toContain('box bounty ' + id + ': work in progress') // the stored subject of a pushed commit: not renamed (BT63);
     expect(git(bare, ['branch', '--list', 'box-bounty/*'])).toBe('');
     expect(loadRecord(repo, id).github!.closedNote).toContain(pub.wipCommit!.slice(0, 12));
     // Retrying the close does not comment twice.
