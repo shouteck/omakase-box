@@ -8,8 +8,9 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { BOUNTY_COMMANDS, changeConfig, RULES_LINES, SKILL_TEXT } from '../../../packages/box-bounty/index.js';
+import { BOUNTY_COMMANDS, changeConfig, closeBounty, postBounty, RULES_LINES, renderStatus, SKILL_TEXT } from '../../../packages/box-bounty/index.js';
 import { SETUP_LINES } from '../../../packages/box-bounty/wording.js';
+import { fixture } from './github-fixture.js';
 import { CLI_DIST, makeRepo, runRoot } from './support.js';
 
 // The old command in any printed line: `box bounty`, `box setup`, `box <command>`, `box --…`, `box.cmd`. Not
@@ -121,4 +122,25 @@ describe('8. an instruction block written under the old words is rewritten in pl
     expect(text).not.toMatch(OLD_COMMAND);
     expect(text).toContain('omakase-box');
   });
+});
+
+describe('9. the posted issue: what stays, what says the new command, and a bounty posted by 0.1.3', () => {
+  it('keeps the title prefix and the label, names the new command in its steps, and still reads and closes a body 0.1.3 wrote', () => fixture(({ repo, id, state, update }) => {
+    postBounty(repo, id, 'github');
+    const issue = state().issues[0]!;
+    // Data that bounties already posted carry: never renamed (a stranger's issue is found by them).
+    expect(issue.title.startsWith(`[box bounty ${id}] `)).toBe(true);
+    expect(issue.body).toContain(`<!-- box-bounty:${id} -->`);
+    expect(state().labels.map(label => label.name)).toContain('box-bounty');
+    // What the issue tells a solver to run is the new command.
+    expect(issue.body).toContain('omakase-box');
+    expect(issue.body.split('\n').filter(line => OLD_COMMAND.test(line))).toEqual([]);
+    // A body written by 0.1.3: the same issue with the old command in its steps.
+    const written = { ...issue, body: issue.body.replaceAll('omakase-box ', 'box bounty ').replaceAll('omakase-box', 'box bounty') };
+    expect(written.body).not.toBe(issue.body);
+    update({ issues: [written, ...state().issues.slice(1)] });
+    expect(renderStatus(repo, { id })).toContain(id);
+    closeBounty(repo, id);
+    expect(state().issues[0]!.state).toBe('closed');
+  }));
 });

@@ -410,7 +410,7 @@ describe('the pages', () => {
     // One window: each command sits under a comment naming the card it belongs to.
     const groups = await page.locator('#hand-off details [data-group]').evaluateAll(elements => elements.map(element => ({
       title: element.querySelector('[data-comment]')?.textContent,
-      commands: [...element.querySelectorAll('code[data-command]')].map(code => code.textContent!.split(' ').slice(0, 3).join(' '))
+      commands: [...element.querySelectorAll('code[data-command]')].map(code => code.textContent!.split(' ').slice(0, 2).join(' '))
     })));
     expect(groups).toEqual([
       { title: '# Asks you a few things', commands: ['omakase-box allow'] },
