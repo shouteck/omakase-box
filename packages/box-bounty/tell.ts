@@ -41,7 +41,7 @@ export function renderDescribe(repoRoot: string | null): string {
   lines.push(amount === 0
     ? '  cost: GitHub posting is public and free; no reward is set, so a bounty is not posted without one. A draft is free; preparing and judging solutions takes your time.'
     : `  cost: GitHub posting is public and free; every bounty states a reward of $${amount} — the owner pays it, and posting an answer does not guarantee it. A draft is free; preparing and judging solutions takes your time.`);
-  if (posted.length === 0) lines.push('  expected wait: unknown; no bounty history yet. Nobody is known to be watching these issues yet.');
+  if (posted.length === 0) lines.push('  expected wait: unknown; no bounty history yet.');
   else lines.push(`  expected wait: ${waits.length === 0 ? 'no solution wait recorded yet' : `${Math.min(...waits).toFixed(1)} to ${Math.max(...waits).toFixed(1)} hours from posting to the first solution recorded, across ${waits.length} bounty/bounties`}; ${merged.length} of ${ended.length} ended posted bounties had a solution merged. Past waits do not predict the next answer.`);
   lines.push('  how a solution is treated: each one arrives as a numbered attempt; the report states facts about the change and runs nothing. Choosing is yours.');
   const owner = ownerStatusLine(repoRoot, true); // describe is the standing-explanation surface — the line always prints

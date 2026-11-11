@@ -311,7 +311,7 @@ describe('GitHub bounty destination, entirely offline', () => {
 
   it('states the public-only, free, unwatched and no-execution facts before preparation', () => {
     const text = renderDescribe(null) + renderHelp();
-    expect(text).toContain('already-public'); expect(text).toContain('free'); expect(text).toContain('Nobody is known');
+    expect(text).toContain('already-public'); expect(text).toContain('free'); expect(text).not.toContain('Nobody is known'); // BT53: the owner's decision removed the sentence
     expect(text).toContain('nothing a solver wrote is ever run');
   });
 

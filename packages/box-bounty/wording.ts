@@ -24,7 +24,6 @@ export const DESCRIBE_LINES: readonly string[] = [
   'come back as facts you judge, and nothing a solver wrote is ever run.',
   'GitHub posting is public and free, only to this project\'s already-public',
   'repository — the preview says exactly what becomes public that was not.',
-  'Nobody is known to be watching these issues yet.',
   '',
   'worth it when: attempts keep failing, the task needs access or knowledge you',
   'lack, it is cheaper or faster solved elsewhere, or a second opinion counts.',

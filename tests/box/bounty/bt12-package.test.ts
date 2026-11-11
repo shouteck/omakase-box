@@ -215,3 +215,19 @@ describe('what it needs is stated and checked', () => {
     }
   });
 });
+
+// BT53: the next release. npm refuses a version it already serves (0.1.3, from 2 November), and the manifest says both
+// halves of the tool: the posting side and the solving side.
+describe('BT53: the manifest of the next release', () => {
+  it('carries a new version, describes both halves, and keeps the line about watchers out of the bundle', () => {
+    const packed = manifest();
+    expect(packed['version']).toBe('0.2.0');
+    expect(packed['version']).not.toBe('0.1.3');
+    const description = String(packed['description']);
+    expect(description).toContain('solver');
+    expect(description).toContain('bounty');
+    expect(description).toContain('takes work');
+    for (const keyword of ['bounty', 'github', 'agent', 'delegation', 'bounties', 'coding-agent', 'agent-skills', 'mcp', 'paid-work', 'open-source']) expect(packed['keywords'], keyword).toContain(keyword);
+    expect(bundle()).not.toContain('watching these issues');
+  });
+});
