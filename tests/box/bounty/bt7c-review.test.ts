@@ -22,7 +22,7 @@ it('a stored outside-answers text written before BT7c names no removed command',
   record.github.outside = {
     at: '2026-10-12T00:00:00Z',
     issueState: 'open',
-    answers: `GitHub answers for ${context.id} against box-bounty/${context.id}:\n  #4 by solver: "app.txt"; new; collect: omakase-box answer ${context.id} --pr 4`
+    answers: `GitHub answers for ${context.id} against box-bounty/${context.id}:\n  #4 by solver: "app.txt"; new; collect: box bounty answer ${context.id} --pr 4`
   };
   persistRecord(context.repo, record);
   context.update({ fail: '/issues' }); // refresh cannot run — the stored text is what prints
@@ -30,6 +30,8 @@ it('a stored outside-answers text written before BT7c names no removed command',
     expect(statusGitHub(context.repo, { id: context.id })).not.toContain(`bounty ${gone}`);
     expect(statusGitHub(context.repo, { id: context.id, full: true })).not.toContain(`bounty ${gone}`);
     expect(renderOpenLine(context.repo)).not.toContain(`bounty ${gone}`);
+    // BT63: the removed command is named in the new spelling too.
+    for (const text of [statusGitHub(context.repo, { id: context.id }), statusGitHub(context.repo, { id: context.id, full: true }), renderOpenLine(context.repo)]) expect(text).not.toContain(`omakase-box ${gone}`);
   }
 }));
 
@@ -43,7 +45,8 @@ it('a stored outside-answers text written before BT7c names no removed command',
 // command name the output *recommends*. The refusal echo `bounty answer
 // refused (command-removed)` lacks the `box ` prefix and stays a statement
 // of what was typed, never a suggestion.
-const REMOVED_NAME = /\bbox bounty (?:answer|questions|reply|undo|reject|withdraw|remind|confirm)\b/;
+// BT63: a removed command is named by either spelling: `omakase-box <removed>` now, `box bounty <removed>` in old stored text.
+const REMOVED_NAME = /\b(?:box bounty|omakase-box) (?:answer|questions|reply|undo|reject|withdraw|remind|confirm)\b/;
 
 describe('no output names a removed command', () => {
   // One posted world for the whole scan (K24): the single corpus `it` ran
@@ -77,9 +80,9 @@ describe('no output names a removed command', () => {
     planted.github.outside = {
       at: '2026-10-12T00:00:00Z',
       issueState: 'open',
-      answers: `GitHub answers for ${id} against box-bounty/${id}:\n  #4 by solver: "app.txt"; new; collect: omakase-box answer ${id} --pr 4`
+      answers: `GitHub answers for ${id} against box-bounty/${id}:\n  #4 by solver: "app.txt"; new; collect: box bounty answer ${id} --pr 4`
     };
-    planted.github.pending = `outside work is still owed; retry omakase-box withdraw ${id}`;
+    planted.github.pending = `outside work is still owed; retry box bounty withdraw ${id}`;
     persistRecord(repo, planted);
     context.update({ fail: '/issues' }); // GitHub cannot refresh — stored text is what prints
 

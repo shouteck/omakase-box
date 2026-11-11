@@ -165,7 +165,8 @@ describe('omakase-box --help exits 0 and lists omakase-box first', () => {
     // K29: the older-platform commands' help lines are gone with the commands
     // themselves — the ordering assertion they anchored is replaced by their
     // absence, which is the same "bounty is the product" pin post-removal.
-    for (const removed of ['box export', 'box submit', 'box verify', 'box trace'])
+    // `submit` is a command of the tool now (the solver's), so it is not on this list of removed ones (BT63).
+    for (const removed of ['omakase-box export', 'omakase-box verify', 'omakase-box trace'])
       expect(run.stdout.includes(removed), removed).toBe(false);
   });
 });

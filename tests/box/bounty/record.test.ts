@@ -125,6 +125,7 @@ describe('the bounty record', () => {
     expect(status).toContain('omakase-box create --task <file>');
     for (const gone of ['answer', 'questions', 'reply', 'undo', 'reject', 'withdraw', 'remind', 'confirm']) {
       expect(status).not.toContain(`bounty ${gone}`);
+      expect(status).not.toContain(`omakase-box ${gone}`); // BT63: and in the new spelling
     }
   });
 });

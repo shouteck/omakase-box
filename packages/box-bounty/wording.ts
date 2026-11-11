@@ -34,7 +34,7 @@ export const DESCRIBE_LINES: readonly string[] = [
   '',
   'using it is always your call — create a draft any time; posting needs the',
   'owner to have allowed the tool once — a post that finds none waits and',
-  'prints the few lines to put to them. omakase-box help shows the journey.'
+  'prints what to ask them. omakase-box help shows the journey.'
 ];
 
 // The solving half (PF27), in the same voice: what / worth it / not worth it / how. `describe` carries one
@@ -121,7 +121,7 @@ export const INSTALL_PACKAGE = 'omakase-box';
 export const RULES_LINES: readonly string[] = [
   'omakase-box can hand a task you cannot or should not do to an outside solver',
   'and bring solutions back as facts. Posting is free apart from any reward the owner set, and goes only to this',
-  'repository\'s own public GitHub, as an issue; the owner\'s standing permission',
+  'repository\'s public GitHub, as an issue; the owner\'s standing permission',
   'applies (`omakase-box config` shows it). `omakase-box describe` says when it',
   'is worth it. Using it is your call. Install: npm i -g omakase-box'
   // No install line yet (BT12 correction): `npx <name> bounty help` returns

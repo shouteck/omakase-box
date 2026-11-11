@@ -160,7 +160,7 @@ describe('status on a taken bounty', { timeout: 120000 }, () => {
     expect(one.stdout).toContain(`${id} — taken on owner/project: pull request #${number} is a draft`);
     const submit = box('submit', id);
     expect(submit.status).toBe(3);
-    expect(submit.stderr).toContain('bounty submit refused (nothing-to-submit)');
+    expect(submit.stderr).toContain('submit refused (nothing-to-submit)');
     const json = box('status', id, '--json');
     expect(json.status).toBe(3);
     expect(json.stderr).toContain('taken-status-options');

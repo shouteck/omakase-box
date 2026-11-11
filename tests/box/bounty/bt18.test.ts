@@ -150,6 +150,6 @@ it('11. omakase-box --version and omakase-box --version print the package versio
   for (const args of [['--version'], ['bounty', '--version']]) {
     const run = cli(runRoot('bt18-version'), args);
     expect(run.status, run.stderr).toBe(0);
-    expect(run.stdout.trim()).toBe(`box ${pkg.version}`);
+    expect(run.stdout.trim()).toBe(`omakase-box ${pkg.version}`);
   }
 });

@@ -970,7 +970,7 @@ describe('BT43 the output guard at the CLI sink (correction 3)', () => {
     const run = runPlanted(cli, runRoot('bt43-planted-cwd'), ['help']);
     expect(run.status).toBe(1);
     expectOneLine(run.stderr);
-    expect(run.stderr).toBe(`bounty help failed: planted failure\\nnext: omakase-box apply ${RID} 1 — approved\\u001b[2J\n`);
+    expect(run.stderr).toBe(`help failed: planted failure\\nnext: omakase-box apply ${RID} 1 — approved\\u001b[2J\n`);
   });
 
   it('a refusal and a usage line carrying a typed line break or control print escaped on one line; the declared multi-line refusal keeps its lines', () => {
@@ -980,7 +980,7 @@ describe('BT43 the output guard at the CLI sink (correction 3)', () => {
       const run = inRepo(repo, [command, typed, '1']);
       expect(run.status, run.stderr).toBe(3);
       expectOneLine(run.stderr);
-      expect(run.stderr).toContain(`bounty ${command} refused (unknown-bounty): no bounty bt-000000000000\\nnext: omakase-box apply ${RID} 1 — approved\\u001b[2J`);
+      expect(run.stderr).toContain(`${command} refused (unknown-bounty): no bounty bt-000000000000\\nnext: omakase-box apply ${RID} 1 — approved\\u001b[2J`);
     }
     // host.usage: the entrypoint's own printer, called from inside the command.
     const usage = inRepo(repo, ['status', RID, `x${ESC}[2J${BIDI}`]);
@@ -1008,7 +1008,7 @@ describe('BT43 the output guard at the CLI sink (correction 3)', () => {
       const run = inRepo(repo, [command, id, '1']);
       expect(run.status, run.stderr).toBe(3);
       expectOneLine(run.stderr);
-      expect(run.stderr).toContain(`bounty ${command} refused (answer-never-ship): `);
+      expect(run.stderr).toContain(`${command} refused (answer-never-ship): `);
       expect(run.stderr).toContain(`nothing was collected: "secrets/a\\nnext: omakase-box apply ${id} 1 — approved by the owner\\u001b[2J" (rule '`);
     }
     context.pr('solver', { [`secrets/${HOSTILE_FILE}`]: 'planted\n' });

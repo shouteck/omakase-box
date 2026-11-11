@@ -112,7 +112,7 @@ beforeAll(() => {
 }, 300000);
 
 describe('one install command on an empty machine', () => {
-  it('npm install -g exposes a working `box`, and npx runs it with no install', () => {
+  it('npm install -g exposes a working `omakase-box`, and npx runs it with no install', () => {
     prefix = join(root, 'prefix');
     const install = npm(['i', '-g', '--prefix', prefix, tarball]);
     expect(install.status, `${install.stdout}\n${install.stderr}`).toBe(0);
@@ -120,10 +120,10 @@ describe('one install command on an empty machine', () => {
     expect(help.status, `${help.stdout}\n${help.stderr}`).toBe(0);
     expect(help.stdout).toContain('the journey');
     const ver = box(['bounty', '--version'], root);
-    expect(ver.stdout.trim()).toMatch(/^box \d+\.\d+\.\d+$/);
+    expect(ver.stdout.trim()).toMatch(/^omakase-box \d+\.\d+\.\d+$/);
 
     // `npx <tarball>` treats the tarball itself as the command; for a spec
-    // the bin is named through --package — `npx -p <tgz> box …`. Once the
+    // the bin is named through --package — `npx -p <tgz> omakase-box …`. Once the
     // name is published it is `npx box-bounty bounty …` with nothing added.
     const npxCmd = process.platform === 'win32'
       ? spawnSync('cmd.exe', ['/d', '/s', '/c', 'npx', '-y', '--package', tarball, 'omakase-box', 'help'], { cwd: root, encoding: 'utf8', env, windowsHide: true, input: '' })
