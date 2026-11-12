@@ -18,7 +18,7 @@ and where to get it.
 
 Run this once:
 
-    npx -y omakase-box@latest setup
+    npx -y omakase-box setup
 
 If Windows PowerShell says running scripts is disabled, use `npx.cmd` in place of
 `npx`, and `omakase-box.cmd` in place of `omakase-box`. You need not change the policy.
