@@ -11,7 +11,7 @@ import { describe, expect, it } from 'vitest';
 import { finalizeBounty, loadRecord, planBounty, readDecision, settingsFile, writeDecision } from '../../../packages/box-bounty/index.js';
 import { writeRepository } from '../../../packages/box-bounty/settings.js';
 import { refused } from './github-fixture.js';
-import { postToGitHub } from './github-solver.js';
+import { postToGitHub, statusGitHub } from './github-solver.js';
 import { git, makeRepo, write } from './support.js';
 
 type Say = 'none' | 'allowed' | 'ask' | 'off' | 'denied' | 'another-repository';
@@ -113,6 +113,7 @@ describe('K67 level 2: the gate, once, up the ladder of what the owner could hav
     rmSync(settingsFile(), { force: true });
     refused(() => postToGitHub(repo, id), 'owner-allow-needed');
     expect(loadRecord(repo, id)).toMatchObject({ stage: 'waiting', waiting: { reason: 'owner-allow' } });
+    expect(statusGitHub(repo)).toContain('waiting for the owner');
 
     writeDecision(repo, 'project', 'ask');
     refused(() => postToGitHub(repo, id), 'owner-answer-needed');
@@ -127,5 +128,13 @@ describe('K67 level 2: the gate, once, up the ladder of what the owner could hav
     writeRepository('owner/project', null);
     writeDecision(repo, 'default', 'allowed');
     refused(() => postToGitHub(repo, id), 'owner-allow-needed');
+
+    // and the top of the ladder: a project allowed stands over a default ask, posts without asking, and records which answer allowed it
+    writeDecision(repo, 'default', 'ask');
+    writeDecision(repo, 'project', 'allowed');
+    const { record } = postToGitHub(repo, id);
+    expect(record.stage).toBe('posted');
+    expect(record.allowedBy).toMatchObject({ decision: 'allowed', level: 'project' });
+    expect(record.waiting).toBeUndefined();
   });
 });

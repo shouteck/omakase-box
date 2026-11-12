@@ -186,6 +186,149 @@
     "tests/platform/hints.test.ts",
     "tests/platform/machine.test.ts"
    ]
+  },
+  {
+   "id": "decision-project-ignored",
+   "guarantees": [
+    "P4",
+    "O1"
+   ],
+   "file": "packages/box-bounty/settings.ts",
+   "find": "if (entry !== undefined) return { decision: entry.bounty, level: 'project'",
+   "replace": "if (Boolean(0) && entry !== undefined) return { decision: entry.bounty, level: 'project'",
+   "note": "a repository's own decision is ignored: the default decides",
+   "tests": [
+    "tests/box/bounty/owner-decision-layers.test.ts",
+    "tests/box/bounty/bt8.test.ts",
+    "tests/box/bounty/bt16.test.ts"
+   ]
+  },
+  {
+   "id": "decision-default-ignored",
+   "guarantees": [
+    "P4",
+    "O1"
+   ],
+   "file": "packages/box-bounty/settings.ts",
+   "find": "  if (settings.default !== undefined) return { decision: settings.default.bounty, level: 'default', at: settings.default.at };",
+   "replace": "  if (Boolean(0) && settings.default !== undefined) return { decision: settings.default.bounty, level: 'default', at: settings.default.at };",
+   "note": "the all-projects default stops applying to a repository with no word of its own",
+   "tests": [
+    "tests/box/bounty/owner-decision-layers.test.ts",
+    "tests/box/bounty/bt8.test.ts",
+    "tests/box/bounty/bt16.test.ts"
+   ]
+  },
+  {
+   "id": "decision-denial-forgotten",
+   "guarantees": [
+    "P4",
+    "O1"
+   ],
+   "file": "packages/box-bounty/settings.ts",
+   "find": "if (entry !== undefined) return { decision: entry.bounty",
+   "replace": "if (entry !== undefined && entry.bounty !== null) return { decision: entry.bounty",
+   "note": "a denied repository falls through to the default",
+   "tests": [
+    "tests/box/bounty/owner-decision-layers.test.ts",
+    "tests/box/bounty/bt8.test.ts",
+    "tests/box/bounty/bt16.test.ts"
+   ]
+  },
+  {
+   "id": "decision-denied-flag",
+   "guarantees": [
+    "P4",
+    "O1"
+   ],
+   "file": "packages/box-bounty/settings.ts",
+   "find": "...(entry.bounty === null ? { denied: true } : {})",
+   "replace": "...(entry.bounty === null && Boolean(0) ? { denied: true } : {})",
+   "note": "a denial stops being marked denied",
+   "tests": [
+    "tests/box/bounty/owner-decision-layers.test.ts",
+    "tests/box/bounty/bt8.test.ts",
+    "tests/box/bounty/bt16.test.ts"
+   ]
+  },
+  {
+   "id": "decision-unlisted-ignored",
+   "guarantees": [
+    "P4",
+    "O1"
+   ],
+   "file": "packages/box-bounty/settings.ts",
+   "find": "if (choice?.kind === 'unlisted') return { decision: null, level: null, at: null };",
+   "replace": "if (Boolean(0) && choice?.kind === 'unlisted') return { decision: null, level: null, at: null };",
+   "note": "a checkout with several unlisted remotes is no longer left undecided (a repository is listed elsewhere)",
+   "tests": [
+    "tests/box/bounty/owner-decision-layers.test.ts",
+    "tests/box/bounty/bt8.test.ts",
+    "tests/box/bounty/bt16.test.ts"
+   ]
+  },
+  {
+   "id": "nothing-written-is-allowed",
+   "guarantees": [
+    "P4",
+    "O1"
+   ],
+   "file": "packages/box-bounty/settings.ts",
+   "find": "if (settings.default === undefined) return { decision: null, level: null, at: null };",
+   "replace": "if (settings.default === undefined) return { decision: 'allowed', level: 'default', at: null };",
+   "note": "with nothing written the owner is read as having allowed",
+   "tests": [
+    "tests/box/bounty/owner-decision-layers.test.ts",
+    "tests/box/bounty/bt8.test.ts",
+    "tests/box/bounty/bt16.test.ts"
+   ]
+  },
+  {
+   "id": "gate-refusal-names-swapped",
+   "guarantees": [
+    "P4",
+    "O1"
+   ],
+   "file": "packages/box-bounty/gate.ts",
+   "find": "read.decision === null ? 'owner-allow-needed' : 'owner-answer-needed',",
+   "replace": "read.decision === null ? 'owner-answer-needed' : 'owner-allow-needed',",
+   "note": "the two held-action refusals trade names (owner-allow-needed and owner-answer-needed)",
+   "tests": [
+    "tests/box/bounty/owner-decision-layers.test.ts",
+    "tests/box/bounty/bt8.test.ts",
+    "tests/box/bounty/bt16.test.ts"
+   ]
+  },
+  {
+   "id": "gate-wait-reasons-swapped",
+   "guarantees": [
+    "P4",
+    "O1"
+   ],
+   "file": "packages/box-bounty/gate.ts",
+   "find": "read.decision === 'ask' ? 'owner-ask' : read.decision === 'off' ? 'owner-off' : 'owner-allow'",
+   "replace": "read.decision === 'ask' ? 'owner-off' : read.decision === 'off' ? 'owner-ask' : 'owner-allow'",
+   "note": "a recorded wait for ask says off and the other way round",
+   "tests": [
+    "tests/box/bounty/owner-decision-layers.test.ts",
+    "tests/box/bounty/bt8.test.ts",
+    "tests/box/bounty/bt16.test.ts"
+   ]
+  },
+  {
+   "id": "decision-unlisted-ignored-default-path",
+   "guarantees": [
+    "O1"
+   ],
+   "file": "packages/box-bounty/settings.ts",
+   "find": "return unlisted ? { decision: null, level: null, at: null } :",
+   "replace": "return unlisted && Boolean(0) ? { decision: null, level: null, at: null } :",
+   "note": "the same, when nothing is listed and only the default speaks",
+   "tests": [
+    "tests/box/bounty/owner-decision-layers.test.ts",
+    "tests/box/bounty/bt8.test.ts",
+    "tests/box/bounty/bt16.test.ts"
+   ]
   }
  ]
 }
