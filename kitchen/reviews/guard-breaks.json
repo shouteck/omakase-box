@@ -58,7 +58,7 @@
    ],
    "file": "packages/box-bounty/snapshot.ts",
    "find": "rules.find(entry => entry.match(key))",
-   "replace": "undefined",
+   "replace": "rules.find(entry => entry.match(key) && Boolean(0))",
    "note": "the snapshot stops applying the rules to the files it lists",
    "nth": 0,
    "tests": [
@@ -126,7 +126,7 @@
    ],
    "file": "packages/box-bounty/gate.ts",
    "find": "if (read.decision === 'allowed') return { read };",
-   "replace": "if (read.decision === 'allowed' || true) return { read };",
+   "replace": "if (read.decision === 'allowed' || Boolean(1)) return { read };",
    "note": "every post passes the owner gate as if allowed",
    "tests": [
     "tests/box/bounty/bt11.test.ts",
@@ -149,7 +149,7 @@
    ],
    "file": "packages/box-bounty/answer.ts",
    "find": "if ((mergeRead.decision === 'ask' || mergeRead.decision === 'off' || unpermitted) && opts?.answered !== true) {",
-   "replace": "if (false) {",
+   "replace": "if (Boolean(0) && (mergeRead.decision === 'ask' || mergeRead.decision === 'off' || unpermitted) && opts?.answered !== true) {",
    "note": "a merge is no longer held for the owner under ask, off or no permission",
    "tests": [
     "tests/box/bounty/bt13.test.ts",
