@@ -15,7 +15,7 @@
 // Thin shell over packages/box-bounty: argument parsing and exit codes live
 // here; every bounty behaviour lives in the library.
 import './node-check.js';
-import { BOUNTY_COMMANDS, runSetup, runSetupRemove } from '../../box-bounty/index.js';
+import { BOUNTY_COMMANDS, runSetupCommand } from '../../box-bounty/index.js';
 import { runBounty } from './bounty.js';
 import { version } from './version.js';
 
@@ -57,8 +57,10 @@ if (command !== undefined && REMOVED.includes(command)) {
   process.exit(2);
 }
 if (command === 'setup') {
-  for (const line of rest[0] === '--remove' ? runSetupRemove() : runSetup()) console.log(line);
-  process.exit(0);
+  // BT65: one strict parser for `setup` (--help writes nothing, a typo is refused), shared by both entry files.
+  const result = runSetupCommand(rest);
+  for (const line of result.lines) (result.code === 0 ? console.log : console.error)(line);
+  process.exit(result.code);
 }
 // BT63: the command is the product's name, so the words after it are the bounty commands. `omakase-box bounty <x>`
 // stays accepted, silently: a script or an instruction block written against the old form keeps working.

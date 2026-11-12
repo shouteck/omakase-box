@@ -6,7 +6,7 @@
 import { gunzipSync } from 'node:zlib';
 import { spawnSync } from 'node:child_process';
 import { userInfo } from 'node:os';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -221,7 +221,7 @@ describe('what it needs is stated and checked', () => {
 describe('BT53: the manifest of the next release', () => {
   it('carries a new version, describes both halves, and keeps the line about watchers out of the bundle', () => {
     const packed = manifest();
-    expect(packed['version']).toBe('0.2.0');
+    expect(packed['version']).toBe('0.2.1'); // BT65: the setup fix; 0.2.0 is on npm
     expect(packed['version']).not.toBe('0.1.3');
     const description = String(packed['description']);
     expect(description).toContain('solver');
@@ -229,5 +229,25 @@ describe('BT53: the manifest of the next release', () => {
     expect(description).toContain('takes work');
     for (const keyword of ['bounty', 'github', 'agent', 'delegation', 'bounties', 'coding-agent', 'agent-skills', 'mcp', 'paid-work', 'open-source']) expect(packed['keywords'], keyword).toContain(keyword);
     expect(bundle()).not.toContain('watching these issues');
+  });
+});
+
+// BT65: the published entry (dist/box.js) behaves like the kitchen build: `setup --help` prints usage and writes nothing,
+// and a typo of `--remove` is refused instead of running the setup.
+describe('BT65: the packed setup acts only on exactly what it was asked', () => {
+  it('setup --help writes nothing in a scratch home; --remov is refused with exit 2', () => {
+    const home = temp();
+    mkdirSync(join(home, '.claude'));
+    mkdirSync(join(home, '.agents'));
+    const env = { ...process.env, HOME: home, USERPROFILE: home };
+    const entry = join(out, 'package', 'dist', 'box.js');
+    const help = spawnSync(process.execPath, [entry, 'setup', '--help'], { encoding: 'utf8', env });
+    expect(help.status, help.stdout + help.stderr).toBe(0);
+    expect(help.stdout).toContain('usage: omakase-box setup');
+    const typo = spawnSync(process.execPath, [entry, 'setup', '--remov'], { encoding: 'utf8', env });
+    expect(typo.status, typo.stdout + typo.stderr).toBe(2);
+    expect(typo.stderr).toContain('did you mean --remove?');
+    expect(readdirSync(join(home, '.claude'))).toEqual([]);
+    expect(readdirSync(join(home, '.agents'))).toEqual([]);
   });
 });

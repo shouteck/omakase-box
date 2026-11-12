@@ -329,7 +329,11 @@ export function commandHelp(command: string): string {
 // library. The nearest listed option is named however far away it is: the
 // refusal's job is to point at a real spelling, not to guess well (BT12).
 function nearestOption(flag: string, spec: CommandSpec): string | undefined {
-  const known = [...Object.keys(spec.values ?? {}), ...Object.keys(spec.switches ?? {})];
+  return nearestOf(flag, [...Object.keys(spec.values ?? {}), ...Object.keys(spec.switches ?? {})]);
+}
+
+// The same, for a list of spellings (BT65: `setup` has two and no table entry).
+export function nearestOf(flag: string, known: readonly string[]): string | undefined {
   if (known.length === 0) return undefined;
   const distance = (a: string, b: string): number => {
     const row = Array.from({ length: b.length + 1 }, (_, i) => i);

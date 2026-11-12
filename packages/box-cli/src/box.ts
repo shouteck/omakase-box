@@ -2,7 +2,7 @@
 // The published `box` command (BT12): the bounty tool alone, bundled into
 // one file. The kitchen build (src/cli.ts) carries the same dispatch.
 import './node-check.js';
-import { BOUNTY_COMMANDS, runSetup, runSetupRemove } from '../../box-bounty/index.js';
+import { BOUNTY_COMMANDS, runSetupCommand } from '../../box-bounty/index.js';
 import { runBounty } from './bounty.js';
 import { version } from './version.js';
 
@@ -30,8 +30,10 @@ if (command === '--version') {
   process.exit(0);
 }
 if (command === 'setup') {
-  for (const line of rest[0] === '--remove' ? runSetupRemove() : runSetup()) console.log(line);
-  process.exit(0);
+  // BT65: one strict parser for `setup` (--help writes nothing, a typo is refused), shared by both entry files.
+  const result = runSetupCommand(rest);
+  for (const line of result.lines) (result.code === 0 ? console.log : console.error)(line);
+  process.exit(result.code);
 }
 if (command === 'export' || command === 'verify' || command === 'trace') {
   // Removed with the older Box platform, not silently: the refusal names
