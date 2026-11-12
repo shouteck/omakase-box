@@ -31,7 +31,8 @@ describe('BT61: the text of every command is byte-identical to the snapshot', { 
       .replace(/\d{4}-\d\d-\d\d[T ]\d\d:\d\d:\d\d(?:\.\d+)?Z?/g, '<time>')
       .replace(/box-bt1-[A-Za-z0-9-]+/g, '<tmp>')
       .replace(/127\.0\.0\.1:\d+/g, '<local>')
-      .replace(/\r\n/g, '\n');
+      .replace(/\r\n/g, '\n')
+      .split(String.fromCharCode(92)).join('/'); // path separators: the snapshot reads the same on every system
   };
   const run = (args: string[]): void => {
     const ran = spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args], { cwd: repo, encoding: 'utf8', env: process.env, timeout: 60000 });
@@ -70,6 +71,14 @@ describe('BT61: the text of every command is byte-identical to the snapshot', { 
     expect(existsSync(SNAPSHOT), 'the snapshot file').toBe(true);
     const expected = JSON.parse(readFileSync(SNAPSHOT, 'utf8')) as Entry[];
     expect(seen.length).toBe(expected.length);
-    for (const [index, entry] of expected.entries()) expect(seen[index], `${entry.args.join(' ')} (step ${index})`).toEqual(entry);
+    // every difference together, so one run on each system shows them all
+    const differences: string[] = [];
+    for (const [index, entry] of expected.entries()) {
+      const got = seen[index]!;
+      for (const field of ['stdout', 'stderr', 'status'] as const) {
+        if (got[field] !== entry[field]) differences.push(`step ${index} (${entry.args.join(' ')}) ${field}: expected ${JSON.stringify(entry[field]).slice(0, 400)} but got ${JSON.stringify(got[field]).slice(0, 400)}`);
+      }
+    }
+    expect(differences).toEqual([]);
   }));
 });
