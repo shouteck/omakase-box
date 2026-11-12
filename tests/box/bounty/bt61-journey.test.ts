@@ -109,3 +109,31 @@ describe('BT61: a document per command', { timeout: 300000 }, () => {
     writeFileSync(join(scratch, 'settings', 'unused.txt'), 'x');
   }));
 });
+
+// setup --json: one document too. Only the cases that never install (--help, --remove, a refusal) run here: plain setup runs
+// `npm install -g` when the tool is not on the path (BT65 does not run it either).
+describe('BT61: setup --json', { timeout: 120000 }, () => {
+  const home = makeRepo({ 'x.txt': 'x\n' });
+  const setup = (args: string[]) => spawnSync(process.execPath, [CLI_DIST, 'setup', ...args], { cwd: home, encoding: 'utf8', env: { ...process.env, HOME: home, USERPROFILE: home } });
+
+  it('--help is a document of its lines, a typo is a refusal document, --remove is a document', () => {
+    const help = setup(['--help', '--json']);
+    expect(help.status).toBe(0);
+    expect(help.stderr).toBe('');
+    const helpDocument = JSON.parse(help.stdout) as Doc;
+    expect(helpDocument).toMatchObject({ schema: 'box-bounty/setup@1', action: 'help' });
+    expect((helpDocument['lines'] as string[])[0]).toContain('usage: omakase-box setup');
+
+    const typo = setup(['--remov', '--json']);
+    expect(typo.status).toBe(2);
+    expect(typo.stderr).toBe('');
+    const refusal = JSON.parse(typo.stdout) as Doc;
+    expect(refusal['schema']).toBe('box-bounty/refusal@1');
+    expect(refusal).toMatchObject({ command: 'setup', refused: 'usage', exitCode: 2 });
+    expect(String(refusal['message'])).toContain('did you mean --remove?');
+
+    const removed = setup(['--remove', '--json']);
+    expect(removed.status).toBe(0);
+    expect(JSON.parse(removed.stdout)).toMatchObject({ schema: 'box-bounty/setup@1', action: 'remove' });
+  });
+});

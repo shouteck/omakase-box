@@ -59,7 +59,8 @@ if (command !== undefined && REMOVED.includes(command)) {
 if (command === 'setup') {
   // BT65: one strict parser for `setup` (--help writes nothing, a typo is refused), shared by both entry files.
   const result = runSetupCommand(rest);
-  for (const line of result.lines) (result.code === 0 ? console.log : console.error)(line);
+  if (result.document !== undefined) console.log(JSON.stringify(result.document)); // BT61: --json is one document
+  else for (const line of result.lines) (result.code === 0 ? console.log : console.error)(line);
   process.exit(result.code);
 }
 // BT63: the command is the product's name, so the words after it are the bounty commands. `omakase-box bounty <x>`
