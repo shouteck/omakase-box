@@ -53,7 +53,7 @@ How much the kitchen cooks is set by the START message, not by what happens to b
 ## Rules that do not bend
 
 1. Product code, tests and tooling reach master only through a wave. Acceptance is a green `node scripts/verify.mjs` run on the commit SHA, plus the brief's Done when checks and ticked lenses answered from the real artifact in the wave file. Kitchen documents (this file, STATUS.md, KITCHEN.md, briefs, agent profiles) are the CTO's to commit directly.
-2. Never edit a test's expected outcome to make a candidate pass. A missing, failed or unknown check is not a pass.
+2. Never edit a test's expected outcome to make a candidate pass. A missing, failed or unknown check is not a pass. A wave that must change an existing test lists it under `## Changed expectations` in its wave file, with the reason; verify refuses otherwise.
 3. One writer per branch. Parallel work uses separate worktrees.
 4. Report what actually happened. No invented test results, agent identities, model diversity, customer evidence or Git history.
 5. Do not read `.runtime/`, `.env*` or `secrets/`. Do not print credentials into logs.
