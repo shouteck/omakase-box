@@ -548,3 +548,20 @@ export function configDocument(repoRoot: string | null, notice: (line: string) =
   };
 }
 
+
+// ---- BT61: one document for every refusal and usage error -----------------
+
+/** The text before and after the last "; next: " every refusal carries (BT40). The message and the step are plain strings:
+    JSON.stringify does the escaping, so a path or a name a stranger chose stays exactly the characters it was. */
+export function splitNext(message: string): { readonly message: string; readonly next: string | null } {
+  const at = message.lastIndexOf('; next: ');
+  return at < 0 ? { message, next: null } : { message: message.slice(0, at), next: message.slice(at + '; next: '.length) };
+}
+
+/** `box-bounty/refusal@1`: what a refusal or a usage error is under --json. `refused` is the name the text view prints
+    (`<command> refused (<name>)`), or "usage" for a usage error (exit 2) and "failed" for an unexpected failure (exit 1);
+    `usage` holds the usage lines of a usage error and is null otherwise. */
+export function refusalDocument(command: string, refused: string, message: string, exitCode: number, usage: readonly string[] | null = null): JsonObject {
+  const split = splitNext(message);
+  return { schema: 'box-bounty/refusal@1', command, refused, message: split.message, next: split.next, exitCode, usage: usage === null ? null : [...usage] };
+}

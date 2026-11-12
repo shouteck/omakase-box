@@ -8,7 +8,7 @@ import { join, resolve } from 'node:path';
 import { actingOn, applyBounty, BountyRefused, BountyUsage, closeBounty, createBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, parseOptions, commandHelp, OPTIONS_NOTE, postBounty, readDecision, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, repoReward, requireRepository, resolveRepoRoot, setMergeNoticeListener, setInstructionNoticeListener, renderOverview, showPath, statusDocument, lookDocument, configDocument, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, hookDisclosure, hookHost, hookOff, hookOn, hookStatus, limitGitHubCalls, runHook } from '../../box-bounty/index.js';
 import { boardAddress, boardNotToldLine, flushBoardHints, readBoardFacts } from '../../box-bounty/index.js';
 import type { ParsedOptions } from '../../box-bounty/index.js';
-import { previewGitHub } from '../../box-bounty/index.js';
+import { previewGitHub, refusalDocument } from '../../box-bounty/index.js';
 import { attemptStatus, closeTaken, discover, discoverDocument, loadTaken, renderDescribeSolving, renderDiscover, submitTaken, takeBounty, takenOverview } from '../../box-bounty/index.js';
 import { escapeControls, exportLook, findDocument, lookBounty, solverBlock, SOLVER_WORDS, renderFind, renderResume, openRecords, endedContaining, readGitPinsOncePerProcess, boundAmount, payToLine, gitOutcome } from '../../box-bounty/index.js';
 
@@ -74,6 +74,18 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
   // --help/--version below). Anything else is a subcommand name.
   const subcommand = requested !== undefined && !requested.startsWith('-') ? requested : undefined;
   const bountyArgs = subcommand === undefined ? rest : commandArgs;
+  // BT61: whether a document was asked for is decided from the raw arguments, before anything is parsed: a usage error happens
+  // before parsing succeeds, and under --json it is one document too.
+  const jsonRequested = bountyArgs.includes('--json');
+  const commandName = subcommand ?? 'overview';
+  // (Typed on the variable so a call narrows the way host.usage's did: TypeScript only does that for an annotated name.)
+  const usageError: (message?: string, lines?: readonly string[]) => never = (message, lines) => {
+    if (jsonRequested) {
+      printDocument(refusalDocument(commandName, 'usage', message ?? '', 2, lines ?? []));
+      process.exit(2);
+    }
+    return host.usage(message, lines);
+  };
   setInstructionNoticeListener(line => console.log(line));
   readGitPinsOncePerProcess(); // this process runs one command and exits
   // A reading command can recognise a solution the agent merged itself and
@@ -89,7 +101,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       let root: string;
       try { root = resolveRepoRoot(bountyArgs[named + 1] !== undefined && named >= 0 ? bountyArgs[named + 1]! : process.cwd(), subcommand ?? 'status'); } catch { return; }
       const notTold = boardNotToldLine(flushBoardHints(root));
-      if (notTold !== null && ['post', 'apply', 'close', 'config'].includes(subcommand ?? '')) console.error(notTold);
+      if (notTold !== null && ['post', 'apply', 'close', 'config'].includes(subcommand ?? '') && !(jsonRequested && subcommand !== 'config')) console.error(notTold);
     });
   }
   // BT18: every command reads its options through the one parser driven by
@@ -195,7 +207,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       }
       // --task stays a usage error; a missing --why is the named refusal
       // missing-why, thrown by planBounty — not a usage wall.
-      if (parsed.task === undefined) host.usage('create needs --task <file|-> (and --why "<one line>") — run omakase-box help');
+      if (parsed.task === undefined) usageError('create needs --task <file|-> (and --why "<one line>") — run omakase-box help');
       const result = createBounty({
         repoPath: resolve(parsed.repo ?? process.cwd()), why: parsed.why ?? '',
         ...(parsed.title !== undefined ? { title: parsed.title } : {}),
@@ -254,7 +266,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       // The solver's half (PF25): no checkout needed; the workspace is a new folder outside every repository.
       const parsed = parse('take');
       const [id] = parsed.positionals;
-      if (id === undefined) host.usage('omakase-box take <id> [--into <new folder>]');
+      if (id === undefined) usageError('omakase-box take <id> [--into <new folder>]');
       const into = parsed.values['--into'];
       const result = takeBounty(id, into === undefined ? {} : { into: resolve(into) });
       console.log(result.lines.join('\n'));
@@ -262,7 +274,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       // The solver's half (PF26): the draft becomes ready for review; no checkout needed.
       const parsed = parse('submit');
       const [id] = parsed.positionals;
-      if (id === undefined) host.usage('omakase-box submit <id>');
+      if (id === undefined) usageError('omakase-box submit <id>');
       console.log(submitTaken(id));
     } else if (subcommand === 'find') {
       // Recall by purpose (BT28): one query over every readable record.
@@ -303,7 +315,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         // the text view prints — the acting-on line, the once-only notices,
         // a recognised merge — is stderr here; --since is a text report
         // the document does not carry, so it is refused by name.
-        if (since !== undefined) throw new BountyRefused('json-not-supported', '--since prints a text report; next: run omakase-box status --since <iso> without --json');
+        if (since !== undefined) usageError('--since prints a text report the document does not carry; drop --json: omakase-box status --since <iso>');
         setInstructionNoticeListener(line => console.error(line));
         setMergeNoticeListener(line => console.error(line));
         printDocument(statusDocument(root, { ...(id === undefined ? {} : { id }), comments: parsed.switches.has('--comments') }, line => console.error(line)));
@@ -324,7 +336,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       // show in --preview, and each makes the post wait for the owner.
       const withChanges = parsed.switches.has('--with-changes');
       const include = [...(parsed.repeated['--include'] ?? [])];
-      if (id === undefined || extraIds.length > 0) host.usage('omakase-box post <id> [--with-changes] [--include <file>] [--preview] [--repo <path>]');
+      if (id === undefined || extraIds.length > 0) usageError('omakase-box post <id> [--with-changes] [--include <file>] [--preview] [--repo <path>]');
       const repoRoot = resolveRepoRoot(repoPath(parsed), 'post');
       sayActingOn(repoRoot);
       if (parsed.switches.has('--preview')) {
@@ -347,7 +359,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       const attempt = attemptText !== undefined && /^\d+$/.test(attemptText) ? Number.parseInt(attemptText, 10) : undefined;
       if (id === undefined || extraIds.length > 0
         || (attemptText !== undefined && attempt === undefined)) {
-        host.usage('omakase-box apply [id] [<n>] [--repo <path>]');
+        usageError('omakase-box apply [id] [<n>] [--repo <path>]');
       }
       const applyRoot = resolveRepoRoot(repoPath(parsed), 'apply');
       sayActingOn(applyRoot);
@@ -405,7 +417,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       if (id === undefined || extraIds.length > 0
         || n === undefined
         || (text !== undefined && n === undefined)) {
-        host.usage('omakase-box look [id] <n> [--full] [--export] [--json] [--repo <path>]');
+        usageError('omakase-box look [id] <n> [--full] [--export] [--json] [--repo <path>]');
       }
       const root = resolveRepoRoot(repoPath(parsed), subcommand);
       const asJson = parsed.switches.has('--json');
@@ -420,7 +432,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       const exporting = parsed.switches.has('--export');
       // The quarantined path prints none of the change; a JSON document
       // would carry the whole diff on standard output, so the two do not mix.
-      if (exporting && asJson) throw new BountyRefused('json-not-supported', '--export writes the change to a file and prints none of it — --json prints it; nothing was written; next: run omakase-box look <id> <n> --export without --json, or --json without --export');
+      if (exporting && asJson) usageError('--export writes the change to a file and prints none of it, and --json prints it; drop one: omakase-box look <id> <n> --export, or omakase-box look <id> <n> --json');
       const result = lookBounty(root, id, n!, { full: parsed.switches.has('--full'), whole: exporting });
       if (asJson) {
         printDocument(lookDocument(result));
@@ -460,7 +472,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       const named = parsed.positionals[0];
       if (named !== undefined && parsed.positionals.length === 1 && loadTaken(named) !== null) { console.log(closeTaken(named)); return; }
       const [id, ...extraIds] = commandIds(parsed);
-      if (id === undefined || extraIds.length > 0) host.usage('omakase-box close [id] [--reason "<text>"] [--repo <path>]');
+      if (id === undefined || extraIds.length > 0) usageError('omakase-box close [id] [--reason "<text>"] [--repo <path>]');
       const closeRoot = resolveRepoRoot(repoPath(parsed), 'close');
       sayActingOn(closeRoot);
       const { record, outcome, payMessage } = closeBounty(closeRoot, id, reason);
@@ -498,7 +510,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         setMergeNoticeListener(line => console.error(line));
         printDocument(configDocument(root, line => console.error(line)));
       }
-      else if (parsed.switches.has('--json')) throw new BountyRefused('json-not-supported', '--json reads the settings — config set|add|remove writes them. Nothing changed; next: run omakase-box config without --json to read the settings');
+      else if (parsed.switches.has('--json')) usageError('--json reads the settings and config set|add|remove writes them; drop --json: omakase-box config set <name> <value>');
       else console.log(values.length === 0 ? renderConfig(root, { full: parsed.switches.has('--full') }) : changeConfig(root, values[0]!, values[1]!, values[2]!, text => console.log(text), values.length === 4 ? values[3] : undefined));
     } else if (subcommand === 'hook') {
       // BT9: the owner switches the hook on and off; hosts run the slot
@@ -511,7 +523,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       const explain = parsed.switches.has('--explain');
       const confirm = parsed.switches.has('--confirm');
       if (action === 'start' || action === 'pause' || action === 'finish') {
-        if (hostName !== undefined || confirm) host.usage(`omakase-box hook ${action} [--explain] [--repo <path>]`);
+        if (hostName !== undefined || confirm) usageError(`omakase-box hook ${action} [--explain] [--repo <path>]`);
         let root: string | null = null;
         let rootRefusal: string | null = null;
         // Any refusal here (no checkout, Git itself unreadable or refusing)
@@ -549,23 +561,34 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         // its last line names the outcome and the confirming command.
         console.log(confirm ? hookOn(root, host) : hookDisclosure(root, host));
       } else if (action === 'off') {
-        if (confirm || explain) host.usage('omakase-box hook off --host <name>');
+        if (confirm || explain) usageError('omakase-box hook off --host <name>');
         console.log(hookOff(resolveRepoRoot(repoPath(parsed), 'hook off'), hookHost(hostName)));
       } else {
-        host.usage('omakase-box hook | omakase-box hook on|off --host <name> | omakase-box hook start|pause|finish [--explain]');
+        usageError('omakase-box hook | omakase-box hook on|off --host <name> | omakase-box hook start|pause|finish [--explain]');
       }
     } else {
-      host.usage(`omakase-box ${subcommand} is not a bounty command — run omakase-box help for the journey`);
+      usageError(`omakase-box ${subcommand} is not a bounty command — run omakase-box help for the journey`);
     }
   } catch (error) {
-    if (error instanceof BountyUsage) host.usage(error.message, error.lines);
+    if (error instanceof BountyUsage) usageError(error.message, error.lines);
     if (error instanceof BountyRefused) {
-      if (['owner-allow-needed', 'owner-answer-needed', 'publish-held', 'merge-held'].includes(error.reason)) {
+      const held = ['owner-allow-needed', 'owner-answer-needed', 'publish-held', 'merge-held'].includes(error.reason);
+      // BT61: under --json a refusal is one document on standard output (standard error stays empty) with the exit code it has
+      // today: 0 for a held answer, 3 for a refusal.
+      if (jsonRequested) {
+        printDocument(refusalDocument(commandName, error.reason, error.message, held ? 0 : 3));
+        process.exit(held ? 0 : 3);
+      }
+      if (held) {
         console.log(error.message);
         process.exit(0);
       }
       console.error(`${subcommand ?? 'overview'} refused (${error.reason}): ${MULTI_LINE_REFUSALS.has(error.reason) ? error.message : oneLine(error.message)}`);
       process.exit(3);
+    }
+    if (jsonRequested) {
+      printDocument(refusalDocument(commandName, 'failed', error instanceof Error ? error.message : String(error), 1));
+      process.exit(1);
     }
     console.error(`${subcommand ?? 'overview'} failed: ${oneLine(error instanceof Error ? error.message : String(error))}`);
     process.exit(1);

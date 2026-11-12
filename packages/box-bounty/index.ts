@@ -39,7 +39,7 @@ export const findDocument = command(findDocumentCommand);
 export const renderFind = command(renderFindCommand);
 export { FIND_RESULT_LIMIT } from './find.js';
 export type { FindMatch } from './find.js';
-export { lookDocument } from './json.js';
+export { lookDocument, refusalDocument, splitNext } from './json.js';
 export type { StatusDocumentOptions } from './json.js';
 export type { LookResult, LookTarget } from './look.js';
 export { exportLook, LOOK_BYTES_MAX, LOOK_DIFF_LIMIT } from './look.js';
