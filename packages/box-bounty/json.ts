@@ -32,7 +32,8 @@ import { boardAddress,boardFact,boardTold } from './board.js';
 import { paymentOf } from './pay.js';
 import { bountyAge,endedNextStep,nextStep,notNext,staleReminderLines,validAt } from './render.js';
 import { sharedEnded,sharedOpen,sharedRead } from './store.js';
-import { LOOK_FOREIGN_FIELDS,STATUS_FOREIGN_FIELDS } from './untrusted.js';
+import { APPLY_FOREIGN_FIELDS,CLOSE_FOREIGN_FIELDS,CREATE_FOREIGN_FIELDS,LOOK_FOREIGN_FIELDS,POST_PREVIEW_FOREIGN_FIELDS,STATUS_FOREIGN_FIELDS,TAKE_FOREIGN_FIELDS } from './untrusted.js';
+import type { ForeignField } from './untrusted.js';
 import { refreshSharedMemory } from './chain.js';
 import type { Attempt,BountyRecord,ScanFinding,StageEvent,WaitingFor } from './record.js';
 import { actingOn,askMergeNoticeLine,loadSettings,loadState,localFirstMergeLine,readDecision,readInstructions,repoReward,repositoryIdentity,rewardNoticeLine,saidOnce,settingsFile } from './settings.js';
@@ -548,3 +549,170 @@ export function configDocument(repoRoot: string | null, notice: (line: string) =
   };
 }
 
+
+// ---- BT61: one document for every refusal and usage error -----------------
+
+/** The text before and after the last "; next: " every refusal carries (BT40). The message and the step are plain strings:
+    JSON.stringify does the escaping, so a path or a name a stranger chose stays exactly the characters it was. */
+export function splitNext(message: string): { readonly message: string; readonly next: string | null } {
+  const at = message.lastIndexOf('; next: ');
+  return at < 0 ? { message, next: null } : { message: message.slice(0, at), next: message.slice(at + '; next: '.length) };
+}
+
+/** `box-bounty/refusal@1`: what a refusal or a usage error is under --json. `refused` is the name the text view prints
+    (`<command> refused (<name>)`), or "usage" for a usage error (exit 2) and "failed" for an unexpected failure (exit 1);
+    `usage` holds the usage lines of a usage error and is null otherwise. */
+export function refusalDocument(command: string, refused: string, message: string, exitCode: number, usage: readonly string[] | null = null): JsonObject {
+  const split = splitNext(message);
+  return { schema: 'box-bounty/refusal@1', command, refused, message: split.message, next: split.next, exitCode, usage: usage === null ? null : [...usage] };
+}
+
+// ---- BT61: one document per command ---------------------------------------
+//
+// `box-bounty/<command>@1` for create, post, apply, close, take, submit, allow, deny, hook, describe and help (setup's is in
+// setup.ts). Each carries `schema` first, the bounty `id` where there is one, the facts the command's text states (built from
+// the value the command's function returned, never by parsing the printed text), the tool's own `lines` (so a program has the
+// text as data too) and `notices`: the lines the text view prints on the side (a merge recognised, an acting-on line, an
+// instruction notice), which under --json go here and never to standard output. Text a stranger wrote appears nowhere in
+// these: a solution's pull request text is `look --json`'s `fromOthers`, and these documents hold only the tool's own words.
+
+const commandDocument = (command: string, facts: JsonObject, lines: readonly string[], notices: readonly string[], foreign: readonly ForeignField[] = []): JsonObject =>
+  ({ schema: `box-bounty/${command}@1`, ...facts, lines: [...lines], notices: [...notices], foreignFields: [...foreign] });
+
+interface ScanHitLike { readonly path: string; readonly line: number; readonly rule: string; readonly commit?: string }
+
+/** `create`: what was drafted. `waitsForOwner` is the owner's decision when a GitHub post would wait, else null. */
+export function createDocument(
+  result: {
+    readonly id: string;
+    readonly plan: {
+      readonly repoRoot: string; readonly title: string; readonly titleShortened: boolean; readonly task: { readonly file: string };
+      readonly scan: { readonly hits: readonly ScanHitLike[]; readonly binary: readonly string[] };
+      readonly ruleRemovals: readonly { readonly rule: string; readonly removed: unknown }[];
+    };
+  },
+  facts: { readonly record: string; readonly reward: number; readonly waitsForOwner: string | null; readonly next: string },
+  lines: readonly string[], notices: readonly string[]
+): JsonObject {
+  const { plan } = result;
+  return commandDocument('create', {
+    id: result.id, repoRoot: plan.repoRoot, record: facts.record, title: plan.title, titleShortened: plan.titleShortened, taskFile: plan.task.file,
+    scan: { hits: plan.scan.hits.map(scanHit), notScanned: [...plan.scan.binary] },
+    neverShipRemoved: plan.ruleRemovals.map(entry => ({ rule: entry.rule, removed: entry.removed })),
+    reward: facts.reward, waitsForOwner: facts.waitsForOwner, next: facts.next
+  }, lines, notices, CREATE_FOREIGN_FIELDS);
+}
+
+/** `post --preview`: what a post would publish, nothing posted. */
+export function postPreviewDocument(
+  id: string,
+  facts: {
+    readonly repository: string; readonly title: string; readonly body: string; readonly base: string; readonly head: string; readonly tip: string;
+    readonly pushed: readonly { readonly sha: string; readonly subject: string }[]; readonly wip: unknown; readonly include: readonly string[];
+    readonly withChanges: boolean; readonly untracked: unknown;
+  },
+  lines: readonly string[], notices: readonly string[]
+): JsonObject {
+  return commandDocument('post-preview', {
+    id, posted: false, repository: facts.repository, branch: `box-bounty/${id}`, title: facts.title, issueBody: facts.body, base: facts.base, head: facts.head, tip: facts.tip,
+    pushed: facts.pushed.map(commit => ({ sha: commit.sha, subject: commit.subject })), wip: facts.wip ?? null, include: [...facts.include],
+    withChanges: facts.withChanges, untracked: facts.untracked ?? null
+  }, lines, notices, POST_PREVIEW_FOREIGN_FIELDS);
+}
+
+/** `post`: the issue and the branch now public. */
+export function postDocument(record: BountyRecord, destination: string, lines: readonly string[], notices: readonly string[]): JsonObject {
+  const github = record.github;
+  return commandDocument('post', {
+    id: record.id, posted: true, destination, repository: github?.repository ?? null, branch: github?.branch ?? null,
+    base: github?.base ?? github?.commit ?? null, commit: github?.commit ?? null,
+    issue: github?.issue === null || github?.issue === undefined ? null : { number: github.issue.number, url: github.issue.url },
+    reward: boundAmount(record) ?? null, scanBinary: github?.scanBinary === undefined ? [] : [...github.scanBinary], stage: record.stage,
+    next: `omakase-box status reads the pull requests; omakase-box look ${record.id} <number> collects one and shows its change`
+  }, lines, notices);
+}
+
+/** `apply`: a solution merged, or a refusal to merge it because it conflicts. */
+export function applyDocument(
+  result: {
+    readonly outcome: string; readonly record: BountyRecord; readonly attempt: number; readonly mergeCommit?: string | null | undefined;
+    readonly conflicts?: readonly string[] | null | undefined; readonly clean?: readonly string[] | null | undefined; readonly commits?: readonly string[] | null | undefined; readonly base?: string | null | undefined;
+  },
+  facts: {
+    readonly notOnGitHub: { readonly upstream: string | null; readonly ahead: number | null; readonly publish: string | null } | null;
+    readonly pending: string | null; readonly closedNote: string | null; readonly payMessage: readonly string[];
+    readonly firstMergeNotice: string | null; readonly job: string; readonly next: string | null;
+  },
+  lines: readonly string[], notices: readonly string[]
+): JsonObject {
+  const list = (value: readonly string[] | null | undefined): string[] | null => (value === null || value === undefined ? null : [...value]);
+  return commandDocument('apply', {
+    id: result.record.id, outcome: result.outcome, attempt: result.attempt, mergeCommit: result.mergeCommit ?? null, stage: result.record.stage,
+    conflicts: list(result.conflicts), clean: list(result.clean), commitsTouchingConflicts: list(result.commits), base: result.base ?? null,
+    firstMergeNotice: facts.firstMergeNotice, pay: [...facts.payMessage], github: { pending: facts.pending, closedNote: facts.closedNote },
+    notOnGitHub: facts.notOnGitHub, resume: resumeEntry(result.record),
+    revert: result.outcome === 'applied' && result.mergeCommit !== null && result.mergeCommit !== undefined ? `git revert -m 1 ${result.mergeCommit}` : null,
+    job: facts.job, next: facts.next
+  }, lines, notices, APPLY_FOREIGN_FIELDS);
+}
+
+/** `close`: a bounty ended with nothing merged (or already ended). */
+export function closeDocument(
+  result: { readonly outcome: string; readonly record: BountyRecord },
+  facts: { readonly reason: string | null; readonly pay: readonly string[]; readonly pending: string | null; readonly closedNote: string | null; readonly job: string },
+  lines: readonly string[], notices: readonly string[]
+): JsonObject {
+  return commandDocument('close', {
+    id: result.record.id, outcome: result.outcome, stage: result.record.stage, reason: facts.reason, pay: [...facts.pay],
+    github: { pending: facts.pending, closedNote: facts.closedNote }, job: facts.job
+  }, lines, notices, CLOSE_FOREIGN_FIELDS);
+}
+
+/** `take`: the attempt started. */
+export function takeDocument(
+  result: {
+    readonly kind: string; readonly lines: readonly string[];
+    readonly taken?: {
+      readonly repository: string; readonly stage: string; readonly target?: string; readonly branch?: string; readonly bountyBranch?: string; readonly baseCommit?: string;
+      readonly workspace?: string; readonly pullRequest?: { readonly number: number; readonly url: string }; readonly reward?: number; readonly ownBounty?: boolean;
+    };
+  },
+  id: string, notices: readonly string[]
+): JsonObject {
+  const taken = result.taken;
+  return commandDocument('take', {
+    id, outcome: result.kind, repository: taken?.repository ?? null, stage: taken?.stage ?? null, target: taken?.target ?? null, branch: taken?.branch ?? null,
+    bountyBranch: taken?.bountyBranch ?? null, baseCommit: taken?.baseCommit ?? null, workspace: taken?.workspace ?? null,
+    pullRequest: taken?.pullRequest === undefined ? null : { number: taken.pullRequest.number, url: taken.pullRequest.url },
+    reward: taken?.reward ?? null, ownBounty: taken?.ownBounty ?? null
+  }, result.lines, notices, TAKE_FOREIGN_FIELDS);
+}
+
+/** `submit`: the draft is ready for the poster's review. */
+export function submitDocument(
+  result: { readonly id: string; readonly outcome: string; readonly pullRequest: number; readonly url: string; readonly changedFiles: number; readonly target: string | null; readonly branch: string | null; readonly text: string },
+  notices: readonly string[]
+): JsonObject {
+  return commandDocument('submit', {
+    id: result.id, outcome: result.outcome, pullRequest: { number: result.pullRequest, url: result.url }, changedFiles: result.changedFiles, target: result.target, branch: result.branch
+  }, result.text.split('\n'), notices, TAKE_FOREIGN_FIELDS);
+}
+
+/** `allow` and `deny`: the owner's word on a repository (or on one waiting bounty), read from the settings the command left. */
+export function ownerDocument(
+  command: 'allow' | 'deny',
+  facts: { readonly kind: 'repository' | 'bounty'; readonly repository: string | null; readonly id: string | null; readonly decision: string | null; readonly reward: number | null; readonly rewardLimit: number | null },
+  lines: readonly string[], notices: readonly string[]
+): JsonObject {
+  return commandDocument(command, { ...facts }, lines, notices);
+}
+
+/** Commands whose text is the content: `describe`, `help` and `hook`. `facts` says which view and which action. */
+export function textDocument(command: 'describe' | 'help' | 'hook', facts: JsonObject, lines: readonly string[], notices: readonly string[]): JsonObject {
+  return commandDocument(command, facts, lines, notices);
+}
+
+/** `close <id>` on a bounty this account took: the attempt withdrawn on GitHub. */
+export function closeAttemptDocument(id: string, text: string, notices: readonly string[]): JsonObject {
+  return commandDocument('close', { id, outcome: 'attempt-withdrawn' }, text.split('\n'), notices, TAKE_FOREIGN_FIELDS);
+}

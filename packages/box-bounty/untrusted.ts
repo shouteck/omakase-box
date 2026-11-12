@@ -92,3 +92,13 @@ export const STATUS_FOREIGN_FIELDS: readonly ForeignField[] = [
   ]),
   ...fields('other account', ['bounties[].github.pay.editedBy', 'bounties[].fromOthers[].from', 'bounties[].fromOthers[].text'])
 ];
+
+// BT61: the new documents' fields that can hold text a stranger chose, by the same rule as the lists above: the path in the
+// document (`[]` steps into every item) and whose words they are. A solution's file names and commit subjects reach the
+// owner's working state after an apply (BT43 correction 5), so even the owner's own `create` and `post --preview` name them.
+// `lines` is each command's printed text as data: where the text quotes such a name, the whole field is listed.
+export const CREATE_FOREIGN_FIELDS: readonly ForeignField[] = fields('solver', ['scan.hits[].path', 'scan.notScanned[]', 'neverShipRemoved[].removed', 'lines[]']);
+export const POST_PREVIEW_FOREIGN_FIELDS: readonly ForeignField[] = fields('solver', ['pushed[].subject', 'issueBody', 'wip', 'untracked', 'lines[]']);
+export const APPLY_FOREIGN_FIELDS: readonly ForeignField[] = fields('solver', ['conflicts[]', 'clean[]', 'commitsTouchingConflicts[]', 'pay[]', 'lines[]']);
+export const CLOSE_FOREIGN_FIELDS: readonly ForeignField[] = fields('solver', ['pay[]', 'lines[]']);
+export const TAKE_FOREIGN_FIELDS: readonly ForeignField[] = fields('other account', ['lines[]']);

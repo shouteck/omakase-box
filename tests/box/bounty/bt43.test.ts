@@ -551,12 +551,14 @@ describe('BT43 the reading boundary on the built CLI', () => {
     }
   }));
 
-  it('look --export with --json is refused by name with a next step, and a link where the export goes is refused, never followed', () => world.run(() => {
+  it('look --export with --json is a usage error (one document, exit 2) naming both options, and a link where the export goes is refused, never followed', () => world.run(() => {
     const both = box(repo, ['look', id, '1', '--export', '--json']);
-    expect(both.status).toBe(3);
-    expect(both.stderr).toContain('json-not-supported');
-    expect(both.stderr).toContain('next:');
-    expect(both.stdout).toBe('');
+    // BT61: --json is an ordinary option now, and this combination is a usage error: one document, stderr empty, exit 2.
+    expect(both.status).toBe(2);
+    expect(both.stderr).toBe('');
+    const doc = JSON.parse(both.stdout) as { refused: string; message: string };
+    expect(doc.refused).toBe('usage');
+    expect(doc.message).toContain('--export');
     // A link planted at .box/local/solutions pointing outside the checkout.
     const outside = runRoot('bt43-outside');
     writeFileSync(join(outside, 'sentinel.txt'), 'foreign\n');

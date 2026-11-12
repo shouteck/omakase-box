@@ -79,8 +79,24 @@ function takenOrRefuse(id: string): Taken {
 
 const retargeted = (taken: Taken, attempt: Attempt): string => `pull request #${taken.pullRequest!.number} now targets ${JSON.stringify(attempt.base.slice(0, 100))}, not the bounty's branch ${taken.bountyBranch} — someone changed it`;
 
+/** What `submit` did, as facts (BT61), beside the text it prints. */
+export interface SubmitResult {
+  readonly id: string;
+  readonly outcome: 'submitted' | 'already-ready';
+  readonly pullRequest: number;
+  readonly url: string;
+  readonly changedFiles: number;
+  readonly target: string | null;
+  readonly branch: string | null;
+  readonly text: string;
+}
+
 /** `submit`: the draft becomes ready for the poster's review. Only work already pushed counts. */
 export function submitTaken(id: string): string {
+  return submitTakenResult(id).text;
+}
+
+export function submitTakenResult(id: string): SubmitResult {
   const taken = takenOrRefuse(id);
   if (taken.stage === 'withdrawn') throw new BountyRefused('attempt-withdrawn', `${id} was withdrawn; nothing changed; next: omakase-box take ${id} starts a new attempt`);
   const attempt = readAttempt(taken);
@@ -90,7 +106,7 @@ export function submitTaken(id: string): string {
   if (attempt.changedFiles === 0) throw new BountyRefused('nothing-to-submit', `pull request #${number} changes no file on GitHub — only the empty start commit is there; nothing changed; next: commit in ${taken.workspace ?? 'your workspace'} and push to ${taken.target} ${taken.branch}, then omakase-box submit ${id}`);
   if (!attempt.draft) {
     if (taken.stage !== 'submitted') saveTaken({ ...taken, stage: 'submitted', at: new Date().toISOString() });
-    return `${id} — pull request #${number} is already ready for review; nothing more to do. next: omakase-box status ${id}`;
+    return { id, outcome: 'already-ready', pullRequest: number, url: taken.pullRequest!.url, changedFiles: attempt.changedFiles, target: taken.target ?? null, branch: taken.branch ?? null, text: `${id} — pull request #${number} is already ready for review; nothing more to do. next: omakase-box status ${id}` };
   }
   // The tool's own draft sentence is replaced; words the solver wrote in the description stay as they are.
   const draftText = DRAFT_BODY(id);
@@ -102,10 +118,13 @@ export function submitTaken(id: string): string {
   const ready = isObject(data) && isObject(data['data']) && isObject(data['data']['ready']) && isObject(data['data']['ready']['pullRequest']) ? data['data']['ready']['pullRequest']['isDraft'] : undefined;
   if (ready !== false) return invalid('github-response-invalid', `GitHub did not say pull request #${number} is ready for review; the attempt stays a draft on record; next: mark it ready at ${taken.pullRequest!.url}, then omakase-box submit ${id}`);
   saveTaken({ ...taken, stage: 'submitted', at: new Date().toISOString() });
-  return [
-    `${id} — submitted: pull request #${number} is ready for the poster's review, ${attempt.changedFiles} file(s) changed · ${taken.pullRequest!.url}`,
-    `next: omakase-box status ${id} follows it — review comments, merged or closed, and payment; to answer a review, push to ${taken.target} ${taken.branch}`
-  ].join('\n');
+  return {
+    id, outcome: 'submitted', pullRequest: number, url: taken.pullRequest!.url, changedFiles: attempt.changedFiles, target: taken.target ?? null, branch: taken.branch ?? null,
+    text: [
+      `${id} — submitted: pull request #${number} is ready for the poster's review, ${attempt.changedFiles} file(s) changed · ${taken.pullRequest!.url}`,
+      `next: omakase-box status ${id} follows it — review comments, merged or closed, and payment; to answer a review, push to ${taken.target} ${taken.branch}`
+    ].join('\n')
+  };
 }
 
 // ---- payment, from the solver's side, as the board's public answers say it ----

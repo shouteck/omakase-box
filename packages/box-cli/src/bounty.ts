@@ -5,10 +5,10 @@
 // repository.
 import { lstatSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { actingOn, applyBounty, BountyRefused, BountyUsage, closeBounty, createBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, parseOptions, commandHelp, OPTIONS_NOTE, postBounty, readDecision, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, repoReward, requireRepository, resolveRepoRoot, setMergeNoticeListener, setInstructionNoticeListener, renderOverview, showPath, statusDocument, lookDocument, configDocument, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, hookDisclosure, hookHost, hookOff, hookOn, hookStatus, limitGitHubCalls, runHook } from '../../box-bounty/index.js';
+import { actingOn, loadSettings, repositoryIdentity, applyBounty, BountyRefused, BountyUsage, closeBounty, createBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, parseOptions, commandHelp, OPTIONS_NOTE, postBounty, readDecision, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, repoReward, requireRepository, resolveRepoRoot, setMergeNoticeListener, setInstructionNoticeListener, renderOverview, showPath, statusDocument, lookDocument, configDocument, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, hookDisclosure, hookHost, hookOff, hookOn, hookStatus, limitGitHubCalls, runHook } from '../../box-bounty/index.js';
 import { boardAddress, boardNotToldLine, flushBoardHints, readBoardFacts } from '../../box-bounty/index.js';
 import type { ParsedOptions } from '../../box-bounty/index.js';
-import { previewGitHub } from '../../box-bounty/index.js';
+import { applyDocument, closeAttemptDocument, closeDocument, createDocument, ownerDocument, postDocument, postPreviewDocument, previewGitHub, previewGitHubFacts, refusalDocument, submitDocument, submitTakenResult, takeDocument, textDocument } from '../../box-bounty/index.js';
 import { attemptStatus, closeTaken, discover, discoverDocument, loadTaken, renderDescribeSolving, renderDiscover, submitTaken, takeBounty, takenOverview } from '../../box-bounty/index.js';
 import { escapeControls, exportLook, findDocument, lookBounty, solverBlock, SOLVER_WORDS, renderFind, renderResume, openRecords, endedContaining, readGitPinsOncePerProcess, boundAmount, payToLine, gitOutcome } from '../../box-bounty/index.js';
 
@@ -74,12 +74,36 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
   // --help/--version below). Anything else is a subcommand name.
   const subcommand = requested !== undefined && !requested.startsWith('-') ? requested : undefined;
   const bountyArgs = subcommand === undefined ? rest : commandArgs;
-  setInstructionNoticeListener(line => console.log(line));
+  // BT61: whether a document was asked for is decided from the raw arguments, before anything is parsed: a usage error happens
+  // before parsing succeeds, and under --json it is one document too.
+  const jsonRequested = bountyArgs.includes('--json');
+  const commandName = subcommand ?? 'overview';
+  // (Typed on the variable so a call narrows the way host.usage's did: TypeScript only does that for an annotated name.)
+  const usageError: (message?: string, lines?: readonly string[]) => never = (message, lines) => {
+    if (jsonRequested) {
+      printDocument(refusalDocument(commandName, 'usage', message ?? '', 2, lines ?? []));
+      process.exit(2);
+    }
+    return host.usage(message, lines);
+  };
+  // BT61: under --json the lines a text view prints on the side go into the document's `notices`, never to standard output;
+  // the four commands that had a document before (status, look, config, find) and discover set their own (standard error).
+  const notices: string[] = [];
+  const aside = (line: string): void => { if (jsonRequested) notices.push(line); else console.log(line); };
+  // The command's own lines, collected as they are printed, so a document carries the text as data (and the text is unchanged).
+  const out: string[] = [];
+  const say = (line: string): void => { out.push(line); if (!jsonRequested) console.log(line); };
+  // describe, help and hook: the text is the content, so the document is its lines.
+  const showText = (command: 'describe' | 'help' | 'hook', text: string, facts: Record<string, unknown> = {}): void => {
+    if (jsonRequested) printDocument(textDocument(command, facts, text.split('\n'), notices));
+    else console.log(text);
+  };
+  setInstructionNoticeListener(aside);
   readGitPinsOncePerProcess(); // this process runs one command and exits
   // A reading command can recognise a solution the agent merged itself and
   // close the bounty — the one line saying so belongs to whichever command
   // noticed, printed the moment it happens.
-  setMergeNoticeListener(line => console.log(line));
+  setMergeNoticeListener(aside);
   // PF5: whatever this command changed, or an earlier one left unsent, goes to
   // the board as the process ends, on every exit path. A hook has a time budget.
   if (subcommand !== 'hook') {
@@ -89,7 +113,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       let root: string;
       try { root = resolveRepoRoot(bountyArgs[named + 1] !== undefined && named >= 0 ? bountyArgs[named + 1]! : process.cwd(), subcommand ?? 'status'); } catch { return; }
       const notTold = boardNotToldLine(flushBoardHints(root));
-      if (notTold !== null && ['post', 'apply', 'close', 'config'].includes(subcommand ?? '')) console.error(notTold);
+      if (notTold !== null && ['post', 'apply', 'close', 'config'].includes(subcommand ?? '') && !(jsonRequested && subcommand !== 'config')) console.error(notTold);
     });
   }
   // BT18: every command reads its options through the one parser driven by
@@ -132,7 +156,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
   // which first. The helper builds the line once and stays silent otherwise.
   const sayActingOn = (root: string): void => {
     const line = actingOn(root);
-    if (line !== null) console.log(line);
+    if (line !== null) aside(line);
   };
   try {
     // The commands BT7c removed: a typed name is a named refusal that says
@@ -158,26 +182,26 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
     if (subcommand === undefined) {
       // `omakase-box --version` — the package version, like `omakase-box --version`.
       if (bountyArgs.includes('--version')) {
-        console.log(host.version());
+        say(host.version());
         process.exit(0);
       }
       const parsed = parse('overview');
-      try { console.log(renderOverview(resolveRepoRoot(repoPath(parsed), 'overview'))); }
+      try { say(renderOverview(resolveRepoRoot(repoPath(parsed), 'overview'))); }
       catch (error) {
         if (!(error instanceof BountyRefused) || error.reason !== 'not-a-repository' || parsed.values['--repo'] !== undefined) throw error;
-        console.log(renderDescribe(null));
+        say(renderDescribe(null));
       }
     } else if (subcommand === 'help') {
       // Works outside a checkout too — it reads no repository.
       parse('help');
-      console.log(`${renderHelp()}\n\n${OPTIONS_NOTE}`);
+      showText('help', `${renderHelp()}\n\n${OPTIONS_NOTE}`);
     } else if (subcommand === 'describe') {
       // Works outside a checkout too — without a repository it prints the
       // description and says the live facts need one.
       const parsed = parse('describe');
       // PF27: the solving half reads no repository; it works anywhere.
       if (parsed.switches.has('--solving')) {
-        console.log(renderDescribeSolving());
+        showText('describe', renderDescribeSolving(), { mode: 'solving' });
         return;
       }
       let described: string | null = null;
@@ -186,16 +210,16 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       } catch (error) {
         if (!(error instanceof BountyRefused)) throw error; // not-a-repository → the description alone prints
       }
-      console.log(parsed.switches.has('--rules') ? renderRules(described) : renderDescribe(described));
+      showText('describe', parsed.switches.has('--rules') ? renderRules(described) : renderDescribe(described), { mode: parsed.switches.has('--rules') ? 'rules' : 'description', repository: described });
     } else if (subcommand === 'create') {
       const parsed = parseCreateArgs(bountyArgs);
       if (parsed.help === true) {
-        console.log(commandHelp('create'));
+        say(commandHelp('create'));
         process.exit(0);
       }
       // --task stays a usage error; a missing --why is the named refusal
       // missing-why, thrown by planBounty — not a usage wall.
-      if (parsed.task === undefined) host.usage('create needs --task <file|-> (and --why "<one line>") — run omakase-box help');
+      if (parsed.task === undefined) usageError('create needs --task <file|-> (and --why "<one line>") — run omakase-box help');
       const result = createBounty({
         repoPath: resolve(parsed.repo ?? process.cwd()), why: parsed.why ?? '',
         ...(parsed.title !== undefined ? { title: parsed.title } : {}),
@@ -208,9 +232,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       // detail — `--full` prints it. What posting would publish is `post
       // --preview`'s answer; create states none of it (BT20).
       const full = parsed.full === true;
-      if (full) {
-        console.log(renderPreview(result.plan));
-      }
+      if (full) say(renderPreview(result.plan));
       const plan = result.plan;
       const lines = [`${result.id} — drafted in ${plan.repoRoot}`];
       // Each path quoted (BT43 correction 5): after an apply the working
@@ -221,17 +243,21 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       if (plan.titleShortened) lines.push(`  title: ${plan.title} (shortened)`);
       const { amount } = repoReward(plan.repoRoot);
       if (amount > 0) lines.push(`  states $${amount} when posted — the reward in force now for this repository`);
+      let waitsForOwner: string | null = null;
       try {
         const address = requireRepository(plan.repoRoot);
         const decision = readDecision(plan.repoRoot).decision;
+        if (decision !== 'allowed') waitsForOwner = String(decision);
         if (decision !== 'allowed') lines.push(`  a GitHub post waits for the owner — ${decision === 'ask' ? 'they asked to be asked each time' : 'they have not allowed the tool'}; omakase-box allow ${address} is their answer`);
       } catch { /* an unlistable repository leaves permission unsaid — post names it */ }
       if (full) {
         lines.push(`  record: ${result.recordPath}`);
         if (plan.task.file !== 'standard input') lines.push('  the task file stays where it is — the tool reads it and never commits or removes it');
       }
-      lines.push(`next: omakase-box post ${result.id} (--preview shows what becomes public)`);
-      console.log(lines.join('\n'));
+      const nextLine = `next: omakase-box post ${result.id} (--preview shows what becomes public)`;
+      lines.push(nextLine);
+      say(lines.join('\n'));
+      if (jsonRequested) printDocument(createDocument(result, { record: result.recordPath, reward: amount, waitsForOwner, next: nextLine.slice('next: '.length) }, out.join('\n').split('\n'), notices));
     } else if (subcommand === 'discover') {
       // The solver's half (PF24): no checkout needed; the owner's word and the agent's bookmark live outside every repository.
       const parsed = parse('discover');
@@ -240,6 +266,11 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       const from = parsed.values['--from'];
       if (from !== undefined && from !== 'start' && from !== 'now') throw new BountyRefused('discover-from-invalid', '--from takes start or now; nothing was read or changed; next: omakase-box discover --from start, or --from now');
       const languages = parsed.repeated['--language'];
+      if (jsonRequested) {
+        // discover's document predates the notices field (BT19): its side lines stay on standard error, as status's do.
+        setInstructionNoticeListener(line => console.error(line));
+        setMergeNoticeListener(line => console.error(line));
+      }
       const result = discover({
         ...(languages === undefined ? {} : { languages: [...languages] }),
         ...(parsed.switches.has('--any-language') ? { anyLanguage: true } : {}),
@@ -248,22 +279,25 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       });
       // Shown first, then saved: a failure in between repeats these bounties next time, never skips them.
       if (parsed.switches.has('--json')) printDocument(discoverDocument(result));
-      else console.log(renderDiscover(result).join('\n'));
+      else say(renderDiscover(result).join('\n'));
       result.save();
     } else if (subcommand === 'take') {
       // The solver's half (PF25): no checkout needed; the workspace is a new folder outside every repository.
       const parsed = parse('take');
       const [id] = parsed.positionals;
-      if (id === undefined) host.usage('omakase-box take <id> [--into <new folder>]');
+      if (id === undefined) usageError('omakase-box take <id> [--into <new folder>]');
       const into = parsed.values['--into'];
       const result = takeBounty(id, into === undefined ? {} : { into: resolve(into) });
-      console.log(result.lines.join('\n'));
+      if (jsonRequested) printDocument(takeDocument(result, id, notices));
+      else say(result.lines.join('\n'));
     } else if (subcommand === 'submit') {
       // The solver's half (PF26): the draft becomes ready for review; no checkout needed.
       const parsed = parse('submit');
       const [id] = parsed.positionals;
-      if (id === undefined) host.usage('omakase-box submit <id>');
-      console.log(submitTaken(id));
+      if (id === undefined) usageError('omakase-box submit <id>');
+      const submitted = submitTakenResult(id);
+      if (jsonRequested) printDocument(submitDocument(submitted, notices));
+      else say(submitted.text);
     } else if (subcommand === 'find') {
       // Recall by purpose (BT28): one query over every readable record.
       const parsed = parse('find');
@@ -275,7 +309,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         printDocument(findDocument(root, query));
       } else {
         sayActingOn(root);
-        console.log(renderFind(root, query));
+        say(renderFind(root, query));
       }
     } else if (subcommand === 'status') {
       const parsed = parse('status');
@@ -283,7 +317,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       // PF26: a bounty this account took is read from GitHub and the board's public answers; it needs no checkout.
       if (id !== undefined && loadTaken(id) !== null) {
         if (parsed.switches.has('--json') || parsed.switches.has('--full') || parsed.values['--since'] !== undefined) throw new BountyRefused('taken-status-options', `${id} is a bounty you took: its status prints text, and --comments adds what was written on its pull request; nothing was read; next: omakase-box status ${id} --comments`);
-        console.log(attemptStatus(id, { comments: parsed.switches.has('--comments') }));
+        say(attemptStatus(id, { comments: parsed.switches.has('--comments') }));
         return;
       }
       let root: string;
@@ -292,7 +326,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         // Outside a checkout, the attempts this account took are still this command's to show.
         const taken = takenOverview();
         if (!(error instanceof BountyRefused) || error.reason !== 'not-a-repository' || parsed.values['--repo'] !== undefined || id !== undefined || taken.length === 0) throw error;
-        console.log(taken.join('\n'));
+        say(taken.join('\n'));
         return;
       }
       const since = parsed.values['--since'];
@@ -303,15 +337,15 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         // the text view prints — the acting-on line, the once-only notices,
         // a recognised merge — is stderr here; --since is a text report
         // the document does not carry, so it is refused by name.
-        if (since !== undefined) throw new BountyRefused('json-not-supported', '--since prints a text report; next: run omakase-box status --since <iso> without --json');
+        if (since !== undefined) usageError('--since prints a text report the document does not carry; drop --json: omakase-box status --since <iso>');
         setInstructionNoticeListener(line => console.error(line));
         setMergeNoticeListener(line => console.error(line));
         printDocument(statusDocument(root, { ...(id === undefined ? {} : { id }), comments: parsed.switches.has('--comments') }, line => console.error(line)));
       } else {
         sayActingOn(root);
-        console.log(renderStatus(root, { ...(id === undefined ? {} : { id }), full: parsed.switches.has('--full'), comments: parsed.switches.has('--comments') }));
-        if (id === undefined) { const taken = takenOverview(); if (taken.length > 0) console.log(taken.join('\n')); }
-        if (since !== undefined) console.log(renderSummary(root, since));
+        say(renderStatus(root, { ...(id === undefined ? {} : { id }), full: parsed.switches.has('--full'), comments: parsed.switches.has('--comments') }));
+        if (id === undefined) { const taken = takenOverview(); if (taken.length > 0) say(taken.join('\n')); }
+        if (since !== undefined) say(renderSummary(root, since));
       }
     } else if (subcommand === 'post') {
       const parsed = parse('post');
@@ -324,20 +358,23 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       // show in --preview, and each makes the post wait for the owner.
       const withChanges = parsed.switches.has('--with-changes');
       const include = [...(parsed.repeated['--include'] ?? [])];
-      if (id === undefined || extraIds.length > 0) host.usage('omakase-box post <id> [--with-changes] [--include <file>] [--preview] [--repo <path>]');
+      if (id === undefined || extraIds.length > 0) usageError('omakase-box post <id> [--with-changes] [--include <file>] [--preview] [--repo <path>]');
       const repoRoot = resolveRepoRoot(repoPath(parsed), 'post');
       sayActingOn(repoRoot);
       if (parsed.switches.has('--preview')) {
-        console.log(previewGitHub(repoRoot, id, { withChanges, include }));
-        console.log('preview only — nothing was posted. Run again without --preview to publish it.');
+        const facts = previewGitHubFacts(repoRoot, id, { withChanges, include });
+        say(facts.preview);
+        say('preview only — nothing was posted. Run again without --preview to publish it.');
+        if (jsonRequested) printDocument(postPreviewDocument(id, facts, out.join('\n').split('\n'), notices));
         process.exit(0);
       }
       const { record, destination } = postBounty(repoRoot, id, to, { choice: { withChanges, include } });
-      console.log(`${record.id} — posted — delivered to ${destination}`);
-      if (record.github?.scanBinary !== undefined && record.github.scanBinary.length > 0) console.log(`scan: not scanned — Git treats them as binary: ${record.github.scanBinary.map(showPath).join(', ')}`);
+      say(`${record.id} — posted — delivered to ${destination}`);
+      if (record.github?.scanBinary !== undefined && record.github.scanBinary.length > 0) say(`scan: not scanned — Git treats them as binary: ${record.github.scanBinary.map(showPath).join(', ')}`);
       // Which written owner answer allowed the post is an audit fact —
       // `status <id> --full` carries it; the compact post stays at three lines.
-      console.log(`next: omakase-box status reads the pull requests; omakase-box look ${record.id} <number> collects one and shows its change`);
+      say(`next: omakase-box status reads the pull requests; omakase-box look ${record.id} <number> collects one and shows its change`);
+      if (jsonRequested) printDocument(postDocument(record, destination, out, notices));
     } else if (subcommand === 'apply') {
       // Approval is the owner's, never the agent's (BT13): a flag that tries
       // to mark a merge as asked-for or approved is a named refusal that
@@ -347,19 +384,21 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       const attempt = attemptText !== undefined && /^\d+$/.test(attemptText) ? Number.parseInt(attemptText, 10) : undefined;
       if (id === undefined || extraIds.length > 0
         || (attemptText !== undefined && attempt === undefined)) {
-        host.usage('omakase-box apply [id] [<n>] [--repo <path>]');
+        usageError('omakase-box apply [id] [<n>] [--repo <path>]');
       }
       const applyRoot = resolveRepoRoot(repoPath(parsed), 'apply');
       sayActingOn(applyRoot);
       const result = applyBounty(applyRoot, id, attempt);
-      if (result.firstMergeNotice !== undefined) console.log(result.firstMergeNotice);
-      if (result.payMessage !== undefined) for (const line of result.payMessage) console.log(line);
-      if (result.record.github?.pending !== null && result.record.github?.pending !== undefined) console.log(result.record.github.pending);
-      if (result.record.github?.closedNote !== undefined) console.log(`github: ${result.record.github.closedNote}`);
+      let notOnGitHub: { upstream: string | null; ahead: number | null; publish: string | null } | null = null;
+      let nextLine: string | null = null;
+      if (result.firstMergeNotice !== undefined) say(result.firstMergeNotice);
+      if (result.payMessage !== undefined) for (const line of result.payMessage) say(line);
+      if (result.record.github?.pending !== null && result.record.github?.pending !== undefined) say(result.record.github.pending);
+      if (result.record.github?.closedNote !== undefined) say(`github: ${result.record.github.closedNote}`);
       if (result.outcome === 'applied') {
         // The saved job the bounty came from is what the agent returns to —
         // the compact form names it; the commit hash is `status --full`'s.
-        console.log(`${result.record.id} — applied — attempt ${result.attempt} merged as ${result.mergeCommit} on this branch`);
+        say(`${result.record.id} — applied — attempt ${result.attempt} merged as ${result.mergeCommit} on this branch`);
         // BT37: the merge exists in this checkout only — say so and say the
         // exact publish command, in git's own convention (`git status` says
         // "Your branch is ahead of 'origin/main' by N commits. (use "git
@@ -370,33 +409,43 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         const upstream = gitOutcome(applyRoot, ['rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}']).stdout.trim();
         if (upstream !== '') {
           const ahead = gitOutcome(applyRoot, ['rev-list', '--count', '@{u}..HEAD']).stdout.trim();
-          console.log(/^\d+$/.test(ahead)
+          notOnGitHub = { upstream, ahead: /^d+$/.test(ahead) ? Number(ahead) : null, publish: 'git push' };
+          say(/^\d+$/.test(ahead)
             ? `not on GitHub yet: this branch is ${ahead} commit(s) ahead of ${upstream} — publish it with: git push`
             : `not on GitHub yet: this branch's upstream is ${upstream} — publish it with: git push`);
         } else {
           const branch = gitOutcome(applyRoot, ['branch', '--show-current']).stdout.trim();
-          console.log(branch === '' ? 'not on GitHub yet: the merge is local to this checkout'
+          notOnGitHub = { upstream: null, ahead: null, publish: branch === '' ? null : remoteNamed(applyRoot, 'origin') ? `git push -u origin ${branch}` : null };
+          say(branch === '' ? 'not on GitHub yet: the merge is local to this checkout'
             : remoteNamed(applyRoot, 'origin') ? `not on GitHub yet: this branch has no upstream — publish it with: git push -u origin ${branch}`
             : `not on GitHub yet: this branch (${branch}) has no upstream and this checkout has no remote named origin — publish it by pushing ${branch} to the repository's remote`);
         }
-        if (result.record.github !== undefined) console.log('this merge counts for the solver once it is on the default branch on GitHub; the tool never pushes it');
-        console.log(`ended — ${jobLine(result.record)}; to reverse it: git revert -m 1 ${result.mergeCommit}`);
-        console.log(renderResume(result.record));
+        if (result.record.github !== undefined) say('this merge counts for the solver once it is on the default branch on GitHub; the tool never pushes it');
+        say(`ended — ${jobLine(result.record)}; to reverse it: git revert -m 1 ${result.mergeCommit}`);
+        say(renderResume(result.record));
       } else {
         const branch = result.record.resume?.kind === 'recorded' ? result.record.resume.branch : 'the branch the bounty was created on';
-        console.log(`${result.record.id} — merging attempt ${result.attempt} onto the current code conflicts in: ${(result.conflicts ?? []).map(showPath).join(', ')} — aborted; worktree and index are exactly as before`);
+        say(`${result.record.id} — merging attempt ${result.attempt} onto the current code conflicts in: ${(result.conflicts ?? []).map(showPath).join(', ')} — aborted; worktree and index are exactly as before`);
         const clean = result.clean ?? [];
-        console.log(clean.length === 0
+        say(clean.length === 0
           ? 'none of the solution\'s files would merge cleanly'
           : `of the solution's files, these would merge cleanly: ${clean.map(showPath).join(', ')}`);
         const commits = result.commits ?? [];
-        if (commits.length === 0) console.log(`no commit on this branch since ${result.base ?? 'the shared commit'} touches the clashing files`);
+        if (commits.length === 0) say(`no commit on this branch since ${result.base ?? 'the shared commit'} touches the clashing files`);
         else {
-          console.log(`commits on this branch since ${result.base} that touch the clashing files:`);
-          for (const line of commits) console.log(`  ${line}`);
+          say(`commits on this branch since ${result.base} that touch the clashing files:`);
+          for (const line of commits) say(`  ${line}`);
         }
-        console.log('a merge the agent performs itself runs under the owner\'s own Git settings — the tool\'s pins are not part of it');
-        console.log(`next: read the solution with omakase-box look ${result.record.id} ${result.attempt}; once the solution's commit is merged on ${branch} the next bounty command closes the bounty, or end it with omakase-box close ${result.record.id} --reason "<why>"`);
+        say('a merge the agent performs itself runs under the owner\'s own Git settings — the tool\'s pins are not part of it');
+        nextLine = `next: read the solution with omakase-box look ${result.record.id} ${result.attempt}; once the solution's commit is merged on ${branch} the next bounty command closes the bounty, or end it with omakase-box close ${result.record.id} --reason "<why>"`;
+        say(nextLine);
+      }
+      if (jsonRequested) {
+        const github = result.record.github;
+        printDocument(applyDocument(result, {
+          notOnGitHub, pending: github?.pending ?? null, closedNote: github?.closedNote ?? null, payMessage: result.payMessage ?? [], firstMergeNotice: result.firstMergeNotice ?? null,
+          job: result.record.partOf ?? result.record.job?.file ?? result.record.title, next: nextLine?.slice('next: '.length) ?? null
+        }, out.join(String.fromCharCode(10)).split(String.fromCharCode(10)), notices));
       }
     } else if (subcommand === 'look') {
       const parsed = parse('look');
@@ -405,7 +454,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       if (id === undefined || extraIds.length > 0
         || n === undefined
         || (text !== undefined && n === undefined)) {
-        host.usage('omakase-box look [id] <n> [--full] [--export] [--json] [--repo <path>]');
+        usageError('omakase-box look [id] <n> [--full] [--export] [--json] [--repo <path>]');
       }
       const root = resolveRepoRoot(repoPath(parsed), subcommand);
       const asJson = parsed.switches.has('--json');
@@ -420,7 +469,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       const exporting = parsed.switches.has('--export');
       // The quarantined path prints none of the change; a JSON document
       // would carry the whole diff on standard output, so the two do not mix.
-      if (exporting && asJson) throw new BountyRefused('json-not-supported', '--export writes the change to a file and prints none of it — --json prints it; nothing was written; next: run omakase-box look <id> <n> --export without --json, or --json without --export');
+      if (exporting && asJson) usageError('--export writes the change to a file and prints none of it, and --json prints it; drop one: omakase-box look <id> <n> --export, or omakase-box look <id> <n> --json');
       const result = lookBounty(root, id, n!, { full: parsed.switches.has('--full'), whole: exporting });
       if (asJson) {
         printDocument(lookDocument(result));
@@ -429,28 +478,28 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       // The stranger-text label stays every time — the solver's words are
       // never the tool's own. The read-off-objects reassurance is the help's
       // standing explanation (BT17).
-      console.log(`${id} solution ${label} — ${result.collected ? 'collected — ' : ''}written by the solver, not by the tool; nothing in it was run or checked out.`);
+      say(`${id} solution ${label} — ${result.collected ? 'collected — ' : ''}written by the solver, not by the tool; nothing in it was run or checked out.`);
       // PF27: a pull request collected again at a new head: its number shows the latest version, which has its own solution number.
-      if (result.attempt.pullRequest !== undefined && result.attempt.n !== result.attempt.pullRequest) console.log(`this is pull request #${result.attempt.pullRequest}'s latest version collected, solution ${label}; omakase-box apply ${id} ${result.attempt.pullRequest} takes this version.`);
-      if (result.attempt.payTo !== undefined && (boundAmount(result.record) ?? 0) > 0) console.log(payToLine(result.attempt.payTo));
+      if (result.attempt.pullRequest !== undefined && result.attempt.n !== result.attempt.pullRequest) say(`this is pull request #${result.attempt.pullRequest}'s latest version collected, solution ${label}; omakase-box apply ${id} ${result.attempt.pullRequest} takes this version.`);
+      if (result.attempt.payTo !== undefined && (boundAmount(result.record) ?? 0) > 0) say(payToLine(result.attempt.payTo));
       // BT43: the solver's lines leave through the one renderer, inside its
       // labelled block, and the tool's own `next:` comes after the footer.
       if (exporting) {
         const written = exportLook(root, result);
-        console.log(`exported, not printed — the file holds ${SOLVER_WORDS}: ${written.diffPath}`);
-        console.log(`  sha256 ${written.sha256}; ${written.fileCount} file(s), ${written.lines} line(s), ${written.bytes} byte(s); manifest ${written.manifestPath}`);
-        console.log('advice only: read the file in a session that has no write access to this checkout, then choose and apply from your own session; the file holds the change\'s raw bytes, so open it as text, not with cat in a terminal');
-        console.log(`next: omakase-box apply ${id} ${label} chooses this solution; omakase-box status ${id} shows what else waits`);
+        say(`exported, not printed — the file holds ${SOLVER_WORDS}: ${written.diffPath}`);
+        say(`  sha256 ${written.sha256}; ${written.fileCount} file(s), ${written.lines} line(s), ${written.bytes} byte(s); manifest ${written.manifestPath}`);
+        say('advice only: read the file in a session that has no write access to this checkout, then choose and apply from your own session; the file holds the change\'s raw bytes, so open it as text, not with cat in a terminal');
+        say(`next: omakase-box apply ${id} ${label} chooses this solution; omakase-box status ${id} shows what else waits`);
       } else if (result.diff === null) {
         const tooLarge = result.tooLarge;
-        if (tooLarge !== null) console.log(`${tooLarge.reason}: the change is ${tooLarge.bytes} bytes, over the ${tooLarge.limit} the tool prints; none of the diff is shown.`);
-        console.log(`${tooLarge?.fileCount ?? result.files.length} file(s) changed:`);
-        for (const line of solverBlock('solver', result.files)) console.log(line);
-        if (tooLarge !== null && tooLarge.filesOmitted > 0) console.log(`${tooLarge.filesOmitted} more file name(s) are not listed; the list has the same limit.`);
-        console.log(`next: ${tooLarge?.next ?? `omakase-box look ${id} ${label} --full prints the whole change; omakase-box apply ${id} ${label} chooses this solution`}`);
+        if (tooLarge !== null) say(`${tooLarge.reason}: the change is ${tooLarge.bytes} bytes, over the ${tooLarge.limit} the tool prints; none of the diff is shown.`);
+        say(`${tooLarge?.fileCount ?? result.files.length} file(s) changed:`);
+        for (const line of solverBlock('solver', result.files)) say(line);
+        if (tooLarge !== null && tooLarge.filesOmitted > 0) say(`${tooLarge.filesOmitted} more file name(s) are not listed; the list has the same limit.`);
+        say(`next: ${tooLarge?.next ?? `omakase-box look ${id} ${label} --full prints the whole change; omakase-box apply ${id} ${label} chooses this solution`}`);
       } else {
-        for (const line of solverBlock('solver', result.diff.split('\n'))) console.log(line);
-        console.log(`next: omakase-box apply ${id} ${label} chooses this solution; omakase-box status ${id} shows what else waits`);
+        for (const line of solverBlock('solver', result.diff.split('\n'))) say(line);
+        say(`next: omakase-box apply ${id} ${label} chooses this solution; omakase-box status ${id} shows what else waits`);
       }
       }
     } else if (subcommand === 'close') {
@@ -458,19 +507,29 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       const reason = parsed.values['--reason'];
       // PF25: an id the solver took is withdrawn on GitHub; it needs no checkout.
       const named = parsed.positionals[0];
-      if (named !== undefined && parsed.positionals.length === 1 && loadTaken(named) !== null) { console.log(closeTaken(named)); return; }
+      if (named !== undefined && parsed.positionals.length === 1 && loadTaken(named) !== null) {
+        const withdrawn = closeTaken(named);
+        if (jsonRequested) printDocument(closeAttemptDocument(named, withdrawn, notices)); else console.log(withdrawn);
+        return;
+      }
       const [id, ...extraIds] = commandIds(parsed);
-      if (id === undefined || extraIds.length > 0) host.usage('omakase-box close [id] [--reason "<text>"] [--repo <path>]');
+      if (id === undefined || extraIds.length > 0) usageError('omakase-box close [id] [--reason "<text>"] [--repo <path>]');
       const closeRoot = resolveRepoRoot(repoPath(parsed), 'close');
       sayActingOn(closeRoot);
       const { record, outcome, payMessage } = closeBounty(closeRoot, id, reason);
-      if (payMessage !== undefined) for (const line of payMessage) console.log(line);
-      if (record.github?.pending !== null && record.github?.pending !== undefined) console.log(record.github.pending);
-      if (record.github?.closedNote !== undefined) console.log(`github: ${record.github.closedNote}`);
+      if (payMessage !== undefined) for (const line of payMessage) say(line);
+      if (record.github?.pending !== null && record.github?.pending !== undefined) say(record.github.pending);
+      if (record.github?.closedNote !== undefined) say(`github: ${record.github.closedNote}`);
       if (outcome === 'already-ended') {
-        console.log(`${record.id} — already ended (${record.stage}) — nothing to do; ${jobLine(record)}`);
+        say(`${record.id} — already ended (${record.stage}) — nothing to do; ${jobLine(record)}`);
       } else {
-        console.log(`${record.id} — ${record.stage} — ${record.stage === 'rejected' ? 'the reason is recorded' : 'the bounty is withdrawn'}; ${jobLine(record)}`);
+        say(`${record.id} — ${record.stage} — ${record.stage === 'rejected' ? 'the reason is recorded' : 'the bounty is withdrawn'}; ${jobLine(record)}`);
+      }
+      if (jsonRequested) {
+        printDocument(closeDocument({ outcome, record }, {
+          reason: reason ?? null, pay: payMessage ?? [], pending: record.github?.pending ?? null, closedNote: record.github?.closedNote ?? null,
+          job: record.partOf ?? record.job?.file ?? record.title
+        }, out.join(String.fromCharCode(10)).split(String.fromCharCode(10)), notices));
       }
     } else if (subcommand === 'allow' || subcommand === 'deny' || subcommand === 'config') {
       // `allow` carries the repository's own money in the same breath
@@ -490,15 +549,29 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       let root: string | null = null;
       try { root = resolveRepoRoot(repoPath(parsed), subcommand); }
       catch (error) { if (!(error instanceof BountyRefused) || error.reason !== 'not-a-repository' || parsed.values['--repo'] !== undefined) throw error; }
-      if (subcommand === 'allow') console.log(allowRepository(root, values[0], parsed.switches.has('--ask'), money, text => console.log(text)));
-      else if (subcommand === 'deny') console.log(denyRepository(root, values[0]));
+      // BT61: the owner's word read from the settings the command left (typed state), beside the text it printed.
+      const ownerFacts = (name: string | undefined) => {
+        if (name?.startsWith('bt-')) return { kind: 'bounty' as const, repository: null, id: name, decision: null, reward: null, rewardLimit: null };
+        let address: string | null = name ?? null;
+        if (address === null && root !== null) { try { address = repositoryIdentity(root); } catch { address = null; } }
+        const entry = address === null ? undefined : Object.entries(loadSettings().repositories).find(([key]) => key.toLowerCase() === address!.toLowerCase())?.[1];
+        return { kind: 'repository' as const, repository: address, id: null, decision: entry?.bounty ?? null, reward: entry?.reward?.amount ?? null, rewardLimit: entry?.rewardLimit?.amount ?? null };
+      };
+      if (subcommand === 'allow') {
+        const said = allowRepository(root, values[0], parsed.switches.has('--ask'), money, aside);
+        if (jsonRequested) printDocument(ownerDocument('allow', ownerFacts(values[0]), said.split(String.fromCharCode(10)), notices)); else console.log(said);
+      }
+      else if (subcommand === 'deny') {
+        const said = denyRepository(root, values[0]);
+        if (jsonRequested) printDocument(ownerDocument('deny', ownerFacts(values[0]), said.split(String.fromCharCode(10)), notices)); else console.log(said);
+      }
       else if (values.length === 0 && parsed.switches.has('--json')) {
         // One settings document on standard output; notices ride stderr (BT19).
         setInstructionNoticeListener(line => console.error(line));
         setMergeNoticeListener(line => console.error(line));
         printDocument(configDocument(root, line => console.error(line)));
       }
-      else if (parsed.switches.has('--json')) throw new BountyRefused('json-not-supported', '--json reads the settings — config set|add|remove writes them. Nothing changed; next: run omakase-box config without --json to read the settings');
+      else if (parsed.switches.has('--json')) usageError('--json reads the settings and config set|add|remove writes them; drop --json: omakase-box config set <name> <value>');
       else console.log(values.length === 0 ? renderConfig(root, { full: parsed.switches.has('--full') }) : changeConfig(root, values[0]!, values[1]!, values[2]!, text => console.log(text), values.length === 4 ? values[3] : undefined));
     } else if (subcommand === 'hook') {
       // BT9: the owner switches the hook on and off; hosts run the slot
@@ -511,7 +584,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       const explain = parsed.switches.has('--explain');
       const confirm = parsed.switches.has('--confirm');
       if (action === 'start' || action === 'pause' || action === 'finish') {
-        if (hostName !== undefined || confirm) host.usage(`omakase-box hook ${action} [--explain] [--repo <path>]`);
+        if (hostName !== undefined || confirm) usageError(`omakase-box hook ${action} [--explain] [--repo <path>]`);
         let root: string | null = null;
         let rootRefusal: string | null = null;
         // Any refusal here (no checkout, Git itself unreadable or refusing)
@@ -541,31 +614,42 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         process.exit(0);
       }
       if (action === undefined) {
-        console.log(hookStatus(resolveRepoRoot(repoPath(parsed), 'hook')));
+        showText('hook', hookStatus(resolveRepoRoot(repoPath(parsed), 'hook')), { action: 'status', host: null });
       } else if (action === 'on') {
         const host = hookHost(hostName);
         const root = resolveRepoRoot(repoPath(parsed), 'hook on');
         // Without --confirm the disclosure prints and nothing is written —
         // its last line names the outcome and the confirming command.
-        console.log(confirm ? hookOn(root, host) : hookDisclosure(root, host));
+        showText('hook', confirm ? hookOn(root, host) : hookDisclosure(root, host), { action: confirm ? 'on' : 'disclosure', host: hostName ?? null });
       } else if (action === 'off') {
-        if (confirm || explain) host.usage('omakase-box hook off --host <name>');
-        console.log(hookOff(resolveRepoRoot(repoPath(parsed), 'hook off'), hookHost(hostName)));
+        if (confirm || explain) usageError('omakase-box hook off --host <name>');
+        showText('hook', hookOff(resolveRepoRoot(repoPath(parsed), 'hook off'), hookHost(hostName)), { action: 'off', host: hostName ?? null });
       } else {
-        host.usage('omakase-box hook | omakase-box hook on|off --host <name> | omakase-box hook start|pause|finish [--explain]');
+        usageError('omakase-box hook | omakase-box hook on|off --host <name> | omakase-box hook start|pause|finish [--explain]');
       }
     } else {
-      host.usage(`omakase-box ${subcommand} is not a bounty command — run omakase-box help for the journey`);
+      usageError(`omakase-box ${subcommand} is not a bounty command — run omakase-box help for the journey`);
     }
   } catch (error) {
-    if (error instanceof BountyUsage) host.usage(error.message, error.lines);
+    if (error instanceof BountyUsage) usageError(error.message, error.lines);
     if (error instanceof BountyRefused) {
-      if (['owner-allow-needed', 'owner-answer-needed', 'publish-held', 'merge-held'].includes(error.reason)) {
+      const held = ['owner-allow-needed', 'owner-answer-needed', 'publish-held', 'merge-held'].includes(error.reason);
+      // BT61: under --json a refusal is one document on standard output (standard error stays empty) with the exit code it has
+      // today: 0 for a held answer, 3 for a refusal.
+      if (jsonRequested) {
+        printDocument(refusalDocument(commandName, error.reason, error.message, held ? 0 : 3));
+        process.exit(held ? 0 : 3);
+      }
+      if (held) {
         console.log(error.message);
         process.exit(0);
       }
       console.error(`${subcommand ?? 'overview'} refused (${error.reason}): ${MULTI_LINE_REFUSALS.has(error.reason) ? error.message : oneLine(error.message)}`);
       process.exit(3);
+    }
+    if (jsonRequested) {
+      printDocument(refusalDocument(commandName, 'failed', error instanceof Error ? error.message : String(error), 1));
+      process.exit(1);
     }
     console.error(`${subcommand ?? 'overview'} failed: ${oneLine(error instanceof Error ? error.message : String(error))}`);
     process.exit(1);

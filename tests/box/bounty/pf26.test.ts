@@ -164,8 +164,10 @@ describe('status on a taken bounty', { timeout: 120000 }, () => {
     expect(submit.status).toBe(3);
     expect(submit.stderr).toContain('submit refused (nothing-to-submit)');
     const json = box('status', id, '--json');
+    // BT61: under --json a refusal is one document on standard output and standard error stays empty.
     expect(json.status).toBe(3);
-    expect(json.stderr).toContain('taken-status-options');
+    expect(json.stderr).toBe('');
+    expect((JSON.parse(json.stdout) as { refused: string }).refused).toBe('taken-status-options');
     expect(box('help').stdout).toContain('discover, take <id>, submit <id>  new bounties since your bookmark');
   }));
 

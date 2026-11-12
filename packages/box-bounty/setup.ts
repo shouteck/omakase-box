@@ -7,6 +7,7 @@ import { existsSync, lstatSync, mkdirSync, readFileSync, rmdirSync, unlinkSync, 
 import { homedir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import { nearestOf } from './args.js';
+import { refusalDocument } from './json.js';
 import { SKILL_TARGETS } from './instructions.js';
 import { INSTALL_SPEC, PACKAGE_REMOVE, SKILL_MARKER, SKILL_MARKER_OLD, SKILL_TEXT } from './wording.js';
 
@@ -77,16 +78,22 @@ export const SETUP_USAGE: readonly string[] = [
 
 /** BT65: `setup` acts on exactly nothing after it (the setup) or exactly `--remove`; `--help` and `-h` print the usage and
     write nothing; anything else is refused, naming the nearest real option, and writes nothing. Exit 2 is a usage error. */
-export function runSetupCommand(args: readonly string[]): { readonly lines: string[]; readonly code: 0 | 2 } {
-  if (args.length === 0) return { lines: runSetup(), code: 0 };
-  if (args.length === 1 && args[0] === '--remove') return { lines: runSetupRemove(), code: 0 };
-  if (args.length === 1 && (args[0] === '--help' || args[0] === '-h')) return { lines: [...SETUP_USAGE], code: 0 };
-  const first = args[0]!;
+export function runSetupCommand(args: readonly string[]): { readonly lines: string[]; readonly code: 0 | 2; readonly document?: object } {
+  // BT61: --json asks for one document (box-bounty/setup@1, or box-bounty/refusal@1 for a usage error) instead of lines.
+  const json = args.includes('--json');
+  const rest = args.filter(arg => arg !== '--json');
+  const answer = (action: 'setup' | 'remove' | 'help', lines: string[]): { readonly lines: string[]; readonly code: 0 | 2; readonly document?: object } =>
+    json ? { lines, code: 0, document: { schema: 'box-bounty/setup@1', action, lines, notices: [] } } : { lines, code: 0 };
+  if (rest.length === 0) return answer('setup', runSetup());
+  if (rest.length === 1 && rest[0] === '--remove') return answer('remove', runSetupRemove());
+  if (rest.length === 1 && (rest[0] === '--help' || rest[0] === '-h')) return answer('help', [...SETUP_USAGE]);
+  const first = rest[0]!;
   const nearest = first.startsWith('-') ? nearestOf(first, ['--remove', '--help']) : undefined;
-  const what = args.length > 1 && (first === '--remove' || first === '--help' || first === '-h')
-    ? `setup takes ${first} alone, not with "${args.slice(1).join(' ').slice(0, 40)}"`
+  const what = rest.length > 1 && (first === '--remove' || first === '--help' || first === '-h')
+    ? `setup takes ${first} alone, not with "${rest.slice(1).join(' ').slice(0, 40)}"`
     : first.startsWith('-') ? `unknown option ${first.slice(0, 40)} for setup${nearest === undefined ? '' : ` — did you mean ${nearest}?`}`
     : `unexpected word "${first.slice(0, 40)}" for setup; it takes --remove or --help`;
+  if (json) return { lines: [], code: 2, document: refusalDocument('setup', 'usage', `${what}; nothing was written; next: omakase-box setup --help`, 2, SETUP_USAGE) };
   return { lines: [`setup refused (setup-usage): ${what}; nothing was written; next: omakase-box setup --help`], code: 2 };
 }
 

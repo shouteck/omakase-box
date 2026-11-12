@@ -320,19 +320,22 @@ describe('config --json', () => {
 });
 
 describe('--json refusals', () => {
-  it('every refusal stays text on stderr with the same exit and no document', () => fixture(({ repo, id }) => {
+  it('every refusal is one document on stdout with the same exit and an empty stderr (BT61)', () => fixture(({ repo, id }) => {
     for (const [args, reason] of [
-      [['post', id, '--json'], 'json-not-supported'],
-      [['apply', id, '1', '--json'], 'json-not-supported'],
-      [['status', '--json', '--since', '2026-01-01'], 'json-not-supported'],
-      [['config', 'set', 'instructions', 'true', '--json'], 'json-not-supported'],
       [['status', 'bt-ffffffffffff', '--json'], 'unknown-bounty'],
       [['look', id, '99', '--json'], 'unknown-attempt']
     ] as const) {
       const run = box(repo, [...args]);
       expect(run.status, `${args.join(' ')}: ${run.stderr}`).toBe(3);
-      expect(run.stderr).toContain(reason);
-      expect(run.stdout, `${args.join(' ')} printed to stdout`).toBe('');
+      expect(run.stderr, `${args.join(' ')} wrote to stderr`).toBe('');
+      expect((JSON.parse(run.stdout) as { refused: string }).refused).toBe(reason);
+    }
+    // BT61: a text report or a write asked for with --json is a usage error (exit 2), also one document.
+    for (const args of [['status', '--json', '--since', '2026-01-01'], ['config', 'set', 'instructions', 'true', '--json']]) {
+      const run = box(repo, args);
+      expect(run.status, `${args.join(' ')}: ${run.stderr}`).toBe(2);
+      expect(run.stderr).toBe('');
+      expect((JSON.parse(run.stdout) as { refused: string }).refused).toBe('usage');
     }
     // help names the form exactly once.
     const help = box(repo, ['help']);

@@ -13,9 +13,9 @@
 //      is a usage error ("--full takes no value").
 //   3. The named refusals run before the unknown-option rule: retired,
 //      removed and money spellings each keep their own reason.
-//   4. --json is a named refusal (json-not-supported) on every command
-//      whose table entry does not list it — status, look and config take
-//      it (BT19); every other command still refuses it by name.
+//   4. --json is an ordinary option: every command but the bare overview
+//      takes it (BT61 added the rest to BT19's status, look and config),
+//      and the name json-not-supported is retired.
 //   5. Any other option is a usage error naming it and the command.
 //   6. An option that takes a value, given none, is a usage error — none
 //      means the line ends or the next word is another option the command
@@ -104,7 +104,7 @@ const folderRefusal = (flag: string): BountyRefused | undefined =>
     ? new BountyRefused('folder-delivery-retired', 'folder solutions were retired; next: collect a pull request with omakase-box look <id> <number> or omakase-box apply <id> <number>. Nothing changed')
     : undefined;
 
-export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
+const BASE_COMMANDS: Readonly<Record<string, CommandSpec>> = {
   overview: {
     label: 'omakase-box', usage: 'omakase-box [--repo <path>]',
     blurb: 'the standing picture — every open bounty, what each waits on, and the next step',
@@ -303,6 +303,14 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
   }
 };
 
+// BT61: every command takes --json and prints one document (box-bounty/<command>@1); the bare overview has none. A command
+// whose entry already lists it (status, look, config, find, discover: BT19) keeps its own entry.
+export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = Object.fromEntries(Object.entries(BASE_COMMANDS).map(([name, spec]) =>
+  name === 'overview' || spec.switches?.['--json'] !== undefined ? [name, spec] : [name, {
+    ...spec, // the usage string is left as it was: the entry points print it in the top-level listing (BT61: text is byte-identical)
+    switches: { ...(spec.switches ?? {}), '--json': { help: `print one JSON document (schema box-bounty/${name}@1) instead of text` } }
+  }]));
+
 export interface ParsedOptions {
   /** --help or -h appeared anywhere: print commandHelp(command), exit 0, do nothing else. */
   readonly help: boolean;
@@ -366,7 +374,7 @@ export function parseOptions(command: string, argv: readonly string[]): ParsedOp
     if (token.startsWith('-') && token !== '-' && !token.includes('=') && spec.values?.[token] !== undefined) i += 1;
   }
   // 3. The named refusals scan the whole line before any option can be
-  //    unknown (5); --json is itself a named refusal (4).
+  //    unknown (5).
   for (let i = 0; i < argv.length; i += 1) {
     const token = argv[i]!;
     if (!token.startsWith('-') || token === '-') continue;
@@ -374,7 +382,6 @@ export function parseOptions(command: string, argv: readonly string[]): ParsedOp
     const flag = equals < 0 ? token : token.slice(0, equals);
     const refusal = spec.refused?.(flag, equals < 0 ? argv[i + 1] : token.slice(equals + 1));
     if (refusal !== undefined) throw refusal;
-    if (flag === '--json' && spec.switches?.['--json'] === undefined) throw new BountyRefused('json-not-supported', `--json is not available on ${spec.label} yet; next: run ${spec.label} without --json`);
   }
   const positionals: string[] = [];
   const values: Record<string, string> = {};

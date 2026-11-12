@@ -67,16 +67,20 @@ describe('4. an unknown option on every command is a usage error naming it', () 
   }
 });
 
-it('5. --json refuses json-not-supported until a command grows it', () => {
+it('5. --json is an ordinary option on every command (BT61 retired json-not-supported); the bare overview has none', () => {
   const dir = runRoot('bt18-json');
-  // post is the brief's case; BT19 grew it on status, look and config, so
-  // the refusal is pinned here on commands that still do not take it.
+  // BT61: post, apply and create take it now; outside a checkout each refuses by name, as one document and not as text.
   for (const command of ['post', 'apply', 'create']) {
     const run = bounty(dir, [command, '--json']);
-    expect(run.status, run.stderr).toBe(3);
-    expect(run.stderr).toContain('json-not-supported');
-    expect(run.stderr).toContain(`--json is not available on omakase-box ${command} yet`);
+    expect([2, 3], `${command}: ${run.stdout}${run.stderr}`).toContain(run.status);
+    expect(run.stderr, command).toBe('');
+    expect((JSON.parse(run.stdout) as { schema: string }).schema).toBe('box-bounty/refusal@1');
   }
+  // The bare overview is the one command without a document: --json there is a usage error naming the option.
+  const overview = spawnSync(process.execPath, [CLI_DIST, '--json'], { cwd: dir, encoding: 'utf8', env: process.env });
+  expect(overview.status).toBe(2);
+  expect(overview.stderr).toBe('');
+  expect((JSON.parse(overview.stdout) as { refused: string; message: string }).message).toContain('unknown option --json');
 });
 
 describe('6. an option that takes a value, given without one', () => {
