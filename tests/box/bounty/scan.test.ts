@@ -9,16 +9,19 @@ import { binaryPatchPaths, looksBinary, scanPatch, scanText } from '../../../pac
 // file.
 const TOKEN_VALUE = 'Xk9Qm2Zv8Lp4' + 'Nr7Ty1Wb6Jd0Fg';
 
+// @guards P5
 it('names the rule and line of a secret-shaped assignment in plain text', () => {
   const hits = scanText('config.env', `API_TOKEN="${TOKEN_VALUE}"\nplain = true\n`);
   expect(hits).toEqual([{ path: 'config.env', line: 1, rule: 'assigned-secret' }]);
 });
 
+// @guards P5
 it('lets an assigned name holding a plain-words value go — the pattern alone cannot say random', () => {
   const hits = scanText('config.env', 'api_token = "thequickbrownfoxjumps"\n');
   expect(hits).toEqual([]);
 });
 
+// @guards P5
 it('names an added diff line\'s new-file line; a removed line is already leaving', () => {
   const diff = [
     'diff --git a/src/app.ts b/src/app.ts',
@@ -32,6 +35,7 @@ it('names an added diff line\'s new-file line; a removed line is already leaving
   expect(scanPatch(diff)).toEqual([{ path: 'src/app.ts', line: 2, rule: 'assigned-secret' }]);
 });
 
+// @guards P5
 it('names a binary file as not scanned — a fact, never a hit', () => {
   expect(looksBinary(Buffer.from('before\0after'))).toBe(true);
   expect(looksBinary(Buffer.from('plain text\n'))).toBe(false);

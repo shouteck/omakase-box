@@ -357,6 +357,7 @@ describe('on the real routes', () => {
     expect((await solver('example-fern')).merged.find((row: any) => row.id === LATE).counted).toBe(false);
   });
 
+  // @guards BD1
   it('a private repository: the click goes with everything else', async () => {
     await post(await signIn(OWNER), ID, 'paid', {});
     r.standin.repositories.get(repository)!.visibility = 'private';

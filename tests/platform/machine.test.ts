@@ -267,6 +267,7 @@ describe('a private repository', () => {
     expect((await askJson(r, `/bounties.json?repository=${SECRET}`)).count).toBe(0);
   });
 
+  // @guards BD1
   it('that turns private is gone from a detail at once, and from every list at the next refresh', async () => {
     expect((await ask(r, `/bounties/${flips}.json`)).status).toBe(200);
     r.standin.repositories.get('example-org/flips')!.visibility = 'private';
@@ -364,6 +365,7 @@ describe('MCP, through the SDK client', () => {
     expect(new Set(seen).size).toBe(121);
   });
 
+  // @guards BD1
   it('never offers a private repository', async () => {
     const list = JSON.stringify(await call('find_bounties', { repository: SECRET }));
     const query = JSON.stringify(await call('find_bounties', { query: 'Hidden' }));

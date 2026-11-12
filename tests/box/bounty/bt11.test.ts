@@ -295,6 +295,7 @@ describe('BT11a — the agent is asked nothing about money', () => {
     expect(loadRecord(repo, id).stage).toBe('drafted'); // nothing was posted
   });
 
+  // @guards O1
   it('a project file claiming a reward or a limit is refused by name and grants nothing', () => {
     const repo = makeRepo({ 'TASK.md': 'task\n', '.box/settings.json': '{"reward": 50}\n' });
     refused(() => planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: 'stuck', }), 'project-claims-reward');

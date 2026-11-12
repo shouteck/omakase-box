@@ -38,6 +38,7 @@ describe('the owner\'s two lists live in the owner\'s settings, never in the pro
     refused(() => changeConfig(repo, 'remove', 'never-publish', 'nope.txt'), 'publish-list-not-listed');
   });
 
+  // @guards O1
   it('a project file that claims either list is refused by name and grants nothing', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     write(repo, 'settings.json', JSON.stringify({ 'safe-to-publish': ['src/app.py'] }));
@@ -60,6 +61,7 @@ describe('list entries are validated — outside paths, links and never-ship-as-
     refused(() => changePublishList(repo, 'safe-to-publish', 'add', 'linked/target.txt'), 'publish-list-link');
   });
 
+  // @guards P2
   it('a never-ship path cannot be safe-listed', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     refused(() => changePublishList(repo, 'safe-to-publish', 'add', '.env'), 'publish-list-never-ship');
@@ -67,6 +69,7 @@ describe('list entries are validated — outside paths, links and never-ship-as-
 });
 
 describe('never publish keeps a listed path out of every bounty', () => {
+  // @guards P2
   it('a first-published commit on a listed path is refused by the never-ship rule', () => fixture(({ repo, id }) => {
     write(repo, 'mine/data.txt', 'key = "AKIA' + 'IOSFODNN7EXAMPLE' + '"\n');
     git(repo, ['add', 'mine/data.txt']);
@@ -78,6 +81,7 @@ describe('never publish keeps a listed path out of every bounty', () => {
     expect((thrown as Error).message).toContain('owner-never-publish');
   }));
 
+  // @guards C1
   it('the snapshot keeps a listed path out of the shipped set at create', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n', 'private/notes.txt': 'owner only\n' });
     changePublishList(repo, 'never-publish', 'add', 'private');
@@ -88,6 +92,7 @@ describe('never publish keeps a listed path out of every bounty', () => {
 });
 
 describe('the scan hold — the owner decides in config, the agent cannot answer it away', () => {
+  // @guards P5
   it('allow <bounty> on a scan hold is a named refusal that changes nothing; safe-listing sends it', () => fixture(({ repo, id, state }) => {
     write(repo, 'keys.txt', 'token=' + 'Xk9Qm2Zv8Lp4Nr' + '7Ty1Wb6Jd0Fg\n'); // the bare NAME=value form
     git(repo, ['add', 'keys.txt']);
@@ -143,6 +148,7 @@ describe('the scan hold — the owner decides in config, the agent cannot answer
 });
 
 describe('an owner answer is bound to what the owner was shown would be published', () => {
+  // @guards P4
   it('under ask-me-each-time an unchanged state posts; a change afterwards refuses the answer', () => fixture(({ repo, id, scratch, state }) => {
     writeFileSync(join(scratch, 'settings', 'settings.json'), JSON.stringify({ kind: 'box-owner-settings', repositories: { 'owner/project': { bounty: 'ask', at: '2026-10-13T00:00:00.000Z', changes: [] } }, projects: {} }));
     refused(() => postBounty(repo, id, 'github'), 'owner-answer-needed');
@@ -190,6 +196,7 @@ describe('binary files are named as not scanned — a fact, never a hold', () =>
 });
 
 describe('the unquoted NAME=value shape joins the stated list', () => {
+  // @guards P5
   it('env-style assignments hit; ordinary code and placeholders still pass', () => {
     const hits = scanText('config.env', 'API_TOKEN=' + 'Xk9Qm2Zv8Lp4' + 'Nr7Ty1Wb6Jd0Fg' + '\n');
     expect(hits).toMatchObject([{ rule: 'assigned-secret' }]);
@@ -214,6 +221,7 @@ describe('the unquoted NAME=value shape joins the stated list', () => {
 });
 
 describe('create previews the scan — a hit holds nothing and is recorded the same way', () => {
+  // @guards P5
   it('a secret-shaped file in the shipped set is named at create and recorded', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     write(repo, 'keys.txt', 'key = "AKIA' + 'IOSFODNN7EXAMPLE' + '"\n');

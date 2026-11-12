@@ -412,6 +412,7 @@ describe('visibility, on the real routes', () => {
     expect(view.payees).toEqual([]);
   });
 
+  // @guards BD1
   it('a private repository: the payment answer is gone, and so is the payee\'s answer', async () => {
     await saveQuill(await signIn(PAYEE));
     await record([paidEvent(new Date(NOW).toISOString())]);

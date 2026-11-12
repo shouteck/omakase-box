@@ -151,6 +151,7 @@ describe('a chosen solution shows as merged on GitHub', { timeout: 180000 }, () 
     expect(tipOf(bare, id)).toBe(posted);
   }));
 
+  // @guards P2
   it('a hand-merged head never collected, carrying a never-ship path in its history, is not pushed', () => posted(world => {
     const { repo, bare, id, pr } = world;
     const head = pr('solver1', { '.env': 'PLANTED\n' });

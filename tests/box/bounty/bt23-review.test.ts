@@ -68,6 +68,7 @@ describe('pass probes — old shapes live', () => {
     });
   });
 
+  // @guards P4 O1
   it('a verified stage and a singular answer convert — then the record really applies, and a drafted old-worded record still hits the owner gate at post', () => {
     const repo = makeRepo({ 'TASK.md': 'x\n' });
     const made = created(repo);

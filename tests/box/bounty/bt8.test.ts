@@ -35,6 +35,7 @@ const levelJson = (bounty: string): string =>
   JSON.stringify({ kind: 'box-owner-settings', default: { bounty, at: '2026-10-13T00:00:00.000Z', changes: [] }, projects: {} }, null, 2) + '\n';
 
 describe('the owner\'s one decision — nothing written is never allowed', () => {
+  // @guards P4 O1
   it('nothing written: the post waits in a named state and prints the exact owner commands', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     expect(ownerRead(repo).decision).toBeNull();
@@ -55,6 +56,7 @@ describe('the owner\'s one decision — nothing written is never allowed', () =>
 });
 
 describe('allowed — posting, answering and closing need nobody asked again', () => {
+  // @guards P4 O1
   it('project-level allowed posts without asking and records which answer allowed it', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id } = drafted(repo);
@@ -66,6 +68,7 @@ describe('allowed — posting, answering and closing need nobody asked again', (
     expect(record.waiting).toBeUndefined();
   });
 
+  // @guards O1 P4
   it('the project level is read first — a project ask stands over a default allowed, and back', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     writeDecision(repo, 'default', 'allowed');
@@ -84,6 +87,7 @@ describe('allowed — posting, answering and closing need nobody asked again', (
 });
 
 describe('ask me each time — every post and every outside close waits', () => {
+  // @guards P4
   it('each post waits on its own; the owner answers one bounty at a time', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     writeDecision(repo, 'project', 'ask');
@@ -122,6 +126,7 @@ describe('the settings file is a boundary — malformed and unknown names refuse
     refused(() => readDecision(repo), 'settings-unknown-name');
   });
 
+  // @guards O3
   it.each(['neverShip', 'private', 'secret', 'scan', 'hard-stop', 'credential'])(
     'a setting reaching for a hard stop (%s) cannot be written or read', name => {
       const repo = makeRepo({ 'src/app.py': 'x\n' });
@@ -141,6 +146,7 @@ describe('the pre-publish scan — secret shapes hold the one bounty that carrie
   // contiguous secret-shaped string — a literal here is what secret
   // scanning on the push itself flags.
   const joined = (...parts: string[]) => parts.join('');
+  // @guards P5
   it.each([
     ['private-key-block', joined('-----BEGIN ', 'RSA PRIVATE ', 'KEY-----', '\nMIIEowIBAAKCAQEA\n')],
     ['github-token', joined('token = "ghp_', 'A1b2C3d4E5f6', 'G7h8I9j0K1l2M3n4O5p6"\n')],
@@ -155,6 +161,7 @@ describe('the pre-publish scan — secret shapes hold the one bounty that carrie
     expect(hits[0]).toMatchObject({ path: 'config.txt', line: 1, rule });
   });
 
+  // @guards P5
   it('ordinary code using the words token and key is not flagged', () => {
     const ordinary = [
       'const token = getToken();',
@@ -168,6 +175,7 @@ describe('the pre-publish scan — secret shapes hold the one bounty that carrie
     expect(scanText('auth.js', ordinary)).toEqual([]);
   });
 
+  // @guards P5
   it('an unpushed commit carrying a secret holds the post — file and line named, never the value', () => fixture(({ repo, id, state }) => {
     write(repo, 'config.txt', 'db = "postgres://user:' + 's3cret-hun73r@' + 'db.internal/main"\n');
     git(repo, ['add', 'config.txt']);
@@ -200,6 +208,7 @@ describe('the pre-publish scan — secret shapes hold the one bounty that carrie
     expect(state().issues).toHaveLength(1);
   }));
 
+  // @guards P5 P4 O1
   it('an owner answer clears only what the recorded wait named — a permission answer still runs the scan', () => fixture(({ repo, id, scratch, state }) => {
     // Nothing written: the post waits for the decision…
     writeFileSync(join(scratch, 'settings', 'settings.json'), JSON.stringify({ kind: 'box-owner-settings', projects: {} }));
@@ -221,6 +230,7 @@ describe('the pre-publish scan — secret shapes hold the one bounty that carrie
     expect(state().issues).toHaveLength(1);
   }));
 
+  // @guards P5
   it('uncommitted secret bytes the agent chose to include hold the post the same way', () => fixture(({ repo, id, state }) => {
     write(repo, 'app.txt', 'fixed\nkey = "AKIA' + 'IOSFODNN7EXAMPLE' + '"\n');
     refused(() => postBounty(repo, id, 'github', { choice: { withChanges: true, include: [] } }), 'publish-held');
@@ -259,6 +269,7 @@ describe('the pre-publish scan — secret shapes hold the one bounty that carrie
 });
 
 describe('the hard stops cannot be set or switched off', () => {
+  // @guards P1
   it('posting a private repository is refused with the tool allowed', () => fixture(({ repo, id, update }) => {
     update({ private: true });
     refused(() => postBounty(repo, id, 'github'), 'github-private-repository');

@@ -62,7 +62,7 @@ What this adds to section 2: the large-company advice is about a suite humans ma
 
 **H5. Select tests by what changed, run everything where it counts.** The owner's rule (the exact commit green on all three systems) stays; the inner loop and the Windows split change.
 
-**H6. Windows temporary files may be a cheap win.** *Try:* one hosted Windows run with the temporary folder on a ReFS Dev Drive, compare minutes. No code change.
+**H6. Windows temporary files may be a cheap win.** *Tried (K63, 12 November 2026): no.* Four paired hosted jobs: C: 1417 and 1105 s, Dev Drive 1679 s (one test failed) and 1336 s (5 more tests skipped). Not faster, not drop-in, dropped (D: was about 10% faster but skips the 8.3 short-name tests, which include a hard-stop guard; and the owner ruled the whole line out of scope: the question is the design of the tests and the tool, not one machine or runner. H6 and the Windows split of H5 are dropped); the same suite on the same image varied 28% between identical jobs.
 
 **H7. Prune only by break-and-red,** after H2 and H3 exist.
 

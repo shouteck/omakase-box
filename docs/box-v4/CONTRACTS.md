@@ -15,7 +15,7 @@ A refusal is a `BountyRefused` (`errors.ts:5`) whose first argument is a stable 
 **States.** none → `drafted`.
 
 **Guarantees.**
-- C1. No never-ship file enters the draft's captured files; removed files are named only as `(rule 'name')` removals (`snapshot.ts`, never-ship.test.ts).
+- C1. No never-ship file enters the draft's captured files; removed files are named only as `(rule 'name')` removals (`snapshot.ts`, never-ship.test.ts) — hard stop 1, create side.
 - C2. Links and junctions resolving outside the repository are refused, never followed (`snapshot.ts:112` `link-escape`).
 - C3. `create` performs no network I/O and writes no `refs/box-bounty-records/<id>` ref (nor the old `refs/box-bounty/<id>`) — the draft is local (`bt32.test.ts` case 1, `record.test.ts:54`).
 - C4. `--why` is required and stored only in the record — never in any shipped artifact (`create.ts:129`, `missing-why`).
@@ -209,6 +209,13 @@ A refusal is a `BountyRefused` (`errors.ts:5`) whose first argument is a stable 
 **Refusals.** `git-missing`, `git-too-old`, `github-cli-missing`, `github-cli-too-old`, `github-cli-unsafe`, `github-not-signed-in`, `github-rate-limited`, `github-permission-denied`, `github-repository-missing`, `github-unavailable`, `github-unreachable` (named from status, headers and safe markers, BT50), `github-command-failed` (the fallback), `github-call-budget`, `github-response-invalid`, `github-git-failed`, `github-visibility-unreadable`, `github-push-denied`, `authority-arguments`, `command-removed`, `bounty-ambiguous`.
 
 **Scale target.** — (process-start budget instead: `k14-start-budget.test.ts` pins per-command Git/gh starts).
+
+## the board
+
+**Job.** For solvers and agents looking for work: the open bounty board (`packages/box-platform`) lists what the tool posted, from public GitHub facts only. Added by K64 so the second hard stop has its board-side guarantee; the board's other behaviour is described in PLAN.md and `waves/PF*.md`, not yet contracted here.
+
+**Guarantees.**
+- BD1. The board never lists, renders, stores or offers a private repository, and one that turns private leaves its pages, feed and lists at the next refresh or at once at render (`box-platform/src/refresh.ts`, `hints.ts`; `tests/platform/refresh.test.ts`, `pages.test.ts`, `machine.test.ts`) — hard stop 2, board side.
 
 ## Refusals fitting no single stage
 

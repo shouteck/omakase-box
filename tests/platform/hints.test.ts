@@ -60,6 +60,7 @@ describe('POST /api/hint', () => {
     expect(await count(r, 'bounties')).toBe(0);
   });
 
+  // @guards BD1
   it('never lists a private repository, and purges one that went private', async () => {
     await send(r, hint());
     expect(await count(r, 'bounties')).toBe(1);

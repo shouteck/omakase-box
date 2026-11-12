@@ -125,6 +125,7 @@ describe('BT40 every refusal names its next step', () => {
     expect(bad.join('\n'), 'a next step names a command that does not exist').toBe('');
   });
 
+  // @guards C1
   it('one refusal per family runs through the built CLI and prints its reason and next step', { timeout: 180000 }, () => {
     const repo = makeRepo({ 'TASK.md': 'Fix the sum.\n', 'secrets/TASK2.md': 'hidden\n' });
     const draft = createBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: 'stuck' });

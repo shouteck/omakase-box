@@ -44,6 +44,7 @@ describe('a look-alike path is refused as the plain spelling is', () => {
     expect(ruleFor(path)).toBe(rule);
   });
 
+  // @guards C1
   it('create removes them, and names the real spelling and the right rule', () => {
     const secret = `s${CYR_E}crets/api.txt`;
     const env = `.${CYR_E}nv`;
@@ -54,6 +55,7 @@ describe('a look-alike path is refused as the plain spelling is', () => {
     expect(removals).toEqual(expect.arrayContaining([[secret, 'secrets-dir'], [env, 'dot-env'], [wide, 'secrets-dir']]));
   });
 
+  // @guards C1
   it('a look-alike task file is refused by name', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     write(repo, `.${CYR_E}nv`, 'fake\n');
@@ -69,6 +71,7 @@ describe('a look-alike path is refused as the plain spelling is', () => {
 });
 
 describe('the journey back: what a commit carries', () => {
+  // @guards P2
   it('a look-alike path in a real commit is a violation under the plain rule, with its real spelling', () => {
     const path = `s${CYR_E}crets/planted.txt`;
     const repo = makeRepo({ 'src/app.py': 'x\n', [path]: 'fake\n' });
@@ -79,6 +82,7 @@ describe('the journey back: what a commit carries', () => {
 });
 
 describe('the owner lists are matched the same way', () => {
+  // @guards C1
   it('an NFD path is caught by an NFC .boxignore entry, and the other way round', () => {
     const one = ship({ '.boxignore': `${NFC_CAFE}/\n`, [`${NFD_CAFE}/menu.txt`]: 'fake\n' });
     expect(one.plan.ruleRemovals).toEqual([{ rule: 'owner-list', removed: 1, paths: [`${NFD_CAFE}/menu.txt`] }]);
@@ -86,6 +90,7 @@ describe('the owner lists are matched the same way', () => {
     expect(two.plan.ruleRemovals).toEqual([{ rule: 'owner-list', removed: 1, paths: [`${NFC_CAFE}/menu.txt`] }]);
   });
 
+  // @guards C1
   it('a look-alike of a .boxignore entry is caught', () => {
     const { plan } = ship({ '.boxignore': 'private/\n', [`prіvat${CYR_E}/algo.py`]: 'fake\n' });
     expect(plan.ruleRemovals).toEqual([{ rule: 'owner-list', removed: 1, paths: [`prіvat${CYR_E}/algo.py`] }]);
@@ -98,6 +103,7 @@ describe('the owner lists are matched the same way', () => {
     expect(rule?.name).toBe('owner-never-publish');
   });
 
+  // @guards C1
   it('a look-alike never-ship path cannot go on the safe list', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     expect(() => changePublishList(repo, 'safe-to-publish', 'add', `.${CYR_E}nv`)).toThrow(/dot-env/);

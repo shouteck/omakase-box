@@ -92,6 +92,7 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(fingerprint(repo)).toEqual(before);
   }));
 
+  // @guards P1
   it.each([
     ['private repository', 'github-private-repository', { private: true, visibility: 'private' }],
     ['unreadable visibility', 'github-visibility-unreadable', { malformed: true }],
@@ -260,6 +261,7 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(stale).toContain('#1 by owner');
   }));
 
+  // @guards R3
   it.each([
     ['wrong base', 'github-pr-wrong-branch', {}, 'main'],
     ['never-ship addition', 'answer-never-ship', { '.env': 'bad' }, undefined],

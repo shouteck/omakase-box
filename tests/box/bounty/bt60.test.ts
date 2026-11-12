@@ -28,6 +28,7 @@ const nothingReached = (world: GithubFixture): void => {
 };
 
 describe('BT60: no bounty is posted without a reward', () => {
+  // @guards P9
   it('1. a repository allowed with no reward: post is refused by name, nothing reaches GitHub, the record is unchanged', () => fixture(world => {
     const before = JSON.stringify(readRecordRaw(world.repo, world.id));
     refused(() => postBounty(world.repo, world.id, 'github'), 'reward-required');

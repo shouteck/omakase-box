@@ -98,6 +98,7 @@ describe('BT61: a refusal or a usage error under --json is one document', { time
     expect(String(doc['message'])).toContain(hostile);
   });
 
+  // @guards D4 P4 O1
   it('a refusal that exits 0 today (the owner has not allowed it) is the same document with exitCode 0', () => {
     const world = sharedFixture();
     world.run(() => {

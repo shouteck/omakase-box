@@ -26,6 +26,7 @@ const plantSecret = (repo: string): void => {
 };
 
 describe('ask me each time covers merges', () => {
+  // @guards P4
   it('apply holds the merge in a named waiting state; allow releases exactly the shown state', () => fixture(({ repo, id, scratch, pr }) => {
     askWorld(scratch);
     refused(() => postBounty(repo, id, 'github'), 'owner-answer-needed');
@@ -59,6 +60,7 @@ describe('ask me each time covers merges', () => {
     expect(applied.events.at(-1)?.unasked).toBeUndefined();
   }));
 
+  // @guards D4 P4
   it('the answer is bound — a moved branch asks again, and a stale allow changes nothing', () => fixture(({ repo, id, scratch, pr }) => {
     askWorld(scratch);
     refused(() => postBounty(repo, id, 'github'), 'owner-answer-needed');
@@ -77,6 +79,7 @@ describe('ask me each time covers merges', () => {
     expect(loadRecord(repo, id).stage).toBe('applied');
   }));
 
+  // @guards D4 P4
   it('a record naming a different bound commit is stale — the owner was never shown it', () => fixture(({ repo, id, scratch, pr }) => {
     askWorld(scratch);
     refused(() => postBounty(repo, id, 'github'), 'owner-answer-needed');
@@ -90,6 +93,7 @@ describe('ask me each time covers merges', () => {
     expect(loadRecord(repo, id).stage).toBe('waiting');
   }));
 
+  // @guards D4 P4
   it('an edited record cannot mark a merge approved — the owner answer lives outside the repository', () => fixture(({ repo, id, scratch, pr }) => {
     askWorld(scratch);
     refused(() => postBounty(repo, id, 'github'), 'owner-answer-needed');
@@ -110,6 +114,7 @@ describe('ask me each time covers merges', () => {
     expect(after.waiting?.answered).toBeUndefined(); // the forge is scrubbed too
   }));
 
+  // @guards D4 P4
   it('nothing an agent passes marks a merge approved', () => fixture(({ repo, id, scratch, pr }) => {
     askWorld(scratch);
     refused(() => postBounty(repo, id, 'github'), 'owner-answer-needed');
@@ -130,6 +135,7 @@ describe('ask me each time covers merges', () => {
     expect(loadRecord(repo, id).waiting).toBeUndefined();
   }));
 
+  // @guards D4 P4
   it('a hand merge while a merge waits still closes the bounty — and says the owner was not asked', () => fixture(({ repo, id, scratch, pr }) => {
     askWorld(scratch);
     refused(() => postBounty(repo, id, 'github'), 'owner-answer-needed');
@@ -158,6 +164,7 @@ describe('ask me each time covers merges', () => {
     expect(loadRecord(repo, id).events.at(-1)).toMatchObject({ command: 'merged', unasked: true });
   }));
 
+  // @guards D4 P4
   it('closing a merge-held bounty never waits', () => fixture(({ repo, id, scratch, pr }) => {
     askWorld(scratch);
     refused(() => postBounty(repo, id, 'github'), 'owner-answer-needed');
@@ -201,6 +208,7 @@ describe('messages meant for the owner', () => {
     expect(held.stdout).toContain(`omakase-box allow ${id}`);
   }));
 
+  // @guards P5
   it('the secret-scan hold tells the owner what was found, where, that nothing was published, and their choices', () => fixture(({ repo, id, scratch }) => {
     plantSecret(repo);
     const held = cli(repo, 'post', id, '--to', 'github');
@@ -216,6 +224,7 @@ describe('messages meant for the owner', () => {
     expect(held.stdout).not.toContain(secretValue);
   }));
 
+  // @guards P5
   it('a safe-listed scan does not headline "clean"', () => fixture(({ repo, id, scratch }) => {
     plantSecret(repo);
     changePublishList(repo, 'safe-to-publish', 'add', 'config/creds.txt');

@@ -5,6 +5,7 @@ import { applyBounty, lookBounty, postBounty } from '../../../packages/box-bount
 import { fixture, postedFixture, refused } from './github-fixture.js';
 import { fingerprint, git, readRecordRaw, runRoot, write } from './support.js';
 
+// @guards P2
 it('the GitHub publication refuses newly committed never-ship content without changing owner bytes', () => fixture(({ repo, id, state }) => {
   write(repo, '.env.local', 'private fixture content\n');
   write(repo, 'app.txt', 'owner progress\n');
@@ -16,6 +17,7 @@ it('the GitHub publication refuses newly committed never-ship content without ch
   expect(fingerprint(repo)).toEqual(before);
 }));
 
+// @guards P1
 it('private GitHub publication refuses by name and preserves the draft', () => fixture(({ repo, id, update, state }) => {
   update({ visibility: 'private', private: true });
   const before = readRecordRaw(repo, id);
@@ -24,6 +26,7 @@ it('private GitHub publication refuses by name and preserves the draft', () => f
   expect(state().issues).toEqual([]);
 }));
 
+// @guards R3
 it('a solver-added never-ship path is refused before recording or writing owner files', () => postedFixture(({ repo, id, pr }) => {
   pr('solver', { '.box/hostile.txt': 'outside content\n' });
   const before = fingerprint(repo);

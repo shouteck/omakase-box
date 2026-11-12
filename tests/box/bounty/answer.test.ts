@@ -339,6 +339,7 @@ describe('apply and close — stage rules and the dirty-worktree boundary', () =
 
 
 describe('the boundary the pass proved open', () => {
+  // @guards R3
   it("a solver-added path the owner's .boxignore names is refused by name — the return enforces the same table create did", () => {
     const repo = makeRepo({ 'src/app.py': 'x\n', '.boxignore': 'credentials.json\n' });
     const { id, delivered } = posted(repo);

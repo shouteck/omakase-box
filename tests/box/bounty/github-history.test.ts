@@ -110,6 +110,7 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     expect(git(repo, ['status', '--porcelain'])).toContain('M app.txt');
   }));
 
+  // @guards P3 P2
   it('--include publishes only the untracked files named, and refuses the rest of the family', () => fixture(({ repo, id, bare }) => {
     write(repo, 'notes/hint.txt', 'look here\n');
     write(repo, 'notes/stay.txt', 'stays home\n');
@@ -136,6 +137,7 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     expect(git(bare, ['ls-tree', '-r', '--name-only', `refs/heads/${pub.branch}`])).not.toContain('.env.local');
   }), 120000);
 
+  // @guards P2
   it('refuses work the task needs when it touches a never-ship path — worktree or staged, it publishes nothing', () => fixture(({ repo, id }) => {
     write(repo, '.env', 'CHANGED\n');
     write(repo, 'key.pem', 'x\n'); git(repo, ['add', '-f', 'key.pem']);
@@ -144,6 +146,7 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     expect(loadRecord(repo, id).github).toBeUndefined();
   }));
 
+  // @guards P2
   it('refuses an unpushed commit that touches a never-ship path', () => fixture(({ repo, id }) => {
     write(repo, 'app.txt', 'legit\n'); git(repo, ['add', '-A']);
     git(repo, ['-c', 'user.name=poster', '-c', 'user.email=poster@test.invalid', 'commit', '-qm', 'legit']);
@@ -153,6 +156,7 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     expect(git(repo, ['rev-list', '--count', 'HEAD'])).toBe('3');
   }));
 
+  // @guards P2
   it('refuses a pushed range that hides a never-ship path inside a root commit', () => fixture(({ repo, id }) => {
     // An orphan root plants payload/.env; a merge pulls it into the branch
     // but drops the file in the merge's own tree — no 'A' survives anywhere
@@ -241,6 +245,7 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     refused(() => lookBounty(repo, id, 2), 'github-pr-not-descended');
   }));
 
+  // @guards R3
   it('refuses a pull request that hides a never-ship path deep in its history but not in its final tree', () => postedFixture(({ repo, id, prCommit }) => {
     const pub = loadRecord(repo, id).github!;
     // Commit 1 plants a never-ship path; commit 2 removes it and fixes the
@@ -263,6 +268,7 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     expect(loadRecord(repo, id).attempts ?? []).toHaveLength(0);
   }));
 
+  // @guards R3
   it('refuses a pull request that drops a never-ship path planted inside a root commit it merges', () => postedFixture(({ repo, id, prCommit }) => {
     const pub = loadRecord(repo, id).github!;
     // A solver merges an orphan root carrying payload/.env, dropped in the
