@@ -19,8 +19,8 @@ function hostilePaths(node: unknown, path = ''): string[] {
 
 const documents: Record<string, Record<string, unknown>> = {
   create: createDocument(
-    { id: 'bt-111111111111', recordPath: '/tmp/r', plan: { repoRoot: '/tmp/repo', title: 'T', titleShortened: false, task: { file: 'TASK.md' }, scan: { hits: [{ path: HOSTILE, line: 1, rule: 'rule' }], binary: [HOSTILE] }, ruleRemovals: [{ rule: 'dot-box', removed: HOSTILE }] } },
-    { reward: 0, waitsForOwner: null, next: 'omakase-box post bt-111111111111' }, [HOSTILE], []),
+    { id: 'bt-111111111111', plan: { repoRoot: '/tmp/repo', title: 'T', titleShortened: false, task: { file: 'TASK.md' }, scan: { hits: [{ path: HOSTILE, line: 1, rule: 'rule' }], binary: [HOSTILE] }, ruleRemovals: [{ rule: 'dot-box', removed: HOSTILE }] } },
+    { record: '/tmp/r', reward: 0, waitsForOwner: null, next: 'omakase-box post bt-111111111111' }, [HOSTILE], []),
   'post-preview': postPreviewDocument('bt-111111111111',
     { repository: 'owner/project', title: 'T', body: HOSTILE, base: 'a'.repeat(40), head: 'b'.repeat(40), tip: 'c'.repeat(40), pushed: [{ sha: 'd'.repeat(40), subject: HOSTILE }], wip: { subject: HOSTILE }, include: [], withChanges: false, untracked: [HOSTILE] },
     [HOSTILE], []),

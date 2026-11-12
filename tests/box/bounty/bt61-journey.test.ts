@@ -43,7 +43,7 @@ describe('BT61: a document per command', { timeout: 300000 }, () => {
     const created = doc(plain, ['create', '--task', 'TASK.md', '--why', 'a test of the document', '--json']);
     expect(created['schema']).toBe('box-bounty/create@1');
     expect(created['id']).toMatch(/^bt-[a-f\d]{12}$/);
-    expect(typeof created['recordPath']).toBe('string');
+    expect(typeof created['record']).toBe('string');
     expect(created['reward']).toBe(0);
     expect(created['next']).toBe(`omakase-box post ${String(created['id'])} (--preview shows what becomes public)`);
     expect(keys(created)[0]).toBe('schema');

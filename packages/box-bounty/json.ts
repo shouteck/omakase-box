@@ -585,19 +585,18 @@ interface ScanHitLike { readonly path: string; readonly line: number; readonly r
 export function createDocument(
   result: {
     readonly id: string;
-    readonly recordPath: string;
     readonly plan: {
       readonly repoRoot: string; readonly title: string; readonly titleShortened: boolean; readonly task: { readonly file: string };
       readonly scan: { readonly hits: readonly ScanHitLike[]; readonly binary: readonly string[] };
       readonly ruleRemovals: readonly { readonly rule: string; readonly removed: unknown }[];
     };
   },
-  facts: { readonly reward: number; readonly waitsForOwner: string | null; readonly next: string },
+  facts: { readonly record: string; readonly reward: number; readonly waitsForOwner: string | null; readonly next: string },
   lines: readonly string[], notices: readonly string[]
 ): JsonObject {
   const { plan } = result;
   return commandDocument('create', {
-    id: result.id, repoRoot: plan.repoRoot, recordPath: result.recordPath, title: plan.title, titleShortened: plan.titleShortened, taskFile: plan.task.file,
+    id: result.id, repoRoot: plan.repoRoot, record: facts.record, title: plan.title, titleShortened: plan.titleShortened, taskFile: plan.task.file,
     scan: { hits: plan.scan.hits.map(scanHit), notScanned: [...plan.scan.binary] },
     neverShipRemoved: plan.ruleRemovals.map(entry => ({ rule: entry.rule, removed: entry.removed })),
     reward: facts.reward, waitsForOwner: facts.waitsForOwner, next: facts.next

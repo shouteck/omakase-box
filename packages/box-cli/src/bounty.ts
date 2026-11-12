@@ -257,7 +257,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       const nextLine = `next: omakase-box post ${result.id} (--preview shows what becomes public)`;
       lines.push(nextLine);
       say(lines.join('\n'));
-      if (jsonRequested) printDocument(createDocument(result, { reward: amount, waitsForOwner, next: nextLine.slice('next: '.length) }, out.join('\n').split('\n'), notices));
+      if (jsonRequested) printDocument(createDocument(result, { record: result.recordPath, reward: amount, waitsForOwner, next: nextLine.slice('next: '.length) }, out.join('\n').split('\n'), notices));
     } else if (subcommand === 'discover') {
       // The solver's half (PF24): no checkout needed; the owner's word and the agent's bookmark live outside every repository.
       const parsed = parse('discover');

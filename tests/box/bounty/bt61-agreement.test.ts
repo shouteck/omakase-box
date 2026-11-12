@@ -39,7 +39,7 @@ const has = (document: unknown, pointer: string): boolean => {
 
 // Every label a command's text can print, mapped to the pointer that carries the same fact, or to null with the reason in NOT_FACT.
 const LABELS: Record<string, Record<string, string | null>> = {
-  create: { 'next': '/next', 'scan hit': '/scan/hits', 'title': '/title', 'record': '/recordPath', 'not scanned': '/scan/notScanned' },
+  create: { 'next': '/next', 'scan hit': '/scan/hits', 'title': '/title', 'record': '/record', 'not scanned': '/scan/notScanned' },
   'post --preview': { 'next': null },
   post: { 'next': '/next', 'scan': '/scanBinary' },
   // The owner's block after a merge (`bounty`, `merged solution`, `merged in`, `reward`) is the `pay` lines; the resume block

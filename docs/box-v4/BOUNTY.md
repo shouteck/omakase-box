@@ -237,7 +237,7 @@ these go here and not to standard output) and `foreignFields` (as above):
 
 | Command | Document | What it carries |
 |---|---|---|
-| `create` | `create@1` | `id`, `repoRoot`, `recordPath`, `title`, `titleShortened`, `taskFile`, `scan {hits, notScanned}`, `neverShipRemoved`, `reward`, `waitsForOwner`, `next` |
+| `create` | `create@1` | `id`, `repoRoot`, `record`, `title`, `titleShortened`, `taskFile`, `scan {hits, notScanned}`, `neverShipRemoved`, `reward`, `waitsForOwner`, `next` |
 | `post --preview` | `post-preview@1` | `id`, `posted: false`, `repository`, `branch`, `title`, `issueBody`, `base`, `head`, `tip`, `pushed`, `wip`, `include`, `withChanges`, `untracked` |
 | `post` | `post@1` | `id`, `posted: true`, `destination`, `repository`, `branch`, `base`, `commit`, `issue {number, url}`, `reward`, `scanBinary`, `stage`, `next` |
 | `apply` | `apply@1` | `id`, `outcome` (`applied` or `conflicts`), `attempt`, `mergeCommit`, `stage`, `conflicts`, `clean`, `commitsTouchingConflicts`, `base`, `firstMergeNotice`, `pay`, `github {pending, closedNote}`, `notOnGitHub {upstream, ahead, publish}`, `resume`, `revert`, `job`, `next` |
