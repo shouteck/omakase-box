@@ -65,7 +65,15 @@ const refusalsIn = text => {
 
 // Words that say a test is about a hard stop even when it asserts no refusal name (a behavioural test).
 const WORDS = { neverShip: /never-ship|neverShip|boxignore|scanPatch|secret|credential/i, env: /[.]env["'`/ ]|[.]pem|id_rsa/i, private: /private/i, owner: /owner-allow|owner-answer|merge-held|standing|"ask"|'ask'|allowed/i };
-const wordsIn = text => Object.entries(WORDS).filter(([, re]) => re.test(text)).map(([name]) => name);
+// K51d: how a test is written (read from its text, not run): which level it works at, how many assertions it has, how many pin wording.
+const shapeOf = body => ({
+  cli: /CLI_DIST|spawnSync\(process\.execPath|runCli\(/.test(body),
+  world: /\b(?:fixture|postedFixture|sharedFixture|sharedPostedFixture|makeRepo|makeWorld|runRoot)\(/.test(body),
+  git: /\bgit\(|['"]git['"]/.test(body),
+  expects: (body.match(/\bexpect\(/g) ?? []).length,
+  wording: (body.match(/\.(?:toContain|toBe|toMatch|toEqual|toStartWith)\(\s*[`'"][^`'"]{25,}/g) ?? []).length
+});
+const wordsIn = text =>Object.entries(WORDS).filter(([, re]) => re.test(text)).map(([name]) => name);
 const out = { refusalNames: [...names].sort(), inContractsOnly: [...fromContracts].filter(n => !fromCode.has(n) && names.has(n)).sort(), inCodeOnly: [...fromCode].filter(n => !fromContracts.has(n)).sort(), files: [] };
 for (const path of files) {
   const text = readFileSync(path, 'utf8');
@@ -82,7 +90,7 @@ for (const path of files) {
         const end = source.getLineAndCharacterOfPosition(node.getEnd()).line + 1;
         if (isGroup) { ts.forEachChild(node, child => visit(child, [...trail, title])); return; }
         const body = node.getText(source);
-        tests.push({ title, group: trail.join(' > '), line, end, lines: end - line + 1, refusals: refusalsIn(body), words: wordsIn(body), titleWords: wordsIn(title), eachTable: /\.each\b/.test(node.expression.getText(source)), skipped: /\.(skip|skipIf|todo)\b/.test(node.expression.getText(source)) });
+        tests.push({ title, group: trail.join(' > '), line, end, lines: end - line + 1, refusals: refusalsIn(body), words: wordsIn(body), titleWords: wordsIn(title), shape: shapeOf(body), eachTable: /\.each\b/.test(node.expression.getText(source)), skipped: /\.(skip|skipIf|todo)\b/.test(node.expression.getText(source)) });
         return;
       }
     }
