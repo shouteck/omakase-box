@@ -881,6 +881,7 @@ describe('the pages', () => {
     await close();
   });
 
+  // @guards BD1
   it('a private repository: not listed, not rendered by direct URL, no bytes in any answer', async () => {
     const { page, close } = await fresh();
     const bodies: string[] = [];
@@ -1024,6 +1025,7 @@ describe('the pages', () => {
     expect(ratio('#ffffff', '#000000')).toBeCloseTo(21, 5);
   });
 
+  // @guards BD1
   it('a repository that turns private after listing is gone from the page at render, in the browser', async () => {
     const standin = board.standin;
     const repository = 'example-org/repo-1';

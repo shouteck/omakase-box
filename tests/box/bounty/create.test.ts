@@ -29,6 +29,7 @@ const readDraft = (result: BountyResult) => ({ ...result.plan, ...loadRecord(res
 
 describe('bounty create end to end', () => {
 
+  // @guards C1
   it('refuses a negation line in .boxignore instead of silently ignoring it', () => {
     const repo = repoWithTask({ 'src/x.py': 'x\n', '.boxignore': '!keep-this.txt\n' });
     try {

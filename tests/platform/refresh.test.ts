@@ -32,6 +32,7 @@ describe('finding bounties', () => {
     expect(body.read_at).toBe(new Date(NOW).toISOString());
   });
 
+  // @guards BD1
   it('never lists, renders or stores a private repository with a valid block', async () => {
     r.standin.repositories.set('example-hidden/vault', { language: 'Go', visibility: 'private' });
     r.standin.issues.push(issue({ repository: 'example-hidden/vault', title: 'PRIVATE SAMPLE' }));
@@ -50,6 +51,7 @@ describe('finding bounties', () => {
     expect((await askJson(r, handle, '/api/board')).body.bounties).toEqual([]);
   });
 
+  // @guards BD1
   it('drops a repository that turns private, at the next refresh', async () => {
     r.standin.repositories.set('example-tidepool/ledger', { language: 'Go', visibility: 'public' });
     r.standin.issues.push(issue());
@@ -63,6 +65,7 @@ describe('finding bounties', () => {
     expect(await dump(r)).not.toContain('Skip no months');
   });
 
+  // @guards BD1
   it('drops it at render, before any refresh, and that empties the list too', async () => {
     r.standin.repositories.set('example-tidepool/ledger', { language: 'Go', visibility: 'public' });
     r.standin.issues.push(issue());

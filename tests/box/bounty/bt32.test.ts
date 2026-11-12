@@ -213,6 +213,7 @@ describe('BT32 shared bounty memory', { timeout: 180000 }, () => {
     }); }
   });
 
+  // @guards P5 M3
   it('a secret-shaped field holds the event before any object is written', () => {
     { const world = sharedFixture(); world.run(() => {
       // A why carrying a GitHub-token-shaped string — a publish-hit refusal,

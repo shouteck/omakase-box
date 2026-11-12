@@ -204,6 +204,7 @@ describe('the three owner words through the built CLI', () => {
     expect(run.stderr).toContain('next: omakase-box');
     expect(saved()).toBe(before);
   });
+  // @guards O3
   it('stray arguments and unknown or hard-stop settings are named refusals with no write', () => {
     const root = repo();
     // BT18: unknown options and extra words are usage errors (exit 2) that
@@ -251,6 +252,7 @@ describe('the three owner words through the built CLI', () => {
     expect(remove.stderr).toContain('omakase-box deny owner/shop');
     expect(readDecision(repo('owner/shop')).decision).toBeNull();
   });
+  // @guards P4 O1
   it('config distinguishes effective authority, undecided defaults and applicable waiting choices', () => {
     const root = repo();
     allowRepository(root);
@@ -304,6 +306,7 @@ it('closing a waiting bounty twice stays a named terminal outcome', () => {
   expect(again.stdout).toContain('the job it came from: repair');
 });
 
+// @guards P4 O1
 it('a previous one-bounty choice is visible on the next held post', () => {
   const root = repo(), first = draft(root);
   refused(() => postToGitHub(root, first.id), 'owner-allow-needed');
@@ -342,6 +345,7 @@ it('legacy tool-written owner spellings are scrubbed on every replay field and h
   });
 }));
 
+// @guards P4
 it('ask: allowing a waiting bounty posts directly and closes without another question', () => fixture(({ repo: root, id, state, bare }) => {
   allowRepository(root, undefined, true);
   refused(() => postBounty(root, id, 'github'), 'owner-answer-needed');

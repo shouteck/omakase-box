@@ -42,6 +42,7 @@ describe('a checkout with several GitHub remotes resolves through the owner list
     expect(loadRecord(root, id).stage).toBe('waiting');
     expect(saved()).toBe(before);
   });
+  // @guards P4 O1
   it('case 2: allow names the fork — the waiting bounty releases and posts to it, and the acting line leads the output', () => {
     const root = fork();
     const { id } = draft(root);
@@ -127,6 +128,7 @@ describe('a checkout with several GitHub remotes resolves through the owner list
     expect(readDecision(root).decision).toBeNull();
     expect(saved()).toBe(before);
   });
+  // @guards P4 O1
   it('case 7: all-projects allowed never chooses between remotes — post waits until one is listed, then posts', () => {
     const root = fork();
     writeDecision(root, 'default', 'allowed');
@@ -143,6 +145,7 @@ describe('a checkout with several GitHub remotes resolves through the owner list
     expect(world.state().issues[0]?.html_url).toContain('github.com/me/project/issues/');
     expect(saved()).not.toBe(before);
   });
+  // @guards P4 O1
   it('case 8: re-pointing the listed remote leaves the checkout unlisted — the yes does not follow it', () => {
     const root = fork();
     allowRepository(root, 'me/project');
@@ -215,6 +218,7 @@ describe('a checkout with several GitHub remotes resolves through the owner list
     expect(git(world.bare, ['branch', '--list', 'box-bounty/*'])).toBe('');
     expect(saved()).toBe(before);
   });
+  // @guards P4 O1
   it('case 13: allow naming a repository this checkout does not have writes it and says nothing here was released', () => {
     const root = fork();
     const { id } = draft(root);
@@ -245,6 +249,7 @@ describe('a checkout with several GitHub remotes resolves through the owner list
     expect(config).toContain('ghost/elsewhere');
     expect(config).toContain('this repository: owner/project');
   });
+  // @guards P4 O1
   it('a one-bounty allow cannot name a repository — it refuses repository-choice-needed and changes nothing', () => {
     const root = fork();
     const { id } = draft(root);
@@ -262,6 +267,7 @@ describe('a checkout with several GitHub remotes resolves through the owner list
     expect(loadRecord(root, id).stage).toBe('waiting');
     expect(saved()).toBe(before);
   });
+  // @guards P4
   it('an ask entry still selects the repository — the post waits for the owner answer', () => {
     const root = fork();
     allowRepository(root, 'me/project', true);
@@ -270,6 +276,7 @@ describe('a checkout with several GitHub remotes resolves through the owner list
     const { id } = draft(root);
     refused(() => postBounty(root, id), 'owner-answer-needed');
   });
+  // @guards P4 O1
   it('a denied entry is not on the list — the checkout is unlisted again', () => {
     const root = fork();
     allowRepository(root, 'me/project');

@@ -155,6 +155,7 @@ describe('the owner\'s written yes — the gate every post passes once', () => {
 });
 
 describe('post — gated first delivery to a local folder', () => {
+  // @guards P4 O1
   it('holds the first post when the owner has not decided: owner-allow-needed', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id } = created(repo);

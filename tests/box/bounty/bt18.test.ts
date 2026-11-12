@@ -128,6 +128,7 @@ it('9. create --task - still reads the task from standard input', () => {
 });
 
 describe('10. the existing named refusals keep their reason names and exit codes', () => {
+  // @guards D4
   it.each([
     [['create', '--task', 'TASK.md', '--why', 'x', '--setup'], 'checks-removed'],
     [['create', '--task', 'TASK.md', '--why', 'x', '--check'], 'checks-removed'],

@@ -31,18 +31,21 @@ function ship(files: Record<string, string>, mutate?: (repo: string) => void): {
 }
 
 describe('never-ship holds against hostile paths', () => {
+  // @guards C1
   it('removes a secret that is tracked', () => {
     const { shipped, plan } = ship({ 'secrets/api.key': 'fake-tracked-key\n' });
     expect(shipped).not.toContain('secrets/api.key');
     expect(plan.ruleRemovals).toEqual([{ rule: 'secrets-dir', removed: 1, paths: ['secrets/api.key'] }]);
   });
 
+  // @guards C1
   it('removes an untracked secret', () => {
     const { shipped, plan } = ship({}, repo => write(repo, 'token.pem', 'fake-untracked\n'));
     expect(shipped).not.toContain('token.pem');
     expect(plan.ruleRemovals).toEqual([{ rule: 'private-key', removed: 1, paths: ['token.pem'] }]);
   });
 
+  // @guards C1
   it('removes a secret reached through a different letter case', () => {
     const { shipped, plan } = ship({}, repo => {
       write(repo, 'SECRETS/Api.KEY', 'fake-case\n');
@@ -60,6 +63,7 @@ describe('never-ship holds against hostile paths', () => {
 
   // Host-only: needs a real junction — on Linux the link stays a link and the
   // snapshot refuses it as 'unreadable-path' before never-ship rules run.
+  // @guards C1
   it.skipIf(!junctions)('removes a secret reached through a junction inside the repository', () => {
     const { shipped, plan } = ship({ 'secrets/real.key': 'fake-junction-key\n' }, repo => {
       // A junction is a directory link any Windows user can create; git traverses
@@ -71,12 +75,14 @@ describe('never-ship holds against hostile paths', () => {
     expect(plan.ruleRemovals).toEqual([{ rule: 'secrets-dir', removed: 1, paths: ['secrets/real.key'] }]);
   });
 
+  // @guards C1
   it('removes a secret in a nested folder', () => {
     const { shipped } = ship({ 'a/b/c/deep/.env.local': 'fake-nested\n', 'a/b/c/deep/notes.txt': 'ok\n' });
     expect(shipped).toContain('a/b/c/deep/notes.txt');
     expect(shipped).not.toContain('a/b/c/deep/.env.local');
   });
 
+  // @guards C1
   it('removes what only the owner list matches', () => {
     const { shipped, plan } = ship({
       'proprietary/algo.py': 'fake-proprietary\n',
@@ -108,6 +114,7 @@ describe('never-ship holds against hostile paths', () => {
     }
   });
 
+  // @guards C1
   it('never names a removed file inside the bounty folder', () => {
     const repo = makeRepo({
       'src/app.py': 'x\n',
@@ -131,6 +138,7 @@ describe('never-ship holds against hostile paths', () => {
     );
   });
 
+  // @guards C1
   it('catches credential stores and key-material spellings', () => {
     const { shipped } = ship({
       '.aws/credentials': 'fake\n',
@@ -145,6 +153,7 @@ describe('never-ship holds against hostile paths', () => {
     expect(shipped).toEqual(['TASK.md', 'notes.txt', 'src/app.py']);
   });
 
+  // @guards C1
   it('catches env-file suffixes, key backups, cert bundles and secrets-dir variants', () => {
     const { shipped } = ship({
       'prod.env': 'fake\n',
@@ -164,6 +173,7 @@ describe('never-ship holds against hostile paths', () => {
     expect(shipped).toEqual(['TASK.md', 'secretary/minutes.txt', 'src/app.py']);
   });
 
+  // @guards C1
   it('folds owner-list patterns before matching, on both sides', () => {
     const { shipped, plan } = ship({
       'secretdir/inside.txt': 'fake\n',
@@ -175,6 +185,7 @@ describe('never-ship holds against hostile paths', () => {
     expect(plan.ruleRemovals).toEqual([{ rule: 'owner-list', removed: 2, paths: ['data/file.key2', 'secretdir/inside.txt'] }]);
   });
 
+  // @guards C1
   it('refuses a --task path the never-ship rules would remove', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     write(repo, '.env', 'FAKE_TOKEN=made-up\n');
@@ -195,6 +206,7 @@ describe('never-ship holds against hostile paths', () => {
     }
   });
 
+  // @guards C1
   it('refuses a never-ship --task even when it lives outside the repository', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const outside = runRoot('outside');

@@ -97,6 +97,7 @@ describe('a later agent on another machine can finish a bounty', { timeout: 1800
     b.on(() => expect(lookBounty(b.repo, world.id, 1).attempt.commit).toBe(world.waitingPr));
   }, { prAuthor: 'solver1' }));
 
+  // @guards D4
   it('no permission here: the merge waits, close is refused, GitHub and the chain are untouched; the owner\'s one answer releases it', () => postedFixture(world => {
     const before = tip(world.bare, world.id);
     const b = machineB(world, 'nothing-written');
@@ -115,6 +116,7 @@ describe('a later agent on another machine can finish a bounty', { timeout: 1800
     expect(world.state().prs[0]!.merged).toBe(true);
   }, { prAuthor: 'solver1' }));
 
+  // @guards D4
   it('denied here: the merge waits and close is refused, whatever the shared record says', () => postedFixture(world => {
     const b = machineB(world, null);
     b.on(() => {
@@ -124,6 +126,7 @@ describe('a later agent on another machine can finish a bounty', { timeout: 1800
     expect(world.state().issues[0]!.state).toBe('open');
   }, { prAuthor: 'solver1' }));
 
+  // @guards D4
   it('ask still holds on the second machine', () => postedFixture(world => {
     const b = machineB(world, 'ask');
     b.on(() => refused(() => applyBounty(b.repo, world.id, 1), 'merge-held'));
@@ -199,6 +202,7 @@ describe('a later agent on another machine can finish a bounty', { timeout: 1800
     });
   }, { prAuthor: 'solver1' }));
 
+  // @guards O1 D4
   it('the allowedBy on a shared record grants nothing and is not kept', () => postedFixture(world => {
     forgePosted(world, { allowedBy: { decision: 'allowed', level: 'project' } });
     const b = machineB(world, 'nothing-written');

@@ -50,6 +50,7 @@ const postedEvent = (id: string, extra: Record<string, unknown> = {}): string =>
 
 describe('BT32 pass probes', { timeout: 120000 }, () => {
 
+  // @guards P5 M3
   it('a secret in ANY scanned field holds the event before a single object is written', () => {
     { const world = sharedPostedFixture(); world.run(() => {
       const record = () => loadRecord(world.repo, world.id);

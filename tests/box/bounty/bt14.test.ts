@@ -55,6 +55,7 @@ describe('the title rule — a leading #, the first sentence, a stated length', 
 });
 
 describe('a held post says it waits for the owner and names their command', () => {
+  // @guards P4 O1
   it('an unallowed post names the wait and the answer the owner gives', () => fixture(({ repo, id, scratch }) => {
     writeFileSync(join(scratch, 'settings', 'settings.json'), JSON.stringify({ kind: 'box-owner-settings', repositories: {} }));
     try { postBounty(repo, id, 'github'); expect.unreachable('expected a refusal'); }

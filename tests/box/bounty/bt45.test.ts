@@ -29,6 +29,7 @@ function heldMessage(repo: string, id: string): string {
 }
 
 describe('the task text is scanned at create and at post', () => {
+  // @guards P5
   it('a token in the task file is recorded at create and holds the post — the value is never printed', () => fixture(({ repo, state }) => {
     const created = draft(repo, `Fix the login.\nIt fails with ${TOKEN} in the header.\n`);
     expect(created.plan.scan.hits).toContainEqual({ path: '(task text)', line: 2, rule: 'github-token' });

@@ -18,25 +18,30 @@ const added = (header: string, lines: readonly string[], hunk = `@@ -0,0 +1,${li
 ].join('\n');
 
 describe('scanPatch reads each line as the hunk says it is', () => {
+  // @guards P5
   it('1. a key on an added `++ ` line is a hit, under the right file and line', () => {
     expect(scanPatch(added('a.txt', [`+${KEY}`]))).toEqual([{ path: 'a.txt', line: 1, rule: RULE }]); // the same key on a plain line
     expect(scanPatch(added('a.txt', [`+++ ${KEY}`, '+plain']))).toEqual([{ path: 'a.txt', line: 1, rule: RULE }]);
   });
 
+  // @guards P5
   it('2. a hit after a `++ ` line keeps the right file and line (it was filed under a file named x)', () => {
     expect(scanPatch(added('a.txt', ['+++ x', `+${KEY}`, '+end']))).toEqual([{ path: 'a.txt', line: 2, rule: RULE }]);
   });
 
+  // @guards P5
   it('3. a removed line starting `-- ` changes nothing: it is not a header either', () => {
     const patch = ['diff --git a/a.txt b/a.txt', 'index 1111111..2222222 100644', '--- a/a.txt', '+++ b/a.txt', '@@ -1,2 +1,1 @@', '--- gone', '-old', `+${KEY}`, ''].join('\n');
     expect(scanPatch(patch)).toEqual([{ path: 'a.txt', line: 1, rule: RULE }]);
   });
 
+  // @guards P5
   it('4. two files: the second header follows the first hunk and each hit is filed under its own file', () => {
     const patch = added('a.txt', [`+${KEY}`]) + added('b.txt', ['+one', `+${KEY}`]);
     expect(scanPatch(patch)).toEqual([{ path: 'a.txt', line: 1, rule: RULE }, { path: 'b.txt', line: 2, rule: RULE }]);
   });
 
+  // @guards P5
   it('5. a quoted name with non-ASCII bytes is reported by its real name', () => {
     const patch = ['diff --git "a/caf\\303\\251.txt" "b/caf\\303\\251.txt"', 'new file mode 100644', '--- /dev/null', '+++ "b/caf\\303\\251.txt"', '@@ -0,0 +1,1 @@', `+${KEY}`, ''].join('\n');
     expect(scanPatch(patch)).toEqual([{ path: 'café.txt', line: 1, rule: RULE }]);
@@ -48,10 +53,12 @@ describe('scanPatch reads each line as the hunk says it is', () => {
     expect(binaryPatchPaths(['diff --git a/x.bin b/x.bin', 'index 1111111..2222222 100644', 'Binary files a/x.bin and b/x.bin differ', ''].join('\n'))).toEqual(['x.bin']);
   });
 
+  // @guards P5
   it('7. a file literally named b/x keeps its name: only one leading a/ or b/ goes', () => {
     expect(scanPatch(added('b/x', [`+${KEY}`]))).toEqual([{ path: 'b/x', line: 1, rule: RULE }]);
   });
 
+  // @guards P5
   it('8. a hunk that ends with "No newline at end of file" keeps the right line', () => {
     expect(scanPatch(added('a.txt', [`+${KEY}`, '\\ No newline at end of file']))).toEqual([{ path: 'a.txt', line: 1, rule: RULE }]);
     expect(scanPatch(added('a.txt', ['+one', `+${KEY}`, '\\ No newline at end of file']))).toEqual([{ path: 'a.txt', line: 2, rule: RULE }]);
@@ -59,21 +66,25 @@ describe('scanPatch reads each line as the hunk says it is', () => {
 });
 
 describe('the attacks the Security lens names', () => {
+  // @guards P5
   it('a content line `+++ b/other` is a line, not a file: the later hit stays in the real file', () => {
     expect(scanPatch(added('a.txt', ['++++ b/other', `+${KEY}`]))).toEqual([{ path: 'a.txt', line: 2, rule: RULE }]);
     expect(scanPatch(added('a.txt', ['+++ b/other', `+${KEY}`]))).toEqual([{ path: 'a.txt', line: 2, rule: RULE }]);
   });
 
+  // @guards P5
   it('a line that is exactly `+++` or exactly `++` is an added line', () => {
     expect(scanPatch(added('a.txt', ['+++', `+${KEY}`]))).toEqual([{ path: 'a.txt', line: 2, rule: RULE }]);
     expect(scanPatch(added('a.txt', ['+++ ', `+++ ${KEY}`]))).toEqual([{ path: 'a.txt', line: 2, rule: RULE }]);
   });
 
+  // @guards P5
   it('a quote, a tab and a backslash in a name are decoded, not shown as escapes', () => {
     const header = (name: string) => ['diff --git a/q b/q', 'new file mode 100644', '--- /dev/null', `+++ b/${name}`, '@@ -0,0 +1,1 @@', `+${KEY}`, ''].join('\n');
     expect(scanPatch(header('"has\\"quote\\ttab\\\\slash.txt"').replace('b/"', '"b/'))).toEqual([{ path: 'has"quote\ttab\\slash.txt', line: 1, rule: RULE }]);
   });
 
+  // @guards P5
   it('a deleted file, a mode-only change and an empty new file have no hit and no crash', () => {
     const deleted = ['diff --git a/a.txt b/a.txt', 'deleted file mode 100644', 'index 1111111..0000000', '--- a/a.txt', '+++ /dev/null', '@@ -1,1 +0,0 @@', `-${KEY}`, ''].join('\n');
     const modeOnly = ['diff --git a/run.sh b/run.sh', 'old mode 100644', 'new mode 100755', ''].join('\n');
@@ -82,11 +93,13 @@ describe('the attacks the Security lens names', () => {
     expect(scanPatch(deleted + modeOnly + empty + added('z.txt', [`+${KEY}`]))).toEqual([{ path: 'z.txt', line: 1, rule: RULE }]);
   });
 
+  // @guards P5
   it('a hunk header that leaves out a count means one line, not none', () => {
     const patch = ['diff --git a/a.txt b/a.txt', 'index 1111111..2222222 100644', '--- a/a.txt', '+++ b/a.txt', '@@ -3 +3 @@', '-old', `+${KEY}`, ''].join('\n');
     expect(scanPatch(patch)).toEqual([{ path: 'a.txt', line: 3, rule: RULE }]);
   });
 
+  // @guards P5
   it('context lines count, and a later hunk restarts the line from its header', () => {
     const patch = ['diff --git a/a.txt b/a.txt', 'index 1111111..2222222 100644', '--- a/a.txt', '+++ b/a.txt', '@@ -1,2 +1,3 @@', ' one', '+two', ' three', '@@ -10,1 +11,2 @@', ' ten', `+${KEY}`, ''].join('\n');
     expect(scanPatch(patch)).toEqual([{ path: 'a.txt', line: 12, rule: RULE }]);
