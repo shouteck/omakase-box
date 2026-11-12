@@ -237,6 +237,14 @@ export function approveGitHub(root: string, record: BountyRecord, choice: GitHub
   };
 }
 
+/** The preview and the facts it states (BT61): `previewGitHub` is this one's `preview`, unchanged. */
+export function previewGitHubFacts(root: string, id: string, choice: GitHubChoice = { withChanges: false, include: [] }): ReturnType<typeof approveGitHub> {
+  const record = loadRecord(root, id);
+  // BT60: a preview of a post that would be refused is refused the same way, before GitHub is asked anything.
+  if (record.github === undefined && record.githubApproval === undefined) assertMinimumReward(repoReward(root).amount);
+  return approveGitHub(root, record, choice);
+}
+
 export function previewGitHub(root: string, id: string, choice: GitHubChoice = { withChanges: false, include: [] }): string {
   const record = loadRecord(root, id);
   // BT60: the preview of a post that would be refused is refused the same way, before GitHub is asked anything.
