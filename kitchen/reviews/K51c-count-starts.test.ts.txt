@@ -1,0 +1,35 @@
+// Throwaway measurement for K51c; never committed.
+import childProcess from 'node:child_process';
+import { appendFileSync } from 'node:fs';
+import { syncBuiltinESMExports } from 'node:module';
+import { basename } from 'node:path';
+import { describe, it } from 'vitest';
+import { answerGitHub, closeBounty, renderStatus } from '../../../packages/box-bounty/index.js';
+import { postedFixture } from './github-fixture.js';
+
+const OUT = process.env['K51_OUT'] as string;
+const counted = (label: string, run: () => void) => {
+  const real = childProcess.spawnSync;
+  const tally = new Map<string, { n: number; ms: number }>();
+  childProcess.spawnSync = ((command: string, args: readonly string[], options: never) => {
+    const name = basename(String(command)).toLowerCase().replace('.exe', '') + (basename(String(command)).toLowerCase().startsWith('git') ? ' ' + String((args ?? [])[0] ?? '') : '');
+    const t = Date.now();
+    const result = (real as unknown as (...a: unknown[]) => unknown)(command, args, options);
+    const entry = tally.get(name) ?? { n: 0, ms: 0 };
+    entry.n += 1; entry.ms += Date.now() - t; tally.set(name, entry);
+    return result;
+  }) as typeof childProcess.spawnSync;
+  syncBuiltinESMExports();
+  const t0 = Date.now();
+  try { run(); } finally { childProcess.spawnSync = real; syncBuiltinESMExports(); }
+  const total = [...tally.values()].reduce((s, e) => s + e.n, 0);
+  const inChildren = [...tally.values()].reduce((s, e) => s + e.ms, 0);
+  appendFileSync(OUT, `MEASURE ${label}: ${Date.now() - t0} ms total, ${total} child starts taking ${inChildren} ms; ${[...tally.entries()].sort((a, b) => b[1].ms - a[1].ms).slice(0, 6).map(([k, v]) => `${k}=${v.n}x/${v.ms}ms`).join(', ')}\n`);
+};
+describe('timing', { timeout: 300000 }, () => {
+  it('measures', () => {
+    postedFixture(({ repo }) => { counted('renderStatus', () => { renderStatus(repo); }); });
+    postedFixture(({ repo, id }) => { counted('answerGitHub', () => { answerGitHub(repo, id, 1); }); }, { collected: true });
+    postedFixture(({ repo, id }) => { counted('closeBounty', () => { closeBounty(repo, id); }); });
+  });
+});
