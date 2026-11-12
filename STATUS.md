@@ -1,8 +1,10 @@
 # Status
 
-Updated by the CTO on 12 November 2026, when BT55 (a quote in a file name) closed.
+Updated by the CTO on 12 November 2026, when K51 (what the test run costs) closed.
 
 ## Now
+
+- **K51 closed at its cut-off: nothing removed from the test run.** All 145 test files (1880 tests) measured on three hosted runs on each system; the table is flat (the slowest file is 7% of the bounty file time), four of the five slowest guard a hard stop, and the only candidate class, the ten review and probe files (about 100 s of Windows wall time at most), adds cases the main files do not hold. Windows `verify` took 955 to 1255 s across runs: the spread is larger than any cut. [Review](kitchen/reviews/K51-tests.md), [Result](waves/K51.md).
 
 - **BT55 is merged, scoped: a quote in a file name no longer stops `create`.** `create` and the snapshot read the tree with `ls-tree -r -z -l` (a name holding a quote used to arrive quoted and refuse `unreadable-path` on Linux and macOS); seen failing on old code on Linux (run 43181094731), the two command-level rows run on Linux and macOS only, the parser rows everywhere. **The second fault did not reproduce:** a refused `apply` adding `café.txt` and `папка/файл.txt` leaves the tree as it was, so no code changed for it and `rmSync` stays in BACKLOG. Hosted run 43184628868 green on all three. [Result](waves/BT55.md).
 
@@ -34,8 +36,6 @@ Updated by the CTO on 12 November 2026, when BT55 (a quote in a file name) close
 
 - **K49, the engineering reviewed** (no code changed): the tool is fast and sound. The board has no backup, rollback, migration record or watch, and no security headers. Verify takes about 5 minutes on GitHub's machine and 20 to 31 here, and runs there only after a merge, on Linux only. Briefs **awaiting the owner's go**: [BT58](waves/BT58.md), [K50](waves/K50.md), [PF36](waves/PF36.md), [PF37](waves/PF37.md), [PF38](waves/PF38.md), [K51](waves/K51.md), [BT59](waves/BT59.md), [K52](waves/K52.md) (a removal). See [K49](waves/K49.md).
 
-- **K48, the product reviewed** (no code changed): **npm still serves 0.1.3, from before the solver side.** Briefs **awaiting the owner's go**: [BT54](waves/BT54.md) (the secret scan skips an added line starting `++ `), [BT56](waves/BT56.md) (a stranger's pull request can claim the owner's commit), [BT53](waves/BT53.md) (version and a true first page), [BT55](waves/BT55.md), [PF34](waves/PF34.md), [BT57](waves/BT57.md), [PF35](waves/PF35.md). The owner answered (D-2026-11-10-k48-answers): publish to npm after BT54, BT56 and BT53; launch is positioning, with no stop signal; the kitchen posts no bounties of its own. Still open: squash merges. See [K48](waves/K48.md).
-
 - **Live on the board** (each deployed on the owner's word, `exceededCpu` 0 before and after; details in each wave file): PF33 (the posted issue reads plainly), PF32 (list an existing issue), PF31c, PF31b, PF31 (payment window), PF9b (the sandbox never listed), PF29 (pricing from the board alone), PF28, PF27's For agents page, PF22, PF21, PF20, PF19, PF18 (Stripe), PF16, PF17, PF15, PF14, PF13, PF11, PF8, PF10: https://open-bounty-board.box-platform.workers.dev, at $0, with real sign-in.
 - **The solver side is built and proven** (CLI only; reaches users with the next npm release, the owner's to publish): `discover`, `take`, `submit`, `status`, `describe --solving` (PF24 to PF27). PF9a ran every agent flow for real with twelve fresh agents: zero blocks or misleads.
 - **The live board is empty** of test records (owner, 4 November 2026); the owner's own sign-ins, Stripe connection and pay settings stay.
@@ -52,7 +52,7 @@ Updated by the CTO on 12 November 2026, when BT55 (a quote in a file name) close
 
 ## Next
 
-- **Order (owner, 10 November 2026; on 12 November 2026 the owner said to run the upcoming waves in this order without stopping, and to carry on with any wave a blocker does not touch):** (BT53 and the npm publish are done; BT63 is done); PF34 to PF38 and K51 any time (BT55 and BT61 are done); BT59 and BT61 after the publish; K52 before PF6; PF39, K54 and BT62 any time. Design order: PF40, PF41 (before PF39), PF42 (before PF35), PF43 (before K41). Then **PF6** (the listings for both sides), **K41** (the film, last), then the owner's launch. PF23 is deferred.
+- **Order (owner, 10 November 2026; on 12 November 2026 the owner said to run the upcoming waves in this order without stopping, and to carry on with any wave a blocker does not touch):** (BT53 and the npm publish are done; BT63 is done); PF34 to PF38 any time (BT55, BT61 and K51 are done); BT59 and BT61 after the publish; K52 before PF6; PF39, K54 and BT62 any time. Design order: PF40, PF41 (before PF39), PF42 (before PF35), PF43 (before K41). Then **PF6** (the listings for both sides), **K41** (the film, last), then the owner's launch. PF23 is deferred.
 - **The next tool release:** the guide gains the PowerShell line (`npx.cmd`, `box.cmd`); 0.2.0 is on npm; a GitHub release comes only from a `v*` tag, the owner's call.
 - Unbriefed (BACKLOG): `rmSync` and non-ASCII names on Windows (BT48); solvers' account age (PF4); a private organisation member counts as an outside solver, a squash-merged head reads as off the default branch (PF8); PF18's leftovers; fewer words, more showing, across the site.
 - **Direction:** agents run the common case; installing is the only required human step. The platform may start a charge but never holds money; no reminders. Site looks need before-and-after screenshots and the owner's approval.
