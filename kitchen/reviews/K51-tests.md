@@ -1,5 +1,7 @@
 # K51: what each test file costs, and why nothing is removed
 
+**Corrected the same day by [K51b](K51b-test-map.md):** the protected list below was a keyword search, and "four of the five slowest guard a hard stop" was a heuristic reported as a fact. The count of tests that defend a hard stop is 85 of 1513, in 28 files; four of the five slowest files hold 4 of those 85 between them. The cut-off decision stands on the timings; the protection by keyword does not.
+
 Measured by the CTO on 12 November 2026 from three hosted runs of master and wave branches (run ids below). **Result: no candidate set reaches a tenth of the run, so by the brief's cut-off (step 3) nothing was removed, no test was changed and the proof phase did not start.**
 
 ## 1. The protected list (step 1)
@@ -178,11 +180,11 @@ Totals of the file times (bounty suite, 106 files, 1257 tests): Ubuntu 574 s, ma
 
 A tenth of the Windows `verify` job is 95 to 125 s of wall time, which at three files at once is about 300 to 390 s of file time. The table is flat: the slowest file (`pf5`, 201 s) is 7% of the bounty file time and the five slowest together are 590 s, four of them protected.
 
-The one class of candidates the brief names that exists here is the review and probe files: `bt7b-review`, `bt6b-holes`, `bt6b-third`, `bt6b-second`, `bt11b-pass`, `bt7c-review`, `bt32-pass-probes`, `bt23-review`, `bt32-pass-toctou`, `bt37-probe` (10 files, 60 tests, 313 s of Windows file time, about 100 s of wall time). That is the ceiling, reached only if all ten were redundant, and the files' own first comments say they are not: they "add negative cases the wave's tests do not pin" (`bt11b-pass`), are "adversarial cases the wave's own tests do not carry" (`bt7b-review`), and each `bt6b` pass is a further way a solver's program ran (a hard stop). Four of the ten are on the protected list (`bt7b-review`, `bt11b-pass`, `bt7c-review`, `bt23-review`), and the three `bt6b` passes attack "nothing a solver wrote runs". No file is a pass-probe whose cases the main file holds. Without those, the set is `bt32-pass-probes`, `bt32-pass-toctou` and `bt37-probe`: 27 s.
+The one class of candidates the brief names that exists here is the review and probe files: `bt7b-review`, `bt6b-holes`, `bt6b-third`, `bt6b-second`, `bt11b-pass`, `bt7c-review`, `bt32-pass-probes`, `bt23-review`, `bt32-pass-toctou`, `bt37-probe` (10 files, 60 tests, 313 s of Windows file time, about 100 s of wall time). That is the ceiling, reached only if all ten were redundant, and the files' own first comments say they are not: they "add negative cases the wave's tests do not pin" (`bt11b-pass`), are "adversarial cases the wave's own tests do not carry" (`bt7b-review`), and each `bt6b` pass is a further way a solver's program ran (a product rule; K51 called it a hard stop, which AGENTS.md's three do not include). Four of the ten are on the protected list (`bt7b-review`, `bt11b-pass`, `bt7c-review`, `bt23-review`), and the three `bt6b` passes attack "nothing a solver wrote runs". No file is a pass-probe whose cases the main file holds. Without those, the set is `bt32-pass-probes`, `bt32-pass-toctou` and `bt37-probe`: 27 s.
 
 Other classes: *retired* (a test of a command or record shape with no reader left): not searched file by file. The signals found are live behaviour: `bt38` and `bt40` assert that a removed command such as `undo` is refused `command-removed`, and `bt23` converts old record shapes that `record.ts` still reads by design (K30 review, "retired-stage loaders"). *Asserts nothing* and *retired rule* (kitchen): not searched; the kitchen suite is 65 s of wall time, so even all of it is under a tenth, and the cut-off decision does not need them.
 
-**So: no candidate set saves a tenth, and the files that could be named are the ones that guard the hard stops. Nothing removed.** A small saving is not worth a lost check (the brief).
+**So: no candidate set saves a tenth, and the files that could be named add cases the main files do not hold. Nothing removed.** A small saving is not worth a lost check (the brief).
 
 ## 4. Before and after
 
