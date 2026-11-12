@@ -116,8 +116,8 @@ Every command reads options the same way: `--help` (or `-h`) prints that
 command's own usage on standard output and exits 0, `--name=value` is the
 same as `--name value`, and an option the command does not take is a usage
 error naming it — nothing is silently ignored. `status`, `look`, `config`
-and `find` take `--json` — one complete document, described below; on every
-other command it is refused by name (`json-not-supported`). `omakase-box --version`
+and `find` take `--json` — one complete document, described below; since BT61 so does every
+other command (the bare overview excepted), and a refusal is a document too. `omakase-box --version`
 and `omakase-box --version` print the tool's version.
 
 With one open bounty, omit its identifier: `bounty look 1`, `bounty apply 1`,
@@ -182,7 +182,8 @@ public remote the repository pushes to.
 
 ## Reading as JSON
 
-`status`, `look`, `config` and `find` take `--json`: one JSON object on standard
+Every command takes `--json` (`status`, `look`, `config` and `find` since BT19, the rest since BT61):
+one JSON object on standard
 output — a newline after it and nothing else — printed instead of the text
 view, built from the same facts, never by parsing the text. `"schema"` is
 always the first key, `box-bounty/<command>@1`; a change to a field's
@@ -205,13 +206,55 @@ later without breaking `@1`.
 
 What the text view prints as lines — an acting-on notice, a merge
 recognised, a said-once explanation — goes to standard error under
-`--json`, unchanged; standard output carries the document alone. A refusal
-stays a refusal: same text, same exit code, no document. `--full` adds
+`--json` for those four, unchanged; standard output carries the document alone. A refusal
+is one document, `box-bounty/refusal@1` (below), with the exit code it always had. `--full` adds
 nothing to a document — it already carries the full facts; `status
 --since` is a text report the document does not carry, so the combination
-is refused. `status --comments --json` fills each bounty's `fromOthers`
+is a usage error. `status --comments --json` fills each bounty's `fromOthers`
 with the issue's comments as `{from, at, text}`; without it `fromOthers`
 is `null`.
+
+### Every command, and a refusal, as data (BT61)
+
+Since BT61 every command takes `--json` except the bare overview (`omakase-box`, which has no document: `--json` there
+is a usage error), and prints exactly one document on standard output and nothing else there. Without `--json` not one
+character of any command's output changes (a snapshot test pins it). Exit codes are unchanged.
+
+**A refusal or a usage error is a document too**, `box-bounty/refusal@1`, with standard error empty:
+`{schema, command, refused, message, next, exitCode, usage}`. `refused` is the name the text view prints
+(`<command> refused (<name>)`), `"usage"` for a usage error (exit 2) or `"failed"` for an unexpected failure (exit 1).
+`message` and `next` are split mechanically at the last `; next: ` every refusal carries (BT40), so a program reads the
+next step as a field; `next` is `null` when there is none. `usage` holds a usage error's usage lines and is `null` otherwise.
+The four answers that exit 0 today (`owner-allow-needed`, `owner-answer-needed`, `publish-held`, `merge-held`) are the same
+document with `exitCode` 0. Whether `--json` was asked for is read from the raw arguments, before parsing, so a usage
+error is a document as well. A name or path a stranger chose reaches `message` as a JSON string and holds exactly the
+characters it had. `json-not-supported` is retired: the three combinations that used it (`status --since --json`,
+`look --export --json`, `config set|add|remove --json`) are usage errors that name the option to drop.
+
+**The success documents**, each `box-bounty/<command>@1`, each ending `lines` (the tool's own printed text, as data),
+`notices` (what the text view prints on the side: an acting-on line, a merge recognised, a said-once notice; under `--json`
+these go here and not to standard output) and `foreignFields` (as above):
+
+| Command | Document | What it carries |
+|---|---|---|
+| `create` | `create@1` | `id`, `repoRoot`, `recordPath`, `title`, `titleShortened`, `taskFile`, `scan {hits, notScanned}`, `neverShipRemoved`, `reward`, `waitsForOwner`, `next` |
+| `post --preview` | `post-preview@1` | `id`, `posted: false`, `repository`, `branch`, `title`, `issueBody`, `base`, `head`, `tip`, `pushed`, `wip`, `include`, `withChanges`, `untracked` |
+| `post` | `post@1` | `id`, `posted: true`, `destination`, `repository`, `branch`, `base`, `commit`, `issue {number, url}`, `reward`, `scanBinary`, `stage`, `next` |
+| `apply` | `apply@1` | `id`, `outcome` (`applied` or `conflicts`), `attempt`, `mergeCommit`, `stage`, `conflicts`, `clean`, `commitsTouchingConflicts`, `base`, `firstMergeNotice`, `pay`, `github {pending, closedNote}`, `notOnGitHub {upstream, ahead, publish}`, `resume`, `revert`, `job`, `next` |
+| `close` | `close@1` | `id`, `outcome` (`closed`, `already-ended` or `attempt-withdrawn`), `stage`, `reason`, `pay`, `github {pending, closedNote}`, `job` |
+| `take` | `take@1` | `id`, `outcome`, `repository`, `stage`, `target`, `branch`, `bountyBranch`, `baseCommit`, `workspace`, `pullRequest {number, url}`, `reward`, `ownBounty` |
+| `submit` | `submit@1` | `id`, `outcome` (`submitted` or `already-ready`), `pullRequest {number, url}`, `changedFiles`, `target`, `branch` |
+| `allow`, `deny` | `allow@1`, `deny@1` | `kind` (`repository` or `bounty`), `repository`, `id`, `decision`, `reward`, `rewardLimit`, read from the settings the command left |
+| `describe`, `help`, `hook` | `describe@1`, `help@1`, `hook@1` | the text is the content: `mode` or `action` and `lines` |
+| `setup` | `setup@1` | `action` (`setup`, `remove` or `help`) and `lines` |
+
+`foreignFields` lists, per document, the fields that can hold text a stranger chose: a solution's file names and commit
+subjects reach the working state after an `apply`, so `create`'s and `post --preview`'s paths and subjects are listed, as
+are `apply`'s `conflicts`, `clean` and `pay`, and every `lines` that quotes them. A test (`bt61-boundary.test.ts`) puts a
+quote, a newline, a control character, a bidi override and a forged-schema fragment into each such field and checks that the
+text appears only under a listed field. A test (`bt61-agreement.test.ts`) maps every labelled line a mutating command prints
+(`next:`, `github:`, `scan hit:` ...) to a field the same document carries, and fails when one is missing.
+
 
 `status --json` prints `{schema, repository, acting, owner, bounties}` —
 `owner` is this checkout's read (`{decision, denied, decisionAt,
@@ -311,7 +354,7 @@ advice, not a control: read the file in a session that has no write access
 to this checkout, then choose and apply from your own. The file holds the
 change's raw bytes, so the same line says to open it as text, not with
 `cat` in a terminal. `--export` and `--json` do not combine
-(`json-not-supported`).
+(a usage error, one document under `--json`).
 
 What this does and does not do: no escaping can make natural language safe
 to read. The block makes it unmissable whose words are whose and keeps a

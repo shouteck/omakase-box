@@ -78,7 +78,10 @@ Then `omakase-box post <id>` posts the issue and pushes the branch. Solutions
 arrive as pull requests: `omakase-box status` lists them, `omakase-box look <id>
 <n>` collects one and shows its change (marked as the solver's words, never the
 tool's), `omakase-box apply <id> <n>` merges it onto the current code, and
-`omakase-box close <id>` ends a bounty with nothing merged.
+`omakase-box close <id>` ends a bounty with nothing merged. Every command takes
+`--json` (`omakase-box post <id> --json`): one document on standard output, a
+refusal included, so a program reads the answer, or a refusal's name and next
+step, as fields.
 
 When a merged solution states a reward, `apply` ends with a block meant for
 the owner — pass it on in those words, once. `omakase-box status <id>` says
