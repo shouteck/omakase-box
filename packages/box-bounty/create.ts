@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { basename, isAbsolute, join, relative, resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
 import { canonicalFolder } from './folder.js';
-import { gitOutcome, ownerGitOutcome } from './git.js';
+import { gitOutcome, ownerGitOutcome, parseTreeListing } from './git.js';
 import { BUILTIN_RULES, publishListed, publishLists, shipRules } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
 import { hitPlace, isTextField, looksBinary, scanFields, scanText } from './scan.js';
@@ -306,10 +306,11 @@ function composeNote(plan: BountyPlan): { file: string; text: string } {
       // core.quotepath=false keeps non-ASCII names unquoted, as in the
       // snapshot's own ls-tree.
       const baseBlobs = new Set<string>();
-      const baseListing = gitOutcome(plan.repoRoot, ['-c', 'core.quotepath=false', 'ls-tree', '-r', '-z', '--format=%(objecttype) %(path)', plan.snapshot.baseCommit]);
+      // BT55: the plain -z -l records, not --format=%(path), which still quotes a name holding a quote character.
+      const baseListing = gitOutcome(plan.repoRoot, ['-c', 'core.quotepath=false', 'ls-tree', '-r', '-z', '-l', plan.snapshot.baseCommit]);
       if (baseListing.status !== 0) throw new Error(`git ls-tree failed: ${baseListing.stderr.trim()}`);
-      for (const record of baseListing.stdout.split('\0')) {
-        if (record.startsWith('blob ')) baseBlobs.add(record.slice(5));
+      for (const entry of parseTreeListing(baseListing.stdout)) {
+        if (entry.type === 'blob') baseBlobs.add(entry.path);
       }
       const baseBlobsLower = new Set([...baseBlobs].map(path => path.toLowerCase()));
       // Fates: a gitlink still in the snapshot tree is a moved submodule,
