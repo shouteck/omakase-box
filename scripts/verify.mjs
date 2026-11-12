@@ -16,7 +16,7 @@
 // K45: test:kitchen likewise runs only the kitchen files whose declared inputs the diff reaches (suite.mjs
 // kitchenTestFilesForPaths; `--full` or an unmapped path runs them all); summary.json records kitchenSelected
 // and kitchenReason, and a reused test:kitchen must have covered at least this run's selection.
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { createWriteStream, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -53,6 +53,16 @@ const kitchenReason = kitchenSuiteReason(diffPaths);
 if (kitchenReason !== null && !suites.includes('test:kitchen')) {
   suites.push('test:kitchen');
   console.log(`added test:kitchen: ${kitchenReason}`);
+}
+// K62: rule 2 as a check. A wave branch that removed, skipped or loosened an existing test, raised a time limit or changed a
+// snapshot must list each under "## Changed expectations" in its wave file; scripts/test-edit-gate.mjs says what to write.
+// Off a wave branch it says it did not apply. Refused here, before any step: a run that never looked is not a pass.
+const editGate = spawnSync(process.execPath, [fileURLToPath(new URL('./test-edit-gate.mjs', import.meta.url))], { cwd: root, encoding: 'utf8', timeout: 120000 });
+console.log(editGate.stdout.trimEnd());
+if (editGate.status !== 0) {
+  if (editGate.stderr) console.error(editGate.stderr.trimEnd());
+  console.error('verify: refusing before any step — the test-edit gate did not pass (rule 2).');
+  process.exit(2);
 }
 const steps = [...(only ? [] : ['check', 'build']), ...suites];
 if (!steps.length) { console.error('Nothing to run.'); process.exit(2); }
