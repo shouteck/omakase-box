@@ -62,7 +62,7 @@ What this adds to section 2: the large-company advice is about a suite humans ma
 
 **H5. Select tests by what changed, run everything where it counts.** The owner's rule (the exact commit green on all three systems) stays; the inner loop and the Windows split change.
 
-**H6. Windows temporary files may be a cheap win.** *Tried (K63, 12 November 2026): no.* Four paired hosted jobs: C: 1417 and 1105 s, Dev Drive 1679 s (one test failed) and 1336 s (5 more tests skipped). Not faster, not drop-in, dropped; the same suite on the same image varied 28% between identical jobs.
+**H6. Windows temporary files may be a cheap win.** *Tried (K63, 12 November 2026): no.* Four paired hosted jobs: C: 1417 and 1105 s, Dev Drive 1679 s (one test failed) and 1336 s (5 more tests skipped). Not faster, not drop-in, dropped (the D: volume the image still has is the next try); the same suite on the same image varied 28% between identical jobs.
 
 **H7. Prune only by break-and-red,** after H2 and H3 exist.
 
