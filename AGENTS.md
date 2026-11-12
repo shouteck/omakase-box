@@ -21,6 +21,7 @@ is worth it. Using it is your call. Install: npm i -g omakase-box
 Every kitchen, on every host, works the pstack way (Lauren Tan, "poteto"): go deep before going fast, write less code of higher quality, and prove work on the real thing. This is a rule, not a suggestion.
 
 - **CTO:** at kickoff, load the mode skill, `.devin/plugins/box-pstack/skills/poteto-mode/SKILL.md`. Hosts that have the plugin installed invoke it as a skill; other hosts read the file. Before writing code, open the playbook that fits the wave in `.devin/plugins/box-pstack/skills/poteto-mode/playbooks/` (feature, bug fix, refactoring, investigation, prototype) and follow its steps.
+- **Tests:** [docs/box-v4/TESTING.md](docs/box-v4/TESTING.md): the level a test belongs at, and how one is replaced or removed.
 - **Everyone:** the principles are in `.devin/plugins/box-pstack/skills/principle-*/SKILL.md`. Read the ones the task calls for, and in your report name each principle that changed a decision and what it changed. Do not cite one you did not read.
 - Where pstack text assumes Cursor tools, cloud workers or pull requests, keep the idea and use what the host has. Where it conflicts with who decides what below, this file wins.
 
