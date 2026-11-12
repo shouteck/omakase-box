@@ -32,7 +32,8 @@ import { boardAddress,boardFact,boardTold } from './board.js';
 import { paymentOf } from './pay.js';
 import { bountyAge,endedNextStep,nextStep,notNext,staleReminderLines,validAt } from './render.js';
 import { sharedEnded,sharedOpen,sharedRead } from './store.js';
-import { LOOK_FOREIGN_FIELDS,STATUS_FOREIGN_FIELDS } from './untrusted.js';
+import { APPLY_FOREIGN_FIELDS,CLOSE_FOREIGN_FIELDS,CREATE_FOREIGN_FIELDS,LOOK_FOREIGN_FIELDS,POST_PREVIEW_FOREIGN_FIELDS,STATUS_FOREIGN_FIELDS,TAKE_FOREIGN_FIELDS } from './untrusted.js';
+import type { ForeignField } from './untrusted.js';
 import { refreshSharedMemory } from './chain.js';
 import type { Attempt,BountyRecord,ScanFinding,StageEvent,WaitingFor } from './record.js';
 import { actingOn,askMergeNoticeLine,loadSettings,loadState,localFirstMergeLine,readDecision,readInstructions,repoReward,repositoryIdentity,rewardNoticeLine,saidOnce,settingsFile } from './settings.js';
@@ -575,8 +576,8 @@ export function refusalDocument(command: string, refused: string, message: strin
 // instruction notice), which under --json go here and never to standard output. Text a stranger wrote appears nowhere in
 // these: a solution's pull request text is `look --json`'s `fromOthers`, and these documents hold only the tool's own words.
 
-const commandDocument = (command: string, facts: JsonObject, lines: readonly string[], notices: readonly string[]): JsonObject =>
-  ({ schema: `box-bounty/${command}@1`, ...facts, lines: [...lines], notices: [...notices] });
+const commandDocument = (command: string, facts: JsonObject, lines: readonly string[], notices: readonly string[], foreign: readonly ForeignField[] = []): JsonObject =>
+  ({ schema: `box-bounty/${command}@1`, ...facts, lines: [...lines], notices: [...notices], foreignFields: [...foreign] });
 
 interface ScanHitLike { readonly path: string; readonly line: number; readonly rule: string; readonly commit?: string }
 
@@ -600,7 +601,7 @@ export function createDocument(
     scan: { hits: plan.scan.hits.map(scanHit), notScanned: [...plan.scan.binary] },
     neverShipRemoved: plan.ruleRemovals.map(entry => ({ rule: entry.rule, removed: entry.removed })),
     reward: facts.reward, waitsForOwner: facts.waitsForOwner, next: facts.next
-  }, lines, notices);
+  }, lines, notices, CREATE_FOREIGN_FIELDS);
 }
 
 /** `post --preview`: what a post would publish, nothing posted. */
@@ -617,7 +618,7 @@ export function postPreviewDocument(
     id, posted: false, repository: facts.repository, branch: `box-bounty/${id}`, title: facts.title, issueBody: facts.body, base: facts.base, head: facts.head, tip: facts.tip,
     pushed: facts.pushed.map(commit => ({ sha: commit.sha, subject: commit.subject })), wip: facts.wip ?? null, include: [...facts.include],
     withChanges: facts.withChanges, untracked: facts.untracked ?? null
-  }, lines, notices);
+  }, lines, notices, POST_PREVIEW_FOREIGN_FIELDS);
 }
 
 /** `post`: the issue and the branch now public. */
@@ -650,10 +651,10 @@ export function applyDocument(
     id: result.record.id, outcome: result.outcome, attempt: result.attempt, mergeCommit: result.mergeCommit ?? null, stage: result.record.stage,
     conflicts: list(result.conflicts), clean: list(result.clean), commitsTouchingConflicts: list(result.commits), base: result.base ?? null,
     firstMergeNotice: facts.firstMergeNotice, pay: [...facts.payMessage], github: { pending: facts.pending, closedNote: facts.closedNote },
-    notOnGitHub: facts.notOnGitHub,
+    notOnGitHub: facts.notOnGitHub, resume: resumeEntry(result.record),
     revert: result.outcome === 'applied' && result.mergeCommit !== null && result.mergeCommit !== undefined ? `git revert -m 1 ${result.mergeCommit}` : null,
     job: facts.job, next: facts.next
-  }, lines, notices);
+  }, lines, notices, APPLY_FOREIGN_FIELDS);
 }
 
 /** `close`: a bounty ended with nothing merged (or already ended). */
@@ -665,7 +666,7 @@ export function closeDocument(
   return commandDocument('close', {
     id: result.record.id, outcome: result.outcome, stage: result.record.stage, reason: facts.reason, pay: [...facts.pay],
     github: { pending: facts.pending, closedNote: facts.closedNote }, job: facts.job
-  }, lines, notices);
+  }, lines, notices, CLOSE_FOREIGN_FIELDS);
 }
 
 /** `take`: the attempt started. */
@@ -685,7 +686,7 @@ export function takeDocument(
     bountyBranch: taken?.bountyBranch ?? null, baseCommit: taken?.baseCommit ?? null, workspace: taken?.workspace ?? null,
     pullRequest: taken?.pullRequest === undefined ? null : { number: taken.pullRequest.number, url: taken.pullRequest.url },
     reward: taken?.reward ?? null, ownBounty: taken?.ownBounty ?? null
-  }, result.lines, notices);
+  }, result.lines, notices, TAKE_FOREIGN_FIELDS);
 }
 
 /** `submit`: the draft is ready for the poster's review. */
@@ -695,7 +696,7 @@ export function submitDocument(
 ): JsonObject {
   return commandDocument('submit', {
     id: result.id, outcome: result.outcome, pullRequest: { number: result.pullRequest, url: result.url }, changedFiles: result.changedFiles, target: result.target, branch: result.branch
-  }, result.text.split('\n'), notices);
+  }, result.text.split('\n'), notices, TAKE_FOREIGN_FIELDS);
 }
 
 /** `allow` and `deny`: the owner's word on a repository (or on one waiting bounty), read from the settings the command left. */
@@ -714,5 +715,5 @@ export function textDocument(command: 'describe' | 'help' | 'hook', facts: JsonO
 
 /** `close <id>` on a bounty this account took: the attempt withdrawn on GitHub. */
 export function closeAttemptDocument(id: string, text: string, notices: readonly string[]): JsonObject {
-  return commandDocument('close', { id, outcome: 'attempt-withdrawn' }, text.split(String.fromCharCode(10)), notices);
+  return commandDocument('close', { id, outcome: 'attempt-withdrawn' }, text.split('\n'), notices, TAKE_FOREIGN_FIELDS);
 }
