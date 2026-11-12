@@ -60,6 +60,42 @@ describe('K67 level 1: what the owner said, and the decision the tool reads', ()
     }
   }
 
+  // BT16 rule 6: an all-projects default never chooses between remotes. A checkout with several GitHub remotes, none of them on
+  // the owner's list, stays undecided; the owner's own listing of one of them decides, and another repository's listing does not.
+  describe('a checkout with two GitHub remotes', () => {
+    const two = (): string => {
+      const repo = remoteRepo();
+      git(repo, ['remote', 'add', 'upstream', 'https://github.com/other/project.git']);
+      return repo;
+    };
+
+    // @guards O1
+    it('the all-projects default alone leaves it undecided', () => {
+      const repo = two();
+      rmSync(settingsFile(), { force: true });
+      writeDecision(repo, 'default', 'allowed');
+      expect(readDecision(repo)).toMatchObject({ decision: null, level: null });
+    });
+
+    // @guards O1
+    it('another repository being listed does not decide it either, default allowed or not', () => {
+      const repo = two();
+      rmSync(settingsFile(), { force: true });
+      writeDecision(repo, 'default', 'allowed');
+      writeRepository('someone/else', 'allowed');
+      expect(readDecision(repo)).toMatchObject({ decision: null, level: null });
+    });
+
+    // @guards O1
+    it('listing one of its remotes decides it, at the project level', () => {
+      const repo = two();
+      rmSync(settingsFile(), { force: true });
+      writeDecision(repo, 'default', 'off');
+      writeRepository('other/project', 'ask');
+      expect(readDecision(repo)).toMatchObject({ decision: 'ask', level: 'project' });
+    });
+  });
+
   // @guards O1
   it('nothing written is never read as allowed, with no settings file at all', () => {
     rmSync(settingsFile(), { force: true });
