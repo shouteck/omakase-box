@@ -1,0 +1,3 @@
+# K65: how the breaks were run
+
+For each break in the table of [waves/K65.md](../../waves/K65.md): a throwaway `git worktree` of the committed code (`node_modules` shared through directory junctions, removed with `rmdir` before the worktree is, so Git never walks into the real folder), one exact-text replacement in `packages/box-bounty/never-ship.ts`, `snapshot.ts` or `create.ts`, the old and the new test file run with the JSON reporter, the replacement undone with `git checkout`, the next break. The runner and the break list were scratch files, not kept in the repository: the table in the wave file is the record, and each break's replacement is described there in words. H3 of [K51d](K51d-how-we-test.md) (a repeatable audit script) would make this permanent.

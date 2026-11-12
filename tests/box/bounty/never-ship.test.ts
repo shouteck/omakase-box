@@ -31,35 +31,6 @@ function ship(files: Record<string, string>, mutate?: (repo: string) => void): {
 }
 
 describe('never-ship holds against hostile paths', () => {
-  // @guards C1
-  it('removes a secret that is tracked', () => {
-    const { shipped, plan } = ship({ 'secrets/api.key': 'fake-tracked-key\n' });
-    expect(shipped).not.toContain('secrets/api.key');
-    expect(plan.ruleRemovals).toEqual([{ rule: 'secrets-dir', removed: 1, paths: ['secrets/api.key'] }]);
-  });
-
-  // @guards C1
-  it('removes an untracked secret', () => {
-    const { shipped, plan } = ship({}, repo => write(repo, 'token.pem', 'fake-untracked\n'));
-    expect(shipped).not.toContain('token.pem');
-    expect(plan.ruleRemovals).toEqual([{ rule: 'private-key', removed: 1, paths: ['token.pem'] }]);
-  });
-
-  // @guards C1
-  it('removes a secret reached through a different letter case', () => {
-    const { shipped, plan } = ship({}, repo => {
-      write(repo, 'SECRETS/Api.KEY', 'fake-case\n');
-      write(repo, '.ENV', 'fake-env\n');
-      write(repo, 'config/.Env.Production', 'fake-env2\n');
-      write(repo, 'UPPER/key.PEM', 'fake-pem\n');
-    });
-    const lowered = shipped.map(path => path.toLowerCase());
-    expect(lowered.some(path => path.includes('secrets/') || path.includes('/.env') || path === '.env' || path.endsWith('.pem'))).toBe(false);
-    const rules = plan.ruleRemovals.map(entry => entry.rule);
-    expect(rules).toContain('secrets-dir');
-    expect(rules).toContain('dot-env');
-    expect(rules).toContain('private-key');
-  });
 
   // Host-only: needs a real junction — on Linux the link stays a link and the
   // snapshot refuses it as 'unreadable-path' before never-ship rules run.
@@ -73,26 +44,6 @@ describe('never-ship holds against hostile paths', () => {
     expect(shipped).not.toContain('alias/real.key');
     expect(shipped).not.toContain('secrets/real.key');
     expect(plan.ruleRemovals).toEqual([{ rule: 'secrets-dir', removed: 1, paths: ['secrets/real.key'] }]);
-  });
-
-  // @guards C1
-  it('removes a secret in a nested folder', () => {
-    const { shipped } = ship({ 'a/b/c/deep/.env.local': 'fake-nested\n', 'a/b/c/deep/notes.txt': 'ok\n' });
-    expect(shipped).toContain('a/b/c/deep/notes.txt');
-    expect(shipped).not.toContain('a/b/c/deep/.env.local');
-  });
-
-  // @guards C1
-  it('removes what only the owner list matches', () => {
-    const { shipped, plan } = ship({
-      'proprietary/algo.py': 'fake-proprietary\n',
-      'licenses/dataset.lic': 'fake-license\n',
-      '.boxignore': '# keep these inside\nproprietary/\n*.lic\n'
-    });
-    expect(shipped).not.toContain('proprietary/algo.py');
-    expect(shipped).not.toContain('licenses/dataset.lic');
-    expect(shipped).toContain('.boxignore');
-    expect(plan.ruleRemovals).toEqual([{ rule: 'owner-list', removed: 2, paths: ['licenses/dataset.lic', 'proprietary/algo.py'] }]);
   });
 
   // Host-only: the 'link-escape' name requires the junction to be traversed far
@@ -136,53 +87,6 @@ describe('never-ship holds against hostile paths', () => {
         { rule: 'owner-list', removed: 1 }
       ])
     );
-  });
-
-  // @guards C1
-  it('catches credential stores and key-material spellings', () => {
-    const { shipped } = ship({
-      '.aws/credentials': 'fake\n',
-      '.npmrc': '//registry/:_authToken=fake\n',
-      'keys/id_ed25519': 'fake\n',
-      'keys/id_rsa.pub': 'fake\n',
-      'tls/server.crt': 'fake\n',
-      'tls/server.cer': 'fake\n',
-      'store/p12bundle.p12': 'fake\n',
-      'notes.txt': 'keep\n'
-    });
-    expect(shipped).toEqual(['TASK.md', 'notes.txt', 'src/app.py']);
-  });
-
-  // @guards C1
-  it('catches env-file suffixes, key backups, cert bundles and secrets-dir variants', () => {
-    const { shipped } = ship({
-      'prod.env': 'fake\n',
-      'config/staging.env': 'fake\n',
-      'id_rsa_backup': 'fake\n',
-      'keys/id_rsa.old': 'fake\n',
-      '.yarnrc': 'fake\n',
-      '.yarnrc.yml': 'fake\n',
-      'tls/ca.cert': 'fake\n',
-      'tls/bundle.p7b': 'fake\n',
-      'tls/bundle.p7c': 'fake\n',
-      'tls/material.asc': 'fake\n',
-      'secrets-backup/api.txt': 'fake\n',
-      'mysecrets/db.txt': 'fake\n',
-      'secretary/minutes.txt': 'kept — plural-only rule must not hit ordinary words\n'
-    });
-    expect(shipped).toEqual(['TASK.md', 'secretary/minutes.txt', 'src/app.py']);
-  });
-
-  // @guards C1
-  it('folds owner-list patterns before matching, on both sides', () => {
-    const { shipped, plan } = ship({
-      'secretdir/inside.txt': 'fake\n',
-      'data/file.key2': 'fake\n',
-      '.boxignore': 'SecretDir/\n*.KEY2\n',
-      'open.txt': 'keep\n'
-    });
-    expect(shipped).toEqual(['.boxignore', 'TASK.md', 'open.txt', 'src/app.py']);
-    expect(plan.ruleRemovals).toEqual([{ rule: 'owner-list', removed: 2, paths: ['data/file.key2', 'secretdir/inside.txt'] }]);
   });
 
   // @guards C1
