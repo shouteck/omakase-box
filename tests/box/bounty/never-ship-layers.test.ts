@@ -31,7 +31,7 @@ const CASES: readonly (readonly [string, string | null])[] = [
   ['.aws/credentials', 'credentials-file'], ['home/.aws/credentials', 'credentials-file'], ['.npmrc', 'credentials-file'], ['.yarnrc', 'credentials-file'], ['.yarnrc.yml', 'credentials-file'],
   ['.docker/config.json', 'credentials-file'], ['x/.netrc', 'credentials-file'], ['.pgpass', 'credentials-file'], ['.git-credentials', 'credentials-file'],
   // the project's own and Git's own state
-  ['.git/config', 'dot-git'], ['sub/.git/HEAD', 'dot-git'], ['.box/bounties/bt-1.json', 'dot-box'], ['.runtime/cache', 'runtime-dir'],
+  ['.git/config', 'dot-git'], ['sub/.git/HEAD', 'dot-git'], ['.box/notes.txt', 'dot-box'], ['.runtime/cache', 'runtime-dir'],
   // look-alikes the fold must see through: Cyrillic e, a zero-width character, a full-width dot
   ['.еnv', 'dot-env'], ['sеcrets/x', 'secrets-dir'], ['.e​nv', 'dot-env'], ['．env', 'dot-env'],
   // nothing may match: ordinary words and files that only look related
