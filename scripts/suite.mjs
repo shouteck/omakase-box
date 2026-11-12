@@ -43,6 +43,7 @@ export const KITCHEN_TEST_READS = [
   'docs/box-v4/DECISIONS.md',
   'docs/box-v4/CONTRACTS.md', // K64: scripts/proof-map.mjs reads the guarantee ids
   'kitchen/reviews/proof-gaps.json', // K64: and the list of guarantees not yet tagged
+  'kitchen/reviews/guard-breaks.json', // K66: scripts/guard-audit.mjs --check-breaks reads the break table
   'kitchen/demo/bt11b-replay.mjs',
   'kitchen/demo/gh-standin.cjs',
   'kitchen/demo/record.mjs',
