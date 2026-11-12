@@ -1,8 +1,10 @@
 # Status
 
-Updated by the CTO on 12 November 2026, when BT61 (every answer as data) closed.
+Updated by the CTO on 12 November 2026, when BT55 (a quote in a file name) closed.
 
 ## Now
+
+- **BT55 is merged, scoped: a quote in a file name no longer stops `create`.** `create` and the snapshot read the tree with `ls-tree -r -z -l` (a name holding a quote used to arrive quoted and refuse `unreadable-path` on Linux and macOS); seen failing on old code on Linux (run 43181094731), the two command-level rows run on Linux and macOS only, the parser rows everywhere. **The second fault did not reproduce:** a refused `apply` adding `café.txt` and `папка/файл.txt` leaves the tree as it was, so no code changed for it and `rmSync` stays in BACKLOG. Hosted run 43184628868 green on all three. [Result](waves/BT55.md).
 
 - **BT61 is merged: every command takes `--json` and a refusal is data too.** Under `--json` a refusal or usage error is one `box-bounty/refusal@1` document (`command`, `refused`, `message`, `next`, `exitCode`) on standard output with standard error empty and the exit code unchanged; `json-not-supported` is retired. `create`, `post` (and `--preview`), `apply`, `close`, `take`, `submit`, `allow`, `deny`, `hook`, `describe`, `help` and `setup` have documents (fields in BOUNTY.md); a stranger's text appears only under declared `foreignFields`. Without `--json` the text of every command is byte-identical (a snapshot test; it caught a recursion bug of mine). **Not done:** `hook start|pause|finish --json`, reading the agent-CLI guidance and a linter pass, a fresh-session check. It is **not in 0.2.1 on npm** (a later release carries it). See [BT61](waves/BT61.md).
 
@@ -25,8 +27,6 @@ Updated by the CTO on 12 November 2026, when BT61 (every answer as data) closed.
 - **Every waiting brief now says how, step by step** (owner, 10 November 2026: later waves may be cooked by a lower-reasoning model). Each of the 25 has "Steps, in order", a table of tests to write first, the traps, and exactly which test expectations the owner's decision changes. Two brief errors were corrected from the code: the watching line is pinned by `github.test.ts`, not `bt41`; the front page's blank picture is CSS (`opacity: 0` in `rise`), not a script.
 
 - **The site's design is approved and briefed** (owner, 11 November 2026, D-2026-11-11-design-approved): the current design stays; four small waves **await the owner's go**: [PF40](waves/PF40.md) (top bar: mark A, the name, one action), [PF43](waves/PF43.md) (front page: install line, a third way in, nothing hidden while it waits), [PF41](waves/PF41.md) (the empty board), [PF42](waves/PF42.md) (How it works: with the tool or without it). Each builds to a picture made by `docs/box-v4/design/review.mjs`. K56's first review was wrong about "two sites"; see its correction.
-
-- **K55, what successful agent tools do** (no code changed): two gaps, a refusal under `--json` is still a sentence and only four commands take `--json` ([BT61](waves/BT61.md), **awaits the owner's go**). The owner answered (D-2026-11-10-k55-answers): no standing agent evaluation, no fee stated in advance, no new install routes; no 1.0 promise until after real use, with the surface recorded now ([BT62](waves/BT62.md), awaits the owner's go).
 
 - **Owner decisions in talk, 10 November 2026:** from going live, no bounty is posted or listed at $0 ([BT60](waves/BT60.md), merged and deployed, D-2026-11-10-no-zero-bounties). Nothing is charged until there is sensible volume (D-2026-11-10-revenue-later). The project still spends nothing.
 
@@ -52,7 +52,7 @@ Updated by the CTO on 12 November 2026, when BT61 (every answer as data) closed.
 
 ## Next
 
-- **Order (owner, 10 November 2026; on 12 November 2026 the owner said to run the upcoming waves in this order without stopping, and to carry on with any wave a blocker does not touch):** (BT53 and the npm publish are done; BT63 is done); BT55, PF34 to PF38 and K51 any time (BT61 is done); BT59 and BT61 after the publish; K52 before PF6; PF39, K54 and BT62 any time. Design order: PF40, PF41 (before PF39), PF42 (before PF35), PF43 (before K41). Then **PF6** (the listings for both sides), **K41** (the film, last), then the owner's launch. PF23 is deferred.
+- **Order (owner, 10 November 2026; on 12 November 2026 the owner said to run the upcoming waves in this order without stopping, and to carry on with any wave a blocker does not touch):** (BT53 and the npm publish are done; BT63 is done); PF34 to PF38 and K51 any time (BT55 and BT61 are done); BT59 and BT61 after the publish; K52 before PF6; PF39, K54 and BT62 any time. Design order: PF40, PF41 (before PF39), PF42 (before PF35), PF43 (before K41). Then **PF6** (the listings for both sides), **K41** (the film, last), then the owner's launch. PF23 is deferred.
 - **The next tool release:** the guide gains the PowerShell line (`npx.cmd`, `box.cmd`); 0.2.0 is on npm; a GitHub release comes only from a `v*` tag, the owner's call.
 - Unbriefed (BACKLOG): `rmSync` and non-ASCII names on Windows (BT48); solvers' account age (PF4); a private organisation member counts as an outside solver, a squash-merged head reads as off the default branch (PF8); PF18's leftovers; fewer words, more showing, across the site.
 - **Direction:** agents run the common case; installing is the only required human step. The platform may start a charge but never holds money; no reminders. Site looks need before-and-after screenshots and the owner's approval.

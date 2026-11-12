@@ -2,7 +2,7 @@ import { lstatSync, readFileSync, statSync } from 'node:fs';
 import { isAbsolute, join, relative } from 'node:path';
 import { canonicalFolder } from './folder.js';
 import { BountyRefused } from './errors.js';
-import { git, gitIndexWrite, gitOutcome, gitStdin, ownerGit } from './git.js';
+import { git, gitIndexWrite, gitOutcome, gitStdin, ownerGit, parseTreeListing } from './git.js';
 import type { IndexChange } from './git.js';
 import { showPath } from './notice.js';
 import { storedIds } from './store.js';
@@ -180,8 +180,8 @@ export function createSnapshotCommit(repoRoot: string, workDir: string, statFrom
 // path pays for the common case and the checks see nothing new.
 export function classifySnapshot(repoRoot: string, commit: string, rules: readonly NeverShipRule[]): { files: SnapshotFile[]; removed: SnapshotRemoval[]; blobs: Set<string>; links: Set<string> } {
   const realRoot = canonicalFolder(repoRoot);
-  // -c core.quotepath=false: without it ls-tree C-quotes non-ASCII names even under -z.
-  const listing = git(repoRoot, ['-c', 'core.quotepath=false', 'ls-tree', '-r', '-z', '--format=%(objecttype) %(objectsize) %(path)', commit]);
+  // BT55: the plain -z -l records, parsed by parseTreeListing: `--format=%(path)` still quotes a name holding a quote character.
+  const listing = git(repoRoot, ['-c', 'core.quotepath=false', 'ls-tree', '-r', '-z', '-l', commit]);
   const escapes: string[] = [];
   const unreadable: string[] = [];
   const shipped = new Map<string, SnapshotFile>();
@@ -189,15 +189,10 @@ export function classifySnapshot(repoRoot: string, commit: string, rules: readon
   const removedPaths = new Set<string>();
   const blobSize = new Map<string, number>();
   const links = new Set<string>();
-  for (const record of listing.split('\0')) {
-    if (record === '') continue;
-    const firstSpace = record.indexOf(' ');
-    const secondSpace = record.indexOf(' ', firstSpace + 1);
-    if (secondSpace === -1) continue;
-    const path = record.slice(secondSpace + 1);
-    if (record.slice(0, firstSpace) !== 'blob') { links.add(path); continue; } // gitlinks (submodules) and anything non-file
-    const size = Number.parseInt(record.slice(firstSpace + 1, secondSpace), 10);
-    if (Number.isFinite(size)) blobSize.set(path, size);
+  for (const entry of parseTreeListing(listing)) {
+    const path = entry.path;
+    if (entry.type !== 'blob') { links.add(path); continue; } // gitlinks (submodules) and anything non-file
+    if (entry.size !== null) blobSize.set(path, entry.size);
     const absolute = join(realRoot, ...path.split('/'));
     let real: string;
     let sizeOnDisk = 0;

@@ -984,3 +984,23 @@ function unsafeCommandDetail(command: string, place: { pathy: (t: string) => boo
   }
   return null;
 }
+
+// BT55: the names in a tree, read the way Git never quotes. `ls-tree --format=%(path)` still C-quotes a name that holds a quote
+// character even under -z (Git 2.43 and 2.45: `"a\"b.txt"`), so one such file in a commit made every `create` refuse
+// `unreadable-path`. The plain `ls-tree -r -z -l` records, `<mode> <type> <object> <size>` TAB `<path>` NUL, carry the path raw: the
+// path is everything after the first tab, so a space, a tab, a newline, a quote or a backslash in it is exact. The size is padded
+// with spaces and is `-` for a gitlink.
+export interface TreeEntry { readonly type: string; readonly size: number | null; readonly path: string }
+
+export function parseTreeListing(listing: string): TreeEntry[] {
+  const entries: TreeEntry[] = [];
+  for (const record of listing.split('\0')) {
+    if (record === '') continue;
+    const tab = record.indexOf('\t');
+    if (tab < 0) continue;
+    const fields = record.slice(0, tab).trim().split(/\s+/);
+    const size = fields[3];
+    entries.push({ type: fields[1] ?? '', size: size !== undefined && /^\d+$/.test(size) ? Number(size) : null, path: record.slice(tab + 1) });
+  }
+  return entries;
+}
