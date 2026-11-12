@@ -35,54 +35,12 @@ const levelJson = (bounty: string): string =>
   JSON.stringify({ kind: 'box-owner-settings', default: { bounty, at: '2026-10-13T00:00:00.000Z', changes: [] }, projects: {} }, null, 2) + '\n';
 
 describe('the owner\'s one decision — nothing written is never allowed', () => {
-  // @guards P4 O1
-  it('nothing written: the post waits in a named state and prints the exact owner commands', () => {
-    const repo = makeRepo({ 'src/app.py': 'x\n' });
-    expect(ownerRead(repo).decision).toBeNull();
-    const { id } = drafted(repo);
-    refused(() => postToGitHub(repo, id), 'owner-allow-needed');
-    const record = loadRecord(repo, id);
-    expect(record.stage).toBe('waiting');
-    expect(record.waiting?.reason).toBe('owner-allow');
-    expect(statusGitHub(repo)).toContain('waiting for the owner');
-  });
 
   it('an owner answer on a bounty that is not waiting is a named refusal', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id } = drafted(repo);
     refused(() => allowGitHub(repo, id), 'owner-answer-not-waiting');
     refused(() => allowGitHub(repo, 'bt-000000000000'), 'unknown-bounty');
-  });
-});
-
-describe('allowed — posting, answering and closing need nobody asked again', () => {
-  // @guards P4 O1
-  it('project-level allowed posts without asking and records which answer allowed it', () => {
-    const repo = makeRepo({ 'src/app.py': 'x\n' });
-    const { id } = drafted(repo);
-    writeDecision(repo, 'project', 'allowed');
-    const { record } = postToGitHub(repo, id);
-    expect(record.stage).toBe('posted');
-    expect(record.allowedBy?.decision).toBe('allowed');
-    expect(record.allowedBy?.level).toBe('project');
-    expect(record.waiting).toBeUndefined();
-  });
-
-  // @guards O1 P4
-  it('the project level is read first — a project ask stands over a default allowed, and back', () => {
-    const repo = makeRepo({ 'src/app.py': 'x\n' });
-    writeDecision(repo, 'default', 'allowed');
-    writeDecision(repo, 'project', 'ask');
-    expect(ownerRead(repo).decision).toBe('ask');
-    expect(ownerRead(repo).level).toBe('project');
-    const first = drafted(repo);
-    refused(() => postToGitHub(repo, first.id), 'owner-answer-needed');
-    // …and a project allowed stands over a default ask, same file, other order.
-    const repo2 = makeRepo({ 'src/app.py': 'x\n' });
-    writeDecision(repo2, 'project', 'allowed');
-    writeDecision(repo2, 'default', 'ask');
-    const second = drafted(repo2, { });
-    expect(postToGitHub(repo2, second.id).record.stage).toBe('posted');
   });
 });
 

@@ -123,7 +123,7 @@ try {
       }
       const ran = runTests(entry.tests ?? []);
       if (ran.error !== undefined) done('error', { detail: ran.error });
-      else done(ran.failed.length > 0 ? 'red' : 'silent', { failed: ran.failed.slice(0, 12), detail: ran.failed.length > 12 ? `${ran.failed.length} failed in all` : '' });
+      else done(ran.failed.length > 0 ? 'red' : 'silent', { failed: ran.failed.slice(0, 500), detail: `${ran.failed.length} test(s) failed` });
     } finally { git(wt, ['checkout', '--', entry.file]); }
   }
 } finally {
