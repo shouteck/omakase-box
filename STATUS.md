@@ -1,10 +1,10 @@
 # Status
 
-Updated by the CTO on 12 November 2026, when BT65 (the setup fix) closed.
+Updated by the CTO on 12 November 2026, when 0.2.1 (the setup fix) was published.
 
 ## Now
 
-- **BT65 is merged: `omakase-box setup` acts only on exactly what it was asked.** `setup --help` and `-h` print what it does and write nothing (before, they ran the setup); a typo such as `--remov` or a stray word is refused with exit 2, naming the nearest real option (before, it ran the setup); plain `setup` and `setup --remove` are unchanged, and the marker rule for a skill file that is not ours stands. The help says that re-running refreshes our skill and replaces edits to it. Every command's `--help` is now a test. **Version 0.2.1 is ready, not published; your step:** `node packages/box-cli/pack.mjs`, then `npm.cmd publish packages/box-cli/dist-package/omakase-box-0.2.1.tgz` (npm asks for your one-time code). The README's `@latest` install line was dropped: the site and README lines must match (BACKLOG, your word). See [BT65](waves/BT65.md).
+- **BT65 is merged: `omakase-box setup` acts only on exactly what it was asked.** `setup --help` and `-h` print what it does and write nothing (before, they ran the setup); a typo such as `--remov` or a stray word is refused with exit 2, naming the nearest real option (before, it ran the setup); plain `setup` and `setup --remove` are unchanged, and the marker rule for a skill file that is not ours stands. The help says that re-running refreshes our skill and replaces edits to it. Every command's `--help` is now a test. **Version 0.2.1 is published** (npm `latest`, 01:27 UTC on 12 November 2026; the registry's checksum matches the tarball built from master; run from the registry in a scratch home, `setup --help` printed usage and wrote nothing, a typo was refused). The README's `@latest` install line was dropped: the site and README lines must match (BACKLOG, your word). See [BT65](waves/BT65.md).
 
 - **K61 is merged:** a scratch folder Windows still holds (a copied `node.exe` or `git.exe` in `withoutGh()`) is retried for about seven seconds and then left behind instead of failing a test whose assertions passed (`removeTree`, any other fault still throws); the hosted log upload may fail without failing the run (GitHub's own artifact outage had). Hosted Windows since K60: 12 runs, no hook timeout, one cleanup `EPERM`, one upload outage. One run cannot prove a flake gone. See [K61](waves/K61.md).
 
