@@ -6,6 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, lstatSync, mkdirSync, readFileSync, rmdirSync, unlinkSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { delimiter, join } from 'node:path';
+import { nearestOf } from './args.js';
 import { SKILL_TARGETS } from './instructions.js';
 import { INSTALL_SPEC, PACKAGE_REMOVE, SKILL_MARKER, SKILL_MARKER_OLD, SKILL_TEXT } from './wording.js';
 
@@ -61,6 +62,32 @@ export function runSetup(): string[] {
   else lines.push('your next agent session finds the tool. It asks you what it cannot decide.');
   lines.push('undo: omakase-box setup --remove');
   return lines;
+}
+
+// BT65: what `setup --help` prints. Fixed text from this file, so the owner reads what the command will do before running it.
+// Re-running refreshes our skill (as the tools this one is modelled on do), so the text says that edits to it are replaced.
+export const SETUP_USAGE: readonly string[] = [
+  'usage: omakase-box setup [--remove]',
+  `  puts omakase-box on this machine (npm install -g, only when it is not already there) and writes one small skill, SKILL.md, in its own folder named ${SKILL}, where your agents look: ${SKILL_TARGETS.map(target => `${shown(target)} (${target.names})`).join(' and ')}, for the agents found.`,
+  '  a skill folder of that name that is not ours is left as it is. Running setup again refreshes our skill: edits to it are replaced, so keep your own skills in their own folders.',
+  `  --remove takes our skill away, only where it carries our marker; the command itself stays: ${PACKAGE_REMOVE}.`,
+  '  --help prints this and writes nothing.',
+  '  example: omakase-box setup'
+];
+
+/** BT65: `setup` acts on exactly nothing after it (the setup) or exactly `--remove`; `--help` and `-h` print the usage and
+    write nothing; anything else is refused, naming the nearest real option, and writes nothing. Exit 2 is a usage error. */
+export function runSetupCommand(args: readonly string[]): { readonly lines: string[]; readonly code: 0 | 2 } {
+  if (args.length === 0) return { lines: runSetup(), code: 0 };
+  if (args.length === 1 && args[0] === '--remove') return { lines: runSetupRemove(), code: 0 };
+  if (args.length === 1 && (args[0] === '--help' || args[0] === '-h')) return { lines: [...SETUP_USAGE], code: 0 };
+  const first = args[0]!;
+  const nearest = first.startsWith('-') ? nearestOf(first, ['--remove', '--help']) : undefined;
+  const what = args.length > 1 && (first === '--remove' || first === '--help' || first === '-h')
+    ? `setup takes ${first} alone, not with "${args.slice(1).join(' ').slice(0, 40)}"`
+    : first.startsWith('-') ? `unknown option ${first.slice(0, 40)} for setup${nearest === undefined ? '' : ` — did you mean ${nearest}?`}`
+    : `unexpected word "${first.slice(0, 40)}" for setup; it takes --remove or --help`;
+  return { lines: [`setup refused (setup-usage): ${what}; nothing was written; next: omakase-box setup --help`], code: 2 };
 }
 
 export function runSetupRemove(): string[] {

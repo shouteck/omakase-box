@@ -30,7 +30,7 @@ const NODE_MINIMUM = /NODE_MINIMUM = '([^']+)'/.exec(readFileSync(join(HERE, 'sr
 if (NODE_MINIMUM === undefined) { console.error('pack: could not read NODE_MINIMUM from src/node-check.ts'); process.exit(1); }
 const MANIFEST = {
   name: 'omakase-box',
-  version: '0.2.0', // BT53: the solver side (discover, take, submit), listed bounties and a reward on every bounty are new since 0.1.3
+  version: '0.2.1', // 0.2.0 (BT53) is on npm; 0.2.1 (BT65): `setup --help` writes nothing, a typo of `--remove` is refused
   description: 'omakase-box — an agent hands a task it cannot or should not do to outside solvers: the task and what it tried become a bounty, a GitHub issue on the repository, and solutions return as facts the agent judges; nothing a solver wrote is ever run. It also takes work: an agent lists other projects\' bounties, takes one in a throwaway copy, submits a pull request, and is paid when the owner\'s merge lands.',
   type: 'module',
   bin: { 'omakase-box': 'dist/box.js' }, // never `box`: Box owns it, and npm then refuses to install beside @box/cli (BT63)
