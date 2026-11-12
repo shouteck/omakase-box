@@ -1,0 +1,191 @@
+{
+ "about": "K66: one-place breaks of the code behind each hard stop. node scripts/guard-audit.mjs applies each in a throwaway worktree and runs its tests: every break must turn a test red. node scripts/guard-audit.mjs --check-breaks (in every verify) checks the table is current.",
+ "breaks": [
+  {
+   "id": "never-ship-env-rule",
+   "guarantees": [
+    "C1",
+    "P2",
+    "R3"
+   ],
+   "file": "packages/box-bounty/never-ship.ts",
+   "find": "/^\\.env(?:\\.|$)/.test(basename(path))",
+   "replace": "false",
+   "note": "the .env rule stops naming .env files: create, publish and return all stop removing them",
+   "tests": [
+    "tests/box/bounty/answer.test.ts",
+    "tests/box/bounty/bt15-guarantees.test.ts",
+    "tests/box/bounty/bt40.test.ts",
+    "tests/box/bounty/bt48.test.ts",
+    "tests/box/bounty/bt51.test.ts",
+    "tests/box/bounty/bt8c.test.ts",
+    "tests/box/bounty/create.test.ts",
+    "tests/box/bounty/github-history.test.ts",
+    "tests/box/bounty/github.test.ts",
+    "tests/box/bounty/never-ship-layers.test.ts",
+    "tests/box/bounty/never-ship.test.ts"
+   ]
+  },
+  {
+   "id": "never-ship-fold",
+   "guarantees": [
+    "C1",
+    "P2",
+    "R3"
+   ],
+   "file": "packages/box-bounty/never-ship.ts",
+   "find": ".normalize('NFKC').toLowerCase()",
+   "replace": ".normalize('NFKC')",
+   "note": "paths stop being case-folded before the rules see them",
+   "tests": [
+    "tests/box/bounty/answer.test.ts",
+    "tests/box/bounty/bt15-guarantees.test.ts",
+    "tests/box/bounty/bt40.test.ts",
+    "tests/box/bounty/bt48.test.ts",
+    "tests/box/bounty/bt51.test.ts",
+    "tests/box/bounty/bt8c.test.ts",
+    "tests/box/bounty/create.test.ts",
+    "tests/box/bounty/github-history.test.ts",
+    "tests/box/bounty/github.test.ts",
+    "tests/box/bounty/never-ship-layers.test.ts",
+    "tests/box/bounty/never-ship.test.ts"
+   ]
+  },
+  {
+   "id": "create-filter",
+   "guarantees": [
+    "C1"
+   ],
+   "file": "packages/box-bounty/snapshot.ts",
+   "find": "rules.find(entry => entry.match(key))",
+   "replace": "rules.find(entry => entry.match(key) && Boolean(0))",
+   "note": "the snapshot stops applying the rules to the files it lists",
+   "nth": 0,
+   "tests": [
+    "tests/box/bounty/bt40.test.ts",
+    "tests/box/bounty/bt48.test.ts",
+    "tests/box/bounty/bt8c.test.ts",
+    "tests/box/bounty/create.test.ts",
+    "tests/box/bounty/never-ship-layers.test.ts",
+    "tests/box/bounty/never-ship.test.ts"
+   ]
+  },
+  {
+   "id": "publish-wip-never-ship",
+   "guarantees": [
+    "P2"
+   ],
+   "file": "packages/box-bounty/publish-plan.ts",
+   "find": "violations.push(...neverShipViolations(statuses, rules));",
+   "replace": "void statuses;",
+   "note": "a change published for the first time is no longer checked for never-ship paths",
+   "tests": [
+    "tests/box/bounty/bt15-guarantees.test.ts",
+    "tests/box/bounty/bt48.test.ts",
+    "tests/box/bounty/bt51.test.ts",
+    "tests/box/bounty/bt8c.test.ts",
+    "tests/box/bounty/github-history.test.ts"
+   ]
+  },
+  {
+   "id": "return-history-never-ship",
+   "guarantees": [
+    "R3"
+   ],
+   "file": "packages/box-bounty/collect.ts",
+   "find": "violations.push(...neverShipViolations(commitStatuses(root, sha, 'nothing was collected', firstParents.get(sha) ?? EMPTY_TREE), rules));",
+   "replace": "void rules;",
+   "note": "a solver's pull request is no longer checked for never-ship paths in its history",
+   "tests": [
+    "tests/box/bounty/answer.test.ts",
+    "tests/box/bounty/bt15-guarantees.test.ts",
+    "tests/box/bounty/github-history.test.ts",
+    "tests/box/bounty/github.test.ts"
+   ]
+  },
+  {
+   "id": "private-repository-check",
+   "guarantees": [
+    "P1"
+   ],
+   "file": "packages/box-bounty/gh.ts",
+   "find": "if (info['private'] !== false || info['visibility'] !== 'public') return invalid(",
+   "replace": "if (false) return invalid(",
+   "note": "a private repository is no longer refused",
+   "tests": [
+    "tests/box/bounty/bt15-guarantees.test.ts",
+    "tests/box/bounty/bt8.test.ts",
+    "tests/box/bounty/github.test.ts"
+   ]
+  },
+  {
+   "id": "owner-gate-always-allowed",
+   "guarantees": [
+    "P4",
+    "O1"
+   ],
+   "file": "packages/box-bounty/gate.ts",
+   "find": "if (read.decision === 'allowed') return { read };",
+   "replace": "if (read.decision === 'allowed' || Boolean(1)) return { read };",
+   "note": "every post passes the owner gate as if allowed",
+   "tests": [
+    "tests/box/bounty/bt11.test.ts",
+    "tests/box/bounty/bt13.test.ts",
+    "tests/box/bounty/bt14.test.ts",
+    "tests/box/bounty/bt16.test.ts",
+    "tests/box/bounty/bt23-review.test.ts",
+    "tests/box/bounty/bt52.test.ts",
+    "tests/box/bounty/bt61.test.ts",
+    "tests/box/bounty/bt8.test.ts",
+    "tests/box/bounty/bt8a.test.ts",
+    "tests/box/bounty/bt8c.test.ts",
+    "tests/box/bounty/record.test.ts"
+   ]
+  },
+  {
+   "id": "merge-hold-disabled",
+   "guarantees": [
+    "D4"
+   ],
+   "file": "packages/box-bounty/answer.ts",
+   "find": "if ((mergeRead.decision === 'ask' || mergeRead.decision === 'off' || unpermitted) && opts?.answered !== true) {",
+   "replace": "if (Boolean(0) && (mergeRead.decision === 'ask' || mergeRead.decision === 'off' || unpermitted) && opts?.answered !== true) {",
+   "note": "a merge is no longer held for the owner under ask, off or no permission",
+   "tests": [
+    "tests/box/bounty/bt13.test.ts",
+    "tests/box/bounty/bt18.test.ts",
+    "tests/box/bounty/bt52.test.ts",
+    "tests/box/bounty/bt61.test.ts"
+   ]
+  },
+  {
+   "id": "settings-hard-stop-words",
+   "guarantees": [
+    "O3"
+   ],
+   "file": "packages/box-bounty/settings.ts",
+   "find": "const hard = HARD_STOP_WORDS.some(word => folded.includes(word));",
+   "replace": "const hard = HARD_STOP_WORDS.some(word => folded.includes(word)) && false;",
+   "note": "a setting that reaches for a hard stop is no longer named as one",
+   "tests": [
+    "tests/box/bounty/bt8.test.ts",
+    "tests/box/bounty/bt8a.test.ts"
+   ]
+  },
+  {
+   "id": "board-private-rule",
+   "guarantees": [
+    "BD1"
+   ],
+   "file": "packages/box-platform/src/refresh.ts",
+   "find": "if (!isPublicRepository(answer)) {",
+   "replace": "if (!isPublicRepository(answer) && false) {",
+   "note": "the board stops dropping a repository that is not public",
+   "tests": [
+    "tests/platform/refresh.test.ts",
+    "tests/platform/hints.test.ts",
+    "tests/platform/machine.test.ts"
+   ]
+  }
+ ]
+}
