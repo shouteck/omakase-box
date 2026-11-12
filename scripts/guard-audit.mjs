@@ -72,8 +72,10 @@ if (args.includes('--check-breaks')) checkBreaks();
 // ---- the run ---------------------------------------------------------------------------------------------------------
 
 const wt = join(mkdtempSync(join(tmpdir(), 'guard-audit-')), 'wt').replaceAll('\\', '/');
-const added = git(root, ['worktree', 'add', '--detach', wt, 'HEAD']);
-if (added.status !== 0) refuse(`git could not make a worktree of HEAD: ${added.stderr.trim()}`);
+// --ref audits another revision (the tests as they were before a conversion), so old and new tests meet the same breaks.
+const ref = value('--ref') ?? 'HEAD';
+const added = git(root, ['worktree', 'add', '--detach', wt, ref]);
+if (added.status !== 0) refuse(`git could not make a worktree of ${ref}: ${added.stderr.trim()}`);
 const links = [];
 const results = [];
 function link(target, path) { symlinkSync(target, path, process.platform === 'win32' ? 'junction' : 'dir'); links.push(path); }
