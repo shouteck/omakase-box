@@ -1,4 +1,4 @@
-// reads: .execution/, docs/legacy/, kitchen/platform-prototype/, .gitignore
+// reads: .execution/, docs/legacy/, kitchen/platform-prototype/
 // K52: the retired platform's folders left the working tree (owner,
 // D-2026-11-10-clear-the-repository) and stay in Git history at the tag
 // history/before-K52. A visitor or a solver's agent cloning the repository
