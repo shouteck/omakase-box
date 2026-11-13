@@ -15,11 +15,12 @@ kitchen/demo/runs/
 __pycache__/
 *.pyc
 .kitchen/
-.execution/**/*.tar
 packages/box-cli/dist-package/
-kitchen/platform-prototype/out/
-kitchen/platform-prototype/.next/
-kitchen/platform-prototype/next-env.d.ts
+# Removed by K52; kept in Git history at the tag history/before-K52. Ignored whole so
+# local build leftovers stay out of the tree and the folders cannot be added back by accident.
+.execution/
+docs/legacy/
+kitchen/platform-prototype/
 packages/box-platform/out/
 packages/box-platform/.next/
 packages/box-platform/.wrangler/

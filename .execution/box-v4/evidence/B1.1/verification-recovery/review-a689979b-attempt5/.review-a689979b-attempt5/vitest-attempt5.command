@@ -1,1 +1,0 @@
-timeout 180 node node_modules/vitest/vitest.mjs run tests/box/verification/environment-readiness.test.ts tests/box/verification/relay-lifecycle.test.ts tests/box/auth/fixture-transport.test.ts --config scripts/vitest.config.mjs

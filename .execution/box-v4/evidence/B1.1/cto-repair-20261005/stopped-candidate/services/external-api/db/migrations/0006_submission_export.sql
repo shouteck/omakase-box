@@ -1,1 +1,0 @@
-ALTER TABLE "external_attempt_outbox" ADD "created_at" timestamp with time zone DEFAULT now() NOT NULL;

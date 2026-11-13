@@ -60,7 +60,7 @@ How much the kitchen cooks is set by the START message, not by what happens to b
 5. Do not read `.runtime/`, `.env*` or `secrets/`. Do not print credentials into logs.
 6. Do not kill processes or remove containers, databases or files the kitchen did not create. Everything a wave creates is named for that wave and removed when it closes.
 7. Do not force-push, rewrite history or change global Git, Docker, WSL, editor or model settings.
-8. `.execution/` and `docs/legacy/` are frozen history. Do not read them unless the task is about history, and do not write to them.
+8. The retired platform's files are no longer in the working tree. They are in Git history at the tag `history/before-K52` and the branch `origin/archive/box-platform-2026-10`; read them only when the task is about history.
 
 ## Environment
 
