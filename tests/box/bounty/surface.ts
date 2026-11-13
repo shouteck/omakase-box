@@ -20,8 +20,6 @@ export const SURFACE_FILE = join(ROOT, 'tests', 'box', 'bounty', 'SURFACE.txt');
 export const UPDATE = 'update the record on purpose: node scripts/surface.mjs --write';
 /** Set by `scripts/surface.mjs --write`: a folder each part writes its lines to, merged into SURFACE.txt afterwards. */
 const WRITE_DIR = process.env['BT62_WRITE'];
-/** True only under `scripts/surface.mjs --write`, which rewrites the record: tests of the record's own shape stand aside then. */
-export const WRITING = WRITE_DIR !== undefined;
 
 /** The one test file that checks each document's fields: the file whose runs print that document in the most states. */
 export const OWNERS: Readonly<Record<string, string>> = {

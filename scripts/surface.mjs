@@ -10,8 +10,10 @@ import { join } from 'node:path';
 import { root, runNode } from './process.mjs';
 
 const RECORD = join(root, 'tests', 'box', 'bounty', 'SURFACE.txt');
-// bt62 holds the static half; each owner in surface.ts's OWNERS checks its documents' fields.
+// bt62 holds the static half; each owner in surface.ts's OWNERS checks its documents' fields. bt62-record checks the
+// record's own shape, so it runs only when comparing: under --write the record is the thing being replaced.
 const FILES = ['bt62', 'json-agreement', 'bt61-journey', 'bt61', 'bt61-solver', 'pf24', 'bt28', 'bt43'].map(name => `tests/box/bounty/${name}.test.ts`);
+const RECORD_SHAPE = 'tests/box/bounty/bt62-record.test.ts';
 
 const args = process.argv.slice(2);
 const write = args[0] === '--write';
@@ -26,7 +28,7 @@ if (await runNode(join(root, 'scripts', 'workspace.mjs'), ['build']) !== 0) {
 }
 
 if (!write) {
-  const code = await runNode(join(root, 'scripts', 'suite.mjs'), ['box', '--suite', 'bounty', ...FILES]);
+  const code = await runNode(join(root, 'scripts', 'suite.mjs'), ['box', '--suite', 'bounty', ...FILES, RECORD_SHAPE]);
   console.log(code === 0 ? 'surface: the built tool matches tests/box/bounty/SURFACE.txt' : 'surface: a difference or a failure is named above');
   process.exit(code);
 }

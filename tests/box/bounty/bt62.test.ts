@@ -1,36 +1,16 @@
 // BT62: the tool's surface is on record in tests/box/bounty/SURFACE.txt, so it changes only on purpose. This file holds the
-// static half (commands, options, positionals, exit codes, held answers, refusal names, the document names) and the
-// record's own shape; each document's fields are checked by the one test that prints it (surface.ts, OWNERS). All of it
-// is read from the code: no command runs here.
+// static half (commands, options, positionals, exit codes, held answers, refusal names, the document names); each
+// document's fields are checked by the one test that prints it (surface.ts, OWNERS), and the record's own shape by
+// bt62-record.test.ts. All of it is read from the code: no command runs here.
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { BOUNTY_COMMANDS } from '../../../packages/box-bounty/index.js';
 import { ROOT } from './refusal-sites.js';
-import { checkStatic, difference, exitCodes, fieldLines, OWNERS, staticLines, SURFACE_FILE, WRITING } from './surface.js';
-
-const record = () => readFileSync(SURFACE_FILE, 'utf8').split('\n').filter(line => line !== '');
+import { checkStatic, difference, exitCodes, fieldLines, OWNERS, staticLines } from './surface.js';
 
 describe('BT62: the surface is on record', () => {
   it('the static surface derived from the code equals the record', () => {
     checkStatic();
-  });
-
-  it.skipIf(WRITING)('the record is sorted, holds no duplicate line and no blank line, and ends with one newline', () => {
-    const text = readFileSync(SURFACE_FILE, 'utf8');
-    const lines = text.split('\n');
-    expect(lines.pop(), 'ends with a newline').toBe('');
-    expect(lines.filter(line => line === ''), 'no blank line').toEqual([]);
-    expect(lines, 'sorted').toEqual([...lines].sort());
-    expect(new Set(lines).size, 'no duplicate line').toBe(lines.length);
-  });
-
-  it.skipIf(WRITING)('every command in the option table has a command line, and every document name has at least one field', () => {
-    const lines = record();
-    for (const name of [...Object.keys(BOUNTY_COMMANDS), 'setup']) expect(lines, `command ${name}`).toContain(`command ${name}`);
-    for (const schema of Object.keys(OWNERS)) expect(lines.some(line => line.startsWith(`field ${schema} `)), `no field recorded for ${schema}`).toBe(true);
-    const unowned = lines.filter(line => line.startsWith('field ')).map(line => line.split(' ')[1]!).filter(schema => OWNERS[schema] === undefined);
-    expect([...new Set(unowned)], 'fields recorded for a document no test owns').toEqual([]);
   });
 
   it('every owner is a test file that watches its documents', () => {

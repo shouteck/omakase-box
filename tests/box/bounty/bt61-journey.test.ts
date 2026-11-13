@@ -139,6 +139,7 @@ describe('BT61: setup --json', { timeout: 120000 }, () => {
 
     const removed = setup(['--remove', '--json']);
     expect(removed.status).toBe(0);
-    expect(fields.see(JSON.parse(removed.stdout))).toMatchObject({ schema: 'box-bounty/setup@1', action: 'remove' });
+    expect(JSON.parse(removed.stdout)).toMatchObject({ schema: 'box-bounty/setup@1', action: 'remove' });
+    fields.see(JSON.parse(removed.stdout));
   });
 });
