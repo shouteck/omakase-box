@@ -22,7 +22,8 @@ After a merge, do not wait for master's hosted run. Read its latest result at ki
 
 - Use absolute paths or `git -C`, never `cd`: a `cd` in a Bash call moves the desktop session's working directory (PF2).
 - Write files, the Result included, with your file tools, never a shell redirect, heredoc or `node -e`: backticks in such a command run as commands (BT44 left a stray `node.exe` on stdin). On Windows a redirect to `nul` can leave a stray file that dirties the tree. Commit from a message file (`git commit -F`): quotes in a PowerShell here-string can reach native `git` as separate arguments (PF3).
-- Never `sed -i` a CRLF file: it rewrites every line ending and buries the change in a whole-file diff (PF15).
+- Never `sed -i` a CRLF file: it rewrites every line ending and buries the change in a whole-file diff (PF15). The file tools can do the same to a file that mixes CRLF and LF lines (K52's `.gitignore`): after editing one, read `git diff --stat`, and if it counts more lines than you changed, rebuild the edit on the committed bytes.
+- Before pushing a new or changed test, run `node scripts/verify.mjs <suites>`, not `suite.mjs` on that file alone: verify picks the checks that read tests too, such as `k45-kitchen-reach` on a kitchen test's `// reads:` header, which refuses an exact path that is missing or inert (K52 named `.gitignore` and went red on all three systems).
 - On Windows run `verify.mjs` from Git Bash: from PowerShell `cat` and `rm` are not on PATH, and 6 bounty tests fail in a way that reads as a flake (PF11).
 - A stand-in that accepts what the real service refuses hides the bug: prove a new call against the real service, in test mode, before trusting green tests (PF11).
 - Read `kitchen-stats`' exit code before merging; never chain the merge after it in one command (PF3).
