@@ -1,6 +1,6 @@
 # Status
 
-Updated by the CTO on 13 November 2026, when the testing track closed (K73 merged); normal waves resume.
+Updated by the CTO on 13 November 2026, when the testing track closed (K73 merged); normal waves resume. Later that day the waiting waves were reviewed and their briefs edited (D-2026-11-13-remaining-waves; see Next).
 
 ## Now
 
@@ -32,14 +32,14 @@ Updated by the CTO on 13 November 2026, when the testing track closed (K73 merge
 
 - **Owner decisions in talk, 10 November 2026:** from going live, no bounty is posted or listed at $0 ([BT60](waves/BT60.md), merged and deployed, D-2026-11-10-no-zero-bounties). Nothing is charged until there is sensible volume (D-2026-11-10-revenue-later). The project still spends nothing.
 
-- **K53, tooling, architecture and language** (no code changed): keep TypeScript on Node. A bounty's page, the board and the numbers page are empty without JavaScript ([PF39](waves/PF39.md)); no linter ([K54](waves/K54.md)). Both **await the owner's go**. See [K53](waves/K53.md).
+- **K53, tooling, architecture and language** (no code changed): keep TypeScript on Node. A bounty's page, the board and the numbers page are empty without JavaScript ([PF39](waves/PF39.md)); no linter ([K54](waves/K54.md), narrowed on 13 November 2026 to the board's unawaited promises). Both **await the owner's go**. See [K53](waves/K53.md).
 
-- **K49, the engineering reviewed** (no code changed): the tool is fast and sound. The board has no backup, rollback, migration record or watch, and no security headers. Verify takes about 5 minutes on GitHub's machine and 20 to 31 here, and runs there only after a merge, on Linux only. Briefs **awaiting the owner's go**: [BT58](waves/BT58.md), [K50](waves/K50.md), [PF36](waves/PF36.md), [PF37](waves/PF37.md), [PF38](waves/PF38.md), [K51](waves/K51.md), [BT59](waves/BT59.md), [K52](waves/K52.md) (a removal). See [K49](waves/K49.md).
+- **K49, the engineering reviewed** (no code changed): the tool is fast and sound. The board has no backup, rollback, migration record or watch, and no security headers. BT58, K50 (the hosted run on three systems is now acceptance) and K51 are done; briefs **awaiting the owner's go**: [PF37](waves/PF37.md), [PF38](waves/PF38.md), [BT59](waves/BT59.md), [K52](waves/K52.md) (a removal); [PF36](waves/PF36.md) waits until after launch. See [K49](waves/K49.md).
 
 - **Live on the board** (each deployed on the owner's word, `exceededCpu` 0 before and after; details in each wave file): PF33 (the posted issue reads plainly), PF32 (list an existing issue), PF31c, PF31b, PF31 (payment window), PF9b (the sandbox never listed), PF29 (pricing from the board alone), PF28, PF27's For agents page, PF22, PF21, PF20, PF19, PF18 (Stripe), PF16, PF17, PF15, PF14, PF13, PF11, PF8, PF10: https://open-bounty-board.box-platform.workers.dev, at $0, with real sign-in.
 - **The solver side is built and proven** (CLI only; reaches users with the next npm release, the owner's to publish): `discover`, `take`, `submit`, `status`, `describe --solving` (PF24 to PF27). PF9a ran every agent flow for real with twelve fresh agents: zero blocks or misleads.
 - **The live board is empty** of test records (owner, 4 November 2026); the owner's own sign-ins, Stripe connection and pay settings stay.
-- **The live board's bounty detail is slow** (0.4 to 9 s against the tool's 2.5 s limit); briefed as PF34.
+- **The live board's bounty detail is slow** (0.4 to 9 s against the tool's 2.5 s limit); briefed as PF34, which waits for a real bounty on the live board.
 - **Stripe is live** since 3 November 2026 (PF18). **No real payment has been made:** the first one is the proof this has not had; read it from the logs. To turn it off: `wrangler secret delete STRIPE_SECRET_KEY`. Optional: ask Stripe whether a restricted key can get Write on Accounts v2.
 - **PayPal's review** of the live app, omakase-box, is awaited (submitted 2 November 2026). No PayPal key until it passes; PayPal live is unproven.
 - **For PF9:** the CPU of `settlePayPal`, the payments-due notice and `exceededCpu` on the free plan; PayPal's connect on a deployed board; a seat with its own `BOX_BOUNTY_SETTINGS_DIR` gets no default board. Wrangler's login is on this machine; `wrangler logout` ends that.
@@ -52,8 +52,9 @@ Updated by the CTO on 13 November 2026, when the testing track closed (K73 merge
 
 ## Next
 
-- **Order (owner, 10 November 2026; on 12 November 2026 the owner said to run the upcoming waves in this order without stopping, and to carry on with any wave a blocker does not touch):** (BT53 and the npm publish are done; BT63 is done); PF34 to PF38 any time (BT55, BT61 and K51 are done); BT59 and BT61 after the publish; K52 before PF6; PF39, K54 and BT62 any time. Design order: PF40, PF41 (before PF39), PF42 (before PF35), PF43 (before K41). Then **PF6** (the listings for both sides), **K41** (the film, last), then the owner's launch. PF23 is deferred.
-- **The next tool release:** the guide gains the PowerShell line (`npx.cmd`, `box.cmd`); 0.2.0 is on npm; a GitHub release comes only from a `v*` tag, the owner's call.
+- **Order (owner, 10 November 2026, revised 13 November 2026 after the testing track, D-2026-11-13-remaining-waves; on 12 November 2026 the owner said to run the upcoming waves in this order without stopping, and to carry on with any wave a blocker does not touch):** **K52** (a removal: its own go); **BT62, then BT59** (BT59's surface must match BT62's record; BT59 opens with the in-process stand-in seam and checks the stand-ins against real GitHub); then the **owner's release** carrying BT61, BT62 and BT59; **PF38, PF37 and K54** (narrowed to the board's unawaited promises) before strangers arrive. Design order unchanged: PF40, PF41 (before PF39), PF42 (before PF35), PF43 (before K41). Then **PF6** (rewritten: the listings, the skill's public home, the facts sheet), **K41** (the film, last), then the owner's launch. **After launch:** PF34 and PF36, once real bounties are on the live board. PF23 stays deferred. Every waiting brief now says acceptance is the hosted run and points at [TESTING.md](docs/box-v4/TESTING.md) and the `## Changed expectations` gate where it changes tests.
+- **The next tool release** (the owner's): BT61, BT62 and BT59 (0.2.1 is on npm and has none of them); the guide gains the PowerShell line (`npx.cmd`); a GitHub release comes only from a `v*` tag, the owner's call.
+- **The repository's GitHub description is still the retired product's** (PF35 found it): one `gh repo edit` sets the description, topics and homepage; the owner's to run or approve, any time.
 - Unbriefed (BACKLOG): `rmSync` and non-ASCII names on Windows (BT48); solvers' account age (PF4); a private organisation member counts as an outside solver, a squash-merged head reads as off the default branch (PF8); PF18's leftovers; fewer words, more showing, across the site.
 - **Direction:** agents run the common case; installing is the only required human step. The platform may start a charge but never holds money; no reminders. Site looks need before-and-after screenshots and the owner's approval.
 - **Verify on a cloud host:** k16 needs the pinned browser (BACKLOG). **On the Windows host:** run verify from Git Bash with heavy apps closed.
