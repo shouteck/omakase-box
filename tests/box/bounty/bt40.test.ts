@@ -8,58 +8,23 @@
 // message text contains `next:`; it does not prove the step is true — the
 // review reads sites for that.
 import { spawnSync } from 'node:child_process';
-import { readdirSync, readFileSync } from 'node:fs';
-import { join, sep } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import { allowRepository, createBounty } from '../../../packages/box-bounty/index.js';
 import { sharedPostedFixture } from './github-fixture.js';
+import { collectSites, ROOT } from './refusal-sites.js';
 import { CLI_DIST, git, makeRepo, runRoot } from './support.js';
 
 const cli = (cwd: string, args: readonly string[]) =>
   spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args], { cwd, encoding: 'utf8', env: process.env, timeout: 60000 });
 
-const ROOT = join(__dirname, '..', '..', '..');
-const SCAN_DIRS = ['packages/box-bounty', 'packages/box-cli/src'];
 // The dispatcher's real branches in packages/box-cli/src/bounty.ts — a `next:`
 // that names a `omakase-box <word>` outside this list sends the reader to a
 // command that does not exist.
 const COMMANDS = new Set(['allow', 'apply', 'close', 'config', 'create', 'deny', 'describe', 'discover', 'find', 'take', 'submit', 'help', 'hook', 'look', 'post', 'status']);
 
-interface Site { file: string; line: number; reason: string; message: string; excepted: boolean }
-
-const collectSites = (): Site[] => {
-  const files: string[] = [];
-  const walk = (dir: string) => {
-    for (const entry of readdirSync(join(ROOT, dir), { withFileTypes: true })) {
-      if (entry.isDirectory()) walk(join(dir, entry.name));
-      else if (entry.name.endsWith('.ts') && !entry.name.endsWith('.d.ts')) files.push(join(dir, entry.name));
-    }
-  };
-  SCAN_DIRS.forEach(walk);
-  const sites: Site[] = [];
-  for (const file of files) {
-    const rel = file.split(sep).join('/');
-    const sf = ts.createSourceFile(rel, readFileSync(join(ROOT, file), 'utf8'), ts.ScriptTarget.Latest, true);
-    const visit = (node: ts.Node) => {
-      let args: ts.NodeArray<ts.Expression> | undefined;
-      if (ts.isNewExpression(node) && node.expression.getText(sf) === 'BountyRefused' && node.arguments !== undefined && node.arguments.length >= 2) args = node.arguments;
-      if (ts.isCallExpression(node) && node.expression.getText(sf) === 'invalid' && node.arguments !== undefined && node.arguments.length >= 2) args = node.arguments;
-      if (args !== undefined) {
-        const { line } = sf.getLineAndCharacterOfPosition(node.getStart(sf));
-        const reason = args[0]!.getText(sf);
-        const message = args[1]!.getText(sf);
-        // Exclusions: `invalid`'s own forwarding body (reason, message) and the
-        // removed-command table lookup — tested through the CLI below.
-        const excepted = (reason === 'reason' && message === 'message') || message === 'removed[subcommand!]!';
-        sites.push({ file: rel, line: line + 1, reason, message, excepted });
-      }
-      ts.forEachChild(node, visit);
-    };
-    visit(sf);
-  }
-  return sites;
-};
 
 describe('BT40 every refusal names its next step', () => {
   it('guard: every BountyRefused/invalid message argument contains literal `next: `', () => {

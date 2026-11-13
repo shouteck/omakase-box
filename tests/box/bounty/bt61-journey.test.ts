@@ -4,9 +4,14 @@
 import { spawnSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
 import { sharedFixture } from './github-fixture.js';
 import { CLI_DIST, makeRepo } from './support.js';
+import { watchFields } from './surface.js';
+
+// BT62: the fields of every document this file prints are checked against the surface record (the schemas OWNERS gives it).
+const fields = watchFields('bt61-journey');
+afterAll(fields.check);
 
 type Doc = Record<string, unknown>;
 const box = (cwd: string, args: string[]) => spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args], { cwd, encoding: 'utf8', env: process.env, timeout: 60000 });
@@ -17,7 +22,7 @@ const doc = (cwd: string, args: string[], exit = 0): Doc => {
   expect(ran.stderr, `${args.join(' ')} wrote to standard error`).toBe('');
   expect(ran.stdout.endsWith('\n')).toBe(true);
   expect(ran.stdout.trim().split('\n'), `${args.join(' ')} printed more than one line`).toHaveLength(1);
-  return JSON.parse(ran.stdout) as Doc;
+  return fields.see(JSON.parse(ran.stdout) as Doc);
 };
 const keys = (document: Doc): string[] => Object.keys(document);
 
@@ -120,7 +125,7 @@ describe('BT61: setup --json', { timeout: 120000 }, () => {
     const help = setup(['--help', '--json']);
     expect(help.status).toBe(0);
     expect(help.stderr).toBe('');
-    const helpDocument = JSON.parse(help.stdout) as Doc;
+    const helpDocument = fields.see(JSON.parse(help.stdout) as Doc);
     expect(helpDocument).toMatchObject({ schema: 'box-bounty/setup@1', action: 'help' });
     expect((helpDocument['lines'] as string[])[0]).toContain('usage: omakase-box setup');
 
@@ -134,6 +139,6 @@ describe('BT61: setup --json', { timeout: 120000 }, () => {
 
     const removed = setup(['--remove', '--json']);
     expect(removed.status).toBe(0);
-    expect(JSON.parse(removed.stdout)).toMatchObject({ schema: 'box-bounty/setup@1', action: 'remove' });
+    expect(fields.see(JSON.parse(removed.stdout))).toMatchObject({ schema: 'box-bounty/setup@1', action: 'remove' });
   });
 });

@@ -4,8 +4,13 @@
 // purpose search (find). Every test names its behaviour and pins the
 // small-N-preservation guarantee where the wave demands it.
 import { spawnSync } from 'node:child_process';
-import { describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
 import { CLI_DIST, RECORDS_DIR_REL, git, makeRepo, openLine, readRecord, readRecordRaw, recordIds, rewriteRecordRaw, write, writeRecord, writeRecordRaw } from './support.js';
+import { watchFields } from './surface.js';
+
+// BT62: the fields of the find document this file prints are checked against the surface record.
+const fields = watchFields('bt28');
+afterAll(fields.check);
 
 const box = (cwd: string, args: string[]) =>
   spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args], { cwd, encoding: 'utf8', env: process.env, timeout: 60000 });
@@ -217,7 +222,7 @@ describe('5. find searches purpose across readable records', () => {
     seed(repo, 1, 'drafted', { why: 'parser work', title: 'hit' });
     const run = box(repo, ['find', 'parser', '--json']);
     expect(run.status).toBe(0);
-    const doc = JSON.parse(run.stdout);
+    const doc = fields.see(JSON.parse(run.stdout));
     expect(doc.schema).toBe('box-bounty/find@1');
     expect(doc.query).toBe('parser');
     expect(doc.total).toBe(1);

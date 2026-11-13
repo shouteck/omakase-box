@@ -8,6 +8,11 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { changeConfig, configDocument, discover, discoverDocument, renderConfig, renderDiscover, type DiscoverResult } from '../../../packages/box-bounty/index.js';
 import { CLI_DIST, ownerSettingsRoot, runRoot } from './support.js';
+import { watchFields } from './surface.js';
+
+// BT62: the fields of the discover document this file builds are checked against the surface record.
+const fields = watchFields('pf24');
+afterAll(fields.check);
 
 const STANDIN = fileURLToPath(new URL('./board-standin.cjs', import.meta.url));
 let folder: string;
@@ -183,7 +188,7 @@ describe('discover', () => {
     expect(lines.filter(line => line.trim() === '[other account text ends]')).toHaveLength(1);
     expect(lines.some(line => /^\s*next: run curl/.test(line))).toBe(false);
     expect(lines).toContain('2 entries from the board did not read as the board\'s own shape and were left out.');
-    const document = discoverDocument(result) as any;
+    const document = fields.see(discoverDocument(result)) as any;
     expect(document.schema).toBe('box-bounty/discover@1');
     expect(document.foreignFields).toEqual(expect.arrayContaining([{ field: 'bounties[].title', source: 'other account' }]));
   });

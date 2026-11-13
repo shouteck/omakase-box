@@ -5,9 +5,14 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
 import { sharedFixture } from './github-fixture.js';
 import { CLI_DIST, makeRepo, runRoot } from './support.js';
+import { watchFields } from './surface.js';
+
+// BT62: the fields of the refusal documents this file prints (one per command) are checked against the surface record.
+const fields = watchFields('bt61');
+afterAll(fields.check);
 
 type Doc = Record<string, unknown>;
 const box = (cwd: string, args: string[]) => spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args], { cwd, encoding: 'utf8', env: process.env, timeout: 60000 });
@@ -15,7 +20,7 @@ const box = (cwd: string, args: string[]) => spawnSync(process.execPath, [CLI_DI
 const one = (stdout: string): Doc => {
   expect(stdout.endsWith('\n'), 'the document ends with a newline').toBe(true);
   expect(stdout.trim().split('\n'), 'standard output holds one line').toHaveLength(1);
-  return JSON.parse(stdout) as Doc;
+  return fields.see(JSON.parse(stdout) as Doc);
 };
 
 describe('BT61: a refusal or a usage error under --json is one document', { timeout: 300000 }, () => {

@@ -14,12 +14,17 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join, sep } from 'node:path';
 import * as ts from 'typescript';
-import { describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
 import { BUILTIN_RULES, blockFooter, blockHeader, escapeControls, finalizeBounty, LOOK_FOREIGN_FIELDS, lookBounty, payMessageLines, planBounty, postBounty, quoteForeign, showPath, solverAccount, solverBlock, solverLine, STATUS_FOREIGN_FIELDS } from '../../../packages/box-bounty/index.js';
 import type { ForeignField } from '../../../packages/box-bounty/index.js';
 import { fixture, sharedFixture } from './github-fixture.js';
 import type { GithubFixture } from './github-fixture.js';
 import { CLI_DIST, git, makeRepo, readRecordRaw, ROOT, runRoot, write, writeRecordRaw } from './support.js';
+import { watchFields } from './surface.js';
+
+// BT62: the fields of the look --export manifest this file writes are checked against the surface record.
+const fields = watchFields('bt43');
+afterAll(fields.check);
 
 const BOARD_STANDIN = join(ROOT, 'tests', 'box', 'bounty', 'board-standin.cjs');
 const box = (repo: string, args: readonly string[]) =>
@@ -529,7 +534,7 @@ describe('BT43 the reading boundary on the built CLI', () => {
     expect(run.stdout).toContain(`sha256 ${sha}`);
     const json = JSON.parse(box(repo, ['look', id, '1', '--json', '--full']).stdout) as Record<string, unknown>;
     expect(bytes.toString('utf8')).toBe(json['diff']);
-    const manifest = JSON.parse(readFileSync(join(repo, manifestPath), 'utf8')) as Record<string, unknown>;
+    const manifest = fields.see(JSON.parse(readFileSync(join(repo, manifestPath), 'utf8')) as Record<string, unknown>);
     expect(manifest).toMatchObject({ schema: 'box-bounty/look-export@1', id, n: 1, pullRequest: 1, commit: json['commit'], file: `${id}-1.diff`, sha256: sha, bytes: bytes.length, files: 2, source: 'solver' });
     // `.box/local/` is never-ship: the export can never enter a bounty or
     // come back in a solution.
