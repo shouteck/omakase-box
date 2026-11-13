@@ -1,0 +1,30 @@
+# PF37: is the live board up, and still reading GitHub? Every 30 minutes, and on demand from the Actions tab. A failed run is
+# the notice: GitHub emails the repository's owner. It reads the board's public front page and /numbers.json only; it has no
+# secret and no permission, and writes nothing. GitHub disables a scheduled workflow after 60 days with no activity in the
+# repository; the Actions tab then offers to turn it back on (DEPLOY.md, "Watching the board").
+name: watch
+
+on:
+  schedule:
+    - cron: '17,47 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  watch:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            scripts/watch.mjs
+            .node-version
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+      # The address is a repository variable when one is set, else the public board.
+      - run: node scripts/watch.mjs "${{ vars.BOARD_ADDRESS || 'https://open-bounty-board.box-platform.workers.dev' }}"
