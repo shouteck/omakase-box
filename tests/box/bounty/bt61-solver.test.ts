@@ -8,6 +8,11 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { changeConfig } from '../../../packages/box-bounty/index.js';
 import { postedFixture, type GhState } from './github-fixture.js';
 import { CLI_DIST, git, runRoot } from './support.js';
+import { watchFields } from './surface.js';
+
+// BT62: the fields of the take and submit documents this file prints are checked against the surface record.
+const fields = watchFields('bt61-solver');
+afterAll(fields.check);
 
 type Doc = Record<string, unknown>;
 const STANDIN = fileURLToPath(new URL('./board-standin.cjs', import.meta.url));
@@ -32,7 +37,7 @@ const one = (cwd: string, args: string[], exit = 0): Doc => {
   expect(ran.status, `${args.join(' ')}: ${ran.stdout}${ran.stderr}`).toBe(exit);
   expect(ran.stderr, `${args.join(' ')} wrote to standard error`).toBe('');
   expect(ran.stdout.trim().split('\n')).toHaveLength(1);
-  return JSON.parse(ran.stdout) as Doc;
+  return fields.see(JSON.parse(ran.stdout) as Doc);
 };
 
 describe('BT61: the solver\'s half answers --json', { timeout: 300000 }, () => {

@@ -1,0 +1,793 @@
+command allow
+command apply
+command close
+command config
+command create
+command deny
+command describe
+command discover
+command find
+command help
+command hook
+command look
+command overview
+command post
+command setup
+command status
+command submit
+command take
+exit 0 done, or an answer held for the owner
+exit 1 failed
+exit 2 usage
+exit 3 refused
+field box-bounty/allow@1 decision string
+field box-bounty/allow@1 foreignFields array
+field box-bounty/allow@1 id null
+field box-bounty/allow@1 kind string
+field box-bounty/allow@1 lines array
+field box-bounty/allow@1 lines[] string
+field box-bounty/allow@1 notices array
+field box-bounty/allow@1 notices[] string
+field box-bounty/allow@1 repository string
+field box-bounty/allow@1 reward number
+field box-bounty/allow@1 rewardLimit number
+field box-bounty/allow@1 schema string
+field box-bounty/apply@1 attempt number
+field box-bounty/apply@1 base null
+field box-bounty/apply@1 clean null
+field box-bounty/apply@1 commitsTouchingConflicts null
+field box-bounty/apply@1 conflicts null
+field box-bounty/apply@1 firstMergeNotice null
+field box-bounty/apply@1 foreignFields array
+field box-bounty/apply@1 foreignFields[] object
+field box-bounty/apply@1 foreignFields[].field string
+field box-bounty/apply@1 foreignFields[].source string
+field box-bounty/apply@1 github object
+field box-bounty/apply@1 github.closedNote null
+field box-bounty/apply@1 github.pending null
+field box-bounty/apply@1 id string
+field box-bounty/apply@1 job string
+field box-bounty/apply@1 lines array
+field box-bounty/apply@1 lines[] string
+field box-bounty/apply@1 mergeCommit string
+field box-bounty/apply@1 next null
+field box-bounty/apply@1 notOnGitHub object
+field box-bounty/apply@1 notOnGitHub.ahead null
+field box-bounty/apply@1 notOnGitHub.publish string
+field box-bounty/apply@1 notOnGitHub.upstream null
+field box-bounty/apply@1 notices array
+field box-bounty/apply@1 outcome string
+field box-bounty/apply@1 pay array
+field box-bounty/apply@1 pay[] string
+field box-bounty/apply@1 resume object
+field box-bounty/apply@1 resume.branch string
+field box-bounty/apply@1 resume.changed array
+field box-bounty/apply@1 resume.changed[] string
+field box-bounty/apply@1 resume.commit string
+field box-bounty/apply@1 resume.note null
+field box-bounty/apply@1 resume.noteStayedOnPostingMachine boolean
+field box-bounty/apply@1 revert string
+field box-bounty/apply@1 schema string
+field box-bounty/apply@1 stage string
+field box-bounty/close@1 foreignFields array
+field box-bounty/close@1 foreignFields[] object
+field box-bounty/close@1 foreignFields[].field string
+field box-bounty/close@1 foreignFields[].source string
+field box-bounty/close@1 github object
+field box-bounty/close@1 github.closedNote null
+field box-bounty/close@1 github.pending null
+field box-bounty/close@1 id string
+field box-bounty/close@1 job string
+field box-bounty/close@1 lines array
+field box-bounty/close@1 lines[] string
+field box-bounty/close@1 notices array
+field box-bounty/close@1 outcome string
+field box-bounty/close@1 pay array
+field box-bounty/close@1 pay[] string
+field box-bounty/close@1 reason null
+field box-bounty/close@1 schema string
+field box-bounty/close@1 stage string
+field box-bounty/config@1 allProjects null|string
+field box-bounty/config@1 allProjectsChangedAt null|string
+field box-bounty/config@1 board null
+field box-bounty/config@1 decision null|string
+field box-bounty/config@1 decisionAt null|string
+field box-bounty/config@1 decisionLevel null|string
+field box-bounty/config@1 denied boolean
+field box-bounty/config@1 instructions object
+field box-bounty/config@1 instructions.enabled boolean
+field box-bounty/config@1 instructions.file null
+field box-bounty/config@1 instructions.found array
+field box-bounty/config@1 promised number
+field box-bounty/config@1 publishLists object
+field box-bounty/config@1 publishLists.neverPublish array
+field box-bounty/config@1 publishLists.safeToPublish array
+field box-bounty/config@1 records object
+field box-bounty/config@1 records.tracked boolean
+field box-bounty/config@1 records.trackedFiles number
+field box-bounty/config@1 repositories object
+field box-bounty/config@1 repositories{} object
+field box-bounty/config@1 repositories{}.addedAt string
+field box-bounty/config@1 repositories{}.changedAt string
+field box-bounty/config@1 repositories{}.decision string
+field box-bounty/config@1 repositories{}.history array
+field box-bounty/config@1 repositories{}.reward number
+field box-bounty/config@1 repositories{}.rewardLimit number
+field box-bounty/config@1 reward number
+field box-bounty/config@1 rewardLimit null|number
+field box-bounty/config@1 schema string
+field box-bounty/config@1 settingsFile string
+field box-bounty/config@1 solving null
+field box-bounty/config@1 thisRepository string
+field box-bounty/config@1 waiting array
+field box-bounty/config@1 waiting[] object
+field box-bounty/config@1 waiting[].for string
+field box-bounty/config@1 waiting[].hits null
+field box-bounty/config@1 waiting[].id string
+field box-bounty/config@1 waiting[].reason string
+field box-bounty/config@1 waiting[].since string
+field box-bounty/config@1 waiting[].to string
+field box-bounty/create@1 foreignFields array
+field box-bounty/create@1 foreignFields[] object
+field box-bounty/create@1 foreignFields[].field string
+field box-bounty/create@1 foreignFields[].source string
+field box-bounty/create@1 id string
+field box-bounty/create@1 lines array
+field box-bounty/create@1 lines[] string
+field box-bounty/create@1 neverShipRemoved array
+field box-bounty/create@1 next string
+field box-bounty/create@1 notices array
+field box-bounty/create@1 record string
+field box-bounty/create@1 repoRoot string
+field box-bounty/create@1 reward number
+field box-bounty/create@1 scan object
+field box-bounty/create@1 scan.hits array
+field box-bounty/create@1 scan.notScanned array
+field box-bounty/create@1 schema string
+field box-bounty/create@1 taskFile string
+field box-bounty/create@1 title string
+field box-bounty/create@1 titleShortened boolean
+field box-bounty/create@1 waitsForOwner null
+field box-bounty/deny@1 decision null
+field box-bounty/deny@1 foreignFields array
+field box-bounty/deny@1 id null
+field box-bounty/deny@1 kind string
+field box-bounty/deny@1 lines array
+field box-bounty/deny@1 lines[] string
+field box-bounty/deny@1 notices array
+field box-bounty/deny@1 repository string
+field box-bounty/deny@1 reward null
+field box-bounty/deny@1 rewardLimit null
+field box-bounty/deny@1 schema string
+field box-bounty/describe@1 foreignFields array
+field box-bounty/describe@1 lines array
+field box-bounty/describe@1 lines[] string
+field box-bounty/describe@1 mode string
+field box-bounty/describe@1 notices array
+field box-bounty/describe@1 repository string optional
+field box-bounty/describe@1 schema string
+field box-bounty/discover@1 began string
+field box-bounty/discover@1 board string
+field box-bounty/discover@1 bounties array
+field box-bounty/discover@1 bounties[] object
+field box-bounty/discover@1 bounties[].ageDays number
+field box-bounty/discover@1 bounties[].attempts number
+field box-bounty/discover@1 bounties[].baseCommit string
+field box-bounty/discover@1 bounties[].branch string
+field box-bounty/discover@1 bounties[].checks object
+field box-bounty/discover@1 bounties[].checks.failing number
+field box-bounty/discover@1 bounties[].checks.none number
+field box-bounty/discover@1 bounties[].checks.passing number
+field box-bounty/discover@1 bounties[].checks.pending number
+field box-bounty/discover@1 bounties[].checks.unread number
+field box-bounty/discover@1 bounties[].decisions object
+field box-bounty/discover@1 bounties[].decisions.count number
+field box-bounty/discover@1 bounties[].decisions.medianDays number
+field box-bounty/discover@1 bounties[].id string
+field box-bounty/discover@1 bounties[].language string
+field box-bounty/discover@1 bounties[].openAllByPoster boolean
+field box-bounty/discover@1 bounties[].owner string
+field box-bounty/discover@1 bounties[].page string
+field box-bounty/discover@1 bounties[].paysOnMerge boolean
+field box-bounty/discover@1 bounties[].pullRequests null
+field box-bounty/discover@1 bounties[].record object
+field box-bounty/discover@1 bounties[].record.confirmedReceived number
+field box-bounty/discover@1 bounties[].record.merged number
+field box-bounty/discover@1 bounties[].record.owedNow number
+field box-bounty/discover@1 bounties[].record.recordedPaid number
+field box-bounty/discover@1 bounties[].repository string
+field box-bounty/discover@1 bounties[].reward number
+field box-bounty/discover@1 bounties[].solutionsOpen number
+field box-bounty/discover@1 bounties[].title string
+field box-bounty/discover@1 filter object
+field box-bounty/discover@1 filter.languages array
+field box-bounty/discover@1 filter.minReward number
+field box-bounty/discover@1 foreignFields array
+field box-bounty/discover@1 foreignFields[] object
+field box-bounty/discover@1 foreignFields[].field string
+field box-bounty/discover@1 foreignFields[].source string
+field box-bounty/discover@1 more boolean
+field box-bounty/discover@1 next string
+field box-bounty/discover@1 notRun string
+field box-bounty/discover@1 numbers string
+field box-bounty/discover@1 resetNote null
+field box-bounty/discover@1 schema string
+field box-bounty/discover@1 skipped number
+field box-bounty/discover@1 solving object
+field box-bounty/discover@1 solving.floor number
+field box-bounty/discover@1 solving.mode string
+field box-bounty/discover@1 solving.paysOnMergeOnly boolean
+field box-bounty/discover@1 solving.skip array
+field box-bounty/discover@1 unreadable number
+field box-bounty/find@1 matches array
+field box-bounty/find@1 matches[] object
+field box-bounty/find@1 matches[].createdAt string
+field box-bounty/find@1 matches[].id string
+field box-bounty/find@1 matches[].lastEventAt string
+field box-bounty/find@1 matches[].matched array
+field box-bounty/find@1 matches[].matched[] string
+field box-bounty/find@1 matches[].open boolean
+field box-bounty/find@1 matches[].stage string
+field box-bounty/find@1 matches[].title string
+field box-bounty/find@1 query string
+field box-bounty/find@1 schema string
+field box-bounty/find@1 total number
+field box-bounty/help@1 foreignFields array
+field box-bounty/help@1 lines array
+field box-bounty/help@1 lines[] string
+field box-bounty/help@1 notices array
+field box-bounty/help@1 schema string
+field box-bounty/hook@1 action string
+field box-bounty/hook@1 foreignFields array
+field box-bounty/hook@1 host null
+field box-bounty/hook@1 lines array
+field box-bounty/hook@1 lines[] string
+field box-bounty/hook@1 notices array
+field box-bounty/hook@1 schema string
+field box-bounty/look-export@1 bytes number
+field box-bounty/look-export@1 commit string
+field box-bounty/look-export@1 file string
+field box-bounty/look-export@1 files number
+field box-bounty/look-export@1 id string
+field box-bounty/look-export@1 n number
+field box-bounty/look-export@1 note string
+field box-bounty/look-export@1 pullRequest number
+field box-bounty/look-export@1 schema string
+field box-bounty/look-export@1 sha256 string
+field box-bounty/look-export@1 source string
+field box-bounty/look@1 author string
+field box-bounty/look@1 collected boolean
+field box-bounty/look@1 commit string
+field box-bounty/look@1 diff string
+field box-bounty/look@1 files array
+field box-bounty/look@1 files[] object
+field box-bounty/look@1 files[].change string
+field box-bounty/look@1 files[].path string
+field box-bounty/look@1 foreignFields array
+field box-bounty/look@1 foreignFields[] object
+field box-bounty/look@1 foreignFields[].field string
+field box-bounty/look@1 foreignFields[].source string
+field box-bounty/look@1 fromOthers object
+field box-bounty/look@1 fromOthers.from string
+field box-bounty/look@1 fromOthers.text string
+field box-bounty/look@1 id string
+field box-bounty/look@1 large boolean
+field box-bounty/look@1 n number
+field box-bounty/look@1 payTo string
+field box-bounty/look@1 pullRequest number
+field box-bounty/look@1 report array
+field box-bounty/look@1 report[] string
+field box-bounty/look@1 schema string
+field box-bounty/look@1 tooLarge null
+field box-bounty/post@1 base string
+field box-bounty/post@1 branch string
+field box-bounty/post@1 commit string
+field box-bounty/post@1 destination string
+field box-bounty/post@1 foreignFields array
+field box-bounty/post@1 id string
+field box-bounty/post@1 issue object
+field box-bounty/post@1 issue.number number
+field box-bounty/post@1 issue.url string
+field box-bounty/post@1 lines array
+field box-bounty/post@1 lines[] string
+field box-bounty/post@1 next string
+field box-bounty/post@1 notices array
+field box-bounty/post@1 posted boolean
+field box-bounty/post@1 repository string
+field box-bounty/post@1 reward number
+field box-bounty/post@1 scanBinary array
+field box-bounty/post@1 schema string
+field box-bounty/post@1 stage string
+field box-bounty/refusal@1 command string
+field box-bounty/refusal@1 exitCode number
+field box-bounty/refusal@1 message string
+field box-bounty/refusal@1 next null|string
+field box-bounty/refusal@1 refused string
+field box-bounty/refusal@1 schema string
+field box-bounty/refusal@1 usage array|null
+field box-bounty/refusal@1 usage[] string
+field box-bounty/setup@1 action string
+field box-bounty/setup@1 lines array
+field box-bounty/setup@1 lines[] string
+field box-bounty/setup@1 notices array
+field box-bounty/setup@1 schema string
+field box-bounty/status@1 acting null
+field box-bounty/status@1 board object
+field box-bounty/status@1 board.address null
+field box-bounty/status@1 board.notTold number
+field box-bounty/status@1 board.reason null
+field box-bounty/status@1 bounties array
+field box-bounty/status@1 bounties[] object
+field box-bounty/status@1 bounties[].allowedBy null|object
+field box-bounty/status@1 bounties[].allowedBy.decision string
+field box-bounty/status@1 bounties[].allowedBy.decisionAt string
+field box-bounty/status@1 bounties[].allowedBy.level string
+field box-bounty/status@1 bounties[].allowedBy.usedAt string
+field box-bounty/status@1 bounties[].baseCommit string
+field box-bounty/status@1 bounties[].board null
+field box-bounty/status@1 bounties[].corrupt boolean
+field box-bounty/status@1 bounties[].createdAt string
+field box-bounty/status@1 bounties[].events array
+field box-bounty/status@1 bounties[].events[] object
+field box-bounty/status@1 bounties[].events[].amount null
+field box-bounty/status@1 bounties[].events[].at string
+field box-bounty/status@1 bounties[].events[].attempt null|number
+field box-bounty/status@1 bounties[].events[].by null
+field box-bounty/status@1 bounties[].events[].command null|string
+field box-bounty/status@1 bounties[].events[].destination null|string
+field box-bounty/status@1 bounties[].events[].merge null|string
+field box-bounty/status@1 bounties[].events[].partial null
+field box-bounty/status@1 bounties[].events[].reason null
+field box-bounty/status@1 bounties[].events[].stage string
+field box-bounty/status@1 bounties[].events[].unasked boolean
+field box-bounty/status@1 bounties[].events[].withdrawn boolean
+field box-bounty/status@1 bounties[].fromOthers null optional
+field box-bounty/status@1 bounties[].github null|object
+field box-bounty/status@1 bounties[].github.account string
+field box-bounty/status@1 bounties[].github.branch string
+field box-bounty/status@1 bounties[].github.closedNote null
+field box-bounty/status@1 bounties[].github.comments object
+field box-bounty/status@1 bounties[].github.comments.count number
+field box-bounty/status@1 bounties[].github.comments.fromPoster number
+field box-bounty/status@1 bounties[].github.comments.latestAt null
+field box-bounty/status@1 bounties[].github.comments.unnamed number
+field box-bounty/status@1 bounties[].github.commit string
+field box-bounty/status@1 bounties[].github.formatRead string
+field box-bounty/status@1 bounties[].github.formatReadAt string
+field box-bounty/status@1 bounties[].github.formatRepair null|string
+field box-bounty/status@1 bounties[].github.formatUnavailableAt null
+field box-bounty/status@1 bounties[].github.issue object
+field box-bounty/status@1 bounties[].github.issue.number number
+field box-bounty/status@1 bounties[].github.issue.url string
+field box-bounty/status@1 bounties[].github.kind string
+field box-bounty/status@1 bounties[].github.lifecycle string
+field box-bounty/status@1 bounties[].github.pay null|object
+field box-bounty/status@1 bounties[].github.pay.editedBy null
+field box-bounty/status@1 bounties[].github.pay.link null
+field box-bounty/status@1 bounties[].github.pay.pr number
+field box-bounty/status@1 bounties[].github.pay.readFailed boolean
+field box-bounty/status@1 bounties[].github.pay.solver string
+field box-bounty/status@1 bounties[].github.pay.testMode boolean
+field box-bounty/status@1 bounties[].github.pending null
+field box-bounty/status@1 bounties[].github.pullRequests array
+field box-bounty/status@1 bounties[].github.pullRequests[] object
+field box-bounty/status@1 bounties[].github.pullRequests[].author string
+field box-bounty/status@1 bounties[].github.pullRequests[].collectedAs null|number
+field box-bounty/status@1 bounties[].github.pullRequests[].commit string
+field box-bounty/status@1 bounties[].github.pullRequests[].n number
+field box-bounty/status@1 bounties[].github.pullRequests[].payTo string
+field box-bounty/status@1 bounties[].github.pullRequests[].seenAt string
+field box-bounty/status@1 bounties[].github.repository string
+field box-bounty/status@1 bounties[].github.state string
+field box-bounty/status@1 bounties[].github.unavailable null
+field box-bounty/status@1 bounties[].id string
+field box-bounty/status@1 bounties[].job null
+field box-bounty/status@1 bounties[].lastActivityAt null|string
+field box-bounty/status@1 bounties[].mergeNow null|object
+field box-bounty/status@1 bounties[].mergeNow.attempt number
+field box-bounty/status@1 bounties[].mergeNow.conflicts null
+field box-bounty/status@1 bounties[].mergeNow.detail null
+field box-bounty/status@1 bounties[].mergeNow.result string
+field box-bounty/status@1 bounties[].next string
+field box-bounty/status@1 bounties[].openedAt null|string
+field box-bounty/status@1 bounties[].payment null|object
+field box-bounty/status@1 bounties[].payment.owed number
+field box-bounty/status@1 bounties[].payment.paidAt null
+field box-bounty/status@1 bounties[].payment.solver string
+field box-bounty/status@1 bounties[].resume object
+field box-bounty/status@1 bounties[].resume.branch string
+field box-bounty/status@1 bounties[].resume.changed array
+field box-bounty/status@1 bounties[].resume.changed[] string
+field box-bounty/status@1 bounties[].resume.commit string
+field box-bounty/status@1 bounties[].resume.note null
+field box-bounty/status@1 bounties[].resume.noteStayedOnPostingMachine boolean
+field box-bounty/status@1 bounties[].reward null|number
+field box-bounty/status@1 bounties[].scanFindings array
+field box-bounty/status@1 bounties[].solutions array
+field box-bounty/status@1 bounties[].solutions[] object
+field box-bounty/status@1 bounties[].solutions[].added array
+field box-bounty/status@1 bounties[].solutions[].author string
+field box-bounty/status@1 bounties[].solutions[].changed array
+field box-bounty/status@1 bounties[].solutions[].changed[] string
+field box-bounty/status@1 bounties[].solutions[].collected string
+field box-bounty/status@1 bounties[].solutions[].commit string
+field box-bounty/status@1 bounties[].solutions[].conflicts null
+field box-bounty/status@1 bounties[].solutions[].deleted array
+field box-bounty/status@1 bounties[].solutions[].merged boolean
+field box-bounty/status@1 bounties[].solutions[].n number
+field box-bounty/status@1 bounties[].solutions[].outcome string
+field box-bounty/status@1 bounties[].solutions[].payTo string
+field box-bounty/status@1 bounties[].solutions[].pullRequest number
+field box-bounty/status@1 bounties[].solutions[].report array
+field box-bounty/status@1 bounties[].solutions[].report[] string
+field box-bounty/status@1 bounties[].solutions[].seen boolean
+field box-bounty/status@1 bounties[].stage string
+field box-bounty/status@1 bounties[].title string
+field box-bounty/status@1 bounties[].waiting null|object
+field box-bounty/status@1 bounties[].waiting.for string
+field box-bounty/status@1 bounties[].waiting.hits null
+field box-bounty/status@1 bounties[].waiting.reason string
+field box-bounty/status@1 bounties[].waiting.since string
+field box-bounty/status@1 bounties[].waiting.to string
+field box-bounty/status@1 bounties[].why string
+field box-bounty/status@1 foreignFields array
+field box-bounty/status@1 foreignFields[] object
+field box-bounty/status@1 foreignFields[].field string
+field box-bounty/status@1 foreignFields[].source string
+field box-bounty/status@1 owner object
+field box-bounty/status@1 owner.decision null|string
+field box-bounty/status@1 owner.decisionAt null|string
+field box-bounty/status@1 owner.decisionLevel null|string
+field box-bounty/status@1 owner.denied boolean
+field box-bounty/status@1 owner.promised number
+field box-bounty/status@1 owner.reward number
+field box-bounty/status@1 owner.rewardLimit null|number
+field box-bounty/status@1 records object
+field box-bounty/status@1 records.tracked boolean
+field box-bounty/status@1 records.trackedFiles number
+field box-bounty/status@1 repository string
+field box-bounty/status@1 schema string
+field box-bounty/submit@1 branch string
+field box-bounty/submit@1 changedFiles number
+field box-bounty/submit@1 foreignFields array
+field box-bounty/submit@1 foreignFields[] object
+field box-bounty/submit@1 foreignFields[].field string
+field box-bounty/submit@1 foreignFields[].source string
+field box-bounty/submit@1 id string
+field box-bounty/submit@1 lines array
+field box-bounty/submit@1 lines[] string
+field box-bounty/submit@1 notices array
+field box-bounty/submit@1 outcome string
+field box-bounty/submit@1 pullRequest object
+field box-bounty/submit@1 pullRequest.number number
+field box-bounty/submit@1 pullRequest.url string
+field box-bounty/submit@1 schema string
+field box-bounty/submit@1 target string
+field box-bounty/take@1 baseCommit string
+field box-bounty/take@1 bountyBranch string
+field box-bounty/take@1 branch string
+field box-bounty/take@1 foreignFields array
+field box-bounty/take@1 foreignFields[] object
+field box-bounty/take@1 foreignFields[].field string
+field box-bounty/take@1 foreignFields[].source string
+field box-bounty/take@1 id string
+field box-bounty/take@1 lines array
+field box-bounty/take@1 lines[] string
+field box-bounty/take@1 notices array
+field box-bounty/take@1 outcome string
+field box-bounty/take@1 ownBounty boolean
+field box-bounty/take@1 pullRequest object
+field box-bounty/take@1 pullRequest.number number
+field box-bounty/take@1 pullRequest.url string
+field box-bounty/take@1 repository string
+field box-bounty/take@1 reward number
+field box-bounty/take@1 schema string
+field box-bounty/take@1 stage string
+field box-bounty/take@1 target string
+field box-bounty/take@1 workspace string
+held merge-held
+held owner-allow-needed
+held owner-answer-needed
+held publish-held
+option allow --ask switch
+option allow --help switch
+option allow --json switch
+option allow --repo value
+option allow --reward value
+option allow --reward-limit value
+option allow -h switch
+option apply --help switch
+option apply --json switch
+option apply --repo value
+option apply -h switch
+option close --help switch
+option close --json switch
+option close --reason value
+option close --repo value
+option close -h switch
+option config --full switch
+option config --help switch
+option config --json switch
+option config --repo value
+option config -h switch
+option create --full switch
+option create --help switch
+option create --json switch
+option create --part-of value
+option create --repo value
+option create --resume value
+option create --task value
+option create --title value
+option create --why value
+option create -h switch
+option deny --help switch
+option deny --json switch
+option deny --repo value
+option deny -h switch
+option describe --help switch
+option describe --json switch
+option describe --repo value
+option describe --rules switch
+option describe --solving switch
+option describe -h switch
+option discover --any-language switch
+option discover --from value
+option discover --help switch
+option discover --json switch
+option discover --language value repeatable
+option discover --min-reward value
+option discover -h switch
+option find --help switch
+option find --json switch
+option find --repo value
+option find -h switch
+option help --help switch
+option help --json switch
+option help -h switch
+option hook --confirm switch
+option hook --explain switch
+option hook --help switch
+option hook --host value
+option hook --json switch
+option hook --repo value
+option hook -h switch
+option look --export switch
+option look --full switch
+option look --help switch
+option look --json switch
+option look --repo value
+option look -h switch
+option overview --help switch
+option overview --repo value
+option overview -h switch
+option post --help switch
+option post --include value repeatable
+option post --json switch
+option post --preview switch
+option post --repo value
+option post --to value
+option post --with-changes switch
+option post -h switch
+option setup --help switch
+option setup --json switch
+option setup --remove switch
+option setup -h switch
+option status --comments switch
+option status --full switch
+option status --help switch
+option status --json switch
+option status --repo value
+option status --since value
+option status -h switch
+option submit --help switch
+option submit --json switch
+option submit -h switch
+option take --help switch
+option take --into value
+option take --json switch
+option take -h switch
+positionals allow 1
+positionals apply 2
+positionals close 1
+positionals config 4
+positionals create 0
+positionals deny 1
+positionals describe 0
+positionals discover 0
+positionals find 24
+positionals help 0
+positionals hook 1
+positionals look 2
+positionals overview 0
+positionals post 1
+positionals setup 0
+positionals status 1
+positionals submit 1
+positionals take 1
+refusal allow-arguments
+refusal allow-scan-held
+refusal already-ended
+refusal already-taken
+refusal answer-empty
+refusal answer-never-ship
+refusal answer-unsafe-path
+refusal apply-ambiguous
+refusal apply-unsafe-config
+refusal apply-worktree-dirty
+refusal attempt-ended
+refusal attempt-mismatch
+refusal attempt-retargeted
+refusal attempt-withdrawn
+refusal authority-arguments
+refusal below-owner-floor
+refusal board-off
+refusal board-unread
+refusal bounty-ambiguous
+refusal bounty-branch-moved
+refusal bounty-id-invalid
+refusal bounty-not-open
+refusal checks-removed
+refusal command-removed
+refusal config-command-removed
+refusal config-value-invalid
+refusal create-option-retired
+refusal discover-from-invalid
+refusal failed
+refusal first-merge-notice-malformed
+refusal first-merge-notice-unsafe-path
+refusal folder-delivery-retired
+refusal git-missing
+refusal git-too-old
+refusal github-account-changed
+refusal github-branch-changed
+refusal github-call-budget
+refusal github-cli-missing
+refusal github-cli-too-old
+refusal github-cli-unsafe
+refusal github-command-failed
+refusal github-filter-failed
+refusal github-fork-failed
+refusal github-git-failed
+refusal github-include-invalid
+refusal github-include-missing
+refusal github-include-never-ship
+refusal github-issue-changed
+refusal github-issue-mismatch
+refusal github-never-ship
+refusal github-no-public-base
+refusal github-non-plain-path
+refusal github-not-signed-in
+refusal github-permission-denied
+refusal github-post-incomplete
+refusal github-pr-changed
+refusal github-pr-missing
+refusal github-pr-not-descended
+refusal github-pr-unreadable
+refusal github-pr-wrong-branch
+refusal github-preview-stale
+refusal github-private-repository
+refusal github-push-denied
+refusal github-rate-limited
+refusal github-remote-mismatch
+refusal github-remote-required
+refusal github-repository-changed
+refusal github-repository-missing
+refusal github-response-invalid
+refusal github-unavailable
+refusal github-unmerged-paths
+refusal github-unreachable
+refusal github-visibility-unreadable
+refusal hook-already-on
+refusal hook-not-on
+refusal hook-settings-blocked
+refusal hook-settings-escape
+refusal hook-settings-malformed
+refusal hook-unknown-host
+refusal instruction-file-changed
+refusal instruction-file-link
+refusal instruction-file-missing
+refusal instruction-file-not-file
+refusal instruction-file-outside-repo
+refusal instruction-file-tool-owned
+refusal instruction-import-cycle
+refusal instruction-import-unmaintained
+refusal instruction-markers-damaged
+refusal instruction-settings-link
+refusal instruction-settings-not-file
+refusal invalid-boxignore
+refusal issue-too-large
+refusal language-invalid
+refusal legacy-delivery-retired
+refusal legacy-task-unavailable
+refusal limit-below-reward
+refusal link-escape
+refusal local-store-path-blocked
+refusal manifest-tampered
+refusal merge-approval-agent
+refusal merge-approval-stale
+refusal merge-failed
+refusal merge-held
+refusal merge-in-progress
+refusal missing-part-of
+refusal missing-query
+refusal missing-reason
+refusal missing-task
+refusal missing-why
+refusal never-ship-input
+refusal no-applicable-attempt
+refusal not-a-repository
+refusal not-github-posted
+refusal not-postable
+refusal not-posted
+refusal not-taken
+refusal not-taken-yet
+refusal not-waiting
+refusal nothing-to-submit
+refusal outside-owner-limits
+refusal owner-answer-not-waiting
+refusal owner-permission-needed
+refusal paid-already-recorded
+refusal paid-not-recorded
+refusal paid-nothing-owed
+refusal project-claims-list
+refusal project-claims-reward
+refusal promise-limit-busy
+refusal promise-limit-exceeded
+refusal publish-held
+refusal publish-list-link
+refusal publish-list-never-ship
+refusal publish-list-not-listed
+refusal publish-list-outside
+refusal publish-list-settings-link
+refusal pull-request-moved
+refusal record-corrupt
+refusal repository-address-invalid
+refusal repository-address-required
+refusal repository-choice-needed
+refusal repository-destination-mismatch
+refusal repository-not-listed
+refusal repository-several-allowed
+refusal reward-agent-set
+refusal reward-all-projects
+refusal reward-amount-invalid
+refusal reward-needs-limit
+refusal reward-repository-unlisted
+refusal reward-required
+refusal settings-inside-repo
+refusal settings-malformed
+refusal settings-write-failed
+refusal shared-issue-closed
+refusal shared-only
+refusal shared-record-disputed
+refusal shared-record-mismatch
+refusal solution-unreadable
+refusal solving-off
+refusal summary-time-invalid
+refusal taken-record-unreadable
+refusal taken-status-options
+refusal title-too-long
+refusal unknown-attempt
+refusal unknown-bounty
+refusal unreadable-path
+refusal usage
+refusal workspace-exists
+refusal wrong-stage
+schema box-bounty/allow@1
+schema box-bounty/apply@1
+schema box-bounty/close@1
+schema box-bounty/config@1
+schema box-bounty/create@1
+schema box-bounty/deny@1
+schema box-bounty/describe@1
+schema box-bounty/discover@1
+schema box-bounty/find@1
+schema box-bounty/help@1
+schema box-bounty/hook@1
+schema box-bounty/look-export@1
+schema box-bounty/look@1
+schema box-bounty/post@1
+schema box-bounty/refusal@1
+schema box-bounty/setup@1
+schema box-bounty/status@1
+schema box-bounty/submit@1
+schema box-bounty/take@1

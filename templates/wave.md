@@ -19,6 +19,7 @@ What will be true when this is done, as something a person can observe or a comm
 - The hosted run on the final commit is green on Linux, Windows and macOS, quoted with its run id; the suites the change affects: `<suites>`.
 - <behavioural check 1, including at least one case that must fail>
 - <behavioural check 2>
+- <if the wave changes a command, option, exit code, refusal name or --json field: the brief says so, `node scripts/surface.mjs --write` updates `tests/box/bounty/SURFACE.txt`, and the Result shows that diff (BT62)>
 - <if a check is a search for leftover names, list the renames you expect, so a legitimate one is not a surprise>
 - <if the wave claims an invariant over code paths — "no read calls the writer", "nothing reaches X" — name the mechanical check that enumerates every caller (a grep, a spy); a list written from memory missed one in BT22>
 - <if a check covers every user-facing hit of something, name the mechanical pattern and the expected count, not a sample list; a sample invites a reasoned skip (BT41)>

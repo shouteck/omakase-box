@@ -9,9 +9,14 @@
 import { spawnSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { expect, it, describe } from 'vitest';
+import { afterAll, expect, it, describe } from 'vitest';
 import { sharedFixture } from './github-fixture.js';
 import { CLI_DIST } from './support.js';
+import { watchFields } from './surface.js';
+
+// BT62: the fields of the status, config and look documents this file prints are checked against the surface record.
+const fields = watchFields('json-agreement');
+afterAll(fields.check);
 
 const box = (cwd: string, args: string[]) =>
   spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args], { cwd, encoding: 'utf8', env: process.env, timeout: 60000 });
@@ -120,7 +125,7 @@ describe('every label a --full text view prints is a document fact or a named no
   const documentOf = (args: string[]): Record<string, unknown> => {
     const run = box(repo, args);
     expect(run.status, `${args.join(' ')}: ${run.stderr}`).toBe(0);
-    return JSON.parse(run.stdout) as Record<string, unknown>;
+    return fields.see(JSON.parse(run.stdout) as Record<string, unknown>);
   };
   const check = (step: string, command: string, textArgs: string[], jsonArgs: string[]) => {
     const text = box(repo, textArgs);
