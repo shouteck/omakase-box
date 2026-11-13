@@ -10,6 +10,11 @@ import { closeStores, dropStored, forgetFileSha, readDecision, recordExists as s
 import type { BountyRecord, OwnerDecision } from '../../../packages/box-bounty/index.js';
 import { removeTree } from './remove-tree.js';
 
+// BT59: a token in the shell that runs the tests must not change what the tool does in them: with GH_TOKEN or GITHUB_TOKEN set
+// and gh missing, the tool would sign in with it. The tests that use a token set their own.
+delete process.env['GH_TOKEN'];
+delete process.env['GITHUB_TOKEN'];
+
 export const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 export const CLI_DIST = join(ROOT, 'packages', 'box-cli', 'dist', 'cli.js');
 const BS = String.fromCharCode(92);

@@ -90,7 +90,7 @@ export const SKILL_TEXT = [
 // The three questions are the owner's; everything else here is the agent's.
 export const SETUP_LINES: readonly string[] = [
   'not set up for this repository yet. To the agent reading this, in the project you work in:',
-  '  1. run gh auth status; if it is not signed in, the owner runs gh auth login, which you cannot finish alone.',
+  '  1. run gh auth status, or with no gh check that GH_TOKEN holds a GitHub token; if neither signs in, the owner runs gh auth login, which you cannot finish alone.',
   '  2. ask the owner: may bounties from this repository go public under your GitHub account, with a solution I choose merged into your code? What reward does each state, a promise you pay, and at most how much promised at once, in whole dollars? Should I ask you before each post and each merge? Show them the command you will run, filled in with their answers, so that their yes names it: omakase-box allow <owner>/<repository> --reward <reward> --reward-limit <limit>, adding --ask if they want to be asked.',
   '  3. run it. If your session refuses it, give the owner that exact command to run themselves.',
   'the answers are the owner\'s to give, unless they leave them to you. With no answer nothing is promised and nothing is posted.',

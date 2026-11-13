@@ -21,10 +21,13 @@ import { describe, expect, it } from 'vitest';
 import './support.js';
 import { checkMergedSolutions, listGitHubAnswers, loadRecord, postBounty, setMergeNoticeListener } from '../../../packages/box-bounty/index.js';
 import { git, write } from './support.js';
-import { fixture, postedFixture } from './github-fixture.js';
+import { answerGhInProcess, fixture, postedFixture } from './github-fixture.js';
 import type { GhState, GithubFixture } from './github-fixture.js';
 
 const STRIPE_LIVE = 'https://buy.stripe.com/9AQ00deadbeef0000';
+
+// BT59: this file calls the tool's functions directly, so its gh calls are answered in-process (the same stand-in source).
+answerGhInProcess(true);
 
 const noticed: string[] = [];
 setMergeNoticeListener(line => noticed.push(line));

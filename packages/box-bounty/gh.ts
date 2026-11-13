@@ -5,6 +5,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { resolveProgram } from './program.js';
 import { BountyRefused } from './errors.js';
+import { directRequest } from './gh-direct.js';
+import { recordSignIn, signedInWith, tokenFromEnvironment, useTokenForGit } from './github-auth.js';
 import { gitOutcome } from './git.js';
 import { requireRepository } from './settings.js';
 import { metaGet,metaSet,storeDbPath } from './store.js';
@@ -119,6 +121,15 @@ function rememberProbe(root: string, path: string, stamp: string): void {
   try { if (existsSync(storeDbPath(root))) metaSet(root, probeKey(path), stamp); } catch { /* the probe just runs next time */ }
 }
 
+// BT59: every GitHub call goes through one transport — a function that takes `gh api`'s arguments and answers as `gh api
+// --include` does (status, then headers, a blank line, the body). The `gh` program is one implementation; a test can install
+// another in place of the program (an in-process stand-in), so a test that calls the tool's functions directly needs no
+// process per call. The CLI never installs one: only a test that imports this module can.
+export interface GitHubAnswer { readonly status: number | null; readonly stdout?: string | null; readonly stderr?: string | null; readonly error?: Error | undefined }
+export type GitHubTransport = (root: string, args: readonly string[]) => GitHubAnswer;
+let installedTransport: GitHubTransport | null = null;
+export function useGitHubTransportForTests(transport: GitHubTransport | null): void { installedTransport = transport; }
+
 // Never include gh/git diagnostics here: signed-in programs can print credentials.
 function gh(root: string, args: readonly string[]): string {
   // The run-level budget a bounded caller (the hook) sets: a call count so
@@ -126,9 +137,72 @@ function gh(root: string, args: readonly string[]): string {
   // calls stays inside its bound. Ordinary commands leave both unbounded.
   if (ghCallBudget <= 0 || Date.now() >= ghDeadline) return invalid('github-call-budget', 'the GitHub budget for this run is spent — the run stays inside its bound and the next one can ask again; next: rerun the command — a new run gets a fresh budget');
   ghCallBudget -= 1;
+  const { kind, call } = installedTransport === null ? chooseCall(root) : { kind: 'test' as const, call: installedTransport };
+  // The probe itself can burn a whole call's cap — check the run deadline
+  // again before the real call so the worst case is the deadline plus one
+  // in-flight call.
+  if (Date.now() >= ghDeadline) return invalid('github-call-budget', 'the GitHub budget for this run is spent — the run stays inside its bound and the next one can ask again; next: rerun the command — a new run gets a fresh budget');
+  const result = call(root, args);
+  if (result.error !== undefined || result.status !== 0) {
+    const failure = classifyGitHubFailure(result, () => {
+      // GET /rate_limit is free, asked at most once per failure, and still a
+      // call: it spends the run's budget and never outlives its deadline.
+      if (ghCallBudget <= 0 || Date.now() >= ghDeadline) return null;
+      ghCallBudget -= 1;
+      const limits = call(root, ['api', '--hostname', 'github.com', 'rate_limit']);
+      if (limits.error !== undefined || limits.status !== 0) return null;
+      try {
+        const data: unknown = JSON.parse(limits.stdout ?? '');
+        const core = isObject(data) && isObject(data['resources']) ? data['resources']['core'] : null;
+        return isObject(core) && typeof core['reset'] === 'number' ? core['reset'] * 1000 : null;
+      } catch { return null; }
+    });
+    // The same name on both transports; with a token the words say what was not accepted.
+    throw kind === 'token' && failure.reason === 'github-not-signed-in' ? new BountyRefused('github-not-signed-in', 'GitHub does not accept the token in GH_TOKEN or GITHUB_TOKEN, or it has expired; nothing was changed; next: set a valid token, or sign in with gh auth login, then rerun the same command') : failure;
+  }
+  return result.stdout ?? '';
+}
+
+
+/** BT59: which way this process reaches GitHub, as data. gh present and no token: gh, exactly as before (no extra start).
+    No gh: the token if there is one. Both: gh when it is signed in, else the token. Neither: no way in. */
+export type TransportKind = 'gh' | 'token' | 'none';
+export function chooseTransport(facts: { readonly ghOnPath: boolean; readonly token: string | null; readonly ghSignedIn: () => boolean }): TransportKind {
+  if (!facts.ghOnPath) return facts.token === null ? 'none' : 'token';
+  if (facts.token === null) return 'gh';
+  return facts.ghSignedIn() ? 'gh' : 'token';
+}
+
+// `gh auth status` asked at most once per gh program per process, and only when a token is also present.
+const ghSignedInAt = new Map<string, boolean>();
+function chooseCall(root: string): { readonly kind: 'gh' | 'token'; readonly call: GitHubTransport } {
+  const token = tokenFromEnvironment();
+  let program: ReturnType<typeof resolveProgram> | null = null;
+  try { program = resolveProgram('gh'); } catch { /* no gh on PATH */ }
+  const kind = chooseTransport({
+    ghOnPath: program !== null,
+    token,
+    ghSignedIn: () => {
+      const known = ghSignedInAt.get(program!.path);
+      if (known !== undefined) return known;
+      const checked = launch(program!, root, ['auth', 'status', '--hostname', 'github.com']);
+      const signed = checked.error === undefined && checked.status === 0;
+      ghSignedInAt.set(program!.path, signed);
+      return signed;
+    }
+  });
+  if (kind === 'none') return invalid('github-cli-missing', `GitHub bounties need a way to sign in to GitHub: GitHub CLI gh ${GH_LEAST} or later, or a token in GH_TOKEN — neither was found (https://cli.github.com); next: install gh from https://cli.github.com and sign in with gh auth login, or set GH_TOKEN to a GitHub token, then rerun the same command`);
+  recordSignIn(kind);
+  if (kind === 'gh') return { kind, call: programTransport(root) };
+  useTokenForGit(token);
+  return { kind, call: (_cwd, args) => directRequest(token!, args, ghCallLimit) };
+}
+
+// The `gh` program as a transport: found on PATH, its version checked once (K71 remembers a passed probe across processes).
+function programTransport(root: string): GitHubTransport {
   let program: ReturnType<typeof resolveProgram>;
   try { program = resolveProgram('gh'); }
-  catch { return invalid('github-cli-missing', `GitHub CLI gh ${GH_LEAST} or later is required for GitHub bounties — none was found on PATH (https://cli.github.com); next: install gh from https://cli.github.com, then rerun the same command`); }
+  catch { return invalid('github-cli-missing', `GitHub bounties need a way to sign in to GitHub: GitHub CLI gh ${GH_LEAST} or later, or a token in GH_TOKEN — neither was found (https://cli.github.com); next: install gh from https://cli.github.com and sign in with gh auth login, or set GH_TOKEN to a GitHub token, then rerun the same command`); }
   const stamp = probeStamp(program.path);
   if (!probedGh.has(program.path) && stamp !== null && probeRemembered(root, program.path, stamp)) probedGh.add(program.path);
   if (!probedGh.has(program.path)) {
@@ -146,27 +220,7 @@ function gh(root: string, args: readonly string[]): string {
     probedGh.add(program.path);
     if (stamp !== null) rememberProbe(root, program.path, stamp);
   }
-  // The probe itself can burn a whole call's cap — check the run deadline
-  // again before the real call so the worst case is the deadline plus one
-  // in-flight call.
-  if (Date.now() >= ghDeadline) return invalid('github-call-budget', 'the GitHub budget for this run is spent — the run stays inside its bound and the next one can ask again; next: rerun the command — a new run gets a fresh budget');
-  const result = launch(program, root, args);
-  if (result.error !== undefined || result.status !== 0) {
-    throw classifyGitHubFailure(result, () => {
-      // GET /rate_limit is free, asked at most once per failure, and still a
-      // call: it spends the run's budget and never outlives its deadline.
-      if (ghCallBudget <= 0 || Date.now() >= ghDeadline) return null;
-      ghCallBudget -= 1;
-      const limits = launch(program, root, ['api', '--hostname', 'github.com', 'rate_limit']);
-      if (limits.error !== undefined || limits.status !== 0) return null;
-      try {
-        const data: unknown = JSON.parse(limits.stdout ?? '');
-        const core = isObject(data) && isObject(data['resources']) ? data['resources']['core'] : null;
-        return isObject(core) && typeof core['reset'] === 'number' ? core['reset'] * 1000 : null;
-      } catch { return null; }
-    });
-  }
-  return result.stdout ?? '';
+  return (cwd, args) => launch(program, cwd, args);
 }
 
 // `gh api --include` puts the status line and headers before the body, on
@@ -314,6 +368,7 @@ export function publicRepository(root: string): string {
     // CLI presence/version refusals keep their own names — only the auth
     // call's failure means not-signed-in.
     if (error instanceof BountyRefused && (error.reason.startsWith('github-cli-') || error.reason === 'github-unreachable')) throw error;
+    if (signedInWith() === 'token') return invalid('github-not-signed-in', 'GitHub does not accept the token in GH_TOKEN or GITHUB_TOKEN, or it has expired; nothing was changed; next: set a valid token, or sign in with gh auth login, then rerun the same command');
     return invalid('github-not-signed-in', `GitHub CLI gh ${GH_LEAST} or later, signed in, is required for GitHub bounties — gh is present but not signed in to GitHub (https://cli.github.com); next: sign in with gh auth login, then rerun the same command`);
   }
   let info: unknown;

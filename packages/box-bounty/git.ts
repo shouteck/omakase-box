@@ -6,6 +6,7 @@ import { canonicalFolder, canonicalPath } from './folder.js';
 import { resolveProgram } from './program.js';
 import { BountyRefused } from './errors.js';
 import { showPath } from './notice.js';
+import { gitCredentialEnvironment, withoutTokens } from './github-auth.js';
 
 // The least Git the tool runs on: merges and dry merges pin GIT_ATTR_SOURCE
 // (git 2.40) so a solver-carried .gitattributes can name nothing, and the dry
@@ -76,10 +77,12 @@ export class GitFailed extends Error {
 
 const BACKSLASH = String.fromCharCode(92);
 
-function gitEnvironment(env: GitEnv = {}): NodeJS.ProcessEnv {
-  const inherited = { ...process.env };
+// BT59: a GitHub token in GH_TOKEN or GITHUB_TOKEN is never handed to Git under those names; a call that reaches github.com
+// while the token is in use gets it as its credential helper's answer instead (github-auth.ts), and only that call.
+function gitEnvironment(env: GitEnv = {}, args: readonly string[] = []): NodeJS.ProcessEnv {
+  const inherited = withoutTokens(process.env);
   for (const key of ['GIT_DIR', 'GIT_COMMON_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE']) delete inherited[key];
-  return { ...inherited, GIT_OPTIONAL_LOCKS: '0', ...env };
+  return { ...inherited, GIT_OPTIONAL_LOCKS: '0', ...gitCredentialEnvironment(args), ...env };
 }
 
 function operationIndex(args: readonly string[]): number {
@@ -213,7 +216,7 @@ function run(repo: string, args: readonly string[], env: GitEnv, content: GitCon
   const safe = args.map((arg, index) => arg === 'diff' && index === operationIndex(args) ? [arg, '--no-ext-diff', '--no-textconv'] : [arg]).flat();
   const result = spawnSync(program, [...safeArgs(repo, args, content), ...safe], {
     encoding: 'utf8',
-    env: gitEnvironment(env),
+    env: gitEnvironment(env, args),
     windowsHide: true,
     maxBuffer: GIT_OUTPUT_LIMIT
   });
@@ -460,7 +463,7 @@ export function gitStdin(repo: string, args: readonly string[], input: string | 
   const result = spawnSync(gitProgram(), [...safeArgs(repo, args, content), ...args], {
     input,
     encoding: 'utf8',
-    env: gitEnvironment(env),
+    env: gitEnvironment(env, args),
     windowsHide: true,
     maxBuffer: GIT_OUTPUT_LIMIT
   });

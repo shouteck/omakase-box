@@ -13,6 +13,7 @@ import type { NeverShipRule } from './never-ship.js';
 import type { BountyRecord,WaitingFor } from './record.js';
 import { binaryPatchPaths,looksBinary,scanPatch,scanText } from './scan.js';
 import type { ScanHit } from './scan.js';
+import { withoutTokens } from './github-auth.js';
 
 // ---------------------------------------------------------------------------
 // The history path (BT6a): a bounty is an issue on the code that is already
@@ -61,7 +62,7 @@ function gitStdin(repo: string, args: readonly string[], input: string): string 
   const result = spawnSync(gitProgram(), ['-c', `safe.directory=${repo.replaceAll(BS, '/')}`, '-c', 'core.hooksPath=/dev/null', '-C', repo, ...args], {
     input,
     encoding: 'utf8',
-    env: { ...process.env, GIT_OPTIONAL_LOCKS: '0' },
+    env: { ...withoutTokens(process.env), GIT_OPTIONAL_LOCKS: '0' }, // BT59: never the token under its own names
     windowsHide: true,
     // rev-list output grows with history — the same named ceiling every
     // other Git read carries (GitFailed via the check below).

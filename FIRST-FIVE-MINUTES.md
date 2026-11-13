@@ -33,7 +33,9 @@ The tool reads the project it runs in, so run it only in projects you trust. Nod
 
     gh auth login
 
-The tool uses that sign-in; it never sees, stores or asks for a credential.
+With `gh`, the tool uses that sign-in and never sees it. An agent with no `gh` can set
+`GH_TOKEN` to a GitHub token instead: the tool reads it from the environment, sends it
+only to GitHub, and never stores or prints it.
 
 ## Agents that read neither skills folder
 

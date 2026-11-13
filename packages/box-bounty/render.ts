@@ -665,7 +665,7 @@ export function renderHelp(): string {
     'reverses it whenever you like, no tool command needed. A solution that does not land never ends',
     'the bounty — it is kept as a numbered attempt and the bounty stays open.',
     '',
-    `needs: git ${GIT_LEAST} or later; GitHub bounties also need GitHub CLI gh ${GH_LEAST} or later, signed in.`,
+    `needs: git ${GIT_LEAST} or later; GitHub bounties also need GitHub CLI gh ${GH_LEAST} or later, signed in, or a GitHub token in GH_TOKEN.`,
     'run inside a git checkout or pass --repo <path>; every refusal names itself and exits 3, usage errors exit 2.',
     'the record lives in .box/local/box.db inside the repository — it outlives the session that made it.'
   ].join('\n');
