@@ -158,13 +158,11 @@ function gh(root: string, args: readonly string[]): string {
       } catch { return null; }
     });
     // The same name on both transports; with a token the words say what was not accepted.
-    throw kind === 'token' && failure.reason === 'github-not-signed-in' ? new BountyRefused('github-not-signed-in', TOKEN_REJECTED) : failure;
+    throw kind === 'token' && failure.reason === 'github-not-signed-in' ? new BountyRefused('github-not-signed-in', 'GitHub does not accept the token in GH_TOKEN or GITHUB_TOKEN, or it has expired; nothing was changed; next: set a valid token, or sign in with gh auth login, then rerun the same command') : failure;
   }
   return result.stdout ?? '';
 }
 
-const TOKEN_REJECTED = 'GitHub does not accept the token in GH_TOKEN or GITHUB_TOKEN, or it has expired; nothing was changed; next: set a valid token, or sign in with gh auth login, then rerun the same command';
-const NO_WAY_IN = `GitHub bounties need a way to sign in to GitHub: GitHub CLI gh ${GH_LEAST} or later, or a token in GH_TOKEN — neither was found (https://cli.github.com); next: install gh from https://cli.github.com and sign in with gh auth login, or set GH_TOKEN to a GitHub token, then rerun the same command`;
 
 /** BT59: which way this process reaches GitHub, as data. gh present and no token: gh, exactly as before (no extra start).
     No gh: the token if there is one. Both: gh when it is signed in, else the token. Neither: no way in. */
@@ -193,7 +191,7 @@ function chooseCall(root: string): { readonly kind: 'gh' | 'token'; readonly cal
       return signed;
     }
   });
-  if (kind === 'none') return invalid('github-cli-missing', NO_WAY_IN);
+  if (kind === 'none') return invalid('github-cli-missing', `GitHub bounties need a way to sign in to GitHub: GitHub CLI gh ${GH_LEAST} or later, or a token in GH_TOKEN — neither was found (https://cli.github.com); next: install gh from https://cli.github.com and sign in with gh auth login, or set GH_TOKEN to a GitHub token, then rerun the same command`);
   recordSignIn(kind);
   if (kind === 'gh') return { kind, call: programTransport(root) };
   useTokenForGit(token);
@@ -204,7 +202,7 @@ function chooseCall(root: string): { readonly kind: 'gh' | 'token'; readonly cal
 function programTransport(root: string): GitHubTransport {
   let program: ReturnType<typeof resolveProgram>;
   try { program = resolveProgram('gh'); }
-  catch { return invalid('github-cli-missing', NO_WAY_IN); }
+  catch { return invalid('github-cli-missing', `GitHub bounties need a way to sign in to GitHub: GitHub CLI gh ${GH_LEAST} or later, or a token in GH_TOKEN — neither was found (https://cli.github.com); next: install gh from https://cli.github.com and sign in with gh auth login, or set GH_TOKEN to a GitHub token, then rerun the same command`); }
   const stamp = probeStamp(program.path);
   if (!probedGh.has(program.path) && stamp !== null && probeRemembered(root, program.path, stamp)) probedGh.add(program.path);
   if (!probedGh.has(program.path)) {
@@ -370,7 +368,7 @@ export function publicRepository(root: string): string {
     // CLI presence/version refusals keep their own names — only the auth
     // call's failure means not-signed-in.
     if (error instanceof BountyRefused && (error.reason.startsWith('github-cli-') || error.reason === 'github-unreachable')) throw error;
-    if (signedInWith() === 'token') return invalid('github-not-signed-in', TOKEN_REJECTED);
+    if (signedInWith() === 'token') return invalid('github-not-signed-in', 'GitHub does not accept the token in GH_TOKEN or GITHUB_TOKEN, or it has expired; nothing was changed; next: set a valid token, or sign in with gh auth login, then rerun the same command');
     return invalid('github-not-signed-in', `GitHub CLI gh ${GH_LEAST} or later, signed in, is required for GitHub bounties — gh is present but not signed in to GitHub (https://cli.github.com); next: sign in with gh auth login, then rerun the same command`);
   }
   let info: unknown;
