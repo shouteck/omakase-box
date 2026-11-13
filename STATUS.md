@@ -1,6 +1,6 @@
 # Status
 
-Updated by the CTO on 13 November 2026, when K71 (command cost, step 1) closed.
+Updated by the CTO on 13 November 2026, when the testing track closed (K73 merged); normal waves resume.
 
 ## Now
 
