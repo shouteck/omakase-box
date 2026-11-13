@@ -257,10 +257,7 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget, 
     `solution: ${attempt.commit}`,
     // BT32 decision 6: the one-line why rides the merge message so `git log`
     // and `git blame` answer "why was this needed" without the tool (M10).
-    ...(record.why === undefined ? [] : [`why: ${record.why}`]),
-    // Old records only: the snapshot line names the capture the bounty was
-    // made from — a record written now keeps no snapshot to name.
-    ...(record.snapshot === undefined ? [] : [`snapshot: ${record.snapshot.commit}`])
+    ...(record.why === undefined ? [] : [`why: ${record.why}`])
   ].join('\n');
   // The merge runs under the repository's own config — pinning eol filters off
   // would make every file clean under the repo's convention look modified to

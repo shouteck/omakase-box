@@ -327,23 +327,6 @@ it('GitHub account and API calls pin github.com despite a different GH_HOST', ()
   expect(calls.every(args => args[args.indexOf('--hostname') + 1] === 'github.com')).toBe(true);
 }));
 
-it('legacy tool-written owner spellings are scrubbed on every replay field and history', () => postedFixture(({ repo: root, id }) => {
-  const record = JSON.parse(readRecordRaw(root, id));
-  // BT63: the planted text is what 0.1.x stored, so it keeps the old command name; the scrub must say the new one.
-  record.github.pending = `waiting-owner: box bounty owner answer ${id}; box bounty owner setup`;
-  record.github.outside = { at: '2026-10-13T00:00:00.000Z', issueState: 'open', answers: 'box bounty owner setup; box bounty owner allow; box bounty owner ask; box bounty owner off; box bounty owner on; box bounty owner summary; box bounty owner answer ' + id };
-  for (const verb of ['setup', 'allow', 'ask', 'off', 'on', 'answer', 'summary']) record.events.push({ stage: 'posted', at: '2026-10-13T00:00:00.000Z', command: 'owner ' + verb });
-  record.events.push({ stage: 'confirmed', at: '2026-10-13T00:00:00.000Z', command: 'confirm' });
-  writeRecordRaw(root, id, JSON.stringify(record));
-  withoutGh(() => {
-    const status = statusGitHub(root, { full: true });
-    expect(status).not.toContain('box bounty owner ');
-    expect(status).not.toContain('omakase-box owner ');
-    expect(status).not.toContain('"command":"owner ');
-    expect(status).not.toContain('"command":"confirm"');
-    expect(status).toContain('omakase-box allow ' + id);
-  });
-}));
 
 // @guards P4
 it('ask: allowing a waiting bounty posts directly and closes without another question', () => fixture(({ repo: root, id, state, bare }) => {

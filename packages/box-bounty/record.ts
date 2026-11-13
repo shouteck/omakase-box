@@ -376,23 +376,19 @@ export const applicableAttempts = (attempts: readonly Attempt[]): Attempt[] =>
 export const baseCommitOf = (record: BountyRecord): string | null =>
   record.snapshot?.baseCommit ?? (record.resume?.kind === 'recorded' && /^[0-9a-f]{40}$/.test(record.resume.commit) ? record.resume.commit : null);
 
-// An open bounty can pin several commits: the snapshot at <id>, each attempt's
-// answer commit at <id>-answer-<n>, and the single <id>-answer of records from
-// before this wave (an attempt commit's parent is the base commit, so it does
-// not keep the snapshot alive on its own). Every end stage deletes them all.
+// An open bounty can pin several commits: each attempt's answer commit at
+// <id>-answer-<n>, and the single <id>-answer of records from before attempts
+// (an attempt commit's parent is the base commit, so it does not keep the
+// base alive on its own). Every end stage deletes them all. K73: the name
+// `refs/box-bounty/<id>` itself is never read or deleted here: since BT58 it is
+// the name Git resolves before a branch, and nothing the tool writes lives there.
 // Best-effort: a missing ref is exactly the state left behind.
 export function dropDurabilityRefs(repoRoot: string, record: BountyRecord): void {
-  // One update-ref --stdin drops the snapshot ref, the legacy answer ref and
-  // every attempt ref — a delete of a missing ref is a no-op, so this is as
-  // best-effort as the per-ref calls were.
+  // One update-ref --stdin drops the legacy answer ref and every attempt
+  // ref — a delete of a missing ref is a no-op, so this is as best-effort as
+  // the per-ref calls were.
   try {
-    // BT32: refs/box-bounty/<id> is the shared chain ref now — a record made
-    // since chains shipped never pins a snapshot under it. Drop it only when
-    // the commit it names is a legacy snapshot (no event.json in its tree).
-    const tip = gitOutcome(repoRoot, ['rev-parse', '-q', '--verify', refName(record.id)]);
-    const chain = tip.status === 0 && gitOutcome(repoRoot, ['cat-file', '-e', `${tip.stdout.trim()}:event.json`]).status === 0;
     gitRefsWrite(repoRoot, [
-      ...(chain ? [] : [{ delete: refName(record.id) }]),
       { delete: `${refName(record.id)}-answer` },
       ...attemptsOf(record).map(attempt => ({ delete: attemptRefName(record.id, attempt.n) }))
     ]);
@@ -583,40 +579,6 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
     if (github.unavailableAt !== undefined && github.unavailableAt !== null && (typeof github.unavailableAt !== 'string' || !stamp.test(github.unavailableAt))) return null;
     if (github.unavailableReason !== undefined && github.unavailableReason !== null && typeof github.unavailableReason !== 'string') return null;
     if (github.pay !== undefined && !payOutcomeShape(github.pay)) return null;
-  }
-  // BT7c: pending text is tool-written and status prints it. A record written
-  // while undo/reject/withdraw existed can carry their names — migrate the
-  // wording to the command that retries the same outside work now.
-  if (record.github?.pending !== null && record.github?.pending !== undefined) {
-    record.github.pending = record.github.pending
-      .replace(/box bounty owner answer \S+/g, `omakase-box close ${record.id}`)
-      .replace(/box bounty owner (?:setup|allow|ask|off|on|summary)\b[^\n;]*/g, 'omakase-box config')
-      .replace(/retry box bounty (?:undo|reject|withdraw|answer|questions|reply|remind)\b[^\n;]*/, `retry omakase-box close ${record.id}`)
-      .replace(/local (?:undo|reject|withdraw) stands/g, 'local close stands')
-      .replace(/box bounty (?:look|apply) [^\n;]*--from[^\n;]*/g, `omakase-box close ${record.id}`)
-      .replace(/ --to github\b/g, '')
-      .replace(/box bounty post [^\n;]*--to (?!github\b)[^\n;]*/g, `omakase-box close ${record.id}`)
-      .replace(/box bounty (?:undo|reject|withdraw|answer|questions|reply|remind)\b[^\n;]*/, `omakase-box close ${record.id}`)
-      // BT63: the command is now omakase-box; a command still valid keeps its name, in the new spelling.
-      .replace(/(?<![\[\w-])box bounty (?=\S)/g, 'omakase-box ');
-  }
-  // `outside.answers` is the same kind of stored tool text — the listing
-  // listGitHubAnswers printed — replayed verbatim by status and by the
-  // open-bounties line while GitHub cannot refresh. Its old collect line
-  // named `answer <id> --pr <n>`: point it at the pair that collects that
-  // pull request now; any other removed name points back at status.
-  if (record.github?.outside !== undefined && typeof record.github.outside.answers === 'string') {
-    const answers = record.github.outside.answers
-      .replace(/box bounty owner answer (\S+)/g, 'omakase-box allow $1')
-      .replace(/box bounty owner (?:setup|allow|ask|off|on|summary)\b[^\n;]*/g, 'omakase-box config')
-      .replace(/box bounty (?:look|apply) [^\n;]*--from[^\n;]*/g, `omakase-box close ${record.id}`)
-      .replace(/ --to github\b/g, '')
-      .replace(/box bounty answer (\S+) --pr (\d+)/g, 'omakase-box look $1 $2 or omakase-box apply $1 $2')
-      .replace(/box bounty (?:answer|questions|reply|undo|reject|withdraw|remind)\b[^\n;]*/g, `omakase-box status ${record.id}`)
-      .replace(/(?<![\[\w-])box bounty (?=\S)/g, 'omakase-box ');
-    if (answers !== record.github.outside.answers) {
-      record.github = { ...record.github, outside: { ...record.github.outside, answers } };
-    }
   }
   return record;
 };

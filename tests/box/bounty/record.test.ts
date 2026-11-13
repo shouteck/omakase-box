@@ -54,7 +54,7 @@ describe('the bounty record', () => {
     expect(git(repo, ['for-each-ref', '--format=%(refname)', 'refs/box-bounty/'])).toBe('');
   });
 
-  it('an old record that kept `snapshot` and its ref still loads, survives gc and closes the ref away', () => {
+  it('an old record that kept `snapshot` and its ref still loads and survives gc', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const result = created(repo);
     // Hand-made pre-BT24 shape: the record stored the snapshot field and
@@ -66,9 +66,7 @@ describe('the bounty record', () => {
     // The durability ref pins snapshot.commit: gc --prune=now cannot take it.
     git(repo, ['gc', '--prune=now', '-q']);
     expect(git(repo, ['cat-file', '-t', result.plan.snapshot.commit])).toBe('commit');
-    closeGitHub(repo, result.id);
-    const ref = spawnSync('git', ['-C', repo, 'rev-parse', '--verify', '-q', `refs/box-bounty/${result.id}`], { encoding: 'utf8' });
-    expect(ref.status).not.toBe(0); // the ref is gone with the record closed
+    // K73: closing no longer deletes refs/box-bounty/<id> (the end stage never touches that name: k73-retired-shapes.test.ts).
   });
 
   it('never ships .box records inside a later bounty', () => {

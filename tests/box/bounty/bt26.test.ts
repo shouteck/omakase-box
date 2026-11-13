@@ -103,15 +103,14 @@ it('a record with no commits diffs its attempts against the empty tree — never
   expect(result.diff).toContain('sol.txt');
 });
 
-it('a new record\'s apply merge message has no snapshot: line; a record carrying one keeps it', () => {
+it('an apply merge message has no snapshot: line, for a new record and for one carrying a snapshot field', () => {
   postedFixture(({ repo, id }) => {
     const result = applyBounty(repo, id, 1);
     expect(result.outcome).toBe('applied');
     const message = git(repo, ['log', '-1', '--format=%B']);
     expect(message.split('\n').some(line => line.startsWith('snapshot:'))).toBe(false);
   }, { collected: true });
-  // The pin is not vacuous: a hand-made old record that carries `snapshot`
-  // still names the capture in its merge message.
+  // K73: a hand-made old record that carries `snapshot` no longer names the capture in its merge message (the field is not read for it).
   postedFixture(({ repo, id }) => {
     const record = JSON.parse(readRecordRaw(repo, id)) as { snapshot?: unknown; github: { commit: string } };
     const head = record.github.commit;
@@ -120,7 +119,7 @@ it('a new record\'s apply merge message has no snapshot: line; a record carrying
     const result = applyBounty(repo, id, 1);
     expect(result.outcome).toBe('applied');
     const message = git(repo, ['log', '-1', '--format=%B']);
-    expect(message).toContain(`snapshot: ${head}`);
+    expect(message.split('\n').some(line => line.startsWith('snapshot:'))).toBe(false);
   }, { collected: true });
 });
 

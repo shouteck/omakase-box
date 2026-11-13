@@ -91,7 +91,7 @@ const BUDGET: Record<string, { git: number; gh: number }> = {
   // and one `fetch +refs/box-bounty-records/*`; an empty shared memory skips the
   // ref listings entirely (measured +2 over BT16's count).
   'status-drafted': { git: 5, gh: 0 },
-  'close-draft': { git: 4, gh: 0 }, // BT32: +1 — the withdrawn milestone appends a chain event (object write); nothing is pushed while unposted.
+  'close-draft': { git: 3, gh: 0 }, // K73: -1, the end stage no longer reads refs/box-bounty/<id>. BT32: +1 — the withdrawn milestone appends a chain event (object write); nothing is pushed while unposted.
   'post-preview': { git: 16, gh: 3 },
   // BT32: +6 — posting appends the `posted` event (hash-object, mktree,
   // commit-tree, update-ref) and pushes the chain ref.
@@ -113,10 +113,10 @@ const BUDGET: Record<string, { git: number; gh: number }> = {
   // gh +1 — reading the pull request back.
   // PF27: +1 gh — apply reads the pull request's current head, so a version
   // pushed after collection is never merged unseen.
-  'apply': { git: 30, gh: 6 },
+  'apply': { git: 29, gh: 6 },
   'status-applied': { git: 3, gh: 0 }, // BT32: +6 — same refresh + import as status-posted
   'close-ended': { git: 4, gh: 3 },
-  'close-reason': { git: 4, gh: 0 },
+  'close-reason': { git: 3, gh: 0 },
   'status-end': { git: 3, gh: 0 }, // BT32: +6 — same refresh + import as status-posted
   // BT32: `hook start` is a fetching surface — the shared-memory refresh
   // pays one `fetch +refs/box-bounty-records/*` plus the batched ref listings and

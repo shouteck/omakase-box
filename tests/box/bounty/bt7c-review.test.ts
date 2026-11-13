@@ -3,48 +3,16 @@ import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { applyBounty, BountyRefused, closeBounty, finalizeBounty, loadRecord, lookBounty, persistRecord, planBounty, postBounty, renderDescribe, renderHelp, renderOpenLine, renderRules, renderRulesBlock, renderStatus, resolveRepoRoot } from '../../../packages/box-bounty/index.js';
+import { applyBounty, BountyRefused, closeBounty, finalizeBounty, loadRecord, lookBounty, planBounty, postBounty, renderDescribe, renderHelp, renderOpenLine, renderRules, renderRulesBlock, renderStatus, resolveRepoRoot } from '../../../packages/box-bounty/index.js';
 import { postedFixture, sharedPostedFixture } from './github-fixture.js';
 import { CLI_DIST, git, makeRepo, openLine, readRecord, runRoot, write, writeRecord, writeRecordRaw } from './support.js';
 
-// BT7c pass review — reproduced on 1ed01f9 by hand: a record written while
-// `answer` was a command stores the answers text it printed (outside.answers)
-// verbatim on disk. While GitHub cannot refresh, renderStatus replays the
-// stored lines and renderOpenLine folds them into the open-bounties line —
-// describe, the OPEN index and the owner's rules-file block — so a
-// removed command is named by output the tool prints today. asRecord
-// migrates github.pending for this reason; outside.answers got none.
-it('a stored outside-answers text written before BT7c names no removed command', () => postedFixture(context => {
-  const record = loadRecord(context.repo, context.id);
-  if (record.github === undefined) throw new Error('publication missing');
-  // The wording listGitHubAnswers wrote before BT7c, kept on disk by a record
-  // that last refreshed while the old command existed.
-  record.github.outside = {
-    at: '2026-10-12T00:00:00Z',
-    issueState: 'open',
-    answers: `GitHub answers for ${context.id} against box-bounty/${context.id}:\n  #4 by solver: "app.txt"; new; collect: box bounty answer ${context.id} --pr 4`
-  };
-  persistRecord(context.repo, record);
-  context.update({ fail: '/issues' }); // refresh cannot run — the stored text is what prints
-  // K69: the three texts do not depend on the removed name, so they are rendered once; the loop used to render them again for each of
-  // the eight names (about 32 status renders for 3 different texts).
-  const status = statusGitHub(context.repo, { id: context.id });
-  const full = statusGitHub(context.repo, { id: context.id, full: true });
-  const open = renderOpenLine(context.repo);
-  for (const gone of ['answer', 'questions', 'reply', 'undo', 'reject', 'withdraw', 'remind', 'confirm']) {
-    expect(status).not.toContain(`bounty ${gone}`);
-    expect(full).not.toContain(`bounty ${gone}`);
-    expect(open).not.toContain(`bounty ${gone}`);
-    // BT63: the removed command is named in the new spelling too.
-    for (const text of [status, full, open]) expect(text).not.toContain(`omakase-box ${gone}`);
-  }
-}));
 
 // The done-when asks for one test that searches every message the tool can
 // print for the removed names. The corpus below is the reachable surface:
 // every renderer (help, describe with and without a repository, the rules
 // block, the open-bounties line, status in each mode), status over records
-// in every reachable stage — including planted pre-wave stored text — every
+// in every reachable stage — every
 // refusal a command path can raise, and the built CLI's own output for the
 // journey and its usage errors. `omakase-box <removed>` is the pattern: a
 // command name the output *recommends*. The refusal echo `bounty answer
@@ -78,17 +46,6 @@ describe('no output names a removed command', () => {
     context.update({ comments: [{ body: 'a question from a solver', user: { login: 'stranger' }, created_at: '2026-10-12T01:00:00Z' }] });
     scan('status-comments', statusGitHub(repo, { id, comments: true }));
 
-    // Planted pre-wave stored text on the posted bounty: the old listing's
-    // collect wording and a pending line written while `withdraw` existed.
-    const planted = loadRecord(repo, id);
-    if (planted.github === undefined) throw new Error('publication missing');
-    planted.github.outside = {
-      at: '2026-10-12T00:00:00Z',
-      issueState: 'open',
-      answers: `GitHub answers for ${id} against box-bounty/${id}:\n  #4 by solver: "app.txt"; new; collect: box bounty answer ${id} --pr 4`
-    };
-    planted.github.pending = `outside work is still owed; retry box bounty withdraw ${id}`;
-    persistRecord(repo, planted);
     context.update({ fail: '/issues' }); // GitHub cannot refresh — stored text is what prints
 
     // A corrupt record exercises the not-a-readable-record line, and ended

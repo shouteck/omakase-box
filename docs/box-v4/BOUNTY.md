@@ -1377,7 +1377,7 @@ which joins this same table from outside the repository.
 
 Project facts have to reach every machine the tool runs on, so each posted
 bounty carries a second, quiet history beside the issue: a Git ref
-`refs/box-bounty-records/<id>` on the project's own remote (bounties posted before version 0.2.0: `refs/box-bounty/<id>`), where every milestone is
+`refs/box-bounty-records/<id>` on the project's own remote (a record under the old name `refs/box-bounty/<id>`, written before version 0.2.0, is no longer read: K73), where every milestone is
 one commit holding one small JSON event (`posted`, `solution`, `merged`,
 `closed`; `paid` is reserved). An event is written when the milestone happens
 and pushed right away; two machines racing get an empty merge event joining

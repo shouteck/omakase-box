@@ -99,7 +99,7 @@ A fact no question needs is not memory (a removal candidate). A question no fact
 | R1 Unasked reads stay constant in size | M1, every session | K25's bars (met) |
 | R2 The overview stays bounded | M2, M5 | open in full; ended as count plus five (met) |
 | R3 Search by purpose across all history | M2, M3, M11 | `find` over F-title, F-task, F-why, F-tried, F-partof (F-tried missing) |
-| R4 Every project fact reaches every machine | M2, M5, M9, M11 | **built (BT32)**: one ref `refs/box-bounty-records/<id>` per bounty on the project's remote (`refs/box-bounty/<id>` for bounties posted before version 0.2.0; BT58), one JSON event per commit; reads fetch and import it into the local store's `shared` table |
+| R4 Every project fact reaches every machine | M2, M5, M9, M11 | **built (BT32)**: one ref `refs/box-bounty-records/<id>` per bounty on the project's remote (a record under `refs/box-bounty/<id>`, from before version 0.2.0, is no longer read; BT58, K73), one JSON event per commit; reads fetch and import it into the local store's `shared` table |
 | R5 Survives deletion of any one copy | M10, M11 | at least two independent copies of project facts — a deleted remote chain ref is restored from a local copy on the next push (BT32) |
 | R6 Only the project's own accounts can write project facts; strangers' text never shown as the tool's | M5, M6, M13 | trust rule (K28): only push access writes a chain; imported events are validated against the allow-list and size bound, and `actor` is informational |
 | R7 Two machines changing one bounty never lose a fact | M5 to M8 on teams | **built (BT32)**: fast-forward-only pushes; a diverged push fetches, writes an empty `merge` event with both tips as parents and retries (the git-bug rule K28 proved locally, and Step 0 on real GitHub) |
@@ -124,7 +124,7 @@ A fact no question needs is not memory (a removal candidate). A question no fact
 
 ## 6. The shared event chain (built in BT32)
 
-One Git ref per bounty, `refs/box-bounty-records/<id>` (bounties posted before version 0.2.0 use `refs/box-bounty/<id>`: that name collides with the bounty branch's short name `box-bounty/<id>`, BT58), each commit's tree a single
+One Git ref per bounty, `refs/box-bounty-records/<id>` (the name `refs/box-bounty/<id>`, used before version 0.2.0, collides with the bounty branch's short name `box-bounty/<id>`, BT58; since K73 the tool neither reads nor writes it), each commit's tree a single
 `event.json` blob — the git-bug DAG shape K28 designed and Step 0 proved on
 real GitHub (`kitchen/memory/delegation/evidence/bt32-step0.txt`). Pushed
 and fetched through the project's own remote; ordinary clones, working
