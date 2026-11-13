@@ -43,39 +43,6 @@ it('recognition records the receiving repository and retains that address in lat
   expect(again.stdout).toContain(`first outside solution merged in fork/project: commit ${commit}`);
 }, { prAuthor: 'solver', collected: true }));
 
-it('independent bounties in same-address copies notify once and a different receiving repository notifies separately', () => {
-  const shared = join(runRoot('BT8a-first-merge-settings'), 'settings');
-  mkdirSync(shared);
-  writeFileSync(join(shared, 'settings.json'), JSON.stringify({ kind: 'box-owner-settings', default: { bounty: 'allowed', at: '2026-10-13T00:00:00.000Z', changes: [] } }));
-  const ids: string[] = [], commits: string[] = [], notices: boolean[] = [];
-  const journeys: readonly [string, string][] = [['first independent bounty', 'owner/project'], ['second independent bounty', 'OWNER/PROJECT'], ['third independent bounty', 'fork/project']];
-  for (const [title, address] of journeys) {
-    fixture(({ repo, id, pr }) => {
-      process.env.BOX_BOUNTY_SETTINGS_DIR = shared;
-      ids.push(id);
-      postBounty(repo, id, 'github');
-      pr('solver');
-      expect(cli(repo, 'look', id, '1').status).toBe(0);
-      git(repo, ['remote', 'rename', 'origin', 'renamed']);
-      if (address !== 'owner/project') git(repo, ['remote', 'set-url', 'renamed', `https://github.com/${address}.git`]);
-      const applied = cli(repo, 'apply', id, '1');
-      expect(applied.status).toBe(0);
-      notices.push(applied.stdout.includes('Tell the owner'));
-      commits.push(git(repo, ['rev-parse', 'HEAD']));
-      expect(loadState().firstMerges[address.toLowerCase()]?.commit).toBe(address === 'OWNER/PROJECT' ? commits[0] : commits.at(-1));
-      expect(loadSettings().repositories).toEqual({});
-      if (address === 'fork/project') {
-        expect(loadState().firstMerges).toEqual({
-          'owner/project': { commit: commits[0], at: expect.any(String) },
-          'fork/project': { commit: commits[2], at: expect.any(String) }
-        });
-      }
-    }, title);
-  }
-  expect(new Set(ids).size).toBe(3);
-  expect(notices).toEqual([true, false, true]);
-}, 120000);
-
 it('an unavailable receiving identity does not refuse a landed merge or borrow its publication address', () => postedFixture(({ repo, id }) => {
   git(repo, ['remote', 'add', 'other', 'https://github.com/fork/project.git']);
   const applied = cli(repo, 'apply', id, '1');
@@ -159,3 +126,23 @@ it('a local first-merge fact is excluded from the next public work-in-progress c
   expect(state().issues).toHaveLength(1);
   expect(state().issues[0]?.body).not.toContain('FIRST_MERGE');
 }));
+
+// K69: the keying of the first-merge notice, as a rule. It was three whole worlds (post, a solver's pull request, look, apply through the
+// built tool, once per address) to learn which of three copies is noticed; the notice is recorded by recordFirstMerge(repo, commit), keyed by
+// the receiving repository's address folded to lower case. The first two tests above keep the real apply and recognition journeys.
+it('the first merge is noticed once per receiving repository address, whatever its case; a different address is noticed separately', () => {
+  const copy = (address: string): string => {
+    const repo = makeRepo({ 'app.txt': 'x\n' });
+    git(repo, ['remote', 'add', 'origin', `https://github.com/${address}.git`]);
+    return repo;
+  };
+  const copies = [copy('owner/project'), copy('OWNER/PROJECT'), copy('fork/project')];
+  const commits = copies.map(repo => git(repo, ['rev-parse', 'HEAD']));
+  const noticed = copies.map((repo, index) => recordFirstMerge(repo, commits[index]!) !== null);
+  expect(noticed).toEqual([true, false, true]);
+  expect(loadState().firstMerges).toEqual({
+    'owner/project': { commit: commits[0], at: expect.any(String) },
+    'fork/project': { commit: commits[2], at: expect.any(String) }
+  });
+  expect(loadSettings().repositories).toEqual({});
+});
