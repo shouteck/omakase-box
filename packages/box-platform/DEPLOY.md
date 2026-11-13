@@ -36,7 +36,7 @@ cd packages/box-platform
 | 6 | Set the two sign-in secrets, then try signing in | terminal, browser | $0 |
 | 7 | Create and set the GitHub read token (optional, recommended) | github.com, terminal | $0 |
 
-Once it runs, four things keep it safe, each its own section below: **Applying a migration** (always before the code that needs it), **Keeping a copy** of the database outside Cloudflare, **Restoring the database** to an earlier minute, and **Rolling back the Worker** to an earlier version. **Watching the board** says how a failure reaches you.
+Once it runs, four things keep it safe, each its own section below: **Applying a migration** (always before the code that needs it), **Keeping a copy** of the database outside Cloudflare, **Restoring the database** to an earlier minute, and **Rolling back the Worker** to an earlier version. **Watching the board** says how a failure reaches you, and **When something has gone wrong** says the order to use them in.
 
 ## 1. Cloudflare account
 
@@ -158,18 +158,27 @@ node node_modules/wrangler/bin/wrangler.js d1 export open-bounty-board --remote 
 - To check a copy is usable, load it into any SQLite tool; it is plain SQL (PF37 loaded one into a local SQLite: every table and the migration record came back).
 - To bring a copy back into an empty database: `node node_modules/wrangler/bin/wrangler.js d1 execute <database> --remote --file <the copy>`.
 
+## When something has gone wrong
+
+In this order (a fresh reader of this guide had to guess it, PF37):
+
+1. **If the code is the problem, roll it back first** ("Rolling back the Worker" below), so it stops writing bad data while you repair the database.
+2. **Take a copy now** ("Keeping a copy"). A restore loses everything written after the moment you choose; the copy keeps those rows, such as payments recorded since, so they can be looked up afterwards.
+3. **Find the moment.** `node node_modules/wrangler/bin/wrangler.js deployments list` shows when each version went live: bad data from bad code starts at that time. `node node_modules/wrangler/bin/wrangler.js d1 execute open-bounty-board --remote --command "SELECT name, applied_at FROM migrations ORDER BY applied_at"` shows when each migration went on. Choose a moment a few minutes before the earlier of the two.
+4. **Restore the database once, to that moment** ("Restoring the database"). If both a migration and bad writes need undoing, the earlier moment covers both.
+
 ## Restoring the database
 
 Cloudflare keeps the database's history and can put it back to **any minute in the last 7 days** on the free plan (30 on Workers Paid). It overwrites the database in place, and it can itself be undone. Tried for real on a throwaway database in PF37. From this folder:
 
-1. Check the database can do this: `node node_modules/wrangler/bin/wrangler.js d1 list`. The `version` column for `open-bounty-board` must say `production`; it did on 14 November 2026.
+1. Check the database can do this: `node node_modules/wrangler/bin/wrangler.js d1 list`. The `version` column for `open-bounty-board` must say `production`; it did on 14 November 2026. If it says anything else, this restore is not available: build a new database from your latest copy instead ("Keeping a copy", last line).
 2. Choose the moment, as a Unix time in seconds, a few minutes **before** the bad change (`date -d "2026-11-14 09:30 UTC" +%s` in Git Bash). Ask which point in history that is:
 
    ```bash
    node node_modules/wrangler/bin/wrangler.js d1 time-travel info open-bounty-board --timestamp=<unix seconds>
    ```
 
-   It answers "Timestamp … corresponds with bookmark …".
+   It answers "Timestamp … corresponds with bookmark …". This only checks the moment exists; the restore below takes the same timestamp.
 3. Restore:
 
    ```bash
@@ -178,7 +187,7 @@ Cloudflare keeps the database's history and can put it back to **any minute in t
 
    It answers "restored back to bookmark …" and **"To undo this operation, you can restore to the previous bookmark: <bookmark>"**. Copy that bookmark before doing anything else. Queries running at that moment are cancelled.
 4. **Read what you restored** before trusting it: `node node_modules/wrangler/bin/wrangler.js d1 execute open-bounty-board --remote --command "SELECT COUNT(*) FROM bounties"`, or the table the bad change touched. In PF37, changes made seconds apart could not be told apart: a restore to a moment seconds after the last write went back to before it. Minutes apart, it was exact.
-5. If it is not what you wanted, undo with the bookmark from step 3, then choose another moment:
+5. If it is not what you wanted, undo with the bookmark from step 3, then choose another moment. Every restore, an undo too, prints its own "previous bookmark": copy it each time.
 
    ```bash
    node node_modules/wrangler/bin/wrangler.js d1 time-travel restore open-bounty-board --bookmark=<the bookmark from step 3>
@@ -196,7 +205,7 @@ Putting the previous code back. Tried for real on a throwaway Worker in PF37. Fr
    node node_modules/wrangler/bin/wrangler.js versions list
    ```
 
-   Each has a "Version ID" and a "Created" time. Each PF wave file that deployed names the version it replaced.
+   Each has a "Version ID" and a "Created" time. The wave file of each deploy (`waves/PF<n>.md` at the repository's root) names the version it replaced.
 2. Roll back to the one you want:
 
    ```bash
@@ -208,7 +217,7 @@ Putting the previous code back. Tried for real on a throwaway Worker in PF37. Fr
    - a migration that only **added** a table or a column stays: the older code ignores it;
    - anything else (a column renamed, a value rewritten): restore the database to the moment before that migration, as above.
 
-   Cloudflare refuses a rollback across a change of the database binding itself.
+   Cloudflare refuses a rollback across a change of the database binding itself. Then deploy the older code instead: check out the commit it came from (`git log` names each deploy's wave), build and deploy as in step 4.
 
 ## Watching the board
 
