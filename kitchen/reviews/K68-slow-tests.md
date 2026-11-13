@@ -70,6 +70,10 @@ The broad lever is the **cost of a command**, as K51c found. From the trace:
 
 Roughly, 1 to 3 save about a quarter of the Git starts of the common commands, and 4 removes up to 40% of a `status`'s starts in tests. These are product changes on code the hard stops depend on; each wants its own wave, the start-budget test and the audit as guards.
 
+## Correction (K70, 13 November 2026)
+
+Patterns B (the journey transcript) and D (the `bt43` renderers) and the `bt6b` landings, as estimated above, did not survive reading the tests: the journey tests are complementary (each proves what the others rely on), the `bt43` doors are the runtime half of a promise whose static half is the walk in the same file (only two of the three share a setup, worth about 6 s), and the landings cannot share a world. See [K70](../../waves/K70.md). The other patterns (A, C, E, F, G) were carried out in K69.
+
 ## Not examined
 
 I did not read the other 1200 tests; I did not measure the saving of any verdict; "needed" for the keeps rests on what the test asserts, not on a break proof; the owner question in H is a product decision.
