@@ -1,12 +1,13 @@
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdtempSync,rmSync,writeFileSync } from 'node:fs';
+import { existsSync,mkdtempSync,rmSync,statSync,writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { resolveProgram } from './program.js';
 import { BountyRefused } from './errors.js';
 import { gitOutcome } from './git.js';
 import { requireRepository } from './settings.js';
+import { metaGet,metaSet,storeDbPath } from './store.js';
 import { type PayOutcome,type PayToFact } from './pay.js';
 
 // The bounty branch as it is posted now (BT6a): a name pointing at commits of
@@ -103,6 +104,21 @@ export const number = (value: unknown): number => typeof value === 'number' && N
 export const GH_LEAST = '2.0';
 const probedGh = new Set<string>();
 
+// K71: the version probe was one process start in every command that reaches GitHub. A program that passed it is remembered in the
+// project's local store, keyed by its path and stamped by its size and modification time, so a later command (another process) does not
+// repeat it; a replaced or upgraded gh has a new stamp and is probed again. The store is only read and written where it already exists
+// (a command never creates the project's `.box/local` for this), and a store that cannot be read or written just means the probe runs.
+const probeStamp = (path: string): string | null => {
+  try { const stat = statSync(path); return `${stat.size}:${stat.mtimeMs}`; } catch { return null; }
+};
+const probeKey = (path: string): string => `gh_probe:${path}`;
+function probeRemembered(root: string, path: string, stamp: string): boolean {
+  try { return existsSync(storeDbPath(root)) && metaGet(root, probeKey(path)) === stamp; } catch { return false; }
+}
+function rememberProbe(root: string, path: string, stamp: string): void {
+  try { if (existsSync(storeDbPath(root))) metaSet(root, probeKey(path), stamp); } catch { /* the probe just runs next time */ }
+}
+
 // Never include gh/git diagnostics here: signed-in programs can print credentials.
 function gh(root: string, args: readonly string[]): string {
   // The run-level budget a bounded caller (the hook) sets: a call count so
@@ -113,6 +129,8 @@ function gh(root: string, args: readonly string[]): string {
   let program: ReturnType<typeof resolveProgram>;
   try { program = resolveProgram('gh'); }
   catch { return invalid('github-cli-missing', `GitHub CLI gh ${GH_LEAST} or later is required for GitHub bounties — none was found on PATH (https://cli.github.com); next: install gh from https://cli.github.com, then rerun the same command`); }
+  const stamp = probeStamp(program.path);
+  if (!probedGh.has(program.path) && stamp !== null && probeRemembered(root, program.path, stamp)) probedGh.add(program.path);
   if (!probedGh.has(program.path)) {
     // `gh version`, never `gh --version`: a gh.exe that is a wrapped program
     // may see the double-dash flag eaten by its own runtime before the
@@ -126,6 +144,7 @@ function gh(root: string, args: readonly string[]): string {
       return invalid('github-cli-too-old', `GitHub CLI gh ${GH_LEAST} or later is required — found gh ${found[1]}.${found[2]} (https://cli.github.com); next: upgrade gh from https://cli.github.com, then rerun the same command`);
     }
     probedGh.add(program.path);
+    if (stamp !== null) rememberProbe(root, program.path, stamp);
   }
   // The probe itself can burn a whole call's cap — check the run deadline
   // again before the real call so the worst case is the deadline plus one
