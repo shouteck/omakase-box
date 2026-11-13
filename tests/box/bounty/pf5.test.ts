@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { allowRepository, answerGitHub, BOARD_DEFAULT, boardAddress, boardNotToldLine, boardTold, changeConfig, checkMergedSolutions, createBounty, flushBoardHints, hintOf, loadRecord, metaKeys, metaSet, postBounty, readBoardFacts, renderConfig, renderStatus, setMergeNoticeListener } from '../../../packages/box-bounty/index.js';
 import { fixture, sharedPostedFixture } from './github-fixture.js';
-import { CLI_DIST, git, rewriteRecordRaw, runRoot, write } from './support.js';
+import { CLI_DIST, git, readRecord, rewriteRecordRaw, runRoot, write, writeRecord } from './support.js';
 
 const STANDIN = fileURLToPath(new URL('./board-standin.cjs', import.meta.url));
 const CLOSED_PORT = 'http://127.0.0.1:9'; // the discard port: nothing answers here
@@ -425,10 +425,10 @@ describe('status', { timeout: 180000 }, () => {
   it('asks at most five reads per command and speaks of a stated number of merged bounties', { timeout: 120000 }, () => fixture(({ repo, id, scratch }) => {
     rewarded(scratch, board);
     postBounty(repo, id, 'github');
-    for (let n = 0; n < 5; n += 1) {
-      const other = createBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: `another ${n}`, title: `Another ${n}` });
-      postBounty(repo, other.id, 'github');
-    }
+    // K69: five more posted bounties, as records. The cap under test is on how many of the open posted records the board is asked about
+    // in one command; reaching them by creating and posting five bounties through the real flow (about 25 s) said nothing more.
+    const posted = readRecord(repo, id);
+    for (let n = 0; n < 5; n += 1) writeRecord(repo, { ...posted, id: `bt-${String(n + 1).padStart(12, '0')}` });
     flushBoardHints(repo);
     writeFileSync(join(folder, 'requests.jsonl'), '');
     readBoardFacts(repo);

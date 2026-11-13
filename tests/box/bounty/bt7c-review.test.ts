@@ -26,12 +26,17 @@ it('a stored outside-answers text written before BT7c names no removed command',
   };
   persistRecord(context.repo, record);
   context.update({ fail: '/issues' }); // refresh cannot run — the stored text is what prints
+  // K69: the three texts do not depend on the removed name, so they are rendered once; the loop used to render them again for each of
+  // the eight names (about 32 status renders for 3 different texts).
+  const status = statusGitHub(context.repo, { id: context.id });
+  const full = statusGitHub(context.repo, { id: context.id, full: true });
+  const open = renderOpenLine(context.repo);
   for (const gone of ['answer', 'questions', 'reply', 'undo', 'reject', 'withdraw', 'remind', 'confirm']) {
-    expect(statusGitHub(context.repo, { id: context.id })).not.toContain(`bounty ${gone}`);
-    expect(statusGitHub(context.repo, { id: context.id, full: true })).not.toContain(`bounty ${gone}`);
-    expect(renderOpenLine(context.repo)).not.toContain(`bounty ${gone}`);
+    expect(status).not.toContain(`bounty ${gone}`);
+    expect(full).not.toContain(`bounty ${gone}`);
+    expect(open).not.toContain(`bounty ${gone}`);
     // BT63: the removed command is named in the new spelling too.
-    for (const text of [statusGitHub(context.repo, { id: context.id }), statusGitHub(context.repo, { id: context.id, full: true }), renderOpenLine(context.repo)]) expect(text).not.toContain(`omakase-box ${gone}`);
+    for (const text of [status, full, open]) expect(text).not.toContain(`omakase-box ${gone}`);
   }
 }));
 

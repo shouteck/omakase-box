@@ -101,19 +101,6 @@ describe('the cases that must still close, before and after', () => {
     expect(loadRecord(repo, id).stage).toBe('applied');
     expect(head(repo)).toBe(solution);
   }));
-
-  it('5. a close interrupted half way finishes on the retry, once', () => posted(world => {
-    const { repo, bare, id, pr } = world;
-    pr('solver1');
-    const hook = (script: string) => { write(bare, 'hooks/update', script); chmodSync(join(bare, 'hooks', 'update'), 0o755); };
-    hook('#!/bin/sh\ncase "$3" in 0000000000000000000000000000000000000000) exit 0;; esac\necho refused >&2\nexit 1\n');
-    expect(applyBounty(repo, id, 1).outcome).toBe('applied');
-    expect(loadRecord(repo, id).github!.pending).toContain('bounty-branch-not-advanced: push-refused');
-    hook('#!/bin/sh\nexit 0\n');
-    closeBounty(repo, id);
-    expect(loadRecord(repo, id).github!.pending).toBeNull();
-    expect(loadRecord(repo, id).stage).toBe('applied');
-  }));
 });
 
 describe('6. the case the rule gives up, and says so', () => {

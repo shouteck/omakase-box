@@ -82,6 +82,8 @@ describe('a chosen solution shows as merged on GitHub', { timeout: 180000 }, () 
     expect(merged(world, 1)).toBe(true);
     expect(tipOf(bare, id)).toBeNull();
     expect(pending(world)).toBeNull();
+    // K69: from bt56's test of the same scenario, which this test now stands for
+    expect(loadRecord(repo, id).stage).toBe('applied');
   }));
 
   it('a mark a moment after the push, as on real GitHub, finishes in the same command', () => posted(world => {

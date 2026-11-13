@@ -43,7 +43,11 @@ const readCommands = (id: string, draftId: string): readonly string[][] => [
 ];
 
 describe('BT38 contract guarantees proven directly', () => {
-  it('T1: a run that changes nothing leaves the instruction block byte- and time-identical', { timeout: 180000 }, () => {
+  // K69: T1 and T4 were two tests (and pf5 holds a third) that each ran the whole list of reading commands through the built tool, one of
+  // them twice per command. One battery, each command run once, with everything asserted after it: the instruction block's bytes and
+  // mtime (T1), the local chain refs and the shared memory on the remote (T4). The other half of T1 stays: a changed fact does change the block.
+  // @guards T1 T4
+  it('T1 and T4: every reading command leaves the instruction block, the chain refs and the shared memory exactly as they were; a new fact changes the block', { timeout: 180000 }, () => {
     const world = sharedPostedFixture({ collected: true });
     world.run(() => {
       write(world.repo, 'AGENTS.md', 'team notes\n');
@@ -54,25 +58,6 @@ describe('BT38 contract guarantees proven directly', () => {
       const beforeBytes = readFileSync(file);
       const beforeMtime = statSync(file).mtimeMs;
       expect(beforeBytes.toString('utf8')).toContain('<!-- box-bounty -->');
-      for (const args of readCommands(world.id, draft.id)) {
-        for (let run = 0; run < 2; run += 1) {
-          const result = cli(world.repo, args);
-          expect(result.status, `omakase-box ${args.join(' ')} exited ${result.status}: ${result.stderr}`).toBe(0);
-        }
-        expect(readFileSync(file).equals(beforeBytes), `omakase-box ${args.join(' ')} changed the instruction block`).toBe(true);
-        expect(statSync(file).mtimeMs, `omakase-box ${args.join(' ')} touched the instruction file`).toBe(beforeMtime);
-      }
-      // A changed fact must change the block: a new pull request arrives.
-      world.pr('solver');
-      refreshGitHubStatus(world.repo, loadRecord(world.repo, world.id));
-      expect(readFileSync(file).equals(beforeBytes), 'a new solution left the instruction block unchanged').toBe(false);
-    });
-  });
-
-  it('T4: every reading command appends no chain event and pushes nothing', { timeout: 180000 }, () => {
-    const world = sharedPostedFixture({ collected: true });
-    world.run(() => {
-      const draft = createBounty({ repoPath: world.repo, taskPath: join(world.repo, 'TASK.md'), why: 'a second hand-off', title: 'Second task' });
       const remoteRefs = () => execFileSync('git', ['-c', `safe.directory=${world.bare}`, 'ls-remote', world.bare, 'refs/box-bounty-records/*'], { encoding: 'utf8' });
       const localRefs = () => git(world.repo, ['for-each-ref', 'refs/box-bounty', 'refs/box-bounty-records', '--format=%(refname) %(objectname)']);
       const remoteBefore = remoteRefs();
@@ -83,11 +68,18 @@ describe('BT38 contract guarantees proven directly', () => {
       for (const args of readCommands(world.id, draft.id)) {
         const result = cli(world.repo, args);
         expect(result.status, `omakase-box ${args.join(' ')} exited ${result.status}: ${result.stderr}`).toBe(0);
+        expect(readFileSync(file).equals(beforeBytes), `omakase-box ${args.join(' ')} changed the instruction block`).toBe(true);
+        expect(statSync(file).mtimeMs, `omakase-box ${args.join(' ')} touched the instruction file`).toBe(beforeMtime);
+        expect(localRefs(), `omakase-box ${args.join(' ')} appended a chain event or moved a chain tip`).toBe(localBefore);
+        expect(remoteRefs(), `omakase-box ${args.join(' ')} pushed to the shared bounty memory`).toBe(remoteBefore);
       }
-      expect(localRefs(), 'a read appended a chain event or moved a chain tip').toBe(localBefore);
-      expect(remoteRefs(), 'a read pushed to the shared bounty memory').toBe(remoteBefore);
+      // A changed fact must change the block: a new pull request arrives.
+      world.pr('solver');
+      refreshGitHubStatus(world.repo, loadRecord(world.repo, world.id));
+      expect(readFileSync(file).equals(beforeBytes), 'a new solution left the instruction block unchanged').toBe(false);
     });
   });
+
 
   it('C5: the snapshot object create makes resolves and rebuilds the captured state (post-BT24: unpinned)', () => {
     const repo = makeRepo({ 'TASK.md': 'Fix the sum.\n', 'app.txt': 'broken\n' }, current => {

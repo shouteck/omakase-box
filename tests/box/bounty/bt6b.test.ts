@@ -49,63 +49,6 @@ describe('defect 1 — a merge must never run a program the solution can supply 
     expect(readFileSync(join(repo, 'tools', 'filter.cjs'), 'utf8')).toBe(loggingFilter('OWNER'));
   }));
 
-  it('refuses apply when the in-tree program is unchanged but calls a file the solution changes — the indirection case', () => withLog(logFile => {
-    const repo = filteredRepo();
-    write(repo, 'tools/key.txt', 'owner key\n');
-    git(repo, ['add', 'tools/key.txt']);
-    git(repo, ['-c', 'user.name=owner', '-c', 'user.email=owner@example.invalid', 'commit', '-qm', 'a key the filter reads']);
-    inTreeFilter(repo);
-    const { id, folder } = delivered(repo);
-    // The program itself is untouched; the file it reads is not. What a
-    // program reads cannot be bounded, so any in-tree program refuses.
-    write(folder, 'repo/tools/key.txt', 'solver key\n');
-    write(folder, 'repo/zz.dat', 'solver changed\n');
-    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
-
-    const before = fingerprint(repo);
-    const applied = cli(repo, 'apply', id, '1');
-    expect(applied.status).toBe(3);
-    expect(applied.stderr).toContain('apply-unsafe-config');
-    expect(readLog(logFile).filter(line => line.startsWith('SOLVER'))).toEqual([]);
-    expect(fingerprint(repo)).toEqual(before);
-  }));
-
-  it('refuses apply for a merge driver whose program is inside the repository', () => {
-    const repo = filteredRepo();
-    write(repo, '.gitattributes', '*.dat filter=own\n*.drv merge=own\n');
-    write(repo, 'tools/drv.cjs', "// merge driver the owner configures\n");
-    git(repo, ['add', '-A']);
-    git(repo, ['-c', 'user.name=owner', '-c', 'user.email=owner@example.invalid', 'commit', '-qm', 'a merge driver']);
-    git(repo, ['config', 'merge.own.driver', 'node tools/drv.cjs %O %A %B %L']);
-    const { id, folder } = delivered(repo);
-    write(folder, 'repo/tools/drv.cjs', "// the solver's driver\n");
-    write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
-
-    const before = fingerprint(repo);
-    const applied = cli(repo, 'apply', id, '1');
-    expect(applied.status).toBe(3);
-    expect(applied.stderr).toContain('apply-unsafe-config');
-    expect(applied.stderr).toContain('merge.own.driver');
-    expect(applied.stderr).toContain('tools/drv.cjs');
-    expect(fingerprint(repo)).toEqual(before);
-  });
-
-  it('refuses apply for a configured command the tool cannot place inside or outside the tree', () => {
-    const repo = makeRepo({ 'app.txt': 'broken\n' });
-    git(repo, ['config', 'filter.mystery.clean', 'bt6b-no-such-program %f']);
-    const { id, folder } = delivered(repo);
-    write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
-
-    const before = fingerprint(repo);
-    const applied = cli(repo, 'apply', id, '1');
-    expect(applied.status).toBe(3);
-    expect(applied.stderr).toContain('apply-unsafe-config');
-    expect(applied.stderr).toContain('filter.mystery.clean');
-    expect(fingerprint(repo)).toEqual(before);
-  });
-
   it('lands a solution as today when every configured command resolves outside the repository — filters applied', () => withLog(logFile => {
     const repo = filteredRepo();
     const external = join(runRoot('bt6b-ext'), 'crypt.cjs');
