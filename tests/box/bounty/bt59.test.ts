@@ -3,7 +3,7 @@
 // on standard input and no environment, and a Git call to github.com gets the token as its credential helper's answer, in
 // its environment only. The rows follow the brief's table; MARK is a made-up token.
 import childProcess, { spawn, spawnSync, type ChildProcess } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { syncBuiltinESMExports } from 'node:module';
 import { delimiter, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -56,11 +56,26 @@ function withEnv<T>(values: Record<string, string | undefined>, run: () => T): T
 }
 const token = (name: 'GH_TOKEN' | 'GITHUB_TOKEN' = 'GH_TOKEN') => ({ [name]: MARK, BOX_BOUNTY_GITHUB_API_FOR_TESTS: base });
 
-/** The PATH as it is, less every folder that holds a gh program (the stand-in's and any real one): Git, sh and Node stay. */
+/**
+ * The PATH as it is, less any gh program (the stand-in's and any real one): Git, sh and Node stay. A folder that holds gh is
+ * left out on Windows, where gh has a folder of its own; on Linux and macOS gh sits in /usr/bin beside git and sh, so such a
+ * folder is replaced by a shadow holding a link to everything in it except gh.
+ */
+const GH_NAMES = new Set(['gh', 'gh.exe', 'gh.cmd', 'gh.bat']);
+const shadows = new Map<string, string>();
+const shadowOf = (dir: string): string => {
+  const known = shadows.get(dir);
+  if (known !== undefined) return known;
+  const shadow = runRoot('bt59-path-shadow');
+  for (const name of readdirSync(dir)) if (!GH_NAMES.has(name)) { try { symlinkSync(join(dir, name), join(shadow, name)); } catch { /* an entry that cannot be linked is not needed */ } }
+  shadows.set(dir, shadow);
+  return shadow;
+};
 function withoutGh(run: () => void): void {
   const before = process.env.PATH;
-  const hasGh = (dir: string) => ['gh', 'gh.exe', 'gh.cmd', 'gh.bat'].some(name => existsSync(join(dir, name)));
-  process.env.PATH = (before ?? '').split(delimiter).filter(dir => dir !== '' && !hasGh(dir)).join(delimiter);
+  const hasGh = (dir: string) => [...GH_NAMES].some(name => existsSync(join(dir, name)));
+  process.env.PATH = (before ?? '').split(delimiter).filter(dir => dir !== '')
+    .flatMap(dir => !hasGh(dir) ? [dir] : process.platform === 'win32' ? [] : [shadowOf(dir)]).join(delimiter);
   try { expect(() => resolveProgram('gh')).toThrow(); run(); }
   finally { process.env.PATH = before; }
 }
