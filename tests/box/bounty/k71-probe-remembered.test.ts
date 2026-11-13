@@ -33,5 +33,6 @@ it('refreshing shared memory lists the chain refs with one for-each-ref start, h
   try { refreshSharedMemory(repo); } finally { childProcess.spawnSync = real; syncBuiltinESMExports(); }
   expect(listings, 'one listing').toHaveLength(1);
   const patterns = listings[0]!.filter(arg => arg.startsWith('refs/box-bounty'));
-  expect(patterns.sort()).toEqual(['refs/box-bounty', 'refs/box-bounty-records', 'refs/box-bounty-records-origin', 'refs/box-bounty-records-origin-old'].sort());
+  // K73: the old name is no longer read, so the one listing names the two record namespaces.
+  expect(patterns.sort()).toEqual(['refs/box-bounty-records', 'refs/box-bounty-records-origin'].sort());
 }));

@@ -42,36 +42,15 @@ import type { SharedRow } from './store.js';
 
 // BT58: where a bounty's shared record lives. A bounty has two things on GitHub with almost the same name: its branch,
 // `refs/heads/box-bounty/<id>`, and its record. Git resolves a short name to `refs/<name>` before `refs/heads/<name>`
-// (gitrevisions, "<refname>"), so a record at `refs/box-bounty/<id>` answered `git fetch origin box-bounty/<id>`, and
-// its tracking ref `refs/remotes/origin/box-bounty/<id>` is the very name a clone gives the branch. Bounties posted
-// from now keep the record at `refs/box-bounty-records/<id>` and its tracking copy outside `refs/remotes/`; no short
-// name anyone types reaches either. A chain written before stays at the old name and is continued there, never moved,
-// deleted or force-pushed; its tracking copy now lives in a namespace of its own, so this tool's fetch no longer
-// touches the place a clone keeps the branch's tracking ref.
+// (gitrevisions, "<refname>"), so a record at `refs/box-bounty/<id>` answered `git fetch origin box-bounty/<id>`, and its tracking
+// ref `refs/remotes/origin/box-bounty/<id>` is the very name a clone gives the branch. The record keeps `refs/box-bounty-records/<id>`
+// and its tracking copy lives outside `refs/remotes/`; no short name anyone types reaches either. K73: a record under the old name,
+// written by a version before 0.2.0, is no longer read, continued or fetched, and the tool writes, reads and deletes nothing at
+// `refs/box-bounty/<id>`.
 export const CHAIN_NS = 'refs/box-bounty-records';
 export const CHAIN_REMOTE_NS = 'refs/box-bounty-records-origin';
-export const CHAIN_NS_OLD = 'refs/box-bounty';
-export const CHAIN_REMOTE_NS_OLD = 'refs/box-bounty-records-origin-old';
-
-// Which name one bounty uses is chosen once and stored (`chain_ns:<id>`), so no command pays a Git start to decide. A
-// bounty this machine already holds chain state for (the four keys master's code wrote) is old; one with none is new.
-// A remote chain first seen at the old name only is old; seen at both, old, and the new name is never written.
-const LEGACY_KEYS = ['chain_authored', 'chain_pending', 'chain_pushed', 'chain_tip'] as const;
-const nsKey = (id: string): string => `chain_ns:${id}`;
-// null: nothing decided and nothing marks it old yet.
-const knownLayout = (root: string, id: string): 'old' | 'new' | null => {
-  const chosen = metaGet(root, nsKey(id));
-  if (chosen === 'old' || chosen === 'new') return chosen;
-  if (LEGACY_KEYS.some(key => metaGet(root, `${key}:${id}`) !== null)) { metaSet(root, nsKey(id), 'old'); return 'old'; }
-  return null;
-};
-const isOldChain = (root: string, id: string): boolean => knownLayout(root, id) === 'old';
-// Decide a bounty whose chain this machine is about to write or adopt, once.
-const settleLayout = (root: string, id: string, old: boolean): void => {
-  if (knownLayout(root, id) === null) metaSet(root, nsKey(id), old ? 'old' : 'new');
-};
-export const chainRef = (root: string, id: string): string => `${isOldChain(root, id) ? CHAIN_NS_OLD : CHAIN_NS}/${id}`;
-const remoteRef = (root: string, id: string): string => `${isOldChain(root, id) ? CHAIN_REMOTE_NS_OLD : CHAIN_REMOTE_NS}/${id}`;
+export const chainRef = (_root: string, id: string): string => `${CHAIN_NS}/${id}`;
+const remoteRef = (_root: string, id: string): string => `${CHAIN_REMOTE_NS}/${id}`;
 const FETCH_INTERVAL_MS = 60000;
 const FIELD_LIMIT = 8000;
 const PUSH_TRIES = 3;
@@ -174,7 +153,6 @@ const provenTip = (root: string, id: string, tip: string): boolean =>
 // The commit is recorded as this machine's authored tip — the provenance
 // that later authorizes pushing it.
 function commitEvent(root: string, id: string, eventJson: string, parents: readonly string[]): string {
-  settleLayout(root, id, false); // a chain this machine starts is a new one; an old one was settled before
   const blob = gitWriteBlob(root, Buffer.from(eventJson, 'utf8'));
   const tree = gitStdin(root, ['mktree'], `100644 blob ${blob}\tevent.json\n`);
   const args = [...IDENTITY, 'commit-tree', tree, '-m', `box-bounty ${id} chain event`];
@@ -186,10 +164,9 @@ function commitEvent(root: string, id: string, eventJson: string, parents: reado
 }
 
 // Append a built event onto the local chain. The parent is the current tip
-// only when it is itself a chain commit AND carries proven provenance — an
-// old `refs/box-bounty/<id>` snapshot pin (pre-BT24 records) is not chain
-// history, and a planted or swapped local ref is never a parent either: a
-// forged tip would otherwise launder its graph under a tool-authored event.
+// only when it is itself a chain commit AND carries proven provenance — a
+// planted or swapped local ref is never a parent: a forged tip would
+// otherwise launder its graph under a tool-authored event.
 export function appendEvent(root: string, id: string, event: ChainEvent): string {
   // K71: the tip and "does its tree carry event.json" in one `rev-parse` (it names the commit, then the blob at <ref>:event.json, and
   // exits non-zero when either is missing), where it was a `rev-parse` and then a `cat-file -e`. Either failing means no parent, as before.
@@ -432,9 +409,8 @@ export function syncChains(root: string, force = false): void {
   }
   const url = remoteUrl(root);
   if (url === null) return;
-  // Both names in one Git call (BT58): the new record namespace and the old one, each into a tracking namespace of its
-  // own. --prune acts only on those two destinations, never on a branch's.
-  const fetched = gitOutcome(root, ['fetch', '--no-tags', '--prune', url, `+${CHAIN_NS}/*:${CHAIN_REMOTE_NS}/*`, `+${CHAIN_NS_OLD}/*:${CHAIN_REMOTE_NS_OLD}/*`]);
+  // The record namespace into a tracking namespace of its own (BT58). --prune acts only on that destination, never on a branch's.
+  const fetched = gitOutcome(root, ['fetch', '--no-tags', '--prune', url, `+${CHAIN_NS}/*:${CHAIN_REMOTE_NS}/*`]);
   if (fetched.status !== 0 || fetched.error !== undefined) {
     // Offline, throttled or refusing: answer from the cache, and say so once
     // per failing spell — a success below clears the recorded error.
@@ -474,38 +450,20 @@ interface ChainView {
   readonly ancestorsOf: (tip: string) => ReadonlySet<string>;
 }
 
-// One listing for a namespace pair (the new name and the old name), so the read costs the Git starts it did before.
-interface TipLists { readonly fresh: ReadonlyMap<string, string>; readonly old: ReadonlyMap<string, string> }
-// K71: every namespace asked for in ONE `for-each-ref` (it takes several patterns), split by prefix afterwards. The remote-tracking pair and the
-// local pair were two listings of one repository's refs.
-const listTipsIn = (root: string, namespaces: readonly string[]): Map<string, Map<string, string>> => {
-  const lists = new Map(namespaces.map((ns): [string, Map<string, string>] => [ns, new Map()]));
-  for (const line of gitOutcome(root, ['for-each-ref', '--format=%(refname) %(objectname)', ...namespaces]).stdout.split('\n')) {
+// K71: the remote-tracking and the local namespace in ONE `for-each-ref` (it takes several patterns), split by prefix afterwards: two listings
+// of one repository's refs was one start too many. Only exact bounty ids count (CHAIN_ID).
+const listTips = (root: string): { readonly remote: Map<string, string>; readonly local: Map<string, string> } => {
+  const remote = new Map<string, string>();
+  const local = new Map<string, string>();
+  for (const line of gitOutcome(root, ['for-each-ref', '--format=%(refname) %(objectname)', CHAIN_REMOTE_NS, CHAIN_NS]).stdout.split('\n')) {
     if (line === '') continue;
     const [ref, sha] = line.split(' ');
     if (ref === undefined || sha === undefined || !/^[a-f\d]{40}$/.test(sha)) continue;
-    const ns = namespaces.find(candidate => ref.startsWith(`${candidate}/`));
-    const id = ns === undefined ? '' : ref.slice(ns.length + 1);
-    if (ns !== undefined && CHAIN_ID.test(id)) lists.get(ns)!.set(id, sha);
+    const into = ref.startsWith(`${CHAIN_REMOTE_NS}/`) ? remote : ref.startsWith(`${CHAIN_NS}/`) ? local : null;
+    const id = into === null ? '' : ref.slice((into === remote ? CHAIN_REMOTE_NS : CHAIN_NS).length + 1);
+    if (into !== null && CHAIN_ID.test(id)) into.set(id, sha);
   }
-  return lists;
-};
-const tipLists = (lists: ReadonlyMap<string, Map<string, string>>, freshNs: string, oldNs: string): TipLists => ({ fresh: lists.get(freshNs)!, old: lists.get(oldNs)! });
-
-// Which of the two names answers for each id, and the tip there. Chosen already: that name (the other is ignored). Not
-// chosen: the old name if the remote or this machine has it, else the new; both: the old. The choice is stored when the
-// tip is adopted (see adoptAndImport), never here.
-const resolveTips = (root: string, lists: TipLists, decide: boolean): Map<string, string> => {
-  const tips = new Map<string, string>();
-  for (const id of new Set([...lists.fresh.keys(), ...lists.old.keys()])) {
-    const known = knownLayout(root, id);
-    const old = known === 'old' || (known === null && lists.old.has(id));
-    const tip = (old ? lists.old : lists.fresh).get(id);
-    if (tip === undefined) continue;
-    if (decide && known === null) settleLayout(root, id, old);
-    tips.set(id, tip);
-  }
-  return tips;
+  return { remote, local };
 };
 
 // Parent edges for the union of the given tips' histories — chunked so the
@@ -572,15 +530,14 @@ function chainOrder(view: ChainView, tip: string): string[] {
 // Returns the collected view for retryPending — the post-fetch push pass
 // reads the same listings instead of listing refs and probing tips again.
 function adoptAndImport(root: string): ChainView {
-  const listed = listTipsIn(root, [CHAIN_REMOTE_NS, CHAIN_REMOTE_NS_OLD, CHAIN_NS, CHAIN_NS_OLD]);
-  const remoteLists = tipLists(listed, CHAIN_REMOTE_NS, CHAIN_REMOTE_NS_OLD);
-  const remoteTips = resolveTips(root, remoteLists, true);
-  // A local listing is skipped only when nothing could be there to compare
-  // or retry: no remote chains and no chain meta keys at all (K14: a plain
-  // read on an empty shared memory costs no extra git start).
+  const listed = listTips(root);
+  const remoteTips = listed.remote;
+  // The local listing is used only when something could be there to compare
+  // or retry: remote chains, or chain meta keys (K14: a plain read on an
+  // empty shared memory finds nothing and costs the one listing).
   const localTips = remoteTips.size === 0 && metaKeys(root, 'chain_').length === 0
     ? new Map<string, string>()
-    : resolveTips(root, tipLists(listed, CHAIN_NS, CHAIN_NS_OLD), false);
+    : listed.local;
 
   // History walks only where a decision needs them: tips that differ, tips
   // not yet imported, and local-only chains (isChainCommit for the retry).
