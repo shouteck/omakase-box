@@ -221,7 +221,7 @@ describe('what it needs is stated and checked', () => {
 describe('BT53: the manifest of the next release', () => {
   it('carries a new version, describes both halves, and keeps the line about watchers out of the bundle', () => {
     const packed = manifest();
-    expect(packed['version']).toBe('0.2.1'); // BT65: the setup fix; 0.2.0 is on npm
+    expect(packed['version']).toBe('0.3.0'); // BT66: --json everywhere (BT61) and the token way in (BT59); 0.2.1 is on npm
     expect(packed['version']).not.toBe('0.1.3');
     const description = String(packed['description']);
     expect(description).toContain('solver');
