@@ -119,6 +119,15 @@ function rememberProbe(root: string, path: string, stamp: string): void {
   try { if (existsSync(storeDbPath(root))) metaSet(root, probeKey(path), stamp); } catch { /* the probe just runs next time */ }
 }
 
+// BT59: every GitHub call goes through one transport — a function that takes `gh api`'s arguments and answers as `gh api
+// --include` does (status, then headers, a blank line, the body). The `gh` program is one implementation; a test can install
+// another in place of the program (an in-process stand-in), so a test that calls the tool's functions directly needs no
+// process per call. The CLI never installs one: only a test that imports this module can.
+export interface GitHubAnswer { readonly status: number | null; readonly stdout?: string | null; readonly stderr?: string | null; readonly error?: Error | undefined }
+export type GitHubTransport = (root: string, args: readonly string[]) => GitHubAnswer;
+let installedTransport: GitHubTransport | null = null;
+export function useGitHubTransportForTests(transport: GitHubTransport | null): void { installedTransport = transport; }
+
 // Never include gh/git diagnostics here: signed-in programs can print credentials.
 function gh(root: string, args: readonly string[]): string {
   // The run-level budget a bounded caller (the hook) sets: a call count so
@@ -126,6 +135,33 @@ function gh(root: string, args: readonly string[]): string {
   // calls stays inside its bound. Ordinary commands leave both unbounded.
   if (ghCallBudget <= 0 || Date.now() >= ghDeadline) return invalid('github-call-budget', 'the GitHub budget for this run is spent — the run stays inside its bound and the next one can ask again; next: rerun the command — a new run gets a fresh budget');
   ghCallBudget -= 1;
+  const call = installedTransport ?? programTransport(root);
+  // The probe itself can burn a whole call's cap — check the run deadline
+  // again before the real call so the worst case is the deadline plus one
+  // in-flight call.
+  if (Date.now() >= ghDeadline) return invalid('github-call-budget', 'the GitHub budget for this run is spent — the run stays inside its bound and the next one can ask again; next: rerun the command — a new run gets a fresh budget');
+  const result = call(root, args);
+  if (result.error !== undefined || result.status !== 0) {
+    const failure = classifyGitHubFailure(result, () => {
+      // GET /rate_limit is free, asked at most once per failure, and still a
+      // call: it spends the run's budget and never outlives its deadline.
+      if (ghCallBudget <= 0 || Date.now() >= ghDeadline) return null;
+      ghCallBudget -= 1;
+      const limits = call(root, ['api', '--hostname', 'github.com', 'rate_limit']);
+      if (limits.error !== undefined || limits.status !== 0) return null;
+      try {
+        const data: unknown = JSON.parse(limits.stdout ?? '');
+        const core = isObject(data) && isObject(data['resources']) ? data['resources']['core'] : null;
+        return isObject(core) && typeof core['reset'] === 'number' ? core['reset'] * 1000 : null;
+      } catch { return null; }
+    });
+    throw failure;
+  }
+  return result.stdout ?? '';
+}
+
+// The `gh` program as a transport: found on PATH, its version checked once (K71 remembers a passed probe across processes).
+function programTransport(root: string): GitHubTransport {
   let program: ReturnType<typeof resolveProgram>;
   try { program = resolveProgram('gh'); }
   catch { return invalid('github-cli-missing', `GitHub CLI gh ${GH_LEAST} or later is required for GitHub bounties — none was found on PATH (https://cli.github.com); next: install gh from https://cli.github.com, then rerun the same command`); }
@@ -146,27 +182,7 @@ function gh(root: string, args: readonly string[]): string {
     probedGh.add(program.path);
     if (stamp !== null) rememberProbe(root, program.path, stamp);
   }
-  // The probe itself can burn a whole call's cap — check the run deadline
-  // again before the real call so the worst case is the deadline plus one
-  // in-flight call.
-  if (Date.now() >= ghDeadline) return invalid('github-call-budget', 'the GitHub budget for this run is spent — the run stays inside its bound and the next one can ask again; next: rerun the command — a new run gets a fresh budget');
-  const result = launch(program, root, args);
-  if (result.error !== undefined || result.status !== 0) {
-    throw classifyGitHubFailure(result, () => {
-      // GET /rate_limit is free, asked at most once per failure, and still a
-      // call: it spends the run's budget and never outlives its deadline.
-      if (ghCallBudget <= 0 || Date.now() >= ghDeadline) return null;
-      ghCallBudget -= 1;
-      const limits = launch(program, root, ['api', '--hostname', 'github.com', 'rate_limit']);
-      if (limits.error !== undefined || limits.status !== 0) return null;
-      try {
-        const data: unknown = JSON.parse(limits.stdout ?? '');
-        const core = isObject(data) && isObject(data['resources']) ? data['resources']['core'] : null;
-        return isObject(core) && typeof core['reset'] === 'number' ? core['reset'] * 1000 : null;
-      } catch { return null; }
-    });
-  }
-  return result.stdout ?? '';
+  return (cwd, args) => launch(program, cwd, args);
 }
 
 // `gh api --include` puts the status line and headers before the body, on

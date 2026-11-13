@@ -9,6 +9,15 @@ import { removeTree } from './remove-tree.js';
 import { git, makeRepo, readRecordRaw, recordFilePath, runRoot, write, writeRecordRaw } from './support.js';
 import { requireRepository } from '../../../packages/box-bounty/settings.js';
 import { resolveProgram } from '../../../packages/box-bounty/program.js';
+import { useGitHubTransportForTests } from '../../../packages/box-bounty/gh.js';
+import { inProcessGh } from './gh-inprocess.js';
+
+// BT59: a test file that calls the tool's functions directly (not the built CLI) may answer its gh calls in-process, from the
+// same stand-in source, instead of one Node start per call. Off by default; a file opts in with `answerGhInProcess(true)`.
+// BT59_GH=program or BT59_GH=inprocess forces one or the other for a whole run, to compare the two.
+let inProcess = false;
+export function answerGhInProcess(on: boolean): void { inProcess = on; }
+const ghInProcess = (): boolean => process.env['BT59_GH'] === 'inprocess' || (process.env['BT59_GH'] !== 'program' && inProcess);
 
 export function withoutGh(run: () => void): void {
   const parentPath = process.env.PATH;
@@ -102,7 +111,8 @@ export interface GhState {
 // contiguous shape — synthetic, and never a real credential.
 export const leakCanary = 'ghp_' + 'DO_NOT_LEAK_THIS_TOKEN_VALUE' + '1234567890';
 
-const STANDIN = String.raw`
+// Exported for the in-process stand-in (gh-inprocess.ts, BT59), which runs this same source without a process per call.
+export const STANDIN = String.raw`
 const fs = require('node:fs');
 const args = process.argv.slice(2);
 const path = process.env.BT6_GH_STATE;
@@ -449,8 +459,10 @@ function withGhEnv<T>(world: World, run: () => T): T {
   });
   childProcess.spawnSync = transport;
   syncBuiltinESMExports();
+  if (ghInProcess()) useGitHubTransportForTests(inProcessGh(STANDIN));
   try { return run(); }
   finally {
+    useGitHubTransportForTests(null);
     childProcess.spawnSync = originalSpawn;
     syncBuiltinESMExports();
     if (oldPath === undefined) delete process.env.PATH; else process.env.PATH = oldPath;
