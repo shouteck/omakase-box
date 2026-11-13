@@ -1,0 +1,324 @@
+{
+ "about": "K69: the one-place breaks used to prove each conversion. Run a table with node scripts/guard-audit.mjs --breaks kitchen/reviews/K69-breaks.json --only <id>; add --ref master to run the same break against the tests as they were before K69 (some test files named here exist only after it). Not part of the guard audit proper (kitchen/reviews/guard-breaks.json).",
+ "breaks": [
+  {
+   "id": "migration-block-disabled",
+   "guarantees": [
+    "T1"
+   ],
+   "file": "packages/box-bounty/record.ts",
+   "find": "if (record.github?.outside !== undefined && typeof record.github.outside.answers === 'string') {",
+   "replace": "if (Boolean(0) && record.github?.outside !== undefined && typeof record.github.outside.answers === 'string') {",
+   "tests": [
+    "tests/box/bounty/bt7c-review.test.ts"
+   ]
+  },
+  {
+   "id": "t1-block-rewritten-when-unchanged",
+   "guarantees": [
+    "T1"
+   ],
+   "file": "packages/box-bounty/instructions.ts",
+   "find": "if (before.equals(after)) return;",
+   "replace": "if (Boolean(0) && before.equals(after)) return;",
+   "tests": [
+    "tests/box/bounty/bt38.test.ts"
+   ]
+  },
+  {
+   "id": "t4-a-read-moves-a-chain-ref",
+   "guarantees": [
+    "T4"
+   ],
+   "file": "packages/box-bounty/chain.ts",
+   "find": "try { syncChains(root); } catch { /* shared memory is a read cache",
+   "replace": "try { syncChains(root); gitOutcome(root, ['update-ref', 'refs/box-bounty-records/bt-bite-t4', 'HEAD']); } catch { /* shared memory is a read cache",
+   "tests": [
+    "tests/box/bounty/bt38.test.ts"
+   ]
+  },
+  {
+   "id": "board-read-cap-raised",
+   "guarantees": [
+    "T2"
+   ],
+   "file": "packages/box-bounty/board.ts",
+   "find": ".slice(0, READS_PER_COMMAND);",
+   "replace": ".slice(0, READS_PER_COMMAND + 3);",
+   "tests": [
+    "tests/box/bounty/pf5.test.ts"
+   ]
+  },
+  {
+   "id": "first-merge-noticed-every-time",
+   "guarantees": [
+    "O7"
+   ],
+   "file": "packages/box-bounty/settings.ts",
+   "find": "if (state.firstMerges[address] !== undefined) return null;",
+   "replace": "if (Boolean(0) && state.firstMerges[address] !== undefined) return null;",
+   "tests": [
+    "tests/box/bounty/first-merge.test.ts"
+   ]
+  },
+  {
+   "id": "address-not-folded-to-lower-case",
+   "guarantees": [
+    "O7"
+   ],
+   "file": "packages/box-bounty/repository.ts",
+   "find": "`${match[1]}/${match[2]}`.toLowerCase()",
+   "replace": "`${match[1]}/${match[2]}`",
+   "tests": [
+    "tests/box/bounty/first-merge.test.ts"
+   ]
+  },
+  {
+   "id": "pending-not-recorded",
+   "guarantees": [
+    "D6"
+   ],
+   "file": "packages/box-bounty/close.ts",
+   "find": "publication.pending = `github-decision-pending (bounty-branch-not-advanced:",
+   "replace": "void `github-decision-pending (bounty-branch-not-advanced:",
+   "tests": [
+    "tests/box/bounty/bt51.test.ts",
+    "tests/box/bounty/bt56.test.ts"
+   ]
+  },
+  {
+   "id": "pending-not-cleared-on-retry",
+   "guarantees": [
+    "D6"
+   ],
+   "file": "packages/box-bounty/close.ts",
+   "find": "publication.pending = null;",
+   "replace": "publication.pending = publication.pending ?? null;",
+   "tests": [
+    "tests/box/bounty/bt51.test.ts",
+    "tests/box/bounty/bt56.test.ts"
+   ]
+  },
+  {
+   "id": "refused-push-ends-the-bounty-anyway",
+   "guarantees": [
+    "D6"
+   ],
+   "file": "packages/box-bounty/close.ts",
+   "find": "if (advanced.notAdvanced !== null) {",
+   "replace": "if (Boolean(0) && advanced.notAdvanced !== null) {",
+   "tests": [
+    "tests/box/bounty/bt51.test.ts",
+    "tests/box/bounty/bt56.test.ts"
+   ]
+  },
+  {
+   "id": "interpreter-node-forgotten",
+   "guarantees": [
+    "R1"
+   ],
+   "file": "packages/box-bounty/git.ts",
+   "find": "'node', 'nodejs', 'deno'",
+   "replace": "'nodejs', 'deno'",
+   "tests": [
+    "tests/box/bounty/unsafe-owner-config-layers.test.ts",
+    "tests/box/bounty/bt6b.test.ts",
+    "tests/box/bounty/bt6b-second.test.ts",
+    "tests/box/bounty/bt6b-third.test.ts",
+    "tests/box/bounty/bt6b-holes.test.ts"
+   ]
+  },
+  {
+   "id": "wrapper-wsl-forgotten",
+   "guarantees": [
+    "R1"
+   ],
+   "file": "packages/box-bounty/git.ts",
+   "find": "'ssh', 'wsl', 'plink'",
+   "replace": "'ssh', 'plink'",
+   "tests": [
+    "tests/box/bounty/unsafe-owner-config-layers.test.ts",
+    "tests/box/bounty/bt6b.test.ts",
+    "tests/box/bounty/bt6b-second.test.ts",
+    "tests/box/bounty/bt6b-third.test.ts",
+    "tests/box/bounty/bt6b-holes.test.ts"
+   ]
+  },
+  {
+   "id": "launcher-npm-forgotten",
+   "guarantees": [
+    "R1"
+   ],
+   "file": "packages/box-bounty/git.ts",
+   "find": "['npm', 'package.json'], ",
+   "replace": "",
+   "tests": [
+    "tests/box/bounty/unsafe-owner-config-layers.test.ts",
+    "tests/box/bounty/bt6b.test.ts",
+    "tests/box/bounty/bt6b-second.test.ts",
+    "tests/box/bounty/bt6b-third.test.ts",
+    "tests/box/bounty/bt6b-holes.test.ts"
+   ]
+  },
+  {
+   "id": "npm-f-taken-as-manifest-flag",
+   "guarantees": [
+    "R1"
+   ],
+   "file": "packages/box-bounty/git.ts",
+   "find": "['npm', new Set(['--prefix', '--cwd'])],",
+   "replace": "['npm', new Set(['--prefix', '--cwd', '-f'])],",
+   "tests": [
+    "tests/box/bounty/unsafe-owner-config-layers.test.ts",
+    "tests/box/bounty/bt6b.test.ts",
+    "tests/box/bounty/bt6b-second.test.ts",
+    "tests/box/bounty/bt6b-third.test.ts",
+    "tests/box/bounty/bt6b-holes.test.ts"
+   ]
+  },
+  {
+   "id": "git-dash-c-operand-forgotten",
+   "guarantees": [
+    "R1"
+   ],
+   "file": "packages/box-bounty/git.ts",
+   "find": "new Set(['-c', '-C', '--config', '--config-env'])",
+   "replace": "new Set(['-C', '--config', '--config-env'])",
+   "tests": [
+    "tests/box/bounty/unsafe-owner-config-layers.test.ts",
+    "tests/box/bounty/bt6b.test.ts",
+    "tests/box/bounty/bt6b-second.test.ts",
+    "tests/box/bounty/bt6b-third.test.ts",
+    "tests/box/bounty/bt6b-holes.test.ts"
+   ]
+  },
+  {
+   "id": "include-path-not-a-path-key",
+   "guarantees": [
+    "R1"
+   ],
+   "file": "packages/box-bounty/git.ts",
+   "find": "/^(include\\.path|includeif\\..*\\.path|core\\.attributesfile)$/i;",
+   "replace": "/^(includeif\\..*\\.path|core\\.attributesfile)$/i;",
+   "tests": [
+    "tests/box/bounty/unsafe-owner-config-layers.test.ts",
+    "tests/box/bounty/bt6b.test.ts",
+    "tests/box/bounty/bt6b-second.test.ts",
+    "tests/box/bounty/bt6b-third.test.ts",
+    "tests/box/bounty/bt6b-holes.test.ts"
+   ]
+  },
+  {
+   "id": "pipe-not-a-separator",
+   "guarantees": [
+    "R1"
+   ],
+   "file": "packages/box-bounty/git.ts",
+   "find": " || ch === '|' || ch === '(' ",
+   "replace": " || ch === '(' ",
+   "tests": [
+    "tests/box/bounty/unsafe-owner-config-layers.test.ts",
+    "tests/box/bounty/bt6b.test.ts",
+    "tests/box/bounty/bt6b-second.test.ts",
+    "tests/box/bounty/bt6b-third.test.ts",
+    "tests/box/bounty/bt6b-holes.test.ts"
+   ]
+  },
+  {
+   "id": "semicolon-not-a-separator",
+   "guarantees": [
+    "R1"
+   ],
+   "file": "packages/box-bounty/git.ts",
+   "find": "ch === ';' || ch === '\\n' || ",
+   "replace": "ch === '\\n' || ",
+   "tests": [
+    "tests/box/bounty/unsafe-owner-config-layers.test.ts",
+    "tests/box/bounty/bt6b.test.ts",
+    "tests/box/bounty/bt6b-second.test.ts",
+    "tests/box/bounty/bt6b-third.test.ts",
+    "tests/box/bounty/bt6b-holes.test.ts"
+   ]
+  },
+  {
+   "id": "aliases-not-read",
+   "guarantees": [
+    "R1"
+   ],
+   "file": "packages/box-bounty/git.ts",
+   "find": "if (alias !== null) aliases.set(alias[1]!.toLowerCase(), value);",
+   "replace": "if (Boolean(0) && alias !== null) aliases.set(alias[1]!.toLowerCase(), value);",
+   "tests": [
+    "tests/box/bounty/unsafe-owner-config-layers.test.ts",
+    "tests/box/bounty/bt6b.test.ts",
+    "tests/box/bounty/bt6b-second.test.ts",
+    "tests/box/bounty/bt6b-third.test.ts",
+    "tests/box/bounty/bt6b-holes.test.ts"
+   ]
+  },
+  {
+   "id": "inside-means-exact-root-only",
+   "guarantees": [
+    "R1"
+   ],
+   "file": "packages/box-bounty/git.ts",
+   "find": "return key === rootKey || key.startsWith(rootKey);",
+   "replace": "return key === rootKey;",
+   "tests": [
+    "tests/box/bounty/unsafe-owner-config-layers.test.ts",
+    "tests/box/bounty/bt6b.test.ts",
+    "tests/box/bounty/bt6b-second.test.ts",
+    "tests/box/bounty/bt6b-third.test.ts",
+    "tests/box/bounty/bt6b-holes.test.ts"
+   ]
+  },
+  {
+   "id": "files-in-tree-not-placed",
+   "guarantees": [
+    "R1"
+   ],
+   "file": "packages/box-bounty/git.ts",
+   "find": "exists(token) || ['.exe', '.com', '.bat', '.cmd'].some(ext => exists(token + ext));",
+   "replace": "false;",
+   "tests": [
+    "tests/box/bounty/unsafe-owner-config-layers.test.ts",
+    "tests/box/bounty/bt6b.test.ts",
+    "tests/box/bounty/bt6b-second.test.ts",
+    "tests/box/bounty/bt6b-third.test.ts",
+    "tests/box/bounty/bt6b-holes.test.ts"
+   ]
+  },
+  {
+   "id": "double-quotes-not-literal",
+   "guarantees": [
+    "R1"
+   ],
+   "file": "packages/box-bounty/git.ts",
+   "find": "if (quote === '\"') {",
+   "replace": "if (Boolean(0) && quote === '\"') {",
+   "tests": [
+    "tests/box/bounty/unsafe-owner-config-layers.test.ts",
+    "tests/box/bounty/bt6b.test.ts",
+    "tests/box/bounty/bt6b-second.test.ts",
+    "tests/box/bounty/bt6b-third.test.ts",
+    "tests/box/bounty/bt6b-holes.test.ts"
+   ]
+  },
+  {
+   "id": "environment-references-allowed",
+   "guarantees": [
+    "R1"
+   ],
+   "file": "packages/box-bounty/git.ts",
+   "find": "if (WINDOWS_ENV.test(token) || ENV_REFERENCE.test(token)) return",
+   "replace": "if (Boolean(0) && (WINDOWS_ENV.test(token) || ENV_REFERENCE.test(token))) return",
+   "tests": [
+    "tests/box/bounty/unsafe-owner-config-layers.test.ts",
+    "tests/box/bounty/bt6b.test.ts",
+    "tests/box/bounty/bt6b-second.test.ts",
+    "tests/box/bounty/bt6b-third.test.ts",
+    "tests/box/bounty/bt6b-holes.test.ts"
+   ]
+  }
+ ]
+}
