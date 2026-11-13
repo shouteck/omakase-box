@@ -9,6 +9,7 @@ import { type Browser, chromium, type Page } from '@playwright/test';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { type LocalBoard, startLocal } from '../../packages/box-platform/src/local.js';
 import { STRIPE_COUNTRIES } from '../../packages/box-platform/src/pay-ways.js';
+import { FIXED_HEADERS, inlineScriptHashes, NOT_A_PAGE_POLICY, pagePolicy } from '../../packages/box-platform/src/security-headers.js';
 import { seed120, seedStates, STATE_IDS } from '../../packages/box-platform/standin/standin.js';
 import { CLI, journeyWorld, wordsOf } from './commands.js';
 import { MINUTE, NOW, SCHEMA } from './support.js';
@@ -32,6 +33,7 @@ const ratio = (a: string, b: string): number => {
 };
 
 describe('the pages', () => {
+  const violations: string[] = [];
   let board: LocalBoard;
   let browser: Browser;
   let clock = NOW;
@@ -45,6 +47,8 @@ describe('the pages', () => {
     const page = await context.newPage();
     const notFound: string[] = [];
     page.on('response', response => { if (response.status() === 404 && !response.url().includes('/api/b/')) notFound.push(response.url()); });
+    // PF38: every page these tests open runs under the security policy; whatever it refuses is collected for the last test.
+    page.on('console', message => { if (message.type() === 'error' && /Content Security Policy|Refused to (execute|load|apply|frame|connect|run)/i.test(message.text())) violations.push(`${page.url()}: ${message.text().slice(0, 240)}`); });
     return { page, notFound, close: () => context.close() };
   };
   const visit = async (page: Page, path: string) => {
@@ -1040,6 +1044,109 @@ describe('the pages', () => {
     await visit(page, `/board/?repository=${repository}`);
     await expect.poll(() => page.locator('main').innerText()).toContain('No open bounty matches');
     await close();
+  });
+
+  // PF38: the standard security headers, on every kind of answer the board gives.
+  const NEXT_FILE = (): string => {
+    const find = (dir: string): string | null => {
+      for (const name of readdirSync(dir)) { const full = join(dir, name); if (statSync(full).isDirectory()) { const hit = find(full); if (hit !== null) return hit; } else if (name.endsWith('.js')) return full; }
+      return null;
+    };
+    return `/${find(join(OUT, '_next'))!.slice(OUT.length + 1).replaceAll('\\', '/')}`;
+  };
+
+  it('every answer carries the security headers: pages, the JSON, a 404, a redirect and Next\'s own files', async () => {
+    const paths = ['/', '/board/', '/how/', '/agents/', '/numbers/', '/me/', '/b/x/', '/bounties.json', '/api/board', '/no-such-page/', '/auth/github', NEXT_FILE()];
+    for (const path of paths) {
+      const answer = await fetch(`${board.url}${path}`, { redirect: 'manual' });
+      for (const [name, value] of Object.entries(FIXED_HEADERS)) expect(answer.headers.get(name), `${path} ${name}`).toBe(value);
+      const policy = answer.headers.get('content-security-policy');
+      const page = (answer.headers.get('content-type') ?? '').startsWith('text/html');
+      expect(policy, `${path} policy`).toBe(page ? pagePolicy(await inlineScriptHashes(await answer.text())) : NOT_A_PAGE_POLICY);
+      if (page) expect(policy, path).toContain("frame-ancestors 'none'");
+    }
+    expect((await fetch(`${board.url}/auth/github`, { redirect: 'manual' })).status, 'the redirect is a redirect').toBe(302);
+  });
+
+  it('every inline script of every built page is allowed by its hash, and nothing else is', async () => {
+    const pages: string[] = [];
+    const walk = (dir: string) => { for (const name of readdirSync(dir)) { const full = join(dir, name); if (statSync(full).isDirectory()) walk(full); else if (name.endsWith('.html')) pages.push(full); } };
+    walk(OUT);
+    expect(pages.length).toBeGreaterThan(5);
+    for (const file of pages) {
+      const html = readFileSync(file, 'utf8');
+      const hashes = await inlineScriptHashes(html);
+      const inline = [...html.matchAll(/<script\b(?![^>]*\bsrc\s*=)[^>]*>/gi)].length;
+      expect(hashes.length, `${file}: one hash per distinct inline script`).toBeLessThanOrEqual(inline);
+      if (inline > 0) expect(hashes.length, file).toBeGreaterThan(0);
+      expect(pagePolicy(hashes)).not.toContain("'unsafe-inline' 'self'");
+      expect(pagePolicy(hashes).split('; ').find(part => part.startsWith('script-src'))).not.toContain('unsafe-inline');
+    }
+  });
+
+  it('the files Cloudflare serves without the Worker get the same fixed set, from public/_headers, and every other address runs the Worker first', () => {
+    const rules = readFileSync(join(PACKAGE, 'public', '_headers'), 'utf8');
+    expect(readFileSync(join(OUT, '_headers'), 'utf8'), 'the build copies it').toBe(rules);
+    const lines = rules.split('\n').filter(Boolean);
+    expect(lines[0]).toBe('/_next/*');
+    const set = Object.fromEntries(lines.slice(1).map(line => { const at = line.indexOf(':'); return [line.slice(0, at).trim().toLowerCase(), line.slice(at + 1).trim()]; }));
+    expect(set).toEqual({ ...FIXED_HEADERS, 'content-security-policy': NOT_A_PAGE_POLICY });
+    expect(/^run_worker_first = (.*)$/m.exec(readFileSync(join(PACKAGE, 'wrangler.toml'), 'utf8'))?.[1]).toBe('["/*", "!/_next/*"]');
+    const html: string[] = [];
+    const walk = (dir: string) => { for (const name of readdirSync(dir)) { const full = join(dir, name); if (statSync(full).isDirectory()) walk(full); else if (name.endsWith('.html')) html.push(full); } };
+    walk(join(OUT, '_next'));
+    expect(html, 'no page sits where the Worker does not run').toEqual([]);
+  });
+
+  it('a page that frames the board is refused, even the board\'s own', async () => {
+    // frame-ancestors 'none' refuses every framer, the board's own origin included, and a frame of the board's own origin
+    // can be read when it does load: so the board frames one of its pages and reads what arrived.
+    const { page, close } = await fresh();
+    await visit(page, '/how/');
+    const arrived = await page.evaluate(async () => {
+      const frame = document.createElement('iframe');
+      frame.src = '/board/';
+      document.body.append(frame);
+      await new Promise(done => { frame.onload = done; setTimeout(done, 3000); });
+      try { return frame.contentDocument?.body?.innerText ?? ''; } catch { return ''; }
+    });
+    expect(arrived, 'the board did not render inside a frame').toBe('');
+    await close();
+    violations.splice(0, violations.length, ...violations.filter(line => !line.includes('frame')));
+  });
+
+  it('the policy stops what an injected part of a page would try: an inline handler, an image from another host, a form to another site', async () => {
+    const { page, close } = await fresh();
+    await visit(page, '/how/');
+    const before = violations.length;
+    const tried = await page.evaluate(async () => {
+      const seen: string[] = [];
+      document.addEventListener('securitypolicyviolation', event => seen.push(event.violatedDirective));
+      (window as unknown as { ranHandler?: boolean }).ranHandler = false;
+      document.body.insertAdjacentHTML('beforeend', '<img src="/no-such.png" onerror="window.ranHandler = true">');
+      const image = document.createElement('img');
+      image.src = 'https://example.invalid/pixel.png';
+      document.body.append(image);
+      const form = document.createElement('form');
+      form.action = 'https://example.invalid/collect';
+      form.method = 'post';
+      form.target = 'pf38-sink';
+      const sink = document.createElement('iframe');
+      sink.name = 'pf38-sink';
+      document.body.append(sink, form);
+      form.submit();
+      await new Promise(done => setTimeout(done, 1500));
+      return { ranHandler: (window as unknown as { ranHandler?: boolean }).ranHandler, seen };
+    });
+    expect(tried.ranHandler, 'an injected inline handler did not run').toBe(false);
+    expect(tried.seen).toEqual(expect.arrayContaining(['script-src-attr', 'img-src', 'form-action']));
+    await close();
+    // These refusals were the point of this test; any other stays for the last one.
+    violations.splice(before);
+  });
+
+  it('no page the tests opened broke the security policy', () => {
+    expect(violations).toEqual([]);
   });
 });
 

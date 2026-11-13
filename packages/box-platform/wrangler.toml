@@ -6,7 +6,10 @@ compatibility_date = "2026-10-01"
 directory = "out"
 binding = "ASSETS"
 not_found_handling = "404-page"
-run_worker_first = ["/api/*", "/b/*", "/bounties.json", "/bounties.schema.json", "/numbers.json", "/numbers.schema.json", "/bounties/*", "/rss.xml", "/mcp", "/auth/*", "/solver/*", "/owner/*"]
+# PF38: every address but Next's own files runs the Worker first, so every page leaves with the security headers
+# (src/security-headers.ts); Cloudflare applies no _headers rule to a Worker's answer. /_next/* gets the same fixed set from
+# public/_headers. This makes a page view one Worker request (Workers Free: 100,000 a day).
+run_worker_first = ["/*", "!/_next/*"]
 
 [[d1_databases]]
 binding = "DB"

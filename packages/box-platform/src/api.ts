@@ -11,6 +11,7 @@ import type { Env } from './github.js';
 import { hintResponse } from './hint.js';
 import { mcpResponse } from './mcp.js';
 import { ownerRecords } from './payments.js';
+import { secured } from './security-headers.js';
 import { addOwnerRecord, DAY, filterOf, freshness, FROM_LISTED, OPEN_COUNT, OPEN_WHERE, readBounty, stateOf } from './query.js';
 
 const PAGE_SIZE = 20;
@@ -126,7 +127,12 @@ async function paypalWebhook(request: Request, env: Env, now: number): Promise<R
 }
 
 /** Routes: the machine interface, the two data answers, the one shell for every bounty address, then the static export. */
+// PF38: every answer, the pages included, leaves with the security headers (security-headers.ts).
 export async function handle(request: Request, env: Env): Promise<Response> {
+  return secured(await route(request, env));
+}
+
+async function route(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
   const now = env.now?.() ?? Date.now();
   if (url.pathname === '/mcp') return mcpResponse(request, env, now);
