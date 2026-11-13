@@ -29,6 +29,7 @@ describe('BT61: the text of every command is byte-identical to the snapshot', { 
       .replace(/\b[a-f\d]{12}\b/g, '<sha12>')
       .replace(/\b[a-f\d]{7,10}\b(?=[ .,;:)\]]|$)/gm, '<short>')
       .replace(/\d{4}-\d\d-\d\d[T ]\d\d:\d\d:\d\d(?:\.\d+)?Z?/g, '<time>')
+      .replace(/\b\d{1,2} (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{4}\b/g, '<date>') // the issue body says "posted 12 Nov 2026": the day the run happens
       .replace(/box-bt1-[A-Za-z0-9-]+/g, '<tmp>')
       .replace(/127\.0\.0\.1:\d+/g, '<local>')
       .replace(/\r\n/g, '\n')
