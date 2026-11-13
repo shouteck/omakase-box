@@ -191,8 +191,13 @@ function commitEvent(root: string, id: string, eventJson: string, parents: reado
 // history, and a planted or swapped local ref is never a parent either: a
 // forged tip would otherwise launder its graph under a tool-authored event.
 export function appendEvent(root: string, id: string, event: ChainEvent): string {
-  const tip = tipOf(root, chainRef(root, id));
-  const parent = tip !== null && provenTip(root, id, tip) && isChainCommit(root, tip) ? [tip] : [];
+  // K71: the tip and "does its tree carry event.json" in one `rev-parse` (it names the commit, then the blob at <ref>:event.json, and
+  // exits non-zero when either is missing), where it was a `rev-parse` and then a `cat-file -e`. Either failing means no parent, as before.
+  const ref = chainRef(root, id);
+  const resolved = gitOutcome(root, ['rev-parse', ref, `${ref}:event.json`]);
+  const [named, blob] = resolved.stdout.trim().split('\n').map(line => line.trim());
+  const tip = resolved.status === 0 && /^[a-f\d]{40}$/.test(named ?? '') && /^[a-f\d]{40}$/.test(blob ?? '') ? named! : null;
+  const parent = tip !== null && provenTip(root, id, tip) ? [tip] : [];
   const commit = commitEvent(root, id, JSON.stringify(event) + '\n', parent);
   // From this moment the authored tip is a pending push — a crash before
   // pushChain still retries it, bound to exactly this tip.
@@ -471,19 +476,21 @@ interface ChainView {
 
 // One listing for a namespace pair (the new name and the old name), so the read costs the Git starts it did before.
 interface TipLists { readonly fresh: ReadonlyMap<string, string>; readonly old: ReadonlyMap<string, string> }
-const listTips = (root: string, freshNs: string, oldNs: string): TipLists => {
-  const fresh = new Map<string, string>();
-  const old = new Map<string, string>();
-  for (const line of gitOutcome(root, ['for-each-ref', '--format=%(refname) %(objectname)', freshNs, oldNs]).stdout.split('\n')) {
+// K71: every namespace asked for in ONE `for-each-ref` (it takes several patterns), split by prefix afterwards. The remote-tracking pair and the
+// local pair were two listings of one repository's refs.
+const listTipsIn = (root: string, namespaces: readonly string[]): Map<string, Map<string, string>> => {
+  const lists = new Map(namespaces.map((ns): [string, Map<string, string>] => [ns, new Map()]));
+  for (const line of gitOutcome(root, ['for-each-ref', '--format=%(refname) %(objectname)', ...namespaces]).stdout.split('\n')) {
     if (line === '') continue;
     const [ref, sha] = line.split(' ');
     if (ref === undefined || sha === undefined || !/^[a-f\d]{40}$/.test(sha)) continue;
-    const into = ref.startsWith(`${freshNs}/`) ? fresh : ref.startsWith(`${oldNs}/`) ? old : null;
-    const id = into === null ? '' : ref.slice(`${into === fresh ? freshNs : oldNs}/`.length);
-    if (into !== null && CHAIN_ID.test(id)) into.set(id, sha);
+    const ns = namespaces.find(candidate => ref.startsWith(`${candidate}/`));
+    const id = ns === undefined ? '' : ref.slice(ns.length + 1);
+    if (ns !== undefined && CHAIN_ID.test(id)) lists.get(ns)!.set(id, sha);
   }
-  return { fresh, old };
+  return lists;
 };
+const tipLists = (lists: ReadonlyMap<string, Map<string, string>>, freshNs: string, oldNs: string): TipLists => ({ fresh: lists.get(freshNs)!, old: lists.get(oldNs)! });
 
 // Which of the two names answers for each id, and the tip there. Chosen already: that name (the other is ignored). Not
 // chosen: the old name if the remote or this machine has it, else the new; both: the old. The choice is stored when the
@@ -565,14 +572,15 @@ function chainOrder(view: ChainView, tip: string): string[] {
 // Returns the collected view for retryPending — the post-fetch push pass
 // reads the same listings instead of listing refs and probing tips again.
 function adoptAndImport(root: string): ChainView {
-  const remoteLists = listTips(root, CHAIN_REMOTE_NS, CHAIN_REMOTE_NS_OLD);
+  const listed = listTipsIn(root, [CHAIN_REMOTE_NS, CHAIN_REMOTE_NS_OLD, CHAIN_NS, CHAIN_NS_OLD]);
+  const remoteLists = tipLists(listed, CHAIN_REMOTE_NS, CHAIN_REMOTE_NS_OLD);
   const remoteTips = resolveTips(root, remoteLists, true);
   // A local listing is skipped only when nothing could be there to compare
   // or retry: no remote chains and no chain meta keys at all (K14: a plain
   // read on an empty shared memory costs no extra git start).
   const localTips = remoteTips.size === 0 && metaKeys(root, 'chain_').length === 0
     ? new Map<string, string>()
-    : resolveTips(root, listTips(root, CHAIN_NS, CHAIN_NS_OLD), false);
+    : resolveTips(root, tipLists(listed, CHAIN_NS, CHAIN_NS_OLD), false);
 
   // History walks only where a decision needs them: tips that differ, tips
   // not yet imported, and local-only chains (isChainCommit for the retry).

@@ -71,6 +71,8 @@ function tally(dir: string): Starts {
 // stand-in, and one `rev-list` to every command that runs while an open
 // bounty has a recorded solution commit (attempt or seen pull-request head)
 // — the merged-solution check.
+// K71: the budgets are ratcheted to what each command costs now (several were caps with slack: status-posted allowed 9 Git starts and used 5)
+// and the gh counts are lowered by the `gh version` probe the tool no longer repeats in every process (it is remembered per gh program).
 const BUDGET: Record<string, { git: number; gh: number }> = {
   'help': { git: 0, gh: 0 },
   // BT16: +1 Git each on describe and the status legs — readDecision's
@@ -88,19 +90,19 @@ const BUDGET: Record<string, { git: number; gh: number }> = {
   // BT32: `status` refreshes shared memory once a minute — one config read
   // and one `fetch +refs/box-bounty-records/*`; an empty shared memory skips the
   // ref listings entirely (measured +2 over BT16's count).
-  'status-drafted': { git: 6, gh: 0 },
+  'status-drafted': { git: 5, gh: 0 },
   'close-draft': { git: 4, gh: 0 }, // BT32: +1 — the withdrawn milestone appends a chain event (object write); nothing is pushed while unposted.
-  'post-preview': { git: 18, gh: 3 },
+  'post-preview': { git: 16, gh: 3 },
   // BT32: +6 — posting appends the `posted` event (hash-object, mktree,
   // commit-tree, update-ref) and pushes the chain ref.
-  'post-github': { git: 27, gh: 8 },
+  'post-github': { git: 25, gh: 7 },
   // BT32: +6 — refresh (fetch + for-each-ref) plus adopting/importing the
   // returned chain tips for the posted bounty.
-  'status-posted': { git: 9, gh: 5 },
-  'status-comments': { git: 10, gh: 7 },
+  'status-posted': { git: 5, gh: 4 },
+  'status-comments': { git: 5, gh: 6 },
   // BT32: +9 — `look` is a fetching surface; collecting the answer also
   // appends the `solution` chain event and pushes it.
-  'look-pr': { git: 28, gh: 2 },
+  'look-pr': { git: 25, gh: 1 },
   'look': { git: 6, gh: 0 }, // second read inside the minute: the throttle serves the cache — count unchanged
   'look-full': { git: 6, gh: 0 },
   // BT32: +11 — the merge appends `solution`/`merged` events and pushes the
@@ -111,15 +113,15 @@ const BUDGET: Record<string, { git: number; gh: number }> = {
   // gh +1 — reading the pull request back.
   // PF27: +1 gh — apply reads the pull request's current head, so a version
   // pushed after collection is never merged unseen.
-  'apply': { git: 32, gh: 7 },
-  'status-applied': { git: 9, gh: 0 }, // BT32: +6 — same refresh + import as status-posted
-  'close-ended': { git: 4, gh: 5 },
+  'apply': { git: 30, gh: 6 },
+  'status-applied': { git: 3, gh: 0 }, // BT32: +6 — same refresh + import as status-posted
+  'close-ended': { git: 4, gh: 3 },
   'close-reason': { git: 4, gh: 0 },
-  'status-end': { git: 9, gh: 0 }, // BT32: +6 — same refresh + import as status-posted
+  'status-end': { git: 3, gh: 0 }, // BT32: +6 — same refresh + import as status-posted
   // BT32: `hook start` is a fetching surface — the shared-memory refresh
   // pays one `fetch +refs/box-bounty-records/*` plus the batched ref listings and
   // adoption work, on top of resolving the checkout. No record writes.
-  'hook-start': { git: 4, gh: 0 }
+  'hook-start': { git: 2, gh: 0 }
 };
 
 it('the spy counts a start in the tool and none inside the gh stand-in', () => {
