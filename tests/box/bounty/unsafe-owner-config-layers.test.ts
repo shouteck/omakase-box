@@ -78,10 +78,14 @@ const REFUSED: readonly Row[] = [
   { name: 'hole 2: a git filter command whose alias lands inside the tree', files: PWN, config: [smudge('git pwn'), ALIAS_PWN], refuses: { key: 'filter.own.smudge', mentions: ['tools/pwn.cjs'] } },
   { name: 'an environment reference cannot be placed', config: [smudge('$HOME/bin/filter')], refuses: { key: 'filter.own.smudge', mentions: ['cannot be placed'] } },
   { name: 'a Windows environment variable cannot be placed', config: [smudge('%TOOLS% clean')], refuses: { key: 'filter.own.smudge', mentions: ['cannot be placed'] } },
+  // K69: rows that only one rule can explain (the alias behind each is safe, so nothing but the wrapper rule refuses them)
+  { name: 'a host wrapper refuses outright even when the command behind it is safe: ssh', config: [smudge('ssh localhost git pwn'), ['alias.pwn', `!node "${posix(external)}"`]], refuses: { key: 'filter.own.smudge', mentions: [] } },
+  { name: 'a host wrapper refuses outright even when the command behind it is safe: wsl', config: [smudge('wsl git pwn'), ['alias.pwn', `!node "${posix(external)}"`]], refuses: { key: 'filter.own.smudge', mentions: [] } },
   { name: 'hole 3: an include.path that escapes .git/config into the tree', files: { 'armed.conf': '[filter "arm"]\n\tclean = node tools/pwn.cjs\n' }, config: [['include.path', '../armed.conf']], refuses: { key: 'include.path', mentions: ['armed.conf'] } }
 ];
 
 const SAFE: readonly Row[] = [
+  { name: 'an inline git -c alias that runs a program outside the tree', config: [smudge(`git -c 'alias.x=!node "${posix(external)}"' x`)] },
   { name: 'filter programs outside the repository', config: [['filter.own.clean', `"${posix(process.execPath)}" "${posix(external)}" clean`], ['filter.own.smudge', `"${posix(process.execPath)}" "${posix(external)}" smudge`], ['filter.own.required', 'true']] },
   { name: 'hole A: every command in a piped line places outside the tree', config: [smudge('cat | git pwn'), ['alias.pwn', `!node "${posix(external)}"`]] },
   { name: 'hole B: a launcher naming a manifest outside the tree (--prefix)', config: [smudge(`npm --prefix "${posix(join(outside, 'npm'))}" --silent run go`)] },
