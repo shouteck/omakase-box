@@ -192,6 +192,15 @@ describe('K62: the test-edit gate', () => {
     expect(report.applied).toBe(true);
   });
 
+  it('19. a title holding backticks is matched by the line that lists it (K69: eight such titles read as unlisted)', () => {
+    const title = 'refuses a `git` filter command — the alias lands inside the tree';
+    const dir = world({ 'tests/a.test.ts': BASE_TEST + `it('${title}', () => { expect(1).toBe(1); });\n`, 'waves/T1.md': '# T1\n' });
+    change(dir, { 'tests/a.test.ts': BASE_TEST, 'waves/T1.md': listing(`- a.test.ts::${title} — moved into a table`) });
+    const { status, report } = gate(dir);
+    expect(status).toBe(0);
+    expect(report.flags[0]).toMatchObject({ kind: 'test-removed', listed: true });
+  });
+
   it('18. verify runs the gate before any step, and the rulebook names the section', () => {
     const verify = execFileSync(process.execPath, ['-e', "process.stdout.write(require('fs').readFileSync(process.argv[1], 'utf8'))", join(root, 'scripts', 'verify.mjs')], { encoding: 'utf8' });
     expect(verify).toContain('test-edit-gate');

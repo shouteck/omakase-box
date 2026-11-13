@@ -183,7 +183,8 @@ export function listedLines(waveText) {
 }
 const escaped = text => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 export function isListed(key, lines) {
-  const pattern = new RegExp(`${escaped(key)}(?![\\w])(.*)$`);
+  // The listed lines lose their backticks (a key is often written in code spelling), so a title that holds backticks must lose them too.
+  const pattern = new RegExp(`${escaped(key.replaceAll('`', ''))}(?![\\w])(.*)$`);
   return lines.some(line => {
     const match = pattern.exec(line);
     return match !== null && match[1].replace(/^[\s—–:-]+/, '').trim().length >= 8;
