@@ -30,6 +30,7 @@ What will be true when this is done, as something a person can observe or a comm
 - <if the wave changes a page: read the running page as its user before the first candidate; PF3 and PF4 found wording faults only there, after verify passed>
 - <if the wave adds a new deployable part: its first milestone includes one measurement at size; the board never had the scale wave the tool had (K49)>
 - <if a brief sets a timing target for a command (seconds, runs), derive it from a measured run or a declared map (e.g. the `// reads:` headers), never from the head chef's estimate of which files read what (K45)>
+- <if the brief names a run to find something out: do the run, or write "not done" in the Result; reading the code instead is weaker evidence (BT53)>
 
 ## Lenses
 
