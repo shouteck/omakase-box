@@ -28,6 +28,10 @@ The older Box platform (export/submit/verify/trace, the services and the portal)
 was retired by wave K29 and is preserved in full on the
 `archive/box-platform-2026-10` branch.
 
+Its evidence (`.execution/`), its documents (`docs/legacy/`) and the K43 prototype
+(`kitchen/platform-prototype/`) left the working tree in wave K52 and stay in Git
+history at the tag `history/before-K52`: read a file with `git show history/before-K52:<path>`.
+
 ## Running the kitchen
 
 Open the project in Claude Code, Devin, Cursor or Codex and give the agent:

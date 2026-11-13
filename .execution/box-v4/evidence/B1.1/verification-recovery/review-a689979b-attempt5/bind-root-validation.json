@@ -1,5 +1,0 @@
-{
-  "hostOutside": "dependency_bind_root_mismatch",
-  "containerMismatch": "dependency_bind_root_mismatch",
-  "toolingMismatch": "dependency_bind_root_mismatch"
-}
