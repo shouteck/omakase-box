@@ -36,6 +36,8 @@ cd packages/box-platform
 | 6 | Set the two sign-in secrets, then try signing in | terminal, browser | $0 |
 | 7 | Create and set the GitHub read token (optional, recommended) | github.com, terminal | $0 |
 
+Once it runs, four things keep it safe, each its own section below: **Applying a migration** (always before the code that needs it), **Keeping a copy** of the database outside Cloudflare, **Restoring the database** to an earlier minute, and **Rolling back the Worker** to an earlier version. **Watching the board** says how a failure reaches you, and **When something has gone wrong** says the order to use them in.
+
 ## 1. Cloudflare account
 
 Sign up at https://dash.cloudflare.com/sign-up with an email and a password, and verify the email. Choose the Free plan if asked.
@@ -119,7 +121,119 @@ node node_modules/wrangler/bin/wrangler.js secret put GITHUB_TOKEN
 
 Paste the token when asked. No redeploy is needed. To check: within about 15 minutes the board lists open bounties and `/bounties.json` shows `"stale":null`. **If it has an expiry date, the board stops updating when it passes** and shows what it last read. Before that date, make a new token and run this command again, or remove the secret to go back to unauthenticated reads: `node node_modules/wrangler/bin/wrangler.js secret delete GITHUB_TOKEN`.
 
-## Updating a board deployed before pay on merge
+## Applying a migration
+
+A migration is a file in `migrations/` that changes the database's shape. It always goes on **before** the code that needs it: the new code may read a column the old database lacks. Since PF37 the database records which files it holds, in its `migrations` table, so you ask it rather than remember. From this folder:
+
+1. Ask the board what it holds, saving the answer outside the repository:
+
+   ```bash
+   node migrate.mjs
+   ```
+
+   It changes nothing. It prints one `wrangler d1 execute … --json --command "SELECT name FROM migrations"` line. Run that line; the answer goes to `applied.json` three folders up, outside the repository.
+2. Ask what is still to run:
+
+   ```bash
+   node migrate.mjs --applied ../../../applied.json
+   ```
+
+   It prints one `wrangler d1 execute open-bounty-board --remote --file migrations/<name>` line per file the board does not hold yet, in order, or "Nothing to apply". A board from before PF37 has no record; it is told to run `migrations/pf37.sql` first, which records the seven older files with that day's date (their real dates are unknown).
+3. Run each printed line, in order. Each answers "Executed … queries".
+4. Then build and deploy as in step 4.
+
+A new migration file ends with its own `INSERT OR IGNORE INTO migrations (name, applied_at, note) VALUES ('<its name>', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), '<what it does>');`, and its name is added to the record at the end of `schema.sql`, so a new board starts with it.
+
+## Keeping a copy
+
+A copy of the database outside Cloudflare, for the day Cloudflare cannot give it back. Keep one after any change that matters, and at least monthly. From this folder:
+
+```bash
+node node_modules/wrangler/bin/wrangler.js d1 export open-bounty-board --remote --output=../../../open-bounty-board-YYYY-MM-DD.sql
+```
+
+- **The board stops answering while the export runs** (Cloudflare: "A running export will block other database requests"). On today's board it takes seconds.
+- **The command prints a download link that works for one hour** and fetches the whole copy. Do not paste its output anywhere: a chat, an issue, a log.
+- **The file holds people's GitHub ids and their payment connections.** Name it with the date, as above, and keep it outside this repository and outside any folder that syncs to a cloud service. Never commit it, attach it or share it. Delete old copies you no longer need.
+- To check a copy is usable, load it into any SQLite tool; it is plain SQL (PF37 loaded one into a local SQLite: every table and the migration record came back).
+- To bring a copy back into an empty database: `node node_modules/wrangler/bin/wrangler.js d1 execute <database> --remote --file <the copy>`.
+
+## When something has gone wrong
+
+In this order (a fresh reader of this guide had to guess it, PF37):
+
+1. **If the code is the problem, roll it back first** ("Rolling back the Worker" below), so it stops writing bad data while you repair the database.
+2. **Take a copy now** ("Keeping a copy"). A restore loses everything written after the moment you choose; the copy keeps those rows, such as payments recorded since, so they can be looked up afterwards.
+3. **Find the moment.** `node node_modules/wrangler/bin/wrangler.js deployments list` shows when each version went live: bad data from bad code starts at that time. `node node_modules/wrangler/bin/wrangler.js d1 execute open-bounty-board --remote --command "SELECT name, applied_at FROM migrations ORDER BY applied_at"` shows when each migration went on. Choose a moment a few minutes before the earlier of the two.
+4. **Restore the database once, to that moment** ("Restoring the database"). If both a migration and bad writes need undoing, the earlier moment covers both.
+
+## Restoring the database
+
+Cloudflare keeps the database's history and can put it back to **any minute in the last 7 days** on the free plan (30 on Workers Paid). It overwrites the database in place, and it can itself be undone. Tried for real on a throwaway database in PF37. From this folder:
+
+1. Check the database can do this: `node node_modules/wrangler/bin/wrangler.js d1 list`. The `version` column for `open-bounty-board` must say `production`; it did on 14 November 2026. If it says anything else, this restore is not available: build a new database from your latest copy instead ("Keeping a copy", last line).
+2. Choose the moment, as a Unix time in seconds, a few minutes **before** the bad change (`date -d "2026-11-14 09:30 UTC" +%s` in Git Bash). Ask which point in history that is:
+
+   ```bash
+   node node_modules/wrangler/bin/wrangler.js d1 time-travel info open-bounty-board --timestamp=<unix seconds>
+   ```
+
+   It answers "Timestamp … corresponds with bookmark …". This only checks the moment exists; the restore below takes the same timestamp.
+3. Restore:
+
+   ```bash
+   node node_modules/wrangler/bin/wrangler.js d1 time-travel restore open-bounty-board --timestamp=<unix seconds>
+   ```
+
+   It answers "restored back to bookmark …" and **"To undo this operation, you can restore to the previous bookmark: <bookmark>"**. Copy that bookmark before doing anything else. Queries running at that moment are cancelled.
+4. **Read what you restored** before trusting it: `node node_modules/wrangler/bin/wrangler.js d1 execute open-bounty-board --remote --command "SELECT COUNT(*) FROM bounties"`, or the table the bad change touched. In PF37, changes made seconds apart could not be told apart: a restore to a moment seconds after the last write went back to before it. Minutes apart, it was exact.
+5. If it is not what you wanted, undo with the bookmark from step 3, then choose another moment. Every restore, an undo too, prints its own "previous bookmark": copy it each time.
+
+   ```bash
+   node node_modules/wrangler/bin/wrangler.js d1 time-travel restore open-bounty-board --bookmark=<the bookmark from step 3>
+   ```
+
+What is lost: everything the board wrote after the chosen moment, such as payments recorded and sign-ins. GitHub's side is read again by the next refresh.
+
+## Rolling back the Worker
+
+Putting the previous code back. Tried for real on a throwaway Worker in PF37. From this folder:
+
+1. See the versions, newest last:
+
+   ```bash
+   node node_modules/wrangler/bin/wrangler.js versions list
+   ```
+
+   Each has a "Version ID" and a "Created" time. The wave file of each deploy (`waves/PF<n>.md` at the repository's root) names the version it replaced.
+2. Roll back to the one you want:
+
+   ```bash
+   node node_modules/wrangler/bin/wrangler.js rollback <version id> --message "why"
+   ```
+
+   It answers "SUCCESS … has been deployed to 100% of traffic". The live board answers with that version within seconds.
+3. **The database is not rolled back with it** (Cloudflare: resources connected to the Worker "will not be changed"). If a migration went on with the code you are leaving:
+   - a migration that only **added** a table or a column stays: the older code ignores it;
+   - anything else (a column renamed, a value rewritten): restore the database to the moment before that migration, as above.
+
+   Cloudflare refuses a rollback across a change of the database binding itself. Then deploy the older code instead: check out the commit it came from (`git log` names each deploy's wave), build and deploy as in step 4.
+
+## Watching the board
+
+`.github/workflows/watch.yml` runs every 30 minutes (at :17 and :47) and on demand from the repository's Actions tab. It reads the board's front page and `/numbers.json`, and fails when the board does not answer, says its last read of GitHub failed, or has not read GitHub for 60 minutes. A healthy board shows up to about 30, since `numbers.json` keeps its answer for 15. **A failed run is the notice:** GitHub emails the repository's owner. It has no secret and no permission, and it writes nothing.
+
+- To watch another address, set a repository variable `BOARD_ADDRESS` (Settings, Secrets and variables, Actions, Variables).
+- To run it by hand: `node scripts/watch.mjs https://open-bounty-board.box-platform.workers.dev` from the repository's root.
+- **GitHub turns off a scheduled workflow after 60 days with no activity in the repository.** The Actions tab then shows "This scheduled workflow is disabled"; its **Enable workflow** button turns it back on.
+
+What it cannot see: a payment that fails, a Stripe or PayPal webhook that never arrives, sign-in being broken. The board publishes no number for these yet (PF37's Result proposes some).
+
+## History: updating boards deployed before a migration record
+
+Kept as they were written. A board deployed since PF37 uses "Applying a migration" above, which names these files too.
+
+### Updating a board deployed before pay on merge
 
 Once only, in this order, before deploying the new code. Skipping the first command breaks every refresh, because the new code writes columns the old database lacks.
 
@@ -133,7 +247,7 @@ node node_modules/wrangler/bin/wrangler.js d1 execute open-bounty-board --remote
 
 Then build and deploy as in step 4.
 
-## Updating a board deployed before limits per repository (PF19)
+### Updating a board deployed before limits per repository (PF19)
 
 Once only, before deploying this code. Each repository already on takes its owner's one limit, so nothing an owner set changes.
 
@@ -143,7 +257,7 @@ node node_modules/wrangler/bin/wrangler.js d1 execute open-bounty-board --remote
 
 Then build and deploy as in step 4.
 
-## Updating a board deployed before "new since" (PF22)
+### Updating a board deployed before "new since" (PF22)
 
 Once only, before deploying this code. Bounties already listed take their order from when they were posted, so a solver starting from the beginning sees each once. Pull requests learn whether they are drafts at their next read.
 
@@ -153,7 +267,7 @@ node node_modules/wrangler/bin/wrangler.js d1 execute open-bounty-board --remote
 
 Then build and deploy as in step 4.
 
-## Updating a board deployed before PF28
+### Updating a board deployed before PF28
 
 Once only, before deploying this code. Each bounty's event chain gets its own read time, starting from when its details were last read, so nothing is read again all at once.
 

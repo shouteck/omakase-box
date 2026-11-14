@@ -162,3 +162,19 @@ CREATE TABLE IF NOT EXISTS meta (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL
 );
+-- PF37: which migration files this database holds. A new board is built from this schema, which already holds every one;
+-- a live board gets the table from migrations/pf37.sql. A new migration adds its own line here and ends with its own insert.
+CREATE TABLE IF NOT EXISTS migrations (
+  name TEXT PRIMARY KEY,
+  applied_at TEXT NOT NULL,
+  note TEXT
+);
+INSERT OR IGNORE INTO migrations (name, applied_at, note) VALUES
+  ('pf11.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
+  ('pf13.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
+  ('pf19.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
+  ('pf22.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
+  ('pf28.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
+  ('pf29.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
+  ('pf32.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
+  ('pf37.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board');
