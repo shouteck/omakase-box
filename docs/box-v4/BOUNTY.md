@@ -93,8 +93,10 @@ Two programs are external requirements, checked where they are needed and
 nowhere else: **Git 2.40 or later** (merges and the dry-merge read pin
 `GIT_ATTR_SOURCE`, a git 2.40 feature, and the dry merge itself is
 `merge-tree --write-tree`, git 2.38 — get it at https://git-scm.com) and, only
-for commands that reach GitHub, the **GitHub CLI `gh` 2.0 or later, signed
-in** (https://cli.github.com). A command that never touches a program never
+for commands that reach GitHub, a way to sign in to GitHub: the **GitHub CLI
+`gh` 2.0 or later, signed in** (https://cli.github.com), or, with no `gh`, a
+**GitHub token in `GH_TOKEN` or `GITHUB_TOKEN`** (BT59; the token is sent only
+to GitHub and never stored or printed). A command that never touches a program never
 demands it — `help` runs with neither installed. A program missing, too old
 or not signed in is a named refusal on the error stream (`git-missing`,
 `git-too-old`, `github-cli-missing`, `github-cli-too-old`,
