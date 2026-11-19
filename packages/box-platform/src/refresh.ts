@@ -15,6 +15,9 @@ const RECENT_ACTIVITY_MS = 60 * 60000;
 const TITLE_MAX = 300;
 const TASK_MAX = 65536;
 
+/** PF44: the exact comment that approves an imported listing: its id and its reward, so it approves this one and no other. */
+export const approvalLine = (id: string, amount: number): string => `omakase approve ${id} $${amount}`;
+const APPROVERS = new Set(['OWNER', 'COLLABORATOR']);
 export const LOGIN = /^[A-Za-z\d](?:[A-Za-z\d-]*[A-Za-z\d])?(?:\[bot\])?$/;
 const record = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
 
@@ -305,6 +308,37 @@ async function readListedIssue(env: Env, github: GitHub, id: string, repository:
 }
 
 /**
+ * PF44: an imported listing is approved by a comment on its issue, written after the import, that is exactly its approval
+ * line, by the issue's author or by someone GitHub calls OWNER or COLLABORATOR of the repository. GitHub says who wrote it,
+ * so nobody signs in to the board. The comment's address is kept as the proof, and its author becomes the poster.
+ */
+async function readApproval(env: Env, github: GitHub, id: string, repository: string, number: number): Promise<void> {
+  const row = await env.DB.prepare(`SELECT amount, poster_id, created_at FROM bounties WHERE id = ? AND approval = 'pending'`).bind(id).first<{ amount: number; poster_id: number | null; created_at: string }>();
+  if (row === null) return;
+  const line = approvalLine(id, row.amount);
+  const comments: unknown[] = [];
+  // Every page since the import, oldest first, up to ten: an approval after a hundred comments is still read.
+  for (let page = 1; page <= 10; page += 1) {
+    const answer = await github.get(`/repos/${repository}/issues/${number}/comments?since=${encodeURIComponent(row.created_at)}&per_page=100&page=${page}`);
+    if (answer.status !== 200 || !Array.isArray(answer.json)) return;
+    comments.push(...answer.json as unknown[]);
+    if (answer.json.length < 100) break;
+  }
+  for (const comment of comments) {
+    if (!record(comment) || !record(comment['user']) || typeof comment['body'] !== 'string' || typeof comment['html_url'] !== 'string' || typeof comment['created_at'] !== 'string') continue;
+    const login = comment['user']['login'];
+    const userId = comment['user']['id'];
+    if (typeof login !== 'string' || !LOGIN.test(login) || !Number.isSafeInteger(userId) || comment['body'].trim() !== line) continue;
+    if (Date.parse(comment['created_at']) < Date.parse(row.created_at)) continue;
+    const association = typeof comment['author_association'] === 'string' ? comment['author_association'] : '';
+    if (userId !== row.poster_id && !APPROVERS.has(association)) continue;
+    await env.DB.prepare(`UPDATE bounties SET approval = 'comment', approval_proof = ?, poster = ?, poster_id = ?, listed_seq = (SELECT COALESCE(MAX(listed_seq), 0) + 1 FROM bounties) WHERE id = ? AND approval = 'pending'`)
+      .bind(comment['html_url'] as string, login, userId as number, id).run();
+    return;
+  }
+}
+
+/**
  * PF32: a listed bounty's pull requests are the ones GitHub's timeline says reference its issue, from the same repository
  * (a closing keyword such as "Fixes #12", or any link). One read, in the turn the branch list read would take.
  */
@@ -438,6 +472,7 @@ export async function refresh(env: Env): Promise<RefreshResult> {
           if (row.step === 'events') { await mark(now); continue; }
           if (row.step === 'pulls') {
             if (!await readListedIssue(env, github, row.id, row.repository, row.issue_number, now)) continue;
+            await readApproval(env, github, row.id, row.repository, row.issue_number);
             await readLinkedPulls(env, github, row.id, row.repository, row.issue_number);
             await mark(now);
             continue;
