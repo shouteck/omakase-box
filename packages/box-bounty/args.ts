@@ -148,18 +148,20 @@ const BASE_COMMANDS: Readonly<Record<string, CommandSpec>> = {
     }
   },
   status: {
-    label: 'omakase-box status', usage: 'omakase-box status [<id>] [--full] [--comments] [--since <iso>] [--json] [--repo <path>]',
+    label: 'omakase-box status', usage: 'omakase-box status [<id>] [--full] [--comments] [--since <iso>] [--wait [--timeout <seconds>]] [--json] [--repo <path>]',
     blurb: 'every open bounty, the pull requests waiting, the attempts and the next step',
     example: 'omakase-box status bt-a1b2c3d4e5f6 --comments',
     positionals: 1,
     values: {
       '--since': { arg: '<iso>', help: 'also print the summary of what changed since that time' },
+      '--timeout': { arg: '<seconds>', help: 'with --wait only: integer seconds, 1..3600 (default 600)' },
       '--repo': REPO
     },
     switches: {
       '--full': { help: 'add history and the full reports' },
       '--comments': { help: 'print comments written by others, marked as theirs' },
-      '--json': { help: 'print one JSON document (schema box-bounty/status@1) instead of text' }
+      '--wait': { help: 'with an id: wait read-only for an unseen solution, polling every 30 seconds, bounded by --timeout' },
+      '--json': { help: 'print one JSON document (schema box-bounty/status@1, or box-bounty/status-wait@1 with --wait) instead of text' }
     }
   },
   post: {

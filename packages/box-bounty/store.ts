@@ -18,8 +18,9 @@
 // roll the record back (rule 5 of the wave brief).
 
 import { createHash } from 'node:crypto';
-import { existsSync,lstatSync,mkdirSync,readFileSync,readdirSync,rmSync,writeFileSync } from 'node:fs';
+import { existsSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { DatabaseSync,StatementSync } from 'node:sqlite';
 import { BountyRefused } from './errors.js';
@@ -540,6 +541,52 @@ export function readStored(repoRoot: string, id: string): StoredRead {
     const corrupt = stmt(entry, "SELECT value FROM meta WHERE key='corrupt_file:' || ?").get(`${id}.json`) as { value: string } | undefined;
     return { record: null, state: corrupt === undefined ? 'missing' : 'corrupt' };
   });
+}
+
+// Read a stable copy, not the live WAL connection: even SQLite's readOnly
+// mode can create or update the live -shm file. No migration or compat
+// import runs here, and any sidecars belong only to the disposable copy.
+export function readStoredSnapshot(repoRoot: string, id: string): BountyRecord | null {
+  checkInside(repoRoot);
+  if (!/^bt-[a-f\d]{12}$/.test(id)) return null;
+  const corrupt = (): never => { throw new BountyRefused('record-corrupt', `the record of ${id} could not be read; nothing changed; next: omakase-box status ${id}`); };
+  const parse = (raw: string): BountyRecord => {
+    try { const record = validate(JSON.parse(raw)); if (record !== null && record.id === id) return record; } catch { /* refused below */ }
+    return corrupt();
+  };
+  const legacy = join(legacyDir(repoRoot), `${id}.json`);
+  const legacyStat = lstatSync(legacyDir(repoRoot), { throwIfNoEntry: false });
+  const fileStat = legacyStat?.isDirectory() && !legacyStat.isSymbolicLink() ? lstatSync(legacy, { throwIfNoEntry: false }) : undefined;
+  if (fileStat?.isSymbolicLink()) return corrupt();
+  const bytes = fileStat?.isFile() ? readFileSync(legacy) : null;
+  const path = storeDbPath(repoRoot);
+  if (!existsSync(path)) return bytes === null ? null : parse(bytes.toString('utf8'));
+  const work = mkdtempSync(join(tmpdir(), 'box-pf6-read-'));
+  let db: DatabaseSync | undefined;
+  try {
+    const read = () => [readFileSync(path), existsSync(`${path}-wal`) ? readFileSync(`${path}-wal`) : null] as const;
+    let stable = false;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const first = read(); const second = read();
+      if (!first[0].equals(second[0]) || !(first[1] === null ? second[1] === null : second[1] !== null && first[1].equals(second[1]))) continue;
+      writeFileSync(join(work, 'box.db'), first[0]);
+      if (first[1] !== null) writeFileSync(join(work, 'box.db-wal'), first[1]);
+      stable = true; break;
+    }
+    if (!stable) return corrupt();
+    db = new (driver())(join(work, 'box.db'), { readOnly: true });
+    const marker = db.prepare('SELECT value FROM meta WHERE key=?').get(`file_sha:${id}.json`) as { value: string } | undefined;
+    if (bytes !== null && marker?.value !== sha256(bytes)) return parse(bytes.toString('utf8'));
+    if (bytes === null && marker !== undefined) return null;
+    const row = db.prepare('SELECT json FROM records WHERE id=?').get(id) as { json: string } | undefined;
+    if (row !== undefined) return parse(row.json);
+    if (bytes !== null) return parse(bytes.toString('utf8'));
+    const bad = db.prepare('SELECT value FROM meta WHERE key=?').get(`corrupt_file:${id}.json`);
+    return bad === undefined ? null : corrupt();
+  } catch (error) {
+    if (error instanceof BountyRefused) throw error;
+    return corrupt();
+  } finally { db?.close(); rmSync(work, { recursive: true, force: true }); }
 }
 
 export function recordExists(repoRoot: string, id: string): boolean {

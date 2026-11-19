@@ -46,7 +46,7 @@
       "--help"
     ],
     "stdout": "",
-    "stderr": "omakase-box <id> is not a bounty command — run omakase-box help for the journey\nusage: omakase-box create --task <file|-> --why \"<one line>\" [--title \"<one line>\"] [--resume \"<context>\"] [--repo <path>]\n       omakase-box help\n       omakase-box describe [--rules] [--solving] [--repo <path>]\n       omakase-box status [<id>] [--full] [--comments] [--since <iso>] [--json] [--repo <path>]\n       omakase-box post [<id>] [--with-changes] [--include <file>] [--preview] [--repo <path>]\n       omakase-box look [<id>] <n> [--full] [--export] [--json] [--repo <path>]\n       omakase-box apply [<id>] [<n>] [--repo <path>]\n       omakase-box close [<id>] [--reason \"<text>\"] [--repo <path>]\n       omakase-box discover [--language <name>]... [--any-language] [--min-reward <whole dollars>] [--from <start|now>] [--json]\n       omakase-box take <id> [--into <new folder>]\n       omakase-box submit <id>\n       omakase-box setup [--remove] — put omakase-box on this machine and a skill where agents look\n       omakase-box allow|deny|config — the owner's settings\n       <id> may be left out when exactly one bounty can take the command\n",
+    "stderr": "omakase-box <id> is not a bounty command — run omakase-box help for the journey\nusage: omakase-box create --task <file|-> --why \"<one line>\" [--title \"<one line>\"] [--resume \"<context>\"] [--repo <path>]\n       omakase-box help\n       omakase-box describe [--rules] [--solving] [--repo <path>]\n       omakase-box status [<id>] [--full] [--comments] [--since <iso>] [--wait [--timeout <seconds>]] [--json] [--repo <path>]\n       omakase-box post [<id>] [--with-changes] [--include <file>] [--preview] [--repo <path>]\n       omakase-box look [<id>] <n> [--full] [--export] [--json] [--repo <path>]\n       omakase-box apply [<id>] [<n>] [--repo <path>]\n       omakase-box close [<id>] [--reason \"<text>\"] [--repo <path>]\n       omakase-box discover [--language <name>]... [--any-language] [--min-reward <whole dollars>] [--from <start|now>] [--json]\n       omakase-box take <id> [--into <new folder>]\n       omakase-box submit <id>\n       omakase-box setup [--remove] — put omakase-box on this machine and a skill where agents look\n       omakase-box allow|deny|config — the owner's settings\n       <id> may be left out when exactly one bounty can take the command\n",
     "status": 2
   },
   {
@@ -184,7 +184,7 @@
       "--nope"
     ],
     "stdout": "",
-    "stderr": "unknown option --nope for omakase-box status — did you mean --repo?\nusage: omakase-box status [<id>] [--full] [--comments] [--since <iso>] [--json] [--repo <path>]\n",
+    "stderr": "unknown option --nope for omakase-box status — did you mean --repo?\nusage: omakase-box status [<id>] [--full] [--comments] [--since <iso>] [--wait [--timeout <seconds>]] [--json] [--repo <path>]\n",
     "status": 2
   }
 ]

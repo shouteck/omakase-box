@@ -1,4 +1,5 @@
 import { asOneCommand } from './git.js';
+export { waitBounty, waitForSolutions, renderWait } from './wait.js';
 import { applyBounty as applyBountyCommand } from './answer.js';
 import { answerGitHub as answerGitHubCommand,listGitHubAnswers as listGitHubAnswersCommand } from './collect.js';
 import { previewGitHub as previewGitHubCommand,previewGitHubFacts as previewGitHubFactsCommand } from './post.js';

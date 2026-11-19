@@ -18,6 +18,7 @@ command submit
 command take
 exit 0 done, or an answer held for the owner
 exit 1 failed
+exit 130 cancelled
 exit 2 usage
 exit 3 refused
 field box-bounty/allow@1 decision string
@@ -311,6 +312,20 @@ field box-bounty/setup@1 lines array
 field box-bounty/setup@1 lines[] string
 field box-bounty/setup@1 notices array
 field box-bounty/setup@1 schema string
+field box-bounty/status-wait@1 endedAt string
+field box-bounty/status-wait@1 id string
+field box-bounty/status-wait@1 outcome string
+field box-bounty/status-wait@1 pollSeconds number
+field box-bounty/status-wait@1 polls number
+field box-bounty/status-wait@1 schema string
+field box-bounty/status-wait@1 solutions array
+field box-bounty/status-wait@1 solutions[] object
+field box-bounty/status-wait@1 solutions[].author string
+field box-bounty/status-wait@1 solutions[].commit string
+field box-bounty/status-wait@1 solutions[].pullRequest number
+field box-bounty/status-wait@1 solutions[].url string
+field box-bounty/status-wait@1 startedAt string
+field box-bounty/status-wait@1 timeoutSeconds number
 field box-bounty/status@1 acting null
 field box-bounty/status@1 board object
 field box-bounty/status@1 board.address null
@@ -582,6 +597,8 @@ option status --help switch
 option status --json switch
 option status --repo value
 option status --since value
+option status --timeout value
+option status --wait switch
 option status -h switch
 option submit --help switch
 option submit --json switch
@@ -775,6 +792,9 @@ refusal unknown-attempt
 refusal unknown-bounty
 refusal unreadable-path
 refusal usage
+refusal wait-bounty-ended
+refusal wait-not-posted
+refusal wait-upstream-unreadable
 refusal workspace-exists
 refusal wrong-stage
 schema box-bounty/allow@1
@@ -793,6 +813,7 @@ schema box-bounty/look@1
 schema box-bounty/post@1
 schema box-bounty/refusal@1
 schema box-bounty/setup@1
+schema box-bounty/status-wait@1
 schema box-bounty/status@1
 schema box-bounty/submit@1
 schema box-bounty/take@1
