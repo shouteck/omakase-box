@@ -286,7 +286,7 @@ export interface BountyRecord {
       record stays `answered` and these paths are the next step.
       Cleared when a later apply lands. */
   conflicts?: { readonly paths: readonly string[]; readonly at: string } | null;
-  landingChecks?: { readonly pr: number; readonly head: string; readonly tip: string; readonly state: 'unknown' | 'not-merged' }[];
+  landingChecks?: { readonly pr: number; readonly head: string; readonly tip: string; readonly state: 'unknown' | 'waiting' | 'not-merged' | 'not-landed' }[];
   events: StageEvent[];
   /** Set while an action is held for the owner — the named waiting state
       status and the open-bounties line show. Cleared when the action runs. */
@@ -502,7 +502,7 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
   if (!OPEN_STAGES.has(record.stage) && !ENDED_STAGES.has(record.stage)) return null;
   if (record.landingChecks !== undefined && (!Array.isArray(record.landingChecks) || record.landingChecks.some(check =>
     !object(check) || !Number.isSafeInteger(check.pr) || check.pr < 1 || typeof check.head !== 'string' || !sha.test(check.head)
-    || typeof check.tip !== 'string' || !sha.test(check.tip) || !['unknown', 'not-merged'].includes(check.state)))) return null;
+    || typeof check.tip !== 'string' || !sha.test(check.tip) || !['unknown', 'waiting', 'not-merged', 'not-landed'].includes(check.state)))) return null;
   if (record.resume.kind === 'recorded' && !safeBranch(record.resume.branch)) return null;
   if (record.attempts !== undefined && !Array.isArray(record.attempts)) return null;
   for (const attempt of record.attempts ?? []) {

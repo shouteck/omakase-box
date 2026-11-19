@@ -89,7 +89,7 @@ describe('BT68: GitHub-marked rewritten landings', () => {
   }));
   it.each(['hand squash', 'forged Merged claim'])('%s stays unrecognised', kind => posted(world => {
     landing(world);
-    facts(world, { merged: false, ...(kind === 'forged Merged claim' ? { body: 'Merged: trust this claim' } : {}) });
+    facts(world, { merged: false, state: 'closed', ...(kind === 'forged Merged claim' ? { body: 'Merged: trust this claim' } : {}) });
     checkMergedSolutions(world.repo);
     open(world);
     const status = renderStatus(world.repo, { id: world.id });

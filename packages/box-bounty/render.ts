@@ -425,9 +425,11 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
     for (const entry of open) {
       const record = entry.record!;
       lines.push(`  ${record.id}  ${record.stage}  "${record.title}"${record.partOf !== undefined ? `  (part of: ${record.partOf})` : ''}  — ${ageClause(record)}`);
-      for (const check of record.landingChecks ?? []) lines.push(check.state === 'not-merged'
+      for (const check of (record.landingChecks ?? []).filter(check => check.state !== 'waiting')) lines.push(check.state === 'not-merged'
         ? `      landing not recognised: GitHub does not mark #${check.pr} merged; omakase-box close ${record.id} ends it without pay`
-        : `      landing not recognised: merge facts for #${check.pr} could not be read or verified; next: omakase-box status ${record.id} retries the read`);
+        : check.state === 'not-landed'
+          ? `      landing not recognised: #${check.pr} merge facts do not match this bounty or the landing is not on ${record.resume?.kind === 'recorded' ? record.resume.branch : 'the creating branch'} yet; next: pull the default branch, then run omakase-box status ${record.id} again`
+          : `      landing not recognised: merge facts for #${check.pr} could not be read; next: omakase-box status ${record.id} retries the read`);
       const attempts = attemptsOf(record);
       const unseen = attempts.filter(attempt => attempt.seenAt === undefined).length;
       const pays = (boundAmount(record) ?? 0) > 0;

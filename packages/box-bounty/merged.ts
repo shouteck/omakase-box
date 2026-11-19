@@ -188,22 +188,29 @@ function checkRewritten(repoRoot: string, record: BountyRecord, branch: string, 
   if (publication !== undefined && base !== null && tip !== undefined && tip !== base && parents.has(base) && reachesThrough(parents, tip, base)) {
     for (const seen of publication.seenPullRequests ?? []) {
       if (parents.has(seen.commit)) continue;
-      let state: 'unknown' | 'not-merged' = 'unknown';
+      const cached = record.landingChecks?.find(check => check.pr === seen.n && check.head === seen.commit && check.tip === tip && check.state !== 'unknown');
+      if (cached !== undefined) {
+        checks.push(cached);
+        continue;
+      }
+      let state: NonNullable<BountyRecord['landingChecks']>[number]['state'] = 'unknown';
       let data: unknown;
       try { data = api(repoRoot, `repos/${publication.repository}/pulls/${seen.n}`); } catch { /* Unknown; retry on the next scan. */ }
-      if (isObject(data) && data['merged'] === false) state = 'not-merged';
-      else if (isObject(data) && data['merged'] === true
-        && isObject(data['base']) && data['base']['ref'] === publication.branch
-        && isObject(data['base']['repo']) && typeof data['base']['repo']['full_name'] === 'string'
-        && data['base']['repo']['full_name'].toLowerCase() === publication.repository.toLowerCase()
-        && isObject(data['head']) && data['head']['sha'] === seen.commit
-        && typeof data['merge_commit_sha'] === 'string' && /^[0-9a-f]{40}$/i.test(data['merge_commit_sha'])) {
-        const landing = data['merge_commit_sha'].toLowerCase();
-        if (landing !== base && parents.has(landing) && reachesThrough(parents, landing, base)) {
-          delete record.landingChecks;
-          const attempt = attemptsOf(record).find(entry => entry.pullRequest === seen.n && entry.commit === seen.commit);
-          closeOne(repoRoot, record, branch, { commit: seen.commit, pr: seen.n, ...(attempt === undefined ? {} : { attempt }) }, landing, landing);
-          return;
+      if (isObject(data) && data['merged'] === false) state = data['state'] === 'closed' ? 'not-merged' : data['state'] === 'open' ? 'waiting' : 'unknown';
+      else if (isObject(data) && data['merged'] === true) {
+        state = 'not-landed';
+        if (isObject(data['base']) && data['base']['ref'] === publication.branch
+          && isObject(data['base']['repo']) && typeof data['base']['repo']['full_name'] === 'string'
+          && data['base']['repo']['full_name'].toLowerCase() === publication.repository.toLowerCase()
+          && isObject(data['head']) && data['head']['sha'] === seen.commit
+          && typeof data['merge_commit_sha'] === 'string' && /^[0-9a-f]{40}$/i.test(data['merge_commit_sha'])) {
+          const landing = data['merge_commit_sha'].toLowerCase();
+          if (landing !== base && parents.has(landing) && reachesThrough(parents, landing, base)) {
+            delete record.landingChecks;
+            const attempt = attemptsOf(record).find(entry => entry.pullRequest === seen.n && entry.commit === seen.commit);
+            closeOne(repoRoot, record, branch, { commit: seen.commit, pr: seen.n, ...(attempt === undefined ? {} : { attempt }) }, landing, landing);
+            return;
+          }
         }
       }
       checks.push({ pr: seen.n, head: seen.commit, tip, state });
