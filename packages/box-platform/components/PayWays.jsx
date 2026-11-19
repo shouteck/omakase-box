@@ -46,8 +46,9 @@ export function WayCards() {
           <li key={way.id} className="bg-card rounded-2xl border border-line p-4 min-w-0 flex flex-col gap-4">
             <div>
               <h3 className="font-medium">{way.name}</h3>
-              <p className="text-sm text-soft">{throughHere(way, here)}</p>
+              <p className="text-sm text-soft">{way.id === 'one-click' ? 'Stripe or PayPal' : throughHere(way, here)}</p>
             </div>
+            {way.id === 'one-click' && !off ? <p className="text-sm text-soft">{here === null ? 'Availability not confirmed on this board.' : `Set up here: ${throughHere(way, here)}.`}</p> : null}
             <p className={off ? 'text-sm text-soft' : 'text-lg font-medium tracking-tight'}>{off ? `${NOT_SET_UP[0].toUpperCase()}${NOT_SET_UP.slice(1)}.` : way.yourPart}</p>
             {off ? null : <Steps way={way} here={here} />}
             {off ? null : <p className="mt-auto text-sm text-soft">{way.whoSays}&apos;s word</p>}

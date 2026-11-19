@@ -527,7 +527,41 @@ describe('the pages', () => {
     await close();
   });
 
-  // PF18: the real pages, each reading what the board says it has. Made fixed, the words fail here.
+  // PF45: support is visible even on the live Stripe-only board; availability still comes from the board.
+  it('PF45: the landing page shows PayPal beside Stripe without claiming an unconfigured provider is available', async () => {
+    const { page, close } = await fresh({ width: 390 });
+    try {
+      await page.route('**/api/ways', route => route.fulfill({ json: { by_hand: true, one_click: ['Stripe'], on_merge: true } }));
+      await visit(page, '/');
+      const oneClick = page.locator('main li', { has: page.locator('h3', { hasText: /^One click$/ }) });
+      await expect.poll(() => oneClick.innerText()).toContain('Stripe or PayPal');
+      await expect.poll(() => oneClick.innerText()).toContain('Set up here: Stripe.');
+      expect(await oneClick.innerText()).not.toContain('Set up here: Stripe or PayPal');
+      expect(await oneClick.innerText()).toContain("You click Pay, on Stripe's page");
+      const onMerge = page.locator('main li', { has: page.locator('h3', { hasText: /^On merge$/ }) });
+      expect(await onMerge.innerText()).toContain('Stripe');
+      expect(await onMerge.innerText()).not.toContain('PayPal');
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+    } finally { await close(); }
+  });
+
+  it.each(['pending', 'failed'])('PF45: with %s availability, support does not claim a provider is set up', async state => {
+    const { page, close } = await fresh();
+    try {
+      await page.route('**/api/ways', async route => {
+        if (state === 'failed') await route.fulfill({ status: 503, json: { error: 'Unavailable' } });
+        // A deliberately unanswered request lets us read the initial, unconfirmed state.
+      });
+      await visit(page, '/');
+      const oneClick = page.locator('main li', { has: page.locator('h3', { hasText: /^One click$/ }) });
+      expect(await oneClick.innerText()).toContain('Stripe or PayPal');
+      expect(await oneClick.innerText()).toContain('Availability not confirmed on this board.');
+      expect(await oneClick.innerText()).not.toContain('Set up here:');
+      expect(await oneClick.innerText()).not.toContain('Not set up on this board yet');
+    } finally { await close(); }
+  });
+
+  // PF18: How it works names only what the board has. PF45: the landing card separates support from availability.
   it.each([
     ['no key', [], false, { through: 'A payment provider', connect: 'On your page, list a way and be paid by hand.', absent: ['Stripe or', 'connect Stripe', 'connect PayPal', 'a bank account in a supported country'] }],
     ['Stripe only', ['Stripe'], true, { through: 'Stripe', connect: 'connect Stripe and an owner can pay you with one click or on merge.', absent: ['PayPal'] }],
@@ -538,8 +572,10 @@ describe('the pages', () => {
     await page.route('**/api/ways', route => route.fulfill({ json: { by_hand: true, one_click, on_merge } }));
     await visit(page, '/');
     const oneClick = page.locator('main li', { has: page.locator('h3', { hasText: /^One click$/ }) });
-    await expect.poll(() => oneClick.locator('p').first().innerText()).toBe(want.through);
+    expect(await oneClick.locator('p').first().innerText()).toBe('Stripe or PayPal');
+    if (one_click.length > 0) await expect.poll(() => oneClick.innerText()).toContain(`Set up here: ${want.through}.`);
     if (one_click.length === 0) await expect.poll(() => oneClick.innerText()).toContain('Not set up on this board yet');
+    if (one_click.length === 0) expect(await oneClick.innerText()).not.toContain('Set up here:');
     const front = await page.locator('main').innerText();
     expect(front.includes('One click for you')).toBe(one_click.length > 0);
     expect(front.includes('Nothing for you')).toBe(on_merge);
