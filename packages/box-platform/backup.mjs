@@ -38,7 +38,7 @@ export function compare(expected, actual) {
 }
 
 export function drill() {
-  const scratch = mkdtempSync(join(tmpdir(), 'kitchen-PF45-'));
+  const scratch = mkdtempSync(join(tmpdir(), 'kitchen-PF47-'));
   const schema = readFileSync(join(here, 'schema.sql'), 'utf8');
   const required = Object.keys(manifest(schema).tables);
   const wrangler = join(here, 'node_modules', 'wrangler', 'bin', 'wrangler.js');

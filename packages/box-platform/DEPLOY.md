@@ -158,7 +158,7 @@ node node_modules/wrangler/bin/wrangler.js d1 export open-bounty-board --remote 
 - To check a copy is usable, load it into any SQLite tool; it is plain SQL (PF37 loaded one into a local SQLite: every table and the migration record came back).
 - To bring a copy back into an empty database: `node node_modules/wrangler/bin/wrangler.js d1 execute <database> --remote --file <the copy>`.
 
-### Scheduled encrypted copies (PF45)
+### Scheduled encrypted copies (PF47)
 
 `.github/workflows/d1-backup.yml` runs daily at 03:23 UTC when the repository variable `D1_BACKUP_ENABLED` is exactly `true`, and on demand from Actions → **d1-backup** → **Run workflow** (the manual run bypasses the enable switch). Schedules run from the default branch; merely pushing a wave branch does not enable one. It exports `open-bounty-board`, suppresses Wrangler's output (including the download link), checks the dump has every board table, records each table's row count, and encrypts the SQL with **age** before uploading it to GitHub Actions artifacts, outside Cloudflare. Retention is **90 days**, not permanent storage. Watch for failed runs and expiring copies; a successful workflow is not proof that a private key is still available.
 
@@ -167,7 +167,7 @@ Owner setup, once:
 1. On an offline, trusted machine install age and run `age-keygen -o board-backup-key.txt`. It prints a public recipient beginning `age1`. Keep the private key file offline, outside this repository and cloud-sync folders, with a second secure offline copy. Never put the private key in GitHub secrets, a workflow, an artifact or chat. Losing it makes backups unreadable.
 2. In this repository's **Settings → Secrets and variables → Actions → Variables**, set `D1_BACKUP_AGE_RECIPIENT` to that **public recipient**. This variable is not the private key.
 3. Under **Secrets**, set `CLOUDFLARE_ACCOUNT_ID` for the account holding the board, and `CLOUDFLARE_API_TOKEN` to an account-scoped token with **D1 read/export permission** for that account (Cloudflare's D1 Read permission). Do not grant Worker deploy or D1 write permission for backups. The job refuses missing settings by name without printing their values.
-4. Set the repository variable `D1_BACKUP_ENABLED=true`. Once the workflow is on the default branch, run it manually once and check its artifact and counts. Do a restore drill with the private key before relying on the schedule. No production export or restore was run during PF45's local implementation checks.
+4. Set the repository variable `D1_BACKUP_ENABLED=true`. Once the workflow is on the default branch, run it manually once and check its artifact and counts. Do a restore drill with the private key before relying on the schedule. No production export or restore was run during PF47's local implementation checks.
 
 This repository is public: **any GitHub user can download its Actions artifacts**. Only `board.sql.age` and `board-manifest.json` are uploaded; the SQL plaintext is removed, including on step failure. The manifest contains table names and counts, not rows; those counts are public metadata. Export still briefly blocks the board as described above. GitHub artifacts have no independent availability guarantee; retain important encrypted copies elsewhere under the owner's control before they expire. Key rotation affects future backups only: retain the old key for older artifacts.
 

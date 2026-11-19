@@ -8,7 +8,7 @@ const { compare, manifest } = await import(new URL('../../packages/box-platform/
 const script = fileURLToPath(new URL('../../packages/box-platform/backup.mjs', import.meta.url));
 const schema = readFileSync(new URL('../../packages/box-platform/schema.sql', import.meta.url), 'utf8');
 
-describe('PF45 backup count manifests', () => {
+describe('PF47 backup count manifests', () => {
   it('fact: counts every user table, including empty and quoted names, without row contents', () => {
     const result = manifest('CREATE TABLE "odd""name" (value TEXT); CREATE TABLE empty (id); INSERT INTO "odd""name" VALUES (\'private sample\'), (\'second\');');
     expect(result).toEqual({ version: 1, tables: { empty: 0, 'odd"name': 2 } });
@@ -55,7 +55,7 @@ describe('PF45 backup count manifests', () => {
   });
 });
 
-describe('PF45 scheduled backup workflow', () => {
+describe('PF47 scheduled backup workflow', () => {
   it('fact: opt-in scheduled export suppresses links and uploads only encrypted SQL and counts', () => {
     const workflow = readFileSync(new URL('../../.github/workflows/d1-backup.yml', import.meta.url), 'utf8');
     expect(workflow).toContain("if: vars.D1_BACKUP_ENABLED == 'true' || github.event_name == 'workflow_dispatch'");
