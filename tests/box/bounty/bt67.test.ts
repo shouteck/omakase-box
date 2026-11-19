@@ -136,6 +136,9 @@ describe('records without the evidence', () => {
     const result = applyBounty(repo, id, 1);
     expect(result.outcome).toBe('applied');
     namesNobody(world, MISSING, (result.payMessage ?? []).join('\n'));
+    // A close that stopped before the pay step leaves no pay outcome: the same rule decides, and nothing is owed.
+    rewriteRecordRaw(repo, id, raw => { delete (raw['github'] as Record<string, unknown>)['pay']; });
+    expect(renderStatus(repo, { id })).not.toContain('payment owed');
   }));
 
   it('a close left unfinished with an old payee: the retry replaces it, it is never kept', () => posted(world => {

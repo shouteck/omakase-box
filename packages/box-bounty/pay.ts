@@ -227,11 +227,15 @@ export function payMessageLines(record: { id: string; title: string }, pay: PayO
     'for the owner — pass this on in these words:',
     `  The bounty "${record.title}" ended with a merge${prUrl !== null ? ` of ${prUrl}` : ''}, and the tool names no one to pay: ${UNATTRIBUTED[pay.unattributed]}.`,
     '  Nothing is recorded as owed. Whether to reward anyone is your decision.',
+    ...(opts.firstMerge === true ? ['  It was the first solution written by someone outside your project to be merged into your code.'] : []),
+    ...(opts.unasked === true ? ['  You were not asked before this merge.'] : []),
+    ...(opts.partial !== undefined && opts.partial.length > 0 ? [`  Of the files the solution changed, the merge left these as they were: ${opts.partial.map(showPath).join(', ')}.`] : []),
     'for you — the tool does not pay and does not send this; repeat it when your work ends:',
     `  bounty: "${record.title}" — ${record.id}${opts.issueUrl !== null ? `; issue ${opts.issueUrl}` : ''}`,
     `  merged: ${prUrl !== null ? `pull request ${prUrl}` : 'the recorded solution'}`,
     `  merged in: ${opts.merge ?? 'the recorded merge'}`,
-    `  payee: none named — ${UNATTRIBUTED[pay.unattributed]}`
+    `  payee: none named — ${UNATTRIBUTED[pay.unattributed]}`,
+    ...(opts.firstMerge === true ? ['  first outside solution merged in this repository — this notice is recorded once'] : [])
   ];
   // The names are read back from the record, which another machine's chain
   // or the local store may have filled: printed through the renderer (BT43).
@@ -332,6 +336,10 @@ export function paymentOf(record: BountyRecord): PaymentState | null {
   const paid = record.events.filter(event => event.stage === 'paid').at(-1);
   const applied = record.events.filter(event => event.stage === 'applied').at(-1);
   const attempt = applied?.attempt === undefined ? undefined : (record.attempts ?? []).find(entry => entry.n === applied.attempt);
+  // BT67: a merged pull request with no pay outcome (a close that stopped before it, a shared record) owes nothing
+  // unless its head's first-sight facts say new work; absent evidence names nobody.
+  if (record.github?.pay === undefined && attempt?.pullRequest !== undefined
+    && unattributedOf(record.github?.seenPullRequests?.find(entry => entry.n === attempt.pullRequest && entry.commit === attempt.commit)?.firstSight) !== null) return null;
   return {
     amount,
     solver: record.github?.pay?.solver ?? attempt?.author ?? null,
