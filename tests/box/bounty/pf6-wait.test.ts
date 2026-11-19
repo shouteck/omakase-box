@@ -257,16 +257,24 @@ describe('PF6 built status --wait', () => {
       expect(localState()).toEqual(before);
     }
   });
-  it('cancels the spawned CLI with SIGINT, one named document and exit 130', async () => {
+  it.each(process.platform === 'win32' ? ['console signal relay'] : ['native signal', 'console signal relay'])('cancels the spawned CLI with SIGINT through %s, one named document and exit 130', async delivery => {
     configure();
+    const relay = delivery === 'console signal relay';
+    const env = environment();
+    if (relay) {
+      const preload = join(apiFolder, 'signal.cjs').replaceAll('\\', '/');
+      writeFileSync(preload, "process.on('message', signal => { if (signal === 'SIGINT') process.emit('SIGINT'); });\n");
+      env['NODE_OPTIONS'] = `${env['NODE_OPTIONS'] ?? ''} --require ${JSON.stringify(preload)}`;
+    }
     const before = localState();
-    const child = spawn(process.execPath, [CLI_DIST, 'status', world.id, '--wait', '--json', '--repo', world.repo], { env: environment(), stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn(process.execPath, [CLI_DIST, 'status', world.id, '--wait', '--json', '--repo', world.repo], { env, stdio: ['ignore', 'pipe', 'pipe', ...(relay ? ['ipc' as const] : [])] });
     let stdout = ''; let stderr = '';
     child.stdout!.on('data', chunk => { stdout += chunk; }); child.stderr!.on('data', chunk => { stderr += chunk; });
     const exited = new Promise<number | null>(resolve => child.once('exit', resolve));
     const deadline = Date.now() + 5000;
     while (!log(apiFolder).some(request => request.path.includes('/pulls?')) && child.exitCode === null && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 10));
-    child.kill('SIGINT');
+    if (relay) child.send('SIGINT');
+    else child.kill('SIGINT');
     expect(await exited, stderr).toBe(130);
     const doc = JSON.parse(stdout) as Result;
     expect(stdout).toBe(JSON.stringify(doc) + '\n');

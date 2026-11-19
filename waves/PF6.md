@@ -90,6 +90,8 @@ Written so any model can cook it.
 
 ## Changed expectations
 
+- tests/box/bounty/pf6-wait.test.ts::cancels the spawned CLI with SIGINT, one named document and exit 130 — Windows child.kill terminates the process rather than delivering a console event. Keep native SIGINT coverage on POSIX and exercise the installed CLI SIGINT handler through a test-only preload/IPC console-event relay on every OS; retain exit 130, the single cancellation document and all writer-exclusion assertions. No product signal or endpoint behavior changes.
+
 - tests/platform/pages.test.ts::PF6: answering explains discovery, safe work, both submission paths and owner payment — MCP is a POST-only protocol endpoint, not a browser destination; link the existing /agents/#mcp explanation and present the server URL with the existing copy style. Assert no direct /mcp link; do not change its HTTP behavior.
 
 - tests/platform/pages.test.ts::the front page says it in few words, shows the real product, and leads to the detail — owner asks for real discovery and payment-page links in Answer bounties, replacing the old no-links assertion only for that section.
