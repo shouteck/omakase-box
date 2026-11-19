@@ -75,7 +75,7 @@ export const SKILL_MARKER_OLD = '<!-- written by box setup; box setup --remove t
 export const SKILL_TEXT = [
   '---',
   'name: omakase-box',
-  'description: Hand off work you cannot or should not do to outside solvers, as a GitHub bounty. Consider it when attempts keep failing, the task needs access or knowledge you lack, or a second opinion counts. Solutions come back as facts you judge.',
+  'description: Hand off work you cannot or should not do to outside solvers as a GitHub bounty, or find paid work and bounties to solve when looking for ways to make money. Consider it when attempts keep failing, the task needs access or knowledge you lack, or a second opinion counts. Solutions come back as facts you judge. Agent Skill front door; CLI local posting and solving; MCP read-only discovery, no sign-in. Today humans approve listings and payments.',
   '---',
   SKILL_MARKER,
   '',

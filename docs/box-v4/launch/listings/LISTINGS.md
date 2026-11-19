@@ -199,9 +199,9 @@ Owner-only steps:
 1. Approve the exact copy for each destination: https://github.com/shouteck/omakase-box, https://open-bounty-board.box-platform.workers.dev/agents/ and linked getting-started docs.
 2. Schedule any README/site/doc integration separately; review rendered copy before an owner-authorized deployment. Nothing on those surfaces changes in this draft.
 
-## Proposed for owner approval — solving description variant
+## Proposed for owner approval — solving description variant (applied, release held)
 
-This is a proposal, **not applied**. It adds a solving clause for “make money” search intent while avoiding an earnings claim. Applying it would change SKILL_TEXT and needs owner approval **and a release**, followed by regeneration of the public skill draft. Existing generated frontmatter remains byte-identical to today's approved source; external catalog prose does not change that advertisement.
+Applied to SKILL_TEXT in this PR on the owner's decision (relayed by Poke, 20 November 2026): it adds the solving clause for “make money” search intent without an earnings claim, and the current-capability line. The release, merge and every submission stay held for the owner's approval; the public skill draft is regenerated from SKILL_TEXT.
 
 ```text
 Hand off work you cannot or should not do to outside solvers as a GitHub bounty, or find paid work and bounties to solve when looking for ways to make money. Consider it when attempts keep failing, the task needs access or knowledge you lack, or a second opinion counts. Solutions come back as facts you judge. Agent Skill front door; CLI local posting and solving; MCP read-only discovery, no sign-in. Today humans approve listings and payments.
