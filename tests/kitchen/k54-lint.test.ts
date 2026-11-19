@@ -12,16 +12,16 @@ it('K54: lint reuse reads board TypeScript and config, not unrelated or ignored 
     'eslint.config.mjs', 'tsconfig.json', 'package.json', 'pnpm-lock.yaml',
     'packages/box-platform/dist/generated.ts', 'packages/box-platform/out/generated.ts',
     'packages/box-platform/node_modules/dependency/index.ts', 'tests/platform/api.test.ts',
-    'packages/box-bounty/index.ts', 'waves/K54.md', 'scripts/unrelated.mjs', '',
+    'packages/box-bounty/index.ts', 'waves/K54.md', 'scripts/unrelated.mjs', '', 'packages/box-platform/.next/types/validator.ts',
   ];
   const result = execFileSync(process.execPath, ['--input-type=module', '-e', `import { stepReadsPath } from './scripts/suite.mjs'; console.log(JSON.stringify(${JSON.stringify(paths)}.map(path => stepReadsPath('lint', path))));`], { cwd: root, encoding: 'utf8' });
-  expect(JSON.parse(result)).toEqual([true, true, true, true, true, true, false, false, false, false, false, false, false, false]);
+  expect(JSON.parse(result)).toEqual([true, true, true, true, true, true, false, false, false, false, false, false, false, false, false]);
 });
 
 it('K54: exactly the three promise rules are errors and the hosted command follows install', () => {
   const result = execFileSync(process.execPath, ['--input-type=module', '-e', "import config from './eslint.config.mjs'; console.log(JSON.stringify(config.map(({ files, ignores, rules, languageOptions }) => ({ files, ignores, rules, projectService: languageOptions?.parserOptions?.projectService }))));"], { cwd: root, encoding: 'utf8' });
   expect(JSON.parse(result)).toEqual([
-    { ignores: ['**/dist/**', '**/out/**', '**/node_modules/**'] },
+    { ignores: ['**/dist/**', '**/out/**', '**/node_modules/**', '**/.next/**', '**/*.{js,mjs,cjs}'] },
     { files: ['packages/box-platform/**/*.ts'], projectService: true, rules: {
       '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/no-misused-promises': 'error',

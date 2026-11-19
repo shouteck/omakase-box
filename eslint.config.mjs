@@ -1,7 +1,7 @@
 import tseslint from 'typescript-eslint';
 
 export default [
-  { ignores: ['**/dist/**', '**/out/**', '**/node_modules/**'] },
+  { ignores: ['**/dist/**', '**/out/**', '**/node_modules/**', '**/.next/**', '**/*.{js,mjs,cjs}'] },
   {
     files: ['packages/box-platform/**/*.ts'],
     languageOptions: {
