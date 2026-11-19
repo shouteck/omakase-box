@@ -158,6 +158,59 @@ node node_modules/wrangler/bin/wrangler.js d1 export open-bounty-board --remote 
 - To check a copy is usable, load it into any SQLite tool; it is plain SQL (PF37 loaded one into a local SQLite: every table and the migration record came back).
 - To bring a copy back into an empty database: `node node_modules/wrangler/bin/wrangler.js d1 execute <database> --remote --file <the copy>`.
 
+### Scheduled encrypted copies (PF45)
+
+`.github/workflows/d1-backup.yml` runs daily at 03:23 UTC when the repository variable `D1_BACKUP_ENABLED` is exactly `true`, and on demand from Actions → **d1-backup** → **Run workflow** (the manual run bypasses the enable switch). Schedules run from the default branch; merely pushing a wave branch does not enable one. It exports `open-bounty-board`, suppresses Wrangler's output (including the download link), checks the dump has every board table, records each table's row count, and encrypts the SQL with **age** before uploading it to GitHub Actions artifacts, outside Cloudflare. Retention is **90 days**, not permanent storage. Watch for failed runs and expiring copies; a successful workflow is not proof that a private key is still available.
+
+Owner setup, once:
+
+1. On an offline, trusted machine install age and run `age-keygen -o board-backup-key.txt`. It prints a public recipient beginning `age1`. Keep the private key file offline, outside this repository and cloud-sync folders, with a second secure offline copy. Never put the private key in GitHub secrets, a workflow, an artifact or chat. Losing it makes backups unreadable.
+2. In this repository's **Settings → Secrets and variables → Actions → Variables**, set `D1_BACKUP_AGE_RECIPIENT` to that **public recipient**. This variable is not the private key.
+3. Under **Secrets**, set `CLOUDFLARE_ACCOUNT_ID` for the account holding the board, and `CLOUDFLARE_API_TOKEN` to an account-scoped token with **D1 read/export permission** for that account (Cloudflare's D1 Read permission). Do not grant Worker deploy or D1 write permission for backups. The job refuses missing settings by name without printing their values.
+4. Set the repository variable `D1_BACKUP_ENABLED=true`. Once the workflow is on the default branch, run it manually once and check its artifact and counts. Do a restore drill with the private key before relying on the schedule. No production export or restore was run during PF45's local implementation checks.
+
+This repository is public: **any GitHub user can download its Actions artifacts**. Only `board.sql.age` and `board-manifest.json` are uploaded; the SQL plaintext is removed, including on step failure. The manifest contains table names and counts, not rows; those counts are public metadata. Export still briefly blocks the board as described above. GitHub artifacts have no independent availability guarantee; retain important encrypted copies elsewhere under the owner's control before they expire. Key rotation affects future backups only: retain the old key for older artifacts.
+
+### Restore an encrypted copy into a new database
+
+Only the owner performs the remote steps. Follow **“When something has gone wrong”** below first, including deciding whether Time Travel or a Worker rollback is the right repair. Never overwrite the live database to test a backup. On a trusted machine, outside the repository and cloud-sync folders:
+
+1. Download the desired **d1-backup** Actions artifact and extract `board.sql.age` and `board-manifest.json`. Note its run date; use a copy from before the incident. Treat the downloaded manifest as public count metadata, not an authenticated integrity signature.
+2. Decrypt locally with `age -d -i /secure/offline/board-backup-key.txt -o /secure/restore/board.sql /secure/restore/board.sql.age`. Keep the plaintext private; never paste SQL, key material or export output into a ticket. The age recipient's private key is needed here, not on GitHub.
+3. From `packages/box-platform`, validate this **trusted owner-generated dump** and compare every table count:
+
+   ```bash
+   node backup.mjs manifest /secure/restore/board.sql > /secure/restore/actual-manifest.json
+   node backup.mjs compare /secure/restore/board-manifest.json /secure/restore/actual-manifest.json
+   ```
+
+   The commands print only counts; malformed, incomplete or mismatched copies exit nonzero with a `backup-*` refusal. This script executes SQL in scratch SQLite: never feed it an untrusted third-party dump. Counts detect missing tables/rows, not changed values with equal counts. age detects ciphertext tampering; it does not authenticate the public artifact's origin.
+4. Create a **new empty D1** in the intended account, e.g. `node node_modules/wrangler/bin/wrangler.js d1 create board-restored-YYYY-MM-DD`. Record its ID; do **not** change the live binding yet. Do not apply `schema.sql` or migrations first: the export supplies its schema and migration record. Restore:
+
+   ```bash
+   node node_modules/wrangler/bin/wrangler.js d1 execute board-restored-YYYY-MM-DD --remote --file /secure/restore/board.sql
+   ```
+
+5. Export that **new** database back to a second private SQL file, suppressing all export output so the download link is not logged:
+
+   ```bash
+   node node_modules/wrangler/bin/wrangler.js d1 export board-restored-YYYY-MM-DD --remote --output /secure/restore/restored.sql >/dev/null 2>&1
+   node backup.mjs manifest /secure/restore/restored.sql > /secure/restore/restored-manifest.json
+   node backup.mjs compare /secure/restore/board-manifest.json /secure/restore/restored-manifest.json
+   ```
+
+   Stop on any command failure. Also inspect the restored facts relevant to the incident before trusting them. A matching count does not prove the chosen backup was from a good moment.
+6. With the owner's explicit production approval, update `[[d1_databases]]` in `wrangler.toml`: retain `binding = "DB"`, change `database_name` and `database_id` to the new database, then follow this guide's build/deploy steps. Pause writes while switching so old and new databases cannot diverge. Keep the old database and its binding identifiers for rollback until the restored board is checked. Update the backup workflow's database name too, so future copies follow the new binding. This is a production change, never part of a drill.
+7. Remove local plaintext SQL and decrypted scratch data when finished; keep ciphertext, the manifest and offline key according to the owner's retention policy. Do not upload plaintext as evidence.
+
+For a repeatable **offline/local-only** export → restore → count check (no credentials, deployment or production access), from this folder run:
+
+```bash
+node backup.mjs drill
+```
+
+It makes separate disposable Wrangler configs and local D1 state outside the checkout, loads `schema.sql`, seeds synthetic rows including payment connections, exports locally, restores into a second fresh local D1 and compares all table counts. Both sides' counts are printed and scratch directories are removed. `d1 export --local` has no `--persist-to` flag; the separate configs give it separate adjacent `.wrangler/state` directories.
+
 ## When something has gone wrong
 
 In this order (a fresh reader of this guide had to guess it, PF37):
