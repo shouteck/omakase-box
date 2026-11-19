@@ -3,12 +3,13 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import * as bounty from '../../../packages/box-bounty/index.js';
 import { sharedPostedFixture } from './github-fixture.js';
 import { CLI_DIST, readRecord, runRoot, writeRecord } from './support.js';
 import { watchFields } from './surface.js';
 import { waitForSolutions } from '../../../packages/box-bounty/wait.js';
+import { GitHubReadDeadlineReached, pages, useGitHubTransportForTests } from '../../../packages/box-bounty/gh.js';
 
 interface Solution { pullRequest: number; commit: string; url: string; author: string }
 interface Result { schema: string; id: string; outcome: string; timeoutSeconds: number; pollSeconds: number; startedAt: string; endedAt: string; polls: number; solutions: readonly Solution[] }
@@ -18,6 +19,30 @@ const loop = (options: { id: string; timeoutSeconds: number; pollSeconds?: numbe
 const solution: Solution = { pullRequest: 7, commit: 'a'.repeat(40), url: 'https://github.com/owner/project/pull/7', author: 'solver' };
 
 describe('PF6 bounded observation loop', () => {
+  it('times out when the read transport spends the deadline without retrying', async () => {
+    let now = 0;
+    const result = await loop({ id: 'bt-test', timeoutSeconds: 1, seen: [] }, {
+      now: () => now, sleep: async () => { throw new Error('must not sleep'); },
+      read: () => { now = 1000; throw new GitHubReadDeadlineReached(); }, signal: new AbortController().signal
+    });
+    expect(result).toMatchObject({ outcome: 'timeout', polls: 1, solutions: [] });
+  });
+  it.each(['before selection', 'after selection', 'after failure'])('starts no request past the deadline %s', phase => {
+    let now = phase === 'before selection' ? 1000 : 0;
+    const clock = vi.spyOn(Date, 'now');
+    if (phase === 'after selection') clock.mockReturnValueOnce(0).mockReturnValue(1000);
+    else clock.mockImplementation(() => now);
+    const calls: string[][] = [];
+    useGitHubTransportForTests((_root, args) => {
+      calls.push([...args]); now = 1000;
+      return { status: 1, stderr: 'HTTP 429 rate limit exceeded' };
+    });
+    try {
+      expect(() => pages('.', 'repos/owner/project/pulls', { readOnly: true, deadline: 1000 })).toThrow(GitHubReadDeadlineReached);
+      expect(calls).toHaveLength(phase === 'after failure' ? 1 : 0);
+      expect(calls.flat()).not.toContain('rate_limit');
+    } finally { clock.mockRestore(); useGitHubTransportForTests(null); }
+  });
   it('returns an unseen head immediately, including a moved head on a seen PR', async () => {
     const result = await loop({ id: 'bt-test', timeoutSeconds: 600, seen: [{ n: 7, commit: 'b'.repeat(40) }] }, {
       now: () => 0, sleep: async () => { throw new Error('must not sleep'); }, read: () => [solution], signal: new AbortController().signal

@@ -1,5 +1,6 @@
 import { setImmediate } from 'node:timers/promises';
 import { BountyRefused } from './errors.js';
+import { GitHubReadDeadlineReached } from './gh.js';
 import { readOpenPullRequests } from './collect.js';
 import { isOpenStage } from './record.js';
 import { readStoredSnapshot } from './store.js';
@@ -45,6 +46,7 @@ export async function waitForSolutions(options: WaitOptions, deps: WaitDependenc
     let solutions: readonly WaitSolution[];
     try { polls++; solutions = deps.read().filter(pr => !seen.has(`${pr.pullRequest}:${pr.commit}`)); }
     catch (error) {
+      if (error instanceof GitHubReadDeadlineReached) return finish('timeout');
       if (error instanceof BountyRefused) throw error;
       throw new BountyRefused('wait-upstream-unreadable', 'the wait could not read solutions from GitHub; nothing changed; next: run the wait again');
     }

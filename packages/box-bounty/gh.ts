@@ -133,22 +133,31 @@ let installedTransport: GitHubTransport | null = null;
 export function useGitHubTransportForTests(transport: GitHubTransport | null): void { installedTransport = transport; }
 
 // Never include gh/git diagnostics here: signed-in programs can print credentials.
-function gh(root: string, args: readonly string[], readOnly = false): string {
+export class GitHubReadDeadlineReached extends Error {}
+function checkReadDeadline(deadline: number): void {
+  if (Date.now() >= deadline) throw new GitHubReadDeadlineReached();
+}
+
+function gh(root: string, args: readonly string[], readOnly = false, deadline = Infinity): string {
+  checkReadDeadline(deadline);
   // The run-level budget a bounded caller (the hook) sets: a call count so
   // endless pagination cannot loop forever, and a deadline so a run of hung
   // calls stays inside its bound. Ordinary commands leave both unbounded.
   if (ghCallBudget <= 0 || Date.now() >= ghDeadline) return invalid('github-call-budget', 'the GitHub budget for this run is spent — the run stays inside its bound and the next one can ask again; next: rerun the command — a new run gets a fresh budget');
   ghCallBudget -= 1;
   const { kind, call } = installedTransport === null ? chooseCall(root, readOnly) : { kind: 'test' as const, call: installedTransport };
+  checkReadDeadline(deadline);
   // The probe itself can burn a whole call's cap — check the run deadline
   // again before the real call so the worst case is the deadline plus one
   // in-flight call.
   if (Date.now() >= ghDeadline) return invalid('github-call-budget', 'the GitHub budget for this run is spent — the run stays inside its bound and the next one can ask again; next: rerun the command — a new run gets a fresh budget');
   const result = call(root, args);
   if (result.error !== undefined || result.status !== 0) {
+    checkReadDeadline(deadline);
     const failure = classifyGitHubFailure(result, () => {
       // GET /rate_limit is free, asked at most once per failure, and still a
       // call: it spends the run's budget and never outlives its deadline.
+      checkReadDeadline(deadline);
       if (ghCallBudget <= 0 || Date.now() >= ghDeadline) return null;
       ghCallBudget -= 1;
       const limits = call(root, ['api', '--hostname', 'github.com', 'rate_limit']);
@@ -345,8 +354,7 @@ export function api(root: string, endpoint: string, payload?: object, method?: s
 export interface GitHubReadOptions { readonly readOnly?: boolean; readonly deadline?: number }
 
 function readOnlyApi(root: string, endpoint: string, deadline?: number): unknown {
-  if (deadline !== undefined && Date.now() >= deadline) return invalid('wait-upstream-unreadable', 'the wait deadline passed while reading GitHub; nothing changed; next: run the wait again');
-  const body = splitResponse(gh(root, ['api', '--hostname', 'github.com', endpoint, '--include'], true)).body;
+  const body = splitResponse(gh(root, ['api', '--hostname', 'github.com', endpoint, '--include'], true, deadline)).body;
   try { return JSON.parse(body); }
   catch { return invalid('github-response-invalid', 'GitHub returned unreadable data; nothing changed; next: run the wait again'); }
 }
