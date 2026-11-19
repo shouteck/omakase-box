@@ -56,14 +56,14 @@ external listing. “Owner action” marks an external submission or approval.
 | Channel | Intent served | What we have today | Status |
 | --- | --- | --- | --- |
 | Agent Skills marketplaces | Both intents | [Paste drafts and formats](launch/listings/LISTINGS.md); generated approved skill | draft prepared; owner action |
-| Public skill repository | Delegate / get help; solver introduction | [skill-repo contents](launch/skill-repo/README.md); proposed name, no external repository created | draft prepared; license/repository owner action |
+| Public skill repository | Delegate / get help; solver introduction | [skill-repo contents](launch/skill-repo/README.md); owner created https://github.com/shouteck/omakase-skills (MIT-0); population separate | draft prepared; license/repository owner action |
 | skills.sh | Both intents | Generated skills layout and [copy/steps](launch/listings/LISTINGS.md#agent-skills--skillssh); install telemetry drives listing | draft prepared; owner action |
 | Claude Code plugin marketplace | Both intents | Both manifests prepared; own marketplace and optional paid-plan directory route documented | draft prepared; owner action, no spend |
 | ClawHub | Both intents | [Copy/steps](launch/listings/LISTINGS.md#clawhub); skill-only MIT-0 decision separate from Apache-2.0 product | optional; owner license decision |
 | MCP catalogs and registries | Both intents | Glama and awesome-remote drafts; Smithery/PulseMCP unverified, paid mcp.so excluded | drafts prepared; nothing submitted |
 | Official MCP Registry description | Delegate / cross-list as well as solve | [server.json](launch/server.json), vendored schema and local validation; posting remains local | draft prepared; owner login/publish |
 | README and agent search | Both intents | [Copy drafts](launch/listings/LISTINGS.md#agent-search-surfaces--readme-board-agents-docs); no surface edited | owner copy approval |
-| Solver skill text | Find paid work | Unchanged generated skill; solving-description variant proposed, not applied | owner approval and release for variant |
+| Solver skill text | Find paid work | Generated skill; solving clause and human-approval line applied to SKILL_TEXT | approved; release held for the owner |
 | Monid | Both intents, with different capabilities | Optional connector plan below; no connector submitted | deferred |
 | Owner-approved cross-listing | Supply for solvers; delegate existing work | PF44 permission-based owner comment-approval route | owner action |
 
@@ -136,15 +136,15 @@ No connector, external PR or email is created by this documentation change.
 
 ## Deferred
 
-- External creation/publication of the proposed public skill repository and all
-  submissions remain owner-only. [Listing drafts](launch/listings/LISTINGS.md),
+- The owner created https://github.com/shouteck/omakase-skills (MIT-0); populating it
+  is separate, and all submissions remain owner-only. [Listing drafts](launch/listings/LISTINGS.md),
   [current formats](launch/listings/FORMATS.md), [generated skill repository](launch/skill-repo/README.md)
   and [Registry metadata](launch/server.json) are prepared locally, not published.
-- ClawHub's skill-only MIT-0 decision, eligible Anthropic directory account,
+- Eligible Anthropic directory account,
   Glama badge identifier, GitHub curated-registry follow-on, and unverified
   Smithery/PulseMCP routes remain unresolved. Paid mcp.so is excluded.
-- Search-surface implementation/deployment and the proposed SKILL_TEXT solving
-  variant need owner copy approval; the variant also needs a release.
+- Search-surface implementation/deployment needs owner copy approval; the
+  approved SKILL_TEXT change needs a release, held for the owner.
 - The complete launch facts package beyond these listing drafts stays deferred.
 - The toolbox comparison test: no new sessions or evidence claimed.
 - Hosted posting APIs and MCP management: not shipped or planned by this wave.
