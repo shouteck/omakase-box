@@ -748,6 +748,19 @@ describe('the pages', () => {
     await moving.close();
   }, 30000);
 
+  it('the front page\'s sections are never blank before they are scrolled to: a full-page capture and a print show them', async () => {
+    const { page, close } = await fresh();
+    await page.goto(`${board.url}/`);
+    const shown = () => page.evaluate(() => [...document.querySelectorAll('.arrive')].map(el => getComputedStyle(el).opacity));
+    const arriving = await shown();
+    expect(arriving.length).toBeGreaterThan(0);
+    // Unscrolled, these sections sit below the fold; motion may move them but never hides them.
+    expect(arriving.every(opacity => opacity === '1')).toBe(true);
+    await page.emulateMedia({ media: 'print' });
+    expect((await shown()).every(opacity => opacity === '1')).toBe(true);
+    await close();
+  });
+
   it('a copy button copies exactly the words beside it, and says so', async () => {
     const context = await browser.newContext({ permissions: ['clipboard-read', 'clipboard-write'] });
     const page = await context.newPage();

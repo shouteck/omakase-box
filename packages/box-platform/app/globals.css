@@ -108,11 +108,13 @@
 }
 .window { box-shadow: var(--shadow-window); }
 
-/* Motion: the picture tells its story once; sections rise as they arrive. At rest all is complete. */
+/* Motion: the picture tells its story once; sections rise as they arrive. At rest all is complete.
+   Sections only move, never fade: tied to scroll, a fade would leave them blank in a print or full-page capture. */
 @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes arrive { from { transform: translateY(12px); } to { transform: none; } }
 @media (prefers-reduced-motion: no-preference) {
   .story { animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both; animation-delay: var(--at, 0s); }
   @supports (animation-timeline: view()) {
-    .arrive { animation: rise linear both; animation-timeline: view(); animation-range: entry 0% entry 30%; }
+    .arrive { animation: arrive linear both; animation-timeline: view(); animation-range: entry 0% entry 30%; }
   }
 }
