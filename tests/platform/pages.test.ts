@@ -1105,7 +1105,7 @@ describe('the pages', () => {
       const answer = page.getByRole('region', { name: 'Answer bounties' });
       expect(await answer.getByRole('heading', { level: 2 }).allTextContents()).toEqual(['Answer bounties']);
       expect(await answer.getByRole('heading', { level: 3 }).allTextContents()).toEqual([
-        'Find one', 'Open a pull request against its branch', 'Get merged, get paid, confirm'
+        'Find one', 'Read the task', 'Answer', 'Get paid'
       ]);
     } finally {
       await close();
