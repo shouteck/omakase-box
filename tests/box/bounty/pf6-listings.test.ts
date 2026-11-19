@@ -11,6 +11,7 @@ const commands = (text: string): string[] => [...text.matchAll(/(?<![\w/-])omaka
 const known = new Set([...Object.keys(BOUNTY_COMMANDS), ...commands(SETUP_USAGE[0]!)]);
 const promises = /\b(?:must|waiting)\b|\bguarantee(?:d|s)? (?:income|payment|rewards?|earnings)|\b(?:earn|make) (?:easy|guaranteed) money|\bget rich\b|\bpassive income\b|\bswarm\b|\bsoftware factory\b/i;
 const currentControl = /humans approve listings and payments/i;
+const staleBoard = /open-bounty-board\.box-platform\.workers\.dev(?!\/mcp)/;
 const autonomyNow = /no human involvement|without (?:any )?humans?\b|end to end with no human/i;
 const listing = read('listings/LISTINGS.md');
 const copies = [...listing.matchAll(/```(?:text|markdown)\n([\s\S]*?)\n```/g)].map(match => match[1]!);
@@ -19,6 +20,7 @@ const checkCopy = (text: string): void => {
   expect(text).not.toMatch(promises);
   expect(text).toMatch(currentControl);
   expect(text).not.toMatch(autonomyNow);
+  expect(text).not.toMatch(staleBoard);
   expect(commands(text).filter(command => !known.has(command))).toEqual([]);
   const skill = /\bskill\b/i.exec(text)?.index;
   const cli = /\bCLI\b/.exec(text)?.index;
@@ -73,7 +75,7 @@ describe('PF6 listing drafts', () => {
     const text = read('skill-repo/README.md');
     expect(text.trimEnd().split('\n').length).toBeLessThanOrEqual(5);
     expect(text).toContain('npx skills add shouteck/omakase-skills');
-    expect(text).toContain('https://open-bounty-board.box-platform.workers.dev');
+    expect(text).toContain('https://omakasebox.dev');
     expect(text).toContain('Hand off work');
     expect(text).toContain('Find paid work');
     checkCopy(text);

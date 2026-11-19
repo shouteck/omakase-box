@@ -7,7 +7,7 @@
     "url": "https://github.com/shouteck/omakase-box",
     "source": "github"
   },
-  "websiteUrl": "https://open-bounty-board.box-platform.workers.dev",
+  "websiteUrl": "https://omakasebox.dev",
   "remotes": [
     {
       "type": "streamable-http",
