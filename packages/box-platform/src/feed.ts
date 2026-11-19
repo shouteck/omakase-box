@@ -238,6 +238,8 @@ export async function bountyDetail(env: Env, id: string, now: number, origin: st
   const read = await readBounty(env, id, now);
   if (read === null) return null;
   const { row, pulls, history } = read;
+  // PF44: an import its owner has not approved is not offered to agents: nothing is promised on it yet.
+  if (row.approval === 'pending') return null;
   const task = capTask(row.task);
   const records = await ownerRecords(env.DB, [row.poster], now);
   const payment = paymentOf((await loadPayments(env.DB, 'b.id = ?', id))[0] ?? emptyPayment(row));
