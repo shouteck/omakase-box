@@ -15,7 +15,7 @@ function useWaysHere() {
   return here;
 }
 
-const oneClickAvailability = here => here === null ? 'Availability not confirmed on this board.' : here.one_click.length === 0 ? `One click is ${NOT_SET_UP}.` : `Set up here: ${here.one_click.join(' or ')}.`;
+const oneClickAvailability = here => here === null ? 'Availability not confirmed on this board.' : here.one_click.length === 0 ? `One click is ${NOT_SET_UP}.` : `Currently available here: ${here.one_click.join(' or ')}.`;
 
 /** What happens after a merge: the same start and end on every way, so what differs is your part. */
 function Steps({ way, here }) {
