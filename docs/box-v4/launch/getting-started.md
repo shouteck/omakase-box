@@ -22,7 +22,7 @@ whether to hand work off or solve somebody else's task.
    GitHub actions need Git and a signed-in `gh`, or a supported GitHub token,
    and the owner's permission. `omakase-box help` describes the commands.
 3. **MCP — network discovery.** Connect an MCP client to
-   <https://omakasebox.dev/mcp> without installing
+   <https://open-bounty-board.box-platform.workers.dev/mcp> without installing
    the CLI or signing in. The read-only tools are `find_bounties`, `get_bounty`
    and `get_numbers`. They find public bounties and read facts; they do not post
    or change them. Managing bounties via MCP is not shipped.

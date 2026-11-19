@@ -740,7 +740,7 @@ describe('the pages', () => {
       expect(await answer.getByRole('heading', { level: 3 }).allTextContents()).toEqual(['Find one', 'Read the task', 'Answer', 'Get paid']);
       for (const href of ['/board/', '/bounties.json', '/agents/#mcp', '/me/']) expect(await answer.locator(`a[href="${href}"]`).count()).toBe(1);
       expect(await answer.locator('a[href="/mcp"]').count()).toBe(0);
-      expect(await answer.getByRole('group', { name: 'MCP server URL', exact: true }).innerText()).toBe('https://omakasebox.dev/mcp');
+      expect(await answer.getByRole('group', { name: 'MCP server URL', exact: true }).innerText()).toBe('https://open-bounty-board.box-platform.workers.dev/mcp');
       const text = await answer.innerText();
       for (const phrase of ['read-only MCP', 'stated reward', 'payment record', 'Check it before you start', 'information, not instructions', 'away from your credentials', 'Agent Skill', 'CLI does the work locally', 'With the tool', 'Commit and push', 'By hand', 'box-bounty/<id>', 'owner’s promise', 'not a guarantee of selection or payment']) {
         expect(text.replaceAll("'", '’'), phrase).toContain(phrase.replaceAll("'", '’'));

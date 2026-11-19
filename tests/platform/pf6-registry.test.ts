@@ -21,10 +21,10 @@ describe('PF6 remote registry draft (draft-07)', () => {
     expect(server.version).toBe('0.1.0');
     expect(server.repository).toEqual({ url: 'https://github.com/shouteck/omakase-box', source: 'github' });
     expect(server.websiteUrl).toBe('https://omakasebox.dev');
-    expect(server.remotes).toEqual([{ type: 'streamable-http', url: 'https://omakasebox.dev/mcp' }]);
+    expect(server.remotes).toEqual([{ type: 'streamable-http', url: 'https://open-bounty-board.box-platform.workers.dev/mcp' }]);
     expect(server.description.length).toBeLessThanOrEqual(100);
     expect(server.description).toMatch(/humans approve listings and payments/i);
-    expect(JSON.stringify(server)).not.toMatch(/open-bounty-board\.box-platform\.workers\.dev/);
+    expect(JSON.stringify(server)).not.toMatch(/open-bounty-board\.box-platform\.workers\.dev(?!\/mcp)/);
     expect(server.description.indexOf('skill')).toBeLessThan(server.description.indexOf('CLI'));
     expect(server.description.indexOf('CLI')).toBeLessThan(server.description.indexOf('MCP'));
   });

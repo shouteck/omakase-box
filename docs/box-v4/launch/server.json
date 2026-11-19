@@ -11,7 +11,7 @@
   "remotes": [
     {
       "type": "streamable-http",
-      "url": "https://omakasebox.dev/mcp"
+      "url": "https://open-bounty-board.box-platform.workers.dev/mcp"
     }
   ]
 }

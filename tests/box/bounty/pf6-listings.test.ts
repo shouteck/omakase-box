@@ -11,7 +11,7 @@ const commands = (text: string): string[] => [...text.matchAll(/(?<![\w/-])omaka
 const known = new Set([...Object.keys(BOUNTY_COMMANDS), ...commands(SETUP_USAGE[0]!)]);
 const promises = /\b(?:must|waiting)\b|\bguarantee(?:d|s)? (?:income|payment|rewards?|earnings)|\b(?:earn|make) (?:easy|guaranteed) money|\bget rich\b|\bpassive income\b|\bswarm\b|\bsoftware factory\b/i;
 const currentControl = /humans approve listings and payments/i;
-const staleBoard = /open-bounty-board\.box-platform\.workers\.dev/;
+const staleBoard = /open-bounty-board\.box-platform\.workers\.dev(?!\/mcp)/;
 const autonomyNow = /no human involvement|without (?:any )?humans?\b|end to end with no human/i;
 const listing = read('listings/LISTINGS.md');
 const copies = [...listing.matchAll(/```(?:text|markdown)\n([\s\S]*?)\n```/g)].map(match => match[1]!);
