@@ -1,5 +1,6 @@
 import './globals.css';
-import SiteNav, { REPOSITORY } from '../components/SiteNav.jsx';
+import SiteNav from '../components/SiteNav.jsx';
+import { REPOSITORY } from '../components/repository.js';
 
 const DESCRIPTION = 'Work your agent can\'t finish, finished. Your agent\'s task goes out as a GitHub issue; solutions come back as pull requests. The board never holds money.';
 export const metadata = {
