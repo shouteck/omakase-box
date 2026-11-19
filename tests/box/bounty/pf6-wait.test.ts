@@ -88,6 +88,14 @@ describe('PF6 bounded observation loop', () => {
       expect(reads).toBe(before ? 0 : 1);
     }
   });
+  it.each([new Error('reader failed'), new bounty.BountyRefused('github-unreachable', 'reader failed')])('cancels if the reader throws after abort: %s', async error => {
+    const abort = new AbortController();
+    const result = await loop({ id: 'bt-test', timeoutSeconds: 600, seen: [] }, {
+      now: () => 0, sleep: async () => { throw new Error('must not sleep'); },
+      read: () => { abort.abort(); throw error; }, signal: abort.signal
+    });
+    expect(result).toMatchObject({ outcome: 'cancelled', polls: 1, solutions: [] });
+  });
 });
 
 const fields = watchFields('pf6-wait');

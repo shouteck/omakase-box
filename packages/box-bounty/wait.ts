@@ -46,6 +46,8 @@ export async function waitForSolutions(options: WaitOptions, deps: WaitDependenc
     let solutions: readonly WaitSolution[];
     try { polls++; solutions = deps.read().filter(pr => !seen.has(`${pr.pullRequest}:${pr.commit}`)); }
     catch (error) {
+      await setImmediate();
+      if (deps.signal.aborted) return finish('cancelled');
       if (error instanceof GitHubReadDeadlineReached) return finish('timeout');
       if (error instanceof BountyRefused) throw error;
       throw new BountyRefused('wait-upstream-unreadable', 'the wait could not read solutions from GitHub; nothing changed; next: run the wait again');
