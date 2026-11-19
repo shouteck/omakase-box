@@ -542,6 +542,13 @@ describe('the pages', () => {
       expect(await onMerge.innerText()).toContain('Stripe');
       expect(await onMerge.innerText()).not.toContain('PayPal');
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+      await visit(page, '/how/');
+      const solverStep = page.locator('main li', { has: page.locator('h4', { hasText: 'Get merged, get paid, confirm' }) });
+      await expect.poll(() => solverStep.innerText()).toContain('One click supports Stripe or PayPal.');
+      await expect.poll(() => solverStep.innerText()).toContain('Set up here: Stripe.');
+      expect(await solverStep.innerText()).not.toContain('connect PayPal');
+      expect(await solverStep.innerText()).toContain('connect Stripe and an owner can pay you with one click or on merge.');
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
     } finally { await close(); }
   });
 
@@ -558,13 +565,20 @@ describe('the pages', () => {
       expect(await oneClick.innerText()).toContain('Availability not confirmed on this board.');
       expect(await oneClick.innerText()).not.toContain('Set up here:');
       expect(await oneClick.innerText()).not.toContain('Not set up on this board yet');
+      await visit(page, '/how/');
+      const solverStep = page.locator('main li', { has: page.locator('h4', { hasText: 'Get merged, get paid, confirm' }) });
+      expect(await solverStep.innerText()).toContain('One click supports Stripe or PayPal.');
+      expect(await solverStep.innerText()).toContain('Availability not confirmed on this board.');
+      expect(await solverStep.innerText()).not.toContain('Set up here:');
+      expect(await solverStep.innerText()).not.toContain('connect Stripe');
+      expect(await solverStep.innerText()).not.toContain('connect PayPal');
     } finally { await close(); }
   });
 
-  // PF18: How it works names only what the board has. PF45: the landing card separates support from availability.
+  // PF45: the card and solver guidance separate support from this board's available connections.
   it.each([
-    ['no key', [], false, { through: 'A payment provider', connect: 'On your page, list a way and be paid by hand.', absent: ['Stripe or', 'connect Stripe', 'connect PayPal', 'a bank account in a supported country'] }],
-    ['Stripe only', ['Stripe'], true, { through: 'Stripe', connect: 'connect Stripe and an owner can pay you with one click or on merge.', absent: ['PayPal'] }],
+    ['no key', [], false, { through: 'A payment provider', connect: 'On your page, list a way and be paid by hand.', absent: ['connect Stripe', 'connect PayPal', 'a bank account in a supported country'] }],
+    ['Stripe only', ['Stripe'], true, { through: 'Stripe', connect: 'connect Stripe and an owner can pay you with one click or on merge.', absent: ['connect PayPal'] }],
     ['PayPal only', ['PayPal'], false, { through: 'PayPal', connect: 'connect PayPal and an owner can pay you with one click.', absent: ['connect Stripe', 'a bank account in a supported country'] }],
     ['both', ['Stripe', 'PayPal'], true, { through: 'Stripe or PayPal', connect: 'connect Stripe or PayPal and an owner can pay you with one click; connected Stripe also covers on merge.', absent: [] }]
   ])('with %s, the card and How it works name what this board has', async (_name, one_click, on_merge, want) => {
@@ -582,6 +596,8 @@ describe('the pages', () => {
     expect(moneyClaims(front)).toEqual([]);
     await visit(page, '/how/');
     const step = page.locator('main li', { has: page.locator('h4', { hasText: 'Get merged, get paid, confirm' }) });
+    expect(await step.innerText()).toContain('One click supports Stripe or PayPal.');
+    await expect.poll(() => step.innerText()).toContain(one_click.length > 0 ? `Set up here: ${want.through}.` : 'One click is not set up on this board yet.');
     await expect.poll(() => step.textContent()).toContain(want.connect);
     await expect.poll(async () => await page.locator('[data-stripe-reach]').count()).toBe(on_merge ? 1 : 0);
     const how = (await page.locator('main').textContent())!;
