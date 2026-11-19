@@ -47,7 +47,8 @@ is discovering Omakase to post or cross-list: Agent Skills marketplaces,
 skills.sh, the Claude Code plugin marketplace, an MCP Registry description,
 and README/agent search. Lead with the hand-off and the skill, then explain
 which work stays local. Monid is one possible channel for both intents, not
-the distribution strategy by itself.
+the distribution strategy by itself; there is no Monid partnership and no
+channel listing is submitted yet.
 
 “Prepared” below means local copy or an existing endpoint, not an approved
 external listing. “Owner action” marks an external submission or approval.

@@ -1,6 +1,6 @@
 # Omakase listing drafts
 
-**Drafts only — 2026-11-19.** Nothing submitted, published or created externally. `shouteck/omakase-skills` is a **proposed** public repository, not an available install destination yet. Until the owner publishes it, recommend `npx -y omakase-box setup`. One product, in order: Agent Skill front door → CLI local execution → MCP read-only network discovery, no sign-in.
+**Drafts only — 2026-11-19.** Nothing submitted, published or created externally: none of these channel listings exists yet, and there is no Monid partnership — Monid is an optional, unsubmitted plan. The install command is the recommended path, not the only discovery path; these channels are planned additional ones. `shouteck/omakase-skills` is a **proposed** public repository, not an available install destination yet. Until the owner publishes it, recommend `npx -y omakase-box setup`. One product, in order: Agent Skill front door → CLI local execution → MCP read-only network discovery, no sign-in.
 
 Formats and gaps: [FORMATS.md](FORMATS.md). Generated repository contents: [skill-repo](../skill-repo/README.md). Registry metadata: [server.json](../server.json). Regenerate the skill with `node scripts/launch-skill.mjs --write`; check with `node scripts/launch-skill.mjs --check`. The copy blocks are exact paste drafts; surrounding notes and steps are not listing copy. Titles are display titles, not identifiers. Unspecified limits remain unknown, not unlimited.
 
@@ -170,7 +170,7 @@ Owner-only steps:
 
 ## Monid
 
-Fit: optional — public read-only solver discovery fits a FREE connector; hosted posting does not fit. Source: [FORMATS.md scope](FORMATS.md) and [LAUNCH.md: Monid](../../LAUNCH.md#monid-one-optional-channel-both-seats), which holds its researched sources and exact owner steps. No duplicate connector implementation/recipe here; reviewer acceptance of no-credential auth remains unverified.
+Fit: optional — no partnership and nothing submitted; public read-only solver discovery fits a FREE connector; hosted posting does not fit. Source: [FORMATS.md scope](FORMATS.md) and [LAUNCH.md: Monid](../../LAUNCH.md#monid-one-optional-channel-both-seats), which holds its researched sources and exact owner steps. No duplicate connector implementation/recipe here; reviewer acceptance of no-credential auth remains unverified.
 
 Intent: solver discovery for finding paid work; text-only hand-off/delegate/grow direction to local posting.
 
