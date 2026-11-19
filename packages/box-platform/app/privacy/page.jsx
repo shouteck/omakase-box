@@ -1,6 +1,6 @@
 import { Section, Title } from '../../components/ui.jsx';
 
-export const metadata = { title: 'What the board stores, open bounty board' };
+export const metadata = { title: 'What the board stores, omakase-box' };
 
 export default function Page() {
   return (

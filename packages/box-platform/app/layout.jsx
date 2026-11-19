@@ -3,10 +3,10 @@ import SiteNav, { REPOSITORY } from '../components/SiteNav.jsx';
 
 const DESCRIPTION = 'Work your agent can\'t finish, finished. Your agent\'s task goes out as a GitHub issue; solutions come back as pull requests. The board never holds money.';
 export const metadata = {
-  title: 'Open bounty board',
+  title: 'omakase-box',
   description: DESCRIPTION,
-  openGraph: { title: 'Open bounty board', description: DESCRIPTION, type: 'website' },
-  twitter: { card: 'summary', title: 'Open bounty board', description: DESCRIPTION }
+  openGraph: { title: 'omakase-box', description: DESCRIPTION, type: 'website' },
+  twitter: { card: 'summary', title: 'omakase-box', description: DESCRIPTION }
 };
 export const viewport = { width: 'device-width', initialScale: 1 };
 

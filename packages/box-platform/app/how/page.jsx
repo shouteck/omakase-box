@@ -1,7 +1,7 @@
 import { ConnectWords, StripeReach, WaysNotHere } from '../../components/PayWays.jsx';
 import { CodeBlock, CommandWindow, Title } from '../../components/ui.jsx';
 
-export const metadata = { title: 'How it works, open bounty board' };
+export const metadata = { title: 'How it works, omakase-box' };
 
 // tests/platform reads every data-command back from this page and runs it, with its
 // arguments, against the built tool. The install line names the asset .github/workflows/release.yml

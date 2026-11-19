@@ -1,7 +1,7 @@
 import Board from '../../components/Board.jsx';
 import { Title } from '../../components/ui.jsx';
 
-export const metadata = { title: 'Open bounties, open bounty board' };
+export const metadata = { title: 'Open bounties, omakase-box' };
 
 export default function Page() {
   return (

@@ -1,7 +1,7 @@
 import Numbers from '../../components/Numbers.jsx';
 import { Title } from '../../components/ui.jsx';
 
-export const metadata = { title: 'Numbers, open bounty board' };
+export const metadata = { title: 'Numbers, omakase-box' };
 
 export default function Page() {
   return (
