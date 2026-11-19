@@ -22,3 +22,25 @@ Investigate hosted verify 44528722243, compare BT67 and the last green Windows r
 - Initial requested verify refused uncommitted changes before executing checks; commit first, then run `node scripts/verify.mjs --full --fresh test:platform`.
 - Principle used: `principle-fix-root-causes`: inject latency to reproduce the race; synchronize on the actual operation instead of extending a timer.
 - Windows execution and visual review are not performed on this Linux host.
+
+## Results
+
+On commit `f17ad220`, `node scripts/verify.mjs --full --fresh test:platform` ran check/build/lint successfully and reported:
+
+```text
+ Test Files  21 passed (21)
+      Tests  492 passed (492)
+   Duration  49.59s (tests 96%, import 3%, transform 1%)
+```
+
+This includes all 70 tests in `tests/platform/pages.test.ts`, with the deliberately delayed successful response. The verify reporter prints suite totals rather than passing file names. Chromium was installed into the suite's configured browser path; browser tests ran, none skipped.
+
+Verify automatically selected kitchen tests and failed the demo recorder (`the replay itself exited 1`). Running that local stand-in replay directly identified the environment cause: `status refused (repository-destination-mismatch): a Git URL rewrite sends this repository to a different destination`. No repository/global Git configuration was changed. Using the documented neutral HOME, `HOME=/home/ubuntu/kitchen-home node scripts/suite.mjs kitchen` reported:
+
+```text
+ Test Files  26 passed (26)
+      Tests  207 passed (207)
+   Duration  41.83s (tests 97%, transform 2%, import 1%)
+```
+
+The initial whole verify remains a failed invocation, not a claimed green acceptance run. No unchanged passing suite was rerun. Subsequent edits only record this evidence.
