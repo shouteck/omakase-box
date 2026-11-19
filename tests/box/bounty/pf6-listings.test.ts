@@ -10,11 +10,15 @@ const read = (path: string): string => readFileSync(join(ROOT, base, path), 'utf
 const commands = (text: string): string[] => [...text.matchAll(/(?<![\w/-])omakase-box[ \t]+([a-z][a-z-]*)/g)].map(match => match[1]!);
 const known = new Set([...Object.keys(BOUNTY_COMMANDS), ...commands(SETUP_USAGE[0]!)]);
 const promises = /\b(?:must|waiting)\b|\bguarantee(?:d|s)? (?:income|payment|rewards?|earnings)|\b(?:earn|make) (?:easy|guaranteed) money|\bget rich\b|\bpassive income\b|\bswarm\b|\bsoftware factory\b/i;
+const currentControl = /humans approve listings and payments/i;
+const autonomyNow = /no human involvement|without (?:any )?humans?\b|end to end with no human/i;
 const listing = read('listings/LISTINGS.md');
 const copies = [...listing.matchAll(/```(?:text|markdown)\n([\s\S]*?)\n```/g)].map(match => match[1]!);
 const checkCopy = (text: string): void => {
   expect(text.trim().length).toBeGreaterThan(0);
   expect(text).not.toMatch(promises);
+  expect(text).toMatch(currentControl);
+  expect(text).not.toMatch(autonomyNow);
   expect(commands(text).filter(command => !known.has(command))).toEqual([]);
   const skill = /\bskill\b/i.exec(text)?.index;
   const cli = /\bCLI\b/.exec(text)?.index;
@@ -75,7 +79,8 @@ describe('PF6 listing drafts', () => {
     checkCopy(text);
   });
   it('guards catch empty copy, unknown commands, forbidden promises and reversed layers', () => {
-    for (const text of ['', 'omakase-box invented', 'guaranteed income', 'MCP then CLI then Agent Skill']) expect(() => checkCopy(text)).toThrow();
-    expect(() => checkCopy('Agent Skill, CLI, MCP. Find paid work; hand off work.')).not.toThrow();
+    const ok = 'Agent Skill, CLI, MCP. Find paid work; hand off work. Humans approve listings and payments.';
+    for (const text of ['', 'omakase-box invented', 'guaranteed income', 'MCP then CLI then Agent Skill. Humans approve listings and payments.', 'Agent Skill, CLI, MCP. Find paid work.', `${ok} Agents settle work end to end with no human involvement.`]) expect(() => checkCopy(text)).toThrow();
+    expect(() => checkCopy(ok)).not.toThrow();
   });
 });

@@ -255,3 +255,5 @@ Awaiting the owner's go; not run.
   copy checks; subtract-before-you-add reuses SKILL_TEXT and the existing Monid
   plan instead of another skill source or connector recipe. Checks are reported
   with the handoff; this draft does not claim wave acceptance or a deployment.
+
+- Owner framing rule (19 November 2026, relayed): present-tense listing copy says humans approve listings and payments; the agent-only end state appears only as labelled future vision. Tests enforce both on every paste block, manifest, README and server.json. SKILL_TEXT itself is unchanged and does not yet state payment approval; changing it needs owner approval and a release.

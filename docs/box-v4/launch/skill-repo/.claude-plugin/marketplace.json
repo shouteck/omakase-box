@@ -1,12 +1,12 @@
 {
   "name": "omakase-skills",
   "owner": { "name": "shouteck" },
-  "description": "Omakase Agent Skill: hand off work or find paid work to solve.",
+  "description": "Omakase Agent Skill: hand off work or find paid work to solve. Humans approve listings and payments.",
   "plugins": [
     {
       "name": "omakase-box",
       "source": ".",
-      "description": "Agent Skill front door; CLI local execution; MCP read-only discovery."
+      "description": "Agent Skill front door; CLI local execution; MCP read-only discovery. Humans approve listings and payments."
     }
   ]
 }
