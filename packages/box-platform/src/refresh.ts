@@ -221,15 +221,20 @@ async function readFirstSight(env: Env, github: GitHub, id: string, repository: 
 
 /** Is a merged head on the default branch? Yes stays yes. A failed read stays unknown, and the page says nothing is confirmed. */
 async function readOnDefault(env: Env, github: GitHub, id: string, repository: string): Promise<void> {
-  const unknown = await env.DB.prepare(`SELECT p.number, p.head_sha, p.landing_check, r.default_branch FROM pull_requests p JOIN repositories r ON r.name = ? WHERE p.bounty_id = ? AND p.state = 'merged' AND p.head_sha IS NOT NULL AND COALESCE(p.on_default, 0) != 1 AND p.landing_sha IS NULL ORDER BY p.on_default IS NOT NULL, p.number LIMIT ?`)
+  const unknown = await env.DB.prepare(`SELECT p.number, p.head_sha, p.landing_check, r.default_branch FROM pull_requests p JOIN repositories r ON r.name = ? WHERE p.bounty_id = ? AND p.state = 'merged' AND p.head_sha IS NOT NULL AND COALESCE(p.on_default, 0) != 1 AND p.landing_sha IS NULL ORDER BY p.landing_checked_at, p.number LIMIT ?`)
     .bind(repository, id, COMPARES_PER_READ).all<{ number: number; head_sha: string; landing_check: string | null; default_branch: string }>();
   let reads = COMPARES_PER_READ;
   for (const { number, head_sha, default_branch, landing_check } of unknown.results) {
     let pending = landing_check;
     const save = (value: string | null) => env.DB.prepare('UPDATE pull_requests SET landing_check = ? WHERE bounty_id = ? AND number = ? AND head_sha = ?').bind(value, id, number, head_sha).run();
+    const read = async (path: string) => {
+      const answer = await github.get(path);
+      await env.DB.prepare('UPDATE pull_requests SET landing_checked_at = ? WHERE bounty_id = ? AND number = ? AND head_sha = ?').bind(env.now?.() ?? Date.now(), id, number, head_sha).run();
+      return answer;
+    };
     if (pending === null) {
       if (reads-- <= 0) break;
-      const answer = await github.get(`/repos/${repository}/compare/${head_sha}...${encodeURIComponent(default_branch)}`);
+      const answer = await read(`/repos/${repository}/compare/${head_sha}...${encodeURIComponent(default_branch)}`);
       const status = answer.status === 200 && record(answer.json) ? answer.json['status'] : null;
       if (status !== 'ahead' && status !== 'identical' && status !== 'behind' && status !== 'diverged') continue;
       await env.DB.prepare('UPDATE pull_requests SET on_default = ? WHERE bounty_id = ? AND number = ? AND head_sha = ?').bind(status === 'ahead' || status === 'identical' ? 1 : 0, id, number, head_sha).run();
@@ -239,14 +244,14 @@ async function readOnDefault(env: Env, github: GitHub, id: string, repository: s
     }
     if (pending === 'pull') {
       if (reads-- <= 0) break;
-      const facts = await github.get(`/repos/${repository}/pulls/${number}`);
+      const facts = await read(`/repos/${repository}/pulls/${number}`);
       const pull = facts.json;
       if (facts.status !== 200 || !record(pull) || pull['merged'] !== true || !record(pull['base']) || pull['base']['ref'] !== `box-bounty/${id}` || !record(pull['base']['repo']) || typeof pull['base']['repo']['full_name'] !== 'string' || pull['base']['repo']['full_name'].toLowerCase() !== repository.toLowerCase() || !record(pull['head']) || pull['head']['sha'] !== head_sha || typeof pull['merge_commit_sha'] !== 'string' || !/^[a-f\d]{40}$/.test(pull['merge_commit_sha'])) { await save(null); continue; }
       pending = pull['merge_commit_sha'];
       await save(pending);
     }
     if (reads-- <= 0) break;
-    const compared = await github.get(`/repos/${repository}/compare/${pending}...${encodeURIComponent(default_branch)}`);
+    const compared = await read(`/repos/${repository}/compare/${pending}...${encodeURIComponent(default_branch)}`);
     const landed = compared.status === 200 && record(compared.json) ? compared.json['status'] : null;
     if (landed === 'ahead' || landed === 'identical') {
       await env.DB.prepare('UPDATE pull_requests SET landing_sha = ?, landing_check = NULL WHERE bounty_id = ? AND number = ? AND head_sha = ?').bind(pending, id, number, head_sha).run();

@@ -33,4 +33,23 @@ describe('BT68: rewritten verification across worker ticks', () => {
     }
     expect(landed).toBe(true);
   });
+  it('an off-default first result cannot starve the next rewritten PR, and both can later land', async () => {
+    const pulls = r.standin.issues[0]!.pulls!;
+    pulls[0]!.landingLanded = false;
+    pulls.push({ ...pulls[0]!, number: 8, author: 'example-quill', merge_commit_sha: 'c'.repeat(40), landingLanded: true });
+    const verified = async (number: number) => (await r.env.DB.prepare('SELECT landing_sha FROM pull_requests WHERE bounty_id = ? AND number = ?').bind(ID, number).first<{ landing_sha: string | null }>())?.landing_sha != null;
+    for (let n = 0; n < 80 && !await verified(8); n++) {
+      r.clock.at += MINUTE;
+      expect((await refresh({ ...r.env, tickReads: 2 })).requests).toBeLessThanOrEqual(2);
+    }
+    expect(await verified(8)).toBe(true);
+    expect(await verified(7)).toBe(false);
+    pulls[0]!.landingLanded = true;
+    for (let n = 0; n < 80 && !await verified(7); n++) {
+      r.clock.at += MINUTE;
+      await refresh({ ...r.env, tickReads: 2 });
+    }
+    expect(await verified(7)).toBe(true);
+    expect((await payeeFacts(r.env, ID)).landed).toHaveLength(2);
+  });
 });
