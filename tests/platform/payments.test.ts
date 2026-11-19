@@ -156,9 +156,10 @@ describe('BT68: rewritten landings', () => {
     ['unknown result', { landingLanded: null }],
     ['moved head', { pullHead: 'c'.repeat(40) }],
     ['not marked merged', { merged: false }],
-    ['open test merge', { state: 'open', merged: false, merged_at: undefined }]
+    ['open test merge', { state: 'open', merged: false }]
   ])('%s never owes', async (_name, over) => {
     Object.assign(reading, over);
+    if (reading.state === 'open') delete reading.merged_at;
     await reread();
     expect((await payment()).owed).toBeNull();
   });
@@ -339,12 +340,14 @@ describe('on the real routes', () => {
     expect(await facts(ID)).toMatchObject({ state: 'merged-not-on-default', owed: null, note: expect.stringContaining('has not confirmed') });
   });
 
-  it('many merged pull requests cannot spend a refresh: at most five compares a read', async () => {
+  it('many merged pull requests cannot spend a refresh: at most five landing-check reads', async () => {
     r.standin.issues.push(issue('bt-aaaaaaaaaaa7', 7, OWNER, Array.from({ length: 30 }, (_, i) => pull(100 + i, 'example-pike', { landed: false }))));
     await reread();
     const before = r.standin.requests.length;
     await reread();
-    expect(r.standin.requests.slice(before).filter(path => path.includes('/compare/')).length).toBe(5);
+    const reads = r.standin.requests.slice(before).filter(path => path.includes('/compare/') || /\/pulls\/\d+(?:\?|$)/.test(path));
+    expect(reads.length).toBeLessThanOrEqual(5);
+    expect(reads).toHaveLength(5);
   });
 
   it('keeps the association of the first read after the merge: a later invitation does not rewrite history', async () => {
