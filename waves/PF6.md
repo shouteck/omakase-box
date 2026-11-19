@@ -90,6 +90,11 @@ Written so any model can cook it.
 
 ## Changed expectations
 
+- tests/platform/pages.test.ts::the front page says it in few words, shows the real product, and leads to the detail — owner asks for real discovery and payment-page links in Answer bounties, replacing the old no-links assertion only for that section.
+- tests/platform/pages.test.ts::with %s, the card and How it works name what this board has — solver payment step is now titled Get paid; keep all payment-capability assertions and fixture cases unchanged.
+
+- tests/platform/pages.test.ts::how it works: both paths, every step, and each fact the front page leaves out — owner-requested solver onboarding now has four explicit steps and optional skill/CLI installation, replacing the blanket no-install claim; keep the other page facts and owner half unchanged.
+
 - tests/box/bounty/pf6-wait.test.ts::starts no request past the deadline %s — distinguish pre-request expiry (timeout) from an already-started request failing after expiry (named upstream refusal); no rate-limit lookup starts after expiry in either case.
 
 - tests/box/bounty/pf6-wait.test.ts::reads unseen PRs in one poll without any local, ref, board or GitHub write — review corrects the text next step: look shows a collected version; apply detects and collects a moved head without merging, but can merge an unchanged head. JSON and read-only guarantees are unchanged.
