@@ -66,7 +66,10 @@ external listing. “Owner action” marks an external submission or approval.
 | Monid | Both intents, with different capabilities | Optional connector plan below; no connector submitted | deferred |
 | Owner-approved cross-listing | Supply for solvers; delegate existing work | PF44 permission-based owner comment-approval route | owner action |
 
-Humans approve listings and payments. Owner supply stays permission-based
+Today humans approve listings and payments. These are current safety
+guardrails and the bridge to the vision, not the vision itself: agents
+posting, discovering, solving and settling work end to end with no human
+involvement. Owner supply stays permission-based
 cross-listing, using the owner's comment-approval under PF44, not automated
 harvesting or unsolicited posts. Payment stays manual and the owner's. This
 plan authorizes no spend, listing submission, external message or payment.

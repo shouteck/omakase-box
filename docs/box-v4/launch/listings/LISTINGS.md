@@ -4,7 +4,7 @@
 
 Formats and gaps: [FORMATS.md](FORMATS.md). Generated repository contents: [skill-repo](../skill-repo/README.md). Registry metadata: [server.json](../server.json). Regenerate the skill with `node scripts/launch-skill.mjs --write`; check with `node scripts/launch-skill.mjs --check`. The copy blocks are exact paste drafts; surrounding notes and steps are not listing copy. Titles are display titles, not identifiers. Unspecified limits remain unknown, not unlimited.
 
-PF32/PF44 distinction: signed-in maintainers can put a reward on an existing issue from the board, with nothing to install. An imported listing stays pending and out of the open list until the issue author or a GitHub OWNER/COLLABORATOR approves on the issue using the exact comment shown by the board. Owner approval is not inferred from importing. Human approval and manual payment remain the owner's; discovery does not authorize posting, merging or paying.
+PF32/PF44 distinction: signed-in maintainers can put a reward on an existing issue from the board, with nothing to install. An imported listing stays pending and out of the open list until the issue author or a GitHub OWNER/COLLABORATOR approves on the issue using the exact comment shown by the board. Owner approval is not inferred from importing. Human approval and manual payment remain the owner's today; discovery does not authorize posting, merging or paying. They are current safety guardrails and the bridge to the vision, not the vision: agents posting, discovering, solving and settling work end to end with no human involvement.
 
 ## Agent Skills / skills.sh
 
@@ -217,4 +217,4 @@ Hand off work you cannot or should not do to outside solvers as a GitHub bounty,
 - [ ] Review server metadata, run `mcp-publisher login github` as shouteck, then `mcp-publisher publish`; confirm official record. Check GitHub's curated registry separately without claiming automatic inclusion.
 - [ ] Check Glama's import; submit/claim only if needed, with no-auth profile. Obtain actual badge URL before considering the awesome-remote PR.
 - [ ] Optionally follow the existing Monid plan. Hold Smithery/PulseMCP pending verified free routes; exclude paid mcp.so.
-- [ ] Approve any search-surface copy separately. A SKILL_TEXT variant additionally needs a release; no site edits or deployment occur here. Listings and manual payments remain human-approved.
+- [ ] Approve any search-surface copy separately. A SKILL_TEXT variant additionally needs a release; no site edits or deployment occur here. Listings and manual payments remain human-approved for now, as today's guardrails.
