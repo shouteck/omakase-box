@@ -15,8 +15,6 @@ function useWaysHere() {
   return here;
 }
 
-const oneClickAvailability = here => here === null ? 'Availability not confirmed on this board.' : here.one_click.length === 0 ? `One click is ${NOT_SET_UP}.` : `Currently available here: ${here.one_click.join(' or ')}.`;
-
 /** What happens after a merge: the same start and end on every way, so what differs is your part. */
 function Steps({ way, here }) {
   const steps = [
@@ -50,7 +48,6 @@ export function WayCards() {
               <h3 className="font-medium">{way.name}</h3>
               <p className="text-sm text-soft">{way.id === 'one-click' ? 'Stripe or PayPal' : throughHere(way, here)}</p>
             </div>
-            {way.id === 'one-click' && !off ? <p className="text-sm text-soft">{oneClickAvailability(here)}</p> : null}
             <p className={off ? 'text-sm text-soft' : 'text-lg font-medium tracking-tight'}>{off ? `${NOT_SET_UP[0].toUpperCase()}${NOT_SET_UP.slice(1)}.` : way.yourPart}</p>
             {off ? null : <Steps way={way} here={here} />}
             {off ? null : <p className="mt-auto text-sm text-soft">{way.whoSays}&apos;s word</p>}
@@ -64,7 +61,7 @@ export function WayCards() {
 /** The solver's step: supported providers first, then only the connections this board offers. */
 export function ConnectWords() {
   const here = useWaysHere();
-  return <p>One click supports Stripe or PayPal. {oneClickAvailability(here)} {connectWords(here)} Then say on the bounty&apos;s page whether it arrived.</p>;
+  return <p>One click supports Stripe or PayPal. {connectWords(here)} Then say on the bounty&apos;s page whether it arrived.</p>;
 }
 
 /** The country list itself, readable signed out: How it works links here (PF19). Nothing where this board has no Stripe. */

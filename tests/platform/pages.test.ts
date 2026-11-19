@@ -535,8 +535,7 @@ describe('the pages', () => {
       await visit(page, '/');
       const oneClick = page.locator('main li', { has: page.locator('h3', { hasText: /^One click$/ }) });
       await expect.poll(() => oneClick.innerText()).toContain('Stripe or PayPal');
-      await expect.poll(() => oneClick.innerText()).toContain('Currently available here: Stripe.');
-      expect(await oneClick.innerText()).not.toContain('Currently available here: Stripe or PayPal');
+      expect(await oneClick.innerText()).not.toMatch(/Currently available here:|Set up here:|Availability not confirmed/);
       expect(await oneClick.innerText()).toContain("You click Pay, on Stripe's page");
       const onMerge = page.locator('main li', { has: page.locator('h3', { hasText: /^On merge$/ }) });
       expect(await onMerge.innerText()).toContain('Stripe');
@@ -545,7 +544,8 @@ describe('the pages', () => {
       await visit(page, '/how/');
       const solverStep = page.locator('main li', { has: page.getByRole('heading', { name: 'Get merged, get paid, confirm', exact: true }) });
       await expect.poll(() => solverStep.innerText()).toContain('One click supports Stripe or PayPal.');
-      await expect.poll(() => solverStep.innerText()).toContain('Currently available here: Stripe.');
+      await expect.poll(() => solverStep.innerText()).toContain('One click supports Stripe or PayPal. On your page, connect Stripe');
+      expect(await solverStep.innerText()).not.toMatch(/Currently available here:|Set up here:|Availability not confirmed/);
       expect(await solverStep.innerText()).not.toContain('connect PayPal');
       expect(await solverStep.innerText()).toContain('connect Stripe and an owner can pay you with one click or on merge.');
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
@@ -562,14 +562,12 @@ describe('the pages', () => {
       await visit(page, '/');
       const oneClick = page.locator('main li', { has: page.locator('h3', { hasText: /^One click$/ }) });
       expect(await oneClick.innerText()).toContain('Stripe or PayPal');
-      expect(await oneClick.innerText()).toContain('Availability not confirmed on this board.');
-      expect(await oneClick.innerText()).not.toContain('Currently available here:');
+      expect(await oneClick.innerText()).not.toMatch(/Currently available here:|Set up here:|Availability not confirmed/);
       expect(await oneClick.innerText()).not.toContain('Not set up on this board yet');
       await visit(page, '/how/');
       const solverStep = page.locator('main li', { has: page.getByRole('heading', { name: 'Get merged, get paid, confirm', exact: true }) });
       expect(await solverStep.innerText()).toContain('One click supports Stripe or PayPal.');
-      expect(await solverStep.innerText()).toContain('Availability not confirmed on this board.');
-      expect(await solverStep.innerText()).not.toContain('Currently available here:');
+      expect(await solverStep.innerText()).not.toMatch(/Currently available here:|Set up here:|Availability not confirmed/);
       expect(await solverStep.innerText()).not.toContain('connect Stripe');
       expect(await solverStep.innerText()).not.toContain('connect PayPal');
     } finally { await close(); }
@@ -577,19 +575,19 @@ describe('the pages', () => {
 
   // PF45: the card and solver guidance separate support from this board's available connections.
   it.each([
-    ['no key', [], false, { through: 'A payment provider', connect: 'On your page, list a way and be paid by hand.', absent: ['connect Stripe', 'connect PayPal', 'a bank account in a supported country'] }],
-    ['Stripe only', ['Stripe'], true, { through: 'Stripe', connect: 'connect Stripe and an owner can pay you with one click or on merge.', absent: ['connect PayPal'] }],
-    ['PayPal only', ['PayPal'], false, { through: 'PayPal', connect: 'connect PayPal and an owner can pay you with one click.', absent: ['connect Stripe', 'a bank account in a supported country'] }],
-    ['both', ['Stripe', 'PayPal'], true, { through: 'Stripe or PayPal', connect: 'connect Stripe or PayPal and an owner can pay you with one click; connected Stripe also covers on merge.', absent: [] }]
+    ['no key', [], false, { page: null, connect: 'On your page, list a way and be paid by hand.', absent: ['connect Stripe', 'connect PayPal', 'a bank account in a supported country'] }],
+    ['Stripe only', ['Stripe'], true, { page: "Stripe's page", connect: 'connect Stripe and an owner can pay you with one click or on merge.', absent: ['connect PayPal'] }],
+    ['PayPal only', ['PayPal'], false, { page: "PayPal's page", connect: 'connect PayPal and an owner can pay you with one click.', absent: ['connect Stripe', 'a bank account in a supported country'] }],
+    ['both', ['Stripe', 'PayPal'], true, { page: "Stripe's or PayPal's page", connect: 'connect Stripe or PayPal and an owner can pay you with one click; connected Stripe also covers on merge.', absent: [] }]
   ])('with %s, the card and How it works name what this board has', async (_name, one_click, on_merge, want) => {
     const { page, close } = await fresh();
     await page.route('**/api/ways', route => route.fulfill({ json: { by_hand: true, one_click, on_merge } }));
     await visit(page, '/');
     const oneClick = page.locator('main li', { has: page.locator('h3', { hasText: /^One click$/ }) });
     expect(await oneClick.locator('p').first().innerText()).toBe('Stripe or PayPal');
-    if (one_click.length > 0) await expect.poll(() => oneClick.innerText()).toContain(`Currently available here: ${want.through}.`);
+    if (want.page !== null) await expect.poll(() => oneClick.innerText()).toContain(`You click Pay, on ${want.page}`);
     if (one_click.length === 0) await expect.poll(() => oneClick.innerText()).toContain('Not set up on this board yet');
-    if (one_click.length === 0) expect(await oneClick.innerText()).not.toContain('Currently available here:');
+    expect(await oneClick.innerText()).not.toMatch(/Currently available here:|Set up here:|Availability not confirmed/);
     const front = await page.locator('main').innerText();
     expect(front.includes('One click for you')).toBe(one_click.length > 0);
     expect(front.includes('Nothing for you')).toBe(on_merge);
@@ -597,7 +595,7 @@ describe('the pages', () => {
     await visit(page, '/how/');
     const step = page.locator('main li', { has: page.getByRole('heading', { name: 'Get merged, get paid, confirm', exact: true }) });
     expect(await step.innerText()).toContain('One click supports Stripe or PayPal.');
-    await expect.poll(() => step.innerText()).toContain(one_click.length > 0 ? `Currently available here: ${want.through}.` : 'One click is not set up on this board yet.');
+    expect(await step.innerText()).not.toMatch(/Currently available here:|Set up here:|Availability not confirmed/);
     await expect.poll(() => step.textContent()).toContain(want.connect);
     await expect.poll(async () => await page.locator('[data-stripe-reach]').count()).toBe(on_merge ? 1 : 0);
     const how = (await page.locator('main').textContent())!;
