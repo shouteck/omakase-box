@@ -46,7 +46,7 @@ export function WayCards() {
           <li key={way.id} className="bg-card rounded-2xl border border-line p-4 min-w-0 flex flex-col gap-4">
             <div>
               <h3 className="font-medium">{way.name}</h3>
-              <p className="text-sm text-soft">{throughHere(way, here)}</p>
+              <p className="text-sm text-soft">{way.id === 'one-click' ? 'Stripe or PayPal' : throughHere(way, here)}</p>
             </div>
             <p className={off ? 'text-sm text-soft' : 'text-lg font-medium tracking-tight'}>{off ? `${NOT_SET_UP[0].toUpperCase()}${NOT_SET_UP.slice(1)}.` : way.yourPart}</p>
             {off ? null : <Steps way={way} here={here} />}
@@ -58,10 +58,10 @@ export function WayCards() {
   );
 }
 
-/** The solver's step, naming only what this board has. */
+/** The solver's step: supported providers first, then only the connections this board offers. */
 export function ConnectWords() {
   const here = useWaysHere();
-  return <p>{connectWords(here)} Then say on the bounty&apos;s page whether it arrived.</p>;
+  return <p>One click supports Stripe or PayPal. {connectWords(here)} Then say on the bounty&apos;s page whether it arrived.</p>;
 }
 
 /** The country list itself, readable signed out: How it works links here (PF19). Nothing where this board has no Stripe. */

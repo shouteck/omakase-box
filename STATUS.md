@@ -1,9 +1,10 @@
 # Status
 
-Reconciled against `origin/master` at `1c6233a4` on 19 November 2026. Git is the merge record; deployment metadata alone does not identify a source commit.
+Reconciled against `origin/master` at `a785626b` on 19 November 2026. Git is the merge record; deployment metadata alone does not identify a source commit.
 
 ## Now
 
+- **PF45 names Stripe and PayPal for one-click support** on the landing card and How it works solver step, without an added availability/setup line. Configuration-dependent connection instructions and Stripe-only on merge are unchanged; no provider setup or payment behavior changes. Implementation hosted run 44543961902 passed on Linux, Windows and macOS; final integration acceptance and merge are tracked in [PR #27](https://github.com/shouteck/omakase-box/pull/27) and [PF45](waves/PF45.md). Production deployment is coordinated by Technical Steward, not performed by this wave.
 - **BT69 is merged and closed: a second never-ship check runs at the publication sink** (PR #20, merge `bb443e8a`). Before the one first-publication push, fresh posts and persisted retries alike re-read the outbound commits against what GitHub advertises and the current never-ship rules, and refuse `github-publish-never-ship` (or `github-git-failed` on an unreadable read) with nothing pushed or posted; the planner's `github-never-ship` is unchanged. Hosted acceptance: run 44520241558 green on Linux, macOS and Windows. Do not run BT69 again. See [BT69](waves/BT69.md).
 - **PF41 is merged and deployed** (PR #18, merge `90761b82`): the empty board shows one centred message, two ways in and an invented sample row. Deployed on the owner's word on 19 November 2026 with the Next.js 16.4.5 patch, no migration: Worker version `106d750c-b373-416d-8e3a-366a78d303a3`; rollback point `8ae133db-3133-4fb5-aee3-5979d4c3e338`; `exceededCpu` 0 before and after. See [PF41](waves/PF41.md).
 - **PF44 is merged:** `df26e299` adds comment-approved imports, `f0ac7a92` hides pending imports from agent detail, and `ae92b58b` reads all approval-comment pages and gives approved imports a new bookmark position. See [PF44](waves/PF44.md).
