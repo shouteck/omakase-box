@@ -339,8 +339,16 @@ describe('the pages', () => {
     expect(await payee.page.locator('[data-pay]').count()).toBe(0);
 
     const owner = await signedIn(7100, 'example-mara');
+    // Delay one successful write past expect.poll's 1 s budget: the test must wait for the POST, not race it.
+    await owner.page.route('**/paid', async route => {
+      const response = await route.fetch();
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      await route.fulfill({ response });
+    }, { times: 1 });
     await owner.page.click('[data-pay]');
+    const recorded = owner.page.waitForResponse(response => response.request().method() === 'POST' && response.url() === `${board.url}/api/b/${STATE_IDS.owed}/paid`);
     await owner.page.click('[data-pay-window] [data-window-action]:has-text("I\'ve paid $45")');
+    expect((await recorded).status()).toBe(200);
     await expect.poll(() => owner.page.locator('[data-pay-window]').innerText()).toContain('Recorded: you paid example-quill $45');
     await owner.page.click('[data-pay-window] [aria-label=Close]');
     await expect.poll(() => says(owner)).toContain('Recorded paid by you');
