@@ -171,6 +171,24 @@ describe('the pages', () => {
     await close();
   });
 
+  it('PF41: with bounties seeded, the board shows no sample and no empty message', async () => {
+    const { page, close } = await fresh();
+    await visit(page, '/board/');
+    await expect.poll(() => page.locator('main ul li').count()).toBe(20);
+    expect(await page.locator('[data-example]').count()).toBe(0);
+    expect(await page.locator('main').innerText()).not.toContain('No open bounties yet.');
+    await close();
+  });
+
+  it('PF41: filters that match nothing on a board with bounties keep their own message, with no sample', async () => {
+    const { page, close } = await fresh();
+    await visit(page, '/board/?query=zzz-nothing');
+    await expect.poll(() => page.locator('main').innerText()).toContain('No open bounty matches these filters.');
+    expect(await page.locator('main').innerText()).not.toContain('No open bounties yet.');
+    expect(await page.locator('[data-example]').count()).toBe(0);
+    await close();
+  });
+
   it('no match names its next step, and the step works', async () => {
     const { page, close } = await fresh();
     await visit(page, '/board/?query=zzz-nothing');
@@ -1245,6 +1263,68 @@ describe('an empty board and a board that cannot read GitHub', () => {
     } finally {
       await browser.close();
       await board.stop();
+    }
+  });
+});
+
+describe('PF41: the empty board says what will be here and how one gets here', () => {
+  let board: LocalBoard;
+  let browser: Browser;
+  beforeAll(async () => {
+    board = await startLocal({ schema: SCHEMA, out: OUT, now: () => NOW, seed: () => undefined });
+    await board.refresh();
+    browser = await chromium.launch();
+    mkdirSync(SHOTS, { recursive: true });
+  }, 120000);
+  afterAll(async () => { await browser?.close(); await board?.stop(); });
+
+  const open = async (options: { width?: number; dark?: boolean } = {}) => {
+    const context = await browser.newContext({ viewport: { width: options.width ?? 1440, height: 900 }, colorScheme: options.dark ? 'dark' : 'light' });
+    const page = await context.newPage();
+    await page.goto(`${board.url}/board/`);
+    await page.waitForFunction(() => !document.body.innerText.includes('Reading the board.'));
+    return { page, close: () => context.close() };
+  };
+
+  it('shows "No open bounties yet." and one way in to /how/ and one to /me/, inside main', async () => {
+    const { page, close } = await open();
+    await expect.poll(() => page.locator('main').innerText()).toContain('No open bounties yet.');
+    expect(await page.locator('main a[href="/how/"]', { hasText: 'Post one with your agent' }).count()).toBe(1);
+    expect(await page.locator('main a[href="/me/"]', { hasText: 'List an issue you already have' }).count()).toBe(1);
+    await close();
+  });
+
+  it('the sample says it is an example and links to no bounty', async () => {
+    const { page, close } = await open();
+    await expect.poll(() => page.locator('main [data-example]').count()).toBe(1);
+    const example = page.locator('main [data-example]');
+    expect(await example.innerText()).toContain('An example. Every name in it is invented.');
+    expect(await example.innerText()).toContain('example-org/ledger');
+    expect(await example.locator('a[href^="/b/"]').count()).toBe(0);
+    await close();
+  });
+
+  it('the sample never reaches the feed, the numbers, RSS or MCP', async () => {
+    const mcp = await fetch(`${board.url}/mcp`, { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json, text/event-stream' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'find_bounties', arguments: { limit: 25 } } }) });
+    expect(mcp.status).toBe(200);
+    const answers = [...await Promise.all(['/bounties.json', '/numbers.json', '/rss.xml', '/api/board'].map(async path => {
+      const response = await fetch(`${board.url}${path}`);
+      expect(response.status, path).toBe(200);
+      return response.text();
+    })), await mcp.text()];
+    for (const text of answers) {
+      expect(text).not.toContain('example-org/ledger');
+      expect(text).not.toContain('Recurring transactions skip the 31st');
+    }
+  });
+
+  it('fits a 390-pixel phone, light and dark, and at 1440', async () => {
+    for (const [width, dark] of [[390, false], [390, true], [1440, false], [1440, true]] as const) {
+      const { page, close } = await open({ width, dark });
+      await expect.poll(() => page.locator('main [data-example]').count()).toBe(1);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+      await page.screenshot({ path: join(SHOTS, `pf41-board-empty-${width}-${dark ? 'dark' : 'light'}.png`), fullPage: true });
+      await close();
     }
   });
 });
