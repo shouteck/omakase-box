@@ -5,12 +5,12 @@ Owner decisions: D-2026-10-21-k44-decisions, D-2026-10-31-agent-skill-channel, D
 Owner context: D-2026-10-21-k44-decisions (decision 3: lead with the mechanism; decision 5: machine channels first, then one Show HN by the owner); D-2026-10-31-agent-skill-channel (an Agent Skill and a free plugin marketplace repository join the machine channels; D-2026-11-01-agent-only-direction brings Monid and the other toolboxes in; agent wallets stay out, in K46); spend no money. **Going live, publishing to npm, listing in registries, creating a repository, pull requests to other repositories and posting anywhere are the owner's own actions;** this wave prepares them and does none of them.
 Horizon: long: start with `/plan` and keep the plan in this file
 
-**Brief.** Written ahead by the CTO on 21 October 2026; **rewritten on 13 November 2026** (D-2026-11-13-remaining-waves) after most of the original was done elsewhere. Runs after K52 and the site waves (PF40 to PF43, PF39, PF35); [K41](K41.md), the film, follows it and is the last wave before the owner's launch.
+**Brief.** Written ahead by the CTO on 21 October 2026; **rewritten on 13 November 2026** (D-2026-11-13-remaining-waves) after most of the original was done elsewhere. Runs after K52 and the site waves (PF40–PF42, PF39, PF35); [PF43](PF43.md) is not a dependency. [K41](K41.md), the film, follows it and is the last wave before the owner's launch.
 
 **Already done, not in this wave:**
 
 - **The npm package** is published as `omakase-box` (0.2.0 by [BT53](BT53.md), 0.2.1 by [BT65](BT65.md)); the command is `omakase-box` alone ([BT63](BT63.md)).
-- **The install line** is `npx -y omakase-box setup`, on the site and in the README, one shared constant ([PF16](PF16.md), [PF43](PF43.md)).
+- **The install line** is `npx -y omakase-box setup`, already on How it works and in [First five minutes](../FIRST-FIVE-MINUTES.md). No homepage copy is needed.
 - **The skill** exists: `SKILL_TEXT` in `packages/box-bounty/wording.ts`, written by `omakase-box setup` into the agent homes `SKILL_TARGETS` names (`instructions.ts`).
 - **The MCP server** is live at `/mcp` on the board (`packages/box-platform/src/mcp.ts`: read-only, no sign-in).
 
@@ -18,7 +18,7 @@ Horizon: long: start with `/plan` and keep the plan in this file
 
 ## Outcome
 
-**Pilot acceptance clarification (owner, 19 November 2026):** The controllable pilot gate is owner-approved bounties, working submissions, merge detection, correct payment-state tracking, and the never-ship stop. Sandbox checks verify payment mechanics; a real payment is optional validation, not a launch prerequisite. Real payments remain the owner's decision.
+**Pilot acceptance clarification (owner, 19 November 2026):** The controllable pilot gate is owner-approved bounties, working submissions, merge detection, correct payment-state tracking, and the never-ship stop. For cross-listing an existing bounty, use [PF44](PF44.md): the listing stays pending until its owner approves on the original GitHub issue. Sandbox checks verify payment mechanics; a real payment is optional validation, not a launch prerequisite. Real payments remain the owner's decision.
 
 Everything the owner needs to list the tool and announce it is prepared and checked, and the owner can do it in one sitting without the kitchen touching an account:
 
