@@ -293,8 +293,9 @@ describe('BT59: the in-process stand-in answers as the program does', { timeout:
       } finally { useGitHubTransportForTests(null); }
       // The version probe is the gh program's own (one per program per process); the stand-in answers every other call.
       // An --input file is a fresh temporary file per call: its name differs every run, its content is the request's.
+      // A commit id is made fresh in each run's fixture too (BT67 compares a pull request's head by id).
       calls = ctx.state().calls.filter(call => !(Array.isArray(call) && call[0] === 'version'))
-        .map(call => (call as string[]).map((arg, index, all) => all[index - 1] === '--input' ? '<input>' : arg));
+        .map(call => (call as string[]).map((arg, index, all) => all[index - 1] === '--input' ? '<input>' : arg.replace(/\b[0-9a-f]{40}\b/g, '<sha>')));
     });
     return { calls, ghStarts };
   };
