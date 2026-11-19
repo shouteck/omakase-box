@@ -90,6 +90,8 @@ Written so any model can cook it.
 
 ## Changed expectations
 
+- tests/box/bounty/pf6-wait.test.ts::starts no request past the deadline %s — distinguish pre-request expiry (timeout) from an already-started request failing after expiry (named upstream refusal); no rate-limit lookup starts after expiry in either case.
+
 - tests/box/bounty/pf6-wait.test.ts::reads unseen PRs in one poll without any local, ref, board or GitHub write — review corrects the text next step: look shows a collected version; apply detects and collects a moved head without merging, but can merge an unchanged head. JSON and read-only guarantees are unchanged.
 
 - tests/box/bounty/pf6.test.ts::the skill is a trusted front door to local execution and read-only discovery — owner-specified actionable CLI journey and verbatim posting/approval paragraph replace the meta front-door and abbreviated CLI assertions; retain command, trust, discovery and installed-byte checks.

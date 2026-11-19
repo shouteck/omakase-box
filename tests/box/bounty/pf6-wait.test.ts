@@ -38,9 +38,28 @@ describe('PF6 bounded observation loop', () => {
       return { status: 1, stderr: 'HTTP 429 rate limit exceeded' };
     });
     try {
-      expect(() => pages('.', 'repos/owner/project/pulls', { readOnly: true, deadline: 1000 })).toThrow(GitHubReadDeadlineReached);
+      const read = () => pages('.', 'repos/owner/project/pulls', { readOnly: true, deadline: 1000 });
+      if (phase === 'after failure') expect(read).toThrow(expect.objectContaining({ reason: 'github-rate-limited' }));
+      else expect(read).toThrow(GitHubReadDeadlineReached);
       expect(calls).toHaveLength(phase === 'after failure' ? 1 : 0);
       expect(calls.flat()).not.toContain('rate_limit');
+    } finally { clock.mockRestore(); useGitHubTransportForTests(null); }
+  });
+  it.each([
+    { reason: 'github-rate-limited', answer: { status: 1, stderr: 'HTTP 429 rate limit exceeded' } },
+    { reason: 'github-unreachable', answer: { status: null, error: new Error('request failed') } },
+    { reason: 'github-unavailable', answer: { status: 1, stderr: 'HTTP 503 unavailable' } }
+  ])('refuses a started request that fails past the deadline: $reason', async ({ reason, answer }) => {
+    let now = 0; let calls = 0;
+    const clock = vi.spyOn(Date, 'now').mockImplementation(() => now);
+    useGitHubTransportForTests(() => { calls++; now = 2000; return answer; });
+    try {
+      await expect(loop({ id: 'bt-test', timeoutSeconds: 1, seen: [] }, {
+        now: () => now, sleep: async () => { throw new Error('must not sleep'); },
+        read: () => { pages('.', 'repos/owner/project/pulls', { readOnly: true, deadline: 1000 }); return []; },
+        signal: new AbortController().signal
+      })).rejects.toMatchObject({ reason });
+      expect(calls).toBe(1);
     } finally { clock.mockRestore(); useGitHubTransportForTests(null); }
   });
   it('returns an unseen head immediately, including a moved head on a seen PR', async () => {

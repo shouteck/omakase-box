@@ -153,12 +153,10 @@ function gh(root: string, args: readonly string[], readOnly = false, deadline = 
   if (Date.now() >= ghDeadline) return invalid('github-call-budget', 'the GitHub budget for this run is spent — the run stays inside its bound and the next one can ask again; next: rerun the command — a new run gets a fresh budget');
   const result = call(root, args);
   if (result.error !== undefined || result.status !== 0) {
-    checkReadDeadline(deadline);
     const failure = classifyGitHubFailure(result, () => {
       // GET /rate_limit is free, asked at most once per failure, and still a
       // call: it spends the run's budget and never outlives its deadline.
-      checkReadDeadline(deadline);
-      if (ghCallBudget <= 0 || Date.now() >= ghDeadline) return null;
+      if (ghCallBudget <= 0 || Date.now() >= ghDeadline || Date.now() >= deadline) return null;
       ghCallBudget -= 1;
       const limits = call(root, ['api', '--hostname', 'github.com', 'rate_limit']);
       if (limits.error !== undefined || limits.status !== 0) return null;
