@@ -8,12 +8,13 @@ import { rig } from './support.js';
 
 const PACKAGE = new URL('../../packages/box-platform/', import.meta.url);
 const OUT = fileURLToPath(new URL('out/', PACKAGE));
+const ROOT = fileURLToPath(new URL('../../', PACKAGE)).replace(/[\\/]+$/, '').replaceAll('\\', '/');
 
 describe('build version', () => {
   it('built version.json contains the current checkout SHA and a UTC build time', () => {
     const version = JSON.parse(readFileSync(new URL('out/version.json', PACKAGE), 'utf8'));
     expect(version.sha).toMatch(/^[0-9a-f]{40}$/);
-    const head = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: PACKAGE, encoding: 'utf8' }).trim();
+    const head = execFileSync('git', ['-c', `safe.directory=${ROOT}`, 'rev-parse', 'HEAD'], { cwd: PACKAGE, encoding: 'utf8' }).trim();
     expect(version.sha, 'version.json is stale; rebuild the platform').toBe(head);
     expect(version.builtAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
     expect(new Date(version.builtAt).toISOString()).toBe(version.builtAt);
@@ -45,6 +46,15 @@ describe('build version', () => {
       expect(result.status).not.toBe(0);
       expect(result.stderr).toContain('full 40-character Git SHA');
     }
+  });
+
+  it('builds without a CI SHA when Git considers the checkout differently owned', () => {
+    const { GITHUB_SHA: _sha, ...env } = process.env;
+    const result = spawnSync(process.execPath, ['--input-type=module', '-e', "import { writeVersion } from './version.mjs'; console.log(JSON.stringify(writeVersion(new URL('./', import.meta.url))));"], { cwd: PACKAGE, encoding: 'utf8', env: { ...env, GIT_TEST_ASSUME_DIFFERENT_OWNER: '1' } });
+    expect(result.stderr).toBe('');
+    expect(result.status).toBe(0);
+    const head = execFileSync('git', ['-c', `safe.directory=${ROOT}`, 'rev-parse', 'HEAD'], { cwd: PACKAGE, encoding: 'utf8' }).trim();
+    expect(JSON.parse(result.stdout).sha).toBe(head);
   });
 
   it('fails when Git is unavailable and no CI SHA was supplied', () => {
