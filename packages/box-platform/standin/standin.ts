@@ -185,6 +185,7 @@ export class Standin {
   }
 
   async start(): Promise<string> {
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises -- The local GitHub stand-in sends its response inside the listener; Node does not consume its return value.
     this.server = createServer(async (request, response) => {
       const url = new URL(request.url ?? '/', 'http://localhost');
       const chunks: Buffer[] = [];
