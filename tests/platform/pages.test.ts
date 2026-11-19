@@ -331,7 +331,7 @@ describe('the pages', () => {
     expect(await payee.page.locator('[data-pay]').count()).toBe(0);
 
     const owner = await signedIn(7100, 'example-mara');
-    // A successful write can outlast expect.poll's 1 s render budget.
+    // Delay one successful write past expect.poll's 1 s budget: the test must wait for the POST, not race it.
     await owner.page.route('**/paid', async route => {
       const response = await route.fetch();
       await new Promise(resolve => setTimeout(resolve, 1200));
