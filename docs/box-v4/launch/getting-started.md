@@ -48,7 +48,9 @@ omakase-box allow <owner>/<repository> --reward <whole-dollars> --reward-limit <
 
 The owner can add `--ask` to approve each post and merge. Write `TASK.md` with
 the problem, useful context and what a solution would change; leave private
-data out. The `--why` note explains the hand-off locally and is not published.
+data out. The `--why` note and any `--part-of` reference are published in the
+shared bounty event chain pushed to the public repository's Git ref when
+posting. Keep private explanations and internal queue references out of both.
 
 ```sh
 omakase-box create --task TASK.md --why "beyond this agent's available knowledge"

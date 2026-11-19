@@ -30,7 +30,7 @@ bounty just to list it.
 ## 2. Linear: one slice of a larger queued job
 
 Write the slice in `TASK.md`, describing its boundary and how it fits the job.
-Keep the parent queue reference on the local record with `--part-of`:
+Use `--part-of` only for a parent queue reference safe to publish:
 
 ```sh
 omakase-box create --task TASK.md --why "this slice needs protocol expertise" --part-of "QUEUE-142"
@@ -38,7 +38,9 @@ omakase-box post <id> --preview
 omakase-box post <id>
 ```
 
-`--part-of` links local context; it does not fetch or modify the queue item.
+Both `--part-of` and `--why` are included in the shared bounty event chain
+pushed to the public repository's Git ref at posting. Use a public-safe label
+instead of an internal reference. Neither option fetches or modifies the queue item.
 The solver sees the task, not an implied grant of access to the parent system.
 
 ## 3. Vercel Board: a task that needs a local reproduction change
