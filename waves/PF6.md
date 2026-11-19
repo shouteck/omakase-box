@@ -143,3 +143,27 @@ and no timeout option. Our API observation is slower and explicitly bounded.
 ## Result
 
 Awaiting the owner's go; not run.
+
+### Follow-up A — author diagnosis and wait dispatch audit
+
+- The host's shell `git` function sources `/opt/.devin/git_author` in the
+  current shell for `commit`, leaving `GIT_AUTHOR_NAME=Original ShouTeck`
+  exported. Launching verify after commit in that same shell inherits it.
+  `publish-plan.ts:buildWip` sets `user.name=box-bounty`, but `gitEnvironment`
+  preserves author environment variables, which take precedence over that config.
+- Reproduction: sourcing that host file before the scoped github-history test
+  gives the exact author assertion failure, 1 failed / 22 passed, on both PF6
+  and an independently built `origin/master` (bc79772c) worktree. In a fresh
+  shell with the same neutral HOME, PF6 passes all 23 tests. This disproves
+  a PF6 regression or HOME-only cause; it is command-environment ordering,
+  not evidence of another test changing shared state. The relevant product
+  and fixture files have no diff against origin/master. No product/test fix.
+- Audit: successful `resolveRepoRoot` does read-only Git root resolution and
+  canonicalization. Before the wait branch there is only the `since` assignment.
+  Earlier `loadTaken`/`settingsDir` read paths and record bytes; no mkdir,
+  migration, notice or settings save. The root-error fallback's takenOverview
+  also only reads local records. Board preflight is after the wait return;
+  the exit hook excludes wait. Existing PF6 snapshots cover .box/SQLite,
+  settings, Git and remote refs, pending board hints, and both GitHub transports.
+- Subsequent verification runs start in a fresh shell, separate from commits;
+  no Git configuration or host wrapper was changed.
