@@ -1,5 +1,5 @@
 import { Section, Title } from '../../components/ui.jsx';
-import { REPOSITORY } from '../../components/SiteNav.jsx';
+import { REPOSITORY } from '../../components/repository.js';
 
 export const metadata = { title: 'Terms of use, omakase-box' };
 

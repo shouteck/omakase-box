@@ -73,6 +73,14 @@ describe('the pages', () => {
 
   const pf40Pages = ['/', '/board/', '/how/', '/agents/', '/me/', '/sign-in/', '/privacy/', '/terms/', '/numbers/', '/404/', '/solver/example-quill/', '/owner/example-mara/', `/b/${STATE_IDS.open}/`];
 
+  it('terms repository links are URLs in the server-rendered HTML, not client functions', () => {
+    const html = readFileSync(join(OUT, 'terms/index.html'), 'utf8');
+    expect(html).toContain('href="https://github.com/shouteck/omakase-box/issues"');
+    expect(html).toContain('href="https://github.com/shouteck/omakase-box/blob/master/LICENSE"');
+    expect(html).not.toMatch(/href="[^"]*function\s*\(/);
+    expect(html).toMatch(/<footer\b[\s\S]*?href="https:\/\/github\.com\/shouteck\/omakase-box"/);
+  });
+
   it('PF40: every built page carries the mark and one product name', async () => {
     const { page, close } = await fresh();
     try {
