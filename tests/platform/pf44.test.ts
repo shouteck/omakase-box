@@ -80,6 +80,13 @@ describe('an imported listing before approval', () => {
     expect(await r.env.DB.prepare('SELECT COUNT(*) AS n FROM paid_clicks').first<{ n: number }>()).toEqual({ n: 0 });
   });
 
+  it('PF41: a pending import alone leaves the board empty, so it shows the empty board', async () => {
+    await imported();
+    await run();
+    const board = await (await send(null, '/api/board')).json() as any;
+    expect(board).toMatchObject({ open_total: 0, count: 0, bounties: [] });
+  });
+
   it('the importer may remove it while it waits; someone else may not', async () => {
     const { omakase, id } = await imported();
     expect((await post(await signIn(QUILL), `/api/b/${id}/remove`, {})).status).toBe(403);

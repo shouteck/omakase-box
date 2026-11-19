@@ -2,6 +2,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Quiet, SampleNote, Stale, plural } from './ui.jsx';
 
+// PF41: the empty board's sample row. A constant, never fetched and never stored.
+const EXAMPLE = { id: 'example', title: 'Recurring transactions skip the 31st', repository: 'example-org/ledger', language: 'TypeScript', age_days: 2, solutions_open: 2, amount: 45, poster: 'example-org',
+  record: { has_history: true, merged: 4, recorded_paid: 4, confirmed_received: 3, says_not_received: 0, owed_now: 0, oldest_owed_days: 0 } };
 const EMPTY = { query: '', language: '', min_reward: '', owner_record: '', sort: 'newest', solutions: '', max_age_days: '', approved_by: '', repository: '' };
 const params = q => {
   const out = new URLSearchParams();
@@ -22,12 +25,14 @@ function Select({ label, name, value, onChange, options }) {
   );
 }
 
-/** A board card, K43's three lines. The title is the poster's words, as text. */
-export function Card({ b }) {
+/** A board card, K43's three lines. The title is the poster's words, as text. `example` draws PF41's invented sample, which links nowhere. */
+export function Card({ b, example = false }) {
   return (
     <li className="border-t border-line py-5 grid grid-cols-[minmax(0,1fr)_auto] gap-x-8">
       <div className="min-w-0">
-        <a href={`/b/${b.id}/`} className="text-lg font-medium tracking-tight hover:underline break-words" style={{ color: 'var(--color-ink)', textDecoration: 'none' }}>{b.title}</a>
+        {example
+          ? <p className="text-lg font-medium tracking-tight break-words">{b.title}</p>
+          : <a href={`/b/${b.id}/`} className="text-lg font-medium tracking-tight hover:underline break-words" style={{ color: 'var(--color-ink)', textDecoration: 'none' }}>{b.title}</a>}
         <p className="mt-1 text-sm text-soft break-words">
           {[b.repository, b.language, b.age_days === 0 ? 'posted today' : `${plural(b.age_days, 'day')} old`, b.solutions_open ? `${plural(b.solutions_open, 'solution')} waiting` : 'no solutions yet'].filter(Boolean).join(' · ')}
         </p>
@@ -136,10 +141,21 @@ export default function Board() {
             </p>
           ) : null}
           {data.open_total === 0 ? (
-            <div className="border border-line bg-surface rounded-xl px-5 py-6" aria-live="polite">
-              <p className="font-semibold">No open bounties on the board yet.</p>
-              <p className="mt-1 text-soft max-w-prose">A bounty appears here a few minutes after someone posts one on a public GitHub repository. <a href="/how/">How it works</a></p>
-            </div>
+            <>
+              <div className="border-t border-line pt-[4.5rem] pb-[3.5rem] text-center" aria-live="polite">
+                <p className="text-xl font-medium tracking-tight">No open bounties yet.</p>
+                <p className="mt-2 text-soft max-w-[30rem] mx-auto">A bounty appears here a few minutes after someone posts one on a public GitHub repository.</p>
+                <p className="mt-6 flex flex-wrap justify-center gap-x-8 gap-y-2">
+                  <a href="/how/" className="font-medium" style={{ textDecoration: 'none' }}>Post one with your agent <span aria-hidden="true">›</span></a>
+                  <a href="/me/" className="font-medium" style={{ textDecoration: 'none' }}>List an issue you already have <span aria-hidden="true">›</span></a>
+                </p>
+              </div>
+              <div className="max-w-[46rem] mx-auto" data-example>
+                <p className="text-sm text-soft pb-2">What one will look like</p>
+                <div style={{ opacity: 0.7 }}><ul className="border-b border-line"><Card b={EXAMPLE} example /></ul></div>
+                <p className="text-sm text-soft pt-2">An example. Every name in it is invented.</p>
+              </div>
+            </>
           ) : data.count === 0 ? (
             <div className="mt-4 border-t border-line pt-6">
               <p className="font-semibold">No open bounty matches these filters.</p>
