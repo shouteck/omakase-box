@@ -90,6 +90,8 @@ Written so any model can cook it.
 
 ## Changed expectations
 
+- tests/platform/pages.test.ts::PF6: answering explains discovery, safe work, both submission paths and owner payment — MCP is a POST-only protocol endpoint, not a browser destination; link the existing /agents/#mcp explanation and present the server URL with the existing copy style. Assert no direct /mcp link; do not change its HTTP behavior.
+
 - tests/platform/pages.test.ts::the front page says it in few words, shows the real product, and leads to the detail — owner asks for real discovery and payment-page links in Answer bounties, replacing the old no-links assertion only for that section.
 - tests/platform/pages.test.ts::with %s, the card and How it works name what this board has — solver payment step is now titled Get paid; keep all payment-capability assertions and fixture cases unchanged.
 
