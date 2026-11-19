@@ -545,7 +545,7 @@ describe('the pages', () => {
     expect(front.includes('Nothing for you')).toBe(on_merge);
     expect(moneyClaims(front)).toEqual([]);
     await visit(page, '/how/');
-    const step = page.locator('main li', { has: page.locator('h4', { hasText: 'Get merged, get paid, confirm' }) });
+    const step = page.locator('main li', { has: page.getByRole('heading', { name: 'Get merged, get paid, confirm', exact: true }) });
     await expect.poll(() => step.textContent()).toContain(want.connect);
     await expect.poll(async () => await page.locator('[data-stripe-reach]').count()).toBe(on_merge ? 1 : 0);
     const how = (await page.locator('main').textContent())!;
