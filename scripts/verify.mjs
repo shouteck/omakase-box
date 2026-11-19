@@ -64,7 +64,7 @@ if (editGate.status !== 0) {
   console.error('verify: refusing before any step — the test-edit gate did not pass (rule 2).');
   process.exit(2);
 }
-const steps = [...(only ? [] : ['check', 'build']), ...suites];
+const steps = [...new Set([...(only ? [] : ['check', 'build', ...(scripts.lint ? ['lint'] : [])]), ...suites])];
 if (!steps.length) { console.error('Nothing to run.'); process.exit(2); }
 // K45: test:kitchen runs the kitchen files the diff can reach — each file
 // declares its inputs; a runner, unmapped or unreadable path, or --full,

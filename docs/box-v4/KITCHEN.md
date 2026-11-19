@@ -25,6 +25,7 @@ Keep ceremony in proportion: a one-command check needs no page of brief.
 
 ## Verification
 
+- `lint` checks only the board's three type-aware promise rules; verify reuses it when no linted file, config or lint toolchain input changed, and the hosted run also runs it after install.
 - **Acceptance is the hosted run** (K50). A push to `wave/<id>` or master runs `verify --full test:box-bounty test:kitchen`, the platform suite and the install test on Linux, Windows and macOS (`.github/workflows/verify.yml`). Acceptance is that run green on all three systems on the wave's exact commit SHA, read with `gh run list -R shouteck/omakase-box --branch wave/<id>` and quoted in the wave file with its run id. Red, cancelled or missing is not a pass. The Result's own push runs again; that run too is green before the merge (K57). If GitHub's machines are unavailable, a full local run is the fallback and the wave file says so.
 - **Local runs are for the files just touched**, while fixing; a full local run is no longer required before a merge. `--fresh` is only for a stated doubt about a record. Read master's latest run at kickoff and before the next merge; if it is red, the next wave is the fix.
 

@@ -135,7 +135,11 @@ export function kitchenSuiteReason(paths) {
 // they look like. Any other non-inert path every step reads — an unmapped
 // path always means "run it", never "skip it".
 export const stepReadsPath = (step, path) =>
-  kitchenSuiteReason([path]) === KITCHEN_READ_REASON ? step === 'test:kitchen' : !isInert(path);
+  step === 'lint'
+    ? ['eslint.config.mjs', 'tsconfig.json', 'package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', '.node-version', 'scripts/pnpm.mjs', 'scripts/toolchain.json', 'scripts/verify.mjs', 'scripts/suite.mjs'].includes(path)
+      || path.startsWith('scripts/tooling/')
+      || (/^packages\/box-platform\/.*\.ts$/.test(path) && !/(^|\/)(dist|out|node_modules)\//.test(path))
+    : kitchenSuiteReason([path]) === KITCHEN_READ_REASON ? step === 'test:kitchen' : !isInert(path);
 
 // --- which kitchen test files a diff can reach (K45) --------------------------
 
