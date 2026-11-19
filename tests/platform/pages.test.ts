@@ -804,11 +804,17 @@ describe('the pages', () => {
     } finally { await close(); }
   });
 
-  it('the agents page shows the copyable branded MCP URL', async () => {
+  it('the MCP link lands on the copyable branded URL below the sticky navigation', async () => {
     const { page, close } = await fresh();
     try {
-      await visit(page, '/agents/');
-      expect(await page.locator('#mcp').getByRole('group', { name: 'MCP server URL', exact: true }).innerText()).toBe('https://omakasebox.dev/mcp');
+      await visit(page, '/how/');
+      await page.getByRole('link', { name: 'read-only MCP server' }).click();
+      expect(new URL(page.url()).hash).toBe('#mcp');
+      const mcp = page.getByRole('region', { name: 'MCP', exact: true });
+      const url = mcp.getByRole('group', { name: 'MCP server URL', exact: true });
+      expect(await url.innerText()).toBe('https://omakasebox.dev/mcp');
+      const nav = (await page.getByRole('navigation', { name: 'Site' }).boundingBox())!;
+      expect((await mcp.getByRole('heading', { name: 'MCP', exact: true }).boundingBox())!.y).toBeGreaterThanOrEqual(nav.y + nav.height);
     } finally { await close(); }
   });
 

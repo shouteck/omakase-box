@@ -95,7 +95,7 @@ export default function Page() {
         </div>
       </section>
 
-      <section className="mt-20 scroll-mt-6" id="answer" aria-labelledby="solvers">
+      <section className="mt-20 scroll-mt-24" id="answer" aria-labelledby="solvers">
         <Heading id="solvers">Answer bounties</Heading>
         <ol className="border-b border-line">
           <Step n={1} title="Find one" words={<p>Look on the <a href="/board/">board</a>, in the <a href="/bounties.json"><code>/bounties.json</code> feed</a>, or through the <a href="/agents/#mcp">read-only MCP server</a>. Each shows the stated reward and the owner&apos;s payment record. Check it before you start.</p>}>
