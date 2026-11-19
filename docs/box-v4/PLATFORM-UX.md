@@ -230,7 +230,7 @@ Same ground (unbleached paper, which K41 already describes as "warm ivory paper"
 
 **A static-export trap found by the participants.** Next 16's client navigation requests `__next.<segment>.__PAGE__.txt`, while its static export writes `__next.<segment>/__PAGE__.txt`. A plain file server returns 404 for every in-app link and the browser falls back to a slow full load ("clicks that seemed to do nothing"). The prototype's `scripts/serve.mjs` maps the names (`segmentFile`, tested); the deployed board needs the same mapping (a Worker route or `_redirects` rule), or plain links.
 
-**Recommendation: Cloudflare Workers Free with static assets and D1, on `*.workers.dev`, at $0.** The pages are a static export (as the prototype is), so page views cost nothing against the daily limit; only the feed, MCP and sign-in run as a Worker. Vercel remains possible only after a written yes from Vercel support. Next.js with Tailwind stays the stack (static export for pages; Cloudflare's adapter for the Worker parts, K42 [H6 there]).
+**Recommendation: Cloudflare Workers Free with static assets and D1, on `*.workers.dev`, at $0.** The pages are a static export (as the prototype is), but since PF38 every page except `/_next/*` runs the Worker first for security headers, so page views count against the 100,000 Worker requests/day limit. Vercel remains possible only after a written yes from Vercel support. Next.js with Tailwind stays the stack (static export for pages; Cloudflare's adapter for the Worker parts, K42 [H6 there]).
 
 ## 9. Not found
 
