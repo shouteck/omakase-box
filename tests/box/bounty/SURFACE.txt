@@ -666,6 +666,7 @@ refusal github-pr-unreadable
 refusal github-pr-wrong-branch
 refusal github-preview-stale
 refusal github-private-repository
+refusal github-publish-never-ship
 refusal github-push-denied
 refusal github-rate-limited
 refusal github-remote-mismatch

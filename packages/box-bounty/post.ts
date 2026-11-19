@@ -15,6 +15,7 @@ import { repositoryAddress } from './repository.js';
 import { readReward, repoReward } from './settings.js';
 import { boundAmount,formatFor,publicText,renderFormat } from './format.js';
 import { showPath } from './notice.js';
+import { checkOutbound } from './publish-sink.js';
 import { hitPlace, isTextField, scanFields } from './scan.js';
 import { SCAN_LIMIT_LINE, WITHHELD } from './wording.js';
 
@@ -461,9 +462,12 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
   // A publication frozen by an older version may never have been measured.
   assertTitleFits(id, publication.title);
   assertBodyFits(id, characters(publication.body), 0);
+  // BT69: fresh posts and persisted retries alike meet the sink's own read of
+  // what this push sends, under the rules as they are now.
+  const checked = checkOutbound(root, repository, publication.commit, shipRules(root), id);
   let destination: string;
   try {
-    remoteGit(root, repository, ['push', `${publication.commit}:refs/heads/${publication.branch}`]);
+    remoteGit(root, repository, ['push', `${checked}:refs/heads/${publication.branch}`]);
     publication.state = 'branch-pushed';
     persistRecord(root, record);
     if (publication.issue === null) {

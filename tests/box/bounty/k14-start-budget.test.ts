@@ -95,7 +95,9 @@ const BUDGET: Record<string, { git: number; gh: number }> = {
   'post-preview': { git: 16, gh: 3 },
   // BT32: +6 — posting appends the `posted` event (hash-object, mktree,
   // commit-tree, update-ref) and pushes the chain ref.
-  'post-github': { git: 25, gh: 7 },
+  // BT69: +3 — the sink's own never-ship read before the push: ls-remote,
+  // cat-file --batch-check and rev-list (diff-tree only when commits go out).
+  'post-github': { git: 28, gh: 7 },
   // BT32: +6 — refresh (fetch + for-each-ref) plus adopting/importing the
   // returned chain tips for the posted bounty.
   'status-posted': { git: 5, gh: 4 },
