@@ -326,9 +326,10 @@ export function answerGitHub(root: string, id: string, pr: number, via?: 'look' 
   const body = typeof data['body'] === 'string' ? data['body'] : '';
   const payTo = parsePayTo(body);
   requireCurrentDelivery(record);
-  const result = collectHistoryPullRequest(root, record, publication, commit, author, pr, via, payTo, redact(body));
+  const sight = firstSightReader(root, record)(pr, commit);
+  const result = collectHistoryPullRequest(root, record, publication, commit, author, pr, via, payTo, redact(body), sight.firstSight);
   if (publication.seenPullRequests?.some(entry => entry.n === pr && entry.commit === commit) !== true) {
-    publication.seenPullRequests = [...publication.seenPullRequests ?? [], { n: pr, commit, at: result.record.attempts?.find(attempt => attempt.commit === commit)?.seenAt ?? new Date().toISOString(), ...firstSightReader(root, result.record)(pr, commit) }];
+    publication.seenPullRequests = [...publication.seenPullRequests ?? [], { n: pr, commit, at: result.record.attempts?.find(attempt => attempt.commit === commit)?.seenAt ?? new Date().toISOString(), ...sight }];
     persistRecord(root, result.record);
   }
   return result;
@@ -416,7 +417,7 @@ export function checkSolutionHistory(root: string, record: BountyRecord, publica
 // `description` is the pull request's own description text, credential-redacted
 // by the caller. It is recorded for `look --json`'s `fromOthers` (BT19) — the
 // tool never renders it as its own words.
-function collectHistoryPullRequest(root: string, record: BountyRecord, publication: GitHubPublication, commit: string, author: string, pr: number, via?: string, payTo: PayToFact = { state: 'none' }, description?: string) {
+function collectHistoryPullRequest(root: string, record: BountyRecord, publication: GitHubPublication, commit: string, author: string, pr: number, via?: string, payTo: PayToFact = { state: 'none' }, description?: string, firstSight?: FirstSight) {
   if (gitOutcome(root, ['merge-base', '--is-ancestor', publication.commit, commit]).status !== 0) {
     return invalid('github-pr-not-descended', `the pull request's history does not descend from ${publication.branch}, the bounty branch — there is nothing sound to compare it with; nothing was collected; next: ask the solver to rebase the pull request on ${publication.branch}, or do not collect it`);
   }
@@ -467,6 +468,6 @@ function collectHistoryPullRequest(root: string, record: BountyRecord, publicati
   persistRecord(root, record);
   // BT32: collecting a pull request is a shared chain milestone. A machine
   // with no permission reads and pushes nothing to the remote (BT52).
-  if (!adoptedWithoutPermission(root, record)) shareSolution(root, record, attempt);
+  if (!adoptedWithoutPermission(root, record)) shareSolution(root, record, attempt, firstSight);
   return { record, outcome: 'answered' as const, attempt: n, report, ...(merge.kind === 'conflict' ? { conflicts: merge.paths } : {}) };
 }

@@ -32,6 +32,7 @@ import { BountyRefused } from './errors.js';
 import { git, gitNamedBlobs, gitOutcome, gitRefsWrite, gitStdin, gitWriteBlob } from './git.js';
 import type { RefWrite } from './git.js';
 import { isObject } from './gh.js';
+import { firstSightShape,type FirstSight } from './pay.js';
 import { queueBoardHint } from './board.js';
 import { emitMergeNotice } from './notice.js';
 import type { Attempt, BountyRecord } from './record.js';
@@ -63,7 +64,7 @@ const CHAIN_ID = /^bt-[a-f\d]{12}$/;
 // never emits one.
 const EVENT_FIELDS: Record<string, readonly string[]> = {
   posted: ['id', 'title', 'task', 'why', 'partOf', 'followup', 'base', 'branch', 'issue', 'published', 'reward', 'allowedBy'],
-  solution: ['n', 'pullRequest', 'author', 'commit', 'changed', 'added', 'deleted', 'payTo'],
+  solution: ['n', 'pullRequest', 'author', 'commit', 'changed', 'added', 'deleted', 'payTo', 'firstSight'],
   merged: ['n', 'mergeCommit', 'unasked'],
   closed: ['kind', 'reason', 'unasked'],
   paid: ['amount', 'by', 'withdrawn'],
@@ -326,7 +327,9 @@ export function sharePosted(root: string, record: BountyRecord, task: string): P
 }
 
 // `solution` — when a pull request is collected (look, apply, status refresh).
-export function shareSolution(root: string, record: BountyRecord, attempt: Attempt): PushResult | 'held' {
+// BT67: `firstSight` is the posting machine's evidence for that head, carried unchanged so another machine decides
+// the payee by the same rule; absent, the shared record names nobody.
+export function shareSolution(root: string, record: BountyRecord, attempt: Attempt, firstSight?: FirstSight): PushResult | 'held' {
   const event: ChainEvent = {
     v: 1, type: 'solution', at: new Date().toISOString(), actor: actorOf(record),
     n: attempt.n,
@@ -335,7 +338,8 @@ export function shareSolution(root: string, record: BountyRecord, attempt: Attem
     commit: attempt.commit,
     changed: [...attempt.changed], added: [...attempt.added], deleted: [...attempt.deleted],
     // Only the parsed fact's kind leaves the machine — never the link text.
-    ...(attempt.payTo !== undefined ? { payTo: { state: attempt.payTo.state } } : {})
+    ...(attempt.payTo !== undefined ? { payTo: { state: attempt.payTo.state } } : {}),
+    ...(attempt.pullRequest !== undefined && firstSight !== undefined ? { firstSight: { local: firstSight.local, remote: firstSight.remote } } : {})
   };
   return share(root, record, {}, event);
 }
@@ -712,6 +716,7 @@ function foldEvents(id: string, events: readonly ChainEvent[]): SharedRow | null
   const issueNumber = typeof issue['number'] === 'number' ? issue['number'] : 0;
   const repository = /^https:\/\/github\.com\/([A-Za-z\d_.-]+\/[A-Za-z\d_.-]+)\//.exec(issueUrl)?.[1] ?? 'unknown/unknown';
   const attempts: unknown[] = [];
+  const seenPullRequests: { n: number; commit: string; at: string; firstSight: FirstSight }[] = [];
   const history: { stage: string; at: string; destination?: string; reason?: string; attempt?: number; merge?: string; unasked?: true; command?: string; amount?: number; by?: string; withdrawn?: true }[] = [];
   let stage = 'posted';
   let endedAt: string | null = null;
@@ -735,6 +740,8 @@ function foldEvents(id: string, events: readonly ChainEvent[]): SharedRow | null
           ...(isObject(event['payTo']) ? { payTo: event['payTo'] } : {})
         });
       }
+      if (typeof event['pullRequest'] === 'number' && typeof event['commit'] === 'string' && firstSightShape(event['firstSight'])
+        && !seenPullRequests.some(entry => entry.n === event['pullRequest'] && entry.commit === event['commit'])) seenPullRequests.push({ n: event['pullRequest'], commit: event['commit'], at, firstSight: event['firstSight'] });
       history.push({ stage: 'answered', at, attempt: n });
       stage = 'answered';
     } else if (event['type'] === 'merged') {
@@ -797,7 +804,8 @@ function foldEvents(id: string, events: readonly ChainEvent[]): SharedRow | null
       body: '',
       state: endedAt === null ? 'posted' : 'closed',
       issue: { number: issueNumber, url: issueUrl },
-      pending: null
+      pending: null,
+      ...(seenPullRequests.length > 0 ? { seenPullRequests } : {})
     },
     ...(isObject(posted['reward']) && typeof posted['reward']['amount'] === 'number' ? { reward: { amount: posted['reward']['amount'] } } : {}),
     ...(isObject(posted['allowedBy']) ? { allowedBy: { decision: posted['allowedBy']['decision'], level: posted['allowedBy']['level'], decisionAt: null, usedAt: createdAt } } : {}),
