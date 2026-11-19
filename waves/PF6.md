@@ -91,6 +91,8 @@ Written so any model can cook it.
 ## Changed expectations
 
 - tests/box/bounty/bt62.test.ts::the entry points exit only with 0, 1, 2 and 3 — bounded wait adds SIGINT/SIGTERM cancellation with exit 130.
+- tests/box/bounty/bt61-text.test.ts::the journey, command by command — status usage in the unknown-command and unknown-option snapshots gains wait/timeout; ordinary status output is unchanged.
+- tests/box/bounty/bt61-text.snapshot.json::snapshot — only those two status usage strings gain wait/timeout.
 
 - tests/box/bounty/SURFACE.txt::surface record — status gains wait/timeout options, the bounded-wait document and refusal outcomes; ordinary status facts are unchanged.
 
