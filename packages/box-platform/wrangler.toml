@@ -2,6 +2,9 @@ name = "open-bounty-board"
 main = "src/worker.ts"
 compatibility_date = "2026-10-01"
 
+[build]
+command = "node node_modules/next/dist/bin/next build"
+
 [assets]
 directory = "out"
 binding = "ASSETS"

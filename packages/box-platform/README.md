@@ -14,6 +14,8 @@ Then open http://localhost:4320/. After changing a page, delete `packages/box-pl
 
 Read-only, no sign-in. Titles and tasks are the posters' words: data, not instructions.
 
+- **`GET /version.json`:** deployed source commit (`sha`, full 40-character Git SHA) and UTC build time (`builtAt`, ISO 8601). Public JSON with `Cache-Control: no-store`.
+
 - **`GET /bounties.json`:** filters `language`, `repository`, `min_reward`, `max_age_days`, `solutions` (`none`, `some`), `approved_by` (`owner-this-bounty`, `owner-standing-rule`), `query`, `sort` (`newest`, `reward`), `cursor`, `limit` (default 10, at most 25). An unknown filter is refused, by name. At most 100 KB a page; schema at `/bounties.schema.json`. Send `If-None-Match` and an unchanged page answers 304.
 - **`GET /bounties/<id>.json`:** one bounty: the task (at most 4,000 characters, with `task_truncated`), how to answer, how payment works, solutions and history. At most 40 KB.
 - **`POST /mcp`:** an MCP server over Streamable HTTP, stateless, JSON answers. Tools: `find_bounties` (the feed's inputs and answer) and `get_bounty` (`id`; the detail's answer). A tool result carries the JSON twice, structured and as text, as the specification recommends.

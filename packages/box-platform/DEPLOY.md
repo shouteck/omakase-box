@@ -64,6 +64,8 @@ node node_modules/wrangler/bin/wrangler.js d1 execute open-bounty-board --remote
 
 ## 4. Build and deploy
 
+Each Next build writes `/version.json` with the full `git rev-parse HEAD` and UTC build time. CI may supply `GITHUB_SHA` instead; an empty or malformed SHA fails the build. Wrangler also runs this build before bundling, so a deploy cannot reuse an old version file. After deployment, read the public `/version.json` to identify the source commit (responses are not cached).
+
 ```bash
 node node_modules/next/dist/bin/next build
 ```
