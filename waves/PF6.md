@@ -90,6 +90,8 @@ Written so any model can cook it.
 
 ## Changed expectations
 
+- tests/box/bounty/pf16.test.ts::states the block's facts, carries the marker, and steers nobody — owner-selected skill front door/local CLI/read-only MCP hierarchy and trust warning replace the skill's pricing and owner-prompt wording; installed bytes still equal SKILL_TEXT and the short-copy bound remains.
+
 - tests/box/bounty/bt62.test.ts::the entry points exit only with 0, 1, 2 and 3 — bounded wait adds SIGINT/SIGTERM cancellation with exit 130.
 - tests/box/bounty/bt61-text.test.ts::the journey, command by command — status usage in the unknown-command and unknown-option snapshots gains wait/timeout; ordinary status output is unchanged.
 - tests/box/bounty/bt61-text.snapshot.json::snapshot — only those two status usage strings gain wait/timeout.
@@ -116,6 +118,15 @@ Architect skipped: the owner settled the interface, bounds and read-only design.
 Default timeout 600 s, maximum 3600 s, polling 30 s with a shortened final sleep.
 Precedent checked: `gh run watch --help` lists `-i, --interval int`, default 3 s,
 and no timeout option. Our API observation is slower and explicitly bounded.
+
+Follow-up B/C: the owner selected one product with Agent Skill as front door,
+local CLI execution, and read-only MCP discovery. Write launch-copy contracts
+first, retain the installed skill's single source, then add onboarding, queue
+recipes and the launch/distribution plan. Validate commands against
+BOUNTY_COMMANDS plus setup derived from SETUP_USAGE (owner-approved exception:
+setup has a separate parser). Items 1–4 and the toolbox test stay deferred.
+Keep these brief changes appended to Plan/Changed expectations/Result so the
+owner's concurrent docs-only PR #23 remains straightforward to rebase onto.
 
 ## Traps
 
@@ -167,3 +178,15 @@ Awaiting the owner's go; not run.
   settings, Git and remote refs, pending board hints, and both GitHub transports.
 - Subsequent verification runs start in a fresh shell, separate from commits;
   no Git configuration or host wrapper was changed.
+
+### Follow-up B — skill front door
+
+- Kept the hand-off description, marker and setup byte-equality contract;
+  added the trust warning, Agent Skill front door, local CLI posting/solving
+  with INSTALL_SPEC, and read-only/no-sign-in MCP discovery without installing.
+  Replaced the skill's pricing wording; the skill remains under 800 characters.
+- Tests first: pf6.test.ts initially reported 5 failed / 2 passed: all three
+  docs absent, trust warning absent, and onboarding order unfulfilled.
+  The owner approved deriving setup from SETUP_USAGE alongside BOUNTY_COMMANDS.
+- Skill/setup/scanner checks: 3 files passed, 15 tests passed, 9 outside the
+  selected name filter. Documentation checks stay red until follow-up C.
