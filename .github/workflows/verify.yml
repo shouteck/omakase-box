@@ -9,7 +9,7 @@ on:
   # pull_request_target trigger), and a push comes only from this repository.
   push:
     # Doc-only pushes are skipped by the negated paths below.
-    branches: [master, 'wave/**']
+    branches: [master, 'wave/**', 'devin/**']
     # paths mirrors the "no test reads these" set (INERT) in scripts/suite.mjs:
     # '**' includes everything, each '!' drops an inert set, and the files a
     # kitchen test reads are re-included after the negations (GitHub applies
