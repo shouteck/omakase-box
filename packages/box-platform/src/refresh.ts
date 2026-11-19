@@ -196,7 +196,7 @@ async function readPullRequests(env: Env, github: GitHub, id: string, repository
     const draft = typeof pull['draft'] === 'boolean' ? (pull['draft'] ? 1 : 0) : null;
     const updated = typeof pull['updated_at'] === 'string' && Number.isFinite(Date.parse(pull['updated_at'])) ? pull['updated_at'] : null;
     writes.push(env.DB.prepare(`INSERT INTO pull_requests (bounty_id, number, author, author_id, state, opened_at, merged_at, association, head_sha, draft, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT (bounty_id, number) DO UPDATE SET author = excluded.author, author_id = excluded.author_id, state = excluded.state, merged_at = excluded.merged_at, head_on_default_at_sight = CASE WHEN pull_requests.head_sha IS excluded.head_sha THEN pull_requests.head_on_default_at_sight ELSE NULL END, head_sha = excluded.head_sha, draft = excluded.draft, updated_at = excluded.updated_at,
+      ON CONFLICT (bounty_id, number) DO UPDATE SET author = excluded.author, author_id = excluded.author_id, state = excluded.state, merged_at = excluded.merged_at, head_on_default_at_sight = CASE WHEN pull_requests.head_sha IS excluded.head_sha THEN pull_requests.head_on_default_at_sight ELSE NULL END, landing_sha = CASE WHEN pull_requests.head_sha IS excluded.head_sha THEN pull_requests.landing_sha ELSE NULL END, head_sha = excluded.head_sha, draft = excluded.draft, updated_at = excluded.updated_at,
         association = CASE WHEN pull_requests.merged_at IS NOT NULL THEN pull_requests.association ELSE excluded.association END`)
       .bind(id, pull['number'] as number, author, Number.isSafeInteger(authorId) ? authorId as number : null, merged !== null ? 'merged' : pull['state'] === 'closed' ? 'closed' : 'open', pull['created_at'], merged, association, head, draft, updated));
   }
@@ -221,13 +221,27 @@ async function readFirstSight(env: Env, github: GitHub, id: string, repository: 
 
 /** Is a merged head on the default branch? Yes stays yes. A failed read stays unknown, and the page says nothing is confirmed. */
 async function readOnDefault(env: Env, github: GitHub, id: string, repository: string): Promise<void> {
-  const unknown = await env.DB.prepare(`SELECT p.number, p.head_sha, r.default_branch FROM pull_requests p JOIN repositories r ON r.name = ? WHERE p.bounty_id = ? AND p.state = 'merged' AND p.head_sha IS NOT NULL AND COALESCE(p.on_default, 0) != 1 ORDER BY p.on_default IS NOT NULL, p.number LIMIT ?`)
+  const unknown = await env.DB.prepare(`SELECT p.number, p.head_sha, r.default_branch FROM pull_requests p JOIN repositories r ON r.name = ? WHERE p.bounty_id = ? AND p.state = 'merged' AND p.head_sha IS NOT NULL AND COALESCE(p.on_default, 0) != 1 AND p.landing_sha IS NULL ORDER BY p.on_default IS NOT NULL, p.number LIMIT ?`)
     .bind(repository, id, COMPARES_PER_READ).all<{ number: number; head_sha: string; default_branch: string }>();
+  let reads = COMPARES_PER_READ;
   for (const { number, head_sha, default_branch } of unknown.results) {
+    if (reads === 0) break;
+    reads -= 1;
     const answer = await github.get(`/repos/${repository}/compare/${head_sha}...${encodeURIComponent(default_branch)}`);
     const status = answer.status === 200 && record(answer.json) ? answer.json['status'] : null;
-    if (typeof status !== 'string') continue;
+    if (status !== 'ahead' && status !== 'identical' && status !== 'behind' && status !== 'diverged') continue;
     await env.DB.prepare('UPDATE pull_requests SET on_default = ? WHERE bounty_id = ? AND number = ?').bind(status === 'ahead' || status === 'identical' ? 1 : 0, id, number).run();
+    if (status === 'ahead' || status === 'identical' || reads < 2) continue;
+    reads -= 1;
+    const facts = await github.get(`/repos/${repository}/pulls/${number}`);
+    const pull = facts.json;
+    if (facts.status !== 200 || !record(pull) || pull['merged'] !== true || !record(pull['base']) || pull['base']['ref'] !== `box-bounty/${id}` || !record(pull['base']['repo']) || typeof pull['base']['repo']['full_name'] !== 'string' || pull['base']['repo']['full_name'].toLowerCase() !== repository.toLowerCase() || !record(pull['head']) || pull['head']['sha'] !== head_sha || typeof pull['merge_commit_sha'] !== 'string' || !/^[a-f\d]{40}$/.test(pull['merge_commit_sha'])) continue;
+    const landing = pull['merge_commit_sha'];
+    reads -= 1;
+    const compared = await github.get(`/repos/${repository}/compare/${landing}...${encodeURIComponent(default_branch)}`);
+    const landed = compared.status === 200 && record(compared.json) ? compared.json['status'] : null;
+    if (landed !== 'ahead' && landed !== 'identical') continue;
+    await env.DB.prepare('UPDATE pull_requests SET landing_sha = ? WHERE bounty_id = ? AND number = ? AND head_sha = ?').bind(landing, id, number, head_sha).run();
   }
 }
 
