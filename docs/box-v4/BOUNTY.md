@@ -544,7 +544,11 @@ Two choices, part of saying what the task is, and both visible in the preview:
 
 Never-ship holds on what is new: a change being published for the first time —
 an unpushed commit or the work-in-progress commit — that touches a never-ship
-path is refused (`github-never-ship`) and publishes nothing. A branch sharing
+path is refused (`github-never-ship`) and publishes nothing. Immediately before
+the push, and on every retry of a frozen post, the tool reads again which
+commits the push would send that GitHub does not already have, under the
+never-ship rules as they are then; any never-ship path among them is refused
+(`github-publish-never-ship`) before anything is pushed or posted. A branch sharing
 no commit with the remote has nothing public to point solvers at
 (`github-no-public-base`).
 

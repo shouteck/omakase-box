@@ -88,6 +88,45 @@
    ]
   },
   {
+   "id": "publish-sink-never-ship",
+   "guarantees": [
+    "P2"
+   ],
+   "file": "packages/box-bounty/publish-sink.ts",
+   "find": "if (rule !== undefined) hits.set(path, rule.name);",
+   "replace": "void rule;",
+   "note": "the sink no longer matches the commits a first publish sends against the never-ship rules",
+   "tests": [
+    "tests/box/bounty/bt69.test.ts"
+   ]
+  },
+  {
+   "id": "publish-sink-first-parent",
+   "guarantees": [
+    "P2"
+   ],
+   "file": "packages/box-bounty/publish-sink.ts",
+   "find": "['rev-list', '--stdin', '--ignore-missing', '--parents']",
+   "replace": "['rev-list', '--stdin', '--ignore-missing', '--parents', '--first-parent']",
+   "note": "the sink reads only the first-parent chain, not merged side histories or roots",
+   "tests": [
+    "tests/box/bounty/bt69.test.ts"
+   ]
+  },
+  {
+   "id": "publish-sink-call",
+   "guarantees": [
+    "P2"
+   ],
+   "file": "packages/box-bounty/post.ts",
+   "find": "const checked = checkOutbound(root, repository, publication.commit, shipRules(root), id);",
+   "replace": "const checked = publication.commit;",
+   "note": "the first-publication push no longer passes through the sink check",
+   "tests": [
+    "tests/box/bounty/bt69.test.ts"
+   ]
+  },
+  {
    "id": "return-history-never-ship",
    "guarantees": [
     "R3"
