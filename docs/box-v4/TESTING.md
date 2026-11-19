@@ -1,5 +1,15 @@
 # How we write tests for this tool
 
+## Current commands
+
+On the Devin Linux host, use a neutral HOME (the directory must exist):
+
+```bash
+env HOME=$HOME/kitchen-home node scripts/verify.mjs test:box-bounty
+```
+
+For kitchen documentation, use `env HOME=$HOME/kitchen-home node scripts/verify.mjs test:kitchen`. Current suites are `test:box-bounty`, `test:platform` and `test:kitchen`. The retired `test:box-package` exits 2, `Unknown package script`; old wave Results and review excerpts retain historical commands and output, not current acceptance instructions.
+
 Written by the CTO on 12 November 2026 from the evidence in [K51](../../kitchen/reviews/K51-tests.md) to [K65](../../waves/K65.md): the suite grew one wave at a time, mostly as one real repository per test; 31% of the bounty tests take 82% of the time; and a pilot ([K65](../../waves/K65.md)) showed the same guard tested as data plus one repository is about four to five times cheaper (13 tests at 9.9 s against 70 at 2.2 s, start-up included) and catches more. Sources and their limits are in [K51d](../../kitchen/reviews/K51d-how-we-test.md). The cost argument is about the shape of the tests, not any machine: a repository per spelling grows with every spelling on every system.
 
 ## What a test is for

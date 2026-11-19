@@ -106,6 +106,9 @@ jobs:
       - name: Install dependencies (frozen lockfile)
         run: node scripts/pnpm.mjs install --frozen-lockfile
 
+      - name: Promise lint
+        run: node scripts/pnpm.mjs run lint
+
       # Chromium into the path suite.mjs sets as PLAYWRIGHT_BROWSERS_PATH — needed by
       # tests/kitchen/k16-record.test.ts, which drives the demo recorder's browser.
       # K60: the browser itself and its system libraries are two steps. The browser is fetched from Playwright's own
