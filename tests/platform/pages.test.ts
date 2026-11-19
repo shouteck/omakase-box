@@ -546,7 +546,7 @@ describe('the pages', () => {
     expect(front.includes('Nothing for you')).toBe(on_merge);
     expect(moneyClaims(front)).toEqual([]);
     await visit(page, '/how/');
-    const step = page.locator('main li', { has: page.locator('h4', { hasText: 'Get paid' }) });
+    const step = page.locator('main li', { has: page.getByRole('heading', { name: 'Get paid', exact: true }) });
     await expect.poll(() => step.textContent()).toContain(want.connect);
     await expect.poll(async () => await page.locator('[data-stripe-reach]').count()).toBe(on_merge ? 1 : 0);
     const how = (await page.locator('main').textContent())!;
@@ -721,7 +721,7 @@ describe('the pages', () => {
     try {
       await visit(page, '/how/');
       const answer = page.locator('#answer');
-      expect(await answer.locator('h4').allTextContents()).toEqual(['Find one', 'Read the task', 'Answer', 'Get paid']);
+      expect(await answer.getByRole('heading', { level: 3 }).allTextContents()).toEqual(['Find one', 'Read the task', 'Answer', 'Get paid']);
       for (const href of ['/board/', '/bounties.json', '/agents/#mcp', '/me/']) expect(await answer.locator(`a[href="${href}"]`).count()).toBe(1);
       expect(await answer.locator('a[href="/mcp"]').count()).toBe(0);
       expect(await answer.getByRole('group', { name: 'MCP server URL', exact: true }).innerText()).toBe('https://open-bounty-board.box-platform.workers.dev/mcp');
@@ -1098,6 +1098,20 @@ describe('the pages', () => {
     }
   }, 120000);
 
+  it('How it works makes the solver steps level-three headings under Answer bounties', async () => {
+    const { page, close } = await fresh();
+    try {
+      await visit(page, '/how/');
+      const answer = page.getByRole('region', { name: 'Answer bounties' });
+      expect(await answer.getByRole('heading', { level: 2 }).allTextContents()).toEqual(['Answer bounties']);
+      expect(await answer.getByRole('heading', { level: 3 }).allTextContents()).toEqual([
+        'Find one', 'Open a pull request against its branch', 'Get merged, get paid, confirm'
+      ]);
+    } finally {
+      await close();
+    }
+  });
+
   it('every piece of text is readable on what is actually behind it, in both themes', async () => {
     for (const colorScheme of ['light', 'dark'] as const) {
       const context = await browser.newContext({ colorScheme, reducedMotion: 'reduce', viewport: { width: 1280, height: 900 } });
@@ -1325,6 +1339,35 @@ describe('PF41: the empty board says what will be here and how one gets here', (
     expect(await example.innerText()).toContain('example-org/ledger');
     expect(await example.locator('a[href^="/b/"]').count()).toBe(0);
     await close();
+  });
+
+  it('the empty board sample text meets AA contrast after compositing opacity in both themes', async () => {
+    for (const dark of [false, true]) {
+      const { page, close } = await open({ dark });
+      try {
+        const sample = page.locator('main [data-example]');
+        await sample.waitFor();
+        const pairs = await sample.locator('p').evaluateAll(elements => {
+          const rgb = (color: string) => (color.match(/[\d.]+/g) ?? []).map(Number);
+          const hex = (color: number[]) => '#' + color.slice(0, 3).map(value => Math.round(value).toString(16).padStart(2, '0')).join('');
+          return elements.map(element => {
+            const ink = rgb(getComputedStyle(element).color);
+            let opacity = 1;
+            let ground: number[] = [];
+            for (let at: Element | null = element; at; at = at.parentElement) {
+              const style = getComputedStyle(at);
+              opacity *= Number(style.opacity);
+              const background = rgb(style.backgroundColor);
+              if (ground.length === 0 && background[3] !== 0) ground = background;
+            }
+            return { text: element.textContent, ink: hex(ink.map((value, i) => value * opacity + ground[i]! * (1 - opacity))), ground: hex(ground) };
+          });
+        });
+        for (const pair of pairs) expect(ratio(pair.ink, pair.ground), `${dark ? 'dark' : 'light'}: "${pair.text}" ${pair.ink} on ${pair.ground}`).toBeGreaterThanOrEqual(4.5);
+      } finally {
+        await close();
+      }
+    }
   });
 
   it('the sample never reaches the feed, the numbers, RSS or MCP', async () => {
