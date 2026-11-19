@@ -70,8 +70,11 @@ before posting. The default wait is 600 seconds, capped at 3600 with
 `--timeout <seconds>`, polling every 30 seconds. A timeout changes nothing;
 rerun it or use `omakase-box status <id>`. An upstream refusal is not an empty
 result. Wait leaves observations unseen; ordinary status shows and marks them.
-Look collects a solution for review; apply merges the chosen attempt under
-the owner's rules. The tool does not run solver code or choose a winner.
+Look collects a first version for review or shows the latest collected version;
+it does not refresh an already-collected PR's moved head. Apply checks that head:
+if moved, it collects the new version without merging, for another look; if
+unchanged, it can merge under the owner's rules. Review the collected version
+before applying again. The tool does not run solver code or choose a winner.
 Payment remains manual and the owner's responsibility.
 
 ## Solve work

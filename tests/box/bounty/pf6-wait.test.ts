@@ -5,14 +5,14 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import * as bounty from '../../../packages/box-bounty/index.js';
-import { sharedPostedFixture } from './github-fixture.js';
-import { CLI_DIST, readRecord, runRoot, writeRecord } from './support.js';
+import { postedFixture, sharedPostedFixture } from './github-fixture.js';
+import { CLI_DIST, git, readRecord, runRoot, write, writeRecord } from './support.js';
 import { watchFields } from './surface.js';
-import { waitForSolutions } from '../../../packages/box-bounty/wait.js';
+import { renderWait, waitForSolutions } from '../../../packages/box-bounty/wait.js';
 import { GitHubReadDeadlineReached, pages, useGitHubTransportForTests } from '../../../packages/box-bounty/gh.js';
 
 interface Solution { pullRequest: number; commit: string; url: string; author: string }
-interface Result { schema: string; id: string; outcome: string; timeoutSeconds: number; pollSeconds: number; startedAt: string; endedAt: string; polls: number; solutions: readonly Solution[] }
+type Result = Awaited<ReturnType<typeof waitForSolutions>>;
 interface Dependencies { now: () => number; sleep: (ms: number, signal: AbortSignal) => Promise<void>; read: () => Solution[]; signal: AbortSignal }
 const loop = (options: { id: string; timeoutSeconds: number; pollSeconds?: number; seen: { n: number; commit: string }[] }, deps: Dependencies): Promise<Result> =>
   waitForSolutions(options, deps);
@@ -48,6 +48,10 @@ describe('PF6 bounded observation loop', () => {
       now: () => 0, sleep: async () => { throw new Error('must not sleep'); }, read: () => [solution], signal: new AbortController().signal
     });
     expect(result).toMatchObject({ outcome: 'solution', polls: 1, solutions: [solution], pollSeconds: 30, timeoutSeconds: 600 });
+    const text = renderWait(result);
+    expect(text).toContain('omakase-box look bt-test <number> collects a first version or shows the latest collected version');
+    expect(text).toContain('omakase-box apply bt-test <number> checks the head and collects a moved version without merging');
+    expect(text).toContain('apply can merge if the head is unchanged.');
   });
   it('ignores seen heads and returns an arrival on a later poll', async () => {
     let now = 0; let reads = 0;
@@ -96,6 +100,27 @@ describe('PF6 bounded observation loop', () => {
     });
     expect(result).toMatchObject({ outcome: 'cancelled', polls: 1, solutions: [] });
   });
+});
+
+describe('PF6 moved-head next step', () => {
+  it('status and look leave an old collected head; apply collects the moved head without merging', () => postedFixture(({ repo, bare, scratch, id, state, update }) => {
+    const first = bounty.lookBounty(repo, id, 1);
+    const solver = join(scratch, 'pf6-review');
+    git(repo, ['clone', '--quiet', bare, solver]);
+    git(solver, ['fetch', '--quiet', 'origin', 'refs/pull/1/head']);
+    git(solver, ['checkout', '--quiet', 'FETCH_HEAD']);
+    write(solver, 'app.txt', 'updated after review\n');
+    git(solver, ['-c', 'user.name=solver', '-c', 'user.email=solver@test.invalid', 'commit', '-qam', 'update solution']);
+    const second = git(solver, ['rev-parse', 'HEAD']);
+    git(solver, ['push', '--quiet', 'origin', 'HEAD:refs/pull/1/head']);
+    update({ prs: state().prs.map(pr => pr.number === 1 ? { ...pr, head: { sha: second } } : pr) });
+    bounty.renderStatus(repo, { id });
+    expect(bounty.lookBounty(repo, id, 1).attempt.commit).toBe(first.attempt.commit);
+    const before = git(repo, ['rev-parse', 'HEAD']);
+    expect(() => bounty.applyBounty(repo, id, 1)).toThrow(expect.objectContaining({ reason: 'pull-request-moved' }));
+    expect(git(repo, ['rev-parse', 'HEAD'])).toBe(before);
+    expect(bounty.lookBounty(repo, id, 1).attempt.commit).toBe(second);
+  }));
 });
 
 const fields = watchFields('pf6-wait');
@@ -171,7 +196,8 @@ describe('PF6 built status --wait', () => {
     const text = box([world.id, '--wait']);
     expect(text.status, text.stderr).toBe(0);
     expect(text.stdout).toContain(`#1 ${world.waitingPr.slice(0, 12)} https://github.com/owner/project/pull/1`);
-    expect(text.stdout).toContain(`next: omakase-box status ${world.id} shows them; omakase-box look ${world.id} <number> collects one`);
+    expect(text.stdout).toContain(`next: omakase-box status ${world.id} shows them; omakase-box look ${world.id} <number> collects a first version or shows the latest collected version`);
+    expect(text.stdout).toContain('apply can merge if the head is unchanged.');
     expect(localState()).toEqual(before);
     world.run(() => bounty.metaSet(world.repo, 'pf6-live-wal', 'read this without checkpointing'));
     const live = localState();

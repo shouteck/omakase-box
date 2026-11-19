@@ -88,7 +88,8 @@ export async function waitBounty(root: string, id: string, timeoutSeconds: numbe
 export function renderWait(result: WaitResult): string {
   if (result.outcome === 'solution') return [
     `${result.id} — solution`, ...result.solutions.map(pr => `#${pr.pullRequest} ${pr.commit.slice(0, 12)} ${pr.url}`),
-    `next: omakase-box status ${result.id} shows them; omakase-box look ${result.id} <number> collects one`
+    `next: omakase-box status ${result.id} shows them; omakase-box look ${result.id} <number> collects a first version or shows the latest collected version`,
+    `for an already-collected PR with a new head: omakase-box apply ${result.id} <number> checks the head and collects a moved version without merging; then omakase-box look ${result.id} <number> reviews it. apply can merge if the head is unchanged.`
   ].join('\n');
   if (result.outcome === 'cancelled') return `${result.id} — cancelled — nothing changed\nnext: run the wait again or omakase-box status ${result.id}`;
   return `${result.id} — timeout — no solution arrived within ${result.timeoutSeconds} s; nothing changed\nnext: run the wait again or omakase-box status ${result.id}`;

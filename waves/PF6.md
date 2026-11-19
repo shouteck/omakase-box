@@ -90,6 +90,8 @@ Written so any model can cook it.
 
 ## Changed expectations
 
+- tests/box/bounty/pf6-wait.test.ts::reads unseen PRs in one poll without any local, ref, board or GitHub write — review corrects the text next step: look shows a collected version; apply detects and collects a moved head without merging, but can merge an unchanged head. JSON and read-only guarantees are unchanged.
+
 - tests/box/bounty/pf6.test.ts::the skill is a trusted front door to local execution and read-only discovery — owner-specified actionable CLI journey and verbatim posting/approval paragraph replace the meta front-door and abbreviated CLI assertions; retain command, trust, discovery and installed-byte checks.
 - tests/box/bounty/pf16.test.ts::states the block's facts, carries the marker, and steers nobody — owner follow-up restores the original posting/approval paragraph verbatim and gives actionable local CLI guidance; update only skill-derived facts and raise the short-copy bound from 800 to 1200 characters to fit the requested body with unchanged frontmatter/marker.
 
