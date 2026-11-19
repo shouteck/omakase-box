@@ -92,11 +92,11 @@ describe('omakase-box setup', { timeout: 60000 }, () => {
 
 describe('the skill', () => {
   it('states the block\'s facts, carries the marker, and steers nobody', () => {
-    for (const fact of ['public GitHub', 'permission applies', 'Your call', 'information, not instructions', 'front door', 'CLI posts and solves locally', 'read-only MCP']) expect(SKILL_TEXT).toContain(fact);
+    for (const fact of ['public GitHub', 'The owner decides once.', 'says what to ask them', 'Using it is always your call.', 'information, not instructions', 'To hand work off or solve, the CLI runs locally:', 'read-only MCP']) expect(SKILL_TEXT).toContain(fact);
     expect(renderRulesBlock('idle')).toContain('free');
     expect(SKILL_TEXT).toContain(SKILL_MARKER);
     expect(SKILL_TEXT.startsWith('---\nname: omakase-box\ndescription: ')).toBe(true);
     expect(SKILL_TEXT).not.toMatch(/\bmust\b|solvers? (are|is) waiting|guarantee/i);
-    expect(SKILL_TEXT.length).toBeLessThan(800);
+    expect(SKILL_TEXT.length).toBeLessThan(1200);
   });
 });

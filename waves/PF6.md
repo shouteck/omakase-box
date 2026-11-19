@@ -90,6 +90,9 @@ Written so any model can cook it.
 
 ## Changed expectations
 
+- tests/box/bounty/pf6.test.ts::the skill is a trusted front door to local execution and read-only discovery — owner-specified actionable CLI journey and verbatim posting/approval paragraph replace the meta front-door and abbreviated CLI assertions; retain command, trust, discovery and installed-byte checks.
+- tests/box/bounty/pf16.test.ts::states the block's facts, carries the marker, and steers nobody — owner follow-up restores the original posting/approval paragraph verbatim and gives actionable local CLI guidance; update only skill-derived facts and raise the short-copy bound from 800 to 1200 characters to fit the requested body with unchanged frontmatter/marker.
+
 - tests/box/bounty/pf16.test.ts::states the block's facts, carries the marker, and steers nobody — owner-selected skill front door/local CLI/read-only MCP hierarchy and trust warning replace the skill's pricing and owner-prompt wording; installed bytes still equal SKILL_TEXT and the short-copy bound remains.
 
 - tests/box/bounty/bt62.test.ts::the entry points exit only with 0, 1, 2 and 3 — bounded wait adds SIGINT/SIGTERM cancellation with exit 130.
