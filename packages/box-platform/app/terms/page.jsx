@@ -1,7 +1,7 @@
 import { Section, Title } from '../../components/ui.jsx';
 import { REPOSITORY } from '../../components/SiteNav.jsx';
 
-export const metadata = { title: 'Terms of use, open bounty board' };
+export const metadata = { title: 'Terms of use, omakase-box' };
 
 export default function Page() {
   return (
