@@ -27,6 +27,8 @@ export type StandinIssue = {
   plain?: boolean;
   /** BT58: where this bounty's record lives on the repository: `refs/box-bounty-records/<id>` (default) or, for a bounty posted before version 0.2.0, `refs/box-bounty/<id>`. */
   chain?: 'old';
+  /** PF44: comments on the issue, as GitHub answers them; `association` is GitHub's author_association. */
+  comments?: { login: string; body: string; association: string; created_at: string }[];
 };
 export type StandinRepository = { language: string | null; visibility: 'public' | 'private'; default_branch?: string;
   /** PF32: the repository's owner (a user by default, named by the repository) and who can write to it, by account id. */
@@ -122,6 +124,13 @@ export class Standin {
       const issue = this.issues.find(entry => entry.repository === match![1] && entry.number === Number(match![2]));
       if (!issue) return { status: 404 };
       return { status: 200, json: (issue.pulls ?? []).map(pull => ({ event: 'cross-referenced', source: { type: 'issue', issue: { number: pull.number, state: pull.state, draft: pull.draft ?? false, created_at: pull.created_at, updated_at: pull.updated_at ?? pull.created_at, repository_url: `https://api.github.com/repos/${issue.repository}`, user: { login: pull.author, id: this.idOf(pull.author) }, author_association: pull.association ?? 'NONE', pull_request: { merged_at: pull.merged_at ?? null }, title: 'A SOLVER WROTE THIS TITLE' } } })) };
+    }
+    match = /^\/repos\/([^/]+\/[^/]+)\/issues\/(\d+)\/comments$/.exec(path);
+    if (match) {
+      const issue = this.issues.find(entry => entry.repository === match![1] && entry.number === Number(match![2]));
+      if (!issue) return { status: 404 };
+      return { status: 200, json: (issue.comments ?? []).map((comment, index) => ({ id: index + 1, html_url: `https://github.com/${issue.repository}/issues/${issue.number}#issuecomment-${index + 1}`,
+        body: comment.body, user: { login: comment.login, id: this.idOf(comment.login), type: 'User' }, author_association: comment.association, created_at: comment.created_at, updated_at: comment.created_at })) };
     }
     // PF32: a branch's head commit, by name.
     match = /^\/repos\/([^/]+\/[^/]+)\/commits\/([A-Za-z][\w.%-]*)$/.exec(path);

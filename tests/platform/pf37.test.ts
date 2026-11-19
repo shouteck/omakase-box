@@ -45,12 +45,14 @@ describe('PF37: the database records which migrations ran', () => {
     expect(() => live.prepare('SELECT 1 FROM migrations').get(), 'the board before PF37 has no record').toThrow();
     live.exec(read('migrations/pf37.sql'));
     live.exec(read('migrations/pf37.sql'));
+    // A file newer than PF37 records itself, as migrate.mjs would run it next.
+    for (const name of files().filter(name => name > 'pf37.sql')) live.exec(read(`migrations/${name}`));
     expect(recorded(live)).toEqual(files());
     const fresh = new DatabaseSync(':memory:');
     fresh.exec(read('schema.sql'));
     expect(shape(live)).toEqual(shape(fresh));
     // The dates the older files are given are this wave's, and the record says so.
-    const older = live.prepare("SELECT note FROM migrations WHERE name <> 'pf37.sql'").all() as { note: string }[];
+    const older = live.prepare("SELECT note FROM migrations WHERE name < 'pf37.sql'").all() as { note: string }[];
     expect(older.every(row => row.note.includes('real date unknown'))).toBe(true);
     live.close();
     fresh.close();
