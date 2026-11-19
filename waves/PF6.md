@@ -190,3 +190,20 @@ Awaiting the owner's go; not run.
   The owner approved deriving setup from SETUP_USAGE alongside BOUNTY_COMMANDS.
 - Skill/setup/scanner checks: 3 files passed, 15 tests passed, 9 outside the
   selected name filter. Documentation checks stay red until follow-up C.
+
+### Follow-up C — onboarding and distribution plan
+
+- Added trust-first onboarding for poster and solver, three manual queue
+  hand-off recipes, and the layered launch/distribution plan. Existing brief
+  lines are unchanged for PR #23; only Plan/Changed expectations/Result gain
+  follow-up notes. Public hosting, submissions, spend and items 1–4/toolbox
+  test remain deferred; no external action or usage evidence is claimed.
+- Monid stays optional: FREE public read-only solver discovery, poster intent
+  surfaced as inspect description/docs only, no hosted posting API. Auth-shape
+  reviewer acceptance remains unverified; owner-only fork/fixtures/checks/PR/
+  email steps and the no-spend drop condition are documented from the notes.
+- Hosted verification was read, not triggered: .github/workflows/verify.yml,
+  workflow verify, code pushes to master or wave/** (no PR trigger; path filters
+  skip inert docs). Its independent ubuntu-24.04/windows-2025/macos-15 jobs run
+  node scripts/verify.mjs --full test:box-bounty test:kitchen and the platform
+  suite; install-node22 separately checks the packed artifact on all three.
