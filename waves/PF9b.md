@@ -54,4 +54,4 @@ Written by the CTO at kickoff, 4 November 2026.
 - **Lenses:**
   - **Measurement fairness:** with the setting live, the numbers and owner records leave the sandbox out entirely; a test's facts never read as real use.
   - **Security:** the setting lives in the Worker's configuration, which only the board's deployer can change; nothing a visitor or a poster sends can add a repository to it.
-- **Reflect:** a live money seat on one account can only record a self-dealt payment -> wave: money seats stay test-proven until a second, real party exists; the first real payment is the proof.
+- **Reflect:** a live money seat on one account can only record a self-dealt payment -> wave: money seats stay test-proven until a second, real party exists. A first real payment would add live-money evidence, not unlock launch (owner clarification, 19 November 2026).

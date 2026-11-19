@@ -18,6 +18,8 @@ Horizon: long: start with `/plan` and keep the plan in this file
 
 ## Outcome
 
+**Pilot acceptance clarification (owner, 19 November 2026):** The controllable pilot gate is owner-approved bounties, working submissions, merge detection, correct payment-state tracking, and the never-ship stop. Sandbox checks verify payment mechanics; a real payment is optional validation, not a launch prerequisite. Real payments remain the owner's decision.
+
 Everything the owner needs to list the tool and announce it is prepared and checked, and the owner can do it in one sitting without the kitchen touching an account:
 
 1. **The skill's public home:** the files for a public repository that holds the same skill `setup` writes, laid out so `npx skills add <owner>/<repository>` and Claude Code's `/plugin marketplace add` both install it; the owner creates the repository.
