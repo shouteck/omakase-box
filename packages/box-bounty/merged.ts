@@ -287,7 +287,7 @@ function closeOne(repoRoot: string, record: BountyRecord, branch: string, candid
   // the hand merge kept only part of the solution (BT13).
   const touched = mergeTouched(repoRoot, merge);
   const extras = neverShipExtras(repoRoot, touched, candidate.attempt);
-  const partial = candidate.attempt === undefined
+  const partial = candidate.attempt === undefined || landing !== undefined
     ? []
     : [...candidate.attempt.changed, ...candidate.attempt.added, ...candidate.attempt.deleted]
         .filter(path => !touched.has(path.toLowerCase()));

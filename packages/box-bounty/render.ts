@@ -240,8 +240,13 @@ export const nextStep = (record: BountyRecord): string => {
 // The one `next:` an ended bounty prints — the job to go back to, the
 // revert when its merge landed, and the ways to look again or start fresh.
 // Shared by the text status and the status --json document (BT19).
-export const endedNextStep = (record: BountyRecord): string =>
-  `${record.adopted !== undefined ? 'the saved job stayed on the machine that posted it' : 'continue the saved job'}${record.stage === 'applied' ? `; to reverse the merge: git revert -m 1 ${record.events.find(event => event.stage === 'applied')?.merge ?? '<merge>'}` : ''}; inspect: omakase-box status ${record.id} --full; or create another with omakase-box create --task <file> --why "<one line>"`;
+export const endedNextStep = (record: BountyRecord): string => {
+  const applied = record.events.find(event => event.stage === 'applied');
+  const rollback = applied?.landing !== undefined
+    ? '; rollback range unknown for this rewritten landing; inspect the landed commits before choosing what to revert'
+    : `; to reverse the merge: git revert -m 1 ${applied?.merge ?? '<merge>'}`;
+  return `${record.adopted !== undefined ? 'the saved job stayed on the machine that posted it' : 'continue the saved job'}${record.stage === 'applied' ? rollback : ''}; inspect: omakase-box status ${record.id} --full; or create another with omakase-box create --task <file> --why "<one line>"`;
+};
 
 // History events record the command that drove them, and records written
 // while older commands existed keep those names on disk — history is never
