@@ -196,7 +196,7 @@ async function readPullRequests(env: Env, github: GitHub, id: string, repository
     const draft = typeof pull['draft'] === 'boolean' ? (pull['draft'] ? 1 : 0) : null;
     const updated = typeof pull['updated_at'] === 'string' && Number.isFinite(Date.parse(pull['updated_at'])) ? pull['updated_at'] : null;
     writes.push(env.DB.prepare(`INSERT INTO pull_requests (bounty_id, number, author, author_id, state, opened_at, merged_at, association, head_sha, draft, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT (bounty_id, number) DO UPDATE SET author = excluded.author, author_id = excluded.author_id, state = excluded.state, merged_at = excluded.merged_at, head_sha = excluded.head_sha, draft = excluded.draft, updated_at = excluded.updated_at,
+      ON CONFLICT (bounty_id, number) DO UPDATE SET author = excluded.author, author_id = excluded.author_id, state = excluded.state, merged_at = excluded.merged_at, head_on_default_at_sight = CASE WHEN pull_requests.head_sha IS excluded.head_sha THEN pull_requests.head_on_default_at_sight ELSE NULL END, head_sha = excluded.head_sha, draft = excluded.draft, updated_at = excluded.updated_at,
         association = CASE WHEN pull_requests.merged_at IS NOT NULL THEN pull_requests.association ELSE excluded.association END`)
       .bind(id, pull['number'] as number, author, Number.isSafeInteger(authorId) ? authorId as number : null, merged !== null ? 'merged' : pull['state'] === 'closed' ? 'closed' : 'open', pull['created_at'], merged, association, head, draft, updated));
   }

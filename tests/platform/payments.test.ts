@@ -242,6 +242,25 @@ describe('on the real routes', () => {
     expect(decidePay({ amount: 50, poster: OWNER, state: null, ...(await payeeFacts(r.env, OWN)) })).toMatchObject({ act: 'refuse', words: expect.stringContaining('Nothing is owed') });
   });
 
+  it('BT67: a head that moves after first sight is read again: new work on it is owed as before', async () => {
+    const MOVED = 'bt-aaaaaaaaaaa9';
+    const reading = pull(22, SOLVER, { state: 'open', landed: true });
+    delete reading.merged_at;
+    r.standin.issues.push(issue(MOVED, 9, OWNER, [reading]));
+    await reread();
+    expect(await r.env.DB.prepare('SELECT head_on_default_at_sight AS seen FROM pull_requests WHERE bounty_id = ? AND number = 22').bind(MOVED).first()).toEqual({ seen: 1 });
+    // The solver pushes new work: a head the default branch does not have, read again while open.
+    reading.head = 'c'.repeat(40);
+    reading.landed = false;
+    await reread();
+    expect(await r.env.DB.prepare('SELECT head_on_default_at_sight AS seen FROM pull_requests WHERE bounty_id = ? AND number = 22').bind(MOVED).first()).toEqual({ seen: 0 });
+    reading.state = 'closed';
+    reading.merged_at = ago(0);
+    reading.landed = true;
+    await reread();
+    expect(await facts(MOVED)).toMatchObject({ state: 'owed', owed: { to: SOLVER, amount: 50 } });
+  });
+
   it('a compare GitHub will not answer stays unknown, and says nothing is confirmed', async () => {
     r.standin.issues.find(entry => entry.id === ID)!.pulls![0]!.landed = null;
     await r.env.DB.prepare('UPDATE pull_requests SET on_default = NULL WHERE bounty_id = ?').bind(ID).run();
