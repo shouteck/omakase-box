@@ -14,7 +14,7 @@ import { git, runRoot, write } from './support.js';
 // with no production bypass — so whatever is refused here was refused by the
 // check before the push. The same seam records every push and every check, and
 // fails one Git read at a time inside the check.
-const seam = vi.hoisted(() => ({ plannerRules: true, inSink: false, fail: '' as '' | 'ls-remote' | 'rev-list' | 'diff-tree', failPush: false, log: [] as string[] }));
+const seam = vi.hoisted(() => ({ plannerRules: true, inSink: false, fail: '' as '' | 'ls-remote' | 'cat-file' | 'rev-list' | 'diff-tree', failPush: false, log: [] as string[] }));
 
 vi.mock('../../../packages/box-bounty/publish-plan.js', async importOriginal => {
   const actual = await importOriginal<typeof import('../../../packages/box-bounty/publish-plan.js')>();
@@ -25,6 +25,7 @@ vi.mock('../../../packages/box-bounty/git.js', async importOriginal => {
   const actual = await importOriginal<typeof import('../../../packages/box-bounty/git.js')>();
   const failing = (args: readonly string[]) => seam.inSink && (
     (seam.fail === 'ls-remote' && args[0] === 'ls-remote')
+    || (seam.fail === 'cat-file' && args[0] === 'cat-file')
     || (seam.fail === 'rev-list' && args[0] === 'rev-list')
     || (seam.fail === 'diff-tree' && args[0] === 'diff-tree'));
   return {
@@ -161,8 +162,8 @@ describe('BT69: the never-ship check at the publication sink', () => {
   }));
 
   // @guards P2
-  it('a remote, range or diff read that fails inside the check refuses by name and sends nothing', () => {
-    for (const fail of ['ls-remote', 'rev-list', 'diff-tree'] as const) {
+  it('a remote, object, range or diff read that fails inside the check refuses by name and sends nothing', () => {
+    for (const fail of ['ls-remote', 'cat-file', 'rev-list', 'diff-tree'] as const) {
       fixture(({ repo, bare, id, state }) => {
         seam.log = [];
         write(repo, 'app.txt', 'fixed\n'); git(repo, ['add', 'app.txt']); commit(repo, 'fix');

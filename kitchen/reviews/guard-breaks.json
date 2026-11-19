@@ -106,8 +106,8 @@
     "P2"
    ],
    "file": "packages/box-bounty/publish-sink.ts",
-   "find": "['rev-list', '--stdin', '--ignore-missing', '--parents']",
-   "replace": "['rev-list', '--stdin', '--ignore-missing', '--parents', '--first-parent']",
+   "find": "['rev-list', '--stdin', '--parents']",
+   "replace": "['rev-list', '--stdin', '--parents', '--first-parent']",
    "note": "the sink reads only the first-parent chain, not merged side histories or roots",
    "tests": [
     "tests/box/bounty/bt69.test.ts"
