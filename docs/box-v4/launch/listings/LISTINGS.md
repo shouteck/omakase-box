@@ -1,6 +1,6 @@
 # Omakase listing drafts
 
-**Drafts only — 2026-11-19.** Nothing submitted, published or created externally: none of these channel listings exists yet, and there is no Monid partnership — Monid is an optional, unsubmitted plan. The install command is the recommended path, not the only discovery path; these channels are planned additional ones. `shouteck/omakase-skills` is a **proposed** public repository, not an available install destination yet. Until the owner publishes it, recommend `npx -y omakase-box setup`. One product, in order: Agent Skill front door → CLI local execution → MCP read-only network discovery, no sign-in.
+**Drafts only — 2026-11-19.** Owner approved these drafts and chose `omakase-skills` with MIT-0 on 20 November 2026; no listing is submitted or published yet. Nothing submitted, published or created externally: none of these channel listings exists yet, and there is no Monid partnership — Monid is an optional, unsubmitted plan. The install command is the recommended path, not the only discovery path; these channels are planned additional ones. `shouteck/omakase-skills` is a **proposed** public repository, not an available install destination yet. Until the owner publishes it, recommend `npx -y omakase-box setup`. One product, in order: Agent Skill front door → CLI local execution → MCP read-only network discovery, no sign-in.
 
 Formats and gaps: [FORMATS.md](FORMATS.md). Generated repository contents: [skill-repo](../skill-repo/README.md). Registry metadata: [server.json](../server.json). Regenerate the skill with `node scripts/launch-skill.mjs --write`; check with `node scripts/launch-skill.mjs --check`. The copy blocks are exact paste drafts; surrounding notes and steps are not listing copy. Titles are display titles, not identifiers. Unspecified limits remain unknown, not unlimited.
 
@@ -210,7 +210,7 @@ Hand off work you cannot or should not do to outside solvers as a GitHub bounty,
 ## Owner-only steps, in order
 
 - [ ] Review all paste copy, held channels and the proposed repository name. No external action has happened.
-- [ ] Decide MIT-0 for the skill repository only, with appropriate rights; otherwise omit ClawHub. No license file is supplied and the product remains Apache-2.0.
+- [x] Owner decision (20 November 2026): the skill repository is a separate public repository named `omakase-skills`, licensed MIT-0 (`skill-repo/LICENSE`). The product repository remains Apache-2.0.
 - [ ] Create proposed `shouteck/omakase-skills`, review/push only `skill-repo/` contents as root and the selected skill license. Check generator bytes before publishing; do not push the parent product repository into it.
 - [ ] Verify skills CLI discovery and own Claude marketplace registration/installation; choose any optional Anthropic directory submission only with an eligible existing plan, no spend.
 - [ ] If MIT-0 approved, authenticate and publish to ClawHub, then inspect security/publication state.
