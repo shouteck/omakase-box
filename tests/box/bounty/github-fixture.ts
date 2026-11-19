@@ -224,7 +224,7 @@ else if (endpoint.includes('/pulls/')) {
   const pr = state.prs.find(pr => pr.number === n);
   if (!pr) fail();
   if (!endpoint.includes('/files')) markMerged(pr);
-  result = endpoint.includes('/files') ? paged(pr.files) : { merged: false, merged_at: null, created_at: '2020-01-01T00:00:00Z', ...publicPr(pr) };
+  result = endpoint.includes('/files') ? paged(pr.files) : { merged: false, merged_at: null, state: 'open', created_at: '2020-01-01T00:00:00Z', ...publicPr(pr) };
 } else if (endpoint.includes('/compare/')) {
   // compare/<base>...<head>: 'behind' or 'identical' when head is already on base.
   const [base, head] = resource.split('/compare/')[1].split('...');
