@@ -200,6 +200,22 @@ async function readPullRequests(env: Env, github: GitHub, id: string, repository
   await runAll(env.DB, writes);
 }
 
+/**
+ * BT67: an open pull request's head, read once while it is open: was it already on the default branch? Such a head is
+ * work that landed before the pull request (the owner's own), so its later merge names nobody. A failed read stays
+ * NULL and is asked again; a pull request first seen merged is never asked, and keeps today's rule.
+ */
+async function readFirstSight(env: Env, github: GitHub, id: string, repository: string): Promise<void> {
+  const unread = await env.DB.prepare(`SELECT p.number, p.head_sha, r.default_branch FROM pull_requests p JOIN repositories r ON r.name = ? WHERE p.bounty_id = ? AND p.state = 'open' AND p.head_sha IS NOT NULL AND p.head_on_default_at_sight IS NULL ORDER BY p.number LIMIT ?`)
+    .bind(repository, id, COMPARES_PER_READ).all<{ number: number; head_sha: string; default_branch: string }>();
+  for (const { number, head_sha, default_branch } of unread.results) {
+    const answer = await github.get(`/repos/${repository}/compare/${head_sha}...${encodeURIComponent(default_branch)}`);
+    const status = answer.status === 200 && record(answer.json) ? answer.json['status'] : null;
+    if (typeof status !== 'string') continue;
+    await env.DB.prepare('UPDATE pull_requests SET head_on_default_at_sight = ? WHERE bounty_id = ? AND number = ? AND head_sha = ? AND head_on_default_at_sight IS NULL').bind(status === 'ahead' || status === 'identical' ? 1 : 0, id, number, head_sha).run();
+  }
+}
+
 /** Is a merged head on the default branch? Yes stays yes. A failed read stays unknown, and the page says nothing is confirmed. */
 async function readOnDefault(env: Env, github: GitHub, id: string, repository: string): Promise<void> {
   const unknown = await env.DB.prepare(`SELECT p.number, p.head_sha, r.default_branch FROM pull_requests p JOIN repositories r ON r.name = ? WHERE p.bounty_id = ? AND p.state = 'merged' AND p.head_sha IS NOT NULL AND COALESCE(p.on_default, 0) != 1 ORDER BY p.on_default IS NOT NULL, p.number LIMIT ?`)
@@ -358,7 +374,7 @@ export async function lookNow(env: Env, repository: string, number: number, id: 
     // A bounty the board already holds at this address: its pull requests before the issue is checked again (PF28), so a
     // look at 2 reads stores a new one. The repository was just read as public, and the stored bounty is the hint's own.
     const held = await env.DB.prepare('SELECT 1 AS yes FROM bounties WHERE id = ? AND repository = ? AND issue_number = ?').bind(id, repository, number).first();
-    if (held !== null) await readPullRequests(env, github, id, repository);
+    if (held !== null) { await readPullRequests(env, github, id, repository); await readFirstSight(env, github, id, repository); }
     const answer = await github.get(`/repos/${repository}/issues/${number}`);
     if (answer.status !== 200) return 'not-this-bounty';
     const listed = readIssue(answer.json);
@@ -447,6 +463,7 @@ export async function refresh(env: Env): Promise<RefreshResult> {
         if (!checked.get(row.id)) continue;
         if (row.step === 'pulls') {
           await readPullRequests(env, github, row.id, row.repository);
+          await readFirstSight(env, github, row.id, row.repository);
           await mark(now);
           await readOnDefault(env, github, row.id, row.repository);
         } else if (row.step === 'events') {

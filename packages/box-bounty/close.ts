@@ -10,7 +10,7 @@ import type { BountyRecord } from './record.js';
 import { readDecision } from './settings.js';
 import type { DecisionRead } from './settings.js';
 import { boundAmount,formatFact,formatFor,readFormat,renderFormat } from './format.js';
-import { parsePayTo,type PayOutcome } from './pay.js';
+import { parsePayTo,unattributedOf,type PayOutcome,type Unattributed } from './pay.js';
 
 // A local decision finishes outside: the decision comments, the issue close
 // and the bounty-branch removal — retried runs resume by stable comment
@@ -110,10 +110,17 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
     // what the solver actually left there (BT11b). $0 and non-merged closes
     // record nothing. Before the branch step, so a branch that cannot advance
     // never holds the message back (BT51).
+    // BT67: the payee is gated first, on what this machine saw when it first recorded the merged head; a head that
+    // was not new work, or that has no such evidence, names nobody and reads nothing. Recomputed on every unfinished
+    // close, so a payee an earlier run recorded is replaced, never kept.
     if (event.merge !== undefined && (boundAmount(record) ?? 0) > 0) {
-      const pay = readPay(root, publication, record, event);
-      const accepts = readPayAccepts(pay.solver);
-      publication.pay = accepts === undefined ? pay : { ...pay, accepts };
+      const unattributed = attributionOf(publication, record, event);
+      if (unattributed !== null) publication.pay = { pr: unattributed.pr, solver: null, link: null, testMode: false, editedBy: null, unattributed: unattributed.reason };
+      else {
+        const pay = readPay(root, publication, record, event);
+        const accepts = readPayAccepts(pay.solver);
+        publication.pay = accepts === undefined ? pay : { ...pay, accepts };
+      }
     }
     // A merge moves the bounty branch to the chosen head, so GitHub marks the
     // pull request merged (BT51). A record already closed is finished: an
@@ -178,6 +185,17 @@ const branchChanged = (publication: GitHubPublication, tip: string): BountyRefus
 // request, or the commit and number the hand-merge scan wrote on the event.
 // Null when the record names no pull request (records from before pull
 // requests were the only return), which keeps the plain tip check.
+// BT67: a merged pull request names a payee only when its head's first-sight facts both say new. A returned folder
+// (no pull request) is not a GitHub head and keeps its own rule.
+function attributionOf(publication: GitHubPublication, record: BountyRecord, event: { attempt?: number; reason?: string }): { pr: number; reason: Unattributed } | null {
+  const attempt = event.attempt !== undefined ? attemptsOf(record).find(entry => entry.n === event.attempt) : undefined;
+  const pr = attempt?.pullRequest ?? decidedPullRequest(event);
+  if (pr === null) return null;
+  const commit = decidedSolution(record, event)?.commit;
+  const entry = commit === undefined ? undefined : publication.seenPullRequests?.find(seen => seen.n === pr && seen.commit === commit);
+  const reason = unattributedOf(entry?.firstSight);
+  return reason === null ? null : { pr, reason };
+}
 function decidedSolution(record: BountyRecord, event: { attempt?: number; reason?: string }): { commit: string; pr: number; collectedAt?: string } | null {
   const attempt = event.attempt !== undefined ? attemptsOf(record).find(entry => entry.n === event.attempt) : undefined;
   const pr = attempt?.pullRequest ?? decidedPullRequest(event);

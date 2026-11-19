@@ -368,12 +368,16 @@ field box-bounty/status@1 bounties[].github.pay.pr number
 field box-bounty/status@1 bounties[].github.pay.readFailed boolean
 field box-bounty/status@1 bounties[].github.pay.solver string
 field box-bounty/status@1 bounties[].github.pay.testMode boolean
+field box-bounty/status@1 bounties[].github.pay.unattributed null
 field box-bounty/status@1 bounties[].github.pending null
 field box-bounty/status@1 bounties[].github.pullRequests array
 field box-bounty/status@1 bounties[].github.pullRequests[] object
 field box-bounty/status@1 bounties[].github.pullRequests[].author string
 field box-bounty/status@1 bounties[].github.pullRequests[].collectedAs null|number
 field box-bounty/status@1 bounties[].github.pullRequests[].commit string
+field box-bounty/status@1 bounties[].github.pullRequests[].firstSight object
+field box-bounty/status@1 bounties[].github.pullRequests[].firstSight.local string
+field box-bounty/status@1 bounties[].github.pullRequests[].firstSight.remote string
 field box-bounty/status@1 bounties[].github.pullRequests[].n number
 field box-bounty/status@1 bounties[].github.pullRequests[].payTo string
 field box-bounty/status@1 bounties[].github.pullRequests[].seenAt string

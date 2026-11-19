@@ -97,7 +97,7 @@ const DUE = `SELECT b.id, b.amount, b.poster, b.poster_id, r.on_at, s.customer_i
   LEFT JOIN charges c ON c.bounty_id = b.id
   WHERE b.amount > 0 AND s.payment_method IS NOT NULL AND COALESCE(r.limit_per_bounty, s.limit_per_bounty) IS NOT NULL
     AND b.source = 'posted' -- PF32: a listed bounty's owner chooses whom to pay; a merge never charges for it
-    AND EXISTS (SELECT 1 FROM pull_requests p WHERE p.bounty_id = b.id AND p.state = 'merged' AND p.on_default = 1)
+    AND EXISTS (SELECT 1 FROM pull_requests p WHERE p.bounty_id = b.id AND p.state = 'merged' AND p.on_default = 1 AND COALESCE(p.head_on_default_at_sight, 0) != 1)
     AND (c.state IS NULL OR c.state NOT IN ('paid', 'refunded', 'disputed', 'owner-must-authenticate', 'owner-paying'))
     AND (c.at IS NULL OR c.at <= ?)
   ORDER BY c.at IS NOT NULL, c.at, b.id LIMIT ?`;
@@ -114,7 +114,7 @@ const LOOK_AGAIN_MS = 300000; // A state that may change is looked at this often
 export async function payeeFacts(env: Env, id: string, chosen?: string): Promise<Pick<ChargeFacts, 'landed' | 'solver' | 'recorded'>> {
   const db = env.DB;
   const listed = chosen !== undefined && (await db.prepare(`SELECT 1 AS yes FROM bounties WHERE id = ? AND source = 'listed'`).bind(id).first()) !== null;
-  const all = (await db.prepare(`SELECT number, author, author_id, merged_at, association, on_default FROM pull_requests WHERE bounty_id = ? AND ${listed ? '1 = 1' : `state = 'merged' AND on_default = 1`} ORDER BY number`).bind(id).all<Merged>()).results;
+  const all = (await db.prepare(`SELECT number, author, author_id, merged_at, association, on_default FROM pull_requests WHERE bounty_id = ? AND ${listed ? '1 = 1' : `state = 'merged' AND on_default = 1 AND COALESCE(head_on_default_at_sight, 0) != 1`} ORDER BY number`).bind(id).all<Merged>()).results;
   const landed = chosen === undefined ? all : all.filter(pull => pull.author.toLowerCase() === chosen.toLowerCase()).slice(-1);
   const authorId = landed.length === 1 ? landed[0]!.author_id : null;
   const solver = authorId === null ? null : await db.prepare('SELECT account_id, ready FROM stripe_accounts WHERE github_id = ?').bind(authorId).first<{ account_id: string; ready: number }>();

@@ -3,6 +3,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { handle } from '../../packages/box-platform/src/api.js';
 import { type BountyPayment, notCounted, ownerRecord, paymentOf, solverRecord } from '../../packages/box-platform/src/payments.js';
+import { decidePay, payeeFacts } from '../../packages/box-platform/src/charge.js';
 import { type StandinIssue, type StandinPull } from '../../packages/box-platform/standin/standin.js';
 import { MINUTE, NOW, rig, type Rig, refreshUntilDone } from './support.js';
 
@@ -217,6 +218,28 @@ describe('on the real routes', () => {
     await reread();
     expect(await facts(ID)).toMatchObject({ state: 'owed', owed: { to: SOLVER, amount: 50 } });
     expect((await solver(SOLVER)).record.merged).toBe(1);
+  });
+
+  it('BT67: an outsider\'s pull request on owner work already on the default branch owes nothing, and neither provider is handed a payee', async () => {
+    const OWN = 'bt-aaaaaaaaaaa8';
+    // Opened on a head GitHub's default branch already has: the owner's own work, landed before the pull request.
+    const outsider = pull(21, 'example-drift', { state: 'open', landed: true });
+    delete outsider.merged_at;
+    r.standin.issues.push(issue(OWN, 8, OWNER, [outsider]));
+    await reread();
+    expect(await r.env.DB.prepare('SELECT author, state FROM pull_requests WHERE bounty_id = ? AND number = 21').bind(OWN).first()).toEqual({ author: 'example-drift', state: 'open' });
+    // The bounty branch then reaches that head, so GitHub marks the pull request merged.
+    outsider.state = 'closed';
+    outsider.merged_at = ago(0);
+    await reread();
+    expect(await r.env.DB.prepare('SELECT state FROM pull_requests WHERE bounty_id = ? AND number = 21').bind(OWN).first()).toEqual({ state: 'merged' });
+    const payment = await facts(OWN);
+    expect(payment.owed).toBeNull();
+    expect(payment.state).not.toBe('owed');
+    expect((await solver('example-drift')).record.merged).toBe(0);
+    // Stripe and PayPal are handed whoever these name: nobody.
+    expect((await payeeFacts(r.env, OWN)).landed).toEqual([]);
+    expect(decidePay({ amount: 50, poster: OWNER, state: null, ...(await payeeFacts(r.env, OWN)) })).toMatchObject({ act: 'refuse', words: expect.stringContaining('Nothing is owed') });
   });
 
   it('a compare GitHub will not answer stays unknown, and says nothing is confirmed', async () => {

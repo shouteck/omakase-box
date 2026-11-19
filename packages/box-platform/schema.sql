@@ -37,6 +37,10 @@ CREATE TABLE IF NOT EXISTS bounties (
 );
 CREATE INDEX IF NOT EXISTS bounties_board ON bounties (issue_state, created_at);
 CREATE INDEX IF NOT EXISTS bounties_listed ON bounties (listed_seq);
+-- BT67: head_on_default_at_sight — was the head already on the default branch when the board first read the pull
+-- request open? 1 yes, 0 no, NULL not read (first seen merged, or the compare did not answer). Set once; a yes is work
+-- that landed before the pull request, and its merge owes nothing. Written as ALTER TABLE leaves it, so a migrated board
+-- and a new one read the same.
 CREATE TABLE IF NOT EXISTS pull_requests (
   bounty_id TEXT NOT NULL,
   number INTEGER NOT NULL,
@@ -55,7 +59,7 @@ CREATE TABLE IF NOT EXISTS pull_requests (
   -- failed). For the head in checks_sha only; a head that moved is due again.
   checks_state TEXT,
   checks_sha TEXT,
-  checks_read_at INTEGER NOT NULL DEFAULT 0,
+  checks_read_at INTEGER NOT NULL DEFAULT 0, head_on_default_at_sight INTEGER,
   PRIMARY KEY (bounty_id, number)
 );
 CREATE TABLE IF NOT EXISTS events (
@@ -177,4 +181,5 @@ INSERT OR IGNORE INTO migrations (name, applied_at, note) VALUES
   ('pf28.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
   ('pf29.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
   ('pf32.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
-  ('pf37.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board');
+  ('pf37.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
+  ('pf38-bt67.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board');

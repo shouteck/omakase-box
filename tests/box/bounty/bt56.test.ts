@@ -145,7 +145,7 @@ describe('8. an old record, with no onBranch anywhere, behaves as today', () => 
     expect(loadRecord(repo, id).stage).toBe('applied');
   }));
 
-  it('a record that plants the owner\'s own commit without the flag keeps today\'s answer (the rule is for heads first seen after this wave)', () => posted(world => {
+  it('a record that plants the owner\'s own commit without the flag keeps today\'s merge answer and names no payee (BT67)', () => posted(world => {
     const { repo, bare, id, prCommit } = world;
     const own = ownerCommit(repo, 'own8.txt');
     git(repo, ['push', bare, 'HEAD:refs/heads/main']);
@@ -156,6 +156,8 @@ describe('8. an old record, with no onBranch anywhere, behaves as today', () => 
     checkMergedSolutions(repo);
     // Today's behaviour, named here so that changing it is a deliberate edit: an old record is not rewritten behind the owner's back.
     expect(loadRecord(repo, id).stage).not.toBe('posted');
+    // BT67: the merge history stands; with no first-sight fact, the $5 reward names nobody.
+    expect(loadRecord(repo, id).github!.pay).toMatchObject({ solver: null, link: null, unattributed: 'missing' });
   }));
 });
 
@@ -188,7 +190,7 @@ describe('9, 10. a head that moves, and two pull requests on one commit', () => 
 
 
 describe('11, 12. what the rule does not do, pinned so a change is a deliberate edit', () => {
-  it('11. a commit that reaches the branch only by a later pull is not on it at first sight, so it is still recognised when pulled (a stated limit)', () => posted(world => {
+  it('11. a commit that reaches the branch only by a later pull is not on it at first sight; GitHub\'s default branch had it, so the merge names no payee (BT67)', () => posted(world => {
     const { repo, bare, id, prCommit } = world;
     // The owner's commit is made elsewhere and pushed to the remote's main; this machine's main does not have it yet.
     git(repo, ['switch', '-q', '-c', 'elsewhere']);
@@ -200,8 +202,12 @@ describe('11, 12. what the rule does not do, pinned so a change is a deliberate 
     expect(seen(world).some(entry => entry.commit === own && entry.onBranch === true)).toBe(false); // not on this machine's branch at first sight
     git(repo, ['merge', '--ff-only', own]); // the owner pulls
     checkMergedSolutions(repo);
-    // Only authorship could tell this from a solver's head landing by hand, and the rule compares no authors (CONTRACTS.md states the limit).
-    expect(loadRecord(repo, id).stage).toBe('applied');
+    expect(seen(world).find(entry => entry.commit === own)?.firstSight).toEqual({ local: 'new', remote: 'contained' }); // BT67: GitHub's default branch had it
+    // The merge is still recognised (the branch state), and with the $5 reward it names nobody and owes nothing (BT67).
+    const record = loadRecord(repo, id);
+    expect(record.stage).toBe('applied');
+    expect(record.github!.pay).toMatchObject({ solver: null, link: null, unattributed: 'remote-contained' });
+    expect(renderStatus(repo, { id })).not.toContain('payment owed');
   }));
 
   it('12. a second machine carries the same branch and applies the rule with its own first sight', () => posted(world => {

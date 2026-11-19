@@ -111,7 +111,9 @@ const pullRequestEntry = (pr: NonNullable<GitHubPublication['availablePullReques
   payTo: pr.payTo?.state ?? null,
   collectedAs: attempts.find(attempt => attempt.pullRequest === pr.n && attempt.commit === pr.commit)?.n ?? null,
   // BT56: only when set, so a document for an old record is unchanged.
-  ...(pr.onBranch === true ? { onBranch: true } : {})
+  ...(pr.onBranch === true ? { onBranch: true } : {}),
+  // BT67: likewise only when recorded.
+  ...(pr.firstSight !== undefined ? { firstSight: { local: pr.firstSight.local, remote: pr.firstSight.remote } } : {})
 });
 
 const githubEntry = (publication: GitHubPublication, attempts: readonly Attempt[]): JsonObject => ({
@@ -150,7 +152,8 @@ const githubEntry = (publication: GitHubPublication, attempts: readonly Attempt[
     link: publication.pay.link,
     testMode: publication.pay.testMode,
     editedBy: publication.pay.editedBy,
-    readFailed: publication.pay.readFailed === true
+    readFailed: publication.pay.readFailed === true,
+    unattributed: publication.pay.unattributed ?? null
   }
 });
 

@@ -9,7 +9,7 @@ export type StandinPull = {
   draft?: boolean; updated_at?: string;
   /** GitHub's word for how the author relates to the repository. Absent: NONE. */
   association?: string;
-  /** Is the head on the default branch? Absent: yes. Null: the compare API does not answer. */
+  /** Is the head on the default branch? Absent: yes once merged or closed, no while open (BT67). Null: the compare API does not answer. */
   landed?: boolean | null;
   /** PF29: the head's sha, when a test moves it (a push). Absent: derived from the number. */
   head?: string;
@@ -135,7 +135,8 @@ export class Standin {
     if (match) {
       const pull = this.issues.filter(entry => entry.repository === match![1]).flatMap(entry => entry.pulls ?? []).find(entry => headOf(entry) === match![2]);
       if (pull === undefined || pull.landed === null) return { status: 404 };
-      return { status: 200, json: { status: pull.landed === false ? 'diverged' : 'ahead' } };
+      const landed = pull.landed ?? pull.state !== 'open';
+      return { status: 200, json: { status: landed ? 'ahead' : 'diverged' } };
     }
     // PF29: check runs and the combined status on one commit: answered for an attempt's current head only.
     match = /^\/repos\/([^/]+\/[^/]+)\/commits\/([a-f\d]{40})\/(check-runs|status)$/.exec(path);

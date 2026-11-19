@@ -8,7 +8,7 @@ import { shipRules } from './never-ship.js';
 import { attemptRefName,attemptsOf,isOpenStage,loadRecord,persistRecord,requireCurrentDelivery,retiredRoute,transitionTo } from './record.js';
 import type { Attempt,BountyRecord } from './record.js';
 import { boundAmount,formatFact,formatFor } from './format.js';
-import { parsePayTo,payToLine,type PayToFact } from './pay.js';
+import { parsePayTo,payToLine,UNATTRIBUTED,unattributedOf,type Containment,type FirstSight,type PayToFact } from './pay.js';
 import { shareSolution,syncChains } from './chain.js';
 import { adoptedWithoutPermission,settleFromChain } from './adopt.js';
 
@@ -26,14 +26,41 @@ function alreadyOnBranch(root: string, record: BountyRecord, commit: string): bo
   if (branch === null) return false;
   return gitOutcome(root, ['merge-base', '--is-ancestor', commit, `refs/heads/${branch}`]).status === 0;
 }
-// The answer is fixed at first sight: an entry already recorded (listed or seen) keeps its stored flag and costs no
-// Git start; only a new (n, commit) is asked. A moved head is a new (n, commit), so it is asked again.
-function firstSightFlag(root: string, record: BountyRecord, n: number, commit: string): { readonly onBranch?: true } {
-  const known = record.github!.seenPullRequests?.find(entry => entry.n === n && entry.commit === commit)
-    ?? record.github!.availablePullRequests?.find(entry => entry.n === n && entry.commit === commit);
-  if (known !== undefined) return known.onBranch === true ? { onBranch: true } : {};
-  return alreadyOnBranch(root, record, commit) ? { onBranch: true } : {};
+// BT67: the same question asked of GitHub's default branch, which owner work can reach before this machine does.
+// Any failed read is an explicit unknown. The default branch is read once per listing.
+function onDefaultBranch(root: string, repository: string, commit: string, defaults: Map<string, string | null>): Containment {
+  try {
+    if (!defaults.has(repository)) {
+      const info = api(root, `repos/${repository}`);
+      defaults.set(repository, isObject(info) && typeof info['default_branch'] === 'string' ? info['default_branch'] : null);
+    }
+    const base = defaults.get(repository);
+    if (base === null || base === undefined) return 'unknown';
+    const compared = api(root, `repos/${repository}/compare/${encodeURIComponent(base)}...${commit}`);
+    const status = isObject(compared) ? compared['status'] : undefined;
+    return status === 'behind' || status === 'identical' ? 'contained' : status === 'ahead' || status === 'diverged' ? 'new' : 'unknown';
+  } catch { return 'unknown'; }
 }
+type Sight = { readonly onBranch?: true; readonly firstSight?: FirstSight };
+// The answer is fixed at first sight: an entry already recorded (listed or seen) keeps its stored facts, unchanged and
+// at no cost; only a new (n, commit) is asked. A moved head is a new (n, commit), so it is asked again. An entry from
+// before BT67 keeps having no evidence: it is not first sight any more, so nothing is read for it now.
+function firstSightReader(root: string, record: BountyRecord): (n: number, commit: string) => Sight {
+  const defaults = new Map<string, string | null>();
+  return (n, commit) => {
+    const known = record.github!.seenPullRequests?.find(entry => entry.n === n && entry.commit === commit)
+      ?? record.github!.availablePullRequests?.find(entry => entry.n === n && entry.commit === commit);
+    if (known !== undefined) return { ...(known.onBranch === true ? { onBranch: true as const } : {}), ...(known.firstSight !== undefined ? { firstSight: known.firstSight } : {}) };
+    const local: Containment = creatingBranch(record) === null ? 'unknown' : alreadyOnBranch(root, record, commit) ? 'contained' : 'new';
+    const firstSight = { local, remote: onDefaultBranch(root, record.github!.repository, commit, defaults) };
+    return { ...(local === 'contained' ? { onBranch: true as const } : {}), firstSight };
+  };
+}
+// What a listing says of a head GitHub's default branch already had, or of one that could not be read: no payee.
+const unattributedLine = (sight: Sight): string => {
+  const reason = sight.onBranch === true ? null : unattributedOf(sight.firstSight);
+  return reason === null ? '' : `; ${UNATTRIBUTED[reason].replace(/^the head was/, 'it was').replace(/^whether the head/, 'whether it')} — no payee is named for it`;
+};
 // What a listing says of a head that was already there: a fact, with the one step that is left.
 const alreadyThereLine = (record: BountyRecord, id: string): string =>
   `already on ${creatingBranch(record) ?? 'the branch the bounty was created on'} when first seen here; it adds nothing and is not counted as a merge; if this is the merged solution, close the bounty: omakase-box close ${id}`;
@@ -42,6 +69,7 @@ export function listGitHubAnswers(root: string, id: string, record = loadRecord(
   if (record.github === undefined) return invalid('not-github-posted', `this bounty has no GitHub post; next: post it with omakase-box post ${id}, or end it with omakase-box close ${id}`);
   if (retiredRoute(record) !== null) return `This bounty used a retired delivery route; end it with omakase-box close ${id}`;
   const { repository, branch } = record.github;
+  const sight = firstSightReader(root, record);
   const data = pages(root, `repos/${repository}/pulls?state=open&base=${branch}`);
   // Every fact a listing line prints except the changed-file names — one
   // pull-request listing read, no per-request file calls yet. When this fact
@@ -72,10 +100,10 @@ export function listGitHubAnswers(root: string, id: string, record = loadRecord(
       ?? record.github!.availablePullRequests?.find(pr => pr.n === fact.n && pr.commit === fact.commit)?.at
       ?? new Date().toISOString();
   if (record.github.outside !== undefined && record.github.answersKey === key) {
-    record.github.availablePullRequests = facts.map(fact => ({ n: fact.n, commit: fact.commit, at: stamp(fact), author: fact.author, payTo: fact.payTo, ...firstSightFlag(root, record, fact.n, fact.commit) }));
+    record.github.availablePullRequests = facts.map(fact => ({ n: fact.n, commit: fact.commit, at: stamp(fact), author: fact.author, payTo: fact.payTo, ...sight(fact.n, fact.commit) }));
     for (const fact of facts) {
       if (shown && record.github.seenPullRequests?.find(seen => seen.n === fact.n && seen.commit === fact.commit) === undefined) {
-        record.github.seenPullRequests = [...record.github.seenPullRequests ?? [], { n: fact.n, commit: fact.commit, at: stamp(fact), author: fact.author, payTo: fact.payTo, ...firstSightFlag(root, record, fact.n, fact.commit) }];
+        record.github.seenPullRequests = [...record.github.seenPullRequests ?? [], { n: fact.n, commit: fact.commit, at: stamp(fact), author: fact.author, payTo: fact.payTo, ...sight(fact.n, fact.commit) }];
       }
     }
     persistRecord(root, record);
@@ -93,8 +121,8 @@ export function listGitHubAnswers(root: string, id: string, record = loadRecord(
     const files = pages(root, `repos/${repository}/pulls/${n}/files`);
     const names = files.map(file => isObject(file) && typeof file['filename'] === 'string' ? redact(quoteForeign(file['filename'])) : invalid('github-response-invalid', 'GitHub returned unreadable changed files; next: check gh and rerun the same command'));
     const collected = record.attempts?.find(attempt => attempt.commit === commit);
-    const flag = firstSightFlag(root, record, n, commit);
-    const next = flag.onBranch === true ? alreadyThereLine(record, id) : collected === undefined ? `collect: omakase-box look ${id} ${n} or omakase-box apply ${id} ${n}` : `collected as solution ${collected.n}; look: omakase-box look ${id} ${collected.n}`;
+    const flag = sight(n, commit);
+    const next = (flag.onBranch === true ? alreadyThereLine(record, id) : collected === undefined ? `collect: omakase-box look ${id} ${n} or omakase-box apply ${id} ${n}` : `collected as solution ${collected.n}; look: omakase-box look ${id} ${collected.n}`) + unattributedLine(flag);
     // The `pay-to:` line is read only from the pull request description — a
     // comment or a changed file never carries it — and only the fact is kept.
     const payTo = parsePayTo(typeof entry['body'] === 'string' ? entry['body'] : '');
@@ -300,7 +328,7 @@ export function answerGitHub(root: string, id: string, pr: number, via?: 'look' 
   requireCurrentDelivery(record);
   const result = collectHistoryPullRequest(root, record, publication, commit, author, pr, via, payTo, redact(body));
   if (publication.seenPullRequests?.some(entry => entry.n === pr && entry.commit === commit) !== true) {
-    publication.seenPullRequests = [...publication.seenPullRequests ?? [], { n: pr, commit, at: result.record.attempts?.find(attempt => attempt.commit === commit)?.seenAt ?? new Date().toISOString(), ...(alreadyOnBranch(root, result.record, commit) ? { onBranch: true as const } : {}) }];
+    publication.seenPullRequests = [...publication.seenPullRequests ?? [], { n: pr, commit, at: result.record.attempts?.find(attempt => attempt.commit === commit)?.seenAt ?? new Date().toISOString(), ...firstSightReader(root, result.record)(pr, commit) }];
     persistRecord(root, result.record);
   }
   return result;
