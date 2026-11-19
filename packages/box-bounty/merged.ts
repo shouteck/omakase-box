@@ -18,7 +18,8 @@ import { resolve } from 'node:path';
 import { canonicalFolder } from './folder.js';
 import { gitOutcome,gitProgram } from './git.js';
 import { shipRules } from './never-ship.js';
-import { attemptsOf,baseCommitOf,dropDurabilityRefs,openRecords,setRecordReadScan,transitionTo } from './record.js';
+import { attemptsOf,baseCommitOf,dropDurabilityRefs,openRecords,persistRecord,setRecordReadScan,transitionTo } from './record.js';
+import { api,isObject } from './gh.js';
 import type { Attempt,BountyRecord } from './record.js';
 import { adoptedWithoutPermission } from './adopt.js';
 import { syncGitHubDecision } from './close.js';
@@ -82,7 +83,7 @@ export function checkMergedSolutions(repoRoot: string): void {
 function scan(repoRoot: string): void {
   const open = openRecords(repoRoot)
     .map(record => ({ record, candidates: candidatesOf(record) }))
-    .filter(entry => entry.candidates.length > 0);
+    .filter(entry => entry.candidates.length > 0 || (entry.record.github?.seenPullRequests?.length ?? 0) > 0);
   if (open.length === 0) return;
   // The check itself needs Git — a missing or too-old binary is the
   // command's named refusal here, not a silently skipped scan.
@@ -162,7 +163,10 @@ function checkOne(repoRoot: string, record: BountyRecord, candidates: readonly M
       reachesThrough(parents, candidate.commit, base)
       && !reachesThrough(parents, base, candidate.commit));
   const merged = eligible.filter(candidate => onBranch.has(candidate.commit));
-  if (merged.length === 0) return;
+  if (merged.length === 0) {
+    checkRewritten(repoRoot, record, branch, parents, base);
+    return;
+  }
 
   // A solution landed — finding which commit carried it spends more git,
   // spent only here. The branch's first-parent chain is the story of what
@@ -175,6 +179,41 @@ function checkOne(repoRoot: string, record: BountyRecord, candidates: readonly M
   // first-parent history wins — the deepest entry, furthest from the tip.
   entries.sort((a, b) => (chainIndex.get(b.merge) ?? chain.length) - (chainIndex.get(a.merge) ?? chain.length));
   closeOne(repoRoot, record, branch, entries[0]!.candidate, entries[0]!.merge);
+}
+
+function checkRewritten(repoRoot: string, record: BountyRecord, branch: string, parents: ReadonlyMap<string, readonly string[]>, base: string | null): void {
+  const publication = record.github;
+  const checks: NonNullable<BountyRecord['landingChecks']> = [];
+  const tip = parents.keys().next().value;
+  if (publication !== undefined && base !== null && tip !== undefined && tip !== base && parents.has(base) && reachesThrough(parents, tip, base)) {
+    for (const seen of publication.seenPullRequests ?? []) {
+      if (parents.has(seen.commit)) continue;
+      let state: 'unknown' | 'not-merged' = 'unknown';
+      let data: unknown;
+      try { data = api(repoRoot, `repos/${publication.repository}/pulls/${seen.n}`); } catch { /* Unknown; retry on the next scan. */ }
+      if (isObject(data) && data['merged'] === false) state = 'not-merged';
+      else if (isObject(data) && data['merged'] === true
+        && isObject(data['base']) && data['base']['ref'] === publication.branch
+        && isObject(data['base']['repo']) && typeof data['base']['repo']['full_name'] === 'string'
+        && data['base']['repo']['full_name'].toLowerCase() === publication.repository.toLowerCase()
+        && isObject(data['head']) && data['head']['sha'] === seen.commit
+        && typeof data['merge_commit_sha'] === 'string' && /^[0-9a-f]{40}$/i.test(data['merge_commit_sha'])) {
+        const landing = data['merge_commit_sha'].toLowerCase();
+        if (landing !== base && parents.has(landing) && reachesThrough(parents, landing, base)) {
+          delete record.landingChecks;
+          const attempt = attemptsOf(record).find(entry => entry.pullRequest === seen.n && entry.commit === seen.commit);
+          closeOne(repoRoot, record, branch, { commit: seen.commit, pr: seen.n, ...(attempt === undefined ? {} : { attempt }) }, landing, landing);
+          return;
+        }
+      }
+      checks.push({ pr: seen.n, head: seen.commit, tip, state });
+    }
+  }
+  if (JSON.stringify(record.landingChecks ?? []) !== JSON.stringify(checks)) {
+    if (checks.length === 0) delete record.landingChecks;
+    else record.landingChecks = checks;
+    persistRecord(repoRoot, record);
+  }
 }
 
 // Is `older` an ancestor of (or equal to) `newer` — the question
@@ -226,7 +265,7 @@ function entryCommit(repoRoot: string, chain: readonly string[], commit: string,
 // GitHub told. The landed delta is also read once for never-ship paths the
 // collected solution did not carry — named as facts, never a reason to keep
 // the bounty open or to rewrite the owner's history.
-function closeOne(repoRoot: string, record: BountyRecord, branch: string, candidate: MergeCandidate, merge: string): void {
+function closeOne(repoRoot: string, record: BountyRecord, branch: string, candidate: MergeCandidate, merge: string, landing?: string): void {
   // One read of the landed delta serves the never-ship scan and the partial
   // fact: which of the solution's own paths the merge left as they were —
   // the hand merge kept only part of the solution (BT13).
@@ -248,10 +287,12 @@ function closeOne(repoRoot: string, record: BountyRecord, branch: string, candid
   const unasked = record.waiting?.for === 'merge' || decision.decision !== 'allowed';
   const label = candidate.attempt !== undefined ? `solution ${candidate.attempt.n}` : `a solution from pull request #${candidate.pr}`;
   record.conflicts = null;
+  delete record.landingChecks;
   transitionTo(repoRoot, record, 'applied', {
     ...(candidate.attempt !== undefined ? { attempt: candidate.attempt.n } : {}),
     command: 'merged',
     merge,
+    ...(landing === undefined ? {} : { landing }),
     reason: `commit ${candidate.commit}${candidate.pr !== undefined ? `, pull request #${candidate.pr}` : ''}`,
     ...(unasked ? { unasked: true } : {}),
     ...(partial.length > 0 ? { partial } : {})
