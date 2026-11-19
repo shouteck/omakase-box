@@ -90,6 +90,8 @@ Written so any model can cook it.
 
 ## Changed expectations
 
+- tests/box/bounty/pf6.test.ts::SKILL_TEXT MCP address and tests/platform/pages.test.ts::PF6 answering MCP server URL — owner decision (20 November 2026, relayed by Poke): the canonical MCP endpoint moves to https://omakasebox.dev/mcp. The Worker address is the same deployment and still answers; the site text changes only on the owner's next deploy. BOARD_DEFAULT (board API base) is unchanged.
+
 - tests/platform/pages.test.ts::How it works makes the solver steps level-three headings under Answer bounties — master adds semantic heading coverage; retain its level-two/level-three accessibility assertions while updating the step names to the owner-approved four-step solver path.
 
 - tests/box/bounty/pf6-wait.test.ts::cancels the spawned CLI with SIGINT, one named document and exit 130 — Windows child.kill terminates the process rather than delivering a console event. Keep native SIGINT coverage on POSIX and exercise the installed CLI SIGINT handler through a test-only preload/IPC console-event relay on every OS; retain exit 130, the single cancellation document and all writer-exclusion assertions. No product signal or endpoint behavior changes.

@@ -34,7 +34,7 @@ describe('PF6 launch copy contract', () => {
     expect(SKILL_TEXT).toContain('It says what is set up and what to do next; `omakase-box help` shows the journey.');
     expect(SKILL_TEXT).toContain('Posting is free apart from any reward the owner set, and goes only to this repository\'s own public GitHub, as an issue. The owner decides once. If they have not yet, `omakase-box` says what to ask them. Using it is always your call.');
     expect(SKILL_TEXT).toContain('npm install -g omakase-box');
-    expect(SKILL_TEXT).toContain('https://open-bounty-board.box-platform.workers.dev/mcp');
+    expect(SKILL_TEXT).toContain('https://omakasebox.dev/mcp');
     expect(SKILL_TEXT).toMatch(/read-only MCP/i);
     expect(SKILL_TEXT).toContain('without installing');
     expect(SKILL_TEXT).toContain('no sign-in');
