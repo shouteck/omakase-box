@@ -98,7 +98,7 @@ const BUDGET: Record<string, { git: number; gh: number }> = {
   'post-github': { git: 25, gh: 7 },
   // BT32: +6 — refresh (fetch + for-each-ref) plus adopting/importing the
   // returned chain tips for the posted bounty.
-  'status-posted': { git: 5, gh: 4 },
+  'status-posted': { git: 5, gh: 6 }, // BT67: +2 — a new pull request head is compared with GitHub's default branch once, at first sight (the repository read and the compare)
   'status-comments': { git: 5, gh: 6 },
   // BT32: +9 — `look` is a fetching surface; collecting the answer also
   // appends the `solution` chain event and pushes it.
