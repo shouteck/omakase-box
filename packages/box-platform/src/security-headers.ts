@@ -62,6 +62,10 @@ export async function secured(response: Response): Promise<Response> {
   }
   const html = await response.text();
   headers.set('content-security-policy', pagePolicy(await inlineScriptHashes(html)));
+  const cacheControl = headers.get('cache-control');
+  if (!cacheControl?.split(',').some(directive => directive.trim().toLowerCase() === 'no-transform')) {
+    headers.append('cache-control', 'no-transform');
+  }
   headers.delete('content-length');
   return new Response(html, { status: response.status, statusText: response.statusText, headers });
 }
