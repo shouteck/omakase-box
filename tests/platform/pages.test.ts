@@ -543,7 +543,7 @@ describe('the pages', () => {
       expect(await onMerge.innerText()).not.toContain('PayPal');
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
       await visit(page, '/how/');
-      const solverStep = page.locator('main li', { has: page.locator('h4', { hasText: 'Get merged, get paid, confirm' }) });
+      const solverStep = page.locator('main li', { has: page.getByRole('heading', { name: 'Get merged, get paid, confirm', exact: true }) });
       await expect.poll(() => solverStep.innerText()).toContain('One click supports Stripe or PayPal.');
       await expect.poll(() => solverStep.innerText()).toContain('Set up here: Stripe.');
       expect(await solverStep.innerText()).not.toContain('connect PayPal');
@@ -566,7 +566,7 @@ describe('the pages', () => {
       expect(await oneClick.innerText()).not.toContain('Set up here:');
       expect(await oneClick.innerText()).not.toContain('Not set up on this board yet');
       await visit(page, '/how/');
-      const solverStep = page.locator('main li', { has: page.locator('h4', { hasText: 'Get merged, get paid, confirm' }) });
+      const solverStep = page.locator('main li', { has: page.getByRole('heading', { name: 'Get merged, get paid, confirm', exact: true }) });
       expect(await solverStep.innerText()).toContain('One click supports Stripe or PayPal.');
       expect(await solverStep.innerText()).toContain('Availability not confirmed on this board.');
       expect(await solverStep.innerText()).not.toContain('Set up here:');
@@ -595,7 +595,7 @@ describe('the pages', () => {
     expect(front.includes('Nothing for you')).toBe(on_merge);
     expect(moneyClaims(front)).toEqual([]);
     await visit(page, '/how/');
-    const step = page.locator('main li', { has: page.locator('h4', { hasText: 'Get merged, get paid, confirm' }) });
+    const step = page.locator('main li', { has: page.getByRole('heading', { name: 'Get merged, get paid, confirm', exact: true }) });
     expect(await step.innerText()).toContain('One click supports Stripe or PayPal.');
     await expect.poll(() => step.innerText()).toContain(one_click.length > 0 ? `Set up here: ${want.through}.` : 'One click is not set up on this board yet.');
     await expect.poll(() => step.textContent()).toContain(want.connect);
@@ -1127,6 +1127,20 @@ describe('the pages', () => {
     }
   }, 120000);
 
+  it('How it works makes the solver steps level-three headings under Answer bounties', async () => {
+    const { page, close } = await fresh();
+    try {
+      await visit(page, '/how/');
+      const answer = page.getByRole('region', { name: 'Answer bounties' });
+      expect(await answer.getByRole('heading', { level: 2 }).allTextContents()).toEqual(['Answer bounties']);
+      expect(await answer.getByRole('heading', { level: 3 }).allTextContents()).toEqual([
+        'Find one', 'Open a pull request against its branch', 'Get merged, get paid, confirm'
+      ]);
+    } finally {
+      await close();
+    }
+  });
+
   it('every piece of text is readable on what is actually behind it, in both themes', async () => {
     for (const colorScheme of ['light', 'dark'] as const) {
       const context = await browser.newContext({ colorScheme, reducedMotion: 'reduce', viewport: { width: 1280, height: 900 } });
@@ -1354,6 +1368,35 @@ describe('PF41: the empty board says what will be here and how one gets here', (
     expect(await example.innerText()).toContain('example-org/ledger');
     expect(await example.locator('a[href^="/b/"]').count()).toBe(0);
     await close();
+  });
+
+  it('the empty board sample text meets AA contrast after compositing opacity in both themes', async () => {
+    for (const dark of [false, true]) {
+      const { page, close } = await open({ dark });
+      try {
+        const sample = page.locator('main [data-example]');
+        await sample.waitFor();
+        const pairs = await sample.locator('p').evaluateAll(elements => {
+          const rgb = (color: string) => (color.match(/[\d.]+/g) ?? []).map(Number);
+          const hex = (color: number[]) => '#' + color.slice(0, 3).map(value => Math.round(value).toString(16).padStart(2, '0')).join('');
+          return elements.map(element => {
+            const ink = rgb(getComputedStyle(element).color);
+            let opacity = 1;
+            let ground: number[] = [];
+            for (let at: Element | null = element; at; at = at.parentElement) {
+              const style = getComputedStyle(at);
+              opacity *= Number(style.opacity);
+              const background = rgb(style.backgroundColor);
+              if (ground.length === 0 && background[3] !== 0) ground = background;
+            }
+            return { text: element.textContent, ink: hex(ink.map((value, i) => value * opacity + ground[i]! * (1 - opacity))), ground: hex(ground) };
+          });
+        });
+        for (const pair of pairs) expect(ratio(pair.ink, pair.ground), `${dark ? 'dark' : 'light'}: "${pair.text}" ${pair.ink} on ${pair.ground}`).toBeGreaterThanOrEqual(4.5);
+      } finally {
+        await close();
+      }
+    }
   });
 
   it('the sample never reaches the feed, the numbers, RSS or MCP', async () => {

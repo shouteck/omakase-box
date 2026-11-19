@@ -152,7 +152,7 @@ export default function Board() {
               </div>
               <div className="max-w-[46rem] mx-auto" data-example>
                 <p className="text-sm text-soft pb-2">What one will look like</p>
-                <div style={{ opacity: 0.7 }}><ul className="border-b border-line"><Card b={EXAMPLE} example /></ul></div>
+                <ul className="border-b border-line"><Card b={EXAMPLE} example /></ul>
                 <p className="text-sm text-soft pt-2">An example. Every name in it is invented.</p>
               </div>
             </>

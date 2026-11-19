@@ -35,7 +35,7 @@ function Step({ n, title, words, children }) {
     <li className="grid grid-cols-[1.5rem_minmax(0,1fr)] md:grid-cols-[2rem_minmax(0,1fr)_minmax(0,1.2fr)] gap-x-1 md:gap-x-6 gap-y-3 border-t border-line py-6">
       <p className="font-medium text-soft tabular-nums" aria-hidden="true">{n}</p>
       <div className="min-w-0">
-        <h4 className="font-medium">{title}</h4>
+        <h3 className="font-medium">{title}</h3>
         {words ? <div className="mt-1 text-soft max-w-prose">{words}</div> : null}
       </div>
       {children ? <div className="col-span-2 md:col-span-1 md:col-start-3 min-w-0 flex flex-col gap-2">{children}</div> : null}
