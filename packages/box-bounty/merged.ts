@@ -184,6 +184,7 @@ function checkOne(repoRoot: string, record: BountyRecord, candidates: readonly M
 function checkRewritten(repoRoot: string, record: BountyRecord, branch: string, parents: ReadonlyMap<string, readonly string[]>, base: string | null): void {
   const publication = record.github;
   const checks: NonNullable<BountyRecord['landingChecks']> = [];
+  const landed: { candidate: MergeCandidate; landing: string }[] = [];
   const tip = parents.keys().next().value;
   if (publication !== undefined && base !== null && tip !== undefined && tip !== base && parents.has(base) && reachesThrough(parents, tip, base)) {
     for (const seen of publication.seenPullRequests ?? []) {
@@ -206,15 +207,23 @@ function checkRewritten(repoRoot: string, record: BountyRecord, branch: string, 
           && typeof data['merge_commit_sha'] === 'string' && /^[0-9a-f]{40}$/i.test(data['merge_commit_sha'])) {
           const landing = data['merge_commit_sha'].toLowerCase();
           if (landing !== base && parents.has(landing) && reachesThrough(parents, landing, base)) {
-            delete record.landingChecks;
             const attempt = attemptsOf(record).find(entry => entry.pullRequest === seen.n && entry.commit === seen.commit);
-            closeOne(repoRoot, record, branch, { commit: seen.commit, pr: seen.n, ...(attempt === undefined ? {} : { attempt }) }, landing, landing);
-            return;
+            landed.push({ candidate: { commit: seen.commit, pr: seen.n, ...(attempt === undefined ? {} : { attempt }) }, landing });
+            continue;
           }
         }
       }
       checks.push({ pr: seen.n, head: seen.commit, tip, state });
     }
+  }
+  if (landed.length > 0) {
+    const chain = gitOutcome(repoRoot, ['rev-list', '--first-parent', `refs/heads/${branch}`]).stdout.split('\n').filter(line => line !== '');
+    const chainIndex = new Map(chain.map((sha, index) => [sha, index]));
+    const entries = landed.map(entry => ({ ...entry, merge: entryCommit(repoRoot, chain, entry.landing, chainIndex) }));
+    entries.sort((a, b) => (chainIndex.get(b.merge) ?? chain.length) - (chainIndex.get(a.merge) ?? chain.length));
+    const first = entries[0]!;
+    closeOne(repoRoot, record, branch, first.candidate, first.merge, first.landing);
+    return;
   }
   if (JSON.stringify(record.landingChecks ?? []) !== JSON.stringify(checks)) {
     if (checks.length === 0) delete record.landingChecks;
