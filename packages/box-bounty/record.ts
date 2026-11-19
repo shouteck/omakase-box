@@ -24,7 +24,7 @@ import { BountyRefused } from './errors.js';
 import { allRecords,listOpen,listEndedRecent,countEnded,readStored,writeStored,setStoreCodec } from './store.js';
 import { gitOutcome,gitRefsWrite } from './git.js';
 import { publishListed,publishLists } from './never-ship.js';
-import { payOutcomeShape,payToFactShape } from './pay.js';
+import { firstSightShape,payOutcomeShape,payToFactShape } from './pay.js';
 import type { PayToFact } from './pay.js';
 
 // Every record read first runs the merged-solution scan, and every write
@@ -570,6 +570,7 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
         if (pr === null || typeof pr !== 'object' || !Number.isInteger(pr.n) || pr.n < 1 || typeof pr.commit !== 'string' || !sha.test(pr.commit) || typeof pr.at !== 'string' || !stamp.test(pr.at)) return null;
         if (pr.payTo !== undefined && !payToFactShape(pr.payTo)) return null;
         if (pr.onBranch !== undefined && pr.onBranch !== true) return null;
+        if (pr.firstSight !== undefined && !firstSightShape(pr.firstSight)) return null;
       }
     }
     if (github.outside !== undefined && (github.outside === null || typeof github.outside !== 'object'

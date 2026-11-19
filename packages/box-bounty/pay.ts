@@ -145,6 +145,35 @@ export function payToLine(fact: PayToFact | undefined): string {
 
 // What the close records about paying the solver — every field is a fact the
 // tool itself made, not copied text: the link passed the allow-list shape.
+// BT67: what this machine saw when it first recorded a pull request's head. `local`: was the commit already on the
+// branch the bounty was created on; `remote`: was it already on GitHub's default branch. `unknown` is a read that
+// failed, or a record that names no branch: it is kept as it was and never read as new.
+export type Containment = 'contained' | 'new' | 'unknown';
+export interface FirstSight { readonly local: Containment; readonly remote: Containment }
+export const firstSightShape = (value: unknown): value is FirstSight => value !== null && typeof value === 'object'
+  && ['contained', 'new', 'unknown'].includes((value as Record<string, unknown>)['local'] as string)
+  && ['contained', 'new', 'unknown'].includes((value as Record<string, unknown>)['remote'] as string)
+  && Object.keys(value).length === 2;
+
+// Why a merged pull request names no payee. Only a head both facts say was new names one: missing evidence names
+// nobody, and absent evidence is never read as eligible.
+export type Unattributed = 'local-contained' | 'remote-contained' | 'local-unknown' | 'remote-unknown' | 'missing';
+export const UNATTRIBUTED: Readonly<Record<Unattributed, string>> = {
+  'local-contained': 'the head was already on the branch the bounty was created on when first seen here',
+  'remote-contained': 'the head was already on the default branch on GitHub when first seen here',
+  'local-unknown': 'whether the head was already on the branch the bounty was created on could not be read when first seen here',
+  'remote-unknown': 'whether the head was already on the default branch on GitHub could not be read when first seen here',
+  missing: 'this record keeps no first-sight fact for that head'
+};
+export function unattributedOf(sight: FirstSight | undefined): Unattributed | null {
+  if (sight === undefined) return 'missing';
+  if (sight.local === 'contained') return 'local-contained';
+  if (sight.remote === 'contained') return 'remote-contained';
+  if (sight.local === 'unknown') return 'local-unknown';
+  if (sight.remote === 'unknown') return 'remote-unknown';
+  return null;
+}
+
 export interface PayOutcome {
   /** The pull request the merged solution came back through; null when it
       came back as a returned folder — no description was ever read. */
@@ -161,6 +190,8 @@ export interface PayOutcome {
   /** What the board said the solver accepts, read once at close (PF5).
       Absent: the board was off. */
   readonly accepts?: PayAccepts;
+  /** BT67: the merged pull request names no payee, and why. Set, solver and link are null. */
+  readonly unattributed?: Unattributed;
 }
 
 export function payOutcomeShape(value: unknown): value is PayOutcome {
@@ -171,7 +202,8 @@ export function payOutcomeShape(value: unknown): value is PayOutcome {
     && (typeof pay['link'] === 'string' && LINK.test(pay['link']) || pay['link'] === null)
     && typeof pay['testMode'] === 'boolean'
     && (typeof pay['editedBy'] === 'string' || pay['editedBy'] === null)
-    && (pay['accepts'] === undefined || acceptsShape(pay['accepts']));
+    && (pay['accepts'] === undefined || acceptsShape(pay['accepts']))
+    && (pay['unattributed'] === undefined || Object.hasOwn(UNATTRIBUTED, pay['unattributed'] as string) && pay['solver'] === null && pay['link'] === null);
 }
 
 export function payToFactShape(value: unknown): value is PayToFact {
@@ -190,6 +222,21 @@ export function payToFactShape(value: unknown): value is PayToFact {
 // end of its work, and that is all the tool does.
 export function payMessageLines(record: { id: string; title: string }, pay: PayOutcome, opts: { repository: string; issueUrl: string | null; merge: string | undefined; amount: number; unasked?: boolean; partial?: readonly string[]; firstMerge?: boolean }): string[] {
   const prUrl = pay.pr !== null ? `https://github.com/${opts.repository}/pull/${pay.pr}` : null;
+  // BT67: no payee — the fact, and nothing that reads as owed.
+  if (pay.unattributed !== undefined) return [
+    'for the owner — pass this on in these words:',
+    `  The bounty "${record.title}" ended with a merge${prUrl !== null ? ` of ${prUrl}` : ''}, and the tool names no one to pay: ${UNATTRIBUTED[pay.unattributed]}.`,
+    '  Nothing is recorded as owed. Whether to reward anyone is your decision.',
+    ...(opts.firstMerge === true ? ['  It was the first solution written by someone outside your project to be merged into your code.'] : []),
+    ...(opts.unasked === true ? ['  You were not asked before this merge.'] : []),
+    ...(opts.partial !== undefined && opts.partial.length > 0 ? [`  Of the files the solution changed, the merge left these as they were: ${opts.partial.map(showPath).join(', ')}.`] : []),
+    'for you — the tool does not pay and does not send this; repeat it when your work ends:',
+    `  bounty: "${record.title}" — ${record.id}${opts.issueUrl !== null ? `; issue ${opts.issueUrl}` : ''}`,
+    `  merged: ${prUrl !== null ? `pull request ${prUrl}` : 'the recorded solution'}`,
+    `  merged in: ${opts.merge ?? 'the recorded merge'}`,
+    `  payee: none named — ${UNATTRIBUTED[pay.unattributed]}`,
+    ...(opts.firstMerge === true ? ['  first outside solution merged in this repository — this notice is recorded once'] : [])
+  ];
   // The names are read back from the record, which another machine's chain
   // or the local store may have filled: printed through the renderer (BT43).
   const solver = solverAccountOr(pay.solver, 'an account whose name could not be read');
@@ -284,9 +331,15 @@ export interface PaymentState {
 export function paymentOf(record: BountyRecord): PaymentState | null {
   const amount = boundAmount(record);
   if (amount === undefined || amount <= 0 || record.stage !== 'applied') return null;
+  // BT67: a merge that names no payee owes nobody.
+  if (record.github?.pay?.unattributed !== undefined) return null;
   const paid = record.events.filter(event => event.stage === 'paid').at(-1);
   const applied = record.events.filter(event => event.stage === 'applied').at(-1);
   const attempt = applied?.attempt === undefined ? undefined : (record.attempts ?? []).find(entry => entry.n === applied.attempt);
+  // BT67: a merged pull request with no pay outcome (a close that stopped before it, a shared record) owes nothing
+  // unless its head's first-sight facts say new work; absent evidence names nobody.
+  if (record.github?.pay === undefined && attempt?.pullRequest !== undefined
+    && unattributedOf(record.github?.seenPullRequests?.find(entry => entry.n === attempt.pullRequest && entry.commit === attempt.commit)?.firstSight) !== null) return null;
   return {
     amount,
     solver: record.github?.pay?.solver ?? attempt?.author ?? null,

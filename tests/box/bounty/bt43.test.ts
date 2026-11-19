@@ -697,14 +697,14 @@ const hostileApplied = (repo: string, opts: { readonly pay: boolean; readonly re
       { stage: 'applied', at: AT, attempt: 1, command: 'apply', merge: SHA }
     ],
     attempts: [{ n: 1, pullRequest: 1, at: AT, author: HOSTILE_ACCOUNT, commit: SHA, changed: ['a.txt'], added: [], deleted: [], outcome: 'answered', conflicts: null, report: [] }],
-    ...(opts.pay ? {
-      github: {
-        repository: 'owner/project', account: 'owner', kind: 'history',
-        branch: `box-bounty/${RID}`, commit: SHA, title: 'bounty 1', body: '',
-        state: 'closed', issue: { number: 1, url: 'https://github.com/owner/project/issues/1' }, pending: null,
-        pay: { pr: 1, solver: HOSTILE_ACCOUNT, link: null, testMode: false, editedBy: HOSTILE_ACCOUNT }
-      }
-    } : {})
+    github: {
+      repository: 'owner/project', account: 'owner', kind: 'history',
+      branch: `box-bounty/${RID}`, commit: SHA, title: 'bounty 1', body: '',
+      state: 'closed', issue: { number: 1, url: 'https://github.com/owner/project/issues/1' }, pending: null,
+      // BT67: without a pay outcome, only first-sight evidence of new work lets the attempt's author stand owed.
+      seenPullRequests: [{ n: 1, commit: SHA, at: AT, firstSight: { local: 'new', remote: 'new' } }],
+      ...(opts.pay ? { pay: { pr: 1, solver: HOSTILE_ACCOUNT, link: null, testMode: false, editedBy: HOSTILE_ACCOUNT } } : {})
+    }
   }, null, 2) + '\n');
 };
 

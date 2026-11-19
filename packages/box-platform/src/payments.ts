@@ -9,7 +9,9 @@ const DAY = 86400000;
 const LATE_DAYS = 14; // What is shown first, and one filter value. Never a deadline.
 export const LISTED_WITH_ACCESS: readonly string[] = ['OWNER', 'MEMBER', 'COLLABORATOR'];
 
-export type MergedPull = { number: number; author: string; merged_at: string; association: string | null; on_default: number | null; state?: string };
+export type MergedPull = { number: number; author: string; merged_at: string; association: string | null; on_default: number | null; state?: string;
+  /** BT67: 1 when the head was already on the default branch when the board first read it open. */
+  head_on_default_at_sight?: number | null };
 export type Paid = PaidEvent & { by: string; source: 'project-record' | 'board' | 'stripe' | 'paypal' };
 /** What a provider did (charge.ts, paypal-pay.ts). Its own fact: the provider's word, not the owner's. */
 export type ChargeFact = { state: string; at: string; solver: string | null; provider?: string | null };
@@ -40,7 +42,7 @@ function standing(input: BountyPayment, landed: readonly MergedPull[]): Paid | n
  * Who can be paid. A posted bounty: GitHub's two facts, merged and its head on the default branch. A listed bounty (PF32):
  * every linked pull request, merged or not, since its owner chooses.
  */
-export const landedOf = (input: Pick<BountyPayment, 'pulls' | 'source'>): MergedPull[] => input.source === 'listed' ? [...input.pulls] : input.pulls.filter(pull => pull.on_default === 1);
+export const landedOf = (input: Pick<BountyPayment, 'pulls' | 'source'>): MergedPull[] => input.source === 'listed' ? [...input.pulls] : input.pulls.filter(pull => pull.on_default === 1 && pull.head_on_default_at_sight !== 1);
 /** Only real merges: what a solver's record counts, on either kind of bounty. */
 const mergedOf = (input: Pick<BountyPayment, 'pulls' | 'source'>): MergedPull[] => input.source === 'listed' ? input.pulls.filter(pull => pull.state === 'merged') : landedOf(input);
 
@@ -75,6 +77,8 @@ export function paymentOf(input: BountyPayment) {
   if (input.source === 'listed' && facts.record === null) return { state: 'owner-chooses' as PaymentState, ...none, note: landed.length === 0 ? 'No linked pull request yet. The owner chooses whom to pay, from every pull request linked to the issue.' : 'The owner chooses whom to pay, from every pull request linked to the issue. A merge names nobody.' };
   if (landed.length === 0) {
     const waiting = input.pulls[0];
+    const owners = input.pulls.find(pull => pull.head_on_default_at_sight === 1);
+    if (owners !== undefined && input.pulls.every(pull => pull.head_on_default_at_sight === 1)) return { state: 'nothing-owed' as PaymentState, ...none, note: `GitHub records pull request #${owners.number} as merged; its head was already on the default branch when the board first read it, so it brought no new work. Nothing is owed.` };
     if (waiting === undefined) return { state: 'nothing-owed' as PaymentState, ...none, note: `Nothing is owed. When a solution is merged, its author is owed $${input.amount} by the owner, paid directly.` };
     return { state: 'merged-not-on-default' as PaymentState, ...none, note: `GitHub records pull request #${waiting.number} as merged, and the board has not confirmed its head on the default branch. Nothing is owed yet.` };
   }
@@ -159,7 +163,7 @@ export async function loadPayments(db: Db, where: string, ...values: readonly (s
   const rows = (await db.prepare(`SELECT b.id, b.title, b.repository, b.amount, b.poster, b.source ${scope}`).bind(...values).all<Pick<BountyPayment, 'id' | 'title' | 'repository' | 'amount' | 'poster' | 'source'>>()).results;
   if (rows.length === 0) return [];
   const within = `bounty_id IN (SELECT b.id ${scope})`;
-  const pulls = (await db.prepare(`SELECT bounty_id, number, author, merged_at, association, on_default, state FROM pull_requests WHERE (state = 'merged' OR bounty_id IN (SELECT id FROM bounties WHERE source = 'listed')) AND ${within} ORDER BY number`).bind(...values).all<MergedPull & { bounty_id: string }>()).results;
+  const pulls = (await db.prepare(`SELECT bounty_id, number, author, merged_at, association, on_default, head_on_default_at_sight, state FROM pull_requests WHERE (state = 'merged' OR bounty_id IN (SELECT id FROM bounties WHERE source = 'listed')) AND ${within} ORDER BY number`).bind(...values).all<MergedPull & { bounty_id: string }>()).results;
   const chain = (await db.prepare(`SELECT bounty_id, at, amount, withdrawn FROM events WHERE type = 'paid' AND ${within}`).bind(...values).all<PaidEvent & { bounty_id: string }>()).results;
   const clicks = (await db.prepare(`SELECT bounty_id, by_login AS by, to_login AS "to", at, amount, withdrawn FROM paid_clicks WHERE ${within}`).bind(...values).all<PaidEvent & { bounty_id: string; by: string }>()).results;
   const receipts = (await db.prepare(`SELECT bounty_id, payee, says, record_at, at FROM receipts WHERE ${within}`).bind(...values).all<Receipt & { bounty_id: string; payee: string }>()).results;

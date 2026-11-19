@@ -19,7 +19,7 @@ import { instructionNotices,syncInstructions } from './instructions.js';
 import { promisedTotal } from './money.js';
 import { ownerStatusLine,waitingSummary } from './owner-text.js';
 import { boardAddress,boardLine,boardNotToldLine,boardTold } from './board.js';
-import { paymentOf,payToLine } from './pay.js';
+import { paymentOf,payToLine,UNATTRIBUTED } from './pay.js';
 import { applicableAttempts,attemptsOf,endedCount,endedRecords,isOpenStage,listRecords,loadRecord,openRecords,persistRecord,recordDir,retiredRoute,setOpenSurfacesSync,trackedRecordFiles } from './record.js';
 import { corruptFiles,endedContaining,metaKeys,sharedEnded,sharedEndedCount,sharedOpen,sharedRead } from './store.js';
 import { refreshSharedMemory } from './chain.js';
@@ -562,6 +562,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
       ? payment.paidAt === null
         ? `; payment owed $${payment.amount} to ${solverAccountOr(payment.solver, 'the solver')}`
         : `; paid $${payment.amount} on ${validAt(payment.paidAt)?.slice(0, 10) ?? 'an unrecorded date'}`
+      : pay?.unattributed !== undefined ? '; no payee named'
       : pay !== undefined ? `; pay $${boundAmount(record) ?? '?'} to ${solverAccountOr(pay.solver, 'the solver')}` : '';
     // A hand merge the owner's decision would have held (ask/off) is marked
     // where it is read back: the owner was not asked before that merge (BT13).
@@ -604,6 +605,8 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
         lines.push(payment.paidAt === null
           ? `  payment: owed $${payment.amount} to ${solver} (${link})${entry.record.shared === true ? ' — recording happens on the machine that posted this bounty' : ` — the owner records it: omakase-box config set paid ${entry.record.id}`}`
           : `  payment: paid $${payment.amount} on ${validAt(payment.paidAt)?.slice(0, 10) ?? 'an unrecorded date'} — the owner's word, recorded`);
+      } else if (asked && pay?.unattributed !== undefined) {
+        lines.push(`  pay: no payee named — ${UNATTRIBUTED[pay.unattributed]}; nothing is owed`);
       } else if (asked && pay !== undefined) {
         lines.push(`  pay: ${pay.pr !== null ? `pull request ${pay.pr}` : 'the returned folder'}${pay.solver !== null ? ` by ${solverAccount(pay.solver)}` : ''} was merged — pay $${boundAmount(entry.record) ?? '?'} to ${solverAccountOr(pay.solver, 'the solver')}${pay.link !== null ? ' at the link they supplied' : ' — no recognised payment link was given'} — a record, not a reminder`);
       }

@@ -10,7 +10,7 @@ import { recordSignIn, signedInWith, tokenFromEnvironment, useTokenForGit } from
 import { gitOutcome } from './git.js';
 import { requireRepository } from './settings.js';
 import { metaGet,metaSet,storeDbPath } from './store.js';
-import { type PayOutcome,type PayToFact } from './pay.js';
+import { type FirstSight,type PayOutcome,type PayToFact } from './pay.js';
 
 // The bounty branch as it is posted now (BT6a): a name pointing at commits of
 // the repository's real history — the newest commit GitHub already had, the
@@ -30,9 +30,11 @@ export interface GitHubPublication {
   /** `unnamed`: how many of them carry an account name GitHub returned in a form the tool will not print. */
   questions?: { readonly count: number; readonly latestAt: string | null; readonly unnamed?: number; readonly fromPoster?: number };
   /** `onBranch` (BT56): this head was already on the branch the bounty was created on when this machine first recorded it, so it
-      is never a merge candidate; only ever `true` or absent, fixed at first sight and never recomputed. */
-  seenPullRequests?: { readonly n: number; readonly commit: string; readonly at: string; readonly author?: string; readonly payTo?: PayToFact; readonly onBranch?: true }[];
-  availablePullRequests?: { readonly n: number; readonly commit: string; readonly at: string; readonly author?: string; readonly payTo?: PayToFact; readonly onBranch?: true }[];
+      is never a merge candidate; only ever `true` or absent, fixed at first sight and never recomputed.
+      `firstSight` (BT67): both containment facts read at first sight, the only evidence a payee is named on; absent on a
+      record from before BT67, which names no payee. */
+  seenPullRequests?: { readonly n: number; readonly commit: string; readonly at: string; readonly author?: string; readonly payTo?: PayToFact; readonly onBranch?: true; readonly firstSight?: FirstSight }[];
+  availablePullRequests?: { readonly n: number; readonly commit: string; readonly at: string; readonly author?: string; readonly payTo?: PayToFact; readonly onBranch?: true; readonly firstSight?: FirstSight }[];
   /** Recorded at close when a bounty with a reward ended on a merged
       solution: whom to pay and where, for `status` and the hook's finish
       slot — a record, not a reminder (BT11b). */

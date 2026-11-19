@@ -106,6 +106,11 @@ if (rest === 'pulls' && method === 'GET') {
   const base = query.get('base');
   emit(pageOf(state.prs.filter(pr => (wanted === 'all' || (pr.state ?? 'open') === wanted) && (!base || pr.base.ref === base))));
 }
+// compare/<base>...<head> (BT67's first-sight read): 'behind' when the head is already on the base, else 'ahead'.
+if (/^compare\/[^/]+\.\.\.[a-f\d]{40}$/.test(rest) && method === 'GET') {
+  const [base, head] = rest.slice('compare/'.length).split('...');
+  emit({ status: spawnSync('git', ['-C', bare, 'merge-base', '--is-ancestor', head, 'refs/heads/' + decodeURIComponent(base)]).status === 0 ? 'behind' : 'ahead' });
+}
 if (rest === 'pulls' && method === 'POST') {
   const number = nextNumber();
   const sha = spawnSync('git', ['-C', bare, 'rev-parse', 'refs/pull/' + number + '/head'], { encoding: 'utf8' }).stdout.trim();

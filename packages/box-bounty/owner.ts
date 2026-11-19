@@ -19,7 +19,7 @@ import { boundAmount } from './format.js';
 import { boardAddress, payOnMergeLines } from './board.js';
 import { BOARD_SENDS } from './wording.js';
 import { boardAddressOf, saveSettings } from './settings.js';
-import { paymentOf } from './pay.js';
+import { paymentOf,UNATTRIBUTED } from './pay.js';
 import { sharePaid } from './chain.js';
 import { showPath } from './notice.js';
 import { hitPlace } from './scan.js';
@@ -465,7 +465,8 @@ function recordPaid(repoRoot: string, id: string, withdraw: boolean): string {
   const amount = boundAmount(record) ?? 0;
   if (record.stage !== 'applied') throw new BountyRefused('paid-nothing-owed', `${id} owes nothing: it was not merged; nothing changed; next: omakase-box status ${id} shows its state`);
   if (amount <= 0) throw new BountyRefused('paid-nothing-owed', `${id} owes nothing: its reward is $0; nothing changed; next: omakase-box status ${id}`);
-  const payment = paymentOf(record)!;
+  const payment = paymentOf(record);
+  if (payment === null) throw new BountyRefused('paid-nothing-owed', `${id} owes nothing: it names no payee — ${UNATTRIBUTED[record.github!.pay!.unattributed!]}; nothing is owed and nothing changed; next: omakase-box status ${id}`);
   if (!withdraw && payment.paidAt !== null) throw new BountyRefused('paid-already-recorded', `${id} was already recorded paid $${amount} at ${payment.paidAt}; nothing changed; next: withdraw a mistaken record with omakase-box config set paid ${id} no`);
   if (withdraw && payment.paidAt === null) throw new BountyRefused('paid-not-recorded', `${id} has no paid record to withdraw — it reads owed $${amount}; nothing changed; next: omakase-box config set paid ${id} records the payment`);
   const at = new Date().toISOString();
