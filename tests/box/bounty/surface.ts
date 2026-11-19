@@ -23,6 +23,7 @@ const WRITE_DIR = process.env['BT62_WRITE'];
 
 /** The one test file that checks each document's fields: the file whose runs print that document in the most states. */
 export const OWNERS: Readonly<Record<string, string>> = {
+  'box-bounty/status-wait@1': 'pf6-wait',
   'box-bounty/status@1': 'json-agreement', 'box-bounty/config@1': 'json-agreement', 'box-bounty/look@1': 'json-agreement',
   'box-bounty/describe@1': 'bt61-journey', 'box-bounty/help@1': 'bt61-journey', 'box-bounty/create@1': 'bt61-journey',
   'box-bounty/post@1': 'bt61-journey', 'box-bounty/allow@1': 'bt61-journey', 'box-bounty/apply@1': 'bt61-journey',
@@ -73,7 +74,7 @@ export const exitCodes = (): number[] => {
 };
 // What each code means, from the catch block of packages/box-cli/src/bounty.ts and the usage path; a code not named here
 // is recorded as `unnamed`, so a new one shows as an addition.
-const EXIT_MEANING: Readonly<Record<number, string>> = { 0: 'done, or an answer held for the owner', 1: 'failed', 2: 'usage', 3: 'refused' };
+const EXIT_MEANING: Readonly<Record<number, string>> = { 0: 'done, or an answer held for the owner', 1: 'failed', 2: 'usage', 3: 'refused', 130: 'cancelled' };
 
 /** The refusals a program gets with exit 0: the array literal tested with `.includes(error.reason)` in bounty.ts. */
 export const heldReasons = (): string[] => {

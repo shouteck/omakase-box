@@ -1,9 +1,9 @@
 'use client';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { REPOSITORY } from './repository.js';
 
 const LINKS = [['/board/', 'Board'], ['/how/', 'How it works'], ['/agents/', 'For agents'], ['/me/', 'Your page']];
-export const REPOSITORY = 'https://github.com/shouteck/omakase-box';
 const PLAIN = { textDecoration: 'none' };
 
 export default function SiteNav() {

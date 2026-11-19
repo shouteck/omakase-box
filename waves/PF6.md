@@ -90,7 +90,61 @@ Written so any model can cook it.
 
 ## Changed expectations
 
+- tests/platform/pages.test.ts::How it works makes the solver steps level-three headings under Answer bounties — master adds semantic heading coverage; retain its level-two/level-three accessibility assertions while updating the step names to the owner-approved four-step solver path.
+
+- tests/box/bounty/pf6-wait.test.ts::cancels the spawned CLI with SIGINT, one named document and exit 130 — Windows child.kill terminates the process rather than delivering a console event. Keep native SIGINT coverage on POSIX and exercise the installed CLI SIGINT handler through a test-only preload/IPC console-event relay on every OS; retain exit 130, the single cancellation document and all writer-exclusion assertions. No product signal or endpoint behavior changes.
+
+- tests/platform/pages.test.ts::PF6: answering explains discovery, safe work, both submission paths and owner payment — MCP is a POST-only protocol endpoint, not a browser destination; link the existing /agents/#mcp explanation and present the server URL with the existing copy style. Assert no direct /mcp link; do not change its HTTP behavior.
+
+- tests/platform/pages.test.ts::the front page says it in few words, shows the real product, and leads to the detail — owner asks for real discovery and payment-page links in Answer bounties, replacing the old no-links assertion only for that section.
+- tests/platform/pages.test.ts::with %s, the card and How it works name what this board has — solver payment step is now titled Get paid; keep all payment-capability assertions and fixture cases unchanged.
+
+- tests/platform/pages.test.ts::how it works: both paths, every step, and each fact the front page leaves out — owner-requested solver onboarding now has four explicit steps and optional skill/CLI installation, replacing the blanket no-install claim; keep the other page facts and owner half unchanged.
+
+- tests/box/bounty/pf6-wait.test.ts::starts no request past the deadline %s — distinguish pre-request expiry (timeout) from an already-started request failing after expiry (named upstream refusal); no rate-limit lookup starts after expiry in either case.
+
+- tests/box/bounty/pf6-wait.test.ts::reads unseen PRs in one poll without any local, ref, board or GitHub write — review corrects the text next step: look shows a collected version; apply detects and collects a moved head without merging, but can merge an unchanged head. JSON and read-only guarantees are unchanged.
+
+- tests/box/bounty/pf6.test.ts::the skill is a trusted front door to local execution and read-only discovery — owner-specified actionable CLI journey and verbatim posting/approval paragraph replace the meta front-door and abbreviated CLI assertions; retain command, trust, discovery and installed-byte checks.
+- tests/box/bounty/pf16.test.ts::states the block's facts, carries the marker, and steers nobody — owner follow-up restores the original posting/approval paragraph verbatim and gives actionable local CLI guidance; update only skill-derived facts and raise the short-copy bound from 800 to 1200 characters to fit the requested body with unchanged frontmatter/marker.
+
+- tests/box/bounty/pf16.test.ts::states the block's facts, carries the marker, and steers nobody — owner-selected skill front door/local CLI/read-only MCP hierarchy and trust warning replace the skill's pricing and owner-prompt wording; installed bytes still equal SKILL_TEXT and the short-copy bound remains.
+
+- tests/box/bounty/bt62.test.ts::the entry points exit only with 0, 1, 2 and 3 — bounded wait adds SIGINT/SIGTERM cancellation with exit 130.
+- tests/box/bounty/bt61-text.test.ts::the journey, command by command — status usage in the unknown-command and unknown-option snapshots gains wait/timeout; ordinary status output is unchanged.
+- tests/box/bounty/bt61-text.snapshot.json::snapshot — only those two status usage strings gain wait/timeout.
+
+- tests/box/bounty/SURFACE.txt::surface record — status gains wait/timeout options, the bounded-wait document and refusal outcomes; ordinary status facts are unchanged.
+
 Ordinary status/help snapshots and surface gain the wait option and declared JSON outcomes. List exact existing tests here before changing their expectations; ordinary non-wait semantics remain unchanged. Skill warning may add bytes, but generated and installed skill must remain identical.
+
+## Plan
+
+This run is the slim scope: items 5, 6 and 7 only; items 1–4 and the toolbox
+test are deferred. This implementation step delivers item 6 (bounded wait),
+not the onboarding or positioning/queue documents in items 5 and 7.
+
+- Blocking first steps: tests first, then extract the PR reader and a record read
+  without store synchronization; exclude the board exit hook before any wait.
+- Independent workstreams: n/a — CLI, reader and tests form one coupled change.
+- Shared mutable state: keep the ordinary status writers outside the wait path;
+  snapshot SQLite/WAL into disposable scratch space instead of opening live state.
+- Smallest safe decomposition: one writer on wave/PF6; deterministic injected
+  loop tests, one shared CLI world, then surface generation and acceptance.
+
+Architect skipped: the owner settled the interface, bounds and read-only design.
+Default timeout 600 s, maximum 3600 s, polling 30 s with a shortened final sleep.
+Precedent checked: `gh run watch --help` lists `-i, --interval int`, default 3 s,
+and no timeout option. Our API observation is slower and explicitly bounded.
+
+Follow-up B/C: the owner selected one product with Agent Skill as front door,
+local CLI execution, and read-only MCP discovery. Write launch-copy contracts
+first, retain the installed skill's single source, then add onboarding, queue
+recipes and the launch/distribution plan. Validate commands against
+BOUNTY_COMMANDS plus setup derived from SETUP_USAGE (owner-approved exception:
+setup has a separate parser). Items 1–4 and the toolbox test stay deferred.
+Keep these brief changes appended to Plan/Changed expectations/Result so the
+owner's concurrent docs-only PR #23 remains straightforward to rebase onto.
 
 ## Traps
 
@@ -118,3 +172,56 @@ Ordinary status/help snapshots and surface gain the wait option and declared JSO
 ## Result
 
 Awaiting the owner's go; not run.
+
+### Follow-up A — author diagnosis and wait dispatch audit
+
+- The host's shell `git` function sources `/opt/.devin/git_author` in the
+  current shell for `commit`, leaving `GIT_AUTHOR_NAME=Original ShouTeck`
+  exported. Launching verify after commit in that same shell inherits it.
+  `publish-plan.ts:buildWip` sets `user.name=box-bounty`, but `gitEnvironment`
+  preserves author environment variables, which take precedence over that config.
+- Reproduction: sourcing that host file before the scoped github-history test
+  gives the exact author assertion failure, 1 failed / 22 passed, on both PF6
+  and an independently built `origin/master` (bc79772c) worktree. In a fresh
+  shell with the same neutral HOME, PF6 passes all 23 tests. This disproves
+  a PF6 regression or HOME-only cause; it is command-environment ordering,
+  not evidence of another test changing shared state. The relevant product
+  and fixture files have no diff against origin/master. No product/test fix.
+- Audit: successful `resolveRepoRoot` does read-only Git root resolution and
+  canonicalization. Before the wait branch there is only the `since` assignment.
+  Earlier `loadTaken`/`settingsDir` read paths and record bytes; no mkdir,
+  migration, notice or settings save. The root-error fallback's takenOverview
+  also only reads local records. Board preflight is after the wait return;
+  the exit hook excludes wait. Existing PF6 snapshots cover .box/SQLite,
+  settings, Git and remote refs, pending board hints, and both GitHub transports.
+- Subsequent verification runs start in a fresh shell, separate from commits;
+  no Git configuration or host wrapper was changed.
+
+### Follow-up B — skill front door
+
+- Kept the hand-off description, marker and setup byte-equality contract;
+  added the trust warning, Agent Skill front door, local CLI posting/solving
+  with INSTALL_SPEC, and read-only/no-sign-in MCP discovery without installing.
+  Replaced the skill's pricing wording; the skill remains under 800 characters.
+- Tests first: pf6.test.ts initially reported 5 failed / 2 passed: all three
+  docs absent, trust warning absent, and onboarding order unfulfilled.
+  The owner approved deriving setup from SETUP_USAGE alongside BOUNTY_COMMANDS.
+- Skill/setup/scanner checks: 3 files passed, 15 tests passed, 9 outside the
+  selected name filter. Documentation checks stay red until follow-up C.
+
+### Follow-up C — onboarding and distribution plan
+
+- Added trust-first onboarding for poster and solver, three manual queue
+  hand-off recipes, and the layered launch/distribution plan. Existing brief
+  lines are unchanged for PR #23; only Plan/Changed expectations/Result gain
+  follow-up notes. Public hosting, submissions, spend and items 1–4/toolbox
+  test remain deferred; no external action or usage evidence is claimed.
+- Monid stays optional: FREE public read-only solver discovery, poster intent
+  surfaced as inspect description/docs only, no hosted posting API. Auth-shape
+  reviewer acceptance remains unverified; owner-only fork/fixtures/checks/PR/
+  email steps and the no-spend drop condition are documented from the notes.
+- Hosted verification was read, not triggered: .github/workflows/verify.yml,
+  workflow verify, code pushes to master or wave/** (no PR trigger; path filters
+  skip inert docs). Its independent ubuntu-24.04/windows-2025/macos-15 jobs run
+  node scripts/verify.mjs --full test:box-bounty test:kitchen and the platform
+  suite; install-node22 separately checks the packed artifact on all three.

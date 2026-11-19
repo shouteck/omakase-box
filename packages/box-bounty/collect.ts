@@ -11,6 +11,7 @@ import { boundAmount,formatFact,formatFor } from './format.js';
 import { parsePayTo,payToLine,UNATTRIBUTED,unattributedOf,type Containment,type FirstSight,type PayToFact } from './pay.js';
 import { shareSolution,syncChains } from './chain.js';
 import { adoptedWithoutPermission,settleFromChain } from './adopt.js';
+import type { GitHubReadOptions } from './gh.js';
 
 // BT56: the merge scan must not take a commit the owner pushed after posting for a solution's landing. When a pull
 // request's head is first recorded here, record whether that commit was already on the branch the bounty was
@@ -65,12 +66,9 @@ const unattributedLine = (sight: Sight): string => {
 const alreadyThereLine = (record: BountyRecord, id: string): string =>
   `already on ${creatingBranch(record) ?? 'the branch the bounty was created on'} when first seen here; it adds nothing and is not counted as a merge; if this is the merged solution, close the bounty: omakase-box close ${id}`;
 
-export function listGitHubAnswers(root: string, id: string, record = loadRecord(root, id), shown = true): string {
-  if (record.github === undefined) return invalid('not-github-posted', `this bounty has no GitHub post; next: post it with omakase-box post ${id}, or end it with omakase-box close ${id}`);
-  if (retiredRoute(record) !== null) return `This bounty used a retired delivery route; end it with omakase-box close ${id}`;
-  const { repository, branch } = record.github;
-  const sight = firstSightReader(root, record);
-  const data = pages(root, `repos/${repository}/pulls?state=open&base=${branch}`);
+export function readOpenPullRequests(root: string, publication: Pick<GitHubPublication, 'repository' | 'branch'>, options: GitHubReadOptions = { readOnly: true }) {
+  const { repository, branch } = publication;
+  const data = pages(root, `repos/${repository}/pulls?state=open&base=${branch}`, options);
   // Every fact a listing line prints except the changed-file names — one
   // pull-request listing read, no per-request file calls yet. When this fact
   // set (plus the bounty branch tip below) is unchanged the recorded answers
@@ -85,6 +83,15 @@ export function listGitHubAnswers(root: string, id: string, record = loadRecord(
     if (!isObject(entry['head']) || typeof entry['head']['sha'] !== 'string' || !/^[a-f\d]{40}$/.test(entry['head']['sha'])) return invalid('github-response-invalid', 'GitHub returned an unreadable solution commit; next: check gh and rerun the same command');
     facts.push({ entry, n, commit: entry['head']['sha'], author: login(entry['user']['login']), payTo: parsePayTo(typeof entry['body'] === 'string' ? entry['body'] : '') });
   }
+  return facts;
+}
+
+export function listGitHubAnswers(root: string, id: string, record = loadRecord(root, id), shown = true): string {
+  if (record.github === undefined) return invalid('not-github-posted', `this bounty has no GitHub post; next: post it with omakase-box post ${id}, or end it with omakase-box close ${id}`);
+  if (retiredRoute(record) !== null) return `This bounty used a retired delivery route; end it with omakase-box close ${id}`;
+  const { repository, branch } = record.github;
+  const sight = firstSightReader(root, record);
+  const facts = readOpenPullRequests(root, record.github, {});
   const pays = boundAmount(record) !== undefined && boundAmount(record)! > 0;
   // The listing's file names are GitHub's diff of each request against the
   // bounty branch's CURRENT tip — a head sha pins the request but not the
@@ -132,7 +139,7 @@ export function listGitHubAnswers(root: string, id: string, record = loadRecord(
     available.push(fact);
     if (shown && seen === undefined) record.github.seenPullRequests = [...record.github.seenPullRequests ?? [], fact];
   }
-  if (data.length === 0) lines.push('  none open; wait for one or close the bounty');
+  if (facts.length === 0) lines.push('  none open; wait for one or close the bounty');
   record.github.availablePullRequests = available;
   record.github.answersKey = answersKey;
   persistRecord(root, record);

@@ -133,13 +133,20 @@ let installedTransport: GitHubTransport | null = null;
 export function useGitHubTransportForTests(transport: GitHubTransport | null): void { installedTransport = transport; }
 
 // Never include gh/git diagnostics here: signed-in programs can print credentials.
-function gh(root: string, args: readonly string[]): string {
+export class GitHubReadDeadlineReached extends Error {}
+function checkReadDeadline(deadline: number): void {
+  if (Date.now() >= deadline) throw new GitHubReadDeadlineReached();
+}
+
+function gh(root: string, args: readonly string[], readOnly = false, deadline = Infinity): string {
+  checkReadDeadline(deadline);
   // The run-level budget a bounded caller (the hook) sets: a call count so
   // endless pagination cannot loop forever, and a deadline so a run of hung
   // calls stays inside its bound. Ordinary commands leave both unbounded.
   if (ghCallBudget <= 0 || Date.now() >= ghDeadline) return invalid('github-call-budget', 'the GitHub budget for this run is spent — the run stays inside its bound and the next one can ask again; next: rerun the command — a new run gets a fresh budget');
   ghCallBudget -= 1;
-  const { kind, call } = installedTransport === null ? chooseCall(root) : { kind: 'test' as const, call: installedTransport };
+  const { kind, call } = installedTransport === null ? chooseCall(root, readOnly) : { kind: 'test' as const, call: installedTransport };
+  checkReadDeadline(deadline);
   // The probe itself can burn a whole call's cap — check the run deadline
   // again before the real call so the worst case is the deadline plus one
   // in-flight call.
@@ -149,7 +156,7 @@ function gh(root: string, args: readonly string[]): string {
     const failure = classifyGitHubFailure(result, () => {
       // GET /rate_limit is free, asked at most once per failure, and still a
       // call: it spends the run's budget and never outlives its deadline.
-      if (ghCallBudget <= 0 || Date.now() >= ghDeadline) return null;
+      if (ghCallBudget <= 0 || Date.now() >= ghDeadline || Date.now() >= deadline) return null;
       ghCallBudget -= 1;
       const limits = call(root, ['api', '--hostname', 'github.com', 'rate_limit']);
       if (limits.error !== undefined || limits.status !== 0) return null;
@@ -177,7 +184,7 @@ export function chooseTransport(facts: { readonly ghOnPath: boolean; readonly to
 
 // `gh auth status` asked at most once per gh program per process, and only when a token is also present.
 const ghSignedInAt = new Map<string, boolean>();
-function chooseCall(root: string): { readonly kind: 'gh' | 'token'; readonly call: GitHubTransport } {
+function chooseCall(root: string, readOnly = false): { readonly kind: 'gh' | 'token'; readonly call: GitHubTransport } {
   const token = tokenFromEnvironment();
   let program: ReturnType<typeof resolveProgram> | null = null;
   try { program = resolveProgram('gh'); } catch { /* no gh on PATH */ }
@@ -195,18 +202,18 @@ function chooseCall(root: string): { readonly kind: 'gh' | 'token'; readonly cal
   });
   if (kind === 'none') return invalid('github-cli-missing', `GitHub bounties need a way to sign in to GitHub: GitHub CLI gh ${GH_LEAST} or later, or a token in GH_TOKEN — neither was found (https://cli.github.com); next: install gh from https://cli.github.com and sign in with gh auth login, or set GH_TOKEN to a GitHub token, then rerun the same command`);
   recordSignIn(kind);
-  if (kind === 'gh') return { kind, call: programTransport(root) };
+  if (kind === 'gh') return { kind, call: programTransport(root, readOnly) };
   useTokenForGit(token);
   return { kind, call: (_cwd, args) => directRequest(token!, args, ghCallLimit) };
 }
 
 // The `gh` program as a transport: found on PATH, its version checked once (K71 remembers a passed probe across processes).
-function programTransport(root: string): GitHubTransport {
+function programTransport(root: string, readOnly = false): GitHubTransport {
   let program: ReturnType<typeof resolveProgram>;
   try { program = resolveProgram('gh'); }
   catch { return invalid('github-cli-missing', `GitHub bounties need a way to sign in to GitHub: GitHub CLI gh ${GH_LEAST} or later, or a token in GH_TOKEN — neither was found (https://cli.github.com); next: install gh from https://cli.github.com and sign in with gh auth login, or set GH_TOKEN to a GitHub token, then rerun the same command`); }
   const stamp = probeStamp(program.path);
-  if (!probedGh.has(program.path) && stamp !== null && probeRemembered(root, program.path, stamp)) probedGh.add(program.path);
+  if (!readOnly && !probedGh.has(program.path) && stamp !== null && probeRemembered(root, program.path, stamp)) probedGh.add(program.path);
   if (!probedGh.has(program.path)) {
     // `gh version`, never `gh --version`: a gh.exe that is a wrapped program
     // may see the double-dash flag eaten by its own runtime before the
@@ -220,7 +227,7 @@ function programTransport(root: string): GitHubTransport {
       return invalid('github-cli-too-old', `GitHub CLI gh ${GH_LEAST} or later is required — found gh ${found[1]}.${found[2]} (https://cli.github.com); next: upgrade gh from https://cli.github.com, then rerun the same command`);
     }
     probedGh.add(program.path);
-    if (stamp !== null) rememberProbe(root, program.path, stamp);
+    if (!readOnly && stamp !== null) rememberProbe(root, program.path, stamp);
   }
   return (cwd, args) => launch(program, cwd, args);
 }
@@ -342,10 +349,19 @@ export function api(root: string, endpoint: string, payload?: object, method?: s
   } finally { rmSync(work, { recursive: true, force: true }); }
 }
 
-export function pages(root: string, endpoint: string): unknown[] {
+export interface GitHubReadOptions { readonly readOnly?: boolean; readonly deadline?: number }
+
+function readOnlyApi(root: string, endpoint: string, deadline?: number): unknown {
+  const body = splitResponse(gh(root, ['api', '--hostname', 'github.com', endpoint, '--include'], true, deadline)).body;
+  try { return JSON.parse(body); }
+  catch { return invalid('github-response-invalid', 'GitHub returned unreadable data; nothing changed; next: run the wait again'); }
+}
+
+export function pages(root: string, endpoint: string, options: GitHubReadOptions = {}): unknown[] {
   const entries: unknown[] = [];
   for (let page = 1; ; page += 1) {
-    const data = api(root, `${endpoint}${endpoint.includes('?') ? '&' : '?'}per_page=100&page=${page}`);
+    const path = `${endpoint}${endpoint.includes('?') ? '&' : '?'}per_page=100&page=${page}`;
+    const data = options.readOnly === true ? readOnlyApi(root, path, options.deadline) : api(root, path);
     if (!Array.isArray(data)) return invalid('github-response-invalid', 'GitHub returned an unreadable list; next: check gh and rerun the same command');
     entries.push(...data);
     if (data.length < 100) return entries;

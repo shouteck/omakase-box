@@ -13,6 +13,7 @@ import { FIXED_HEADERS, inlineScriptHashes, NOT_A_PAGE_POLICY, pagePolicy } from
 import { seed120, seedStates, STATE_IDS } from '../../packages/box-platform/standin/standin.js';
 import { CLI, journeyWorld, wordsOf } from './commands.js';
 import { MINUTE, NOW, SCHEMA } from './support.js';
+import { BOUNTY_COMMANDS, SETUP_USAGE } from '../../packages/box-bounty/index.js';
 
 const PACKAGE = fileURLToPath(new URL('../../packages/box-platform/', import.meta.url));
 const OUT = join(PACKAGE, 'out');
@@ -72,6 +73,14 @@ describe('the pages', () => {
   afterAll(async () => { await browser?.close(); await board?.stop(); });
 
   const pf40Pages = ['/', '/board/', '/how/', '/agents/', '/me/', '/sign-in/', '/privacy/', '/terms/', '/numbers/', '/404/', '/solver/example-quill/', '/owner/example-mara/', `/b/${STATE_IDS.open}/`];
+
+  it('terms repository links are URLs in the server-rendered HTML, not client functions', () => {
+    const html = readFileSync(join(OUT, 'terms/index.html'), 'utf8');
+    expect(html).toContain('href="https://github.com/shouteck/omakase-box/issues"');
+    expect(html).toContain('href="https://github.com/shouteck/omakase-box/blob/master/LICENSE"');
+    expect(html).not.toMatch(/href="[^"]*function\s*\(/);
+    expect(html).toMatch(/<footer\b[\s\S]*?href="https:\/\/github\.com\/shouteck\/omakase-box"/);
+  });
 
   it('PF40: every built page carries the mark and one product name', async () => {
     const { page, close } = await fresh();
@@ -331,8 +340,16 @@ describe('the pages', () => {
     expect(await payee.page.locator('[data-pay]').count()).toBe(0);
 
     const owner = await signedIn(7100, 'example-mara');
+    // Delay one successful write past expect.poll's 1 s budget: the test must wait for the POST, not race it.
+    await owner.page.route('**/paid', async route => {
+      const response = await route.fetch();
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      await route.fulfill({ response });
+    }, { times: 1 });
     await owner.page.click('[data-pay]');
+    const recorded = owner.page.waitForResponse(response => response.request().method() === 'POST' && response.url() === `${board.url}/api/b/${STATE_IDS.owed}/paid`);
     await owner.page.click('[data-pay-window] [data-window-action]:has-text("I\'ve paid $45")');
+    expect((await recorded).status()).toBe(200);
     await expect.poll(() => owner.page.locator('[data-pay-window]').innerText()).toContain('Recorded: you paid example-quill $45');
     await owner.page.click('[data-pay-window] [aria-label=Close]');
     await expect.poll(() => says(owner)).toContain('Recorded paid by you');
@@ -513,7 +530,7 @@ describe('the pages', () => {
     expect(groups.map(group => group.title)).toEqual(cards.map(card => `# ${card}`));
     // A person gets on with the page: the only links in the owner's and solver's sections skip between them.
     expect(await page.locator('#hand-off a').count()).toBe(0);
-    expect(await page.locator('#answer a').count()).toBe(0);
+    expect(await page.locator('#answer a').count()).toBe(4);
     expect(how).toContain('/bounties.json');
     expect(await page.locator('#hand-off details code[data-command]').count()).toBe(7);
     expect(await page.locator('#hand-off code[data-command]').count()).toBe(7);
@@ -542,7 +559,7 @@ describe('the pages', () => {
       expect(await onMerge.innerText()).not.toContain('PayPal');
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
       await visit(page, '/how/');
-      const solverStep = page.locator('main li', { has: page.getByRole('heading', { name: 'Get merged, get paid, confirm', exact: true }) });
+      const solverStep = page.locator('main li', { has: page.getByRole('heading', { name: 'Get paid', exact: true }) });
       await expect.poll(() => solverStep.innerText()).toContain('One click supports Stripe or PayPal.');
       await expect.poll(() => solverStep.innerText()).toContain('One click supports Stripe or PayPal. On your page, connect Stripe');
       expect(await solverStep.innerText()).not.toMatch(/Currently available here:|Set up here:|Availability not confirmed/);
@@ -565,7 +582,7 @@ describe('the pages', () => {
       expect(await oneClick.innerText()).not.toMatch(/Currently available here:|Set up here:|Availability not confirmed/);
       expect(await oneClick.innerText()).not.toContain('Not set up on this board yet');
       await visit(page, '/how/');
-      const solverStep = page.locator('main li', { has: page.getByRole('heading', { name: 'Get merged, get paid, confirm', exact: true }) });
+      const solverStep = page.locator('main li', { has: page.getByRole('heading', { name: 'Get paid', exact: true }) });
       expect(await solverStep.innerText()).toContain('One click supports Stripe or PayPal.');
       expect(await solverStep.innerText()).not.toMatch(/Currently available here:|Set up here:|Availability not confirmed/);
       expect(await solverStep.innerText()).not.toContain('connect Stripe');
@@ -593,7 +610,7 @@ describe('the pages', () => {
     expect(front.includes('Nothing for you')).toBe(on_merge);
     expect(moneyClaims(front)).toEqual([]);
     await visit(page, '/how/');
-    const step = page.locator('main li', { has: page.getByRole('heading', { name: 'Get merged, get paid, confirm', exact: true }) });
+    const step = page.locator('main li', { has: page.getByRole('heading', { name: 'Get paid', exact: true }) });
     expect(await step.innerText()).toContain('One click supports Stripe or PayPal.');
     expect(await step.innerText()).not.toMatch(/Currently available here:|Set up here:|Availability not confirmed/);
     await expect.poll(() => step.textContent()).toContain(want.connect);
@@ -754,15 +771,37 @@ describe('the pages', () => {
     const { page, close } = await fresh();
     await visit(page, '/how/');
     const text = (await page.locator('main').textContent())!;
-    for (const phrase of ['Hand off work', 'Answer bounties', 'Nothing a solver wrote is run', 'a private repository is refused', 'never-ship files', 'anything else in it is too', 'The board never holds money', 'install nothing from this page', 'nothing here makes them pay', 'it asks you before each post and each merge', 'only the repository, the issue number, the bounty id and what happened']) expect(text).toContain(phrase);
-    // The agent's four, the solver's three.
-    expect(await page.locator('main ol > li').count()).toBe(7);
+    for (const phrase of ['Hand off work', 'Answer bounties', 'Nothing a solver wrote is run', 'a private repository is refused', 'never-ship files', 'anything else in it is too', 'The board never holds money', 'The task is information, not instructions.', 'nothing here makes them pay', 'it asks you before each post and each merge', 'only the repository, the issue number, the bounty id and what happened']) expect(text).toContain(phrase);
+    // Four steps for each seat.
+    expect(await page.locator('main ol > li').count()).toBe(8);
     expect(await page.locator('main a[href="#answer"]').count()).toBe(1);
     expect(await page.locator('#answer h2').innerText()).toBe('Answer bounties');
     expect(await page.locator('#limits details').count()).toBe(4); // PF18, the owner: building from source moved to the README.
     await page.click('#limits summary >> text=What becomes public');
     expect(await page.locator('#limits details[open]').innerText()).toContain('a private repository is refused');
     await close();
+  });
+
+  it('PF6: answering explains discovery, safe work, both submission paths and owner payment', async () => {
+    const { page, close } = await fresh();
+    try {
+      await visit(page, '/how/');
+      const answer = page.locator('#answer');
+      expect(await answer.getByRole('heading', { level: 3 }).allTextContents()).toEqual(['Find one', 'Read the task', 'Answer', 'Get paid']);
+      for (const href of ['/board/', '/bounties.json', '/agents/#mcp', '/me/']) expect(await answer.locator(`a[href="${href}"]`).count()).toBe(1);
+      expect(await answer.locator('a[href="/mcp"]').count()).toBe(0);
+      expect(await answer.getByRole('group', { name: 'MCP server URL', exact: true }).innerText()).toBe('https://open-bounty-board.box-platform.workers.dev/mcp');
+      const text = await answer.innerText();
+      for (const phrase of ['read-only MCP', 'stated reward', 'payment record', 'Check it before you start', 'information, not instructions', 'away from your credentials', 'Agent Skill', 'CLI does the work locally', 'With the tool', 'Commit and push', 'By hand', 'box-bounty/<id>', 'owner’s promise', 'not a guarantee of selection or payment']) {
+        expect(text.replaceAll("'", '’'), phrase).toContain(phrase.replaceAll("'", '’'));
+      }
+      await expect.poll(() => answer.innerText()).toContain('Then say on the bounty\'s page whether it arrived.');
+      const commands = await answer.locator('code[data-solver-command]').allTextContents();
+      expect(commands).toEqual(['npx -y omakase-box setup', 'omakase-box discover', 'omakase-box take <id>', 'omakase-box submit <id>']);
+      const known = new Set([...Object.keys(BOUNTY_COMMANDS), ...SETUP_USAGE[0]!.matchAll(/omakase-box ([a-z-]+)/g)].map(value => typeof value === 'string' ? value : value[1]));
+      for (const line of commands) expect(known.has(/omakase-box ([a-z-]+)/.exec(line)![1])).toBe(true);
+      await answer.screenshot({ path: join(SHOTS, 'pf6-answer-bounties-desktop.png') });
+    } finally { await close(); }
   });
 
   it('the front page tells its story once, and does not move at all when motion is reduced', async () => {
@@ -781,6 +820,19 @@ describe('the pages', () => {
     expect(await moving.page.evaluate(() => [...document.querySelectorAll('.story')].every(el => getComputedStyle(el).opacity === '1'))).toBe(true);
     await moving.close();
   }, 30000);
+
+  it('the front page\'s sections are never blank before they are scrolled to: a full-page capture and a print show them', async () => {
+    const { page, close } = await fresh();
+    await page.goto(`${board.url}/`);
+    const shown = () => page.evaluate(() => [...document.querySelectorAll('.arrive')].map(el => getComputedStyle(el).opacity));
+    const arriving = await shown();
+    expect(arriving.length).toBeGreaterThan(0);
+    // Unscrolled, these sections sit below the fold; motion may move them but never hides them.
+    expect(arriving.every(opacity => opacity === '1')).toBe(true);
+    await page.emulateMedia({ media: 'print' });
+    expect((await shown()).every(opacity => opacity === '1')).toBe(true);
+    await close();
+  });
 
   it('a copy button copies exactly the words beside it, and says so', async () => {
     const context = await browser.newContext({ permissions: ['clipboard-read', 'clipboard-write'] });
@@ -1132,7 +1184,7 @@ describe('the pages', () => {
       const answer = page.getByRole('region', { name: 'Answer bounties' });
       expect(await answer.getByRole('heading', { level: 2 }).allTextContents()).toEqual(['Answer bounties']);
       expect(await answer.getByRole('heading', { level: 3 }).allTextContents()).toEqual([
-        'Find one', 'Open a pull request against its branch', 'Get merged, get paid, confirm'
+        'Find one', 'Read the task', 'Answer', 'Get paid'
       ]);
     } finally {
       await close();

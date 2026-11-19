@@ -378,6 +378,10 @@ async function main() {
   const { KITCHEN_SELECTION: selection, ...env } = process.env;
   if (files.length) console.log(selection ? `verify ${selection}` : `scoped run: ${targets.length} file(s) under ${relative(root, directory)} — this is an inner loop, never suite acceptance`);
   const vitest = fileURLToPath(new URL('../node_modules/vitest/vitest.mjs', import.meta.url));
+  if (suite === 'platform') {
+    const built = await runNode(join(root, 'packages/box-platform/node_modules/next/dist/bin/next'), ['build'], { cwd: join(root, 'packages/box-platform'), env: { ...env, NEXT_TELEMETRY_DISABLED: '1' } });
+    if (built !== 0) process.exit(built);
+  }
   process.exit(await runNode(vitest, ['run', `--maxWorkers=${suiteWorkers(suite, subgroup)}`, ...(targets.length ? targets : [directory]), '--config', 'scripts/vitest.config.mjs'], { env: { ...env, PLAYWRIGHT_BROWSERS_PATH: join(root, '.runtime', 'browsers') } }));
 }
 

@@ -26,6 +26,7 @@ packages/box-platform/.next/
 packages/box-platform/.wrangler/
 packages/box-platform/dist/
 packages/box-platform/next-env.d.ts
+packages/box-platform/public/version.json
 
 # Design review pictures: remade by node docs/box-v4/design/review.mjs
 docs/box-v4/design/review/

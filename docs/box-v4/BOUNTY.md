@@ -42,6 +42,7 @@ node packages/box-cli/dist/cli.js bounty [--repo <path>]
 node packages/box-cli/dist/cli.js bounty help
 node packages/box-cli/dist/cli.js bounty describe [--rules] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty status [id] [--full] [--comments] [--json] [--repo <path>]
+node packages/box-cli/dist/cli.js bounty status <id> --wait [--timeout <seconds>] [--json] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty post <id> [--with-changes] [--include <file>] [--preview] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty look [id] <n> [--full] [--export] [--json] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty apply [id] [<n>] [--repo <path>]
@@ -72,6 +73,41 @@ The commands folded away — `answer`, `questions`, `reply`, `undo`,
 `reject`, `withdraw`, `remind` (BT7c) and `confirm` (BT8) — each refuse by
 name (`command-removed`) and say what took their place; none survives as a
 hidden alias.
+
+## Wait for a solution
+
+`omakase-box status <id> --wait [--timeout <seconds>] [--json] [--repo <path>]`
+observes a posted bounty without changing it. It returns on an open pull request
+targeting the bounty's recorded branch whose PR number and head commit are not
+in the record's seen set. An unseen solution already present returns on the
+first poll. Nothing is marked seen: ordinary `status <id>` still shows and
+marks those solutions afterwards.
+
+The default timeout is 600 seconds, with integer values from 1 to 3600. Polls
+are 30 seconds apart; the last sleep stops at the deadline. `gh run watch`
+provides the polling precedent (`-i, --interval`, default 3 seconds; no timeout
+option, checked with `gh run watch --help`). This command polls more slowly
+because each poll reads GitHub's API, and always has a bounded timeout.
+
+`solution` names each new PR, head commit and URL. `timeout` explicitly says no
+solution arrived within the chosen seconds and nothing changed; both exit 0.
+SIGINT or SIGTERM returns `cancelled`, says nothing changed and exits 130.
+An unreadable upstream stops immediately with a named refusal (exit 3), never
+a retry or a successful empty result. Drafts refuse `wait-not-posted`, ended
+bounties `wait-bounty-ended`; taken bounties use `taken-status-options`.
+Unknown ids use `unknown-bounty`. `--wait` requires an id and cannot be combined
+with `--full`, `--comments` or `--since`. `--timeout` needs `--wait`; invalid
+combinations or timeout values are usage errors (exit 2).
+
+With `--json`, exactly one `box-bounty/status-wait@1` document is printed:
+`id`, `outcome`, `timeoutSeconds`, `pollSeconds`, ISO `startedAt` and `endedAt`,
+`polls`, and `solutions` (each with `pullRequest`, full `commit`, `url`, `author`).
+Timeout and cancellation have an empty solutions array. Refusals retain
+`box-bounty/refusal@1`. There is no reminder, background process or notification.
+Wait bypasses ordinary status's board hints, shared-memory refresh, merge
+recognition, seen marking and managed-file synchronization. The record is read
+from a disposable stable SQLite/WAL copy so even SQLite's shared-memory files
+in the project are untouched; legacy JSON can be read without importing it.
 
 A fresh git clone contains no
 `node_modules` and no built output, so `dist/cli.js` is missing until three

@@ -140,6 +140,13 @@ export async function handle(request: Request, env: Env): Promise<Response> {
 
 async function route(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
+  if (url.pathname === '/version.json') {
+    if (request.method !== 'GET') return new Response(null, { status: 405, headers: { allow: 'GET', 'cache-control': 'no-store' } });
+    if (env.ASSETS === undefined) return json(503, { error: 'The version is not built.' });
+    const asset = await env.ASSETS.fetch(new Request(url));
+    if (!asset.ok) return json(503, { error: 'The version is not built.' });
+    return new Response(asset.body, { headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
+  }
   const now = env.now?.() ?? Date.now();
   if (url.pathname === '/mcp') return mcpResponse(request, env, now);
   const account = await accountResponse(request, env, url, now);
