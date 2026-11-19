@@ -71,6 +71,75 @@ describe('the pages', () => {
   }, 300000);
   afterAll(async () => { await browser?.close(); await board?.stop(); });
 
+  const pf40Pages = ['/', '/board/', '/how/', '/agents/', '/me/', '/sign-in/', '/privacy/', '/terms/', '/numbers/', '/404/', '/solver/example-quill/', '/owner/example-mara/', `/b/${STATE_IDS.open}/`];
+
+  it('PF40: every built page carries the mark and one product name', async () => {
+    const { page, close } = await fresh();
+    try {
+      for (const path of pf40Pages) {
+        await visit(page, path);
+        const first = page.locator('nav[aria-label="Site"] a').first();
+        expect(await first.innerText(), path).toBe('omakase-box');
+        expect(await first.locator('svg').count(), path).toBe(1);
+      }
+    } finally { await close(); }
+  });
+
+  it('PF40: every bar has exactly one separate Get started action', async () => {
+    const { page, close } = await fresh();
+    try {
+      for (const path of pf40Pages) {
+        await visit(page, path);
+        const action = page.locator('nav[aria-label="Site"] [data-nav-action]');
+        expect(await action.count(), path).toBe(1);
+        expect(await action.getAttribute('href')).toBe('/how/');
+        expect(await action.innerText()).toBe('Get started');
+        expect(await action.getAttribute('data-primary')).toBeNull();
+      }
+    } finally { await close(); }
+  });
+
+  it('PF40: phone navigation exposes all four links but not GitHub', async () => {
+    const { page, close } = await fresh({ width: 390 });
+    try {
+      await visit(page, '/');
+      const nav = page.locator('nav[aria-label="Site"]');
+      for (const name of ['Board', 'How it works', 'For agents', 'Your page']) expect(await nav.getByRole('link', { name, exact: true }).isVisible(), name).toBe(true);
+      expect(await nav.getByRole('link', { name: 'GitHub', exact: true }).isVisible()).toBe(false);
+    } finally { await close(); }
+  });
+
+  it('PF40: front and board fit a 390 pixel phone', async () => {
+    const { page, close } = await fresh({ width: 390 });
+    try {
+      for (const path of ['/', '/board/']) {
+        await visit(page, path);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth), path).toBeLessThanOrEqual(390);
+      }
+    } finally { await close(); }
+  });
+
+  it('PF40: browser titles use the product name', async () => {
+    const { page, close } = await fresh();
+    try {
+      await visit(page, '/');
+      expect(await page.title()).toBe('omakase-box');
+      await visit(page, '/how/');
+      expect(await page.title()).toMatch(/, omakase-box$/);
+    } finally { await close(); }
+  });
+
+  it('PF40: no built HTML carries the exact former capitalized name', () => {
+    const walk = (dir: string) => {
+      for (const name of readdirSync(dir)) {
+        const file = join(dir, name);
+        if (statSync(file).isDirectory()) walk(file);
+        else if (name.endsWith('.html')) expect(readFileSync(file, 'utf8').includes('Open bounty board'), file).toBe(false);
+      }
+    };
+    walk(OUT);
+  });
+
   it('the board lists the seeded bounties with their card facts, and says whose words the titles are', async () => {
     const { page, close } = await fresh();
     await visit(page, '/board/?repository=example-tidepool/ledger-lite&query=Import');
@@ -944,7 +1013,7 @@ describe('the pages', () => {
     await page.keyboard.press('Tab');
     expect(await page.evaluate(() => document.activeElement?.textContent)).toBe('Skip to content');
     await page.keyboard.press('Tab');
-    expect(await page.evaluate(() => document.activeElement?.textContent)).toBe('Open bounty board');
+    expect(await page.evaluate(() => document.activeElement?.textContent)).toBe('omakase-box');
     const outline = await page.evaluate(() => { const s = getComputedStyle(document.activeElement!); return [s.outlineStyle, s.outlineWidth]; });
     expect(outline).toEqual(['solid', '2px']);
     await close();

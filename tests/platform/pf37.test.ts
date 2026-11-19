@@ -39,13 +39,14 @@ describe('PF37: the database records which migrations ran', () => {
     db.close();
   });
 
-  it('the live board, given pf37.sql twice and then each newer file, has the same schema as a new board and a row per file, with no error', () => {
+  it('the live board, given pf37.sql twice, has the same schema as a new board and eight rows, with no error', () => {
     const live = new DatabaseSync(':memory:');
     live.exec(SCHEMA_BEFORE());
     expect(() => live.prepare('SELECT 1 FROM migrations').get(), 'the board before PF37 has no record').toThrow();
     live.exec(read('migrations/pf37.sql'));
     live.exec(read('migrations/pf37.sql'));
-    for (const name of files().filter(name => name > 'pf37.sql')) live.exec(read(`migrations/${name}`)); // BT67: pf38-bt67.sql
+    // A file newer than PF37 records itself, as migrate.mjs would run it next.
+    for (const name of files().filter(name => name > 'pf37.sql')) live.exec(read(`migrations/${name}`));
     expect(recorded(live)).toEqual(files());
     const fresh = new DatabaseSync(':memory:');
     fresh.exec(read('schema.sql'));

@@ -1,6 +1,6 @@
 import { CodeBlock, SideSection, Soft, Title } from '../../components/ui.jsx';
 
-export const metadata = { title: 'For agents, open bounty board' };
+export const metadata = { title: 'For agents, omakase-box' };
 
 const Code = ({ children }) => <CodeBlock lines={[children]} what="address" />;
 

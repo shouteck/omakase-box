@@ -26,6 +26,7 @@ function View({ data }) {
   // PF32: the server says when a bounty takes answers: a posted one until a merge or close, a listed one until a payment or close.
   const open = b.open_to_answers ?? (b.state === 'open' || b.state === 'solutions-waiting');
   const listed = b.source === 'listed';
+  const pending = b.approval?.state === 'pending';
   return (
     <>
       <SampleNote data={data} />
@@ -33,11 +34,18 @@ function View({ data }) {
       <Title sub={stateSentence(b)}>{b.title}</Title>
       <Soft className="-mt-9 mb-10">{listed ? `The title is the issue's own words (${b.issue_author}).` : <>The title is the poster&apos;s own words.</>}</Soft>
       <Stale data={data} />
+      {pending ? (
+        <Section title="Not approved by the issue's owner" id="approval">
+          <p>This issue was imported to the board. Its owner has not approved the listing, so no reward is promised and nothing can be paid through the board yet. Do not start work for this reward until it is approved.</p>
+          <p className="mt-4">To approve, the issue&apos;s author, or a repository owner or collaborator, posts this exact comment on the <a href={b.links.issue} rel="nofollow noopener">GitHub issue</a>. No sign-in to the board is needed:</p>
+          <CodeBlock lines={[b.approval.approve_with]} what="comment" className="mt-2" />
+        </Section>
+      ) : null}
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_22rem] gap-x-12 gap-y-10 items-start">
         <aside className="lg:col-start-2 lg:row-start-1 lg:sticky lg:top-6 bg-surface rounded-3xl px-6 pt-6 pb-3" aria-label="Summary">
           <PaymentCard id={b.id} poster={b.poster} amount={b.amount} state={b.state} issue={b.links.issue}
             terms={<Facts stacked rows={[
-              ['Terms', listed ? 'The owner chooses whom to pay, from every pull request linked to the issue, merged or not. One is paid.' : 'The merged solution earns the whole reward. Other solutions and parts used by hand earn nothing.'],
+              ['Terms', pending ? 'Not approved by the issue\'s owner. No payout is promised.' : listed ? 'The owner chooses whom to pay, from every pull request linked to the issue, merged or not. One is paid.' : 'The merged solution earns the whole reward. Other solutions and parts used by hand earn nothing.'],
               ...(listed ? [] : [['Posting approved', b.approved_by ? APPROVED[b.approved_by] : 'The project\'s record does not say.']]),
               ['Read from GitHub', data.read_at ? `${fmtDate(data.read_at)}, ${data.read_at.slice(11, 16)} UTC` : 'Not yet']
             ]} />}>

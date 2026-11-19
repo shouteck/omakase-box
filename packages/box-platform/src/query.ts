@@ -26,7 +26,7 @@ const ENUMS: Record<string, readonly string[]> = {
 const WHOLE = /^\d{1,9}$/;
 
 /** Open and unmerged, as listed: what every list starts from. */
-export const OPEN_WHERE = [`b.issue_state = 'open'`, `NOT EXISTS (SELECT 1 FROM pull_requests m WHERE m.bounty_id = b.id AND m.state = 'merged')`];
+export const OPEN_WHERE = [`b.issue_state = 'open'`, `b.approval IS NOT 'pending'`, `NOT EXISTS (SELECT 1 FROM pull_requests m WHERE m.bounty_id = b.id AND m.state = 'merged')`];
 export const OPEN_COUNT = `(SELECT COUNT(*) FROM pull_requests p WHERE p.bounty_id = b.id AND p.state = 'open')`;
 export const FROM_LISTED = 'FROM bounties b JOIN repositories r ON r.name = b.repository';
 
@@ -71,7 +71,7 @@ export async function addOwnerRecord(db: Db, q: URLSearchParams, filter: Filter,
   filter.values.push(JSON.stringify(logins));
 }
 
-export type BountyRow = { id: string; repository: string; issue_number: number; title: string; task: string; poster: string; issue_state: string; closed_at: string | null; amount: number; created_at: string; work_commit: string; approved_by: string | null; language: string | null; default_branch: string; read_at: number; source?: string; issue_author?: string | null; listed_by?: string | null };
+export type BountyRow = { id: string; repository: string; issue_number: number; title: string; task: string; poster: string; issue_state: string; closed_at: string | null; amount: number; created_at: string; work_commit: string; approved_by: string | null; language: string | null; default_branch: string; read_at: number; source?: string; issue_author?: string | null; listed_by?: string | null ; approval?: string | null; approval_proof?: string | null };
 export type PullRow = { number: number; author: string; state: string; opened_at: string; merged_at: string | null; head_sha?: string | null; checks_state?: string | null; checks_sha?: string | null; checks_read_at?: number };
 /** PF29: what GitHub's checks said, for the current head only; null when this head is not read yet. */
 export const checksFact = (pull: Pick<PullRow, 'head_sha' | 'checks_state' | 'checks_sha' | 'checks_read_at'>): { state: string; head: string; read_at: string } | null =>

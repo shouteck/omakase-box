@@ -653,6 +653,19 @@ export async function accountResponse(request: Request, env: Env, url: URL, now:
     if ('needs_permission' in listing) return json(409, { needs_permission: true, next: `/auth/github/list?${new URLSearchParams({ issue: String(sent.issue), reward: String(sent.reward) })}` });
     return json(listing.status, { error: listing.error });
   }
+  // PF44: importing an issue for its owner to approve with a comment on GitHub; the owner never signs in here to approve.
+  if (method === 'POST' && path === '/api/import') {
+    const refusal = writeRefusal(request, url, true);
+    if (refusal !== null) return refusal;
+    const viewer = await viewerOf(request, env, now);
+    if (viewer === null) return json(401, SIGN_IN_FIRST);
+    const body = await readBody(request);
+    if ('refused' in body) return body.refused;
+    const sent = (body.value ?? {}) as { issue?: unknown; reward?: unknown };
+    const listing = await listIssue(env, viewer, sent.issue, sent.reward, now, undefined, true);
+    if ('id' in listing) return json(200, { listed: listing.id, pending: true, approve_with: listing.approve_with });
+    return json('status' in listing ? listing.status : 409, { error: 'error' in listing ? listing.error : 'Nothing was listed.' });
+  }
   if (method === 'GET' && path === '/auth/github/list') {
     const viewer = await viewerOf(request, env, now);
     if (viewer === null || env.GITHUB_OAUTH_CLIENT_ID === undefined) return redirect('/me/');
@@ -709,6 +722,9 @@ export async function accountResponse(request: Request, env: Env, url: URL, now:
   const payment = /^\/api\/b\/(bt-[a-f\d]{12})\/(payment|receipt|paid|authenticate|pay|pay-paypal|remove)$/.exec(path);
   if (payment !== null) {
     const id = payment[1]!;
+    if (method === 'POST' && payment[2] !== 'remove' && await env.DB.prepare(`SELECT 1 AS yes FROM bounties WHERE id = ? AND approval = 'pending'`).bind(id).first() !== null) {
+      return json(409, { error: 'The issue\'s owner has not approved this listing, so nothing can be paid or recorded on it yet. Nothing changed. Next: the owner approves it with a comment on the GitHub issue.' });
+    }
     if (method === 'POST' && payment[2] === 'remove') {
       const refusal = writeRefusal(request, url, true);
       if (refusal !== null) return refusal;

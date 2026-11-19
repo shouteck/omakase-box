@@ -13,6 +13,7 @@ import { mcpResponse } from './mcp.js';
 import { ownerRecords } from './payments.js';
 import { secured } from './security-headers.js';
 import { addOwnerRecord, DAY, filterOf, freshness, FROM_LISTED, OPEN_COUNT, OPEN_WHERE, readBounty, stateOf } from './query.js';
+import { approvalLine } from './refresh.js';
 
 const PAGE_SIZE = 20;
 const SOLUTIONS_MAX = 50;
@@ -67,6 +68,7 @@ async function bounty(env: Env, id: string, now: number): Promise<Response> {
   const paying = !listed && (await payingIds(env, [row.id])).has(row.id);
   const settled = listed && (await env.DB.prepare(`SELECT 1 AS yes FROM paid_clicks WHERE bounty_id = ? AND withdrawn = 0 UNION SELECT 1 FROM charges WHERE bounty_id = ? AND state = 'paid'`).bind(row.id, row.id).first()) !== null;
   const state = stateOf(row.issue_state, pulls);
+  const pending = listed && row.approval === 'pending';
   return json(200, {
     ...await freshness(env),
     bounty: {
@@ -80,7 +82,7 @@ async function bounty(env: Env, id: string, now: number): Promise<Response> {
       issue_number: row.issue_number,
       issue_author: listed ? row.issue_author ?? null : row.poster,
       listed_by: listed ? row.listed_by ?? row.poster : null,
-      open_to_answers: listed ? row.issue_state === 'open' && !settled : state === 'open' || state === 'solutions-waiting',
+      open_to_answers: listed ? row.issue_state === 'open' && !settled && !pending : state === 'open' || state === 'solutions-waiting',
       closed_at: row.closed_at,
       repository: row.repository,
       language: row.language,
@@ -93,7 +95,11 @@ async function bounty(env: Env, id: string, now: number): Promise<Response> {
       solutions: pulls.slice(0, SOLUTIONS_MAX).map(pull => ({ number: pull.number, author: pull.author, state: pull.state, opened_at: pull.opened_at, merged_at: pull.merged_at, url: `${base}/pull/${pull.number}` })),
       history,
       pays_on_merge: paying,
-      how_it_pays: { ways: waysOfBounty(row.amount, waysOn(env), paying) },
+      how_it_pays: { ways: pending ? [] : waysOfBounty(row.amount, waysOn(env), paying) },
+      // PF44: whether the issue's owner approved this listing, and how. Pending: nothing is promised and nothing can be paid.
+      ...(listed ? { approval: pending
+        ? { state: 'pending' as const, approve_with: approvalLine(row.id, row.amount), proof: null }
+        : { state: 'approved' as const, approve_with: null, proof: row.approval === 'comment' ? row.approval_proof ?? null : null } } : {}),
       ...await authorTakes(env, row.id),
       agents_welcome: true
     }

@@ -34,7 +34,11 @@ CREATE TABLE IF NOT EXISTS bounties (
   listed_by TEXT,
   -- The issue's own author, whose words the task is (the lister may be someone who can write to the repository).
   issue_author TEXT
-);
+, approval TEXT, approval_proof TEXT);
+-- PF44 (written as the live board's ALTER TABLE leaves it, so both schemas read the same): approval NULL, approved when it
+-- came in (posted, or listed by someone with authority). 'pending': imported by anyone and not yet approved: hidden from the
+-- open list, nothing promised, nothing paid. 'comment': approved by the comment whose address is approval_proof, written on
+-- the issue by its author, or by someone GitHub calls OWNER or COLLABORATOR.
 CREATE INDEX IF NOT EXISTS bounties_board ON bounties (issue_state, created_at);
 CREATE INDEX IF NOT EXISTS bounties_listed ON bounties (listed_seq);
 -- BT67: head_on_default_at_sight — was the head already on the default branch when the board first read the pull
@@ -182,4 +186,5 @@ INSERT OR IGNORE INTO migrations (name, applied_at, note) VALUES
   ('pf29.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
   ('pf32.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
   ('pf37.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
-  ('pf38-bt67.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board');
+  ('pf38-bt67.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
+  ('pf44.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board');

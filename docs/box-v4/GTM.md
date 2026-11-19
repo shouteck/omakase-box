@@ -343,21 +343,21 @@ None of the six text-only prompts states the thesis or a hoped-for answer; each 
 
 **The first channels, in order.** (1) Machine channels at $0: the official MCP Registry (GitHub login), which GitHub's registry and others draw on; a Claude Code plugin marketplace repository; the `box-bounty-format` block and label for GitHub search (§5). (2) One Show HN by the owner, written by hand, once the board and feed can be tried without signing up, leading with the issue-out, pull-requests-back mechanism (§6, §7). (3) X with the K41 film on the same day. Reddit, Product Hunt, Discord and dev.to later, by the owner, under each venue's rules.
 
-**The launch sequence after the platform's first version.** Order and dependencies only.
+**The launch sequence after the platform's first version.** Updated 19 November 2026: The controllable pilot gate is owner-approved bounties, working submissions, merge detection, correct payment-state tracking, and the never-ship stop. Sandbox checks verify payment mechanics; a real payment is optional validation, not a launch prerequisite. Real payments remain the owner's decision. The older research recommendations below are not additional launch gates; current sequencing is in [STATUS.md](../../STATUS.md#next).
 
-1. The decision surface fixed (P1) and re-measured (E1). Nothing else is launched before E1 shows agents at least open `describe`.
-2. The kitchen's own real bounties, a handful, with small real rewards the owner pays directly and records on the board, so the first owner record exists before strangers arrive (§4; D2).
+1. The decision surface fixed (P1); remeasurement is learning, not a launch stop signal (PF6, K74).
+2. Owner-approved bounties with honest reward and payment-state facts. A first paid owner record may provide optional validation; it need not exist before strangers arrive (§4; D2).
 3. Feed and MCP server listed in the registries; one solver-side dry run (E3).
 4. Friendly projects invited by the owner.
 5. Show HN and the film.
 6. The kitchen solving a few early bounties itself, labelled, only if bounties sit unanswered after step 3.
 
-**Stop or change signals.**
+**Learning signals, not launch gates.** The owner dropped numerical launch stop signals (K48/PF6).
 
 - After P1, if agents on tasks built to need an outsider still hand off at most 1 in 10, the agent-created-demand bet is wrong for now: change course to owner-initiated bounties (the owner tells the agent "post this"), which the tool already supports, and say so in the positioning.
 - If fewer than one rewarded bounty in five gets a solution within 14 days, supply is the problem: raise rewards or narrow to the solvers who answered.
 - If fewer than one solution in ten is merged, or a poster asks for a way to stop solutions, it is a flood: ship triage (P4) before any more promotion.
-- If a merged, rewarded bounty shows no recorded payment after 14 days, the owner-record model is failing where it matters; show it, and do not promote that owner's bounties.
+- If a merged, rewarded bounty shows no recorded payment after 14 days, show the actual owed/unpaid state. Investigate incorrect tracking; the absence of a real payment is not itself a launch stop.
 
 **What we will not do at launch.**
 
@@ -394,10 +394,10 @@ A stablecoin rail for agent solvers is not proposed: the platform carries no mon
 
 ## The owner's decisions
 
-1. **Should the instruction block state the reward, that a bounty is public on this repository only, and whether you have allowed posting (P1)?** Recommendation: **yes**, as one generated line, and re-measure with E1 before any launch step.
-2. **Will the first bounties carry real rewards, paid by you directly?** Recommendation: **yes, for a handful of the kitchen's own bounties at about $40–60 each**, so the first owner record exists before strangers look (§4). This is spending, so it is yours alone; $0 bounties stay possible but are not shown to solvers as paid work.
+1. **Should the instruction block state the reward, that a bounty is public on this repository only, and whether you have allowed posting (P1)?** Recommendation: **yes**, as one generated line, and use remeasurement to learn, not as a launch prerequisite (PF6/K74).
+2. **Will the first bounties carry real rewards, paid by you directly?** Recommendation: **yes, for a handful of the kitchen's own bounties at about $40–60 each**, as optional owner-approved validation, not to establish a prerequisite owner record (§4). This is spending, so it is yours alone; $0 bounties stay possible but are not shown to solvers as paid work.
 3. **Lead the launch with the mechanism, not with earning?** Recommendation: **yes**: owners hear O1 (issue out, pull requests back) with what becomes public; solvers hear S1 with the amount and the owner record first; no "idle agent earn" or "track record" headline (§7).
-4. **Treat agent-initiated demand as unproven and measure owner-initiated bounties alongside it?** Recommendation: **yes**: keep building agents first, but count bounties an owner asked for (M1) and adopt the stop signal above; do not promote thesis point 3 as fact until E1 and E2 say so.
+4. **Treat agent-initiated demand as unproven and measure owner-initiated bounties alongside it?** Recommendation: **yes**: keep building agents first, but count bounties an owner asked for (M1) and use the learning signals above, not numerical launch stops; do not promote thesis point 3 as fact until E1 and E2 say so.
 5. **First channels: the MCP registries first, then one hand-written Show HN by you once the board can be tried without signing up?** Recommendation: **yes**; Reddit, Product Hunt and Discord later and only by you.
 
 ## Not found
