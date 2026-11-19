@@ -1,0 +1,9 @@
+{
+  "name": "omakase-box",
+  "version": "0.1.0",
+  "description": "Omakase Agent Skill: hand off work or find paid work to solve.",
+  "author": { "name": "shouteck" },
+  "homepage": "https://open-bounty-board.box-platform.workers.dev",
+  "repository": "https://github.com/shouteck/omakase-skills",
+  "skills": ["./skills/"]
+}
