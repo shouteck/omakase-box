@@ -1,0 +1,223 @@
+import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import * as bounty from '../../../packages/box-bounty/index.js';
+import { sharedPostedFixture } from './github-fixture.js';
+import { CLI_DIST, readRecord, runRoot, writeRecord } from './support.js';
+import { watchFields } from './surface.js';
+import { waitForSolutions } from '../../../packages/box-bounty/wait.js';
+
+interface Solution { pullRequest: number; commit: string; url: string; author: string }
+interface Result { schema: string; id: string; outcome: string; timeoutSeconds: number; pollSeconds: number; startedAt: string; endedAt: string; polls: number; solutions: readonly Solution[] }
+interface Dependencies { now: () => number; sleep: (ms: number, signal: AbortSignal) => Promise<void>; read: () => Solution[]; signal: AbortSignal }
+const loop = (options: { id: string; timeoutSeconds: number; pollSeconds?: number; seen: { n: number; commit: string }[] }, deps: Dependencies): Promise<Result> =>
+  waitForSolutions(options, deps);
+const solution: Solution = { pullRequest: 7, commit: 'a'.repeat(40), url: 'https://github.com/owner/project/pull/7', author: 'solver' };
+
+describe('PF6 bounded observation loop', () => {
+  it('returns an unseen head immediately, including a moved head on a seen PR', async () => {
+    const result = await loop({ id: 'bt-test', timeoutSeconds: 600, seen: [{ n: 7, commit: 'b'.repeat(40) }] }, {
+      now: () => 0, sleep: async () => { throw new Error('must not sleep'); }, read: () => [solution], signal: new AbortController().signal
+    });
+    expect(result).toMatchObject({ outcome: 'solution', polls: 1, solutions: [solution], pollSeconds: 30, timeoutSeconds: 600 });
+  });
+  it('ignores seen heads and returns an arrival on a later poll', async () => {
+    let now = 0; let reads = 0;
+    const sleeps: number[] = [];
+    const result = await loop({ id: 'bt-test', timeoutSeconds: 60, seen: [{ n: 6, commit: solution.commit }] }, {
+      now: () => now, sleep: async ms => { sleeps.push(ms); now += ms; },
+      read: () => ++reads === 1 ? [{ ...solution, pullRequest: 6 }] : [solution], signal: new AbortController().signal
+    });
+    expect(result).toMatchObject({ outcome: 'solution', polls: 2, endedAt: '1970-01-01T00:00:30.000Z' });
+    expect(sleeps).toEqual([30000]);
+  });
+  it('shortens the last sleep to the deadline without a poll at the deadline', async () => {
+    let now = 0;
+    const sleeps: number[] = [];
+    const result = await loop({ id: 'bt-test', timeoutSeconds: 31, seen: [] }, {
+      now: () => now, sleep: async ms => { sleeps.push(ms); now += ms; }, read: () => [], signal: new AbortController().signal
+    });
+    expect(result).toMatchObject({ outcome: 'timeout', polls: 2, solutions: [], endedAt: '1970-01-01T00:00:31.000Z' });
+    expect(sleeps).toEqual([30000, 1000]);
+  });
+  it('stops on the first upstream error and never sleeps or retries', async () => {
+    let reads = 0;
+    await expect(loop({ id: 'bt-test', timeoutSeconds: 600, seen: [] }, {
+      now: () => 0, sleep: async () => { throw new Error('must not sleep'); },
+      read: () => { reads++; throw new Error('untrusted upstream text'); }, signal: new AbortController().signal
+    })).rejects.toMatchObject({ reason: 'wait-upstream-unreadable' });
+    expect(reads).toBe(1);
+  });
+  it('cancels before reading or during sleep with a named outcome', async () => {
+    for (const before of [true, false]) {
+      const abort = new AbortController();
+      if (before) abort.abort();
+      let reads = 0;
+      const result = await loop({ id: 'bt-test', timeoutSeconds: 600, seen: [] }, {
+        now: () => 0, sleep: async () => { abort.abort(); }, read: () => { reads++; return []; }, signal: abort.signal
+      });
+      expect(result).toMatchObject({ outcome: 'cancelled', solutions: [], polls: before ? 0 : 1 });
+      expect(reads).toBe(before ? 0 : 1);
+    }
+  });
+});
+
+const fields = watchFields('pf6-wait');
+afterAll(fields.check);
+const world = sharedPostedFixture({ prAuthor: 'solver' });
+const settings = join(world.scratch, 'settings');
+let api: ChildProcess; let board: ChildProcess; let apiFolder: string; let boardFolder: string; let apiBase: string; let boardBase: string;
+const start = async (script: string, folder: string) => {
+  const child = spawn(process.execPath, [fileURLToPath(new URL(script, import.meta.url)), folder], { stdio: ['ignore', 'pipe', 'inherit'] });
+  const base = await new Promise<string>(resolve => child.stdout!.once('data', chunk => resolve(`http://127.0.0.1:${/listening (\d+)/.exec(String(chunk))![1]}`)));
+  return { child, base };
+};
+beforeAll(async () => {
+  apiFolder = runRoot('pf6-api'); boardFolder = runRoot('pf6-board');
+  writeFileSync(join(apiFolder, 'config.json'), '{}');
+  writeFileSync(join(boardFolder, 'routes.json'), '{}');
+  ({ child: api, base: apiBase } = await start('./api-standin.cjs', apiFolder));
+  ({ child: board, base: boardBase } = await start('./board-standin.cjs', boardFolder));
+});
+afterAll(() => { api?.kill(); board?.kill(); });
+const log = (folder: string): { method: string; path: string }[] => {
+  const file = join(folder, 'requests.jsonl');
+  return existsSync(file) ? readFileSync(file, 'utf8').split('\n').filter(Boolean).map(line => JSON.parse(line)) : [];
+};
+const configure = (extra: Record<string, unknown> = {}) => {
+  world.update({ auth: false });
+  writeFileSync(join(apiFolder, 'config.json'), JSON.stringify({ standin: join(world.bin, 'standin.cjs'), state: join(world.scratch, 'state.json'), bare: world.bare, remoteUrl: 'https://github.com/owner/project.git', ...extra }));
+  writeFileSync(join(apiFolder, 'requests.jsonl'), ''); writeFileSync(join(boardFolder, 'requests.jsonl'), '');
+};
+const environment = (): NodeJS.ProcessEnv => world.run(() => ({ ...process.env, GH_TOKEN: 'pf6-dummy-token', BOX_BOUNTY_GITHUB_API_FOR_TESTS: apiBase, BOX_BOUNTY_WAIT_POLL_MS_FOR_TESTS: '10' }));
+const box = (args: string[], extra: NodeJS.ProcessEnv = {}) => spawnSync(process.execPath, [CLI_DIST, 'status', ...args, '--repo', world.repo], { encoding: 'utf8', env: { ...environment(), ...extra }, timeout: 10000 });
+const document = (run: ReturnType<typeof box>): Result => {
+  expect(run.status, run.stdout + run.stderr).toBe(0);
+  const value = JSON.parse(run.stdout) as Result;
+  expect(run.stdout).toBe(JSON.stringify(value) + '\n');
+  expect(run.stderr).toBe('');
+  fields.see(value);
+  return value;
+};
+const snapshot = (path: string): Record<string, string> => {
+  if (!existsSync(path)) return {};
+  const result: Record<string, string> = {};
+  const visit = (folder: string, prefix: string) => {
+    for (const entry of readdirSync(folder, { withFileTypes: true })) {
+      const relative = `${prefix}${entry.name}`;
+      if (entry.isDirectory()) { result[relative + '/'] = ''; visit(join(folder, entry.name), relative + '/'); }
+      else result[relative] = createHash('sha256').update(readFileSync(join(folder, entry.name))).digest('hex');
+    }
+  };
+  visit(path, ''); return result;
+};
+const localState = () => [snapshot(join(world.repo, '.box')), snapshot(join(world.repo, '.git')), snapshot(settings), snapshot(join(world.bare, 'refs'))];
+
+describe('PF6 built status --wait', () => {
+  it('reads unseen PRs in one poll without any local, ref, board or GitHub write', () => {
+    world.run(() => {
+      const path = join(settings, 'settings.json');
+      writeFileSync(path, JSON.stringify({ ...JSON.parse(readFileSync(path, 'utf8')), board: boardBase }));
+      bounty.metaSet(world.repo, `board_hint:${world.id}:posted`, JSON.stringify({ repository: 'owner/project', issue: 1, bounty: world.id, event: 'posted' }));
+      for (const key of bounty.metaKeys(world.repo, 'gh_probe:')) bounty.metaSet(world.repo, key, null);
+      bounty.closeStores();
+    });
+    configure();
+    const before = localState();
+    const doc = document(box([world.id, '--wait', '--json']));
+    expect(doc).toMatchObject({ schema: 'box-bounty/status-wait@1', id: world.id, outcome: 'solution', timeoutSeconds: 600, polls: 1 });
+    expect(doc.solutions).toEqual([{ pullRequest: 1, commit: world.waitingPr, url: 'https://github.com/owner/project/pull/1', author: 'solver' }]);
+    expect(Date.parse(doc.endedAt)).toBeGreaterThanOrEqual(Date.parse(doc.startedAt));
+    expect(localState()).toEqual(before);
+    expect(log(apiFolder).length).toBeGreaterThan(0);
+    expect(log(apiFolder).every(request => request.method === 'GET')).toBe(true);
+    expect(log(boardFolder)).toEqual([]);
+    const text = box([world.id, '--wait']);
+    expect(text.status, text.stderr).toBe(0);
+    expect(text.stdout).toContain(`#1 ${world.waitingPr.slice(0, 12)} https://github.com/owner/project/pull/1`);
+    expect(text.stdout).toContain(`next: omakase-box status ${world.id} shows them; omakase-box look ${world.id} <number> collects one`);
+    expect(localState()).toEqual(before);
+    world.run(() => bounty.metaSet(world.repo, 'pf6-live-wal', 'read this without checkpointing'));
+    const live = localState();
+    const callsBefore = world.state().calls.length;
+    document(box([world.id, '--wait', '--json'], { GH_TOKEN: '', GITHUB_TOKEN: '' }));
+    expect(localState()).toEqual(live);
+    const calls = world.state().calls.slice(callsBefore).filter(call => call[0] === 'api');
+    expect(calls).toHaveLength(1);
+    expect(calls.every(call => !call.includes('--input') && !call.includes('--method'))).toBe(true);
+    expect(log(boardFolder)).toEqual([]);
+    bounty.closeStores();
+  });
+  it('reports timeout in text and one JSON document, never marks the seen head again', () => {
+    world.run(() => {
+      const record = readRecord(world.repo, world.id);
+      record.github!.seenPullRequests = [{ n: 1, commit: world.waitingPr, at: '2026-01-01T00:00:00Z' }];
+      writeRecord(world.repo, record);
+    });
+    configure();
+    const before = localState();
+    const doc = document(box([world.id, '--wait', '--timeout', '1', '--json']));
+    expect(doc).toMatchObject({ outcome: 'timeout', timeoutSeconds: 1, solutions: [] });
+    expect(Date.parse(doc.endedAt) - Date.parse(doc.startedAt)).toBeGreaterThanOrEqual(1000);
+    const text = box([world.id, '--wait', '--timeout', '1']);
+    expect(text.status).toBe(0);
+    expect(text.stdout).toContain('no solution arrived within 1 s');
+    expect(text.stdout).toContain('nothing changed');
+    expect(localState()).toEqual(before);
+  });
+  it('refuses upstream failures and malformed PRs immediately without retries or state writes', () => {
+    for (const failure of [{ status: 503, body: '{}' }, { status: 200, body: '[{"number":1}]' }]) {
+      configure({ failure: { on: '/pulls?', ...failure } });
+      const before = localState();
+      const run = box([world.id, '--wait', '--json']);
+      expect(run.status, run.stderr).toBe(3);
+      expect(JSON.parse(run.stdout)).toMatchObject({ schema: 'box-bounty/refusal@1', refused: failure.status === 200 ? 'github-response-invalid' : 'github-unavailable', exitCode: 3 });
+      expect(log(apiFolder).filter(request => request.path.includes('/pulls?'))).toHaveLength(1);
+      expect(localState()).toEqual(before);
+    }
+  });
+  it('cancels the spawned CLI with SIGINT, one named document and exit 130', async () => {
+    configure();
+    const before = localState();
+    const child = spawn(process.execPath, [CLI_DIST, 'status', world.id, '--wait', '--json', '--repo', world.repo], { env: environment(), stdio: ['ignore', 'pipe', 'pipe'] });
+    let stdout = ''; let stderr = '';
+    child.stdout!.on('data', chunk => { stdout += chunk; }); child.stderr!.on('data', chunk => { stderr += chunk; });
+    const exited = new Promise<number | null>(resolve => child.once('exit', resolve));
+    const deadline = Date.now() + 5000;
+    while (!log(apiFolder).some(request => request.path.includes('/pulls?')) && child.exitCode === null && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 10));
+    child.kill('SIGINT');
+    expect(await exited, stderr).toBe(130);
+    const doc = JSON.parse(stdout) as Result;
+    expect(stdout).toBe(JSON.stringify(doc) + '\n');
+    expect(doc).toMatchObject({ outcome: 'cancelled', solutions: [] }); fields.see(doc);
+    expect(localState()).toEqual(before);
+  });
+  it('rejects invalid combinations and timeout spellings as usage before reads', () => {
+    configure();
+    for (const args of [['--wait'], [world.id, '--timeout', '1'], ...['0', '3601', '1.5', '-1', 'abc'].map(value => [world.id, '--wait', '--timeout', value]), ...['--full', '--comments', '--since'].map(flag => [world.id, '--wait', flag, ...(flag === '--since' ? ['2026-01-01'] : [])])]) {
+      const run = box([...args, '--json']);
+      expect(run.status, `${args}: ${run.stdout} ${run.stderr}`).toBe(2);
+      expect(JSON.parse(run.stdout)).toMatchObject({ refused: 'usage', exitCode: 2 });
+    }
+    expect(log(apiFolder)).toEqual([]); expect(log(boardFolder)).toEqual([]);
+  });
+  it('names unknown, draft, ended and taken bounties without reading GitHub', () => {
+    configure();
+    expect(JSON.parse(box(['bt-000000000000', '--wait', '--json']).stdout)).toMatchObject({ refused: 'unknown-bounty' });
+    world.run(() => {
+      const record = readRecord(world.repo, world.id);
+      const original = structuredClone(record);
+      record.stage = 'drafted'; delete record.github; delete record.reward; writeRecord(world.repo, record);
+      expect(JSON.parse(box([world.id, '--wait', '--json']).stdout)).toMatchObject({ refused: 'wait-not-posted' });
+      original.stage = 'withdrawn'; writeRecord(world.repo, original);
+      expect(JSON.parse(box([world.id, '--wait', '--json']).stdout)).toMatchObject({ refused: 'wait-bounty-ended' });
+      mkdirSync(join(settings, 'taken'), { recursive: true });
+      writeFileSync(join(settings, 'taken', `${world.id}.json`), JSON.stringify({ id: world.id, repository: 'owner/project', stage: 'taken' }));
+      expect(JSON.parse(box([world.id, '--wait', '--json']).stdout)).toMatchObject({ refused: 'taken-status-options' });
+    });
+    expect(log(apiFolder)).toEqual([]); expect(log(boardFolder)).toEqual([]);
+  });
+});

@@ -21,8 +21,8 @@ describe('BT62: the surface is on record', () => {
     }
   });
 
-  it('the entry points exit only with 0, 1, 2 and 3', () => {
-    expect(exitCodes()).toEqual([0, 1, 2, 3]);
+  it('the entry points exit only with 0, 1, 2, 3 and 130', () => {
+    expect(exitCodes()).toEqual([0, 1, 130, 2, 3]);
   });
 
   it('the comparison names what changed: added, removed, and a changed type as one of each', () => {

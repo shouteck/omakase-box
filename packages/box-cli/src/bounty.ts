@@ -7,6 +7,7 @@ import { lstatSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { actingOn, loadSettings, repositoryIdentity, applyBounty, BountyRefused, BountyUsage, closeBounty, createBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, parseOptions, commandHelp, OPTIONS_NOTE, postBounty, readDecision, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, repoReward, requireRepository, resolveRepoRoot, setMergeNoticeListener, setInstructionNoticeListener, renderOverview, showPath, statusDocument, lookDocument, configDocument, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, hookDisclosure, hookHost, hookOff, hookOn, hookStatus, limitGitHubCalls, runHook } from '../../box-bounty/index.js';
 import { boardAddress, boardNotToldLine, flushBoardHints, readBoardFacts } from '../../box-bounty/index.js';
+import { waitBounty, renderWait } from '../../box-bounty/index.js';
 import type { ParsedOptions } from '../../box-bounty/index.js';
 import { applyDocument, closeAttemptDocument, closeDocument, createDocument, ownerDocument, postDocument, postPreviewDocument, previewGitHub, previewGitHubFacts, refusalDocument, submitDocument, submitTakenResult, takeDocument, textDocument } from '../../box-bounty/index.js';
 import { attemptStatus, closeTaken, discover, discoverDocument, loadTaken, renderDescribeSolving, renderDiscover, submitTaken, takeBounty, takenOverview } from '../../box-bounty/index.js';
@@ -106,7 +107,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
   setMergeNoticeListener(aside);
   // PF5: whatever this command changed, or an earlier one left unsent, goes to
   // the board as the process ends, on every exit path. A hook has a time budget.
-  if (subcommand !== 'hook') {
+  if (subcommand !== 'hook' && !(subcommand === 'status' && bountyArgs.some(arg => arg === '--wait' || arg === '--timeout' || arg.startsWith('--timeout=')))) {
     const named = bountyArgs.indexOf('--repo');
     process.once('exit', () => {
       if (boardAddress() === '') return;
@@ -314,9 +315,14 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
     } else if (subcommand === 'status') {
       const parsed = parse('status');
       const [id] = parsed.positionals;
+      const waiting = parsed.switches.has('--wait');
+      const timeoutText = parsed.values['--timeout'];
+      if (timeoutText !== undefined && !waiting) usageError('--timeout is valid only with --wait');
+      if (waiting && (id === undefined || parsed.switches.has('--full') || parsed.switches.has('--comments') || parsed.values['--since'] !== undefined)) usageError('--wait needs an id and cannot be combined with --full, --comments or --since');
+      if (timeoutText !== undefined && (!/^\d+$/.test(timeoutText) || Number(timeoutText) < 1 || Number(timeoutText) > 3600)) usageError('--timeout must be an integer in 1..3600 seconds');
       // PF26: a bounty this account took is read from GitHub and the board's public answers; it needs no checkout.
       if (id !== undefined && loadTaken(id) !== null) {
-        if (parsed.switches.has('--json') || parsed.switches.has('--full') || parsed.values['--since'] !== undefined) throw new BountyRefused('taken-status-options', `${id} is a bounty you took: its status prints text, and --comments adds what was written on its pull request; nothing was read; next: omakase-box status ${id} --comments`);
+        if (waiting || parsed.switches.has('--json') || parsed.switches.has('--full') || parsed.values['--since'] !== undefined) throw new BountyRefused('taken-status-options', `${id} is a bounty you took: its status prints text, and --comments adds what was written on its pull request; nothing was read; next: omakase-box status ${id} --comments`);
         say(attemptStatus(id, { comments: parsed.switches.has('--comments') }));
         return;
       }
@@ -330,6 +336,18 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         return;
       }
       const since = parsed.values['--since'];
+      if (waiting && id !== undefined) {
+        const abort = new AbortController();
+        const cancel = () => abort.abort();
+        process.on('SIGINT', cancel); process.on('SIGTERM', cancel);
+        try {
+          const result = await waitBounty(root, id, timeoutText === undefined ? 600 : Number(timeoutText), abort.signal);
+          if (jsonRequested) printDocument(result);
+          else say(renderWait(result));
+          if (result.outcome === 'cancelled') process.exit(130);
+        } finally { process.removeListener('SIGINT', cancel); process.removeListener('SIGTERM', cancel); }
+        return;
+      }
       flushBoardHints(root);
       readBoardFacts(root, id);
       if (parsed.switches.has('--json')) {

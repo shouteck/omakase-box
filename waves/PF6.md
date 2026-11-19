@@ -90,7 +90,30 @@ Written so any model can cook it.
 
 ## Changed expectations
 
+- tests/box/bounty/bt62.test.ts::the entry points exit only with 0, 1, 2 and 3 — bounded wait adds SIGINT/SIGTERM cancellation with exit 130.
+
+- tests/box/bounty/SURFACE.txt::surface record — status gains wait/timeout options, the bounded-wait document and refusal outcomes; ordinary status facts are unchanged.
+
 Ordinary status/help snapshots and surface gain the wait option and declared JSON outcomes. List exact existing tests here before changing their expectations; ordinary non-wait semantics remain unchanged. Skill warning may add bytes, but generated and installed skill must remain identical.
+
+## Plan
+
+This run is the slim scope: items 5, 6 and 7 only; items 1–4 and the toolbox
+test are deferred. This implementation step delivers item 6 (bounded wait),
+not the onboarding or positioning/queue documents in items 5 and 7.
+
+- Blocking first steps: tests first, then extract the PR reader and a record read
+  without store synchronization; exclude the board exit hook before any wait.
+- Independent workstreams: n/a — CLI, reader and tests form one coupled change.
+- Shared mutable state: keep the ordinary status writers outside the wait path;
+  snapshot SQLite/WAL into disposable scratch space instead of opening live state.
+- Smallest safe decomposition: one writer on wave/PF6; deterministic injected
+  loop tests, one shared CLI world, then surface generation and acceptance.
+
+Architect skipped: the owner settled the interface, bounds and read-only design.
+Default timeout 600 s, maximum 3600 s, polling 30 s with a shortened final sleep.
+Precedent checked: `gh run watch --help` lists `-i, --interval int`, default 3 s,
+and no timeout option. Our API observation is slower and explicitly bounded.
 
 ## Traps
 
