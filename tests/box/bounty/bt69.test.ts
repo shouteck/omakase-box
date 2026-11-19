@@ -31,7 +31,8 @@ vi.mock('../../../packages/box-bounty/git.js', async importOriginal => {
   return {
     ...actual,
     gitOutcome: (...call: Parameters<typeof actual.gitOutcome>) => failing(call[1]) ? { status: 128, stdout: '', stderr: 'fatal: injected read failure' } : actual.gitOutcome(...call),
-    gitStdin: (...call: Parameters<typeof actual.gitStdin>) => { if (failing(call[1])) throw new actual.GitFailed('injected read failure'); return actual.gitStdin(...call); }
+    gitStdin: (...call: Parameters<typeof actual.gitStdin>) => { if (failing(call[1])) throw new actual.GitFailed('injected read failure'); return actual.gitStdin(...call); },
+    gitStdinOutcome: (...call: Parameters<typeof actual.gitStdinOutcome>) => failing(call[1]) ? { status: 128, stdout: '', stderr: 'fatal: injected read failure' } : actual.gitStdinOutcome(...call)
   };
 });
 
@@ -89,12 +90,18 @@ describe('BT69: the never-ship check at the publication sink', () => {
 
   // @guards P2
   it('a persisted retry meets the rules as they are now, not as they were when it was planned', () => fixture(({ repo, bare, id, state }) => {
-    write(repo, 'notes/plan.txt', 'the plan\n'); git(repo, ['add', 'notes/plan.txt']); commit(repo, 'plan');
+    // A leading space, committed through plumbing (no file on disk): the
+    // first name diff-tree prints, which a trimmed read would lose.
+    const env = { GIT_INDEX_FILE: join(runRoot('bt69-retry'), 'index') };
+    objectGit(repo, ['read-tree', 'HEAD'], env);
+    objectGit(repo, ['update-index', '--add', '--cacheinfo', `100644,${gitWriteBlob(repo, Buffer.from('the plan\n'))}, plan.txt`], env);
+    const planned = objectGit(repo, ['-c', 'user.name=poster', '-c', 'user.email=poster@test.invalid', 'commit-tree', objectGit(repo, ['write-tree'], env), '-p', git(repo, ['rev-parse', 'HEAD']), '-m', 'plan'], env);
+    git(repo, ['update-ref', 'refs/heads/main', planned]);
     seam.failPush = true;
     expect(() => postBounty(repo, id, 'github')).toThrow(BountyRefused);
     const frozen = loadRecord(repo, id).github!;
     expect(seam.log).toEqual([`check ${frozen.commit}`, `push ${frozen.commit}:refs/heads/${frozen.branch}`]);
-    changePublishList(repo, 'never-publish', 'add', 'notes/plan.txt');
+    changePublishList(repo, 'never-publish', 'add', ' plan.txt');
     seam.log = [];
     refused(() => postBounty(repo, id, 'github'), 'github-publish-never-ship');
     expect(seam.log).toEqual([`check ${frozen.commit}`]);

@@ -1,5 +1,5 @@
 import { invalid, remoteUrl } from './gh.js';
-import { GitFailed, gitOutcome, gitStdin } from './git.js';
+import { GitFailed, gitOutcome, gitStdin, gitStdinOutcome } from './git.js';
 import type { NeverShipRule } from './never-ship.js';
 import { showPath } from './notice.js';
 
@@ -46,12 +46,9 @@ export function checkOutbound(root: string, repository: string, commit: string, 
   const pairs = walk.split('\n').map(line => line.trim().split(/\s+/).slice(0, 2)).filter(([each]) => each !== undefined && SHA.test(each));
   let paths = '';
   if (pairs.length > 0) {
-    try {
-      paths = gitStdin(root, ['diff-tree', '--stdin', '-r', '-z', '--no-renames', '--name-only', '--no-commit-id', '--root'], pairs.map(pair => pair.join(' ')).join('\n') + '\n');
-    } catch (error) {
-      if (error instanceof GitFailed) return unread('the paths the outbound commits change');
-      throw error;
-    }
+    const read = gitStdinOutcome(root, ['diff-tree', '--stdin', '-r', '-z', '--no-renames', '--name-only', '--no-commit-id', '--root'], pairs.map(pair => pair.join(' ')).join('\n') + '\n');
+    if (read.status !== 0 || read.error !== undefined) return unread('the paths the outbound commits change');
+    paths = read.stdout;
   }
   const hits = new Map<string, string>();
   for (const path of paths.split('\0')) {

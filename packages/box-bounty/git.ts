@@ -457,6 +457,19 @@ export function gitIndexWrite(repo: string, index: string, changes: readonly Ind
 // missing ref is a no-op, matching `update-ref -d` on an absent name.
 export type RefWrite = { readonly delete: string } | { readonly update: string; readonly sha: string };
 
+// gitStdin's outcome, stdout untrimmed: for -z output whose first or last
+// name may begin or end with whitespace.
+export function gitStdinOutcome(repo: string, args: readonly string[], input: string, env: GitEnv = {}): GitOutcome {
+  const result = spawnSync(gitProgram(), [...safeArgs(repo, args, 'foreign'), ...args], {
+    input,
+    encoding: 'utf8',
+    env: gitEnvironment(env, args),
+    windowsHide: true,
+    maxBuffer: GIT_OUTPUT_LIMIT
+  });
+  return { status: result.status, stdout: result.stdout ?? '', stderr: result.stderr ?? '', ...(result.error === undefined ? {} : { error: result.error }) };
+}
+
 // A git call that reads its input from stdin — mktree's table and any other
 // plumbing whose operand is a stream. Same pin layer as every call above.
 export function gitStdin(repo: string, args: readonly string[], input: string | Buffer, env: GitEnv = {}, content: GitContent = 'foreign'): string {
