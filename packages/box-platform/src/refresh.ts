@@ -315,10 +315,16 @@ async function readListedIssue(env: Env, github: GitHub, id: string, repository:
 async function readApproval(env: Env, github: GitHub, id: string, repository: string, number: number): Promise<void> {
   const row = await env.DB.prepare(`SELECT amount, poster_id, created_at FROM bounties WHERE id = ? AND approval = 'pending'`).bind(id).first<{ amount: number; poster_id: number | null; created_at: string }>();
   if (row === null) return;
-  const answer = await github.get(`/repos/${repository}/issues/${number}/comments?since=${encodeURIComponent(row.created_at)}&per_page=100`);
-  if (answer.status !== 200 || !Array.isArray(answer.json)) return;
   const line = approvalLine(id, row.amount);
-  for (const comment of answer.json as unknown[]) {
+  const comments: unknown[] = [];
+  // Every page since the import, oldest first, up to ten: an approval after a hundred comments is still read.
+  for (let page = 1; page <= 10; page += 1) {
+    const answer = await github.get(`/repos/${repository}/issues/${number}/comments?since=${encodeURIComponent(row.created_at)}&per_page=100&page=${page}`);
+    if (answer.status !== 200 || !Array.isArray(answer.json)) return;
+    comments.push(...answer.json as unknown[]);
+    if (answer.json.length < 100) break;
+  }
+  for (const comment of comments) {
     if (!record(comment) || !record(comment['user']) || typeof comment['body'] !== 'string' || typeof comment['html_url'] !== 'string' || typeof comment['created_at'] !== 'string') continue;
     const login = comment['user']['login'];
     const userId = comment['user']['id'];
@@ -326,7 +332,7 @@ async function readApproval(env: Env, github: GitHub, id: string, repository: st
     if (Date.parse(comment['created_at']) < Date.parse(row.created_at)) continue;
     const association = typeof comment['author_association'] === 'string' ? comment['author_association'] : '';
     if (userId !== row.poster_id && !APPROVERS.has(association)) continue;
-    await env.DB.prepare(`UPDATE bounties SET approval = 'comment', approval_proof = ?, poster = ?, poster_id = ? WHERE id = ? AND approval = 'pending'`)
+    await env.DB.prepare(`UPDATE bounties SET approval = 'comment', approval_proof = ?, poster = ?, poster_id = ?, listed_seq = (SELECT COALESCE(MAX(listed_seq), 0) + 1 FROM bounties) WHERE id = ? AND approval = 'pending'`)
       .bind(comment['html_url'] as string, login, userId as number, id).run();
     return;
   }
