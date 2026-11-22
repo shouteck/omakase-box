@@ -305,10 +305,10 @@ type Event = { type?: unknown; account?: unknown; created?: unknown; data?: { ob
 
 export async function setStripeReady(env: Env, account: string, ready: boolean, now: number, observedAt = now): Promise<void> {
   // Disabled wins when Stripe's second-resolution event times are equal.
-  const version = observedAt * 2 + (ready ? 0 : 1);
+  const version = Math.floor(observedAt / 1000) * 2 + (ready ? 0 : 1);
   if (!Number.isSafeInteger(version)) return;
-  await env.DB.prepare(`UPDATE stripe_accounts SET ready_at = CASE WHEN ? = 0 THEN NULL WHEN ready = 0 OR ready_at IS NULL THEN ? ELSE ready_at END, ready = ?, ready_version = ? WHERE account_id = ? AND (ready_version IS NULL OR ready_version < ?)`)
-    .bind(ready ? 1 : 0, new Date(now).toISOString(), ready ? 1 : 0, version, account, version).run();
+  await env.DB.prepare(`UPDATE stripe_accounts SET ready_at = CASE WHEN ? = 0 THEN NULL WHEN ready = 0 OR ready_at IS NULL THEN ? ELSE ready_at END, ready = ?, ready_version = ? WHERE account_id = ? AND (ready_version IS NULL OR ready_version < ? OR (ready_version = ? AND ready = 1 AND ? = 0))`)
+    .bind(ready ? 1 : 0, new Date(now).toISOString(), ready ? 1 : 0, version, account, version, version, ready ? 1 : 0).run();
 }
 
 /** A signed event. Only the row whose account and payment both match changes, so a stray event moves nothing. */

@@ -123,7 +123,7 @@ CREATE TRIGGER IF NOT EXISTS stripe_ready_changed AFTER UPDATE OF ready ON strip
 WHEN NEW.ready_version IS OLD.ready_version OR (NEW.ready = 0 AND NEW.ready_at IS NOT NULL) OR (NEW.ready = 1 AND (NEW.ready_at IS NULL OR (OLD.ready = 0 AND NEW.ready_at IS OLD.ready_at)))
 BEGIN
   UPDATE stripe_accounts SET ready_at = CASE WHEN NEW.ready = 0 THEN NULL WHEN OLD.ready = 0 OR NEW.ready_at IS NULL THEN strftime('%Y-%m-%dT%H:%M:%fZ', 'now') ELSE NEW.ready_at END,
-    ready_version = CASE WHEN NEW.ready_version IS OLD.ready_version THEN MAX(COALESCE(OLD.ready_version, 0), CAST(ROUND((julianday('now') - 2440587.5) * 86400000) AS INTEGER) * 2 + CASE WHEN NEW.ready = 0 THEN 1 ELSE 0 END) ELSE NEW.ready_version END WHERE github_id = NEW.github_id;
+    ready_version = CASE WHEN NEW.ready_version IS OLD.ready_version THEN MAX(COALESCE(OLD.ready_version, 0), CAST(strftime('%s', 'now') AS INTEGER) * 2 + CASE WHEN NEW.ready = 0 THEN 1 ELSE 0 END) ELSE NEW.ready_version END WHERE github_id = NEW.github_id;
 END;
 -- An owner's saved card and the most one bounty may charge it.
 CREATE TABLE IF NOT EXISTS pay_settings (

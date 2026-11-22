@@ -204,7 +204,7 @@ describe('PF52: deployment cutoff and literal merge-time readiness', () => {
   it('fails closed for tied, duplicated and missing Stripe event ordering evidence', async () => {
     await connectedStripe(false);
     const event = (ready: boolean, minute: number) => ({ type: 'account.updated', account: 'acct_solver', created: (NOW + minute * MINUTE) / 1000, data: { object: { charges_enabled: ready } } });
-    await applyEvent(r.env, event(true, 1), NOW + MINUTE);
+    await setStripeReady(r.env, 'acct_solver', true, NOW + MINUTE + 500);
     await applyEvent(r.env, event(false, 1), NOW + 2 * MINUTE);
     await applyEvent(r.env, event(true, 1), NOW + 3 * MINUTE);
     await applyEvent(r.env, { type: 'account.updated', account: 'acct_solver', data: { object: { charges_enabled: true } } }, NOW + 4 * MINUTE);
