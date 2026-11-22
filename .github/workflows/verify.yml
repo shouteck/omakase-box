@@ -62,17 +62,23 @@ permissions:
   contents: read
 
 jobs:
-  verify:
-    # K50: one job per system, each reported apart; one system's failure never
-    # cancels another's (fail-fast: false). Images are named, never -latest: a
-    # label that moves must not change the result between two pushes.
-    name: verify (${{ matrix.os }})
+  bounty:
+    # K50: named images and independent results on every OS; no failure cancels another.
+    name: bounty (${{ matrix.os }} shard ${{ matrix.shard }}/${{ matrix.shards }})
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, windows-2025, macos-15]
+        include:
+          - { os: windows-2025, shard: 1, shards: 4 }
+          - { os: windows-2025, shard: 2, shards: 4 }
+          - { os: windows-2025, shard: 3, shards: 4 }
+          - { os: windows-2025, shard: 4, shards: 4 }
+          - { os: macos-15, shard: 1, shards: 2 }
+          - { os: macos-15, shard: 2, shards: 2 }
+          - { os: ubuntu-24.04, shard: 1, shards: 2 }
+          - { os: ubuntu-24.04, shard: 2, shards: 2 }
     runs-on: ${{ matrix.os }}
-    timeout-minutes: ${{ matrix.os == 'ubuntu-24.04' && 10 || 45 }}
+    timeout-minutes: 25
     # Git Bash on Windows: from PowerShell `cat` and `rm` are not on PATH (PF11).
     defaults:
       run:
@@ -103,11 +109,126 @@ jobs:
       - name: Install repository-local pnpm
         run: npm ci --prefix scripts/tooling --ignore-scripts
 
+      - name: Locate pnpm store
+        id: pnpm-store
+        run: echo "path=$(node scripts/pnpm.mjs store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-${{ runner.os }}-
+
+      - name: Install dependencies (frozen lockfile)
+        run: node scripts/pnpm.mjs install --frozen-lockfile
+
+      # K29: no database. Host-only Windows cases still run on Windows;
+      # sharding partitions files without changing workers, assertions or skips.
+      - name: Build CLI for bounty tests
+        run: node scripts/workspace.mjs build
+
+      - name: bounty suite
+        run: |
+          set -o pipefail
+          node scripts/suite.mjs box --suite bounty --shard ${{ matrix.shard }}/${{ matrix.shards }} 2>&1 | tee "$RUNNER_TEMP/bounty.log"
+
+      # K50: skips are counted per system, never silent. Each skipped test is named beside its assertion in the
+      # tests, with the reason (grep the tests for "Host-only"); this prints how many each suite skipped here.
+      - name: Skips on ${{ matrix.os }}
+        if: always()
+        run: |
+          for log in .kitchen/runs/*/test_box-bounty.log .kitchen/runs/*/test_kitchen.log "$RUNNER_TEMP/bounty.log"; do
+            [ -f "$log" ] || continue
+            printf '%s on ${{ matrix.os }}: ' "$(basename "$log")"
+            perl -pe 's/\e\[[0-9;]*m//g' "$log" | grep -aE '^\s+Tests ' | tr -s ' ' | tr '\n' ' '
+            echo
+          done
+
+      # K59: the eight slowest tests here, so a test creeping toward its limit shows before it fails. The limit is 60 s on
+      # Windows and 30 s elsewhere (scripts/test-timeout.mjs); a test that sets its own is not bound by it. Reports only:
+      # `|| true`, and always(), so it can never fail a job. The runner's log holds real escape bytes, hence `perl`.
+      - name: Slowest tests on ${{ matrix.os }}
+        if: always()
+        run: |
+          for log in .kitchen/runs/*/test_box-bounty.log .kitchen/runs/*/test_kitchen.log "$RUNNER_TEMP/bounty.log"; do
+            [ -f "$log" ] && perl -pe 's/\e\[[0-9;]*m//g' "$log"
+          done | grep -aE '^\s+✓ ' | grep -avE '^\s+✓ tests/' \
+            | perl -ne '/✓ (.*?)\s+(\d+)ms\s*$/ and printf "%7d ms  %.110s\n", $2, $1' \
+            | sort -rn | head -8 || true
+
+      # K61: the logs are a diagnostic aid. GitHub's own artifact storage failed one run (43088503658, attempt 2) after every
+      # test step had passed, so a failed upload must not fail the job; the step still shows its failure in the log.
+      - name: Upload verify run logs
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: bounty-runs-${{ matrix.shard }}-${{ matrix.os }}-${{ github.run_id }}
+          path: |
+            .kitchen/runs/
+            ${{ runner.temp }}/bounty.log
+          retention-days: 7
+          if-no-files-found: ignore
+
+  kitchen:
+    # K50: named images and independent results on every OS; no failure cancels another.
+    name: kitchen (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2025, macos-15]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    # Git Bash on Windows: from PowerShell `cat` and `rm` are not on PATH (PF11).
+    defaults:
+      run:
+        shell: bash
+    steps:
+      # fetch-depth: 0 — verify's merge-base and run-history reads need full git history.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # K50: on a wave branch the checkout has origin/master but no local
+      # master, and bt8b diffs master...HEAD (run 42802182752, all systems).
+      - name: Make master resolvable on a wave branch
+        run: git rev-parse -q --verify refs/heads/master >/dev/null || git branch master origin/master
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+
+      # Same path as the host: repository-local pnpm 10.34.5 (scripts/tooling, lockfile-pinned).
+      - name: Install repository-local pnpm
+        run: npm ci --prefix scripts/tooling --ignore-scripts
+
+      - name: Locate pnpm store
+        id: pnpm-store
+        run: echo "path=$(node scripts/pnpm.mjs store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-${{ runner.os }}-
+
       - name: Install dependencies (frozen lockfile)
         run: node scripts/pnpm.mjs install --frozen-lockfile
 
       - name: Promise lint
         run: node scripts/pnpm.mjs run lint
+
+      - name: Read Playwright version from lockfile
+        id: playwright
+        run: node -e "const fs = require('node:fs'); const lock = fs.readFileSync('pnpm-lock.yaml', 'utf8'); const version = /'@playwright\/test@([^']+)'/.exec(lock)?.[1]; if (!version) throw new Error('Playwright version missing from lockfile'); fs.appendFileSync(process.env.GITHUB_OUTPUT, 'version=' + version + '\\n')"
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: .runtime/browsers
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
 
       # Chromium into the path suite.mjs sets as PLAYWRIGHT_BROWSERS_PATH — needed by
       # tests/kitchen/k16-record.test.ts, which drives the demo recorder's browser.
@@ -134,21 +255,133 @@ jobs:
         env:
           PLAYWRIGHT_BROWSERS_PATH: .runtime/browsers
 
-      # K29: the older platform is gone — every suite that ran here belonged to
-      # it except the bounty tool's and the kitchen's. No suite needs a
-      # database anymore, so the disposable Postgres went too.
-      #  * test:box-bounty has three Windows-bound tests marked host-only beside
-      #    their assertions: the 'npm.cmd' setup recipe (the launcher refuses
-      #    command files off Windows by design) and two junction tests (a
-      #    junction is transparent to git; a Linux symlink stays a visible link
-      #    and is refused under a different named reason — still a refusal).
-      # `check --full` is the typecheck alone; the two suites are named so the
-      # list reads as the whole suite set.
       - name: verify
-        run: node scripts/verify.mjs --full test:box-bounty test:kitchen
+        run: node scripts/verify.mjs --full test:kitchen
 
-      # PF1: the board's own suite, apart from the kitchen's acceptance profile,
-      # whose duration budget measures the two suites above.
+      # K50: skips are counted per system, never silent. Each skipped test is named beside its assertion in the
+      # tests, with the reason (grep the tests for "Host-only"); this prints how many each suite skipped here.
+      - name: Skips on ${{ matrix.os }}
+        if: always()
+        run: |
+          for log in .kitchen/runs/*/test_box-bounty.log .kitchen/runs/*/test_kitchen.log "$RUNNER_TEMP/kitchen.log"; do
+            [ -f "$log" ] || continue
+            printf '%s on ${{ matrix.os }}: ' "$(basename "$log")"
+            perl -pe 's/\e\[[0-9;]*m//g' "$log" | grep -aE '^\s+Tests ' | tr -s ' ' | tr '\n' ' '
+            echo
+          done
+
+      # K59: the eight slowest tests here, so a test creeping toward its limit shows before it fails. The limit is 60 s on
+      # Windows and 30 s elsewhere (scripts/test-timeout.mjs); a test that sets its own is not bound by it. Reports only:
+      # `|| true`, and always(), so it can never fail a job. The runner's log holds real escape bytes, hence `perl`.
+      - name: Slowest tests on ${{ matrix.os }}
+        if: always()
+        run: |
+          for log in .kitchen/runs/*/test_box-bounty.log .kitchen/runs/*/test_kitchen.log "$RUNNER_TEMP/kitchen.log"; do
+            [ -f "$log" ] && perl -pe 's/\e\[[0-9;]*m//g' "$log"
+          done | grep -aE '^\s+✓ ' | grep -avE '^\s+✓ tests/' \
+            | perl -ne '/✓ (.*?)\s+(\d+)ms\s*$/ and printf "%7d ms  %.110s\n", $2, $1' \
+            | sort -rn | head -8 || true
+
+      # K61: the logs are a diagnostic aid. GitHub's own artifact storage failed one run (43088503658, attempt 2) after every
+      # test step had passed, so a failed upload must not fail the job; the step still shows its failure in the log.
+      - name: Upload verify run logs
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: kitchen-runs-${{ matrix.os }}-${{ github.run_id }}
+          path: |
+            .kitchen/runs/
+            ${{ runner.temp }}/kitchen.log
+          retention-days: 7
+          if-no-files-found: ignore
+
+  platform:
+    # K50: named images and independent results on every OS; no failure cancels another.
+    name: platform (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2025, macos-15]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    # Git Bash on Windows: from PowerShell `cat` and `rm` are not on PATH (PF11).
+    defaults:
+      run:
+        shell: bash
+    steps:
+      # fetch-depth: 0 — verify's merge-base and run-history reads need full git history.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # K50: on a wave branch the checkout has origin/master but no local
+      # master, and bt8b diffs master...HEAD (run 42802182752, all systems).
+      - name: Make master resolvable on a wave branch
+        run: git rev-parse -q --verify refs/heads/master >/dev/null || git branch master origin/master
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+
+      # Same path as the host: repository-local pnpm 10.34.5 (scripts/tooling, lockfile-pinned).
+      - name: Install repository-local pnpm
+        run: npm ci --prefix scripts/tooling --ignore-scripts
+
+      - name: Locate pnpm store
+        id: pnpm-store
+        run: echo "path=$(node scripts/pnpm.mjs store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-${{ runner.os }}-
+
+      - name: Install dependencies (frozen lockfile)
+        run: node scripts/pnpm.mjs install --frozen-lockfile
+
+      - name: Read Playwright version from lockfile
+        id: playwright
+        run: node -e "const fs = require('node:fs'); const lock = fs.readFileSync('pnpm-lock.yaml', 'utf8'); const version = /'@playwright\/test@([^']+)'/.exec(lock)?.[1]; if (!version) throw new Error('Playwright version missing from lockfile'); fs.appendFileSync(process.env.GITHUB_OUTPUT, 'version=' + version + '\\n')"
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: .runtime/browsers
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+
+      # Chromium into the path suite.mjs sets as PLAYWRIGHT_BROWSERS_PATH — needed by
+      # tests/kitchen/k16-record.test.ts, which drives the demo recorder's browser.
+      # K60: the browser itself and its system libraries are two steps. The browser is fetched from Playwright's own
+      # download and must succeed. The libraries come from the runner's apt mirror, which was dead on run 43035172554
+      # (three attempts cancelled ten minutes in, the verify step never ran), so that step is bounded and may fail:
+      # the browser-backed test still runs and says by itself if a library is missing. Windows and macOS need none.
+      - name: Install Chromium for browser-backed tests
+        run: node scripts/pnpm.mjs exec playwright install chromium
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: .runtime/browsers
+
+      - name: Install Chromium system libraries (Linux)
+        if: runner.os == 'Linux'
+        timeout-minutes: 5
+        continue-on-error: true
+        run: |
+          for attempt in 1 2; do
+            if timeout 150 node scripts/pnpm.mjs exec playwright install-deps chromium; then exit 0; fi
+            echo "attempt $attempt did not finish"
+          done
+          echo "system libraries not installed: the browser-backed test says if one is missing"
+          exit 1
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: .runtime/browsers
+
+      # PF1: the board suite stays apart from kitchen's acceptance budget.
+      # Its journeys use the built CLI; suite.mjs also builds Next for its pages.
+      - name: Build CLI for platform journeys
+        run: node scripts/workspace.mjs build
+
       - name: platform suite
         run: |
           set -o pipefail
@@ -185,7 +418,7 @@ jobs:
         continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
-          name: kitchen-runs-${{ matrix.os }}-${{ github.run_id }}
+          name: platform-runs-${{ matrix.os }}-${{ github.run_id }}
           path: |
             .kitchen/runs/
             ${{ runner.temp }}/platform.log

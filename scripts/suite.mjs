@@ -345,6 +345,16 @@ export function suiteKey(command) {
 async function main() {
   const [suite, ...raw] = process.argv.slice(2);
   const args = raw.filter(arg => arg !== '--');
+  const shardIndex = args.indexOf('--shard');
+  const shard = shardIndex >= 0 ? args[shardIndex + 1] : undefined;
+  if (shardIndex >= 0) {
+    const parts = /^(\d+)\/(\d+)$/.exec(shard ?? '');
+    if (!parts || !parts.slice(1).every(part => Number.isSafeInteger(Number(part))) || Number(parts[1]) < 1 || Number(parts[1]) > Number(parts[2]) || args.lastIndexOf('--shard') !== shardIndex) {
+      console.error('Invalid --shard: expected i/N with 1 <= i <= N (positive safe integers).');
+      process.exit(2);
+    }
+    args.splice(shardIndex, 2);
+  }
   const subgroupIndex = args.indexOf('--suite');
   const subgroup = subgroupIndex >= 0 ? args[subgroupIndex + 1] : undefined;
   if (subgroupIndex >= 0 && (!subgroup || !/^[a-z0-9-]+$/.test(subgroup))) process.exit(2);
@@ -382,7 +392,7 @@ async function main() {
     const built = await runNode(join(root, 'packages/box-platform/node_modules/next/dist/bin/next'), ['build'], { cwd: join(root, 'packages/box-platform'), env: { ...env, NEXT_TELEMETRY_DISABLED: '1' } });
     if (built !== 0) process.exit(built);
   }
-  process.exit(await runNode(vitest, ['run', `--maxWorkers=${suiteWorkers(suite, subgroup)}`, ...(targets.length ? targets : [directory]), '--config', 'scripts/vitest.config.mjs'], { env: { ...env, PLAYWRIGHT_BROWSERS_PATH: join(root, '.runtime', 'browsers') } }));
+  process.exit(await runNode(vitest, ['run', `--maxWorkers=${suiteWorkers(suite, subgroup)}`, ...(shard ? ['--shard', shard] : []), ...(targets.length ? targets : [directory]), '--config', 'scripts/vitest.config.mjs'], { env: { ...env, PLAYWRIGHT_BROWSERS_PATH: join(root, '.runtime', 'browsers') } }));
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) await main();
