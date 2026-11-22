@@ -547,7 +547,7 @@ describe('the pages', () => {
     expect(await page.locator('main figure').innerText()).toContain('An example. Every name in it is invented');
     expect(await page.locator('[data-primary]').getAttribute('href')).toBe('/how/');
     expect(await page.locator('main a[href="/board/"]').count()).toBeGreaterThan(0);
-    expect(await page.locator('main a[href^="/how/#"]').count()).toBe(0);
+    expect(await page.locator('main a[href^="/how/#"]').evaluateAll(elements => elements.map(a => a.getAttribute('href')))).toEqual(['/how/#hand-off', '/how/#answer']);
     await close();
   });
 
@@ -648,7 +648,7 @@ describe('the pages', () => {
       ['no activity', false, false, '', 'Solver'],
       ['both roles', true, true, '', 'Solver'],
       ['explicit solver anchor', true, false, '#methods', 'Solver'],
-      ['explicit owner anchor', false, true, '#bounties', 'Owner']
+      ['explicit owner anchor', false, true, '#owner', 'Owner']
     ])('PF51: default role for %s', async (_name, owns, solves, hash, want) => {
       const bounty = { id: STATE_IDS.owed, title: 'Waiting task', repository: 'example-org/ledger', issue_number: 4, created_at: new Date(NOW).toISOString(), reward: 45, solutions: 0, stage: 'waiting' };
       const solution = { ...bounty, pull_number: 10, from: 'example-mara', stage: 'progress', draft: true, checks: 'pending' };
