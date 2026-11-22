@@ -64,6 +64,7 @@ describe.each(['stripe', 'paypal'] as const)('PF52 funded local worker: %s', rai
       standin.repositories.set(REPO, { visibility: 'public', language: 'TypeScript' });
       standin.accountIds.set(OWNER.login, OWNER.id); standin.accountIds.set(SOLVER.login, SOLVER.id);
     } });
+    await board.env.DB.prepare("UPDATE meta SET value = ? WHERE key = 'pf52_deployed_at'").bind(new Date(clock).toISOString()).run();
     const stripe = new StripeStandin(), paypal = new PayPalStandin();
     const context = await browser.newContext();
     const page = await context.newPage();

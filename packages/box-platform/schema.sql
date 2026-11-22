@@ -118,7 +118,12 @@ CREATE TABLE IF NOT EXISTS stripe_accounts (
   github_id INTEGER PRIMARY KEY,
   account_id TEXT NOT NULL UNIQUE,
   ready INTEGER NOT NULL DEFAULT 0
-);
+, ready_at TEXT);
+CREATE TRIGGER IF NOT EXISTS stripe_ready_changed AFTER UPDATE OF ready ON stripe_accounts
+WHEN (NEW.ready = 0 AND NEW.ready_at IS NOT NULL) OR (NEW.ready = 1 AND (NEW.ready_at IS NULL OR (OLD.ready = 0 AND NEW.ready_at IS OLD.ready_at)))
+BEGIN
+  UPDATE stripe_accounts SET ready_at = CASE WHEN NEW.ready = 0 THEN NULL ELSE strftime('%Y-%m-%dT%H:%M:%fZ', 'now') END WHERE github_id = NEW.github_id;
+END;
 -- An owner's saved card and the most one bounty may charge it.
 CREATE TABLE IF NOT EXISTS pay_settings (
   github_id INTEGER PRIMARY KEY,
@@ -186,6 +191,7 @@ CREATE TABLE IF NOT EXISTS meta (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL
 );
+INSERT OR IGNORE INTO meta (key, value) VALUES ('pf52_deployed_at', strftime('%Y-%m-%dT%H:%M:%fZ', 'now'));
 -- PF37: which migration files this database holds. A new board is built from this schema, which already holds every one;
 -- a live board gets the table from migrations/pf37.sql. A new migration adds its own line here and ends with its own insert.
 CREATE TABLE IF NOT EXISTS migrations (

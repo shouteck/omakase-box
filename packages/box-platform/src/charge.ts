@@ -101,7 +101,8 @@ const CHARGES_PER_RUN = 1; // Workers Free: a charge is five calls to Stripe, an
 const COMMENTED = `(b.source = 'listed' OR b.approval IS NOT NULL OR b.merge_consent = 1)`;
 const APPROVED_AT = `CASE WHEN ${COMMENTED} THEN b.approval_at ELSE b.created_at END`;
 const APPROVED_AMOUNT = `CASE WHEN ${COMMENTED} THEN b.approved_amount ELSE b.amount END`;
-const CONSENT_AT = `CASE WHEN ${COMMENTED} THEN CASE WHEN b.merge_consent = 1 THEN ${APPROVED_AT} END ELSE r.on_at END`;
+const DEPLOYED_AT = `(SELECT value FROM meta WHERE key = 'pf52_deployed_at')`;
+const CONSENT_AT = `CASE WHEN ${COMMENTED} THEN CASE WHEN b.merge_consent = 1 AND julianday(${APPROVED_AT}) >= julianday(${DEPLOYED_AT}) THEN ${APPROVED_AT} END ELSE r.on_at END`;
 const STRIPE_LIMIT = `CASE WHEN ${COMMENTED} THEN s.limit_per_bounty ELSE MIN(s.limit_per_bounty, COALESCE(r.limit_per_bounty, s.limit_per_bounty)) END`;
 const PAYPAL_LIMIT = `CASE WHEN ${COMMENTED} THEN v.limit_per_bounty ELSE MIN(v.limit_per_bounty, COALESCE(r.limit_per_bounty, v.limit_per_bounty)) END`;
 const APPROVED = `(COALESCE(b.approval, '') != 'pending' AND (NOT ${COMMENTED} OR (${APPROVED_AT} IS NOT NULL AND b.amount = ${APPROVED_AMOUNT})))`;
@@ -115,7 +116,7 @@ const DUE = `SELECT b.id, b.amount, b.poster, b.poster_id, b.merge_rail, r.limit
     AND ${APPROVED}
     AND NOT EXISTS (SELECT 1 FROM meta WHERE key = 'merge_payment_off/' || b.id)
     AND (NOT ${COMMENTED} OR ${paymentCommentsCurrent})
-    AND EXISTS (SELECT 1 FROM pull_requests p WHERE p.bounty_id = b.id AND ${landedWhere('p')})
+    AND EXISTS (SELECT 1 FROM pull_requests p WHERE p.bounty_id = b.id AND ${landedWhere('p')} AND julianday(p.merged_at) >= julianday(${DEPLOYED_AT}))
     AND (c.state IS NULL OR c.state NOT IN ('paid', 'refunded', 'disputed', 'owner-must-authenticate', 'owner-paying', 'solver-not-ready'))
     AND (c.at IS NULL OR c.at <= ?)
   ORDER BY c.at IS NOT NULL, c.at, b.id LIMIT ?`;
@@ -163,9 +164,9 @@ export async function payeeFacts(env: Env, id: string, chosen?: string, forMerge
   }
   const landed = chosen === undefined ? eligible : all.filter(pull => pull.author.toLowerCase() === chosen.toLowerCase()).slice(-1);
   const authorId = landed.length === 1 ? landed[0]!.author_id : null;
-  const solver = authorId === null ? null : await db.prepare('SELECT account_id, ready FROM stripe_accounts WHERE github_id = ?').bind(authorId).first<{ account_id: string; ready: number }>();
+  const solver = authorId === null ? null : await db.prepare('SELECT account_id, ready, ready_at FROM stripe_accounts WHERE github_id = ?').bind(authorId).first<{ account_id: string; ready: number; ready_at: string | null }>();
   const events = await db.prepare(`SELECT 1 FROM events WHERE bounty_id = ? AND type = 'paid' AND withdrawn = 0 UNION SELECT 1 FROM paid_clicks WHERE bounty_id = ? AND withdrawn = 0 LIMIT 1`).bind(id, id).first();
-  return { landed, solver: solver === null ? null : { account_id: solver.account_id, ready: solver.ready === 1 }, recorded: events !== null, poster_id: bounty?.poster_id ?? null };
+  return { landed, solver: solver === null ? null : { account_id: solver.account_id, ready: solver.ready === 1 && (!forMerge || (solver.ready_at !== null && Date.parse(solver.ready_at) <= Date.parse(landed[0]!.merged_at))) }, recorded: events !== null, poster_id: bounty?.poster_id ?? null };
 }
 
 /** The switch is on, a merge landed: start what is due. Returns how many were looked at. */
@@ -177,11 +178,12 @@ export async function settleCharges(env: Env): Promise<number> {
   const due = (await db.prepare(DUE).bind(now - LOOK_AGAIN_MS, CHARGES_PER_RUN).all<DueRow>()).results;
   for (const row of due) {
     const { landed, solver, recorded } = await payeeFacts(env, row.id, undefined, true);
-    const paypalSolver = landed.length === 1 && landed[0]!.author_id !== null ? await db.prepare('SELECT payer_id FROM paypal_accounts WHERE github_id = ?').bind(landed[0]!.author_id).first<{ payer_id: string }>() : null;
-    const rails = await paymentRail(env, row.poster_id, row.merge_rail, { stripe: solver?.ready === true, paypal: paypalSolver !== null });
+    const paypalSolver = landed.length === 1 && landed[0]!.author_id !== null ? await db.prepare('SELECT payer_id, at FROM paypal_accounts WHERE github_id = ?').bind(landed[0]!.author_id).first<{ payer_id: string; at: number }>() : null;
+    const paypalReady = paypalSolver !== null && Number.isFinite(paypalSolver.at) && paypalSolver.at <= Date.parse(landed[0]!.merged_at);
+    const rails = await paymentRail(env, row.poster_id, row.merge_rail, { stripe: solver?.ready === true, paypal: paypalReady });
     if (rails.needs_choice) { await saveCharge(env, row.id, 'choose-rail', landed.length === 1 ? landed[0]! : null, null, null, null, row.amount, now); continue; }
     const useStripe = rails.selected_rail === 'stripe' && stripeOn(env) && row.payment_method !== null && solver?.ready === true;
-    const usePayPal = rails.selected_rail === 'paypal' && paypalOn(env) && row.payment_token !== null && paypalSolver !== null;
+    const usePayPal = rails.selected_rail === 'paypal' && paypalOn(env) && row.payment_token !== null && paypalReady;
     const method = rails.selected_rail === 'paypal' ? row.payment_token : row.payment_method;
     if (method === null || (rails.selected_rail === 'stripe' ? !stripeOn(env) : !paypalOn(env))) { await saveCharge(env, row.id, 'looked', null, null, null, null, row.amount, now); continue; }
     const held = await db.prepare('SELECT state, payment_method, provider, at FROM charges WHERE bounty_id = ?').bind(row.id).first<ChargeRow & { provider: string | null }>();
@@ -283,6 +285,11 @@ async function saveCharge(env: Env, id: string, state: ChargeState, pull: Merged
 
 type Event = { type?: unknown; account?: unknown; data?: { object?: Record<string, unknown> } };
 
+export async function setStripeReady(env: Env, account: string, ready: boolean, now: number): Promise<void> {
+  await env.DB.prepare(`UPDATE stripe_accounts SET ready_at = CASE WHEN ? = 0 THEN NULL WHEN ready = 0 OR ready_at IS NULL THEN ? ELSE ready_at END, ready = ? WHERE account_id = ?`)
+    .bind(ready ? 1 : 0, new Date(now).toISOString(), ready ? 1 : 0, account).run();
+}
+
 /** A signed event. Only the row whose account and payment both match changes, so a stray event moves nothing. */
 export async function applyEvent(env: Env, event: Event, now: number): Promise<void> {
   const db = env.DB;
@@ -290,7 +297,7 @@ export async function applyEvent(env: Env, event: Event, now: number): Promise<v
   const object = event.data?.object ?? {};
   if (account === null) return;
   if (event.type === 'account.updated') {
-    await db.prepare('UPDATE stripe_accounts SET ready = ? WHERE account_id = ?').bind(object['charges_enabled'] === true ? 1 : 0, account).run();
+    await setStripeReady(env, account, object['charges_enabled'] === true, now);
     return;
   }
   if (event.type === 'account.application.deauthorized') {
@@ -495,10 +502,10 @@ export async function payingIds(env: Env, ids: readonly string[]): Promise<Reado
 
 export async function mergePaymentFact(env: Env, id: string, origin: string) {
   const row = await env.DB.prepare(`SELECT b.source, b.approval, b.amount, r.limit_per_bounty AS repository_reward, ${COMMENTED} AS commented, ${APPROVED_AT} AS approval_at, ${APPROVED_AMOUNT} AS approved_amount,
-    ${CONSENT_AT} AS consent_at, ${STRIPE_LIMIT} AS stripe_limit, ${PAYPAL_LIMIT} AS paypal_limit, s.payment_method, v.payment_token, ${paymentCommentsCurrent} AS comments_current, (SELECT provider FROM charges WHERE bounty_id = b.id) AS charge_provider
+    ${CONSENT_AT} AS consent_at, ${DEPLOYED_AT} AS deployed_at, ${STRIPE_LIMIT} AS stripe_limit, ${PAYPAL_LIMIT} AS paypal_limit, s.payment_method, v.payment_token, ${paymentCommentsCurrent} AS comments_current, (SELECT provider FROM charges WHERE bounty_id = b.id) AS charge_provider
     FROM bounties b LEFT JOIN pay_settings s ON s.github_id = b.poster_id LEFT JOIN paypal_vault v ON v.github_id = b.poster_id
     LEFT JOIN pay_repositories r ON r.github_id = b.poster_id AND r.repository = b.repository WHERE b.id = ?`).bind(id).first<{
-      source: string; approval: string | null; amount: number; repository_reward: number | null; commented: number; approval_at: string | null; approved_amount: number | null; consent_at: string | null; stripe_limit: number | null; paypal_limit: number | null; payment_method: string | null; payment_token: string | null; comments_current: number; charge_provider: string | null;
+      source: string; approval: string | null; amount: number; repository_reward: number | null; commented: number; approval_at: string | null; approved_amount: number | null; consent_at: string | null; deployed_at: string | null; stripe_limit: number | null; paypal_limit: number | null; payment_method: string | null; payment_token: string | null; comments_current: number; charge_provider: string | null;
     }>();
   if (row === null) return null;
   const links = setupLinks(origin, id);
@@ -541,8 +548,11 @@ export async function mergePaymentFact(env: Env, id: string, origin: string) {
   if (landed.length === 1 && notCounted(landed[0]!, poster!.poster, poster!.poster_id) !== null) reasons.push('The author is the poster or has repository access, or GitHub did not state their association.');
   if (landed.length === 1 && selectedAvailable && provider === null) reasons.push('The solver is not ready to receive on an available pay-on-merge rail.');
   const charge = await chargeOf(env, id);
-  const automaticChargeOff = charge?.state === 'solver-not-ready' || await env.DB.prepare('SELECT 1 FROM meta WHERE key = ?').bind(`merge_payment_off/${id}`).first() !== null;
-  if (charge?.state !== 'solver-not-ready' && automaticChargeOff) reasons.push(CHARGE_WORDS['solver-not-ready']);
+  const terminal = charge?.state === 'solver-not-ready' || await env.DB.prepare('SELECT 1 FROM meta WHERE key = ?').bind(`merge_payment_off/${id}`).first() !== null;
+  const preDeployment = landed.length > 0 && landed.every(pull => row.deployed_at === null || !(Date.parse(pull.merged_at) >= Date.parse(row.deployed_at)));
+  const automaticChargeOff = terminal || preDeployment;
+  if (charge?.state !== 'solver-not-ready' && terminal) reasons.push(CHARGE_WORDS['solver-not-ready']);
+  if (preDeployment) reasons.push('Automatic charge on merge is off for pre-deployment merges. The poster can pay by one-click or record an outside payment.');
   if (charge !== null && charge.state !== 'owner-decides' && charge.state !== 'refused-over-limit') {
     const words = chargeWords(charge.state, row.charge_provider); if (words !== null) reasons.push(words);
   }

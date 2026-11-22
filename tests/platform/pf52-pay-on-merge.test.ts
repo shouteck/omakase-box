@@ -3,7 +3,7 @@ import { handle } from '../../packages/box-platform/src/api.js';
 import worker from '../../packages/box-platform/src/worker.js';
 import { GitHub } from '../../packages/box-platform/src/github.js';
 import { readPaymentComments } from '../../packages/box-platform/src/payment-comment.js';
-import { decidePay, payeeFacts, paySaved, settleCharges } from '../../packages/box-platform/src/charge.js';
+import { applyEvent, decidePay, payeeFacts, paySaved, settleCharges, setStripeReady } from '../../packages/box-platform/src/charge.js';
 import { listIssue } from '../../packages/box-platform/src/listing.js';
 import { applyPayPalEvent, settlePayPal } from '../../packages/box-platform/src/paypal-pay.js';
 import { refreshUntilDone, rig, MINUTE, NOW, type Rig } from './support.js';
@@ -36,7 +36,7 @@ async function card(limit = 50) {
 }
 async function connectedStripe(ready = true) {
   stripe.accounts.set('acct_solver', { charges_enabled: ready });
-  await r.env.DB.prepare(`INSERT INTO stripe_accounts (github_id, account_id, ready) VALUES (7001, 'acct_solver', ?)`).bind(ready ? 1 : 0).run();
+  await r.env.DB.prepare(`INSERT INTO stripe_accounts (github_id, account_id, ready, ready_at) VALUES (7001, 'acct_solver', ?, ?)`).bind(ready ? 1 : 0, ready ? at(0) : null).run();
 }
 async function vault(limit = 50) {
   await r.env.DB.prepare(`INSERT INTO paypal_vault (github_id, payment_token, label, limit_per_bounty) VALUES (?, 'VAULT1', 'Saved PayPal', ?)`).bind(OWNER.github_id, limit).run();
@@ -69,6 +69,69 @@ beforeEach(async () => {
   expect(listed).toHaveProperty('id'); id = (listed as { id: string }).id;
 });
 afterEach(async () => { vi.restoreAllMocks(); await stripe.stop(); await paypal.stop(); await r.close(); });
+
+describe('PF52: deployment cutoff and literal merge-time readiness', () => {
+  it.each([['stripe', 'pay'], ['paypal', 'pay'], ['stripe', 'paid'], ['paypal', 'paid']] as const)('keeps historical consent a plain approval with %s explicit %s available', async (rail, action) => {
+    if (rail === 'stripe') { await card(); await connectedStripe(); } else await vault();
+    await r.env.DB.prepare("UPDATE meta SET value = ? WHERE key = 'pf52_deployed_at'").bind(at(2)).run();
+    await approve(' on merge', 1);
+    expect(await r.env.DB.prepare('SELECT approval, approval_at, merge_consent, merge_rail FROM bounties WHERE id = ?').bind(id).first()).toEqual({ approval: 'comment', approval_at: at(1), merge_consent: 0, merge_rail: null });
+    await settleTwice(); expect(stripe.charged()).toHaveLength(0); expect(paypal.orders).toHaveLength(0);
+    if (action === 'pay') {
+      await paySaved(r.env, id, OWNER.github_id, 45, SOLVER, rail); expect(await state()).toMatchObject({ state: 'paid' });
+    } else {
+      expect((await post(`/api/b/${id}/paid`, { to: SOLVER }, await session())).status).toBe(200);
+      await settleTwice(); expect(stripe.charged()).toHaveLength(0); expect(paypal.orders).toHaveLength(0);
+    }
+  });
+  it.each(['stripe', 'paypal'] as const)('requires %s readiness no later than the actual merge', async rail => {
+    if (rail === 'stripe') { await card(); await connectedStripe(false); stripe.accounts.set('acct_solver', { charges_enabled: true }); await setStripeReady(r.env, 'acct_solver', true, NOW + 6 * MINUTE); }
+    else { await vault(); await r.env.DB.prepare('UPDATE paypal_accounts SET at = ?').bind(NOW + 6 * MINUTE).run(); }
+    await approve(); await settleTwice();
+    expect(await state()).toMatchObject({ state: 'solver-not-ready' });
+    expect(stripe.charged()).toHaveLength(0); expect(paypal.orders).toHaveLength(0);
+    r.clock.at += 60 * MINUTE; await settleTwice();
+    expect(stripe.charged()).toHaveLength(0); expect(paypal.orders).toHaveLength(0);
+    await paySaved(r.env, id, OWNER.github_id, 45, SOLVER, rail);
+    expect(await state()).toMatchObject({ state: 'paid' });
+    expect(stripe.charged()).toHaveLength(rail === 'stripe' ? 1 : 0); expect(paypal.captures).toHaveLength(rail === 'paypal' ? 1 : 0);
+  });
+  it.each(['stripe', 'paypal'] as const)('accepts %s readiness exactly at merge time', async rail => {
+    if (rail === 'stripe') { await card(); await connectedStripe(false); stripe.accounts.set('acct_solver', { charges_enabled: true }); await setStripeReady(r.env, 'acct_solver', true, NOW + 5 * MINUTE); }
+    else { await vault(); await r.env.DB.prepare('UPDATE paypal_accounts SET at = ?').bind(NOW + 5 * MINUTE).run(); }
+    await approve(); await settleTwice(); expect(await state()).toMatchObject({ state: 'paid' });
+  });
+  it('treats an unknown Stripe ready time as not ready at merge', async () => {
+    await card(); await connectedStripe(); await r.env.DB.prepare('UPDATE stripe_accounts SET ready_at = NULL').run();
+    await approve(); await settleTwice(); expect(await state()).toMatchObject({ state: 'solver-not-ready' });
+    expect(stripe.charged()).toHaveLength(0);
+  });
+  it.each(['missing', 'old-consent'] as const)('fails closed for %s cutoff evidence without blocking explicit pay', async mode => {
+    await card(); await connectedStripe(); await approve();
+    if (mode === 'missing') await r.env.DB.prepare("DELETE FROM meta WHERE key = 'pf52_deployed_at'").run();
+    else await r.env.DB.prepare("UPDATE meta SET value = ? WHERE key = 'pf52_deployed_at'").bind(at(2)).run();
+    await settleTwice(); expect(stripe.charged()).toHaveLength(0);
+    await paySaved(r.env, id, OWNER.github_id, 45, SOLVER); expect(stripe.charged()).toHaveLength(1);
+  });
+  it('accepts consent exactly at the deployment cutoff', async () => {
+    await card(); await connectedStripe(); await approve(' on merge', 0); await settleTwice();
+    expect(await state()).toMatchObject({ state: 'paid' });
+  });
+  it.each(['webhook', 'read'] as const)('tracks Stripe ready transitions without advancing a continuing ready time: %s', async mode => {
+    await connectedStripe(false);
+    const token = await session(7001, SOLVER);
+    const update = async (ready: boolean, minute: number) => {
+      r.clock.at = NOW + minute * MINUTE;
+      if (mode === 'webhook') await applyEvent(r.env, { type: 'account.updated', account: 'acct_solver', data: { object: { charges_enabled: ready } } }, r.clock.at);
+      else { stripe.accounts.set('acct_solver', { charges_enabled: ready }); expect((await post('/api/me/stripe/read', {}, token)).status).toBe(200); }
+      return r.env.DB.prepare('SELECT ready, ready_at FROM stripe_accounts WHERE github_id = 7001').first();
+    };
+    expect(await update(true, 1)).toEqual({ ready: 1, ready_at: at(1) });
+    expect(await update(true, 3)).toEqual({ ready: 1, ready_at: at(1) });
+    expect(await update(false, 4)).toEqual({ ready: 0, ready_at: null });
+    expect(await update(true, 6)).toEqual({ ready: 1, ready_at: at(6) });
+  });
+});
 
 describe('PF52: direct listing consent', () => {
   it('sends PayPal a fragment-free Vault return address', async () => {

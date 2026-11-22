@@ -14,6 +14,7 @@ export async function rig(token?: string): Promise<Rig> {
   const standin = new Standin();
   const url = await standin.start();
   const db = localDb(SCHEMA);
+  await db.prepare("UPDATE meta SET value = ? WHERE key = 'pf52_deployed_at'").bind(new Date(NOW).toISOString()).run();
   const clock = { at: NOW };
   return {
     standin, clock,
