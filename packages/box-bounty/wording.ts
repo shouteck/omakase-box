@@ -12,14 +12,14 @@
 // What the tool tells the board (PF5), said wherever the setting is shown.
 export const BOARD_SENDS = 'after a post, a merge, a close or a paid record the tool sends it the repository, issue number, bounty id and event name, and nothing else; the board then reads GitHub';
 
+// How to choose a reward (0.4.1, poster friction 8): a basis, never an amount — the owner names the amount, never the tool.
+export const PRICING_BASIS = 'about what you would pay a person for the time a capable solver needs to understand, change and test the work';
+export const PRICING_LINE = `how to choose a reward: ${PRICING_BASIS}. Only the solution you merge is paid, so a solver weighs the reward against that time and the other attempts; one below what the work is worth may draw none. A new amount applies to bounties posted after it; open bounties keep theirs. The limit is the reward times how many bounties may be open at once.`;
+
 // --- Candidate A (picked — the comparative runs stood it): what / worth it / not worth it ---
 // States all three things an agent needs to choose — what the tool does, when
 // it is worth using and when it is not — without commanding a choice. See the
 // pack for candidates B (minimal pointer) and C (trigger list).
-
-// How to choose a reward (0.4.1, poster friction 8): a basis, never an amount — the owner names the amount, never the tool.
-export const PRICING_BASIS = 'about what you would pay a person for the time a capable solver needs to understand, change and test the work';
-export const PRICING_LINE = `how to choose a reward: ${PRICING_BASIS}. Only the solution you merge is paid, so a solver weighs the reward against that time and the other attempts; one below what the work is worth may draw none. A new amount applies to bounties posted after it; open bounties keep theirs. The limit is the reward times how many bounties may be open at once.`;
 
 export const DESCRIBE_LINES: readonly string[] = [
   'omakase-box hands a piece of work to an outside solver: the task and what you',
