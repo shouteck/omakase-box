@@ -51,7 +51,7 @@ it.each(['approval_token_id', 'setup_token', 'missing'])('PF52 PayPal Vault brow
     } else {
       await page.getByLabel('Maximum USD per bounty', { exact: true }).fill('50');
       await page.getByRole('button', { name: 'Save PayPal and limit', exact: true }).click();
-      await page.waitForURL('**/setup/finish/');
+      await page.waitForURL(`${board.url}/me/`);
       expect((await (await page.request.get(`${board.url}/api/me/paypal/vault`)).json()).saved).toEqual({ label: 'Saved PayPal', limit_per_bounty: 50 });
     }
   } finally { await context.close(); await paypal.stop(); await board.stop(); }

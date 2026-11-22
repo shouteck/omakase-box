@@ -832,7 +832,7 @@ describe('PF52: PayPal Vault', () => {
     const token = await session();
     expect((await post('/api/me/paypal/vault/saved', { setup_token: 'stranger', limit: 50 }, token)).status).toBe(409);
     expect((await post('/api/me/paypal/vault', {}, token)).status).toBe(200);
-    expect(paypal.vaultRequests[0]).toMatchObject({ payment_source: { paypal: { usage_type: 'MERCHANT', customer_type: 'CONSUMER', experience_context: { return_url: `${ORIGIN}/me/?vault=return#pay` } } } });
+    expect(paypal.vaultRequests[0]).toMatchObject({ payment_source: { paypal: { usage_type: 'MERCHANT', customer_type: 'CONSUMER', experience_context: { return_url: `${ORIGIN}/me/?vault=return` } } } });
     paypal.setupApproved = false;
     const refused = await post('/api/me/paypal/vault/saved', { setup_token: 'SETUP1', limit: 50 }, token);
     expect(refused.status).toBe(409); expect(await refused.text()).not.toContain('provider prose');
