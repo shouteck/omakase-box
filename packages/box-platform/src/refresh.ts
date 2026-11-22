@@ -18,7 +18,6 @@ const TASK_MAX = 65536;
 /** PF44: the exact comment that approves an imported listing: its id and its reward, so it approves this one and no other. */
 export const approvalLine = (id: string, amount: number): string => `omakase approve ${id} $${amount}`;
 const APPROVERS = new Set(['OWNER', 'COLLABORATOR']);
-const AGENT_APPROVERS = new Set(['OWNER', 'COLLABORATOR', 'MEMBER']);
 export const LOGIN = /^[A-Za-z\d](?:[A-Za-z\d-]*[A-Za-z\d])?(?:\[bot\])?$/;
 const record = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
 
@@ -355,7 +354,7 @@ async function readListedIssue(env: Env, github: GitHub, id: string, repository:
 /**
  * PF44: an imported listing is approved by a comment on its issue, written after the import, that is exactly its approval
  * line, by the issue's author or by someone GitHub calls OWNER or COLLABORATOR of the repository. Sessionless imports
- * instead require OWNER, COLLABORATOR or MEMBER association, never just authorship. GitHub says who wrote it,
+ * instead require OWNER or COLLABORATOR association, never just authorship (MEMBER is not write access). GitHub says who wrote it,
  * so nobody signs in to the board. The comment's address is kept as the proof, and its author becomes the poster.
  */
 async function readApproval(env: Env, github: GitHub, id: string, repository: string, number: number): Promise<void> {
@@ -377,7 +376,7 @@ async function readApproval(env: Env, github: GitHub, id: string, repository: st
     if (typeof login !== 'string' || !LOGIN.test(login) || !Number.isSafeInteger(userId) || comment['body'].trim() !== line) continue;
     if (Date.parse(comment['created_at']) < Date.parse(row.created_at)) continue;
     const association = typeof comment['author_association'] === 'string' ? comment['author_association'] : '';
-    if (row.listed_by_id === null ? !AGENT_APPROVERS.has(association) : userId !== row.poster_id && !APPROVERS.has(association)) continue;
+    if (row.listed_by_id === null ? !APPROVERS.has(association) : userId !== row.poster_id && !APPROVERS.has(association)) continue;
     await env.DB.prepare(`UPDATE bounties SET approval = 'comment', approval_proof = ?, poster = ?, poster_id = ?, listed_seq = (SELECT COALESCE(MAX(listed_seq), 0) + 1 FROM bounties) WHERE id = ? AND approval = 'pending'`)
       .bind(comment['html_url'] as string, login, userId as number, id).run();
     return;
