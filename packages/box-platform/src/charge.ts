@@ -236,8 +236,9 @@ export async function paySaved(env: Env, id: string, posterId: number, amount: n
 
 async function saveCharge(env: Env, id: string, state: ChargeState, pull: Merged | null, account: string | null, card: string | null, intent: string | null, amount: number, now: number): Promise<void> {
   await env.DB.prepare(`INSERT INTO charges (bounty_id, state, pull_number, solver, account_id, amount, payment_method, payment_intent, at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT (bounty_id) DO UPDATE SET state = excluded.state, pull_number = excluded.pull_number, solver = excluded.solver, account_id = excluded.account_id, amount = excluded.amount, payment_method = excluded.payment_method, payment_intent = excluded.payment_intent, at = excluded.at, provider = NULL`)
-    .bind(id, state, pull?.number ?? null, pull?.author ?? null, account, amount, card, intent, now).run();
+    ON CONFLICT (bounty_id) DO UPDATE SET state = excluded.state, pull_number = excluded.pull_number, solver = excluded.solver, account_id = excluded.account_id, amount = excluded.amount, payment_method = excluded.payment_method, payment_intent = excluded.payment_intent, at = excluded.at, provider = NULL
+    WHERE charges.state NOT IN ('paid', 'refunded', 'disputed') AND (? IS NOT NULL OR charges.state NOT IN ('charging', 'owner-paying', 'owner-must-authenticate'))`)
+    .bind(id, state, pull?.number ?? null, pull?.author ?? null, account, amount, card, intent, now, account).run();
 }
 
 // ---- what Stripe tells the board ---------------------------------------------

@@ -3,7 +3,7 @@ import { handle } from '../../packages/box-platform/src/api.js';
 import worker from '../../packages/box-platform/src/worker.js';
 import { GitHub } from '../../packages/box-platform/src/github.js';
 import { readPaymentComments } from '../../packages/box-platform/src/payment-comment.js';
-import { settleCharges } from '../../packages/box-platform/src/charge.js';
+import { paySaved, settleCharges } from '../../packages/box-platform/src/charge.js';
 import { listIssue } from '../../packages/box-platform/src/listing.js';
 import { refreshUntilDone, rig, MINUTE, NOW, type Rig } from './support.js';
 import { StripeStandin } from './stripe-standin.js';
@@ -318,6 +318,27 @@ describe('PF52: agent pay comments', () => {
     try { await Promise.all([readPaymentComments(r.env, github, id, REPO, 12), readPaymentComments(r.env, github, id, REPO, 12)]); }
     finally { await github.settle(); }
     expect(stripe.charged()).toHaveLength(1);
+  });
+  it('does not let a stale cron refusal overwrite an agent payment', async () => {
+    await approve(); await card(); await connectedStripe();
+    await r.env.DB.prepare(`INSERT INTO pull_requests (bounty_id, number, author, author_id, state, opened_at, merged_at, association, on_default, head_sha)
+      VALUES (?, 42, 'other', 7002, 'merged', ?, ?, 'NONE', 1, ?)`).bind(id, at(2), at(6), 'a'.repeat(40)).run();
+    const prepare = r.env.DB.prepare;
+    let intercepted = false;
+    r.env.DB.prepare = sql => {
+      const statement = prepare(sql);
+      if (!sql.includes('payment_intent, at) VALUES')) return statement;
+      return { ...statement, bind: (...values: (string | number | null)[]) => {
+        const bound = statement.bind(...values);
+        return { ...bound, run: async () => {
+          if (!intercepted && values[1] === 'owner-decides') { intercepted = true; await paySaved(r.env, id, OWNER.github_id, 45, SOLVER); }
+          return bound.run();
+        } };
+      } };
+    };
+    try { await settleCharges(r.env); }
+    finally { r.env.DB.prepare = prepare; }
+    expect(intercepted).toBe(true); expect(await state()).toMatchObject({ state: 'paid' }); expect(stripe.charged()).toHaveLength(1);
   });
 });
 
