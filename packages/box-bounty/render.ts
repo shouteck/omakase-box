@@ -24,7 +24,7 @@ import { applicableAttempts,attemptsOf,endedCount,endedRecords,isOpenStage,listR
 import { corruptFiles,endedContaining,metaKeys,sharedEnded,sharedEndedCount,sharedOpen,sharedRead } from './store.js';
 import { refreshSharedMemory } from './chain.js';
 import { adoptOpenShared } from './adopt.js';
-import { PRICING_LINE, RESUME_STAYED,SETUP_LINES } from './wording.js';
+import { RESUME_STAYED,SETUP_LINES } from './wording.js';
 import { askMergeNoticeLine,loadState,localFirstMergeLine,readDecision,repoReward,rewardNoticeLine,saidOnce } from './settings.js';
 import type { AttemptOutcome,BountyRecord,ListedBounty,StageEvent } from './record.js';
 
@@ -660,8 +660,7 @@ export function renderHelp(): string {
     'nothing a solver wrote is ever run — checks were removed on 11 October 2026: a solution arrives as a',
     'numbered attempt, the report states facts about the change, and apply/close is always your call.',
     '',
-    'a bounty is not posted without a reward, which the owner sets (at least $1, whole dollars). Setting BOX_BOUNTY_ALLOW_ZERO_FOR_TESTING=1 posts without one — for testing the tool; such a bounty is never listed.',
-    PRICING_LINE,
+    'a bounty is not posted without a reward, which the owner sets (at least $1, whole dollars; allow --help says how to choose it). Setting BOX_BOUNTY_ALLOW_ZERO_FOR_TESTING=1 posts without one — for testing the tool; such a bounty is never listed.',
     boardAddress() === '' ? 'three ways to pay a reward: by hand, one click, on merge.' : `three ways to pay a reward: by hand, one click, on merge. See ${boardAddress()}/how/`,
     '',
     'what ends a bounty: apply, or close — or a solution merged onto the bounty\'s branch with your own',

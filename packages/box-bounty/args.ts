@@ -32,6 +32,7 @@
 // there are the same usage error as everywhere else.
 
 import { BountyRefused } from './errors.js';
+import { PRICING_LINE } from './wording.js';
 
 export class BountyUsage extends Error {
   /** The usage lines printed after the message; undefined means the whole list. */
@@ -224,7 +225,7 @@ const BASE_COMMANDS: Readonly<Record<string, CommandSpec>> = {
     positionals: 1,
     authority: true,
     values: {
-      '--reward': { ...AMOUNT, help: 'the reward for one bounty, in whole dollars: about what the work is worth to you — omakase-box help says how to choose it' },
+      '--reward': { ...AMOUNT, help: `the reward for one bounty, in whole dollars; ${PRICING_LINE}` },
       '--reward-limit': { ...AMOUNT, help: 'the most promised across this repository\'s open bounties, in whole dollars' },
       '--repo': REPO
     },

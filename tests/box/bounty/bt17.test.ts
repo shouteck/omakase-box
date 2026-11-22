@@ -34,7 +34,9 @@ const BUDGETS: Record<string, Budget> = {
   'deny':              { lines: 6,  characters: 600 },
   // BT60: help gained one line, the rule that a bounty is not posted without a reward and the testing allowance (about 260
   // characters), the one fact an agent must know before it posts. A reviewed raise, with that reason.
-  'help':              { lines: 33, characters: 4500 },
+  // 0.4.1 poster friction 8: the reward rule points to allow --help for how to choose the amount (+36 characters); the
+  // guidance itself lives there, not here. A reviewed raise, with that reason.
+  'help':              { lines: 33, characters: 4550 },
   // BT37: the not-worth-it list gained the "a solver could not do it either"
   // clause — measured 2,085 characters on the standard journey (+85).
   // PF27: one line points to the solving half (describe --solving), so a posting
