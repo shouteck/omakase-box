@@ -102,7 +102,7 @@ async function bounty(env: Env, id: string, now: number, origin: string): Promis
       history,
       pays_on_merge: paying,
       pay_on_merge: await mergePaymentFact(env, row.id, origin),
-      owed_now: pending ? null : await owedNow(env, row.id),
+      owed_now: pending ? null : await owedNow(env, row.id, origin),
       how_it_pays: { ways: pending ? [] : waysOfBounty(row.amount, waysOn(env), paying) },
       // PF44: whether the issue's owner approved this listing, and how. Pending: nothing is promised and nothing can be paid.
       ...(listed || row.approval != null ? { approval: pending

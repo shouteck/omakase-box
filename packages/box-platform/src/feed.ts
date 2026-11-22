@@ -280,7 +280,7 @@ export async function bountyDetail(env: Env, id: string, now: number, origin: st
       ] : ['No reward is stated, so nothing is owed if your pull request is merged.'],
       payment,
       pay_on_merge: await mergePaymentFact(env, id, origin),
-      owed_now: await owedNow(env, id),
+      owed_now: await owedNow(env, id, origin),
       ...await authorTakes(env, id),
       solution_list: pulls.slice(0, SOLUTIONS_MAX).map(pull => ({ number: pull.number, author: pull.author, state: pull.state, opened_at: pull.opened_at, merged_at: pull.merged_at, checks: pull.state === 'open' ? checksFact(pull) : null, url: `${entry.repository.url}/pull/${pull.number}` })),
       history,

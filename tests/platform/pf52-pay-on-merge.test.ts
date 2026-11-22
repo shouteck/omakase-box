@@ -48,7 +48,7 @@ async function approve(suffix = ' on merge', minutes = 1) {
   r.clock.at = NOW + 20 * MINUTE;
   await refreshUntilDone(r);
 }
-async function state() { return (await r.env.DB.prepare('SELECT state, provider FROM charges WHERE bounty_id = ?').bind(id).first()) ?? null; }
+async function state() { return (await r.env.DB.prepare('SELECT state, provider FROM charges WHERE bounty_id = ?').bind(id).first<{ state: string; provider: string | null }>()) ?? null; }
 async function fact() { return (await (await get(`/api/b/${id}`)).json() as any).bounty; }
 async function settleTwice() { await settleCharges(r.env); r.clock.at += 10 * MINUTE; await settleCharges(r.env); }
 
@@ -86,6 +86,7 @@ describe('PF52: payout connection after a refused payment', () => {
     const before = await fact();
     expect(before.pay_on_merge.solvers[0].setup_urls).toMatchObject({ stripe: expect.stringContaining('/setup/stripe-payouts/'), paypal: expect.stringContaining('/setup/paypal-payouts/') });
     expect(before.owed_now).toMatchObject({ amount: 45, pay_now: { comment: `omakase pay ${id} $45 to @<solver-login>` } });
+    expect(before.owed_now.payout_setup_urls).toEqual(before.pay_on_merge.solvers[0].setup_urls);
     await connect(rail); r.clock.at += 10 * MINUTE; await settleTwice();
     expect(stripe.charged()).toHaveLength(0); expect(paypal.captures).toHaveLength(0);
     const after = await fact();
@@ -146,14 +147,14 @@ describe('PF52: owner and solver PayPal parity', () => {
       ? await post('/api/me/pay', { remove_card: true }, owner) : await post('/api/me/paypal/vault/remove', {}, owner);
     expect(response.status).toBe(200);
     const both = mode.startsWith('both');
-    expect((await r.env.DB.prepare('SELECT COUNT(*) AS n FROM pay_repositories').first())?.n).toBe(both ? 1 : 0);
+    expect((await r.env.DB.prepare('SELECT COUNT(*) AS n FROM pay_repositories').first<{ n: number }>())?.n).toBe(both ? 1 : 0);
     const me = await (await get('/api/me', owner)).json() as any;
     expect(me.pay.repositories).toHaveLength(both ? 1 : 0);
     if (mode.endsWith('remove-stripe')) expect(me.pay).toMatchObject({ saved_paypal: true, card: null });
     if (mode.endsWith('remove-paypal')) expect(me.pay.card).not.toBeNull();
   });
   it('offers PayPal-only setup and repository switches, including a legacy repository default, and pays without Stripe', async () => {
-    delete r.env.STRIPE_SECRET_KEY;
+    Object.assign(r.env, { STRIPE_SECRET_KEY: '' });
     const owner = await session();
     expect(await (await get('/api/me', owner)).json()).toMatchObject({ pay: { set_up: true, stripe_set_up: false, card: null } });
     await vault(); await approve(); await switched();
