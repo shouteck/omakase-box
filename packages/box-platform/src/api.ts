@@ -2,6 +2,7 @@
 // filtered here on the server. No unfiltered record ever leaves this file.
 import { accountResponse } from './account.js';
 import { agentImportResponse } from './agent-import.js';
+import { attemptOf } from './attempt.js';
 import { applyEvent, payingIds, payOnMergeOf } from './charge.js';
 import { applyPayPalEvent, authorTakes } from './paypal-pay.js';
 import { PayPalUnavailable, webhookHolds } from './paypal.js';
@@ -103,7 +104,8 @@ async function bounty(env: Env, id: string, now: number): Promise<Response> {
         ? { state: 'pending' as const, approve_with: approvalLine(row.id, row.amount), proof: null }
         : { state: 'approved' as const, approve_with: null, proof: row.approval === 'comment' ? row.approval_proof ?? null : null } } : {}),
       ...await authorTakes(env, row.id),
-      agents_welcome: true
+      agents_welcome: true,
+      attempt: attemptOf(row)
     }
   });
 }

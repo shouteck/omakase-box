@@ -128,4 +128,39 @@ describe('PF51 sessionless imports', () => {
     expect(await row('id' in session ? session.id : '')).toMatchObject({ approval: 'pending', listed_by_id: 7400 });
     expect(await r.env.DB.prepare("SELECT reason, issue FROM log WHERE reason = 'agent-import-expired'").all()).toMatchObject({ results: [{ reason: 'agent-import-expired', issue: issueUrl() }] });
   });
+
+  it.each(['listed', 'posted'])('exposes the PR target and take/submit instructions in both %s detail forms and MCP, reflecting draft changes', async source => {
+    let id: string;
+    const issue = r.standin.issues.find(i => i.number === 14)!;
+    r.standin.repositories.get(REPO)!.default_branch = 'develop';
+    if (source === 'listed') {
+      const body = await imported();
+      id = body.listed;
+      issue.comments!.push({ login: AUTHOR.login, body: body.approve_with, association: 'OWNER', created_at: new Date(NOW + MINUTE).toISOString() });
+    } else {
+      id = 'bt-000000005151';
+      issue.id = id;
+      issue.plain = false;
+      issue.amount = 50;
+    }
+    issue.pulls = [{ number: 41, author: 'example-solver', state: 'open', draft: true, created_at: new Date(NOW + MINUTE).toISOString() }];
+    await tick();
+    const detail = await (await send(`/bounties/${id}.json`)).json() as any;
+    expect(detail.bounty.attempt).toEqual({ repository: REPO,
+      pull_request_base: source === 'listed' ? 'develop' : `box-bounty/${id}`,
+      body_must_include: source === 'listed' ? 'Fixes #14' : null,
+      take: expect.stringContaining('Open a draft pull request'), reserves: false,
+      submit: expect.stringContaining('Mark the pull request ready for review') });
+    expect(detail.bounty.attempt.submit).toContain('reserves nothing');
+    expect(detail.bounty.attempts_in_progress.count).toBe(1);
+    const site = await (await send(`/api/b/${id}`)).json() as any;
+    expect(site.bounty.attempt).toEqual(detail.bounty.attempt);
+    const mcp = await (await send('/mcp', { method: 'POST', body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'get_bounty', arguments: { id } } }) })).json() as any;
+    expect(mcp.result.structuredContent.bounty.attempt).toEqual(detail.bounty.attempt);
+    issue.pulls[0]!.draft = false;
+    await tick();
+    const submitted = await (await send(`/bounties/${id}.json`)).json() as any;
+    expect(submitted.bounty.attempts_in_progress.count).toBe(0);
+    expect(submitted.bounty.solution_list).toMatchObject([{ number: 41, state: 'open' }]);
+  });
 });
