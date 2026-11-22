@@ -162,13 +162,13 @@ export const OWNER_RECORD_FILTERS: Record<string, (record: OwnerRecord) => boole
   'no-history': record => !record.has_history
 };
 
-/** Every bounty matching `where` that has a merge, whole. `where` is SQL over `b`; only this file's callers write it. */
+/** Every bounty matching `where` with a merge, listed choice or provider attempt. `where` is SQL over `b`. */
 export async function loadPayments(db: Db, where: string, ...values: readonly (string | number)[]): Promise<BountyPayment[]> {
-  const scope = `FROM bounties b WHERE ${where} AND EXISTS (SELECT 1 FROM pull_requests m WHERE m.bounty_id = b.id AND (m.state = 'merged' OR b.source = 'listed'))`;
+  const scope = `FROM bounties b WHERE ${where} AND (EXISTS (SELECT 1 FROM pull_requests m WHERE m.bounty_id = b.id AND (m.state = 'merged' OR b.source = 'listed')) OR EXISTS (SELECT 1 FROM charges c WHERE c.bounty_id = b.id AND c.state != 'looked'))`;
   const rows = (await db.prepare(`SELECT b.id, b.title, b.repository, b.amount, b.poster, b.source ${scope}`).bind(...values).all<Pick<BountyPayment, 'id' | 'title' | 'repository' | 'amount' | 'poster' | 'source'>>()).results;
   if (rows.length === 0) return [];
   const within = `bounty_id IN (SELECT b.id ${scope})`;
-  const pulls = (await db.prepare(`SELECT bounty_id, number, author, merged_at, association, on_default, landing_sha, head_on_default_at_sight, state FROM pull_requests WHERE (state = 'merged' OR bounty_id IN (SELECT id FROM bounties WHERE source = 'listed')) AND ${within} ORDER BY number`).bind(...values).all<MergedPull & { bounty_id: string }>()).results;
+  const pulls = (await db.prepare(`SELECT bounty_id, number, author, merged_at, association, on_default, landing_sha, head_on_default_at_sight, state FROM pull_requests WHERE (state = 'merged' OR bounty_id IN (SELECT id FROM bounties WHERE source = 'listed') OR EXISTS (SELECT 1 FROM charges c WHERE c.bounty_id = pull_requests.bounty_id AND c.pull_number = pull_requests.number AND c.state = 'paid')) AND ${within} ORDER BY number`).bind(...values).all<MergedPull & { bounty_id: string }>()).results;
   const chain = (await db.prepare(`SELECT bounty_id, at, amount, withdrawn FROM events WHERE type = 'paid' AND ${within}`).bind(...values).all<PaidEvent & { bounty_id: string }>()).results;
   const clicks = (await db.prepare(`SELECT bounty_id, by_login AS by, to_login AS "to", at, amount, withdrawn FROM paid_clicks WHERE ${within}`).bind(...values).all<PaidEvent & { bounty_id: string; by: string }>()).results;
   const receipts = (await db.prepare(`SELECT bounty_id, payee, says, record_at, at FROM receipts WHERE ${within}`).bind(...values).all<Receipt & { bounty_id: string; payee: string }>()).results;

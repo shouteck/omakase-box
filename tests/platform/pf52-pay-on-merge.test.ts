@@ -227,6 +227,7 @@ describe('PF52: PayPal Vault', () => {
 });
 
 describe('PF52: agent pay comments', () => {
+  async function payment() { return (await (await get(`/bounties/${id}.json`)).json() as any).bounty.payment; }
   async function open(rail: 'stripe' | 'paypal' | 'both' = 'stripe') {
     Object.assign(issue.pulls![0]!, { state: 'open', landed: false }); delete issue.pulls![0]!.merged_at;
     await approve('');
@@ -250,7 +251,7 @@ describe('PF52: agent pay comments', () => {
     expect(await state()).toMatchObject({ state: 'paid', provider: rail === 'paypal' ? 'paypal' : null });
     expect(stripe.charged()).toHaveLength(rail === 'paypal' ? 0 : 1);
     expect(paypal.captures).toHaveLength(rail === 'paypal' ? 1 : 0);
-    expect((await fact()).payment.recorded_paid).toMatchObject({ source: rail === 'paypal' ? 'paypal' : 'stripe' });
+    expect((await payment()).recorded_paid).toMatchObject({ source: rail === 'paypal' ? 'paypal' : 'stripe' });
     expect(await r.env.DB.prepare('SELECT * FROM sessions').first()).toBeNull();
     expect(await r.env.DB.prepare('SELECT * FROM pay_repositories').first()).toBeNull();
     expect(await r.env.DB.prepare('SELECT state FROM pull_requests WHERE bounty_id = ?').bind(id).first()).toEqual({ state: 'open' });
@@ -259,7 +260,7 @@ describe('PF52: agent pay comments', () => {
     await open(rail);
     await r.env.DB.prepare(`UPDATE bounties SET source = 'posted', approval = NULL WHERE id = ?`).bind(id).run();
     await command();
-    expect((await fact()).payment).toMatchObject({ state: 'recorded', recorded_paid: { source: rail === 'paypal' ? 'paypal' : 'stripe' } });
+    expect(await payment()).toMatchObject({ state: 'recorded', recorded_paid: { source: rail === 'paypal' ? 'paypal' : 'stripe' } });
   });
   it.each(['wrong-author', 'unlinked', 'self', 'access', 'over-limit', 'not-ready', 'recorded', 'in-flight', 'wrong-amount', 'extra-prose'])(
     'does not charge: %s', async mode => {
@@ -282,7 +283,7 @@ describe('PF52: agent pay comments', () => {
     await command(); expect((await fact()).approval.state).toBe('pending'); expect(stripe.charged()).toHaveLength(0);
     issue.comments!.push({ login: OWNER.login, association: 'OWNER', body: `omakase approve ${id} $45`, created_at: at(2) });
     r.clock.at += 20 * MINUTE; await refreshUntilDone(r); await read();
-    expect((await fact()).approval.state).toBe('comment'); expect(stripe.charged()).toHaveLength(0);
+    expect((await fact()).approval.state).toBe('approved'); expect(stripe.charged()).toHaveLength(0);
     await command(); expect(stripe.charged()).toHaveLength(1);
   });
   it.each(['stripe', 'paypal'] as const)('keeps declined %s honest and does not replay the comment after setup changes', async rail => {
@@ -312,7 +313,10 @@ describe('PF52: agent pay comments', () => {
     await open();
     issue.comments!.push({ login: OWNER.login, association: 'OWNER', body: `omakase pay ${id} $45 to @solver`, created_at: at(21) });
     r.clock.at += MINUTE;
-    await Promise.all([read(), read()]);
+    const github = new GitHub(r.env, true);
+    await github.get(`/repos/${REPO}/issues/12`);
+    try { await Promise.all([readPaymentComments(r.env, github, id, REPO, 12), readPaymentComments(r.env, github, id, REPO, 12)]); }
+    finally { await github.settle(); }
     expect(stripe.charged()).toHaveLength(1);
   });
 });
