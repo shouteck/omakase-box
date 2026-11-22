@@ -1,14 +1,15 @@
+import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import './support.js';
-import { answerGitHub, checkMergedSolutions, loadRecord, postBounty } from '../../../packages/box-bounty/index.js';
+import { answerGitHub, checkMergedSolutions, loadRecord, postBounty, renderStatus, sharedRead, syncChains } from '../../../packages/box-bounty/index.js';
 import { endedNextStep } from '../../../packages/box-bounty/render.js';
 import { fixture } from './github-fixture.js';
-import { git, write } from './support.js';
+import { CLI_DIST, git, write } from './support.js';
 
 describe('BT68: a rewritten landing does not identify the whole rebased range', () => {
-  it.each(['partial', 'rollback'])('%s stays unknown for a two-commit rebase', kind => fixture(world => {
+  it.each(['partial', 'rollback', 'shared status', 'apply retry'])('%s stays unknown for a two-commit rebase', kind => fixture(world => {
     const { repo, id, bare } = world;
     postBounty(repo, id, 'github');
     world.pr('solver', { 'early.txt': 'early\n' });
@@ -35,11 +36,30 @@ describe('BT68: a rewritten landing does not identify the whole rebased range', 
     const record = loadRecord(repo, id);
     expect(record.stage).toBe('applied');
     if (kind === 'partial') expect(record.events.at(-1)?.partial ?? []).toEqual([]);
-    else {
+    else if (kind === 'rollback') {
       const next = endedNextStep(record);
       expect(next).toContain('rollback range unknown');
       expect(next).not.toContain('git revert');
       expect(existsSync(join(repo, 'owner.txt'))).toBe(true);
+    } else if (kind === 'shared status') {
+      const other = join(world.scratch, 'other');
+      git(repo, ['clone', '--no-checkout', bare, other]);
+      git(other, ['remote', 'set-url', 'origin', 'git@github.com:owner/project.git']);
+      syncChains(other, true);
+      expect(sharedRead(other, id)?.stage).toBe('applied');
+      const status = renderStatus(other, { id });
+      expect(status).toContain('rollback range unknown');
+      expect(status).not.toContain('git revert');
+    } else {
+      const args = [CLI_DIST, 'apply', id];
+      const text = spawnSync(process.execPath, args, { cwd: repo, encoding: 'utf8' });
+      expect(text.status, text.stdout + text.stderr).toBe(0);
+      expect(text.stdout).toContain('rollback range unknown');
+      expect(text.stdout).not.toContain('git revert');
+      expect(text.stdout).not.toContain('git push');
+      const json = spawnSync(process.execPath, [...args, '--json'], { cwd: repo, encoding: 'utf8' });
+      expect(json.status, json.stdout + json.stderr).toBe(0);
+      expect(JSON.parse(json.stdout)).toMatchObject({ outcome: 'applied', revert: null, notOnGitHub: null });
     }
   }));
 });

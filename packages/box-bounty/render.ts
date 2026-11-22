@@ -237,14 +237,21 @@ export const nextStep = (record: BountyRecord): string => {
   }
 };
 
+export const UNKNOWN_ROLLBACK = 'rollback range unknown; inspect the landed commits before choosing what to revert';
+
+export function appliedRevert(record: BountyRecord): string | null {
+  const applied = record.events.findLast(event => event.stage === 'applied');
+  return record.stage === 'applied' && applied?.command === 'apply' && applied.merge !== undefined
+    ? `git revert -m 1 ${applied.merge}`
+    : null;
+}
+
 // The one `next:` an ended bounty prints — the job to go back to, the
 // revert when its merge landed, and the ways to look again or start fresh.
 // Shared by the text status and the status --json document (BT19).
 export const endedNextStep = (record: BountyRecord): string => {
-  const applied = record.events.find(event => event.stage === 'applied');
-  const rollback = applied?.landing !== undefined
-    ? '; rollback range unknown for this rewritten landing; inspect the landed commits before choosing what to revert'
-    : `; to reverse the merge: git revert -m 1 ${applied?.merge ?? '<merge>'}`;
+  const revert = appliedRevert(record);
+  const rollback = revert === null ? `; ${UNKNOWN_ROLLBACK}` : `; to reverse the merge: ${revert}`;
   return `${record.adopted !== undefined ? 'the saved job stayed on the machine that posted it' : 'continue the saved job'}${record.stage === 'applied' ? rollback : ''}; inspect: omakase-box status ${record.id} --full; or create another with omakase-box create --task <file> --why "<one line>"`;
 };
 
@@ -674,9 +681,9 @@ export function renderHelp(): string {
     boardAddress() === '' ? 'three ways to pay a reward: by hand, one click, on merge.' : `three ways to pay a reward: by hand, one click, on merge. See ${boardAddress()}/how/`,
     '',
     'what ends a bounty: apply, or close — or a solution merged onto the bounty\'s branch with your own',
-    'Git, which the next bounty command recognises. A merge is one ordinary commit: git revert -m 1',
-    'reverses it whenever you like, no tool command needed. A solution that does not land never ends',
-    'the bounty — it is kept as a numbered attempt and the bounty stays open.',
+    'Git, which the next bounty command recognises. For a merge the tool made, status gives the Git',
+    'revert command. For other landings, inspect the commits before choosing what to revert.',
+    'A solution that does not land stays a numbered attempt, and the bounty stays open.',
     '',
     `needs: git ${GIT_LEAST} or later; GitHub bounties also need GitHub CLI gh ${GH_LEAST} or later, signed in, or a GitHub token in GH_TOKEN.`,
     'run inside a git checkout or pass --repo <path>; every refusal names itself and exits 3, usage errors exit 2.',
