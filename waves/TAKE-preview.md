@@ -36,3 +36,4 @@ Human and `box-bounty/take-preview@1` output; help, solver docs and skill agree.
 - Full verify and hosted run pending. Verify requires a clean committed candidate, so the implementation is committed before that local check.
 - Terminal behavior is exercised through the built CLI; no graphical UI changes or live GitHub mutations tested.
 - Existing ask-mode approval flow is preserved: preview names the allow command, while real take records the waiting request first.
+- First full verify failed: the known github-history WIP-author flake (isolated rerun: 23/23 passed), and the skill exceeded its existing 1200-character budget. Shortened the skill's setup sentence and put preview directly in the solving journey; the budget test is unchanged.
