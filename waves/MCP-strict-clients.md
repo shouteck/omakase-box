@@ -19,4 +19,4 @@ Streamable HTTP clients can discover that the board has no resources, resource t
 
 ## Changed expectations
 
-- `tests/platform/machine.test.ts`, “holds the transport rules”: use `unknown/method` instead of `resources/list` to exercise the existing `-32601` expectation. The SDK test now verifies `resources/list` succeeds.
+- tests/platform/machine.test.ts::holds the transport rules — use `unknown/method` instead of `resources/list` to exercise the existing `-32601` expectation. The SDK test now verifies `resources/list` succeeds.
