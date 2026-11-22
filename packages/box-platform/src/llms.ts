@@ -33,6 +33,8 @@ Never-ship matches the CLI's built-in paths and removal-only .boxignore patterns
 
 ## Optional
 
+Prepared branch posts use the same comment-based payment consent as imported issues: append on merge to the exact approval line to authorize a saved Stripe card or PayPal Vault without a repository switch. Plain approval does not authorize automatic payment. One eligible verified default-branch landing must follow approval, fit the saved method limit and pass the same exclusions and fresh payment-comment checks. Both omakase pay and omakase paid comments work on the posted issue; API/MCP details expose pay_on_merge, setup_urls and owed_now for these posts too.
+
 - [Poster payment setup](${origin}/api/payment-setup/poster): public read-only API; MCP get_poster_payment_setup. Returns Stripe card and PayPal Vault setup links, plus approval consent wording. Optional bounty query parameter. No credentials or state changes; a human signs in with GitHub before provider setup starts.
 - [Solver payment setup](${origin}/api/payment-setup/solver): public read-only API; MCP get_solver_payment_setup. Returns Stripe and PayPal payout-connect deep links for the solver's human to use once.
 - [Bounty payment facts](${origin}/bounties.json): get_bounty details expose pay_on_merge (configured, will_pay, provider, blockers, owner and solver setup links) and owed_now (amount, public methods, recording instructions). A verified default-branch landing after approval, authorized reward, one eligible non-self/repository-access payee and ready payout account are required. Stripe is preferred when both rails work; payment is not guaranteed.

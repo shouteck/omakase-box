@@ -63,7 +63,69 @@ beforeEach(async () => {
   const listed = await listIssue(r.env, OWNER, `https://github.com/${REPO}/issues/12`, 45, NOW, undefined, true);
   expect(listed).toHaveProperty('id'); id = (listed as { id: string }).id;
 });
-afterEach(async () => { await stripe.stop(); await paypal.stop(); await r.close(); });
+afterEach(async () => { vi.restoreAllMocks(); await stripe.stop(); await paypal.stop(); await r.close(); });
+
+describe('PF52: prepared agent branch payments', () => {
+  async function prepared(rail: 'stripe' | 'paypal' = 'stripe', limit = 50) {
+    await r.env.DB.prepare('DELETE FROM bounties WHERE id = ?').bind(id).run();
+    const commit = 'b'.repeat(40), tree = 'c'.repeat(40);
+    const response = await post('/api/agents/prepare', { repository: REPO, commit, title: 'Fix it', task: 'Fix it', reward: 45, paths: ['src/fix.ts'] });
+    expect(response.status).toBe(200);
+    const published = await response.json() as any;
+    id = published.id;
+    Object.assign(issue, { id, plain: false, rawBody: published.issue.body, title: published.issue.title, amount: 45, createdAt: at(0), comments: [] });
+    Object.assign(issue.pulls![0]!, { state: 'open', landed: false }); delete issue.pulls![0]!.merged_at;
+    const nativeFetch = globalThis.fetch;
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input, init) => {
+      const url = new URL(typeof input === 'string' || input instanceof URL ? input : input.url);
+      if (url.origin === r.env.GITHUB_API && url.pathname.startsWith(`/repos/${REPO}/commits/box-bounty`)) return Promise.resolve(Response.json({ sha: commit, commit: { tree: { sha: tree } } }));
+      if (url.origin === r.env.GITHUB_API && url.pathname === `/repos/${REPO}/git/trees/${tree}`) return Promise.resolve(Response.json({ truncated: false, tree: [{ path: 'src/fix.ts', type: 'blob', mode: '100644', sha: commit }] }));
+      return nativeFetch(input, init);
+    });
+    const imported = await post('/api/agents/import', { issue: `https://github.com/${REPO}/issues/12`, reward: 45 });
+    expect(imported.status).toBe(200);
+    expect(await imported.json()).toMatchObject({ listed: id, pending: true, approve_with: `omakase approve ${id} $45` });
+    if (rail === 'stripe') { await card(limit); await connectedStripe(); } else await vault(limit);
+    await refreshUntilDone(r); await settleCharges(r.env);
+    expect(stripe.charged()).toHaveLength(0); expect(paypal.captures).toHaveLength(0);
+    expect(await r.env.DB.prepare('SELECT source, approval, listed_by_id FROM bounties WHERE id = ?').bind(id).first()).toEqual({ source: 'posted', approval: 'pending', listed_by_id: null });
+  }
+  async function merge(minutes = 21) {
+    Object.assign(issue.pulls![0]!, { state: 'closed', merged_at: at(minutes), landed: true });
+    r.clock.at += 20 * MINUTE; await refreshUntilDone(r);
+  }
+  it.each(['stripe', 'paypal'] as const)('pays a prepared branch once through %s with comment consent and no switch, with setup/payment/owed facts', async rail => {
+    await prepared(rail); await approve(); await merge();
+    const facts = await fact();
+    expect(facts).toMatchObject({ source: 'posted', pays_on_merge: true, pay_on_merge: { will_pay: true, provider: rail === 'stripe' ? 'Stripe' : 'PayPal' }, owed_now: { amount: 45, payees: [{ login: SOLVER, methods: [] }] } });
+    expect(facts.pay_on_merge.setup_urls).toMatchObject({ stripe: expect.stringContaining(`/setup/stripe-card/?bounty=${id}`), paypal: expect.stringContaining('/setup/paypal-vault/') });
+    expect(facts.owed_now.record_payment.comment).toBe(`omakase paid ${id} $45 to @<solver-login>`);
+    expect(facts.pay_on_merge.pay_now.comment).toBe(`omakase pay ${id} $45 to @<solver-login>`);
+    expect(await r.env.DB.prepare('SELECT 1 FROM pay_repositories').first()).toBeNull();
+    await settleTwice();
+    expect(await state()).toMatchObject({ state: 'paid' });
+    expect(stripe.charged()).toHaveLength(rail === 'stripe' ? 1 : 0); expect(paypal.captures).toHaveLength(rail === 'paypal' ? 1 : 0);
+  });
+  it.each(['plain', 'over-limit', 'old-merge', 'manual-prior'])('preserves the %s guard for prepared branch posts', async mode => {
+    await prepared('stripe', mode === 'over-limit' ? 40 : 50);
+    await approve(mode === 'plain' ? '' : ' on merge');
+    if (mode === 'plain') await switched();
+    if (mode === 'manual-prior') issue.comments!.push({ login: OWNER.login, association: 'OWNER', body: `omakase paid ${id} $45 to @solver`, created_at: at(22) });
+    await merge(mode === 'old-merge' ? 0.5 : 21); await settleTwice();
+    expect(stripe.charged()).toHaveLength(0); expect(paypal.captures).toHaveLength(0); expect((await fact()).pay_on_merge.will_pay).toBe(false);
+  });
+  it.each(['pay', 'paid'])('processes the prepared poster’s %s comment without a session or repository switch', async command => {
+    await prepared(); await approve('');
+    if (command === 'paid') await merge();
+    issue.comments!.push({ login: OWNER.login, association: 'OWNER', body: `OMAKASE ${command.toUpperCase()} ${id.toUpperCase()} $45 TO @SOLVER`, created_at: new Date(r.clock.at + MINUTE).toISOString() });
+    for (let tick = 0; tick < 120 && (command === 'pay' ? (await state())?.state !== 'paid' : await r.env.DB.prepare('SELECT 1 FROM paid_clicks WHERE bounty_id = ?').bind(id).first() === null); tick += 1) {
+      r.clock.at += MINUTE; await worker.scheduled(undefined, r.env);
+    }
+    const payment = (await (await get(`/bounties/${id}.json`)).json() as any).bounty.payment;
+    expect(payment).toMatchObject({ state: 'recorded', recorded_paid: { source: command === 'pay' ? 'stripe' : 'board' } });
+    await settleTwice(); expect(stripe.charged()).toHaveLength(command === 'pay' ? 1 : 0);
+  });
+});
 
 describe('PF52: approved listed pay on merge', () => {
   it('pays a sessionless agent import once after on-merge approval and merge, never while pending', async () => {
@@ -187,6 +249,7 @@ describe('PF52: approved listed pay on merge', () => {
   it.each(['listed', 'posted'])('refuses the renamed poster by numeric id across %s payment paths', async source => {
     await card(45); await connectedStripe(); await approve();
     await r.env.DB.prepare('UPDATE bounties SET source = ? WHERE id = ?').bind(source, id).run();
+    if (source === 'posted') await r.env.DB.prepare('UPDATE bounties SET approval = NULL WHERE id = ?').bind(id).run();
     await r.env.DB.prepare('UPDATE pull_requests SET author_id = ? WHERE bounty_id = ?').bind(OWNER.github_id, id).run();
     await r.env.DB.prepare('UPDATE stripe_accounts SET github_id = ?').bind(OWNER.github_id).run();
     if (source === 'posted') {
@@ -209,7 +272,7 @@ describe('PF52: approved listed pay on merge', () => {
   ] as const)('caps posted %s limits: method %s, repository %s', async (rail, savedLimit, repositoryLimit, pays) => {
     if (rail === 'stripe') { await card(savedLimit); await connectedStripe(); } else await vault(savedLimit);
     await approve();
-    await r.env.DB.prepare(`UPDATE bounties SET source = 'posted' WHERE id = ?`).bind(id).run();
+    await r.env.DB.prepare(`UPDATE bounties SET source = 'posted', approval = NULL WHERE id = ?`).bind(id).run();
     await switched();
     await r.env.DB.prepare('UPDATE pay_repositories SET limit_per_bounty = ?').bind(repositoryLimit).run();
     expect((await fact()).pays_on_merge).toBe(pays);
@@ -337,7 +400,7 @@ describe('PF52: agent pay comments', () => {
   });
   it.each(['stripe', 'paypal'] as const)('credits the provider-paid %s solver, not another sole merged author', async rail => {
     await open(rail);
-    await r.env.DB.prepare(`UPDATE bounties SET source = 'posted' WHERE id = ?`).bind(id).run();
+    await r.env.DB.prepare(`UPDATE bounties SET source = 'posted', approval = NULL WHERE id = ?`).bind(id).run();
     await r.env.DB.prepare(`INSERT INTO pull_requests (bounty_id, number, author, author_id, state, opened_at, merged_at, association, on_default)
       VALUES (?, 42, 'other', 7002, 'merged', ?, ?, 'NONE', 1)`).bind(id, at(2), at(5)).run();
     await command();

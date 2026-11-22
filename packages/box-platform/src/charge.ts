@@ -98,12 +98,13 @@ const CHARGES_PER_RUN = 1; // Workers Free: a charge is five calls to Stripe, an
 /** Only merged, rewarded bounties whose poster's GitHub id has switched this repository on. */
 const APPROVED_AT = `CASE WHEN b.approval IS NULL THEN b.created_at ELSE b.approval_at END`;
 const APPROVED_AMOUNT = `CASE WHEN b.approval IS NULL THEN b.amount ELSE b.approved_amount END`;
-const CONSENT_AT = `CASE WHEN b.source = 'listed' THEN CASE WHEN b.merge_consent = 1 THEN ${APPROVED_AT} END ELSE r.on_at END`;
-const STRIPE_LIMIT = `CASE WHEN b.source = 'listed' THEN s.limit_per_bounty ELSE MIN(s.limit_per_bounty, COALESCE(r.limit_per_bounty, s.limit_per_bounty)) END`;
-const PAYPAL_LIMIT = `CASE WHEN b.source = 'listed' THEN v.limit_per_bounty ELSE MIN(v.limit_per_bounty, COALESCE(r.limit_per_bounty, v.limit_per_bounty)) END`;
+const COMMENTED = `(b.source = 'listed' OR b.approval IS NOT NULL)`;
+const CONSENT_AT = `CASE WHEN ${COMMENTED} THEN CASE WHEN b.merge_consent = 1 THEN ${APPROVED_AT} END ELSE r.on_at END`;
+const STRIPE_LIMIT = `CASE WHEN ${COMMENTED} THEN s.limit_per_bounty ELSE MIN(s.limit_per_bounty, COALESCE(r.limit_per_bounty, s.limit_per_bounty)) END`;
+const PAYPAL_LIMIT = `CASE WHEN ${COMMENTED} THEN v.limit_per_bounty ELSE MIN(v.limit_per_bounty, COALESCE(r.limit_per_bounty, v.limit_per_bounty)) END`;
 const REWARD_LIMIT = `COALESCE(${STRIPE_LIMIT}, ${PAYPAL_LIMIT})`;
-const APPROVED = `(COALESCE(b.approval, '') != 'pending' AND (b.source = 'posted' OR (${APPROVED_AT} IS NOT NULL AND b.amount = ${APPROVED_AMOUNT})))`;
-const DUE = `SELECT b.id, b.amount, b.poster, b.poster_id, b.source, ${STRIPE_LIMIT} AS stripe_limit, ${PAYPAL_LIMIT} AS paypal_limit, ${CONSENT_AT} AS on_at, s.customer_id, s.payment_method, v.payment_token
+const APPROVED = `(COALESCE(b.approval, '') != 'pending' AND (NOT ${COMMENTED} OR (${APPROVED_AT} IS NOT NULL AND b.amount = ${APPROVED_AMOUNT})))`;
+const DUE = `SELECT b.id, b.amount, b.poster, b.poster_id, ${COMMENTED} AS commented, ${STRIPE_LIMIT} AS stripe_limit, ${PAYPAL_LIMIT} AS paypal_limit, ${CONSENT_AT} AS on_at, s.customer_id, s.payment_method, v.payment_token
   FROM bounties b
   LEFT JOIN pay_repositories r ON r.github_id = b.poster_id AND r.repository = b.repository
   LEFT JOIN pay_settings s ON s.github_id = b.poster_id
@@ -111,12 +112,12 @@ const DUE = `SELECT b.id, b.amount, b.poster, b.poster_id, b.source, ${STRIPE_LI
   LEFT JOIN charges c ON c.bounty_id = b.id
   WHERE b.amount > 0 AND (s.payment_method IS NOT NULL OR v.payment_token IS NOT NULL) AND ${REWARD_LIMIT} IS NOT NULL AND ${CONSENT_AT} IS NOT NULL
     AND ${APPROVED}
-    AND (b.source != 'listed' OR ${paymentCommentsCurrent})
+    AND (NOT ${COMMENTED} OR ${paymentCommentsCurrent})
     AND EXISTS (SELECT 1 FROM pull_requests p WHERE p.bounty_id = b.id AND ${landedWhere('p')})
     AND (c.state IS NULL OR c.state NOT IN ('paid', 'refunded', 'disputed', 'owner-must-authenticate', 'owner-paying'))
     AND (c.at IS NULL OR c.at <= ?)
   ORDER BY c.at IS NOT NULL, c.at, b.id LIMIT ?`;
-type DueRow = { id: string; amount: number; poster: string; poster_id: number; source: string; stripe_limit: number | null; paypal_limit: number | null; on_at: string; customer_id: string | null; payment_method: string | null; payment_token: string | null };
+type DueRow = { id: string; amount: number; poster: string; poster_id: number; commented: number; stripe_limit: number | null; paypal_limit: number | null; on_at: string; customer_id: string | null; payment_method: string | null; payment_token: string | null };
 
 const LOOK_AGAIN_MS = 300000; // A state that may change is looked at this often, never faster.
 
@@ -150,9 +151,10 @@ export async function payeeFacts(env: Env, id: string, chosen?: string): Promise
   const db = env.DB;
   const bounty = await db.prepare(`SELECT source, poster, poster_id, approval, ${APPROVED_AT} AS approval_at FROM bounties b WHERE id = ?`).bind(id).first<{ source: string; poster: string; poster_id: number | null; approval: string | null; approval_at: string | null }>();
   const listed = chosen !== undefined && bounty?.source === 'listed';
+  const commented = bounty?.source === 'listed' || bounty?.approval != null;
   const all = (await db.prepare(`SELECT number, author, author_id, merged_at, association, on_default, landing_sha FROM pull_requests WHERE bounty_id = ? AND ${listed ? '1 = 1' : landedWhere()} ORDER BY number`).bind(id).all<Merged>()).results;
-  let eligible = bounty?.source === 'listed' ? all.filter(pull => bounty.approval !== 'pending' && bounty.approval_at !== null && Date.parse(pull.merged_at) > Date.parse(bounty.approval_at) && notCounted(pull, bounty.poster, bounty.poster_id) === null) : all;
-  if (bounty?.source === 'listed') {
+  let eligible = commented && bounty != null ? all.filter(pull => bounty.approval !== 'pending' && bounty.approval_at !== null && Date.parse(pull.merged_at) > Date.parse(bounty.approval_at) && notCounted(pull, bounty.poster, bounty.poster_id) === null) : all;
+  if (commented && bounty != null) {
     const unknown = await db.prepare(`SELECT 1 FROM pull_requests WHERE bounty_id = ? AND state = 'merged' AND merged_at > ?
       AND ((on_default IS NULL AND landing_sha IS NULL) OR landing_check IS NOT NULL OR head_sha IS NULL) LIMIT 1`).bind(id, bounty.approval_at).first();
     if (unknown !== null) eligible = [];
@@ -184,7 +186,7 @@ export async function settleCharges(env: Env): Promise<number> {
       amount: row.amount, poster: row.poster, poster_id: row.poster_id, landed, on_at: row.on_at,
       card: { payment_method: method, customer: row.customer_id ?? '', limit: limit ?? 0 },
       solver: usePayPal ? { account_id: paypalSolver!.payer_id, ready: true } : useStripe ? solver : null,
-      recorded, row: held, maximum: row.source === 'listed'
+      recorded, row: held, maximum: row.commented === 1
     }, now);
     // Looked at, and its turn passes: one bounty that cannot move must not hold up the others.
     if (decision.act === 'nothing') { await db.prepare(`INSERT INTO charges (bounty_id, state, at) VALUES (?, 'looked', ?) ON CONFLICT (bounty_id) DO UPDATE SET at = excluded.at`).bind(row.id, now).run(); continue; }
@@ -461,8 +463,8 @@ export async function payingIds(env: Env, ids: readonly string[]): Promise<Reado
     LEFT JOIN pay_settings s ON s.github_id = b.poster_id
     LEFT JOIN paypal_vault v ON v.github_id = b.poster_id
     WHERE b.id IN (SELECT value FROM json_each(?)) AND b.amount > 0 AND ${CONSENT_AT} IS NOT NULL AND ${APPROVED}
-      AND ((? AND s.payment_method IS NOT NULL AND (CASE WHEN b.source = 'listed' THEN b.amount <= ${STRIPE_LIMIT} ELSE b.amount = ${STRIPE_LIMIT} END))
-        OR (? AND v.payment_token IS NOT NULL AND (CASE WHEN b.source = 'listed' THEN b.amount <= ${PAYPAL_LIMIT} ELSE b.amount = ${PAYPAL_LIMIT} END)))`).bind(JSON.stringify(ids), stripeOn(env) ? 1 : 0, paypalOn(env) ? 1 : 0).all<{ id: string }>();
+      AND ((? AND s.payment_method IS NOT NULL AND (CASE WHEN ${COMMENTED} THEN b.amount <= ${STRIPE_LIMIT} ELSE b.amount = ${STRIPE_LIMIT} END))
+        OR (? AND v.payment_token IS NOT NULL AND (CASE WHEN ${COMMENTED} THEN b.amount <= ${PAYPAL_LIMIT} ELSE b.amount = ${PAYPAL_LIMIT} END)))`).bind(JSON.stringify(ids), stripeOn(env) ? 1 : 0, paypalOn(env) ? 1 : 0).all<{ id: string }>();
   return new Set(results.map(row => row.id));
 }
 
@@ -475,14 +477,15 @@ export async function mergePaymentFact(env: Env, id: string, origin: string) {
     }>();
   if (row === null) return null;
   const links = setupLinks(origin, id);
+  const commented = row.source === 'listed' || row.approval !== null;
   const reasons: string[] = [];
   const stripeSaved = stripeOn(env) && row.payment_method !== null;
   const paypalSaved = paypalOn(env) && row.payment_token !== null;
   if (row.approval === 'pending') reasons.push('The import is pending approval.');
   if (!stripeSaved && !paypalSaved) reasons.push('The poster has no saved payment method available on this board. A human can save Stripe or PayPal using the setup links.');
-  if (row.consent_at === null) reasons.push(row.source === 'listed' ? 'No pay-on-merge consent: approve with the exact on merge comment. A repository switch does not authorize imported bounties.' : 'No pay-on-merge consent: enable the repository before the merge.');
-  if (row.source === 'listed' && (row.approval_at === null || row.amount !== row.approved_amount)) reasons.push('The approval time or approved reward is not verified.');
-  if (row.source === 'listed' && row.comments_current !== 1) reasons.push('Payment comments have not been read after the verified landing.');
+  if (row.consent_at === null) reasons.push(commented ? 'No pay-on-merge consent: approve with the exact on merge comment. A repository switch does not authorize imported bounties or agent-prepared branch posts.' : 'No pay-on-merge consent: enable the repository before the merge.');
+  if (commented && (row.approval_at === null || row.amount !== row.approved_amount)) reasons.push('The approval time or approved reward is not verified.');
+  if (commented && row.comments_current !== 1) reasons.push('Payment comments have not been read after the verified landing.');
   const { landed, recorded } = await payeeFacts(env, id);
   const pulls = await env.DB.prepare(`SELECT p.author, MAX(COALESCE(s.ready, 0)) AS stripe, MAX(a.payer_id IS NOT NULL) AS paypal
     FROM pull_requests p LEFT JOIN stripe_accounts s ON s.github_id = p.author_id LEFT JOIN paypal_accounts a ON a.github_id = p.author_id
@@ -493,11 +496,11 @@ export async function mergePaymentFact(env: Env, id: string, origin: string) {
   const solver = landed.length === 1 ? solvers.find(p => p.login.toLowerCase() === landed[0]!.author.toLowerCase()) : undefined;
   const provider = solver?.stripe_ready && stripeSaved ? 'Stripe' : solver?.paypal_connected && paypalSaved ? 'PayPal' : null;
   const limit = provider === 'PayPal' ? row.paypal_limit : provider === 'Stripe' ? row.stripe_limit : Math.max(stripeSaved ? row.stripe_limit ?? 0 : 0, paypalSaved ? row.paypal_limit ?? 0 : 0);
-  if (limit === null || (row.source === 'listed' ? row.amount > limit : row.amount !== limit)) reasons.push('The reward is outside the authorized limit.');
+  if (limit === null || (commented ? row.amount > limit : row.amount !== limit)) reasons.push('The reward is outside the authorized limit.');
   if (recorded) reasons.push('A payment is already recorded.');
   if (landed.length === 0) reasons.push('No eligible merged pull request with a verified default-branch landing after approval.');
   if (landed.length > 1) reasons.push('More than one eligible solution landed; the owner decides.');
-  if (landed.length === 1 && row.consent_at !== null && (row.source === 'listed' ? Date.parse(landed[0]!.merged_at) <= Date.parse(row.consent_at) : Date.parse(landed[0]!.merged_at) < Date.parse(row.consent_at))) reasons.push('The merge predates pay-on-merge consent.');
+  if (landed.length === 1 && row.consent_at !== null && (commented ? Date.parse(landed[0]!.merged_at) <= Date.parse(row.consent_at) : Date.parse(landed[0]!.merged_at) < Date.parse(row.consent_at))) reasons.push('The merge predates pay-on-merge consent.');
   const poster = await env.DB.prepare('SELECT poster, poster_id FROM bounties WHERE id = ?').bind(id).first<{ poster: string; poster_id: number | null }>();
   if (landed.length === 1 && notCounted(landed[0]!, poster!.poster, poster!.poster_id) !== null) reasons.push('The author is the poster or has repository access, or GitHub did not state their association.');
   if (landed.length === 1 && provider === null) reasons.push('The solver is not ready to receive on an available pay-on-merge rail.');

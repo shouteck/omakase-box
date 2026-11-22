@@ -566,23 +566,25 @@ export async function refresh(env: Env): Promise<RefreshResult> {
           continue;
         }
         // Listed details and landing/payment reads take separate turns within the worker's small request budget.
-        if (row.source === 'listed') {
+        if (row.source === 'listed' || row.approval !== null) {
           if (row.step === 'events') {
             const key = `listed_turn_${row.id}`;
             const turn = Number((await getMetas(db, [key])).get(key) ?? 0);
             await setMeta(db, key, String((turn + 1) % 3));
             if (turn === 0) {
-              const linked = new Set((await db.prepare('SELECT number FROM pull_requests WHERE bounty_id = ?').bind(row.id).all<{ number: number }>()).results.map(p => p.number));
-              await readPullRequests(env, github, row.id, row.repository, linked, 1);
+              if (row.source === 'listed') {
+                const linked = new Set((await db.prepare('SELECT number FROM pull_requests WHERE bounty_id = ?').bind(row.id).all<{ number: number }>()).results.map(p => p.number));
+                await readPullRequests(env, github, row.id, row.repository, linked, 1);
+              } else await readEvents(env, github, row.id, row.repository);
             } else if (turn === 1) {
               await readFirstSight(env, github, row.id, row.repository);
-              await readOnDefault(env, github, row.id, row.repository, true);
+              await readOnDefault(env, github, row.id, row.repository, row.source === 'listed');
             } else await readPaymentComments(env, github, row.id, row.repository, row.issue_number);
             await mark(now);
             continue;
           }
           if (row.step === 'checks') { await readChecks(env, github, row.id, row.repository, row.number!, row.head!, now); continue; }
-          if (row.step === 'pulls') {
+          if (row.step === 'pulls' && row.source === 'listed') {
             if (!await readListedIssue(env, github, row.id, row.repository, row.issue_number, now)) continue;
             await readApproval(env, github, row.id, row.repository, row.issue_number);
             await readLinkedPulls(env, github, row.id, row.repository, row.issue_number, () => mark(now));
