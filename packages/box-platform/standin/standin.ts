@@ -2,6 +2,7 @@
 // fact seeded so a test can check the board against it. No real GitHub, no token.
 import { createServer, type IncomingMessage, type Server } from 'node:http';
 import { renderFormat } from '../../box-bounty/format.js';
+import type { ReplayReads } from './replay.js';
 
 export type StandinPull = {
   number: number; author: string; state: 'open' | 'closed'; merged_at?: string; created_at: string;
@@ -65,6 +66,8 @@ export class Standin {
   private nextOauth = 1;
   private server: Server | null = null;
 
+  constructor(private readonly replay?: ReplayReads) {}
+
   /** GitHub's sign-in: answers straight away as `signInAs`, as if the person said yes. */
   private oauth(request: IncomingMessage, url: URL, body: string): { status: number; json?: unknown; location?: string } | null {
     if (url.pathname === '/login/oauth/authorize') {
@@ -102,9 +105,12 @@ export class Standin {
       const perPage = Number(query.get('per_page') ?? 30);
       // Real search returns public and, for a token that can see them, private
       // issues alike; serving private ones here makes the board's own check count.
-      const open = this.issues.filter(issue => issue.plain !== true && (!q.includes('is:open') || (issue.state ?? 'open') === 'open'));
-      return { status: 200, json: { total_count: open.length, incomplete_results: false, items: open.slice((page - 1) * perPage, page * perPage).map(issue => this.issueJson(issue)) } };
+      const issues = [...this.issues.filter(issue => issue.plain !== true).map(issue => this.issueJson(issue)), ...(this.replay?.issues() ?? [])];
+      const open = issues.filter(issue => !q.includes('is:open') || issue.state === 'open');
+      return { status: 200, json: { total_count: open.length, incomplete_results: false, items: open.slice((page - 1) * perPage, page * perPage) } };
     }
+    const replay = this.replay?.answer(path, query);
+    if (replay !== undefined) return replay;
     let match = /^\/repos\/([^/]+\/[^/]+)$/.exec(path);
     if (match) {
       const repository = this.repositories.get(match[1]!);
@@ -179,7 +185,7 @@ export class Standin {
 
   private eventSha(issue: StandinIssue, index: number): string { return `${issue.id.slice(3)}${String(index).padStart(28, '0')}`; }
 
-  private issueJson(issue: StandinIssue): unknown {
+  private issueJson(issue: StandinIssue) {
     return {
       html_url: `https://github.com/${issue.repository}/issues/${issue.number}`,
       repository_url: `https://api.github.com/repos/${issue.repository}`,
