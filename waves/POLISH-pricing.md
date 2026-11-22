@@ -11,7 +11,7 @@ The 0.4.0 poster rehearsal (PR #41 RC) found friction 8 still open: `omakase-box
   - `help`: a full line after the reward rule — the basis, that only the merged solution is paid so solvers weigh reward against time and other attempts, that a new amount applies to later bounties only, and the limit as reward × bounties open at once;
   - `allow --help`: `--reward` points to `help`.
 - FIRST-FIVE-MINUTES.md and BOUNTY.md say the same.
-- The bundled skill (`SKILL_TEXT`) is left alone: it sends the agent to bare `omakase-box`, which now carries the basis, and PR #41 rewrites those lines (no conflict on merge).
+- The bundled skill (`SKILL_TEXT`) is left alone: it sends the agent to bare `omakase-box`, which now carries the basis, and PR #41 rewrites those lines. A trial merge onto PR #41 conflicts only in `SKILL_TEXT`'s description, the same conflict master already has with PR #41; these hunks merge cleanly.
 
 ## Changed expectations
 
