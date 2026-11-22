@@ -97,9 +97,9 @@ async function attempt(env: Env, bounty: string, amount: number, decision: Extra
 const CHARGES_PER_RUN = 1; // Workers Free: a charge is five calls to Stripe, and this runs every minute.
 
 /** Only merged, rewarded bounties whose poster's GitHub id has switched this repository on. */
-const APPROVED_AT = `CASE WHEN b.approval IS NULL THEN b.created_at ELSE b.approval_at END`;
-const APPROVED_AMOUNT = `CASE WHEN b.approval IS NULL THEN b.amount ELSE b.approved_amount END`;
-const COMMENTED = `(b.source = 'listed' OR b.approval IS NOT NULL)`;
+const COMMENTED = `(b.source = 'listed' OR b.approval IS NOT NULL OR b.merge_consent = 1)`;
+const APPROVED_AT = `CASE WHEN ${COMMENTED} THEN b.approval_at ELSE b.created_at END`;
+const APPROVED_AMOUNT = `CASE WHEN ${COMMENTED} THEN b.approved_amount ELSE b.amount END`;
 const CONSENT_AT = `CASE WHEN ${COMMENTED} THEN CASE WHEN b.merge_consent = 1 THEN ${APPROVED_AT} END ELSE r.on_at END`;
 const STRIPE_LIMIT = `CASE WHEN ${COMMENTED} THEN s.limit_per_bounty ELSE MIN(s.limit_per_bounty, COALESCE(r.limit_per_bounty, s.limit_per_bounty)) END`;
 const PAYPAL_LIMIT = `CASE WHEN ${COMMENTED} THEN v.limit_per_bounty ELSE MIN(v.limit_per_bounty, COALESCE(r.limit_per_bounty, v.limit_per_bounty)) END`;

@@ -385,6 +385,14 @@ describe('PF52: prepared agent branch payments', () => {
     await merge(mode === 'old-merge' ? 0.5 : 21); await settleTwice();
     expect(stripe.charged()).toHaveLength(0); expect(paypal.captures).toHaveLength(0); expect((await fact()).pay_on_merge.will_pay).toBe(false);
   });
+  it.each(['stripe', 'paypal'] as const)('Monid: explicit consent and its approved maximum apply to source posted even without an approval tag: %s', async rail => {
+    await prepared(rail, 50); await approve(); await merge();
+    await r.env.DB.prepare(`UPDATE bounties SET approval = NULL WHERE id = ?`).bind(id).run();
+    expect((await fact()).pay_on_merge).toMatchObject({ will_pay: true, provider: rail === 'stripe' ? 'Stripe' : 'PayPal', authorized_limit: 50 });
+    await settleTwice();
+    expect(stripe.charged()).toHaveLength(rail === 'stripe' ? 1 : 0); expect(paypal.captures).toHaveLength(rail === 'paypal' ? 1 : 0);
+    expect(await state()).toMatchObject({ state: 'paid' });
+  });
   it.each(['stripe', 'paypal'] as const)('a prepared branch via %s overrides the other default with both saved', async rail => {
     await prepared('stripe'); await vault(); await preference(rail === 'stripe' ? 'paypal' : 'stripe', true);
     await approve(` on merge via ${rail}`); await merge(); await settleTwice();
