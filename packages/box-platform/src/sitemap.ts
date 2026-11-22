@@ -1,4 +1,4 @@
-const PUBLIC_PAGES = ['/', '/agents/', '/delegate/', '/earn/', '/how/', '/board/', '/solver/', '/owner/', '/numbers/', '/privacy/', '/terms/'];
+const PUBLIC_PAGES = ['/', '/agents/', '/delegate/', '/earn/', '/how/', '/board/', '/numbers/', '/privacy/', '/terms/'];
 
 export function sitemapResponse(): Response {
   const urls = PUBLIC_PAGES.map(path => `<url><loc>https://omakasebox.dev${path}</loc></url>`).join('\n');

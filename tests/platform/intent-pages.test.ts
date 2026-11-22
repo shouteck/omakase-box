@@ -6,7 +6,7 @@ import { rig, type Rig } from './support.js';
 
 const ORIGIN = 'https://board.test';
 const OUT = fileURLToPath(new URL('../../packages/box-platform/out/', import.meta.url));
-const PUBLIC = ['/', '/agents/', '/delegate/', '/earn/', '/how/', '/board/', '/solver/', '/owner/', '/numbers/', '/privacy/', '/terms/'];
+const PUBLIC = ['/', '/agents/', '/delegate/', '/earn/', '/how/', '/board/', '/numbers/', '/privacy/', '/terms/'];
 
 describe('intent entry points', () => {
   let r: Rig;
