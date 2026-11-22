@@ -120,40 +120,58 @@ export const BUILTIN_RULES: readonly NeverShipRule[] = UNFOLDED_RULES.map(rule =
 // mistaken rule cannot look like it matched.
 export const OWNER_LIST_FILE = '.boxignore';
 
-const GLOB_CHAR = /[\\^$+.()|[\]{}]/g;
-function globToRegExp(pattern: string): RegExp {
-  let out = '';
+type GlobToken = { kind: 'literal'; value: string } | { kind: 'star' | 'globstar' | 'one' };
+function globTokens(pattern: string): GlobToken[] {
+  const tokens: GlobToken[] = [];
   for (let i = 0; i < pattern.length; i += 1) {
     const ch = pattern[i]!;
     if (ch === '*') {
-      if (pattern[i + 1] === '*') { out += '.*'; i += 1; }
-      else out += '[^/]*';
-    } else if (ch === '?') out += '[^/]';
-    else out += ch.replace(GLOB_CHAR, m => `\\${m}`);
+      if (pattern[i + 1] === '*') { tokens.push({ kind: 'globstar' }); i += 1; }
+      else tokens.push({ kind: 'star' });
+    } else if (ch === '?') tokens.push({ kind: 'one' });
+    else tokens.push({ kind: 'literal', value: ch });
   }
-  return new RegExp(`^${out}$`);
+  return tokens;
 }
 
-function compilePattern(raw: string, line: number): RegExp {
+function compilePattern(raw: string, line: number): (path: string) => boolean {
   // Fold the pattern side too: matches run against the path's skeleton, so an
   // un-folded pattern containing uppercase could never hit.
   const pattern = matchingSkeleton(raw.trim());
   if (pattern.startsWith('!')) throw new BountyRefused('invalid-boxignore', `${OWNER_LIST_FILE} line ${line}: '!' negation is not supported — never-ship rules can only remove files; next: remove the '!' negation on ${OWNER_LIST_FILE} line ${line}`);
-  if (pattern.endsWith('/')) {
-    const dir = pattern.slice(0, -1);
-    const anchored = dir.startsWith('/') || dir.includes('/');
-    const body = globToRegExp(dir.startsWith('/') ? dir.slice(1) : dir).source.slice(1, -1);
-    return new RegExp(anchored ? `^${body}/` : `(?:^|/)${body}/`);
-  }
-  if (pattern.startsWith('/')) return globToRegExp(pattern.slice(1));
-  if (pattern.includes('/')) return globToRegExp(pattern);
-  const body = globToRegExp(pattern).source.slice(1, -1);
-  return new RegExp(`(?:^|/)${body}(?:/|$)`);
+  const directory = pattern.endsWith('/');
+  const glob = directory ? pattern.slice(0, -1) : pattern;
+  const anchored = glob.startsWith('/') || glob.includes('/');
+  const tokens = globTokens(glob.startsWith('/') ? glob.slice(1) : glob);
+  return path => {
+    let previous = new Uint8Array(path.length + 1);
+    let current = new Uint8Array(path.length + 1);
+    previous[0] = 1;
+    if (!anchored) for (let i = 0; i < path.length; i += 1) if (path[i] === '/') previous[i + 1] = 1;
+    // One row per token, one column per UTF-16 path position; no search backtracking.
+    for (const token of tokens) {
+      current.fill(0);
+      const star = token.kind === 'star' || token.kind === 'globstar';
+      if (star) current[0] = previous[0]!;
+      for (let i = 0; i < path.length; i += 1) {
+        const ch = path[i]!;
+        const consumes = token.kind === 'literal' ? ch === token.value
+          : token.kind === 'globstar' ? ch !== '\n' && ch !== '\r' && ch !== '\u2028' && ch !== '\u2029' : ch !== '/';
+        current[i + 1] = star
+          ? Number(previous[i + 1] === 1 || (current[i] === 1 && consumes))
+          : Number(previous[i] === 1 && consumes);
+      }
+      [previous, current] = [current, previous];
+    }
+    if (!directory && previous[path.length] === 1) return true;
+    if (directory || !anchored) for (let i = 0; i < path.length; i += 1) if (previous[i] === 1 && path[i] === '/') return true;
+    return false;
+  };
 }
 
 export function parseOwnerList(text: string): { readonly rule: NeverShipRule; readonly patterns: readonly string[] } | null {
   const lines = text.split(/\r?\n/);
-  const compiled: RegExp[] = [];
+  const compiled: ((path: string) => boolean)[] = [];
   const patterns: string[] = [];
   lines.forEach((raw, index) => {
     const trimmed = raw.trim();
@@ -162,5 +180,5 @@ export function parseOwnerList(text: string): { readonly rule: NeverShipRule; re
     patterns.push(trimmed);
   });
   if (compiled.length === 0) return null;
-  return { rule: { name: 'owner-list', match: path => { const skeleton = matchingSkeleton(path); return compiled.some(regex => regex.test(skeleton)); } }, patterns };
+  return { rule: { name: 'owner-list', match: path => { const skeleton = matchingSkeleton(path); return compiled.some(match => match(skeleton)); } }, patterns };
 }

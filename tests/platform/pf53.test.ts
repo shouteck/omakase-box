@@ -122,6 +122,14 @@ describe('PF53 prepare', () => {
     expect((await prepare({ ...input(), boxignore: '!.env' })).status).toBe(400);
   });
 
+  it('finishes pathological owner globs through anonymous prepare in under 100 ms', async () => {
+    const start = performance.now();
+    const response = await prepare({ ...input(), paths: ['a'.repeat(60)], boxignore: '*a'.repeat(16) + 'b' });
+    expect(response.status).toBe(200);
+    expect(performance.now() - start).toBeLessThan(100);
+    expect(r.standin.requests).toEqual([]);
+  });
+
   it.each([
     null, [], {}, { ...input(), extra: true }, { ...input(), repository: 'private host/repo' }, { ...input(), commit: 'bad' },
     { ...input(), reward: 0 }, { ...input(), reward: 1.5 }, { ...input(), reward: 100001 }, { ...input(), reward: '50' },
