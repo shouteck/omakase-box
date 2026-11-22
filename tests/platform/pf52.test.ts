@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { handle } from '../../packages/box-platform/src/api.js';
+import worker from '../../packages/box-platform/src/worker.js';
 import { settleCharges } from '../../packages/box-platform/src/charge.js';
 import { listIssue } from '../../packages/box-platform/src/listing.js';
 import { refreshUntilDone, rig, MINUTE, NOW, type Rig } from './support.js';
@@ -62,6 +63,25 @@ beforeEach(async () => {
 afterEach(async () => { await stripe.stop(); await paypal.stop(); await r.close(); });
 
 describe('PF52: approved listed pay on merge', () => {
+  it.each(['head', 'squash'])('makes progress under the deployed worker’s two-GitHub-read cron budget: %s', async landing => {
+    await card(); await connectedStripe();
+    if (landing === 'squash') Object.assign(issue.pulls![0]!, { landed: false, merge_commit_sha: 'b'.repeat(40), landingLanded: true });
+    issue.comments = [{ login: OWNER.login, association: 'OWNER', body: `omakase approve ${id} $45 on merge`, created_at: at(1) }];
+    for (let tick = 0; tick < 120 && stripe.charged().length === 0; tick += 1) {
+      r.clock.at += MINUTE;
+      await worker.scheduled(undefined, r.env);
+    }
+    expect(stripe.charged()).toHaveLength(1); expect(await state()).toMatchObject({ state: 'paid' });
+  });
+  it('rehearses an imported open PR through approval, merge, verified landing and stand-in payment', async () => {
+    Object.assign(issue.pulls![0]!, { state: 'open', landed: false }); delete issue.pulls![0]!.merged_at;
+    await card(); await connectedStripe(); await approve(); await settleCharges(r.env);
+    expect(stripe.charged()).toHaveLength(0);
+    Object.assign(issue.pulls![0]!, { state: 'closed', merged_at: at(25), landed: true });
+    r.clock.at += 20 * MINUTE; await refreshUntilDone(r); await settleTwice();
+    expect(stripe.charged()).toHaveLength(1); expect(await state()).toMatchObject({ state: 'paid' });
+    console.log('Listed stand-in loop: imported -> approval on merge -> PR merged -> default verified -> paid once ($45); no real money moved.');
+  });
   it('charges once without a switch or board session after an on merge comment, including a sessionless import', async () => {
     await card(); await connectedStripe();
     await r.env.DB.prepare('UPDATE bounties SET listed_by_id = NULL, listed_by = NULL WHERE id = ?').bind(id).run();

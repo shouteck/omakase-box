@@ -180,12 +180,12 @@ async function search(env: Env, github: GitHub, now: number): Promise<{ readonly
 const COMPARES_PER_READ = 5;
 const ASSOCIATIONS = new Set(['COLLABORATOR', 'CONTRIBUTOR', 'FIRST_TIMER', 'FIRST_TIME_CONTRIBUTOR', 'MANNEQUIN', 'MEMBER', 'NONE', 'OWNER']);
 
-async function readPullRequests(env: Env, github: GitHub, id: string, repository: string, linked?: ReadonlySet<number>): Promise<void> {
+async function readPullRequests(env: Env, github: GitHub, id: string, repository: string, linked?: ReadonlySet<number>, limit = COMPARES_PER_READ): Promise<void> {
   const answer = linked === undefined
     ? await github.get(`/repos/${repository}/pulls?state=all&base=box-bounty/${id}&per_page=100`)
     : { status: 200, json: [] as unknown[] };
   if (linked !== undefined) {
-    const due = await env.DB.prepare('SELECT number FROM pull_requests WHERE bounty_id = ? ORDER BY head_sha IS NOT NULL, landing_checked_at, number LIMIT ?').bind(id, COMPARES_PER_READ).all<{ number: number }>();
+    const due = await env.DB.prepare('SELECT number FROM pull_requests WHERE bounty_id = ? ORDER BY head_sha IS NOT NULL, landing_checked_at, number LIMIT ?').bind(id, limit).all<{ number: number }>();
     for (const { number } of due.results) {
       if (!linked.has(number)) continue;
       const pull = await github.get(`/repos/${repository}/pulls/${number}`);
@@ -207,10 +207,15 @@ async function readPullRequests(env: Env, github: GitHub, id: string, repository
     // Draft and last activity (PF22): in the list already read, so an attempt in progress costs no request.
     const draft = typeof pull['draft'] === 'boolean' ? (pull['draft'] ? 1 : 0) : null;
     const updated = typeof pull['updated_at'] === 'string' && Number.isFinite(Date.parse(pull['updated_at'])) ? pull['updated_at'] : null;
-    writes.push(env.DB.prepare(`INSERT INTO pull_requests (bounty_id, number, author, author_id, state, opened_at, merged_at, association, head_sha, draft, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    const write = env.DB.prepare(`INSERT INTO pull_requests (bounty_id, number, author, author_id, state, opened_at, merged_at, association, head_sha, draft, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT (bounty_id, number) DO UPDATE SET author = excluded.author, author_id = excluded.author_id, state = excluded.state, merged_at = excluded.merged_at, on_default = CASE WHEN pull_requests.head_sha IS excluded.head_sha THEN pull_requests.on_default ELSE NULL END, head_on_default_at_sight = CASE WHEN pull_requests.head_sha IS excluded.head_sha THEN pull_requests.head_on_default_at_sight ELSE NULL END, landing_sha = CASE WHEN pull_requests.head_sha IS excluded.head_sha THEN pull_requests.landing_sha ELSE NULL END, landing_check = CASE WHEN pull_requests.head_sha IS excluded.head_sha THEN pull_requests.landing_check ELSE NULL END, head_sha = excluded.head_sha, draft = excluded.draft, updated_at = excluded.updated_at,
         association = CASE WHEN pull_requests.merged_at IS NOT NULL THEN pull_requests.association ELSE excluded.association END`)
-      .bind(id, pull['number'] as number, author, Number.isSafeInteger(authorId) ? authorId as number : null, merged !== null ? 'merged' : pull['state'] === 'closed' ? 'closed' : 'open', pull['created_at'], merged, association, head, draft, updated));
+      .bind(id, pull['number'] as number, author, Number.isSafeInteger(authorId) ? authorId as number : null, merged !== null ? 'merged' : pull['state'] === 'closed' ? 'closed' : 'open', pull['created_at'], merged, association, head, draft, updated);
+    if (linked === undefined) writes.push(write);
+    else {
+      await write.run();
+      await env.DB.prepare('UPDATE pull_requests SET landing_checked_at = ? WHERE bounty_id = ? AND number = ?').bind(env.now?.() ?? Date.now(), id, pull['number'] as number).run();
+    }
   }
   await runAll(env.DB, writes);
 }
@@ -401,7 +406,7 @@ async function readApproval(env: Env, github: GitHub, id: string, repository: st
  * PF32: a listed bounty's pull requests are the ones GitHub's timeline says reference its issue, from the same repository
  * (a closing keyword such as "Fixes #12", or any link). One read, in the turn the branch list read would take.
  */
-async function readLinkedPulls(env: Env, github: GitHub, id: string, repository: string, number: number): Promise<void> {
+async function readLinkedPulls(env: Env, github: GitHub, id: string, repository: string, number: number, stored: () => Promise<unknown>): Promise<void> {
   const answer = await github.get(`/repos/${repository}/issues/${number}/timeline?per_page=100`);
   if (answer.status !== 200 || !Array.isArray(answer.json)) return;
   const writes: Statement[] = [];
@@ -425,6 +430,7 @@ async function readLinkedPulls(env: Env, github: GitHub, id: string, repository:
       .bind(id, pull['number'] as number, author, Number.isSafeInteger(authorId) ? authorId as number : null, merged !== null ? 'merged' : pull['state'] === 'closed' ? 'closed' : 'open', pull['created_at'], merged, association, null, draft, updated));
   }
   await runAll(env.DB, writes);
+  await stored();
   if (seen.size > 0) {
     await readPullRequests(env, github, id, repository, seen);
     await readFirstSight(env, github, id, repository);
@@ -530,15 +536,27 @@ export async function refresh(env: Env): Promise<RefreshResult> {
         : db.prepare(`UPDATE bounties SET ${row.step === 'pulls' ? 'details_read_at' : 'events_read_at'} = ? WHERE id = ?`).bind(at, row.id).run();
       await mark(row.issue_state === 'open' ? stale : closedStale);
       try {
-        // PF32: a listed bounty has no block and no chain. Its pull step reads its issue as it is, then the pull requests
-        // linked to it; its events step has nothing to read.
+        // Listed details and landing/payment reads take separate turns within the worker's small request budget.
         if (row.source === 'listed') {
-          if (row.step === 'events') { await mark(now); continue; }
+          if (row.step === 'events') {
+            const key = `listed_turn_${row.id}`;
+            const turn = Number((await getMetas(db, [key])).get(key) ?? 0);
+            await setMeta(db, key, String((turn + 1) % 3));
+            if (turn === 0) {
+              const linked = new Set((await db.prepare('SELECT number FROM pull_requests WHERE bounty_id = ?').bind(row.id).all<{ number: number }>()).results.map(p => p.number));
+              await readPullRequests(env, github, row.id, row.repository, linked, 1);
+            } else if (turn === 1) {
+              await readFirstSight(env, github, row.id, row.repository);
+              await readOnDefault(env, github, row.id, row.repository, true);
+            } else await readPaymentComments(env, github, row.id, row.repository, row.issue_number);
+            await mark(now);
+            continue;
+          }
           if (row.step === 'checks') { await readChecks(env, github, row.id, row.repository, row.number!, row.head!, now); continue; }
           if (row.step === 'pulls') {
             if (!await readListedIssue(env, github, row.id, row.repository, row.issue_number, now)) continue;
             await readApproval(env, github, row.id, row.repository, row.issue_number);
-            await readLinkedPulls(env, github, row.id, row.repository, row.issue_number);
+            await readLinkedPulls(env, github, row.id, row.repository, row.issue_number, () => mark(now));
             await readPaymentComments(env, github, row.id, row.repository, row.issue_number);
             await mark(now);
             continue;
