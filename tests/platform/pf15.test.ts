@@ -79,7 +79,7 @@ describe('what a machine reads', () => {
     expect(paypal).not.toContain('pay on merge');
     const both = (await read(`/bounties/${ID}.json`, KEYS.both)).bounty.how_to_get_paid.join(' ');
     expect(both).toContain('Connecting Stripe or PayPal');
-    expect(both).toContain('pay on merge pays you with no click');
+    expect(both).toContain('pay on merge requires the owner to authorize Stripe charges in advance');
   });
 
   // PF18: a solver's agent learns who Stripe can pay before it does the work, on a board with Stripe, and nowhere else.

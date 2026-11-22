@@ -129,6 +129,78 @@ describe('an owner\'s counts', () => {
   });
 });
 
+describe('BT68: rewritten landings', () => {
+  let r: Rig;
+  const id = 'bt-bbbbbbbbbbbb';
+  const repository = 'example-tidepool/ledger-lite';
+  const landing = 'b'.repeat(40);
+  let reading: StandinPull;
+  const reread = async () => { r.clock.at += 15 * MINUTE; await refreshUntilDone(r); };
+  const payment = async () => (await (await handle(new Request(`https://board.test/bounties/${id}.json`), r.env)).json() as any).bounty.payment;
+  beforeEach(async () => {
+    r = await rig('standin-read');
+    r.standin.repositories.set(repository, { language: 'TypeScript', visibility: 'public' });
+    reading = { number: 51, author: SOLVER, state: 'closed', created_at: ago(9), merged_at: ago(6), landed: false, merged: true, merge_commit_sha: landing, landingLanded: true };
+    r.standin.issues.push({ id, repository, number: 1, title: 'Rewritten landing', task: 'Fix it.', poster: OWNER, amount: 50, createdAt: ago(10), pulls: [reading] });
+  });
+  afterEach(async () => { await r.close(); });
+  it.each(['squash', 'rebase'])('%s: a verified merge result on default owes the author', async () => {
+    await reread();
+    expect(await payment()).toMatchObject({ state: 'owed', owed: { to: SOLVER } });
+  });
+  it.each<[string, Partial<StandinPull>]>([
+    ['wrong base', { base: { ref: 'main', repo: { full_name: repository } } }],
+    ['wrong repository', { base: { ref: `box-bounty/${id}`, repo: { full_name: 'other/repo' } } }],
+    ['invalid result', { merge_commit_sha: 'not-a-sha' }],
+    ['off-default result', { landingLanded: false }],
+    ['unknown result', { landingLanded: null }],
+    ['moved head', { pullHead: 'c'.repeat(40) }],
+    ['not marked merged', { merged: false }],
+    ['open test merge', { state: 'open', merged: false }]
+  ])('%s never owes', async (_name, over) => {
+    Object.assign(reading, over);
+    if (reading.state === 'open') delete reading.merged_at;
+    await reread();
+    expect((await payment()).owed).toBeNull();
+  });
+  it.each([404, 500])('a failed PR read (%s) retries later', async status => {
+    reading.pullStatus = status;
+    await reread();
+    expect((await payment()).owed).toBeNull();
+    expect(r.standin.requests.filter(path => path.includes('/pulls/51'))).toHaveLength(1);
+    reading.pullStatus = 200;
+    await reread();
+    expect(await payment()).toMatchObject({ state: 'owed', owed: { to: SOLVER } });
+    expect(r.standin.requests.filter(path => path.includes('/pulls/51'))).toHaveLength(2);
+  });
+  it('accepts repository case differences', async () => {
+    reading.base = { ref: `box-bounty/${id}`, repo: { full_name: repository.toUpperCase() } };
+    await reread();
+    expect((await payment()).state).toBe('owed');
+  });
+  it('BT67: owner-work first sight stays excluded after squash', async () => {
+    Object.assign(reading, { state: 'open', merged_at: undefined, landed: true, merged: false });
+    await reread();
+    Object.assign(reading, { state: 'closed', merged_at: ago(1), landed: false, merged: true });
+    await reread();
+    expect((await payment()).owed).toBeNull();
+  });
+  it('ordinary merge still owes without merge-result metadata', async () => {
+    reading.landed = true;
+    delete reading.merge_commit_sha;
+    await reread();
+    expect((await payment()).state).toBe('owed');
+  });
+  it('a moved head clears verified landing evidence', async () => {
+    await reread();
+    expect((await payment()).state).toBe('owed');
+    reading.head = 'd'.repeat(40);
+    reading.merged = false;
+    await reread();
+    expect((await payment()).owed).toBeNull();
+  });
+});
+
 describe('on the real routes', () => {
   type Jar = Map<string, string>;
   let r: Rig;
@@ -268,12 +340,14 @@ describe('on the real routes', () => {
     expect(await facts(ID)).toMatchObject({ state: 'merged-not-on-default', owed: null, note: expect.stringContaining('has not confirmed') });
   });
 
-  it('many merged pull requests cannot spend a refresh: at most five compares a read', async () => {
+  it('many merged pull requests cannot spend a refresh: at most five landing-check reads', async () => {
     r.standin.issues.push(issue('bt-aaaaaaaaaaa7', 7, OWNER, Array.from({ length: 30 }, (_, i) => pull(100 + i, 'example-pike', { landed: false }))));
     await reread();
     const before = r.standin.requests.length;
     await reread();
-    expect(r.standin.requests.slice(before).filter(path => path.includes('/compare/')).length).toBe(5);
+    const reads = r.standin.requests.slice(before).filter(path => path.includes('/compare/') || /\/pulls\/\d+(?:\?|$)/.test(path));
+    expect(reads.length).toBeLessThanOrEqual(5);
+    expect(reads).toHaveLength(5);
   });
 
   it('keeps the association of the first read after the merge: a later invitation does not rewrite history', async () => {

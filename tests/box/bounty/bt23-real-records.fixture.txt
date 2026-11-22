@@ -45,7 +45,7 @@ ended: bt-22f3b1723a38 applied — scan finding recorded (job: job.txt)
   scan finding (recorded at create): docs/box-v4/delegation/FIRST-IMPLEMENTATION-BRIEF.md:114 (passworded-connection-string) — the flagged content changed — the bounty went out
   scan finding (recorded at create): scripts/verify.mjs:67 (passworded-connection-string) — the flagged content changed — the bounty went out
   scan finding (recorded at create): scripts/verify.mjs:107 (passworded-connection-string) — the flagged content changed — the bounty went out
-  next: continue the saved job; to reverse the merge: git revert -m 1 d493dbe35f0dbdb0724c73ff339e18ce39d56978; inspect: omakase-box status bt-22f3b1723a38 --full; or create another with omakase-box create --task <file> --why "<one line>"
+  next: continue the saved job; rollback range unknown; inspect the landed commits before choosing what to revert; inspect: omakase-box status bt-22f3b1723a38 --full; or create another with omakase-box create --task <file> --why "<one line>"
   history: {"stage":"drafted","at":"2026-10-13T12:48:51.187Z"}
   history: {"stage":"waiting","at":"2026-10-13T12:49:08.821Z"}
   history: {"stage":"posted","at":"2026-10-13T13:11:17.831Z","destination":"https://github.com/shouteck/omakase-box/issues/5"}

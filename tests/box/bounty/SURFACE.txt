@@ -350,6 +350,7 @@ field box-bounty/status@1 bounties[].events[].attempt null|number
 field box-bounty/status@1 bounties[].events[].by null
 field box-bounty/status@1 bounties[].events[].command null|string
 field box-bounty/status@1 bounties[].events[].destination null|string
+field box-bounty/status@1 bounties[].events[].landing null
 field box-bounty/status@1 bounties[].events[].merge null|string
 field box-bounty/status@1 bounties[].events[].partial null
 field box-bounty/status@1 bounties[].events[].reason null
@@ -401,6 +402,7 @@ field box-bounty/status@1 bounties[].github.state string
 field box-bounty/status@1 bounties[].github.unavailable null
 field box-bounty/status@1 bounties[].id string
 field box-bounty/status@1 bounties[].job null
+field box-bounty/status@1 bounties[].landingChecks array
 field box-bounty/status@1 bounties[].lastActivityAt null|string
 field box-bounty/status@1 bounties[].mergeNow null|object
 field box-bounty/status@1 bounties[].mergeNow.attempt number
