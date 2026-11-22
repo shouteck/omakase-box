@@ -13,6 +13,7 @@ import { FROM_LISTED, readBounty, stateOf } from './query.js';
 import { LOGIN } from './refresh.js';
 import { ownerOnlyAllowed, payeeOf, roleOf, same } from './visibility.js';
 import { SETUP_KINDS } from './payment-setup.js';
+import { paymentRail, requireRailChoice } from './payment-rail.js';
 
 const SESSION_COOKIE = '__Host-board_session';
 const STATE_COOKIE = '__Host-board_oauth_state';
@@ -131,7 +132,7 @@ async function finishSignIn(request: Request, env: Env, url: URL, now: number): 
   const token = randomToken();
   await db.prepare('INSERT INTO sessions (token_hash, github_id, login, expires_at) VALUES (?, ?, ?, ?)').bind(await hashOf(token), github_id, login, now + SESSION_DAYS * DAY_SECONDS * 1000).run();
   const setup = cookieOf(request, SETUP_COOKIE);
-  const next = setup !== null && /^\/setup\/(stripe-card|paypal-vault|stripe-payouts|paypal-payouts)\/(\?bounty=bt-[a-f\d]{12})?$/.test(setup) ? setup : '/me/';
+  const next = setup !== null && /^\/setup\/(stripe-card|paypal-vault|stripe-payouts|paypal-payouts|payment-rail)\/(\?bounty=bt-[a-f\d]{12})?$/.test(setup) ? setup : '/me/';
   return redirect(next, [clearState, cookie(SETUP_COOKIE, '', 0), cookie(SESSION_COOKIE, token, SESSION_DAYS * DAY_SECONDS)]);
 }
 
@@ -478,6 +479,7 @@ async function payOf(env: Env, viewer: Viewer) {
   const openIn = new Map(mine.map(entry => [entry.repository.toLowerCase(), entry.open]));
   return {
     ...(vault !== null ? { saved_paypal: true } : {}), ...(!stripeOn(env) ? { stripe_set_up: false } : {}),
+    rail_choice: await paymentRail(env, viewer.github_id),
     set_up: true, solver: { connected: solver !== null, ready: solver?.ready === 1 }, card: owner?.payment_method == null ? null : owner.card_label ?? 'a saved card', limit: owner?.limit_per_bounty ?? null,
     repositories: on.map(entry => ({ ...entry, open: openIn.get(entry.repository.toLowerCase()) ?? 0 })),
     yours: mine.map(entry => ({ repository: entry.repository, open: entry.open, reward: entry.reward }))
@@ -546,6 +548,7 @@ async function finishCard(request: Request, env: Env, viewer: Viewer): Promise<R
   const { brand, last4 } = method.card ?? {};
   const label = typeof brand === 'string' && typeof last4 === 'string' && /^[a-z_ ]{1,20}$/.test(brand) && /^\d{4}$/.test(last4) ? `${brand} ending ${last4}` : null;
   await env.DB.prepare('UPDATE pay_settings SET payment_method = ?, card_label = ? WHERE github_id = ?').bind(method.id, label, viewer.github_id).run();
+  await requireRailChoice(env, viewer.github_id);
   return json(200, { pay: await payOf(env, viewer) });
 }
 
@@ -635,6 +638,7 @@ export async function accountResponse(request: Request, env: Env, url: URL, now:
     if (viewer === null) return redirect('/auth/github');
     if (path === '/setup/stripe-return/' && stripeOn(env)) await readReady(env, viewer);
     const target = cookieOf(request, SETUP_RETURN_COOKIE);
+    if ((await paymentRail(env, viewer.github_id)).needs_choice) return redirect('/me/?choose-rail=1#pay');
     return redirect(target !== null && /^\/b\/bt-[a-f\d]{12}\/$/.test(target) ? target : '/me/', [cookie(SETUP_RETURN_COOKIE, '', 0)]);
   }
   const setup = /^\/setup\/([^/]+)\/$/.exec(path);
@@ -643,6 +647,7 @@ export async function accountResponse(request: Request, env: Env, url: URL, now:
     const bounty = /^bt-[a-f\d]{12}$/.test(url.searchParams.get('bounty') ?? '') ? url.searchParams.get('bounty') : null;
     const carry = (response: Response) => { if (bounty !== null) response.headers.append('set-cookie', cookie(SETUP_RETURN_COOKIE, `/b/${bounty}/`, 3600)); return response; };
     if (viewer === null) return carry(redirect('/auth/github', [cookie(SETUP_COOKIE, `${path}${bounty === null ? '' : `?bounty=${bounty}`}`, 600)]));
+    if (setup[1] === 'payment-rail') return carry(redirect('/me/#pay'));
     if (setup[1] === 'paypal-payouts') return carry(paypalOn(env) ? startPayPal(env, url) : redirect('/me/?paypal=not-set-up#paypal'));
     try {
       if (setup[1] === 'paypal-vault') {
@@ -704,6 +709,17 @@ export async function accountResponse(request: Request, env: Env, url: URL, now:
       if (error instanceof PayPalUnavailable) return json(503, { error: 'PayPal could not be reached. Next: try again.' });
       throw error;
     }
+  }
+  if (method === 'POST' && path === '/api/me/payment-rail') {
+    const refusal = writeRefusal(request, url, true); if (refusal !== null) return refusal;
+    const viewer = await viewerOf(request, env, now); if (viewer === null) return json(401, SIGN_IN);
+    const body = await readBody(request); if ('refused' in body) return body.refused;
+    const input = (body.value ?? {}) as { rail?: unknown; fallback?: unknown };
+    if ((input.rail !== 'stripe' && input.rail !== 'paypal') || typeof input.fallback !== 'boolean') return json(400, { error: 'Choose stripe or paypal and explicitly enable or disable fallback. Nothing changed.' });
+    const saved = await paymentRail(env, viewer.github_id);
+    if (!saved.saved_rails.includes(input.rail)) return json(409, { error: 'Save the selected payment method first. Nothing changed.' });
+    await env.DB.prepare('INSERT INTO payment_preferences (github_id, rail, fallback) VALUES (?, ?, ?) ON CONFLICT (github_id) DO UPDATE SET rail = excluded.rail, fallback = excluded.fallback').bind(viewer.github_id, input.rail, input.fallback ? 1 : 0).run();
+    return json(200, { pay: await payOf(env, viewer), next: cookieOf(request, SETUP_RETURN_COOKIE) === null ? null : '/setup/finish/' });
   }
   if (method === 'GET' && path === '/auth/github') return startSignIn(env, url);
   if (method === 'GET' && path === '/auth/github/callback') return finishSignIn(request, env, url, now);

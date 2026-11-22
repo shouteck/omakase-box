@@ -9,6 +9,7 @@ import { errorCode, errorWords, isCardError, stripe, StripeUnavailable, stripeOn
 import { paypalOn, PayPalUnavailable } from './paypal.js';
 import { chargeVault } from './paypal-pay.js';
 import { payComment, setupLinks } from './payment-setup.js';
+import { chooseRail, paymentRail, type Rail } from './payment-rail.js';
 
 /** Nothing can change these by trying again. Everything else is looked at again when its facts change. */
 const SETTLED: readonly ChargeState[] = ['paid', 'refunded', 'disputed'];
@@ -104,7 +105,7 @@ const STRIPE_LIMIT = `CASE WHEN ${COMMENTED} THEN s.limit_per_bounty ELSE MIN(s.
 const PAYPAL_LIMIT = `CASE WHEN ${COMMENTED} THEN v.limit_per_bounty ELSE MIN(v.limit_per_bounty, COALESCE(r.limit_per_bounty, v.limit_per_bounty)) END`;
 const REWARD_LIMIT = `COALESCE(${STRIPE_LIMIT}, ${PAYPAL_LIMIT})`;
 const APPROVED = `(COALESCE(b.approval, '') != 'pending' AND (NOT ${COMMENTED} OR (${APPROVED_AT} IS NOT NULL AND b.amount = ${APPROVED_AMOUNT})))`;
-const DUE = `SELECT b.id, b.amount, b.poster, b.poster_id, ${COMMENTED} AS commented, ${STRIPE_LIMIT} AS stripe_limit, ${PAYPAL_LIMIT} AS paypal_limit, ${CONSENT_AT} AS on_at, s.customer_id, s.payment_method, v.payment_token
+const DUE = `SELECT b.id, b.amount, b.poster, b.poster_id, b.merge_rail, ${COMMENTED} AS commented, ${STRIPE_LIMIT} AS stripe_limit, ${PAYPAL_LIMIT} AS paypal_limit, ${CONSENT_AT} AS on_at, s.customer_id, s.payment_method, v.payment_token
   FROM bounties b
   LEFT JOIN pay_repositories r ON r.github_id = b.poster_id AND r.repository = b.repository
   LEFT JOIN pay_settings s ON s.github_id = b.poster_id
@@ -112,12 +113,13 @@ const DUE = `SELECT b.id, b.amount, b.poster, b.poster_id, ${COMMENTED} AS comme
   LEFT JOIN charges c ON c.bounty_id = b.id
   WHERE b.amount > 0 AND (s.payment_method IS NOT NULL OR v.payment_token IS NOT NULL) AND ${REWARD_LIMIT} IS NOT NULL AND ${CONSENT_AT} IS NOT NULL
     AND ${APPROVED}
+    AND NOT EXISTS (SELECT 1 FROM meta WHERE key = 'merge_payment_off/' || b.id)
     AND (NOT ${COMMENTED} OR ${paymentCommentsCurrent})
     AND EXISTS (SELECT 1 FROM pull_requests p WHERE p.bounty_id = b.id AND ${landedWhere('p')})
     AND (c.state IS NULL OR c.state NOT IN ('paid', 'refunded', 'disputed', 'owner-must-authenticate', 'owner-paying', 'solver-not-ready'))
     AND (c.at IS NULL OR c.at <= ?)
   ORDER BY c.at IS NOT NULL, c.at, b.id LIMIT ?`;
-type DueRow = { id: string; amount: number; poster: string; poster_id: number; commented: number; stripe_limit: number | null; paypal_limit: number | null; on_at: string; customer_id: string | null; payment_method: string | null; payment_token: string | null };
+type DueRow = { id: string; amount: number; poster: string; poster_id: number; merge_rail: Rail | null; commented: number; stripe_limit: number | null; paypal_limit: number | null; on_at: string; customer_id: string | null; payment_method: string | null; payment_token: string | null };
 
 const LOOK_AGAIN_MS = 300000; // A state that may change is looked at this often, never faster.
 
@@ -176,12 +178,15 @@ export async function settleCharges(env: Env): Promise<number> {
   for (const row of due) {
     const { landed, solver, recorded } = await payeeFacts(env, row.id);
     const paypalSolver = landed.length === 1 && landed[0]!.author_id !== null ? await db.prepare('SELECT payer_id FROM paypal_accounts WHERE github_id = ?').bind(landed[0]!.author_id).first<{ payer_id: string }>() : null;
-    const useStripe = stripeOn(env) && row.payment_method !== null && solver?.ready === true;
-    const usePayPal = !useStripe && paypalOn(env) && row.payment_token !== null && paypalSolver !== null;
-    const method = usePayPal ? row.payment_token! : row.payment_method ?? row.payment_token!;
+    const rails = await paymentRail(env, row.poster_id, row.merge_rail, { stripe: solver?.ready === true, paypal: paypalSolver !== null });
+    if (rails.needs_choice) { await saveCharge(env, row.id, 'choose-rail', landed.length === 1 ? landed[0]! : null, null, null, null, row.amount, now); continue; }
+    const useStripe = rails.selected_rail === 'stripe' && stripeOn(env) && row.payment_method !== null && solver?.ready === true;
+    const usePayPal = rails.selected_rail === 'paypal' && paypalOn(env) && row.payment_token !== null && paypalSolver !== null;
+    const method = rails.selected_rail === 'paypal' ? row.payment_token : row.payment_method;
+    if (method === null || (rails.selected_rail === 'stripe' ? !stripeOn(env) : !paypalOn(env))) { await saveCharge(env, row.id, 'looked', null, null, null, null, row.amount, now); continue; }
     const held = await db.prepare('SELECT state, payment_method, provider, at FROM charges WHERE bounty_id = ?').bind(row.id).first<ChargeRow & { provider: string | null }>();
     if (held?.state === 'charging' && (held.payment_method !== method || (held.provider === 'paypal') !== usePayPal)) continue;
-    const limit = usePayPal || row.payment_method === null ? row.paypal_limit : row.stripe_limit;
+    const limit = rails.selected_rail === 'paypal' ? row.paypal_limit : row.stripe_limit;
     const decision = decide({
       amount: row.amount, poster: row.poster, poster_id: row.poster_id, landed, on_at: row.on_at,
       card: { payment_method: method, customer: row.customer_id ?? '', limit: limit ?? 0 },
@@ -223,15 +228,16 @@ async function chargeStripe(env: Env, id: string, amount: number, decision: Extr
   }
 }
 
-export async function paySaved(env: Env, id: string, posterId: number, amount: number, login: string): Promise<void> {
+export async function paySaved(env: Env, id: string, posterId: number, amount: number, login: string, via?: Rail): Promise<void> {
   const db = env.DB;
-  const bounty = await db.prepare(`SELECT b.poster, s.customer_id, s.payment_method, s.limit_per_bounty AS stripe_limit,
+  const bounty = await db.prepare(`SELECT b.poster, b.merge_rail, s.customer_id, s.payment_method, s.limit_per_bounty AS stripe_limit,
     v.payment_token, v.limit_per_bounty AS paypal_limit FROM bounties b
     LEFT JOIN pay_settings s ON s.github_id = b.poster_id LEFT JOIN paypal_vault v ON v.github_id = b.poster_id
     WHERE b.id = ? AND b.poster_id = ? AND b.amount = ? AND b.amount > 0 AND COALESCE(b.approval, '') != 'pending'`)
-    .bind(id, posterId, amount).first<{ poster: string; customer_id: string | null; payment_method: string | null; stripe_limit: number | null; payment_token: string | null; paypal_limit: number | null }>();
+    .bind(id, posterId, amount).first<{ poster: string; merge_rail: Rail | null; customer_id: string | null; payment_method: string | null; stripe_limit: number | null; payment_token: string | null; paypal_limit: number | null }>();
   if (bounty === null) return;
   const held = await db.prepare('SELECT state, payment_method, at FROM charges WHERE bounty_id = ?').bind(id).first<ChargeRow>();
+  if (held?.state === 'solver-not-ready') await db.prepare(`INSERT OR IGNORE INTO meta (key, value) VALUES (?, 'solver-not-ready')`).bind(`merge_payment_off/${id}`).run();
   if (held !== null && [...SETTLED, 'charging', 'owner-paying', 'owner-must-authenticate'].includes(held.state)) return;
   if (await db.prepare(`SELECT 1 FROM events WHERE bounty_id = ? AND type = 'paid' AND withdrawn = 0 UNION SELECT 1 FROM paid_clicks WHERE bounty_id = ? AND withdrawn = 0`).bind(id, id).first() !== null) return;
   const pull = await db.prepare(`SELECT number, author, author_id, merged_at, association, on_default, landing_sha FROM pull_requests
@@ -239,6 +245,7 @@ export async function paySaved(env: Env, id: string, posterId: number, amount: n
   if (pull === null) return;
   const now = env.now?.() ?? Date.now();
   const refuse = async (state: ChargeState) => {
+    if (state === 'solver-not-ready') await db.prepare(`INSERT OR IGNORE INTO meta (key, value) VALUES (?, 'solver-not-ready')`).bind(`merge_payment_off/${id}`).run();
     await db.prepare(`INSERT INTO charges (bounty_id, state, pull_number, solver, amount, at) VALUES (?, ?, ?, ?, ?, ?)
       ON CONFLICT (bounty_id) DO UPDATE SET state = excluded.state, pull_number = excluded.pull_number, solver = excluded.solver,
         amount = excluded.amount, provider = NULL, payment_method = NULL, payment_intent = NULL, account_id = NULL, at = excluded.at
@@ -248,8 +255,11 @@ export async function paySaved(env: Env, id: string, posterId: number, amount: n
   if (notCounted(pull, bounty.poster, posterId) !== null) { await refuse('not-counted'); return; }
   const solver = pull.author_id === null ? null : await db.prepare('SELECT account_id, ready FROM stripe_accounts WHERE github_id = ?').bind(pull.author_id).first<{ account_id: string; ready: number }>();
   const paypal = pull.author_id === null ? null : await db.prepare('SELECT payer_id FROM paypal_accounts WHERE github_id = ?').bind(pull.author_id).first<{ payer_id: string }>();
-  const useStripe = stripeOn(env) && bounty.payment_method !== null && solver?.ready === 1;
-  const usePayPal = !useStripe && paypalOn(env) && bounty.payment_token !== null && paypal !== null;
+  const rails = await paymentRail(env, posterId, via ?? bounty.merge_rail, { stripe: solver?.ready === 1, paypal: paypal !== null });
+  if (rails.needs_choice) { await refuse('choose-rail'); return; }
+  if (rails.selected_rail === null || !rails.saved_rails.includes(rails.selected_rail) || (rails.selected_rail === 'stripe' ? !stripeOn(env) : !paypalOn(env))) { await refuse('looked'); return; }
+  const useStripe = rails.selected_rail === 'stripe' && stripeOn(env) && bounty.payment_method !== null && solver?.ready === 1;
+  const usePayPal = rails.selected_rail === 'paypal' && paypalOn(env) && bounty.payment_token !== null && paypal !== null;
   if (!useStripe && !usePayPal) { await refuse(bounty.payment_method === null && bounty.payment_token === null ? 'looked' : 'solver-not-ready'); return; }
   const limit = usePayPal ? bounty.paypal_limit : bounty.stripe_limit;
   if (limit === null || amount > limit) { await refuse('refused-over-limit'); return; }
@@ -261,6 +271,7 @@ export async function paySaved(env: Env, id: string, posterId: number, amount: n
 }
 
 async function saveCharge(env: Env, id: string, state: ChargeState, pull: Merged | null, account: string | null, card: string | null, intent: string | null, amount: number, now: number): Promise<void> {
+  if (state === 'solver-not-ready') await env.DB.prepare(`INSERT OR IGNORE INTO meta (key, value) VALUES (?, 'solver-not-ready')`).bind(`merge_payment_off/${id}`).run();
   await env.DB.prepare(`INSERT INTO charges (bounty_id, state, pull_number, solver, account_id, amount, payment_method, payment_intent, at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT (bounty_id) DO UPDATE SET state = excluded.state, pull_number = excluded.pull_number, solver = excluded.solver, account_id = excluded.account_id, amount = excluded.amount, payment_method = excluded.payment_method, payment_intent = excluded.payment_intent, at = excluded.at, provider = NULL
     WHERE charges.state NOT IN ('paid', 'refunded', 'disputed') AND (? IS NOT NULL OR charges.state NOT IN ('charging', 'owner-paying', 'owner-must-authenticate'))`)
@@ -458,15 +469,27 @@ export async function readPayPage(env: Env, id: string, githubId: number, now: n
 /** Which of these bounties pay on merge right now: the poster's own switch, a saved card, and the reward approved for its repository. */
 export async function payingIds(env: Env, ids: readonly string[]): Promise<ReadonlySet<string>> {
   if ((!stripeOn(env) && !paypalOn(env)) || ids.length === 0) return new Set();
-  const { results } = await env.DB.prepare(`SELECT b.id FROM bounties b
+  const { results } = await env.DB.prepare(`SELECT b.id, b.amount, b.merge_rail, ${COMMENTED} AS commented, p.rail, COALESCE(p.fallback, 0) AS fallback,
+      s.payment_method IS NOT NULL AS stripe_saved, v.payment_token IS NOT NULL AS paypal_saved, ${STRIPE_LIMIT} AS stripe_limit, ${PAYPAL_LIMIT} AS paypal_limit FROM bounties b
     LEFT JOIN pay_repositories r ON r.github_id = b.poster_id AND r.repository = b.repository
     LEFT JOIN pay_settings s ON s.github_id = b.poster_id
     LEFT JOIN paypal_vault v ON v.github_id = b.poster_id
+    LEFT JOIN payment_preferences p ON p.github_id = b.poster_id
     WHERE b.id IN (SELECT value FROM json_each(?)) AND b.amount > 0 AND ${CONSENT_AT} IS NOT NULL AND ${APPROVED}
+      AND NOT EXISTS (SELECT 1 FROM meta WHERE key = 'merge_payment_off/' || b.id)
       AND NOT EXISTS (SELECT 1 FROM charges WHERE bounty_id = b.id AND state = 'solver-not-ready')
       AND ((? AND s.payment_method IS NOT NULL AND (CASE WHEN ${COMMENTED} THEN b.amount <= ${STRIPE_LIMIT} ELSE b.amount = ${STRIPE_LIMIT} END))
-        OR (? AND v.payment_token IS NOT NULL AND (CASE WHEN ${COMMENTED} THEN b.amount <= ${PAYPAL_LIMIT} ELSE b.amount = ${PAYPAL_LIMIT} END)))`).bind(JSON.stringify(ids), stripeOn(env) ? 1 : 0, paypalOn(env) ? 1 : 0).all<{ id: string }>();
-  return new Set(results.map(row => row.id));
+        OR (? AND v.payment_token IS NOT NULL AND (CASE WHEN ${COMMENTED} THEN b.amount <= ${PAYPAL_LIMIT} ELSE b.amount = ${PAYPAL_LIMIT} END)))`).bind(JSON.stringify(ids), stripeOn(env) ? 1 : 0, paypalOn(env) ? 1 : 0).all<{
+          id: string; amount: number; commented: number; merge_rail: Rail | null; rail: Rail | null; fallback: number; stripe_saved: number; paypal_saved: number; stripe_limit: number | null; paypal_limit: number | null;
+        }>();
+  return new Set(results.filter(row => {
+    const choice = chooseRail({ stripe: row.stripe_saved === 1, paypal: row.paypal_saved === 1, rail: row.rail, fallback: row.fallback === 1, override: row.merge_rail });
+    const fits = (rail: Rail) => {
+      const limit = rail === 'stripe' ? row.stripe_limit : row.paypal_limit;
+      return choice.saved_rails.includes(rail) && (rail === 'stripe' ? stripeOn(env) : paypalOn(env)) && limit !== null && (row.commented === 1 ? row.amount <= limit : row.amount === limit);
+    };
+    return choice.selected_rail !== null && (fits(choice.selected_rail) || (choice.fallback && fits(choice.selected_rail === 'stripe' ? 'paypal' : 'stripe')));
+  }).map(row => row.id));
 }
 
 export async function mergePaymentFact(env: Env, id: string, origin: string) {
@@ -488,15 +511,26 @@ export async function mergePaymentFact(env: Env, id: string, origin: string) {
   if (commented && (row.approval_at === null || row.amount !== row.approved_amount)) reasons.push('The approval time or approved reward is not verified.');
   if (commented && row.comments_current !== 1) reasons.push('Payment comments have not been read after the verified landing.');
   const { landed, recorded } = await payeeFacts(env, id);
+  const owner = await env.DB.prepare('SELECT poster_id, merge_rail FROM bounties WHERE id = ?').bind(id).first<{ poster_id: number | null; merge_rail: Rail | null }>();
+  const baseChoice = await paymentRail(env, owner!.poster_id, owner!.merge_rail);
   const pulls = await env.DB.prepare(`SELECT p.author, MAX(COALESCE(s.ready, 0)) AS stripe, MAX(a.payer_id IS NOT NULL) AS paypal
     FROM pull_requests p LEFT JOIN stripe_accounts s ON s.github_id = p.author_id LEFT JOIN paypal_accounts a ON a.github_id = p.author_id
     WHERE p.bounty_id = ? AND p.state IN ('open', 'merged') GROUP BY p.author ORDER BY p.author LIMIT 50`).bind(id).all<{ author: string; stripe: number; paypal: number }>();
-  const solvers = pulls.results.map(p => ({ login: p.author, stripe_ready: p.stripe === 1, paypal_connected: p.paypal === 1,
-    can_receive: (stripeSaved && p.stripe === 1) || (paypalSaved && p.paypal === 1),
-    ...((p.stripe !== 1 && p.paypal !== 1) ? { reason: 'No ready Stripe payout account or connected PayPal account.', setup_urls: { stripe: links.stripe_payouts, paypal: links.paypal_payouts } } : {}) }));
+  const solvers = pulls.results.map(p => {
+    const choice = chooseRail({ stripe: baseChoice.saved_rails.includes('stripe'), paypal: baseChoice.saved_rails.includes('paypal'), rail: baseChoice.account_rail, fallback: baseChoice.fallback, override: baseChoice.override }, { stripe: p.stripe === 1, paypal: p.paypal === 1 });
+    const can_receive = choice.selected_rail === 'stripe' ? stripeSaved && p.stripe === 1 : choice.selected_rail === 'paypal' && paypalSaved && p.paypal === 1;
+    const missingPayout = (p.stripe !== 1 && p.paypal !== 1) || (choice.selected_rail === 'stripe' && p.stripe !== 1) || (choice.selected_rail === 'paypal' && p.paypal !== 1);
+    return { login: p.author, stripe_ready: p.stripe === 1, paypal_connected: p.paypal === 1, can_receive,
+      ...(missingPayout ? { reason: p.stripe !== 1 && p.paypal !== 1 ? 'No ready Stripe payout account or connected PayPal account.' : 'No usable payout account on the selected payment rail.', setup_urls: { stripe: links.stripe_payouts, paypal: links.paypal_payouts } } : {}) };
+  });
   const solver = landed.length === 1 ? solvers.find(p => p.login.toLowerCase() === landed[0]!.author.toLowerCase()) : undefined;
-  const provider = solver?.stripe_ready && stripeSaved ? 'Stripe' : solver?.paypal_connected && paypalSaved ? 'PayPal' : null;
-  const limit = provider === 'PayPal' ? row.paypal_limit : provider === 'Stripe' ? row.stripe_limit : Math.max(stripeSaved ? row.stripe_limit ?? 0 : 0, paypalSaved ? row.paypal_limit ?? 0 : 0);
+  const rails = await paymentRail(env, owner!.poster_id, owner!.merge_rail, { stripe: solver?.stripe_ready === true, paypal: solver?.paypal_connected === true });
+  if (rails.needs_choice) reasons.push(`${CHARGE_WORDS['choose-rail']} ${links.payment_rail}`);
+  const provider = rails.selected_rail === 'stripe' && solver?.stripe_ready && stripeSaved ? 'Stripe' : rails.selected_rail === 'paypal' && solver?.paypal_connected && paypalSaved ? 'PayPal' : null;
+  if (rails.selected_rail !== null && !rails.saved_rails.includes(rails.selected_rail)) reasons.push('The selected payment rail has no saved method. Use its setup link.');
+  const selectedAvailable = rails.selected_rail !== null && rails.saved_rails.includes(rails.selected_rail) && (rails.selected_rail === 'stripe' ? stripeOn(env) : paypalOn(env));
+  if (rails.selected_rail !== null && !(rails.selected_rail === 'stripe' ? stripeOn(env) : paypalOn(env))) reasons.push('The selected payment provider is not set up on this board.');
+  const limit = rails.selected_rail === 'paypal' ? row.paypal_limit : rails.selected_rail === 'stripe' ? row.stripe_limit : 0;
   if (limit === null || (commented ? row.amount > limit : row.amount !== limit)) reasons.push('The reward is outside the authorized limit.');
   if (recorded) reasons.push('A payment is already recorded.');
   if (landed.length === 0) reasons.push('No eligible merged pull request with a verified default-branch landing after approval.');
@@ -504,12 +538,13 @@ export async function mergePaymentFact(env: Env, id: string, origin: string) {
   if (landed.length === 1 && row.consent_at !== null && (commented ? Date.parse(landed[0]!.merged_at) <= Date.parse(row.consent_at) : Date.parse(landed[0]!.merged_at) < Date.parse(row.consent_at))) reasons.push('The merge predates pay-on-merge consent.');
   const poster = await env.DB.prepare('SELECT poster, poster_id FROM bounties WHERE id = ?').bind(id).first<{ poster: string; poster_id: number | null }>();
   if (landed.length === 1 && notCounted(landed[0]!, poster!.poster, poster!.poster_id) !== null) reasons.push('The author is the poster or has repository access, or GitHub did not state their association.');
-  if (landed.length === 1 && provider === null) reasons.push('The solver is not ready to receive on an available pay-on-merge rail.');
+  if (landed.length === 1 && selectedAvailable && provider === null) reasons.push('The solver is not ready to receive on an available pay-on-merge rail.');
   const charge = await chargeOf(env, id);
+  if (charge?.state !== 'solver-not-ready' && await env.DB.prepare('SELECT 1 FROM meta WHERE key = ?').bind(`merge_payment_off/${id}`).first() !== null) reasons.push(CHARGE_WORDS['solver-not-ready']);
   if (charge !== null && charge.state !== 'owner-decides' && charge.state !== 'refused-over-limit') reasons.push((row.charge_provider === 'paypal' ? PAYPAL_WORDS[charge.state] : undefined) ?? CHARGE_WORDS[charge.state]);
-  return { configured: (await payingIds(env, [id])).has(id), will_pay: reasons.length === 0, provider, reasons,
+  return { configured: (await payingIds(env, [id])).has(id), will_pay: reasons.length === 0, provider, reasons, rail_choice: { ...rails, choice_url: links.payment_rail },
     setup_urls: { stripe: links.stripe_card, paypal: links.paypal_vault }, solvers,
-    pay_now: { comment: payComment(id, row.amount), note: 'The poster can post this exact case-insensitive comment on the bounty issue to pay a linked PR author without a merge, repository switch or board session. The approved reward must fit the saved method’s default limit, with no self/repository-access payee or prior payment/record/in-flight charge. Stripe is preferred when ready, else PayPal Vault. A refused comment is not retried; after fixing setup, post a new comment. An in-flight charge must be resolved first.' },
+    pay_now: { comment: payComment(id, row.amount), note: 'The poster can post this exact case-insensitive comment on the bounty issue to pay a linked PR author without a merge, repository switch or board session. The approved reward must fit the saved method’s default limit, with no self/repository-access payee or prior payment/record/in-flight charge. The poster chooses a default rail when both are saved. Fallback is off unless explicitly enabled; a via stripe or via paypal override never falls back. A refused comment is not retried; after fixing setup, post a new comment. An in-flight charge must be resolved first.' },
     fallback: 'The owner may choose a linked author and pay through Checkout or by hand.' };
 }
 

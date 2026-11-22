@@ -10,6 +10,7 @@ import Dialog from './Dialog.jsx';
 import { LABELS } from './Methods.jsx';
 import { PayOnMergeOwner, StripeRow } from './PayOnMerge.jsx';
 import PayPalVault from './PayPalVault.jsx';
+import PaymentRail from './PaymentRail.jsx';
 import { StripeCountries } from './PayWays.jsx';
 import { Badge, Button, Empty, fmtDate, Primary, Row, Rows, Table, Title } from './ui.jsx';
 
@@ -154,6 +155,7 @@ function Owner({ me, setMe }) {
       <Bounties bounties={me.bounties} />
       <Heading id="pay" note="Posted bounties: Save a card and authorize the repository before Stripe pays rewards on merge. Listed approvals can instead authorize on merge within the saved-method limit; eligible merges can also use saved PayPal.">Pay on merge</Heading>
       <PayOnMergeOwner pay={me.pay} setPay={pay => setMe(current => ({ ...current, pay }))} />
+      <PaymentRail choice={me.pay.rail_choice} onChange={pay => setMe(current => ({ ...current, pay }))} />
       <PayPalVault onChange={pay => setMe(current => ({ ...current, pay }))} />
     </>
   );
@@ -259,6 +261,7 @@ function AccountMenu({ login, signOut }) {
 
 /** Address, waiting work, saved choice, then a poster-only account; otherwise Solver. */
 function firstRole(me) {
+  if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('card')) return 'owner';
   const hash = typeof window === 'undefined' ? '' : window.location.hash;
   if (OWNER_HASHES.includes(hash)) return 'owner';
   if (SOLVER_HASHES.includes(hash)) return 'solver';

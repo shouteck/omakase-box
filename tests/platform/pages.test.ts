@@ -822,6 +822,45 @@ describe('the pages', () => {
       await close();
     });
 
+    it.each(['stripe-first', 'paypal-first'])('PF52: saving the second method prompts an unanswered default question and saves only the answer: %s', async order => {
+      const { page, close } = await fresh();
+      const pending = { saved_rails: ['stripe', 'paypal'], chosen_rail: null, selected_rail: null, account_rail: null, fallback: false, override: null, needs_choice: true };
+      let current = pay(order === 'stripe-first' ? { card: 'visa ending 3155' } : { saved_paypal: true });
+      let saved: { label: string; limit_per_bounty: number } | null = order === 'stripe-first' ? null : { label: 'Saved PayPal', limit_per_bounty: 50 };
+      const sent: unknown[] = [];
+      const both = () => { saved = { label: 'Saved PayPal', limit_per_bounty: 50 }; current = pay({ card: 'visa ending 3155', saved_paypal: true, rail_choice: pending }); };
+      await page.route('**/api/me', route => route.fulfill({ json: { ...base, login: 'example-mara', pay: current } }));
+      await page.route('**/api/me/card/saved', route => { both(); return route.fulfill({ json: { pay: current } }); });
+      await page.route('**/api/me/paypal/vault**', route => {
+        if (route.request().method() === 'POST') { both(); return route.fulfill({ json: { saved: true } }); }
+        return route.fulfill({ json: { set_up: true, saved, pay: current } });
+      });
+      await page.route('**/setup/finish/', route => route.fulfill({ status: 302, headers: { location: '/me/?choose-rail=1#pay' } }));
+      await page.route('**/api/me/payment-rail', route => {
+        const body = route.request().postDataJSON(); sent.push(body);
+        current = pay({ card: 'visa ending 3155', saved_paypal: true, rail_choice: { ...pending, account_rail: body.rail, chosen_rail: body.rail, selected_rail: body.rail, fallback: body.fallback, needs_choice: false } });
+        return route.fulfill({ json: { pay: current } });
+      });
+      await visit(page, order === 'stripe-first' ? '/me/?approval_token=SETUP1#pay' : '/me/?card=cs_second#pay');
+      if (order === 'stripe-first') {
+        await page.locator('#paypal-vault').getByLabel('Maximum USD per bounty', { exact: true }).fill('50');
+        await page.getByRole('button', { name: 'Save PayPal and limit', exact: true }).click();
+      }
+      const choice = page.locator('#payment-rail');
+      await expect.poll(() => choice.innerText()).toContain('Which one is the default for pay on merge?');
+      expect(await choice.locator('input[type=radio]:checked').count()).toBe(0);
+      expect(await choice.locator('input[type=checkbox]').isChecked()).toBe(false);
+      expect(sent).toEqual([]);
+      const rail = order === 'stripe-first' ? 'paypal' : 'stripe';
+      await choice.getByRole('radio', { name: rail === 'stripe' ? 'Stripe card' : 'PayPal', exact: true }).check();
+      if (order === 'paypal-first') await choice.getByRole('checkbox').check();
+      await choice.getByRole('button', { name: 'Save default payment rail', exact: true }).click();
+      await expect.poll(() => choice.innerText()).toContain('Default payment rail saved.');
+      expect(sent).toEqual([{ rail, fallback: order === 'paypal-first' }]);
+      await page.screenshot({ path: join(SHOTS, `pf52-default-${order}.png`), fullPage: true });
+      await close();
+    });
+
     it('PF52: a PayPal payer-action window offers the existing PayPal link, not Stripe authentication', async () => {
       const { page, close } = await open({ ...base, login: 'example-mara', pay: pay() }, '/me/#pay');
       const original = await (await fetch(`${board.url}/api/b/${STATE_IDS.owed}/payment`)).json() as any;

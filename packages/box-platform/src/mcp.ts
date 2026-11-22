@@ -4,7 +4,7 @@
 import { bountyDetail, findBounties, LIMIT_DEFAULT, LIMIT_MAX, NOT_ON_BOARD } from './feed.js';
 import type { Env } from './github.js';
 import { numbersCached } from './numbers.js';
-import { paymentSetup } from './payment-setup.js';
+import { paymentSetupFacts } from './payment-setup.js';
 
 const VERSIONS = ['2025-11-25', '2025-06-18', '2025-03-26'];
 const BODY_BYTES_MAX = 64 * 1024;
@@ -15,7 +15,7 @@ const ANNOTATIONS = { readOnlyHint: true, openWorldHint: false, idempotentHint: 
 export const TOOLS = [
   ...(['poster', 'solver'] as const).map(role => ({
     name: `get_${role}_payment_setup`, title: `${role} payment setup links`,
-    description: `Read public GitHub ${role} payment setup links. No authentication or state changes. A human opens a link, signs in with GitHub and completes provider setup once.`,
+    description: `Read public GitHub ${role} payment setup links. No authentication or state changes. A human opens a link, signs in with GitHub and completes provider setup once. Poster facts include the saved rails, chosen rail, explicit fallback and choice link when a bounty is supplied; via stripe/paypal commands override the default and never fall back. Saving a second method requires answering the default-rail question.`,
     inputSchema: { type: 'object', properties: { bounty: { type: 'string', pattern: '^bt-[0-9a-f]{12}$' } }, additionalProperties: false }, annotations: ANNOTATIONS
   })),
   {
@@ -78,7 +78,7 @@ async function callTool(env: Env, now: number, origin: string, name: unknown, ar
   const input: Record<string, unknown> = typeof args === 'object' && args !== null && !Array.isArray(args) ? args as Record<string, unknown> : {};
   if (name === 'get_poster_payment_setup' || name === 'get_solver_payment_setup') {
     if (input['bounty'] !== undefined && (typeof input['bounty'] !== 'string' || !/^bt-[a-f\d]{12}$/.test(input['bounty']))) return toolError('Use a bounty id: bt- followed by twelve hex digits.');
-    return toolResult(paymentSetup(origin, name === 'get_poster_payment_setup' ? 'poster' : 'solver', input['bounty'] as string | undefined));
+    return toolResult(await paymentSetupFacts(env, origin, name === 'get_poster_payment_setup' ? 'poster' : 'solver', input['bounty'] as string | undefined));
   }
   if (name === 'find_bounties') {
     const q = new URLSearchParams();

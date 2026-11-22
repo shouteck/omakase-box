@@ -1,8 +1,9 @@
 // Each state of pay on merge, in the board's and the tool's words. Facts: nobody is
 // told to do anything by a reminder. Here on its own so payments.ts needs nothing of charge.ts.
-export type ChargeState = 'looked' | 'charging' | 'not-counted' | 'owner-decides' | 'refused-over-limit' | 'solver-not-ready' | 'solver-disconnected' | 'declined' | 'stripe-refused' | 'provider-refused' | 'owner-must-authenticate' | 'owner-paying' | 'paid' | 'refunded' | 'disputed';
+export type ChargeState = 'looked' | 'charging' | 'choose-rail' | 'not-counted' | 'owner-decides' | 'refused-over-limit' | 'solver-not-ready' | 'solver-disconnected' | 'declined' | 'stripe-refused' | 'provider-refused' | 'owner-must-authenticate' | 'owner-paying' | 'paid' | 'refunded' | 'disputed';
 
 export const CHARGE_WORDS: Record<Exclude<ChargeState, 'looked'>, string> = {
+  'choose-rail': 'Choose the default payment rail on your page before this bounty can charge. Neither saved method was charged.',
   charging: 'A charge has been started and has not finished.',
   'not-counted': 'Pay on merge does not run here: the solver is the poster, or GitHub lists them as having access to the repository.',
   'owner-decides': 'More than one solution landed, so pay on merge did not choose. Nothing was charged.',

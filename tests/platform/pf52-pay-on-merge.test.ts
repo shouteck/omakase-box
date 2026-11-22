@@ -10,6 +10,7 @@ import { refreshUntilDone, rig, MINUTE, NOW, type Rig } from './support.js';
 import { StripeStandin } from './stripe-standin.js';
 import { PayPalStandin } from './paypal-standin.js';
 import type { StandinIssue } from '../../packages/box-platform/standin/standin.js';
+import { chooseRail } from '../../packages/box-platform/src/payment-rail.js';
 
 const ORIGIN = 'https://board.test';
 const REPO = 'owner/project';
@@ -40,6 +41,9 @@ async function vault(limit = 50) {
   await r.env.DB.prepare(`INSERT INTO paypal_vault (github_id, payment_token, label, limit_per_bounty) VALUES (?, 'VAULT1', 'Saved PayPal', ?)`).bind(OWNER.github_id, limit).run();
   await r.env.DB.prepare(`INSERT INTO paypal_accounts (github_id, payer_id, at) VALUES (7001, 'SOLVERPAYPAL1', ?)`).bind(NOW).run();
 }
+async function preference(rail: 'stripe' | 'paypal', fallback = false) {
+  expect((await post('/api/me/payment-rail', { rail, fallback }, await session())).status).toBe(200);
+}
 async function switched(minutes = 0) {
   await r.env.DB.prepare('INSERT INTO pay_repositories (github_id, repository, on_at, limit_per_bounty) VALUES (?, ?, ?, 50)').bind(OWNER.github_id, REPO, at(minutes)).run();
 }
@@ -64,6 +68,152 @@ beforeEach(async () => {
   expect(listed).toHaveProperty('id'); id = (listed as { id: string }).id;
 });
 afterEach(async () => { vi.restoreAllMocks(); await stripe.stop(); await paypal.stop(); await r.close(); });
+
+describe('PF52: explicit saved payment rail choice', () => {
+  async function both() { await card(); await connectedStripe(); await vault(); }
+  async function commands(body: string) {
+    r.clock.at += MINUTE;
+    issue.comments!.push({ login: OWNER.login, association: 'OWNER', body, created_at: new Date(r.clock.at).toISOString() });
+    const github = new GitHub(r.env, false);
+    try { await readPaymentComments(r.env, github, id, REPO, 12); } finally { await github.settle(); }
+  }
+  async function unavailable(rail: 'stripe' | 'paypal') {
+    if (rail === 'stripe') { await r.env.DB.prepare('UPDATE stripe_accounts SET ready = 0').run(); stripe.accounts.set('acct_solver', { charges_enabled: false }); }
+    else await r.env.DB.prepare('DELETE FROM paypal_accounts').run();
+  }
+  const expectRail = (rail: 'stripe' | 'paypal' | null) => {
+    expect(stripe.charged()).toHaveLength(rail === 'stripe' ? 1 : 0);
+    expect(paypal.captures).toHaveLength(rail === 'paypal' ? 1 : 0);
+  };
+  it('uses only the saved rail, including empty settings, and never silently picks between two', () => {
+    const base = { stripe: false, paypal: false, rail: null, fallback: false };
+    expect(chooseRail(base)).toMatchObject({ saved_rails: [], chosen_rail: null, selected_rail: null, needs_choice: false });
+    expect(chooseRail({ ...base, stripe: true, rail: 'paypal' })).toMatchObject({ chosen_rail: 'stripe' });
+    expect(chooseRail({ ...base, paypal: true, rail: 'stripe' })).toMatchObject({ chosen_rail: 'paypal' });
+    expect(chooseRail({ ...base, stripe: true, paypal: true })).toMatchObject({ needs_choice: true, chosen_rail: null });
+  });
+  it.each(['stripe', 'paypal'] as const)('both saved wait for a %s choice, with matching public API/MCP/setup facts and a safe choice link', async rail => {
+    await both(); await approve(); await settleTwice();
+    expect(await state()).toMatchObject({ state: 'choose-rail' }); expectRail(null);
+    const view = await fact();
+    expect(view).toMatchObject({ pays_on_merge: false, pay_on_merge: { will_pay: false, rail_choice: { saved_rails: ['stripe', 'paypal'], chosen_rail: null, fallback: false, choice_url: `${ORIGIN}/setup/payment-rail/?bounty=${id}` } } });
+    expect(view.pay_on_merge.reasons.join(' ')).toContain('Choose the default payment rail');
+    const setup = await (await get(`/api/payment-setup/poster?bounty=${id}`)).json() as any;
+    expect(setup).toMatchObject({ rail_choice: { saved_rails: ['stripe', 'paypal'], chosen_rail: null, fallback: false }, choice_url: view.pay_on_merge.rail_choice.choice_url });
+    const mcp = await post('/mcp', { jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'get_poster_payment_setup', arguments: { bounty: id } } });
+    expect(await mcp.json()).toMatchObject({ result: { structuredContent: { rail_choice: setup.rail_choice } } });
+    expect((await get('/setup/payment-rail/')).headers.get('location')).toBe('/auth/github');
+    expect((await get('/setup/payment-rail/', await session())).headers.get('location')).toBe('/me/#pay');
+    await preference(rail); r.clock.at += 10 * MINUTE; await settleTwice(); expectRail(rail);
+  });
+  it('requires the signed-in owner, an available rail, JSON and explicit fallback, without provider calls', async () => {
+    expect((await post('/api/me/payment-rail', { rail: 'stripe', fallback: false })).status).toBe(401);
+    const owner = await session();
+    expect((await post('/api/me/payment-rail', { rail: 'stripe', fallback: false }, owner)).status).toBe(409);
+    await both();
+    for (const body of [{}, { rail: 'stripe' }, { rail: 'cash', fallback: false }, { rail: 'paypal', fallback: 1 }]) expect((await post('/api/me/payment-rail', body, owner)).status).toBe(400);
+    const csrf = await handle(new Request(`${ORIGIN}/api/me/payment-rail`, { method: 'POST', headers: { origin: 'https://evil.test', 'content-type': 'application/json', cookie: `__Host-board_session=${owner}` }, body: '{"rail":"stripe","fallback":true}' }), r.env);
+    expect(csrf.status).toBe(403);
+    expect((await post('/api/me/payment-rail', { rail: 'stripe', fallback: false }, await session(8002, 'other'))).status).toBe(409);
+    await preference('paypal', true);
+    expect(await r.env.DB.prepare('SELECT * FROM payment_preferences').first()).toEqual({ github_id: OWNER.github_id, rail: 'paypal', fallback: 1 });
+    expect(stripe.calls).toEqual([]); expect(paypal.calls).toEqual([]);
+  });
+  it.each(['stripe', 'paypal'] as const)('honors on-merge via %s over the opposite account choice', async rail => {
+    await both(); await preference(rail === 'stripe' ? 'paypal' : 'stripe', true); await approve(` on merge via ${rail}`); await settleTwice();
+    expectRail(rail);
+    expect(await r.env.DB.prepare('SELECT merge_rail FROM bounties WHERE id = ?').bind(id).first()).toEqual({ merge_rail: rail });
+    expect((await fact()).pay_on_merge.rail_choice).toMatchObject({ chosen_rail: rail, override: rail, fallback: false });
+  });
+  it.each(['stripe', 'paypal'] as const)('a via %s approval is sufficient with both saved and no account choice', async rail => {
+    await both(); await approve(` on merge via ${rail}`); await settleTwice(); expectRail(rail);
+    expect(await r.env.DB.prepare('SELECT * FROM payment_preferences').first()).toBeNull();
+  });
+  it.each([
+    ['stripe', false], ['stripe', true], ['paypal', false], ['paypal', true]
+  ] as const)('uses fallback from %s only with permission=%s and only for missing payout readiness', async (rail, fallback) => {
+    await both(); await unavailable(rail); await preference(rail, fallback); await approve(); await settleTwice();
+    expectRail(fallback ? rail === 'stripe' ? 'paypal' : 'stripe' : null);
+    if (!fallback) {
+      expect(await state()).toMatchObject({ state: 'solver-not-ready' });
+      await preference(rail === 'stripe' ? 'paypal' : 'stripe', true); r.clock.at += 10 * MINUTE; await settleTwice(); expectRail(null);
+    }
+  });
+  it.each(['stripe', 'paypal'] as const)('via %s never falls back, even with account fallback enabled', async rail => {
+    await both(); await unavailable(rail); await preference(rail, true); await approve(` on merge via ${rail}`); await settleTwice();
+    expectRail(null); expect(await state()).toMatchObject({ state: 'solver-not-ready' });
+    expect((await fact()).pay_on_merge.rail_choice).toMatchObject({ chosen_rail: rail, selected_rail: rail, fallback: false });
+  });
+  it.each([
+    ['stripe', 'limit'], ['paypal', 'limit'], ['stripe', 'declined'], ['paypal', 'declined']
+  ] as const)('does not use fallback after a ready %s rail fails its %s check', async (rail, failure) => {
+    await both(); await preference(rail, true); await approve();
+    if (failure === 'limit') await r.env.DB.prepare(`UPDATE ${rail === 'stripe' ? 'pay_settings' : 'paypal_vault'} SET limit_per_bounty = 40`).run();
+    else if (rail === 'stripe') stripe.card = 'declined'; else paypal.vaultDeclined = true;
+    await settleTwice(); expectRail(null);
+    expect(await state()).toMatchObject({ state: failure === 'limit' ? 'refused-over-limit' : 'declined' });
+    expect(rail === 'stripe' ? paypal.orders : stripe.intents).toHaveLength(0);
+  });
+  it.each(['stripe', 'paypal'] as const)('keeps a %s-unready merge terminal even when a fresh command changes its refusal state', async rail => {
+    const other = rail === 'stripe' ? 'paypal' : 'stripe';
+    await both(); await unavailable(rail); await preference(rail); await approve(); await settleTwice();
+    expect(await state()).toMatchObject({ state: 'solver-not-ready' });
+    await r.env.DB.prepare(`UPDATE ${other === 'stripe' ? 'pay_settings' : 'paypal_vault'} SET limit_per_bounty = 40`).run();
+    await commands(`omakase pay ${id} $45 to @solver via ${other}`);
+    expect(await state()).toMatchObject({ state: 'refused-over-limit' });
+    await r.env.DB.prepare(`UPDATE ${other === 'stripe' ? 'pay_settings' : 'paypal_vault'} SET limit_per_bounty = 50`).run();
+    await preference(other); r.clock.at += 10 * MINUTE; await settleTwice(); expectRail(null);
+    expect((await fact()).pay_on_merge.reasons.join(' ')).toContain('Automatic charge on merge is off for this bounty');
+    await commands(`omakase pay ${id} $45 to @solver via ${other}`); await settleTwice(); expectRail(other);
+  });
+  it.each(['stripe', 'paypal'] as const)('an exact agent pay via %s overrides the default without a merge; an old choose-rail command is not queued', async rail => {
+    await both(); Object.assign(issue.pulls![0]!, { state: 'open', landed: false }); delete issue.pulls![0]!.merged_at;
+    await approve(''); await commands(`omakase pay ${id} $45 to @solver`);
+    expect(await state()).toMatchObject({ state: 'choose-rail' }); expectRail(null);
+    await preference(rail === 'stripe' ? 'paypal' : 'stripe', true); await settleTwice(); expectRail(null);
+    await commands(`OMAKASE PAY ${id.toUpperCase()} $45 TO @SOLVER VIA ${rail.toUpperCase()}`); await settleTwice(); expectRail(rail);
+    expect(await state()).toMatchObject({ state: 'paid', provider: rail === 'paypal' ? 'paypal' : null });
+  });
+  it.each(['stripe', 'paypal'] as const)('an agent pay via %s cannot fall back when the chosen solver payout is missing', async rail => {
+    await both(); await unavailable(rail); await preference(rail, true);
+    Object.assign(issue.pulls![0]!, { state: 'open', landed: false }); delete issue.pulls![0]!.merged_at;
+    await approve(''); await commands(`omakase pay ${id} $45 to @solver via ${rail}`); await settleTwice();
+    expectRail(null); expect(await state()).toMatchObject({ state: 'solver-not-ready' });
+  });
+  it.each([' on merge via cash', ' on merge via stripe please', ' via paypal', ' on merge via paypal via stripe'])('keeps malformed approval pending: %s', async suffix => {
+    await both(); await approve(suffix); await settleTwice(); expectRail(null); expect((await fact()).approval.state).toBe('pending');
+  });
+  it('rejects a via suffix on paid and any extra prose or unknown rail on pay', async () => {
+    await both(); await preference('stripe'); await approve('');
+    for (const body of [`omakase paid ${id} $45 to @solver via stripe`, `omakase pay ${id} $45 to @solver via cash`, `omakase pay ${id} $45 to @solver via stripe please`]) await commands(body);
+    expectRail(null); expect(await state()).toBeNull(); expect(await r.env.DB.prepare('SELECT * FROM paid_clicks').first()).toBeNull();
+  });
+  it.each(['stripe-first', 'paypal-first'] as const)('saving a second method prompts for a default and sets only the answer: %s, including setup deep-link return', async order => {
+    const owner = await session();
+    const saveStripe = async () => {
+      const started = await post('/api/me/card', {}, owner); expect(started.status).toBe(200);
+      const customer = await r.env.DB.prepare('SELECT customer_id FROM pay_settings WHERE github_id = ?').bind(OWNER.github_id).first<{ customer_id: string }>();
+      stripe.sessionCustomer = customer!.customer_id;
+      expect((await post('/api/me/card/saved', { session: 'cs_setup' }, owner)).status).toBe(200);
+    };
+    const savePayPal = async () => {
+      expect((await post('/api/me/paypal/vault', {}, owner)).status).toBe(200);
+      expect((await post('/api/me/paypal/vault/saved', { setup_token: 'SETUP1', limit: 50 }, owner)).status).toBe(200);
+    };
+    if (order === 'stripe-first') { await saveStripe(); await preference('stripe', true); await savePayPal(); }
+    else { await savePayPal(); await preference('paypal', true); await saveStripe(); }
+    const me = await (await get('/api/me', owner)).json() as any;
+    expect(me.pay.rail_choice).toMatchObject({ saved_rails: ['stripe', 'paypal'], chosen_rail: null, account_rail: null, fallback: false, needs_choice: true });
+    const returned = await handle(new Request(`${ORIGIN}/setup/finish/`, { headers: { cookie: `__Host-board_session=${owner}; __Host-board_setup_return=/b/${id}/` } }), r.env);
+    expect(returned.headers.get('location')).toBe('/me/?choose-rail=1#pay');
+    expect(returned.headers.get('set-cookie')).toBeNull();
+    const choice = order === 'stripe-first' ? 'paypal' : 'stripe';
+    await preference(choice);
+    expect(await r.env.DB.prepare('SELECT rail, fallback FROM payment_preferences').first()).toEqual({ rail: choice, fallback: 0 });
+    const finished = await handle(new Request(`${ORIGIN}/setup/finish/`, { headers: { cookie: `__Host-board_session=${owner}; __Host-board_setup_return=/b/${id}/` } }), r.env);
+    expect(finished.headers.get('location')).toBe(`/b/${id}/`);
+  });
+});
 
 describe('PF52: payout connection after a refused payment', () => {
   async function unconnected(rail: 'stripe' | 'paypal', automatic = true) {
@@ -234,6 +384,12 @@ describe('PF52: prepared agent branch payments', () => {
     if (mode === 'manual-prior') issue.comments!.push({ login: OWNER.login, association: 'OWNER', body: `omakase paid ${id} $45 to @solver`, created_at: at(22) });
     await merge(mode === 'old-merge' ? 0.5 : 21); await settleTwice();
     expect(stripe.charged()).toHaveLength(0); expect(paypal.captures).toHaveLength(0); expect((await fact()).pay_on_merge.will_pay).toBe(false);
+  });
+  it.each(['stripe', 'paypal'] as const)('a prepared branch via %s overrides the other default with both saved', async rail => {
+    await prepared('stripe'); await vault(); await preference(rail === 'stripe' ? 'paypal' : 'stripe', true);
+    await approve(` on merge via ${rail}`); await merge(); await settleTwice();
+    expect(stripe.charged()).toHaveLength(rail === 'stripe' ? 1 : 0); expect(paypal.captures).toHaveLength(rail === 'paypal' ? 1 : 0);
+    expect((await fact()).pay_on_merge.rail_choice).toMatchObject({ override: rail, fallback: false });
   });
   it.each(['pay', 'paid'])('processes the prepared poster’s %s comment without a session or repository switch', async command => {
     await prepared(); await approve('');
@@ -461,16 +617,16 @@ describe('PF52: PayPal Vault', () => {
     expect((await state() as any)?.state).not.toBe('paid');
     if (mode === 'pending') expect(await state()).toMatchObject({ state: 'owner-paying', provider: 'paypal' });
   });
-  it('prefers Stripe when both work, and uses PayPal when Stripe payouts are not ready', async () => {
-    await card(); await connectedStripe(); await vault(); await approve(); await settleTwice();
+  it('uses an explicit Stripe default when both work', async () => {
+    await card(); await connectedStripe(); await vault(); await preference('stripe'); await approve(); await settleTwice();
     expect(stripe.charged()).toHaveLength(1); expect(paypal.orders).toHaveLength(0);
   });
   it('uses PayPal when the solver cannot receive Stripe', async () => {
-    await card(); await connectedStripe(false); await vault(); await approve(); await settleTwice();
+    await card(); await connectedStripe(false); await vault(); await preference('stripe', true); await approve(); await settleTwice();
     expect(stripe.charged()).toHaveLength(0); expect(paypal.captures).toHaveLength(1);
   });
   it('applies the selected rail’s default limit, not the other saved method’s limit', async () => {
-    await card(100); await vault(40); await approve(); await settleTwice();
+    await card(100); await vault(40); await preference('paypal'); await approve(); await settleTwice();
     expect(paypal.captures).toHaveLength(0);
     expect((await fact()).pay_on_merge).toMatchObject({ provider: 'PayPal', will_pay: false, reasons: expect.arrayContaining(['The reward is outside the authorized limit.']) });
   });
@@ -490,6 +646,7 @@ describe('PF52: agent pay comments', () => {
     await approve('');
     if (rail !== 'paypal') { await card(); await connectedStripe(); }
     if (rail !== 'stripe') await vault();
+    if (rail === 'both') await preference('stripe');
   }
   async function read() {
     const github = new GitHub(r.env, false);

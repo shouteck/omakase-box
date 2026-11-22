@@ -2,6 +2,7 @@ import type { Env, GitHub } from './github.js';
 import { paySaved } from './charge.js';
 import { paymentLandingVersion } from './payments.js';
 import { setMeta } from './store.js';
+import type { Rail } from './payment-rail.js';
 
 export async function readPaymentComments(env: Env, github: GitHub, id: string, repository: string, number: number): Promise<void> {
   const row = await env.DB.prepare(`SELECT b.amount, b.poster_id, b.created_at, b.approval_at, MAX(c.at) AS paid_at FROM bounties b
@@ -15,14 +16,15 @@ export async function readPaymentComments(env: Env, github: GitHub, id: string, 
     for (const comment of read.json as { id?: unknown; body?: unknown; user?: { id?: unknown; login?: unknown }; created_at?: unknown }[]) {
       if (typeof comment.body !== 'string' || typeof comment.created_at !== 'string' || comment.user?.id !== row.poster_id || typeof comment.user.login !== 'string') continue;
       if (!Number.isFinite(Date.parse(comment.created_at)) || Date.parse(comment.created_at) < Date.parse(row.created_at) || (row.paid_at !== null && comment.created_at <= row.paid_at)) continue;
-      const match = new RegExp(`^omakase (pay|paid) ${id} \\$${row.amount} to @([a-z\\d](?:[a-z\\d-]{0,37}[a-z\\d])?(?:\\[bot\\])?)$`, 'i').exec(comment.body.trim());
+      const match = new RegExp(`^omakase (pay|paid) ${id} \\$${row.amount} to @([a-z\\d](?:[a-z\\d-]{0,37}[a-z\\d])?(?:\\[bot\\])?)(?: via (stripe|paypal))?$`, 'i').exec(comment.body.trim());
       if (match === null) continue;
+      if (match[1]!.toLowerCase() === 'paid' && match[3] !== undefined) continue;
       if (match[1]!.toLowerCase() === 'pay') {
         if (!Number.isSafeInteger(comment.id) || Date.parse(comment.created_at) < Date.parse(row.approval_at ?? row.created_at)) continue;
         const command = await env.DB.prepare(`INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT (key) DO NOTHING RETURNING key`)
           .bind(`payment_command/${id}/${comment.id as number}`, comment.created_at).first();
         if (command === null) continue;
-        await paySaved(env, id, row.poster_id, row.amount, match[2]!);
+        await paySaved(env, id, row.poster_id, row.amount, match[2]!, match[3]?.toLowerCase() as Rail | undefined);
         return;
       }
       const pull = await env.DB.prepare('SELECT author FROM pull_requests WHERE bounty_id = ? AND author = ? COLLATE NOCASE LIMIT 1').bind(id, match[2]!).first<{ author: string }>();

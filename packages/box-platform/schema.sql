@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS bounties (
   listed_by TEXT,
   -- The issue's own author, whose words the task is (the lister may be someone who can write to the repository).
   issue_author TEXT
-, approval TEXT, approval_proof TEXT, approval_at TEXT, approved_amount INTEGER, merge_consent INTEGER NOT NULL DEFAULT 0);
+, approval TEXT, approval_proof TEXT, approval_at TEXT, approved_amount INTEGER, merge_consent INTEGER NOT NULL DEFAULT 0, merge_rail TEXT CHECK (merge_rail IN ('stripe', 'paypal')));
 -- PF44 (written as the live board's ALTER TABLE leaves it, so both schemas read the same): approval NULL, approved when it
 -- came in (posted, or listed by someone with authority). 'pending': imported by anyone and not yet approved: hidden from the
 -- open list, nothing promised, nothing paid. 'comment': approved by the comment whose address is approval_proof, written on
@@ -126,6 +126,11 @@ CREATE TABLE IF NOT EXISTS pay_settings (
   payment_method TEXT,
   card_label TEXT,
   limit_per_bounty INTEGER
+);
+CREATE TABLE IF NOT EXISTS payment_preferences (
+  github_id INTEGER PRIMARY KEY,
+  rail TEXT CHECK (rail IN ('stripe', 'paypal')),
+  fallback INTEGER NOT NULL DEFAULT 0 CHECK (fallback IN (0, 1))
 );
 -- The owner's switch, per repository, with its own limit (PF19). A merge from before on_at is never charged.
 CREATE TABLE IF NOT EXISTS pay_repositories (

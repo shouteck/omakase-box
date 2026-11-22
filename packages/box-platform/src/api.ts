@@ -6,7 +6,7 @@ import { agentPrepareResponse } from './agent-prepare.js';
 import { attemptOf } from './attempt.js';
 import { applyEvent, payingIds, payOnMergeOf, mergePaymentFact } from './charge.js';
 import { owedNow } from './payment-agent.js';
-import { paymentSetup } from './payment-setup.js';
+import { paymentSetupFacts } from './payment-setup.js';
 import { applyPayPalEvent, authorTakes } from './paypal-pay.js';
 import { PayPalUnavailable, webhookHolds } from './paypal.js';
 import { waysOfBounty } from './pay-ways.js';
@@ -182,7 +182,7 @@ async function route(request: Request, env: Env): Promise<Response> {
   if (url.pathname === '/api/payment-setup/poster' || url.pathname === '/api/payment-setup/solver') {
     const id = url.searchParams.get('bounty') ?? undefined;
     if (id !== undefined && !/^bt-[a-f\d]{12}$/.test(id)) return json(400, { error: 'Use a bounty id: bt- followed by twelve hex digits.' });
-    return json(200, paymentSetup(url.origin, url.pathname.endsWith('/poster') ? 'poster' : 'solver', id));
+    return json(200, await paymentSetupFacts(env, url.origin, url.pathname.endsWith('/poster') ? 'poster' : 'solver', id));
   }
   if (url.pathname === '/api/pay-on-merge') {
     const repository = url.searchParams.get('repository') ?? '';

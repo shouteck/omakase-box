@@ -405,14 +405,15 @@ async function readApproval(env: Env, github: GitHub, id: string, repository: st
     const login = comment['user']['login'];
     const userId = comment['user']['id'];
     const body = comment['body'].trim().toLowerCase();
-    const onMerge = body === `${line} on merge`;
+    const via = body === `${line} on merge via stripe` ? 'stripe' : body === `${line} on merge via paypal` ? 'paypal' : null;
+    const onMerge = body === `${line} on merge` || via !== null;
     if (typeof login !== 'string' || !LOGIN.test(login) || !Number.isSafeInteger(userId) || (body !== line && !onMerge)) continue;
     if (!Number.isFinite(Date.parse(comment['created_at']))) continue;
     if (Date.parse(comment['created_at']) < Date.parse(row.created_at)) continue;
     const association = typeof comment['author_association'] === 'string' ? comment['author_association'] : '';
     if (row.listed_by_id === null ? !APPROVERS.has(association) : userId !== row.poster_id && !APPROVERS.has(association)) continue;
-    await env.DB.prepare(`UPDATE bounties SET approval = 'comment', approval_proof = ?, poster = ?, poster_id = ?, approval_at = ?, approved_amount = amount, merge_consent = ?, listed_seq = (SELECT COALESCE(MAX(listed_seq), 0) + 1 FROM bounties) WHERE id = ? AND approval = 'pending'`)
-      .bind(comment['html_url'] as string, login, userId as number, comment['created_at'], onMerge ? 1 : 0, id).run();
+    await env.DB.prepare(`UPDATE bounties SET approval = 'comment', approval_proof = ?, poster = ?, poster_id = ?, approval_at = ?, approved_amount = amount, merge_consent = ?, merge_rail = ?, listed_seq = (SELECT COALESCE(MAX(listed_seq), 0) + 1 FROM bounties) WHERE id = ? AND approval = 'pending'`)
+      .bind(comment['html_url'] as string, login, userId as number, comment['created_at'], onMerge ? 1 : 0, via, id).run();
     return;
   }
 }

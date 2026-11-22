@@ -7,6 +7,7 @@ import type { Env } from './github.js';
 import { issueOf, paypal, paypalOn } from './paypal.js';
 import { stripeOn } from './stripe.js';
 import { setMeta } from './store.js';
+import { requireRailChoice } from './payment-rail.js';
 
 export async function vaultSetup(env: Env, githubId: number, origin: string, now: number): Promise<{ url: string } | { error: string }> {
   const made = await paypal(env, 'POST', '/v3/vault/setup-tokens', { payment_source: { paypal: { usage_type: 'MERCHANT', customer_type: 'CONSUMER',
@@ -28,6 +29,7 @@ export async function vaultSaved(env: Env, githubId: number, setupId: unknown, l
   await env.DB.prepare('INSERT INTO paypal_vault (github_id, payment_token, label, limit_per_bounty) VALUES (?, ?, ?, ?) ON CONFLICT (github_id) DO UPDATE SET payment_token = excluded.payment_token, label = excluded.label, limit_per_bounty = excluded.limit_per_bounty')
     .bind(githubId, made.json['id'], 'Saved PayPal', limit as number).run();
   await env.DB.prepare('DELETE FROM paypal_vault_setup WHERE github_id = ?').bind(githubId).run();
+  await requireRailChoice(env, githubId);
   return { saved: true };
 }
 
