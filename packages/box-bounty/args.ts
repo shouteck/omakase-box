@@ -224,7 +224,7 @@ const BASE_COMMANDS: Readonly<Record<string, CommandSpec>> = {
     positionals: 1,
     authority: true,
     values: {
-      '--reward': { ...AMOUNT, help: 'the reward for one bounty, in whole dollars' },
+      '--reward': { ...AMOUNT, help: 'the reward for one bounty, in whole dollars: about what the work is worth to you — omakase-box help says how to choose it' },
       '--reward-limit': { ...AMOUNT, help: 'the most promised across this repository\'s open bounties, in whole dollars' },
       '--repo': REPO
     },

@@ -864,7 +864,11 @@ The owner has three words:
   amount it was posted with; a change while bounties are open says so, and
   closing a bounty — merged or not — stops its amount counting. `status` and
   bare `config` show this repository's reward, its limit, what its open
-  bounties promise and what is left. The first amount above 0 gets one
+  bounties promise and what is left. `help` and the setup question carry a basis for
+  choosing the amount, never an amount: about what the owner would pay a
+  person for the time a capable solver needs to understand, change and test
+  the work, with the limit that reward times how many bounties may be open at
+  once. The first amount above 0 gets one
   plain sentence: it is a promise, made in the owner's name, that the owner
   pays by hand — the tool never moves money. A reward and limit written
   before rewards were per repository applied to nothing once this wave
