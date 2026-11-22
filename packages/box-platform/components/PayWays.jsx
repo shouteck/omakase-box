@@ -61,7 +61,7 @@ export function WayCards() {
 /** The solver's step: supported providers first, then only the connections this board offers. */
 export function ConnectWords() {
   const here = useWaysHere();
-  return <p>One click supports Stripe or PayPal. {connectWords(here)} On merge can also use saved PayPal when the solver can only receive on PayPal. Then say on the bounty&apos;s page whether it arrived.</p>;
+  return <p>One click supports Stripe or PayPal. {connectWords(here).replace('with one click; connected Stripe also covers on merge', 'with one click or on merge')} On merge charges the owner&apos;s saved Stripe card or PayPal Vault method. Then say on the bounty&apos;s page whether it arrived.</p>;
 }
 
 /** The country list itself, readable signed out: How it works links here (PF19). Nothing where this board has no Stripe. */

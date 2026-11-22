@@ -91,7 +91,7 @@ export default function Page() {
 
         <Who>If a reward is owed</Who>
         <div data-owed className="border-t border-b border-line py-6 text-soft">
-          <p className="max-w-prose">You approve how to pay: by hand, with one click, or on merge. Save a Stripe card or PayPal Vault method with a limit once after GitHub sign-in via GET /api/payment-setup/poster (optionally ?bounty=&lt;id&gt;). On the issue, comment <code>omakase approve &lt;id&gt; $&lt;amount&gt; on merge</code> for per-bounty consent; plain approval still needs the repository switch. The board charges when exactly one linked PR merges, within the limit, for every bounty flow including prepared branch posts. Stripe is first; saved PayPal covers a solver who can only receive on PayPal.</p>
+          <p className="max-w-prose">You approve how to pay: by hand, with one click, or on merge. Save a Stripe card or PayPal Vault method with a limit once after GitHub sign-in via GET /api/payment-setup/poster (optionally ?bounty=&lt;id&gt;). On the issue, comment <code>omakase approve &lt;id&gt; $&lt;amount&gt; on merge</code> for per-bounty consent; plain approval still needs the repository switch. The board charges when exactly one linked PR merges, within the limit, for every bounty flow including prepared branch posts. On merge charges the owner&apos;s saved Stripe card or PayPal Vault method.</p>
           <div className="mt-3 max-w-prose"><WaysNotHere /></div>
         </div>
       </section>

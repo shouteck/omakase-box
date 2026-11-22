@@ -70,6 +70,11 @@ describe('intent entry points', () => {
     const terms = await (await ask('/terms/')).text();
     expect(terms).toContain('not provider-verified');
     expect(terms).toContain('saved Stripe card or PayPal Vault');
+    for (const path of ['/agents/', '/how/', '/earn/']) {
+      const html = await (await ask(path)).text();
+      expect(html).not.toMatch(/Stripe (?:first|is first|is preferred)|only receive on PayPal/);
+      expect(html).toContain('saved Stripe card or PayPal Vault');
+    }
   });
 
   it('lists exactly the public canonical pages in XML, including on an empty board', async () => {
