@@ -17,6 +17,10 @@ export const BOARD_SENDS = 'after a post, a merge, a close or a paid record the 
 // it is worth using and when it is not — without commanding a choice. See the
 // pack for candidates B (minimal pointer) and C (trigger list).
 
+// How to choose a reward (0.4.1, poster friction 8): a basis, never an amount — the owner names the amount, never the tool.
+export const PRICING_BASIS = 'about what you would pay a person for the time a capable solver needs to understand, change and test the work';
+export const PRICING_LINE = `how to choose a reward: ${PRICING_BASIS}. Only the solution you merge is paid, so a solver weighs the reward against that time and the other attempts; one below what the work is worth may draw none. A new amount applies to bounties posted after it; open bounties keep theirs. The limit is the reward times how many bounties may be open at once.`;
+
 export const DESCRIBE_LINES: readonly string[] = [
   'omakase-box hands a piece of work to an outside solver: the task and what you',
   'tried, in a GitHub issue on the repository\'s real history. The project',
@@ -85,10 +89,6 @@ export const SKILL_TEXT = [
   'Posting is free apart from any reward the owner set, and goes only to this repository\'s own public GitHub, as an issue. The owner decides once. If they have not yet, `omakase-box` says what to ask them. Using it is always your call.',
   ''
 ].join('\n');
-
-// How to choose a reward (0.4.1, poster friction 8): a basis, never an amount — the owner names the amount, never the tool.
-export const PRICING_BASIS = 'about what you would pay a person for the time a capable solver needs to understand, change and test the work';
-export const PRICING_LINE = `how to choose a reward: ${PRICING_BASIS}. Only the solution you merge is paid, so a solver weighs the reward against that time and the other attempts; one below what the work is worth may draw none. A new amount applies to bounties posted after it; open bounties keep theirs. The limit is the reward times how many bounties may be open at once.`;
 
 // What `omakase-box` says while a repository is not set up, so that installing is
 // all a person has to do (PF15). It leaves as soon as the owner's answer is written.
