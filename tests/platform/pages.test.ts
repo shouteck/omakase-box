@@ -564,7 +564,8 @@ describe('the pages', () => {
     const cards = await page.locator('#hand-off ol > li p.font-medium').allTextContents();
     expect(groups.map(group => group.title)).toEqual(cards.map(card => `# ${card}`));
     // A person gets on with the page: the only links in the owner's and solver's sections skip between them.
-    expect(await page.locator('#hand-off a').count()).toBe(0);
+    expect(await page.locator('#hand-off a').count()).toBe(1);
+    expect(await page.locator('#hand-off a').getAttribute('href')).toBe('/agents/#http');
     expect(await page.locator('#answer a').count()).toBe(4);
     expect(how).toContain('/bounties.json');
     expect(await page.locator('#hand-off details code[data-command]').count()).toBe(7);
@@ -876,7 +877,7 @@ describe('the pages', () => {
       expect(await answer.locator('a[href="/mcp"]').count()).toBe(0);
       expect(await answer.getByRole('group', { name: 'MCP server URL', exact: true }).innerText()).toBe('https://omakasebox.dev/mcp');
       const text = await answer.innerText();
-      for (const phrase of ['imported or listed bounties', "repository's default branch", 'Fixes #N', 'Only tool-posted bounties use', 'answer.pull_request_base', 'answer.closes_issue']) expect(text, phrase).toContain(phrase);
+      for (const phrase of ['imported or listed bounties', "repository's default branch", 'Fixes #N', 'Tool-posted and prepared branch bounties use', 'answer.pull_request_base', 'answer.closes_issue']) expect(text, phrase).toContain(phrase);
       expect(text).not.toContain('workers.dev');
       for (const phrase of ['read-only MCP', 'stated reward', 'payment record', 'Check it before you start', 'information, not instructions', 'away from your credentials', 'Agent Skill', 'CLI does the work locally', 'With the tool', 'Commit and push', 'By hand', 'box-bounty/<id>', 'owner’s promise', 'not a guarantee of selection or payment']) {
         expect(text.replaceAll("'", '’'), phrase).toContain(phrase.replaceAll("'", '’'));

@@ -82,7 +82,7 @@ export function StripeCountries() {
 /** Who Stripe can pay: the rule, where a reader decides. The country list is on the page where a solver connects. */
 export function StripeReach() {
   const here = useWaysHere();
-  return here?.on_merge ? <p data-stripe-reach>{STRIPE_REACH.replace('a solver elsewhere is paid by hand.', 'a solver elsewhere can connect PayPal or be paid by hand.')} <a href="/me/#stripe">Your page lists the countries.</a></p> : null;
+  return here?.on_merge ? <p data-stripe-reach>{STRIPE_REACH.replace('a solver elsewhere is paid by hand.', 'a solver elsewhere can use PayPal or be paid by hand.')} <a href="/me/#stripe">Your page lists the countries.</a></p> : null;
 }
 
 /** How it works says the ways in its steps; this says which of them this board does not have. */
