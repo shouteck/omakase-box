@@ -2,6 +2,7 @@ ALTER TABLE bounties ADD COLUMN approval_at TEXT;
 ALTER TABLE bounties ADD COLUMN approved_amount INTEGER;
 ALTER TABLE bounties ADD COLUMN merge_consent INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE bounties ADD COLUMN merge_rail TEXT CHECK (merge_rail IN ('stripe', 'paypal'));
+ALTER TABLE charges ADD COLUMN origin TEXT CHECK (origin IN ('merge', 'agent', 'owner'));
 CREATE TABLE IF NOT EXISTS payment_preferences (
   github_id INTEGER PRIMARY KEY,
   rail TEXT CHECK (rail IN ('stripe', 'paypal')),

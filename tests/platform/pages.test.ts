@@ -476,13 +476,21 @@ describe('the pages', () => {
     await db.prepare('DELETE FROM paid_clicks WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
     await db.prepare('DELETE FROM receipts WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
     await db.prepare(`INSERT INTO charges (bounty_id, state, pull_number, solver, account_id, amount, payment_method, payment_intent, at, provider) VALUES (?, 'paid', 68, 'example-quill', 'acct_sample', 45, 'pm_saved', 'pi_sample', ?, NULL)`).bind(STATE_IDS.owed, clock).run();
+    await db.prepare(`UPDATE charges SET origin = 'merge' WHERE bounty_id = ?`).bind(STATE_IDS.owed).run();
     const stranger = await fresh();
     try {
       await visit(stranger.page, `/b/${STATE_IDS.owed}/`);
       await expect.poll(() => stranger.page.locator('[data-standing]').innerText()).toContain('Paid on merge through Stripe');
-      await db.prepare('UPDATE charges SET payment_method = NULL WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
+      await db.prepare(`UPDATE charges SET payment_method = NULL, origin = NULL WHERE bounty_id = ?`).bind(STATE_IDS.owed).run();
       await visit(stranger.page, `/b/${STATE_IDS.owed}/`);
       await expect.poll(() => stranger.page.locator('[data-standing]').innerText()).toMatch(/^Paid through Stripe/);
+      for (const provider of [null, 'paypal']) {
+        await db.prepare(`UPDATE charges SET origin = 'agent', provider = ? WHERE bounty_id = ?`).bind(provider, STATE_IDS.owed).run();
+        await visit(stranger.page, `/b/${STATE_IDS.owed}/`);
+        await expect.poll(() => stranger.page.locator('[data-standing]').innerText()).toContain(`Paid by agent command through ${provider === 'paypal' ? 'PayPal' : 'Stripe'}`);
+        expect(await stranger.page.locator('[data-standing]').innerText()).not.toContain('on merge');
+        await stranger.page.screenshot({ path: join(SHOTS, `pf52-agent-paid-${provider ?? 'stripe'}.png`), fullPage: true });
+      }
       // One way to GitHub on every bounty, and no bounty-branch button.
       expect(await stranger.page.locator('[data-issue]').getAttribute('href')).toContain('/issues/');
       expect(await stranger.page.locator('main').innerText()).not.toContain('Open the bounty branch on GitHub');

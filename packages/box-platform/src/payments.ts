@@ -14,7 +14,7 @@ export type MergedPull = { number: number; author: string; author_id?: number | 
   head_on_default_at_sight?: number | null };
 export type Paid = PaidEvent & { by: string; source: 'project-record' | 'board' | 'stripe' | 'paypal' };
 /** What a provider did (charge.ts, paypal-pay.ts). Its own fact: the provider's word, not the owner's. */
-export type ChargeFact = { state: string; at: string; solver: string | null; provider?: string | null };
+export type ChargeFact = { state: string; at: string; solver: string | null; provider?: string | null; origin?: string | null };
 export type BountyPayment = {
   id: string; title: string; repository: string; amount: number; poster: string; poster_id?: number | null;
   /** Listed bounties preserve owner choice until a provider payment or owner record names the payee. */
@@ -81,7 +81,7 @@ export function paymentOf(input: BountyPayment) {
   const chargedPull = input.charge?.state === 'paid' ? input.pulls.find(pull => same(pull.author, input.charge!.solver)) : undefined;
   if (chargedPull !== undefined && !landed.includes(chargedPull)) landed.push(chargedPull);
   const viaPayPal = input.charge?.provider === 'paypal';
-  const charge = input.charge == null ? null : { state: input.charge.state, at: input.charge.at, words: chargeWords(input.charge.state, input.charge.provider ?? null), whose_word: viaPayPal ? 'the board\'s, from PayPal\'s answer' as const : 'the board\'s, from Stripe\'s answer' as const };
+  const charge = input.charge == null ? null : { state: input.charge.state, at: input.charge.at, origin: input.charge.origin ?? null, words: chargeWords(input.charge.state, input.charge.provider ?? null), whose_word: viaPayPal ? 'the board\'s, from PayPal\'s answer' as const : 'the board\'s, from Stripe\'s answer' as const };
   const none = { owed: null, recorded_paid: null, solver_says: null, excluded_from_counts: null, charge };
   if (input.amount === 0) return { state: 'no-reward' as PaymentState, ...none, note: 'No reward is stated, so nothing is owed.' };
   if (input.source === 'listed' && facts.record === null) return { state: 'owner-chooses' as PaymentState, ...none, note: landed.length === 0 ? 'No linked pull request yet. The owner may choose whom to pay. Authorized pay on merge requires one eligible verified landing.' : 'Authorized pay on merge can pay one eligible verified landing. Otherwise the owner chooses from every linked pull request, merged or not.' };
@@ -177,9 +177,9 @@ export async function loadPayments(db: Db, where: string, ...values: readonly (s
   const chain = (await db.prepare(`SELECT bounty_id, at, amount, withdrawn FROM events WHERE type = 'paid' AND ${within}`).bind(...values).all<PaidEvent & { bounty_id: string }>()).results;
   const clicks = (await db.prepare(`SELECT bounty_id, by_login AS by, to_login AS "to", at, amount, withdrawn FROM paid_clicks WHERE ${within}`).bind(...values).all<PaidEvent & { bounty_id: string; by: string }>()).results;
   const receipts = (await db.prepare(`SELECT bounty_id, payee, says, record_at, at FROM receipts WHERE ${within}`).bind(...values).all<Receipt & { bounty_id: string; payee: string }>()).results;
-  const charges = (await db.prepare(`SELECT bounty_id, state, at, solver, provider FROM charges WHERE state != 'looked' AND ${within}`).bind(...values).all<{ bounty_id: string; state: string; at: number; solver: string | null; provider: string | null }>()).results;
+  const charges = (await db.prepare(`SELECT bounty_id, state, at, solver, provider, origin FROM charges WHERE state != 'looked' AND ${within}`).bind(...values).all<{ bounty_id: string; state: string; at: number; solver: string | null; provider: string | null; origin: string | null }>()).results;
   return rows.map(row => ({
-    charge: ((found = charges.find(entry => entry.bounty_id === row.id)) => found === undefined ? null : { state: found.state, at: new Date(found.at).toISOString(), solver: found.solver, provider: found.provider })(),
+    charge: ((found = charges.find(entry => entry.bounty_id === row.id)) => found === undefined ? null : { state: found.state, at: new Date(found.at).toISOString(), solver: found.solver, provider: found.provider, origin: found.origin })(),
     ...row,
     pulls: pulls.filter(pull => pull.bounty_id === row.id),
     chain: chain.filter(event => event.bounty_id === row.id),

@@ -58,8 +58,11 @@ export function standing(view, amount, state) {
     ? { line: `Owed to one of ${owed.to_one_of.join(' or ')}`, sub: `Since ${fmtDate(owed.since)}. The owner chooses whom to pay.` }
     : { line: `Owed to ${owed.to} since ${fmtDate(owed.since)}`, sub: `GitHub records ${owed.fact}. Not yet recorded paid.` };
   // PF31b: the provider's word is the record; the solver is not asked, so nothing about confirming is said.
-  if (recorded.source === 'stripe') return { line: view.on_merge ? `Paid on merge through Stripe, ${fmtDate(recorded.at)}` : `Paid through Stripe, ${fmtDate(recorded.at)}`, sub: `Stripe's word: paid to ${owed.to}'s own account.` };
-  if (recorded.source === 'paypal') return { line: `Paid through PayPal, ${fmtDate(recorded.at)}`, sub: `PayPal's word: paid to ${owed.to}'s own account.` };
+  if (recorded.source === 'stripe' || recorded.source === 'paypal') {
+    const provider = recorded.source === 'stripe' ? 'Stripe' : 'PayPal';
+    const how = p.charge?.origin === 'merge' ? ' on merge' : p.charge?.origin === 'agent' ? ' by agent command' : p.charge?.origin === 'owner' ? ' by owner click' : '';
+    return { line: `Paid${how} through ${provider}, ${fmtDate(recorded.at)}`, sub: `${provider}'s word: paid to ${owed.to}'s own account.` };
+  }
   if (view.role === 'payee') return { line: `${recorded.by} recorded paying you, ${fmtDate(recorded.at)}`, sub: `The owner's word. ${says?.word === 'received' ? 'You confirmed it was received.' : 'Not yet confirmed by you.'}` };
   return { line: `Recorded paid by ${you ? 'you' : recorded.by}, ${fmtDate(recorded.at)}`, sub: `${you ? 'Your' : 'The owner\'s'} word. ${confirmed}` };
 }

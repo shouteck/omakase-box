@@ -245,9 +245,11 @@ const OWN_MAX = 200;
 const CARD_FAILED = new Set(['declined', 'stripe-refused', 'owner-must-authenticate']);
 type OwnRow = { id: string; title: string; repository: string; issue_number: number; issue_state: string; amount: number; created_at: string; solutions: number };
 
-/** How a recorded payment was made, in the words of whoever made it (PF21). A Stripe charge with a saved card is pay on merge. */
-const paidBy = (source: string, savedCard: boolean): string =>
-  source === 'stripe' ? (savedCard ? 'Pay on merge' : 'Stripe, one click') : source === 'paypal' ? 'PayPal, one click' : 'Recorded by you';
+/** How a recorded payment was initiated, separately from its provider. */
+const paidBy = (source: string, origin: string | null | undefined): string => {
+  const provider = source === 'stripe' ? 'Stripe' : source === 'paypal' ? 'PayPal' : null;
+  return provider === null ? 'Recorded by you' : origin === 'merge' ? `${provider}, pay on merge` : origin === 'agent' ? `${provider}, agent pay` : origin === 'owner' ? `${provider}, one click` : `${provider} payment`;
+};
 
 /**
  * Every bounty GitHub says this person opened (the issue's author id, never a typed name), newest first, each in the
@@ -266,7 +268,6 @@ async function bountiesOf(env: Env, viewer: Viewer, now: number) {
   const rows = read.filter(row => !gone.has(row.repository.toLowerCase()));
   const pulls = (await env.DB.prepare('SELECT p.bounty_id, p.state FROM pull_requests p JOIN bounties b ON b.id = p.bounty_id WHERE b.poster_id = ?').bind(viewer.github_id).all<{ bounty_id: string; state: string }>()).results;
   const inputs = new Map((await loadPayments(env.DB, 'b.poster_id = ?', viewer.github_id)).map(input => [input.id, input]));
-  const savedCard = new Set((await env.DB.prepare('SELECT c.bounty_id FROM charges c JOIN bounties b ON b.id = c.bounty_id WHERE b.poster_id = ? AND c.payment_method IS NOT NULL').bind(viewer.github_id).all<{ bounty_id: string }>()).results.map(row => row.bounty_id));
   const payOn = new Set((await env.DB.prepare('SELECT repository FROM pay_repositories WHERE github_id = ?').bind(viewer.github_id).all<{ repository: string }>()).results.map(row => row.repository.toLowerCase()));
   const list = rows.slice(0, OWN_MAX).map(row => {
     const base = { id: row.id, title: row.title, repository: row.repository, issue_number: row.issue_number, created_at: row.created_at, reward: row.amount, solutions: row.solutions };
@@ -282,7 +283,7 @@ async function bountiesOf(env: Env, viewer: Viewer, now: number) {
       return { ...base, stage: 'due', merged: payment.owed!.to, merged_one_of: payment.owed!.to === null ? (payment.owed as { to_one_of?: readonly string[] }).to_one_of ?? [] : undefined, note, card_failed: charge !== null && CARD_FAILED.has(charge.state) };
     }
     if (payment.state === 'recorded' || payment.state === 'confirmed' || payment.state === 'says-not-received') {
-      return { ...base, stage: 'paid', merged: payment.owed!.to, paid_by: paidBy(payment.recorded_paid!.source, savedCard.has(row.id)), note: payment.state === 'says-not-received' ? 'The solver says it has not arrived.' : null };
+      return { ...base, stage: 'paid', merged: payment.owed!.to, paid_by: paidBy(payment.recorded_paid!.source, input.charge?.origin), note: payment.state === 'says-not-received' ? 'The solver says it has not arrived.' : null };
     }
     if (payment.state === 'no-reward') return { ...base, stage: 'paid', merged: landedOf(input)[0]?.author ?? null, paid_by: null, note: 'No reward was stated.' };
     if (payment.state === 'owner-chooses') {
@@ -314,7 +315,6 @@ async function solutionsOf(env: Env, viewer: Viewer, now: number) {
   const rows = read.filter(row => !gone.has(row.repository.toLowerCase()) && !same(row.poster, viewer.login));
   const ids = rows.map(row => row.id);
   const inputs = new Map(ids.length === 0 ? [] : (await loadPayments(env.DB, `b.id IN (${ids.map(() => '?').join(', ')})`, ...ids)).map(input => [input.id, input]));
-  const savedCard = new Set(ids.length === 0 ? [] : (await env.DB.prepare(`SELECT bounty_id FROM charges WHERE payment_method IS NOT NULL AND bounty_id IN (${ids.map(() => '?').join(', ')})`).bind(...ids).all<{ bounty_id: string }>()).results.map(row => row.bounty_id));
   const list = rows.slice(0, OWN_MAX).map(row => {
     const base = { id: row.id, title: row.title, repository: row.repository, issue_number: row.issue_number, pull_number: row.number, created_at: row.opened_at, reward: row.amount, from: row.poster };
     const input = inputs.get(row.id);
@@ -325,7 +325,7 @@ async function solutionsOf(env: Env, viewer: Viewer, now: number) {
       if (payment.recorded_paid !== null) {
         if (!mine(payment.owed.to)) return { ...base, stage: 'closed', note: 'Another solution was paid.' };
         const provider = byProvider(payment.recorded_paid);
-        return { ...base, stage: 'paid', paid_by: paidBy(payment.recorded_paid.source, savedCard.has(row.id)), paid_at: payment.recorded_paid.at, needs_confirm: !provider && payment.solver_says?.word !== 'received' };
+        return { ...base, stage: 'paid', paid_by: paidBy(payment.recorded_paid.source, input.charge?.origin), paid_at: payment.recorded_paid.at, needs_confirm: !provider && payment.solver_says?.word !== 'received' };
       }
       if (owedToMe) return { ...base, stage: 'due', since: payment.owed.since, one_of: payment.owed.to === null };
       return { ...base, stage: 'closed', note: 'Another solution was merged.' };
@@ -383,8 +383,7 @@ async function paymentView(env: Env, id: string, viewer: Viewer | null, now: num
     const state = input.pulls.find(pull => pull.number === number)?.state ?? 'merged';
     return { login: author, number, state, methods, next: methods.length === 0 && facts.record === null ? ask(author, number) : null, ...(own === null ? {} : { can_pay: own.can_pay, can_pay_paypal: own.can_pay_paypal }) };
   })) : [];
-  // PF31: a Stripe payment from the owner's saved card is pay on merge; from Stripe's page, one click. Said apart on the page.
-  const onMerge = (await env.DB.prepare('SELECT 1 AS yes FROM charges WHERE bounty_id = ? AND payment_method IS NOT NULL').bind(id).first()) !== null;
+  const onMerge = input.charge?.origin === 'merge';
   return json(200, {
     viewer: login, role, payee, payees, on_merge: onMerge,
     payment: paymentOf(input),

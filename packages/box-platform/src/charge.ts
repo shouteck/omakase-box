@@ -206,20 +206,21 @@ export async function settleCharges(env: Env): Promise<number> {
   return due.length;
 }
 
-export async function claimCharge(env: Env, id: string, amount: number, pull: Merged, account: string, method: string, provider: 'paypal' | null, heldAt: number | null, now: number): Promise<boolean> {
-  const claim = await env.DB.prepare(`INSERT INTO charges (bounty_id, state, pull_number, solver, account_id, amount, payment_method, provider, at)
-    SELECT ?, 'charging', ?, ?, ?, ?, ?, ?, ? WHERE NOT EXISTS
+export async function claimCharge(env: Env, id: string, amount: number, pull: Merged, account: string, method: string, provider: 'paypal' | null, heldAt: number | null, now: number, origin: 'merge' | 'agent' = 'merge'): Promise<boolean> {
+  const claim = await env.DB.prepare(`INSERT INTO charges (bounty_id, state, pull_number, solver, account_id, amount, payment_method, provider, at, origin)
+    SELECT ?, 'charging', ?, ?, ?, ?, ?, ?, ?, ? WHERE NOT EXISTS
       (SELECT 1 FROM events WHERE bounty_id = ? AND type = 'paid' AND withdrawn = 0 UNION SELECT 1 FROM paid_clicks WHERE bounty_id = ? AND withdrawn = 0)
     ON CONFLICT (bounty_id) DO UPDATE SET state = 'charging', provider = excluded.provider, pull_number = excluded.pull_number, solver = excluded.solver,
-      account_id = excluded.account_id, amount = excluded.amount, payment_method = excluded.payment_method, at = excluded.at
+      account_id = excluded.account_id, amount = excluded.amount, payment_method = excluded.payment_method, at = excluded.at,
+      origin = CASE WHEN charges.state = 'charging' THEN charges.origin ELSE excluded.origin END
     WHERE charges.at = ? AND charges.state NOT IN ('paid', 'refunded', 'disputed', 'owner-paying', 'owner-must-authenticate')
       AND (charges.state != 'charging' OR (charges.at <= ? AND charges.payment_method IS excluded.payment_method AND charges.provider IS excluded.provider))
-    RETURNING bounty_id`).bind(id, pull.number, pull.author, account, amount, method, provider, now, id, id, heldAt ?? -1, now - STALE_CLAIM_MS).first();
+    RETURNING bounty_id`).bind(id, pull.number, pull.author, account, amount, method, provider, now, origin, id, id, heldAt ?? -1, now - STALE_CLAIM_MS).first();
   return claim !== null;
 }
 
-async function chargeStripe(env: Env, id: string, amount: number, decision: Extract<Decision, { act: 'charge' }>, heldAt: number | null, now: number): Promise<void> {
-  if (!await claimCharge(env, id, amount, decision.pull, decision.account, decision.card.payment_method, null, heldAt, now)) return;
+async function chargeStripe(env: Env, id: string, amount: number, decision: Extract<Decision, { act: 'charge' }>, heldAt: number | null, now: number, origin: 'merge' | 'agent' = 'merge'): Promise<void> {
+  if (!await claimCharge(env, id, amount, decision.pull, decision.account, decision.card.payment_method, null, heldAt, now, origin)) return;
   try {
     const result = await attempt(env, id, amount, decision);
     await saveCharge(env, id, result.state, decision.pull, decision.account, decision.card.payment_method, result.payment_intent, amount, now);
@@ -264,10 +265,10 @@ export async function paySaved(env: Env, id: string, posterId: number, amount: n
   const limit = usePayPal ? bounty.paypal_limit : bounty.stripe_limit;
   if (limit === null || amount > limit) { await refuse('refused-over-limit'); return; }
   if (usePayPal) {
-    try { await chargeVault(env, id, amount, pull, paypal!.payer_id, bounty.payment_token!, held?.at ?? null, now); }
+    try { await chargeVault(env, id, amount, pull, paypal!.payer_id, bounty.payment_token!, held?.at ?? null, now, 'agent'); }
     catch (error) { if (!(error instanceof PayPalUnavailable)) throw error; }
   } else await chargeStripe(env, id, amount, { act: 'charge', pull, account: solver!.account_id,
-    card: { payment_method: bounty.payment_method!, customer: bounty.customer_id!, limit } }, held?.at ?? null, now);
+    card: { payment_method: bounty.payment_method!, customer: bounty.customer_id!, limit } }, held?.at ?? null, now, 'agent');
 }
 
 async function saveCharge(env: Env, id: string, state: ChargeState, pull: Merged | null, account: string | null, card: string | null, intent: string | null, amount: number, now: number): Promise<void> {
@@ -402,8 +403,8 @@ async function recordPage(env: Env, id: string, session: Record<string, unknown>
  * for the same thing under the same key. Null: something else holds it, a charge or the other provider's page.
  */
 export async function claimPage(env: Env, id: string, row: { at: number; state: string } | null, pull: Merged, account: string, amount: number, provider: 'paypal' | null, held: string | null, now: number): Promise<{ at: number } | null> {
-  const claimed = await env.DB.prepare(`INSERT INTO charges (bounty_id, state, pull_number, solver, account_id, amount, payment_intent, at, provider) VALUES (?, 'owner-paying', ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT (bounty_id) DO UPDATE SET state = 'owner-paying', pull_number = excluded.pull_number, solver = excluded.solver, account_id = excluded.account_id, amount = excluded.amount, payment_method = NULL, payment_intent = excluded.payment_intent, at = excluded.at, provider = excluded.provider
+  const claimed = await env.DB.prepare(`INSERT INTO charges (bounty_id, state, pull_number, solver, account_id, amount, payment_intent, at, provider, origin) VALUES (?, 'owner-paying', ?, ?, ?, ?, ?, ?, ?, 'owner')
+    ON CONFLICT (bounty_id) DO UPDATE SET state = 'owner-paying', origin = 'owner', pull_number = excluded.pull_number, solver = excluded.solver, account_id = excluded.account_id, amount = excluded.amount, payment_method = NULL, payment_intent = excluded.payment_intent, at = excluded.at, provider = excluded.provider
     WHERE charges.at = ? AND charges.state = ? RETURNING at`).bind(id, pull.number, pull.author, account, amount, held, now, provider, row?.at ?? -1, row?.state ?? '').first<{ at: number }>();
   if (claimed !== null) return claimed;
   const winner = await env.DB.prepare(`SELECT at, provider FROM charges WHERE bounty_id = ? AND state = 'owner-paying'`).bind(id).first<{ at: number; provider: string | null }>();
