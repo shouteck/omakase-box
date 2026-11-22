@@ -70,6 +70,22 @@ function admittedPrepared(listed: Listed, held: Held | undefined): boolean {
 const claimedElsewhere = (held: Held | undefined, listed: Listed): boolean =>
   held !== undefined && (held.repository.toLowerCase() !== listed.repository.toLowerCase() || held.issue_number !== listed.issue['number']);
 
+async function admittedPoster(env: Env, github: GitHub, listed: Listed, held: Held | undefined, now: number): Promise<boolean> {
+  if (held !== undefined) return true;
+  const association = listed.issue['author_association'];
+  if (typeof association === 'string' && APPROVERS.has(association)) return true;
+  if (association === 'MEMBER') {
+    const format = readFormat(listed.issue['body'] as string);
+    if (format.kind !== 'present') return false;
+    const branch = await github.get(`/repos/${listed.repository}/branches/${encodeURIComponent(format.value.branch)}`);
+    if (branch.status === 200) return true;
+    await log(env.DB, now, 'poster-branch-not-confirmed', listed.issue['html_url'] as string);
+    return false;
+  }
+  await log(env.DB, now, 'poster-lacks-repository-authority', listed.issue['html_url'] as string);
+  return false;
+}
+
 function issueStatement(db: Db, listed: Listed, now: number): Statement | null {
   const { issue } = listed;
   const body = issue['body'] as string;
@@ -100,7 +116,7 @@ const rewardTooLow = (env: Env, listed: Listed): boolean => {
 };
 
 /** False when the issue may not hold this id, or states no reward: a row already stored for it is removed. */
-async function storeIssue(env: Env, listed: Listed, now: number): Promise<boolean> {
+async function storeIssue(env: Env, github: GitHub, listed: Listed, now: number): Promise<boolean> {
   const db = env.DB;
   const held = await db.prepare('SELECT id, repository, issue_number, source, approval, work_commit, amount FROM bounties WHERE id = ?').bind(listed.id).first<Held>();
   if (claimedElsewhere(held ?? undefined, listed)) {
@@ -108,6 +124,7 @@ async function storeIssue(env: Env, listed: Listed, now: number): Promise<boolea
     return false;
   }
   if (!admittedPrepared(listed, held ?? undefined)) return false;
+  if (!await admittedPoster(env, github, listed, held ?? undefined, now)) return false;
   if (rewardTooLow(env, listed)) {
     await removeBounty(db, listed.id);
     await log(db, now, 'reward-below-minimum', listed.issue['html_url'] as string);
@@ -176,10 +193,13 @@ async function search(env: Env, github: GitHub, now: number): Promise<{ readonly
       if (!isPublic) continue;
       if (claimedElsewhere(held.get(listed.id), listed)) { writes.push(...logStatements(db, now, 'id-claimed-by-another-issue', listed.issue['html_url'] as string)); continue; }
       if (!admittedPrepared(listed, held.get(listed.id))) continue;
+      if (!await admittedPoster(env, github, listed, held.get(listed.id), now)) continue;
       if (rewardTooLow(env, listed)) { await removeBounty(db, listed.id); writes.push(...logStatements(db, now, 'reward-below-minimum', listed.issue['html_url'] as string)); continue; }
       const statement = issueStatement(db, listed, now);
       if (statement === null) continue;
       writes.push(statement);
+      // Keep a successful branch proof when a later read exhausts the budget.
+      if (!held.has(listed.id) && listed.issue['author_association'] === 'MEMBER') await runAll(db, writes.splice(0));
       // The same id later on this page meets this claim.
       if (!held.has(listed.id)) held.set(listed.id, { id: listed.id, repository: listed.repository, issue_number: listed.issue['number'] as number });
     }
@@ -438,7 +458,7 @@ async function readIssueAgain(env: Env, github: GitHub, id: string, repository: 
     await log(env.DB, now, 'refused' in listed ? listed.refused : 'id-changed', 'refused' in listed ? listed.url : null);
     return false;
   }
-  return await storeIssue(env, listed, now);
+  return await storeIssue(env, github, listed, now);
 }
 
 export type Look = 'read' | 'not-public' | 'not-this-bounty' | 'budget-spent' | 'github-unavailable';
@@ -458,7 +478,7 @@ export async function lookNow(env: Env, repository: string, number: number, id: 
     const listed = readIssue(answer.json);
     if ('refused' in listed || listed.id !== id || listed.repository.toLowerCase() !== repository.toLowerCase()) return 'not-this-bounty';
     // A copy of another repository's bounty must not read its pull requests into that bounty.
-    if (!await storeIssue(env, listed, now)) return 'not-this-bounty';
+    if (!await storeIssue(env, github, listed, now)) return 'not-this-bounty';
     if (held === null) await readPullRequests(env, github, id, listed.repository);
     await readEvents(env, github, id, listed.repository);
     await readOnDefault(env, github, id, listed.repository);
