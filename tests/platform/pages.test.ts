@@ -1546,6 +1546,22 @@ describe('the pages', () => {
     await close();
   });
 
+  it('PF52: an unready merge explains stopped automation and offers payout setup on the detail page', async () => {
+    const { page, close } = await fresh();
+    const key = `merge_payment_off/${STATE_IDS.owed}`;
+    await board.env.DB.prepare(`INSERT INTO meta (key, value) VALUES (?, 'solver-not-ready')`).bind(key).run();
+    try {
+      await visit(page, `/b/${STATE_IDS.owed}/`);
+      const stopped = page.locator('[data-automatic-charge-off]');
+      await expect.poll(() => stopped.innerText()).toContain('Automatic charge on merge is off for this bounty');
+      expect(await stopped.innerText()).toContain('solver had no usable payout account when payment was evaluated');
+      expect(await stopped.innerText()).toContain('one-click (Checkout or a fresh omakase pay comment), or record an outside payment');
+      expect(await stopped.getByRole('link', { name: 'Connect Stripe payouts' }).getAttribute('href')).toContain(`/setup/stripe-payouts/?bounty=${STATE_IDS.owed}`);
+      expect(await stopped.getByRole('link', { name: 'Connect PayPal payouts' }).getAttribute('href')).toContain(`/setup/paypal-payouts/?bounty=${STATE_IDS.owed}`);
+      await page.screenshot({ path: join(SHOTS, 'pf52-automatic-charge-off.png'), fullPage: true });
+    } finally { await close(); await board.env.DB.prepare('DELETE FROM meta WHERE key = ?').bind(key).run(); }
+  });
+
   it('PF52: the payout country form can redirect to exactly the supported provider hosts under CSP', async () => {
     const previous = board.env.STRIPE_SECRET_KEY;
     Object.assign(board.env, { STRIPE_SECRET_KEY: 'standin' });

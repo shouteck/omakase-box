@@ -541,11 +541,12 @@ export async function mergePaymentFact(env: Env, id: string, origin: string) {
   if (landed.length === 1 && notCounted(landed[0]!, poster!.poster, poster!.poster_id) !== null) reasons.push('The author is the poster or has repository access, or GitHub did not state their association.');
   if (landed.length === 1 && selectedAvailable && provider === null) reasons.push('The solver is not ready to receive on an available pay-on-merge rail.');
   const charge = await chargeOf(env, id);
-  if (charge?.state !== 'solver-not-ready' && await env.DB.prepare('SELECT 1 FROM meta WHERE key = ?').bind(`merge_payment_off/${id}`).first() !== null) reasons.push(CHARGE_WORDS['solver-not-ready']);
+  const automaticChargeOff = charge?.state === 'solver-not-ready' || await env.DB.prepare('SELECT 1 FROM meta WHERE key = ?').bind(`merge_payment_off/${id}`).first() !== null;
+  if (charge?.state !== 'solver-not-ready' && automaticChargeOff) reasons.push(CHARGE_WORDS['solver-not-ready']);
   if (charge !== null && charge.state !== 'owner-decides' && charge.state !== 'refused-over-limit') {
     const words = chargeWords(charge.state, row.charge_provider); if (words !== null) reasons.push(words);
   }
-  return { configured: (await payingIds(env, [id])).has(id), will_pay: reasons.length === 0, provider, reasons, rail_choice: { ...rails, choice_url: links.payment_rail },
+  return { configured: (await payingIds(env, [id])).has(id), will_pay: reasons.length === 0, automatic_charge_off: automaticChargeOff, provider, reasons, rail_choice: { ...rails, choice_url: links.payment_rail },
     setup_urls: { stripe: links.stripe_card, paypal: links.paypal_vault }, solvers,
     pay_now: { comment: payComment(id, row.amount), note: 'The poster can post this exact case-insensitive comment on the bounty issue to pay a linked PR author without a merge, repository switch or board session. The approved reward must fit the saved method’s default limit, with no self/repository-access payee or prior payment/record/in-flight charge. The poster chooses a default rail when both are saved. Fallback is off unless explicitly enabled; a via stripe or via paypal override never falls back. A refused comment is not retried; after fixing setup, post a new comment. An in-flight charge must be resolved first.' },
     fallback: 'The owner may choose a linked author and pay through Checkout or by hand.' };

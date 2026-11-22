@@ -309,6 +309,7 @@ describe('PF52: payout connection after a refused payment', () => {
   it.each(['stripe', 'paypal'] as const)('never auto-retries a %s-unready merge after connection, retains explicit fallback facts, and accepts an outside record', async rail => {
     await unconnected(rail);
     const before = await fact();
+    expect(before.pay_on_merge.automatic_charge_off).toBe(true);
     expect(before.pay_on_merge.solvers[0].setup_urls).toMatchObject({ stripe: expect.stringContaining('/setup/stripe-payouts/'), paypal: expect.stringContaining('/setup/paypal-payouts/') });
     expect(before.owed_now).toMatchObject({ amount: 45, pay_now: { comment: `omakase pay ${id} $45 to @<solver-login>` } });
     expect(before.owed_now.payout_setup_urls).toEqual(before.pay_on_merge.solvers[0].setup_urls);

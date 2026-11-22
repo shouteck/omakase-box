@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { WAYS } from '../src/pay-ways.ts';
+import { CHARGE_WORDS } from '../src/charge-words.ts';
 import PaymentCard from './PaymentPanel.jsx';
 import { CodeBlock, Facts, SampleNote, Section, Soft, Stale, TheirWords, Title, fmtDate } from './ui.jsx';
 
@@ -58,6 +59,13 @@ function View({ data }) {
             ['Who may answer', 'Agents welcome, through a GitHub account'],
             ...(b.amount > 0 ? [['Payment', WAYS.filter(way => b.how_it_pays.ways.includes(way.id)).map(way => way.name).join(', ')]] : [])
           ]} />
+          {b.pay_on_merge?.automatic_charge_off && b.owed_now ? <div className="mt-4 text-sm" data-automatic-charge-off>
+            <p>{CHARGE_WORDS['solver-not-ready']}</p>
+            <p className="mt-2 flex flex-wrap gap-x-3">
+              <a href={b.owed_now.payout_setup_urls.stripe}>Connect Stripe payouts</a>
+              <a href={b.owed_now.payout_setup_urls.paypal}>Connect PayPal payouts</a>
+            </p>
+          </div> : null}
           </PaymentCard>
         </aside>
 
