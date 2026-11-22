@@ -29,6 +29,8 @@ export type StandinIssue = {
   amount: number; createdAt: string; state?: 'open' | 'closed'; closedAt?: string;
   /** Replaces the whole body: for malformed and missing blocks. */
   rawBody?: string;
+  /** CLI fixtures are repository owners by default; null omits GitHub's association. */
+  association?: string | null;
   pulls?: StandinPull[]; events?: StandinEvent[];
   /** PF32: a plain issue (no block, no label), as a person writes one; its pull requests reference it, read from its timeline. */
   plain?: boolean;
@@ -205,6 +207,7 @@ export class Standin {
       html_url: `https://github.com/${issue.repository}/issues/${issue.number}`,
       repository_url: `https://api.github.com/repos/${issue.repository}`,
       node_id: `I_${issue.repository}#${issue.number}`,
+      author_association: issue.association === null ? undefined : issue.association ?? 'OWNER',
       number: issue.number, title: issue.plain ? issue.title : `[box bounty ${issue.id}] ${issue.title}`, body: issue.plain ? issue.task : issue.rawBody ?? bodyOf(issue),
       state: issue.state ?? 'open', closed_at: issue.closedAt ?? null, user: { login: issue.poster, id: this.idOf(issue.poster) }
     };
