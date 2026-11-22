@@ -513,8 +513,9 @@ describe('the pages', () => {
     expect(how).toContain('On your page, list a way and be paid by hand.'); // This board has no key. PF18: the words follow what it has.
     // A person only installs: every other command is folded away.
     expect(await page.locator('#hand-off ol > li').count()).toBe(4);
-    expect(how).toContain('On merge pays without you:');
-    expect(how).toContain('merges it and pushes');
+    expect(how).toContain('save a card and authorize Stripe charges for the repository');
+    expect(how).toContain('merges it locally and prints the git push command for you to run');
+    expect(how).toContain('Only imported issues need the GitHub comment omakase approve <id> $<reward>');
     // One window: each command sits under a comment naming the card it belongs to.
     const groups = await page.locator('#hand-off details [data-group]').evaluateAll(elements => elements.map(element => ({
       title: element.querySelector('[data-comment]')?.textContent,
@@ -607,7 +608,7 @@ describe('the pages', () => {
     expect(await oneClick.innerText()).not.toMatch(/Currently available here:|Set up here:|Availability not confirmed/);
     const front = await page.locator('main').innerText();
     expect(front.includes('One click for you')).toBe(one_click.length > 0);
-    expect(front.includes('Nothing for you')).toBe(on_merge);
+    expect(front.includes('You authorize payment first')).toBe(on_merge);
     expect(moneyClaims(front)).toEqual([]);
     await visit(page, '/how/');
     const step = page.locator('main li', { has: page.getByRole('heading', { name: 'Get paid', exact: true }) });

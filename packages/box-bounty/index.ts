@@ -70,7 +70,7 @@ export { anyJsonContaining, closeStores, countCorrupt, corruptFiles, dropStored,
 export { ownerGate, waitForOwner } from './gate.js';
 export { assertMinimumReward, assertPromiseRoom, promisedTotal, rewardForPost, withPromiseLock } from './money.js';
 export { waitingSummary } from './owner-text.js';
-export { ENDED_OVERVIEW_LIMIT, renderHelp, renderOpenLine, renderResume, renderOverview, setInstructionNoticeListener } from './render.js';
+export { appliedRevert, ENDED_OVERVIEW_LIMIT, renderHelp, renderOpenLine, renderResume, renderOverview, setInstructionNoticeListener, UNKNOWN_ROLLBACK } from './render.js';
 export { firstUseBlock, mergeWaitLines, ownerBlock, ownerWaitLines } from './owner-text.js';
 export { boundAmount } from './format.js';
 export type { AllowedBy, AnswerSpec, Attempt, AttemptOutcome, BountyRecord, BountyStage, EndedStage, ListedBounty, OpenStage, RecordSeed, StageEvent, WaitingFor } from './record.js';
