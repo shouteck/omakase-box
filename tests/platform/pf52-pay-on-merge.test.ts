@@ -71,6 +71,20 @@ beforeEach(async () => {
 afterEach(async () => { vi.restoreAllMocks(); await stripe.stop(); await paypal.stop(); await r.close(); });
 
 describe('PF52: direct listing consent', () => {
+  it.each([false, true])('only newly approved imports appear after an existing feed bookmark: pending=%s', async pending => {
+    await r.env.DB.prepare('DELETE FROM bounties WHERE id = ?').bind(id).run();
+    expect(await listIssue(r.env, OWNER, `https://github.com/${REPO}/issues/12`, 45, NOW, undefined, pending)).toHaveProperty('id', id);
+    issue.pulls = [];
+    const sequence = async () => (await r.env.DB.prepare('SELECT listed_seq FROM bounties WHERE id = ?').bind(id).first<{ listed_seq: number }>())!.listed_seq;
+    const before = await sequence();
+    const bookmark = (await (await get('/bounties.json?since=now')).json() as any).since_next;
+    expect(typeof bookmark).toBe('string');
+    await approve();
+    if (pending) expect(await sequence()).toBeGreaterThan(before); else expect(await sequence()).toBe(before);
+    const feed = await (await get(`/bounties.json?since=${bookmark}`)).json() as any;
+    expect(feed.bounties.map((bounty: { id: string }) => bounty.id)).toEqual(pending ? [id] : []);
+    expect(await r.env.DB.prepare('SELECT merge_consent FROM bounties WHERE id = ?').bind(id).first()).toEqual({ merge_consent: 1 });
+  });
   it('discovers new solutions without consent and later reads consent through the two-read worker', async () => {
     await r.env.DB.prepare('DELETE FROM bounties WHERE id = ?').bind(id).run();
     expect(await listIssue(r.env, OWNER, `https://github.com/${REPO}/issues/12`, 45, NOW)).toEqual({ id });

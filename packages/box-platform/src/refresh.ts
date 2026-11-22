@@ -412,7 +412,7 @@ async function readApproval(env: Env, github: GitHub, id: string, repository: st
     if (Date.parse(comment['created_at']) < Date.parse(row.created_at)) continue;
     const association = typeof comment['author_association'] === 'string' ? comment['author_association'] : '';
     if (row.approval === null ? userId !== row.poster_id || !onMerge : row.listed_by_id === null ? !APPROVERS.has(association) : userId !== row.poster_id && !APPROVERS.has(association)) continue;
-    await env.DB.prepare(`UPDATE bounties SET approval = 'comment', approval_proof = ?, poster = ?, poster_id = ?, approval_at = ?, approved_amount = amount, merge_consent = ?, merge_rail = ?, listed_seq = (SELECT COALESCE(MAX(listed_seq), 0) + 1 FROM bounties) WHERE id = ? AND approval IS ?`)
+    await env.DB.prepare(`UPDATE bounties SET approval = 'comment', approval_proof = ?, poster = ?, poster_id = ?, approval_at = ?, approved_amount = amount, merge_consent = ?, merge_rail = ?, listed_seq = CASE WHEN approval = 'pending' THEN (SELECT COALESCE(MAX(listed_seq), 0) + 1 FROM bounties) ELSE listed_seq END WHERE id = ? AND approval IS ?`)
       .bind(comment['html_url'] as string, login, userId as number, comment['created_at'], onMerge ? 1 : 0, via, id, row.approval).run();
     return;
   }
