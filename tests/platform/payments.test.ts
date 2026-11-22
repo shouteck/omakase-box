@@ -225,7 +225,7 @@ describe('on the real routes', () => {
     return response;
   }
   async function signIn(login: string): Promise<Jar> {
-    r.standin.signInAs = { id: login.length * 1000 + login.charCodeAt(8), login };
+    r.standin.signInAs = { id: r.standin.idOf(login), login };
     const jar: Jar = new Map();
     const start = await send(jar, '/auth/github');
     const atGitHub = await fetch(start.headers.get('location')!, { redirect: 'manual' });
