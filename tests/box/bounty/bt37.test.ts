@@ -96,6 +96,20 @@ describe('1. an applied merge says it is local and how it reaches GitHub', () =>
 });
 
 describe('2. status never says "no solution yet" while a pull request waits', () => {
+  it('a draft appears as waiting only after it is ready for review', () => postedFixture(({ repo, id, state, update }) => {
+    update({ prs: state().prs.map(pr => ({ ...pr, draft: true })) });
+    const draft = box(repo, ['status', id]);
+    expect(draft.status).toBe(0);
+    expect(draft.stdout).toContain('no solution yet');
+    expect(draft.stdout).not.toContain(`omakase-box apply ${id}`);
+
+    update({ prs: state().prs.map(pr => ({ ...pr, draft: false })) });
+    const submitted = box(repo, ['status', id]);
+    expect(submitted.status).toBe(0);
+    expect(submitted.stdout).toContain('1 solution(s) waiting');
+    expect(submitted.stdout).toContain(`omakase-box apply ${id}`);
+  }));
+
   it('a waiting uncollected pull request shows "1 solution(s) waiting"', () => postedFixture(({ repo, id }) => {
     // The first status refreshes outside state: the stand-in's PR lands on
     // availablePullRequests. Nothing is collected.
