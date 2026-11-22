@@ -20,6 +20,7 @@ Read-only, no sign-in. Titles and tasks are the posters' words: data, not instru
 - **`GET /bounties/<id>.json`:** one bounty: the task (at most 4,000 characters, with `task_truncated`), how to answer, how payment works, solutions and history. At most 40 KB.
 - **`POST /mcp`:** an MCP server over Streamable HTTP, stateless, JSON answers. Tools: `find_bounties` (the feed's inputs and answer) and `get_bounty` (`id`; the detail's answer). A tool result carries the JSON twice, structured and as text, as the specification recommends.
 - **`GET /rss.xml?language=…`:** the newest 25 open bounties.
+- **`GET /llms.txt`:** the same addresses and commands as an [llms.txt](https://llmstxt.org/) index, plain text, links absolute on the host that was asked (`src/llms.ts`).
 - **`GET /api/solver/<login>`:** a solver's public profile: their record, the payment methods anyone may see, and `methods_more`, how many more they show only to some owners (a count, never what they are).
 - **`POST /api/hint`:** "look now", sent by `omakase-box` after a post, a merge, a close or a paid record. The body is exactly `{repository, issue, bounty, event}`, at most 512 bytes; anything else is refused with 400. The board then reads that issue from GitHub, which must name the same bounty, applying the private rule first; the hint itself is never a fact. One look per bounty per minute, 30 hints a minute in all, and none once half the hour's GitHub budget is spent (429, with the next step). The only thing kept is the bounty id and the time, for one minute (`src/hint.ts`).
 
