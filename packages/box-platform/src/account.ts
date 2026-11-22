@@ -2,20 +2,23 @@
 // answer that may carry an owner-only method. The feed, MCP and RSS never come here.
 import { authenticationPage, openPayPage, payOffer, readPayPage } from './charge.js';
 import type { Env } from './github.js';
-import { finishOrder, openPayPalPage, paypalOffer } from './paypal-pay.js';
+import { finishOrder, openPayPalPage, paypalOffer, removeVault, vaultSaved, vaultSetup } from './paypal-pay.js';
 import { loginAddress, payerFrom, paypalOn, PayPalUnavailable } from './paypal.js';
 import { errorWords, redact, stripe, stripeOn, StripeUnavailable } from './stripe.js';
 import { checkMethod, isLink, MAX_METHODS, type Method, parseStored, publicOnly } from './methods.js';
-import { waysSetUp } from './pay-ways.js';
+import { waysSetUp, STRIPE_COUNTRIES } from './pay-ways.js';
 import { type BountyPayment, emptyPayment, factsOf, landedOf, loadPayments, notCounted, notCountedOf, ownerRecord, paymentOf, solverRecord } from './payments.js';
 import { listIssue, removeListed } from './listing.js';
 import { FROM_LISTED, readBounty, stateOf } from './query.js';
 import { LOGIN } from './refresh.js';
 import { ownerOnlyAllowed, payeeOf, roleOf, same } from './visibility.js';
+import { SETUP_KINDS } from './payment-setup.js';
 
 const SESSION_COOKIE = '__Host-board_session';
 const STATE_COOKIE = '__Host-board_oauth_state';
 const PAYPAL_STATE_COOKIE = '__Host-board_paypal_state';
+const SETUP_COOKIE = '__Host-board_setup';
+const SETUP_RETURN_COOKIE = '__Host-board_setup_return';
 // PF32: a listing waiting on a one-time sign-in that asks GitHub for the lister's permission on the repository.
 const LIST_COOKIE = '__Host-board_list';
 const SESSION_DAYS = 30;
@@ -127,7 +130,9 @@ async function finishSignIn(request: Request, env: Env, url: URL, now: number): 
   await db.prepare('DELETE FROM sessions WHERE expires_at <= ?').bind(now).run();
   const token = randomToken();
   await db.prepare('INSERT INTO sessions (token_hash, github_id, login, expires_at) VALUES (?, ?, ?, ?)').bind(await hashOf(token), github_id, login, now + SESSION_DAYS * DAY_SECONDS * 1000).run();
-  return redirect('/me/', [clearState, cookie(SESSION_COOKIE, token, SESSION_DAYS * DAY_SECONDS)]);
+  const setup = cookieOf(request, SETUP_COOKIE);
+  const next = setup !== null && /^\/setup\/(stripe-card|paypal-vault|stripe-payouts|paypal-payouts)\/(\?bounty=bt-[a-f\d]{12})?$/.test(setup) ? setup : '/me/';
+  return redirect(next, [clearState, cookie(SETUP_COOKIE, '', 0), cookie(SESSION_COOKIE, token, SESSION_DAYS * DAY_SECONDS)]);
 }
 
 async function signOut(request: Request, env: Env): Promise<Response> {
@@ -458,7 +463,8 @@ const SWITCHES_MAX = 50;
 
 /** What this person has set up, for their own page only. Never an id of Stripe's. */
 async function payOf(env: Env, viewer: Viewer) {
-  if (!stripeOn(env)) return { set_up: false };
+  const vault = await env.DB.prepare('SELECT 1 FROM paypal_vault WHERE github_id = ?').bind(viewer.github_id).first();
+  if (!stripeOn(env) && !(paypalOn(env) && vault !== null)) return { set_up: false };
   const solver = await env.DB.prepare('SELECT ready FROM stripe_accounts WHERE github_id = ?').bind(viewer.github_id).first<{ ready: number }>();
   const owner = await env.DB.prepare('SELECT payment_method, card_label, limit_per_bounty FROM pay_settings WHERE github_id = ?').bind(viewer.github_id).first<{ payment_method: string | null; card_label: string | null; limit_per_bounty: number | null }>();
   // Each repository's own limit (PF19); a row from before PF19's migration falls back to the owner's one limit.
@@ -470,6 +476,7 @@ async function payOf(env: Env, viewer: Viewer) {
     FROM bounties b WHERE b.poster_id = ? GROUP BY b.repository ORDER BY open DESC, b.repository LIMIT 50`).bind(viewer.github_id).all<{ repository: string; open: number; reward: number }>()).results;
   const openIn = new Map(mine.map(entry => [entry.repository.toLowerCase(), entry.open]));
   return {
+    ...(vault !== null ? { saved_paypal: true } : {}), ...(!stripeOn(env) ? { stripe_set_up: false } : {}),
     set_up: true, solver: { connected: solver !== null, ready: solver?.ready === 1 }, card: owner?.payment_method == null ? null : owner.card_label ?? 'a saved card', limit: owner?.limit_per_bounty ?? null,
     repositories: on.map(entry => ({ ...entry, open: openIn.get(entry.repository.toLowerCase()) ?? 0 })),
     yours: mine.map(entry => ({ repository: entry.repository, open: entry.open, reward: entry.reward }))
@@ -497,7 +504,7 @@ async function connectStripe(request: Request, env: Env, url: URL, viewer: Viewe
     held = { account_id: made.json['id'] };
     await env.DB.prepare('INSERT INTO stripe_accounts (github_id, account_id) VALUES (?, ?)').bind(viewer.github_id, held.account_id).run();
   }
-  const link = await stripe(env, 'POST', '/v1/account_links', { account: held.account_id, type: 'account_onboarding', refresh_url: `${url.origin}/me/`, return_url: `${url.origin}/me/` });
+  const link = await stripe(env, 'POST', '/v1/account_links', { account: held.account_id, type: 'account_onboarding', refresh_url: `${url.origin}/me/`, return_url: `${url.origin}${url.pathname.startsWith('/setup/') ? '/setup/stripe-return/' : '/me/'}` });
   if (link.status !== 200 || typeof link.json['url'] !== 'string') return json(409, { error: `${errorWords(link)} Next: try again.` });
   return json(200, { url: link.json['url'] });
 }
@@ -555,7 +562,8 @@ async function savePay(request: Request, env: Env, viewer: Viewer, now: number):
     ]);
     return json(200, { pay: await payOf(env, viewer) });
   }
-  if (owner?.payment_method == null) return json(409, { error: 'Save a card first. Nothing changed. Next: save a card on this page.' });
+  const vault = await env.DB.prepare('SELECT payment_token FROM paypal_vault WHERE github_id = ?').bind(viewer.github_id).first();
+  if (owner?.payment_method == null && vault === null) return json(409, { error: 'Save a card or PayPal first. Nothing changed. Next: save a method on this page.' });
   // Each repository with its own limit (PF19). The older form, one limit for a list of names, still works: it gives each the same limit.
   if (!Array.isArray(repositories) || repositories.length > SWITCHES_MAX) return json(400, { error: `Name up to ${SWITCHES_MAX} repositories as owner/name. Nothing changed.` });
   const entries = (repositories as unknown[]).map(entry => typeof entry === 'string' ? { repository: entry, limit } : (entry ?? {}) as { repository?: unknown; limit?: unknown });
@@ -575,7 +583,7 @@ async function savePay(request: Request, env: Env, viewer: Viewer, now: number):
 }
 
 async function payRoute(request: Request, env: Env, url: URL, viewer: Viewer, now: number): Promise<Response> {
-  if (!stripeOn(env)) return json(409, NOT_SET_UP);
+  if (!stripeOn(env) && !(url.pathname === '/api/me/pay' && paypalOn(env))) return json(409, NOT_SET_UP);
   try {
     switch (url.pathname) {
       case '/api/me/stripe/connect': return await connectStripe(request, env, url, viewer);
@@ -604,7 +612,7 @@ async function finishPayPal(request: Request, env: Env, url: URL, viewer: Viewer
   try { payer = await payerFrom(env, code); } catch (error) { if (!(error instanceof PayPalUnavailable)) throw error; }
   if (payer === null) return redirect('/me/?paypal=refused#paypal', [clear]);
   await env.DB.prepare('INSERT INTO paypal_accounts (github_id, payer_id, at) VALUES (?, ?, ?) ON CONFLICT (github_id) DO UPDATE SET payer_id = excluded.payer_id, at = excluded.at').bind(viewer.github_id, payer, now).run();
-  return redirect('/me/#paypal', [clear]);
+  return redirect(cookieOf(request, SETUP_RETURN_COOKIE) === null ? '/me/#paypal' : '/setup/finish/', [clear]);
 }
 
 const paypalOf = async (env: Env, viewer: Viewer) => paypalOn(env)
@@ -621,6 +629,73 @@ const loginFrom = (text: string): string | null => {
 export async function accountResponse(request: Request, env: Env, url: URL, now: number): Promise<Response | null> {
   const { pathname: path } = url;
   const { method } = request;
+  if (method === 'GET' && (path === '/setup/finish/' || path === '/setup/stripe-return/')) {
+    const viewer = await viewerOf(request, env, now);
+    if (viewer === null) return redirect('/auth/github');
+    if (path === '/setup/stripe-return/' && stripeOn(env)) await readReady(env, viewer);
+    const target = cookieOf(request, SETUP_RETURN_COOKIE);
+    return redirect(target !== null && /^\/b\/bt-[a-f\d]{12}\/$/.test(target) ? target : '/me/', [cookie(SETUP_RETURN_COOKIE, '', 0)]);
+  }
+  const setup = /^\/setup\/([^/]+)\/$/.exec(path);
+  if (method === 'GET' && setup !== null && SETUP_KINDS.some(kind => kind === setup[1])) {
+    const viewer = await viewerOf(request, env, now);
+    const bounty = /^bt-[a-f\d]{12}$/.test(url.searchParams.get('bounty') ?? '') ? url.searchParams.get('bounty') : null;
+    const carry = (response: Response) => { if (bounty !== null) response.headers.append('set-cookie', cookie(SETUP_RETURN_COOKIE, `/b/${bounty}/`, 3600)); return response; };
+    if (viewer === null) return carry(redirect('/auth/github', [cookie(SETUP_COOKIE, `${path}${bounty === null ? '' : `?bounty=${bounty}`}`, 600)]));
+    if (setup[1] === 'paypal-payouts') return carry(paypalOn(env) ? startPayPal(env, url) : redirect('/me/?paypal=not-set-up#paypal'));
+    try {
+      if (setup[1] === 'paypal-vault') {
+        if (!paypalOn(env)) return json(409, { error: 'PayPal is not set up on this board.' });
+        const started = await vaultSetup(env, viewer.github_id, url.origin, now);
+        return carry('url' in started ? redirect(started.url) : json(409, started));
+      }
+      if (!stripeOn(env)) return json(409, NOT_SET_UP);
+      if (setup[1] === 'stripe-card') {
+        const started = await startCard(env, url, viewer);
+        const body = await started.json() as { url?: string };
+        return carry(typeof body.url === 'string' ? redirect(body.url) : json(started.status, body));
+      }
+      return carry(new Response(`<!doctype html><html><head><title>Connect Stripe payouts</title></head><body><h1>Connect Stripe payouts</h1><form method="post" action="/setup/stripe-payouts/"><label>Bank account country <select name="country">${STRIPE_COUNTRIES.map(code => `<option value="${code}">${code}</option>`).join('')}</select></label><button>Continue to Stripe</button></form></body></html>`, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } }));
+    } catch (error) {
+      if (error instanceof StripeUnavailable || error instanceof PayPalUnavailable) return json(503, { error: 'The payment provider could not be reached. Next: try again.' });
+      throw error;
+    }
+  }
+  if (method === 'POST' && path === '/setup/stripe-payouts/') {
+    const refusal = writeRefusal(request, url, false);
+    if (refusal !== null) return refusal;
+    const viewer = await viewerOf(request, env, now);
+    if (viewer === null) return redirect('/auth/github');
+    if (!/^application\/x-www-form-urlencoded\b/i.test(request.headers.get('content-type') ?? '')) return json(415, { error: 'Use the country form on this page.' });
+    const text = await request.text();
+    if (new TextEncoder().encode(text).length > 512) return json(413, { error: 'The country form is too large.' });
+    const form = new URLSearchParams(text);
+    const made = await connectStripe(new Request(url, { method: 'POST', body: JSON.stringify({ country: form.get('country') }) }), env, url, viewer);
+    const body = await made.json() as { url?: string };
+    return typeof body.url === 'string' ? redirect(body.url) : json(made.status, body);
+  }
+  if (path === '/api/me/paypal/vault' || path === '/api/me/paypal/vault/saved' || path === '/api/me/paypal/vault/remove') {
+    if (method !== 'GET' && method !== 'POST') return json(405, { error: 'Use GET or POST.' });
+    if (method === 'POST') { const refusal = writeRefusal(request, url, true); if (refusal !== null) return refusal; }
+    const viewer = await viewerOf(request, env, now);
+    if (viewer === null) return json(401, SIGN_IN_FIRST);
+    if (method === 'GET') return json(200, { set_up: paypalOn(env), saved: await env.DB.prepare('SELECT label, limit_per_bounty FROM paypal_vault WHERE github_id = ?').bind(viewer.github_id).first() });
+    if (!paypalOn(env)) return json(409, { error: 'PayPal is not set up on this board.' });
+    try {
+      if (path.endsWith('/remove')) { await removeVault(env, viewer.github_id); return json(200, { removed: true }); }
+      if (path.endsWith('/saved')) {
+        const body = await readBody(request); if ('refused' in body) return body.refused;
+        const input = (body.value ?? {}) as { setup_token?: unknown; limit?: unknown };
+        const result = await vaultSaved(env, viewer.github_id, input.setup_token, input.limit, now);
+        return json('error' in result ? 409 : 200, result);
+      }
+      const result = await vaultSetup(env, viewer.github_id, url.origin, now);
+      return json('error' in result ? 409 : 200, result);
+    } catch (error) {
+      if (error instanceof PayPalUnavailable) return json(503, { error: 'PayPal could not be reached. Next: try again.' });
+      throw error;
+    }
+  }
   if (method === 'GET' && path === '/auth/github') return startSignIn(env, url);
   if (method === 'GET' && path === '/auth/github/callback') return finishSignIn(request, env, url, now);
   if (method === 'POST' && path === '/auth/sign-out') return writeRefusal(request, url, false) ?? signOut(request, env);

@@ -3,6 +3,7 @@
 // human way's payment (the owner chooses, a merge names nobody, never owed), and removing it.
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { handle } from '../../packages/box-platform/src/api.js';
+import { payingIds } from '../../packages/box-platform/src/charge.js';
 import { refresh } from '../../packages/box-platform/src/refresh.js';
 import type { StandinIssue } from '../../packages/box-platform/standin/standin.js';
 import { MINUTE, NOW, rig, type Rig, refreshUntilDone } from './support.js';
@@ -190,7 +191,7 @@ describe('a listed bounty on the board', () => {
     expect((await send(null, `/api/b/${id}`)).status).toBe(404);
   });
 
-  it('is never charged on merge, whatever the owner\'s pay-on-merge switch', async () => {
+  it('can pay on merge when approved and the owner saved a card and enabled the repository', async () => {
     const mara = await signIn(MARA);
     const id = (await (await list(mara, issueOf(12))).json() as any).listed as string;
     await r.env.DB.prepare(`INSERT INTO pay_settings (github_id, customer_id, payment_method, card_label, limit_per_bounty) VALUES (?, 'cus_x', 'pm_x', 'Visa', 500)`).bind(MARA.id).run();
@@ -198,7 +199,6 @@ describe('a listed bounty on the board', () => {
     const issue = r.standin.issues.find(entry => entry.number === 12 && entry.repository === REPO)!;
     issue.pulls = [{ number: 42, author: ROOK.login, state: 'closed', merged_at: new Date(NOW).toISOString(), created_at: new Date(NOW).toISOString() }];
     r.clock.at += 20 * MINUTE; await refresh(r.env);
-    const { results } = await r.env.DB.prepare(`SELECT b.id FROM bounties b JOIN pay_repositories r ON r.github_id = b.poster_id AND r.repository = b.repository WHERE b.amount > 0 AND b.source = 'posted'`).all<{ id: string }>();
-    expect(results.map(row => row.id)).not.toContain(id);
+    expect((await payingIds({ ...r.env, STRIPE_SECRET_KEY: 'standin-key' }, [id])).has(id)).toBe(true);
   });
 });

@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS bounties (
   listed_by TEXT,
   -- The issue's own author, whose words the task is (the lister may be someone who can write to the repository).
   issue_author TEXT
-, approval TEXT, approval_proof TEXT);
+, approval TEXT, approval_proof TEXT, approval_at TEXT, approved_amount INTEGER, merge_consent INTEGER NOT NULL DEFAULT 0);
 -- PF44 (written as the live board's ALTER TABLE leaves it, so both schemas read the same): approval NULL, approved when it
 -- came in (posted, or listed by someone with authority). 'pending': imported by anyone and not yet approved: hidden from the
 -- open list, nothing promised, nothing paid. 'comment': approved by the comment whose address is approval_proof, written on
@@ -161,6 +161,17 @@ CREATE TABLE IF NOT EXISTS hints (
   bounty_id TEXT PRIMARY KEY,
   at INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS paypal_vault (
+  github_id INTEGER PRIMARY KEY,
+  payment_token TEXT NOT NULL,
+  label TEXT NOT NULL,
+  limit_per_bounty INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS paypal_vault_setup (
+  github_id INTEGER PRIMARY KEY,
+  setup_id TEXT NOT NULL,
+  expires_at INTEGER NOT NULL
+);
 CREATE TABLE IF NOT EXISTS log (
   at INTEGER NOT NULL,
   reason TEXT NOT NULL,
@@ -190,4 +201,5 @@ INSERT OR IGNORE INTO migrations (name, applied_at, note) VALUES
   ('pf44.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
   ('pf45-bt68.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
   ('pf46-bt68.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
-  ('pf47-bt68.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board');
+  ('pf47-bt68.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
+  ('pf52.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board');

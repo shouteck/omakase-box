@@ -65,6 +65,15 @@ const paidEvents = (repo: string, rid: string) =>
   (JSON.parse(readRecordRaw(repo, rid)) as { events: Record<string, unknown>[] }).events.filter(event => event['stage'] === 'paid');
 
 describe('a merged bounty with a reward reads owed until the owner records paid', () => {
+  it('exposes owed_now with the supplied destination and a browser-free record command, clearing it after payment', () => {
+    const repo = makeRepo({ 'app.txt': 'seed\n' });
+    const rid = applied(repo, 49);
+    const before = JSON.parse(box(repo, ['status', rid, '--json']).stdout);
+    expect(before.bounties.find((b: any) => b.id === rid).owed_now).toMatchObject({ amount: 5, currency: 'USD', solver: 'solver', methods: null, payment_link: LINK, record_payment: `omakase-box config set paid ${rid}` });
+    expect(box(repo, ['config', 'set', 'paid', rid]).status).toBe(0);
+    const after = JSON.parse(box(repo, ['status', rid, '--json']).stdout);
+    expect(after.bounties.find((b: any) => b.id === rid).owed_now).toBeNull();
+  });
   it('status <id> names whom is owed; the `omakase-box` overview and an unasked status say nothing of it (PF15)', () => {
     const repo = makeRepo({ 'app.txt': 'seed\n' });
     const rid = applied(repo, 1);

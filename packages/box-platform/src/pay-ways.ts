@@ -11,14 +11,14 @@ export type Step = { readonly you: boolean; readonly words: string };
 export const WAYS: readonly { readonly id: WayId; readonly name: string; readonly through: string; readonly yourPart: string; readonly steps: readonly Step[]; readonly whoSays: string }[] = [
   { id: 'by-hand', name: 'By hand', through: 'Wise, wallet or another way they list', yourPart: 'You pay yourself', steps: [{ you: true, words: 'You pay through a link they listed' }], whoSays: 'The owner' },
   { id: 'one-click', name: 'One click', through: 'A payment provider', yourPart: 'One click for you', steps: [{ you: true, words: 'You click Pay, on the provider\'s page' }], whoSays: 'The provider' },
-  { id: 'on-merge', name: 'On merge', through: 'Stripe', yourPart: 'You authorize payment first', steps: [{ you: false, words: 'Stripe charges the card you authorized for the repository' }], whoSays: 'The provider' }
+  { id: 'on-merge', name: 'On merge', through: 'Stripe or saved PayPal', yourPart: 'You authorize payment first', steps: [{ you: false, words: 'The provider charges the saved method you authorized' }], whoSays: 'The provider' }
 ];
 
 /** Which ways this board's keys allow. By hand needs none. */
 export const waysSetUp = (keys: { readonly stripe: boolean; readonly paypal: boolean }): WaysSetUp => ({
   by_hand: true,
   one_click: [...(keys.stripe ? ['Stripe' as const] : []), ...(keys.paypal ? ['PayPal' as const] : [])],
-  on_merge: keys.stripe
+  on_merge: keys.stripe || keys.paypal
 });
 
 /** One way as a reader on this board should see it: its name, and whether it is set up here. */
@@ -26,7 +26,7 @@ export const isSetUp = (id: WayId, here: WaysSetUp): boolean => id === 'by-hand'
 
 /** A way's "through" line on this board. Until the board has answered, or with no key, it names no provider. */
 export const throughHere = (way: { readonly id: WayId; readonly through: string }, here: WaysSetUp | null): string =>
-  way.id === 'one-click' && here !== null && here.one_click.length > 0 ? here.one_click.join(' or ') : way.through;
+  (way.id === 'one-click' || way.id === 'on-merge') && here !== null && here.one_click.length > 0 ? here.one_click.join(' or ') : way.through;
 
 /** Whose page one click opens, on this board. */
 export const pageWords = (here: WaysSetUp): string => here.one_click.length === 0 ? 'a provider\'s page' : `${here.one_click.map(name => `${name}'s`).join(' or ')} page`;
@@ -36,7 +36,7 @@ export const connectWords = (here: WaysSetUp | null): string => {
   const names = here?.one_click ?? [];
   const byHand = names.length === 0 ? 'On your page, list a way and be paid by hand.' : 'Or list a way and be paid by hand.';
   if (names.length === 0) return byHand;
-  const onMerge = here?.on_merge !== true ? ' with one click' : names.length === 1 ? ' with one click or on merge' : ' with one click; connected Stripe also covers on merge';
+  const onMerge = here?.on_merge !== true ? ' with one click' : ' with one click or on merge';
   return `On your page, connect ${names.join(' or ')} and an owner can pay you${onMerge}. ${byHand}`;
 };
 

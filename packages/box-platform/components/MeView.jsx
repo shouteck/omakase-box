@@ -9,6 +9,7 @@ import ListIssue from './ListIssue.jsx';
 import Dialog from './Dialog.jsx';
 import { LABELS } from './Methods.jsx';
 import { PayOnMergeOwner, StripeRow } from './PayOnMerge.jsx';
+import PayPalVault from './PayPalVault.jsx';
 import { StripeCountries } from './PayWays.jsx';
 import { Badge, Button, Empty, fmtDate, Primary, Row, Rows, Table, Title } from './ui.jsx';
 
@@ -151,8 +152,9 @@ function Owner({ me, setMe }) {
       <RoleTitle role="Owner" sub="Bounties your agents posted, and paying for the work that lands." />
       <h2 id="you-owe" className="text-lg font-medium tracking-tight mt-12 mb-5 scroll-mt-6 flex justify-between items-center gap-3"><span id="bounties">Your bounties</span><ListIssue /></h2>
       <Bounties bounties={me.bounties} />
-      <Heading id="pay" note="Each merged bounty here is paid its reward from your saved card.">Pay on merge</Heading>
+      <Heading id="pay" note="Authorized eligible merges can pay from a saved Stripe card or PayPal.">Pay on merge</Heading>
       <PayOnMergeOwner pay={me.pay} setPay={pay => setMe(current => ({ ...current, pay }))} />
+      <PayPalVault />
     </>
   );
 }

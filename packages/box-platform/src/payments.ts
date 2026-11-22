@@ -17,7 +17,7 @@ export type Paid = PaidEvent & { by: string; source: 'project-record' | 'board' 
 export type ChargeFact = { state: string; at: string; solver: string | null; provider?: string | null };
 export type BountyPayment = {
   id: string; title: string; repository: string; amount: number; poster: string;
-  /** PF32: 'listed' (an existing issue listed from the board): the owner chooses whom to pay; a merge names nobody. */
+  /** Listed bounties preserve owner choice until a provider payment or owner record names the payee. */
   source?: string;
   pulls: readonly MergedPull[];
   chain: readonly PaidEvent[];
@@ -77,8 +77,7 @@ export function paymentOf(input: BountyPayment) {
   const charge = input.charge == null ? null : { state: input.charge.state, at: input.charge.at, words: (viaPayPal ? PAYPAL_WORDS[input.charge.state as keyof typeof CHARGE_WORDS] : undefined) ?? CHARGE_WORDS[input.charge.state as keyof typeof CHARGE_WORDS] ?? null, whose_word: viaPayPal ? 'the board\'s, from PayPal\'s answer' as const : 'the board\'s, from Stripe\'s answer' as const };
   const none = { owed: null, recorded_paid: null, solver_says: null, excluded_from_counts: null, charge };
   if (input.amount === 0) return { state: 'no-reward' as PaymentState, ...none, note: 'No reward is stated, so nothing is owed.' };
-  // PF32: a listed bounty is never owed. Until a payment names someone, the owner chooses, from every linked pull request.
-  if (input.source === 'listed' && facts.record === null) return { state: 'owner-chooses' as PaymentState, ...none, note: landed.length === 0 ? 'No linked pull request yet. The owner chooses whom to pay, from every pull request linked to the issue.' : 'The owner chooses whom to pay, from every pull request linked to the issue. A merge names nobody.' };
+  if (input.source === 'listed' && facts.record === null) return { state: 'owner-chooses' as PaymentState, ...none, note: landed.length === 0 ? 'No linked pull request yet. The owner may choose whom to pay. Authorized pay on merge requires one eligible verified landing.' : 'Authorized pay on merge can pay one eligible verified landing. Otherwise the owner chooses from every linked pull request, merged or not.' };
   if (landed.length === 0) {
     const waiting = input.pulls[0];
     const owners = input.pulls.find(pull => pull.head_on_default_at_sight === 1);

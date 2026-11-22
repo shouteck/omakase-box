@@ -191,6 +191,7 @@ const mergeNowEntry = (repoRoot: string, record: BountyRecord, attempts: readonl
 const bountyEntry = (repoRoot: string, record: BountyRecord, next: string | null): JsonObject => {
   const attempts = attemptsOf(record);
   const payment = paymentOf(record);
+  const board = boardFact(repoRoot, record);
   // The two age facts (BT35) belong to open bounties — an ended record's
   // wait is over, so both stay null there; on an open record a source time
   // that does not parse also reads null, never a non-ISO echo.
@@ -219,7 +220,16 @@ const bountyEntry = (repoRoot: string, record: BountyRecord, next: string | null
     },
     // What the board says (PF5): null with the board off or outside what
     // status speaks about.
-    board: boardFact(repoRoot, record) as unknown as JsonObject | null,
+    board: board as unknown as JsonObject | null,
+    owed_now: payment === null || payment.paidAt !== null ? null : {
+      amount: payment.amount,
+      currency: 'USD',
+      solver: payment.solver,
+      methods: board?.kind === 'listed' ? board.accepts as unknown as JsonObject | null : null,
+      payment_link: record.github?.pay?.link ?? null,
+      record_payment: `omakase-box config set paid ${record.id}`,
+      note: 'The owner records payment after paying directly. This is the owner’s word, not provider verification.'
+    },
     job: record.partOf ?? record.job?.file ?? null,
     resume: resumeEntry(record),
     waiting: record.waiting === undefined ? null : waitingEntry(record.waiting),

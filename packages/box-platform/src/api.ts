@@ -1,7 +1,9 @@
 // What a browser may have: only facts about bounties on public repositories,
 // filtered here on the server. No unfiltered record ever leaves this file.
 import { accountResponse } from './account.js';
-import { applyEvent, payingIds, payOnMergeOf } from './charge.js';
+import { applyEvent, payingIds, payOnMergeOf, mergePaymentFact } from './charge.js';
+import { owedNow } from './payment-agent.js';
+import { paymentSetup } from './payment-setup.js';
 import { applyPayPalEvent, authorTakes } from './paypal-pay.js';
 import { PayPalUnavailable, webhookHolds } from './paypal.js';
 import { waysOfBounty } from './pay-ways.js';
@@ -60,14 +62,13 @@ async function board(env: Env, url: URL, now: number): Promise<Response> {
   });
 }
 
-async function bounty(env: Env, id: string, now: number): Promise<Response> {
+async function bounty(env: Env, id: string, now: number, origin: string): Promise<Response> {
   const facts = await readBounty(env, id, now);
   if (facts === null) return json(404, { error: NOT_ON_BOARD });
   const { row, pulls, history } = facts;
   const base = `https://github.com/${row.repository}`;
   const listed = row.source === 'listed';
-  // PF32: a listed bounty is never paid on merge, and it stops taking answers at a payment or when its issue closes.
-  const paying = !listed && (await payingIds(env, [row.id])).has(row.id);
+  const paying = (await payingIds(env, [row.id])).has(row.id);
   const settled = listed && (await env.DB.prepare(`SELECT 1 AS yes FROM paid_clicks WHERE bounty_id = ? AND withdrawn = 0 UNION SELECT 1 FROM charges WHERE bounty_id = ? AND state = 'paid'`).bind(row.id, row.id).first()) !== null;
   const state = stateOf(row.issue_state, pulls);
   const pending = listed && row.approval === 'pending';
@@ -97,6 +98,8 @@ async function bounty(env: Env, id: string, now: number): Promise<Response> {
       solutions: pulls.slice(0, SOLUTIONS_MAX).map(pull => ({ number: pull.number, author: pull.author, state: pull.state, opened_at: pull.opened_at, merged_at: pull.merged_at, url: `${base}/pull/${pull.number}` })),
       history,
       pays_on_merge: paying,
+      pay_on_merge: await mergePaymentFact(env, row.id, origin),
+      owed_now: pending ? null : await owedNow(env, row.id),
       how_it_pays: { ways: pending ? [] : waysOfBounty(row.amount, waysOn(env), paying) },
       // PF44: whether the issue's owner approved this listing, and how. Pending: nothing is promised and nothing can be paid.
       ...(listed ? { approval: pending
@@ -170,13 +173,18 @@ async function route(request: Request, env: Env): Promise<Response> {
   if (file !== null) return detailResponse(request, env, decodeURIComponent(file[1]!), now);
   if (url.pathname === '/api/board') return board(env, url, now);
   if (url.pathname === '/api/ways') return json(200, waysOn(env));
+  if (url.pathname === '/api/payment-setup/poster' || url.pathname === '/api/payment-setup/solver') {
+    const id = url.searchParams.get('bounty') ?? undefined;
+    if (id !== undefined && !/^bt-[a-f\d]{12}$/.test(id)) return json(400, { error: 'Use a bounty id: bt- followed by twelve hex digits.' });
+    return json(200, paymentSetup(url.origin, url.pathname.endsWith('/poster') ? 'poster' : 'solver', id));
+  }
   if (url.pathname === '/api/pay-on-merge') {
     const repository = url.searchParams.get('repository') ?? '';
     if (!/^[A-Za-z\d-]{1,39}\/[A-Za-z\d._-]{1,100}$/.test(repository)) return json(400, { error: 'Name one repository as owner/name. Next: /api/pay-on-merge?repository=owner/name.' });
     return json(200, await payOnMergeOf(env, repository));
   }
   const detail = /^\/api\/b\/([^/]+)$/.exec(url.pathname);
-  if (detail !== null) return bounty(env, decodeURIComponent(detail[1]!), now);
+  if (detail !== null) return bounty(env, decodeURIComponent(detail[1]!), now, url.origin);
   if (url.pathname.startsWith('/api/')) return json(404, { error: 'No such address. Next: /api/board.' });
   if (env.ASSETS === undefined) return json(503, { error: 'The pages are not built. Next: node packages/box-platform/local.mjs.' });
   // Any /b/<something>/ gets the same shell, so the shell says nothing about whether it exists.

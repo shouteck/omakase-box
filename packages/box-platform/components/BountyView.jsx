@@ -45,7 +45,7 @@ function View({ data }) {
         <aside className="lg:col-start-2 lg:row-start-1 lg:sticky lg:top-6 bg-surface rounded-3xl px-6 pt-6 pb-3" aria-label="Summary">
           <PaymentCard id={b.id} poster={b.poster} amount={b.amount} state={b.state} issue={b.links.issue}
             terms={<Facts stacked rows={[
-              ['Terms', pending ? 'Not approved by the issue\'s owner. No payout is promised.' : listed ? 'The owner chooses whom to pay, from every pull request linked to the issue, merged or not. One is paid.' : 'The merged solution earns the whole reward. Other solutions and parts used by hand earn nothing.'],
+              ['Terms', pending ? 'Not approved by the issue\'s owner. No payout is promised.' : listed ? 'With a saved payment method and owner consent, one eligible verified merge can pay automatically. Otherwise the owner chooses from every linked pull request, merged or not.' : 'The merged solution earns the whole reward. Other solutions and parts used by hand earn nothing.'],
               ...(listed ? [] : [['Posting approved', b.approved_by ? APPROVED[b.approved_by] : 'The project\'s record does not say.']]),
               ['Read from GitHub', data.read_at ? `${fmtDate(data.read_at)}, ${data.read_at.slice(11, 16)} UTC` : 'Not yet']
             ]} />}>
@@ -74,7 +74,7 @@ function View({ data }) {
                   <p>2. Open a pull request against {b.default_branch} in {b.repository} whose description says:</p>
                   <CodeBlock lines={[`Fixes #${b.issue_number}`]} what="line" className="mt-2" />
                 </li>
-                <li>3. The board links it to this bounty from GitHub. The owner chooses whom to pay.</li>
+                <li>3. The board links it from GitHub. Authorized pay on merge can pay one eligible verified landing; otherwise the owner chooses whom to pay.</li>
               </ol>
             </Section>
           ) : open ? (

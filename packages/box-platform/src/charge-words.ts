@@ -1,6 +1,6 @@
 // Each state of pay on merge, in the board's and the tool's words. Facts: nobody is
 // told to do anything by a reminder. Here on its own so payments.ts needs nothing of charge.ts.
-export type ChargeState = 'looked' | 'charging' | 'not-counted' | 'owner-decides' | 'refused-over-limit' | 'solver-not-ready' | 'solver-disconnected' | 'declined' | 'stripe-refused' | 'owner-must-authenticate' | 'owner-paying' | 'paid' | 'refunded' | 'disputed';
+export type ChargeState = 'looked' | 'charging' | 'not-counted' | 'owner-decides' | 'refused-over-limit' | 'solver-not-ready' | 'solver-disconnected' | 'declined' | 'stripe-refused' | 'provider-refused' | 'owner-must-authenticate' | 'owner-paying' | 'paid' | 'refunded' | 'disputed';
 
 export const CHARGE_WORDS: Record<Exclude<ChargeState, 'looked'>, string> = {
   charging: 'A charge has been started and has not finished.',
@@ -11,6 +11,7 @@ export const CHARGE_WORDS: Record<Exclude<ChargeState, 'looked'>, string> = {
   'solver-disconnected': 'The solver\'s Stripe account is no longer connected. Nothing was charged.',
   declined: 'The card was declined. Nothing was charged.',
   'stripe-refused': 'Stripe refused this charge for a reason other than the card. Nothing was charged.',
+  'provider-refused': 'The payment provider refused this charge. No payment is confirmed. Use Checkout or pay by hand.',
   'owner-must-authenticate': 'The card asks its owner to authenticate. Nothing has been charged.',
   'owner-paying': 'The owner opened Stripe\'s page. Nothing has been charged yet.',
   paid: 'Stripe charged the owner\'s card and paid the solver\'s own account. Stripe\'s fee comes out of the reward.',
@@ -20,6 +21,7 @@ export const CHARGE_WORDS: Record<Exclude<ChargeState, 'looked'>, string> = {
 
 /** Where the owner's click went through PayPal, the words that differ. */
 export const PAYPAL_WORDS: Partial<typeof CHARGE_WORDS> = {
+  'owner-must-authenticate': 'PayPal has not confirmed a completed payment. The owner must finish payment; no automatic retry is made.',
   'owner-paying': 'The owner opened PayPal\'s page. Nothing has been charged yet.',
   paid: 'PayPal took the payment from the owner and paid the solver\'s own account. PayPal\'s fee comes out of the reward.',
   refunded: 'PayPal records this payment as refunded or reversed.',

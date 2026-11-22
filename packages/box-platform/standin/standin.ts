@@ -157,7 +157,7 @@ export class Standin {
       const issue = this.issues.find(entry => entry.repository === match![1] && entry.pulls?.some(pull => pull.number === Number(match![2])));
       const pull = issue?.pulls?.find(pull => pull.number === Number(match![2]));
       if (!pull || !issue) return { status: 404 };
-      return { status: pull.pullStatus ?? 200, json: { merged: pull.merged ?? typeof pull.merged_at === 'string', merge_commit_sha: pull.merge_commit_sha ?? null, head: { sha: pull.pullHead ?? headOf(pull) }, base: pull.base ?? { ref: `box-bounty/${issue.id}`, repo: { full_name: issue.repository } } } };
+      return { status: pull.pullStatus ?? 200, json: { number: pull.number, state: pull.state, merged_at: pull.merged_at ?? null, created_at: pull.created_at, draft: pull.draft ?? false, updated_at: pull.updated_at ?? pull.created_at, user: { login: pull.author, id: this.idOf(pull.author) }, author_association: pull.association ?? 'NONE', merged: pull.merged ?? typeof pull.merged_at === 'string', merge_commit_sha: pull.merge_commit_sha ?? null, head: { sha: pull.pullHead ?? headOf(pull) }, base: pull.base ?? { ref: issue.plain ? this.repositories.get(issue.repository)?.default_branch ?? 'main' : `box-bounty/${issue.id}`, repo: { full_name: issue.repository } } } };
     }
     match = /^\/repos\/([^/]+\/[^/]+)\/compare\/([a-f\d]{40})\.\.\.[^/]+$/.exec(path);
     if (match) {

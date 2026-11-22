@@ -596,7 +596,7 @@ describe('the pages', () => {
     ['no key', [], false, { page: null, connect: 'On your page, list a way and be paid by hand.', absent: ['connect Stripe', 'connect PayPal', 'a bank account in a supported country'] }],
     ['Stripe only', ['Stripe'], true, { page: "Stripe's page", connect: 'connect Stripe and an owner can pay you with one click or on merge.', absent: ['connect PayPal'] }],
     ['PayPal only', ['PayPal'], false, { page: "PayPal's page", connect: 'connect PayPal and an owner can pay you with one click.', absent: ['connect Stripe', 'a bank account in a supported country'] }],
-    ['both', ['Stripe', 'PayPal'], true, { page: "Stripe's or PayPal's page", connect: 'connect Stripe or PayPal and an owner can pay you with one click; connected Stripe also covers on merge.', absent: [] }]
+    ['both', ['Stripe', 'PayPal'], true, { page: "Stripe's or PayPal's page", connect: 'connect Stripe or PayPal and an owner can pay you with one click or on merge.', absent: [] }]
   ])('with %s, the card and How it works name what this board has', async (_name, one_click, on_merge, want) => {
     const { page, close } = await fresh();
     await page.route('**/api/ways', route => route.fulfill({ json: { by_hand: true, one_click, on_merge } }));
@@ -695,7 +695,7 @@ describe('the pages', () => {
       const { page, close } = await open({ ...base, login: 'example-mara', pay: pay({ card: 'visa ending 3155', repositories: [{ repository: 'example-org/ledger', on_at: new Date(NOW).toISOString(), limit: 45, open: 2 }], yours }) }, '/me/#pay');
       const section = async () => { const text = await page.locator('main').innerText(); return text.slice(text.indexOf('Pay on merge')); };
       expect(await page.locator('table[aria-label="Repositories on pay on merge"] th').allInnerTexts()).toEqual(['Repository', 'Reward', 'Open bounties', 'On since', '']);
-      expect(await section()).not.toMatch(/limit|charge up to/i);
+      expect(await section()).toContain('Default maximum for an import approved with “on merge”, USD');
       await page.click('text=+ Add a repository');
       const dialog = page.locator('dialog[open]');
       expect(await dialog.locator('input[name=repository]').evaluateAll(inputs => inputs.map(input => [(input as HTMLInputElement).type, (input as HTMLInputElement).value]))).toEqual([['radio', 'example-org/lite']]);

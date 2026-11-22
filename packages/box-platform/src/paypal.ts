@@ -16,6 +16,7 @@ async function sent(url: string, init: RequestInit): Promise<PayPalAnswer> {
   let response: Response;
   try { response = await fetch(url, { ...init, signal: AbortSignal.timeout(15000) }); } catch { throw new PayPalUnavailable('PayPal could not be reached'); }
   if (response.status >= 500 || response.status === 429) throw new PayPalUnavailable(`PayPal answered ${response.status}`);
+  if (response.status === 204) return { status: 204, json: {} };
   try {
     const json: unknown = await response.json();
     return { status: response.status, json: json !== null && typeof json === 'object' ? json as Record<string, unknown> : {} };
@@ -29,7 +30,7 @@ async function appToken(env: PayPalEnv): Promise<string> {
 }
 
 /** A call as the board. `request` is PayPal's idempotency key: the same key gives the same answer. */
-export async function paypal(env: PayPalEnv, method: 'GET' | 'POST', path: string, body?: unknown, request?: string): Promise<PayPalAnswer> {
+export async function paypal(env: PayPalEnv, method: 'GET' | 'POST' | 'DELETE', path: string, body?: unknown, request?: string): Promise<PayPalAnswer> {
   return sent(`${apiOf(env)}${path}`, {
     method,
     headers: { authorization: `Bearer ${await appToken(env)}`, 'content-type': 'application/json', prefer: 'return=representation', ...(request === undefined ? {} : { 'paypal-request-id': request }) },
