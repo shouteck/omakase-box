@@ -113,6 +113,8 @@ describe('PF52: approved listed pay on merge', () => {
     issue.comments!.push({ login: OWNER.login, association: 'OWNER', body: `omakase paid ${id} $45 to @solver`, created_at: at(26) });
     await r.env.DB.prepare(`UPDATE pull_requests SET state = 'merged', merged_at = ?, head_on_default_at_sight = 0 WHERE bounty_id = ?`).bind(at(25), id).run();
     r.clock.at += 20 * MINUTE;
+    await r.env.DB.prepare('UPDATE repositories SET read_at = ?').bind(r.clock.at).run();
+    await r.env.DB.prepare(`INSERT INTO meta (key, value) VALUES ('search_tried_at', ?), ('search_complete_at', ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value`).bind(String(r.clock.at), String(r.clock.at)).run();
     await r.env.DB.prepare('UPDATE bounties SET details_read_at = ?, events_read_at = 0 WHERE id = ?').bind(r.clock.at, id).run();
     await r.env.DB.prepare(`INSERT INTO meta (key, value) VALUES (?, '1') ON CONFLICT (key) DO UPDATE SET value = '1'`).bind(`listed_turn_${id}`).run();
     let verifiedBeforeRecord = false;
@@ -446,6 +448,7 @@ describe('PF52: agent pay comments', () => {
     await approve(); await card(); await connectedStripe();
     await r.env.DB.prepare(`INSERT INTO pull_requests (bounty_id, number, author, author_id, state, opened_at, merged_at, association, on_default, head_sha)
       VALUES (?, 42, 'other', 7002, 'merged', ?, ?, 'NONE', 1, ?)`).bind(id, at(2), at(6), 'a'.repeat(40)).run();
+    await read();
     const prepare = r.env.DB.prepare;
     let intercepted = false;
     r.env.DB.prepare = sql => {
