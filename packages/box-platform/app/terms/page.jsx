@@ -21,8 +21,8 @@ export default function Page() {
         <ul className="list-disc pl-5 flex flex-col gap-2 max-w-prose">
           <li>The board never holds money and takes no cut. A payment goes from the bounty&apos;s owner to the solver.</li>
           <li>A reward is the owner&apos;s own promise. The board does not guarantee that anyone pays or is paid.</li>
-          <li>Payments made through Stripe or PayPal happen on their pages, under their terms. Their fees come out of the reward. Refunds, disputes and reversals are handled by them, and the board records what they report.</li>
-          <li>Other ways of paying are details a solver lists. The board does not check them beyond their shape. A payment recorded by hand is the owner&apos;s word, and a reply about it is the solver&apos;s.</li>
+          <li>Payments through Stripe or PayPal follow their terms. You can pay on their pages, or authorize the board to charge a saved Stripe card or PayPal Vault within your limit. An on merge issue comment authorizes one bounty across every bounty flow, including prepared branch posts; exactly one linked PR must merge. Plain approval still needs the repository switch. A poster can instead comment omakase pay on the issue to charge now to a linked PR author. Their fees come out of the reward. Refunds, disputes and reversals are handled by them, and the board records what they report.</li>
+          <li>Other ways of paying are details a solver lists. The board does not check them beyond their shape. A payment recorded by hand, including an omakase paid issue comment, is not provider-verified: it is the owner&apos;s word, and a reply about it is the solver&apos;s.</li>
           <li>Any tax on a reward is for the person who pays or receives it.</li>
         </ul>
       </Section>

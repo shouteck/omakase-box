@@ -541,7 +541,7 @@ describe('the pages', () => {
     expect(how).toContain('On your page, list a way and be paid by hand.'); // This board has no key. PF18: the words follow what it has.
     // A person only installs: every other command is folded away.
     expect(await page.locator('#hand-off ol > li').count()).toBe(4);
-    expect(how).toContain('save a card and authorize Stripe charges for the repository');
+    expect(how).toContain('Save a Stripe card or PayPal Vault method with a limit once');
     expect(how).toContain('merges it locally and prints the git push command for you to run');
     expect(how).toContain('Only imported issues need the GitHub comment omakase approve <id> $<reward>');
     expect(how).toContain('There is no separate per-listing approval under that permission');
@@ -591,7 +591,7 @@ describe('the pages', () => {
       expect(await oneClick.innerText()).toContain("You click Pay, on Stripe's page");
       const onMerge = page.locator('main li', { has: page.locator('h3', { hasText: /^On merge$/ }) });
       expect(await onMerge.innerText()).toContain('Stripe');
-      expect(await onMerge.innerText()).not.toContain('PayPal');
+      expect(await onMerge.innerText()).toContain('PayPal');
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
       await visit(page, '/how/');
       const solverStep = page.locator('main li', { has: page.getByRole('heading', { name: 'Get paid', exact: true }) });

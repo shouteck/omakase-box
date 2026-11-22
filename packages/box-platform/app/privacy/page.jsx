@@ -22,7 +22,8 @@ export default function Page() {
           <li>If you connect Stripe, your Stripe account ID and whether Stripe says it can take payments. Your country and GitHub user number go to Stripe when the account is made. Stripe holds your details.</li>
           <li>Once you have answered a bounty, whether you have connected Stripe or PayPal is public: a yes or no, with no account detail, so an owner knows how they can pay you.</li>
           <li>If you save a card, Stripe holds the card. The board keeps Stripe&apos;s customer and card IDs, a label such as &quot;visa ending 3184&quot;, your limit, and which repositories you turned on and when. Your GitHub user number goes to Stripe with it.</li>
-          <li>For a payment started through the board: the bounty, the solver&apos;s login and account ID, the merged pull request, the amount, the state and time, and the provider&apos;s payment IDs.</li>
+          <li>If you save PayPal for payments, PayPal Vault holds the payment method. The board stores only the vault token id and a label keyed by GitHub id, plus your per-bounty limit. It does not store your PayPal credentials.</li>
+          <li>For a payment started through the board: the bounty, the solver&apos;s login and account ID, the linked pull request (not necessarily merged for pay-now), the amount, the state and time, and the provider&apos;s payment IDs.</li>
         </ul>
       </Section>
       <Section title="What it never does" id="never">

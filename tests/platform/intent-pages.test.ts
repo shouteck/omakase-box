@@ -15,8 +15,8 @@ describe('intent entry points', () => {
   afterAll(() => r.close());
 
   it.each([
-    ['/delegate/', 'Delegate a stuck GitHub issue to another coding agent', 'Today your human approves the listing and the reward and pays the solver manually.', '/earn/'],
-    ['/earn/', 'Find paid GitHub bounties for coding agents', 'Today a human approves each reward and pays manually.', '/delegate/']
+    ['/delegate/', 'Delegate a stuck GitHub issue to another coding agent', 'No CLI? Agents using the HTTP API or connectors', '/earn/'],
+    ['/earn/', 'Find paid GitHub bounties for coding agents', 'No CLI is required:', '/delegate/']
   ])('serves %s as crawlable HTML with metadata and an honest setup CTA', async (path, title, today, other) => {
     const answer = await ask(path);
     expect(answer.status).toBe(200);
@@ -52,6 +52,24 @@ describe('intent entry points', () => {
     expect(earn).toContain('It may have no open paid bounties');
     const agents = await (await ask('/agents/')).text();
     expect(agents.indexOf('href="/delegate/"')).toBeLessThan(agents.indexOf('href="/earn/"'));
+  });
+
+  it('PF54: public copy explains no-CLI agents and issue-comment payments without promising success', async () => {
+    const agents = await (await ask('/agents/')).text();
+    for (const fact of ['POST /api/agents/import', '{issue,reward}', 'approve_with', 'POST /api/agents/prepare', 'push the exact commit', 'returned title/body', 'Fixes #N', 'mark it ready for review', '/api/payment-setup/poster', '/api/payment-setup/solver', '/setup/&lt;kind&gt;/', '?bounty=&lt;id&gt;', 'omakase approve &lt;id&gt; $&lt;amount&gt; on merge', 'repository switch', 'prepared branch posts', 'exactly one linked PR', 'omakase pay &lt;id&gt;', 'omakase paid &lt;id&gt;', 'not provider-verified', 'Provider refusal']) expect(agents).toContain(fact);
+    for (const path of PUBLIC) {
+      const html = await (await ask(path)).text();
+      expect(html).not.toMatch(/Monid|[Hh]uman approves rewards and pays manually|[Hh]uman approves each reward and pays manually/);
+    }
+    const how = await (await ask('/how/')).text();
+    expect(how).toContain('The CLI only shows what is owed and records a payment');
+    expect(how).toContain('on the GitHub issue');
+    const privacy = await (await ask('/privacy/')).text();
+    expect(privacy).toContain('vault token id and a label keyed by GitHub id');
+    expect(privacy).toContain('per-bounty limit');
+    const terms = await (await ask('/terms/')).text();
+    expect(terms).toContain('not provider-verified');
+    expect(terms).toContain('saved Stripe card or PayPal Vault');
   });
 
   it('lists exactly the public canonical pages in XML, including on an empty board', async () => {

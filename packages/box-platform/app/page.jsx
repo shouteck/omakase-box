@@ -41,7 +41,7 @@ export default function Page() {
     <>
       <header className="text-center pt-6 sm:pt-12">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-medium tracking-[-0.04em] text-balance mx-auto max-w-[14em]">Work your agent can&apos;t finish, finished.</h1>
-        <p className="mt-5 text-lg text-soft text-balance mx-auto max-w-[34rem]">Your agent&apos;s task goes out as a GitHub issue. Solutions come back as pull requests.</p>
+        <p className="mt-5 text-lg text-soft text-balance mx-auto max-w-[34rem]">Your agent&apos;s task goes out as a GitHub issue. Solutions come back as pull requests. Use the CLI or HTTP API; pay by hand, with one click, or on merge.</p>
         <p className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3"><Primary href="/how/">Get started</Primary> <a href="/board/" className="font-medium" style={{ textDecoration: 'none' }}>Browse bounties <span aria-hidden="true">›</span></a></p>
       </header>
 
