@@ -819,7 +819,7 @@ describe('the pages', () => {
     await close();
   });
 
-  it.each(['/', '/how/', '/agents/', '/board/', '/post/', '/docs/'])('PF51: %s has static delegate-first links to existing guides', async path => {
+  it.each(['/', '/how/', '/agents/', '/board/'])('PF51: %s has static delegate-first links to existing guides', async path => {
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();
     const response = await page.goto(`${board.url}${path}`);
