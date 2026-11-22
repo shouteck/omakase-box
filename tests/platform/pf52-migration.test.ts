@@ -33,6 +33,7 @@ beforeEach(async () => {
   await r.env.DB.prepare('ALTER TABLE charges DROP COLUMN origin').run();
   await r.env.DB.prepare('DROP TRIGGER stripe_ready_changed').run();
   await r.env.DB.prepare('ALTER TABLE stripe_accounts DROP COLUMN ready_at').run();
+  await r.env.DB.prepare('ALTER TABLE stripe_accounts DROP COLUMN ready_version').run();
   await r.env.DB.prepare("DELETE FROM meta WHERE key = 'pf52_deployed_at'").run();
   for (const table of ['payment_preferences', 'paypal_vault', 'paypal_vault_setup']) await r.env.DB.prepare(`DROP TABLE ${table}`).run();
   await r.env.DB.prepare("DELETE FROM migrations WHERE name = 'pf52.sql'").run();
@@ -100,6 +101,7 @@ describe.each(['stripe', 'paypal'] as const)('PF52 migrated pre-PF52 data: %s sc
     r.clock.at = Date.parse(cutoff);
     expect(r.clock.at).toBeGreaterThanOrEqual(NOW);
     expect(await r.env.DB.prepare('SELECT ready_at FROM stripe_accounts WHERE github_id = 7001').first()).toEqual({ ready_at: scenario.lateSolver ? null : cutoff });
+    expect(await r.env.DB.prepare('SELECT ready_version FROM stripe_accounts WHERE github_id = 7001').first()).toEqual({ ready_version: Date.parse(cutoff) * 2 + (scenario.lateSolver ? 1 : 0) });
     await r.env.DB.prepare("INSERT OR IGNORE INTO meta (key, value) VALUES ('pf52_deployed_at', '2099-01-01T00:00:00.000Z')").run();
     expect(await r.env.DB.prepare("SELECT value FROM meta WHERE key = 'pf52_deployed_at'").first()).toEqual({ value: cutoff });
     expect(await r.env.DB.prepare('SELECT approval_at, approved_amount, merge_consent, merge_rail FROM bounties WHERE id = ?').bind(ID).first())

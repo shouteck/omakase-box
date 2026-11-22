@@ -301,11 +301,14 @@ async function saveCharge(env: Env, id: string, state: ChargeState, pull: Merged
 
 // ---- what Stripe tells the board ---------------------------------------------
 
-type Event = { type?: unknown; account?: unknown; data?: { object?: Record<string, unknown> } };
+type Event = { type?: unknown; account?: unknown; created?: unknown; data?: { object?: Record<string, unknown> } };
 
-export async function setStripeReady(env: Env, account: string, ready: boolean, now: number): Promise<void> {
-  await env.DB.prepare(`UPDATE stripe_accounts SET ready_at = CASE WHEN ? = 0 THEN NULL WHEN ready = 0 OR ready_at IS NULL THEN ? ELSE ready_at END, ready = ? WHERE account_id = ?`)
-    .bind(ready ? 1 : 0, new Date(now).toISOString(), ready ? 1 : 0, account).run();
+export async function setStripeReady(env: Env, account: string, ready: boolean, now: number, observedAt = now): Promise<void> {
+  // Disabled wins when Stripe's second-resolution event times are equal.
+  const version = observedAt * 2 + (ready ? 0 : 1);
+  if (!Number.isSafeInteger(version)) return;
+  await env.DB.prepare(`UPDATE stripe_accounts SET ready_at = CASE WHEN ? = 0 THEN NULL WHEN ready = 0 OR ready_at IS NULL THEN ? ELSE ready_at END, ready = ?, ready_version = ? WHERE account_id = ? AND (ready_version IS NULL OR ready_version < ?)`)
+    .bind(ready ? 1 : 0, new Date(now).toISOString(), ready ? 1 : 0, version, account, version).run();
 }
 
 /** A signed event. Only the row whose account and payment both match changes, so a stray event moves nothing. */
@@ -315,7 +318,8 @@ export async function applyEvent(env: Env, event: Event, now: number): Promise<v
   const object = event.data?.object ?? {};
   if (account === null) return;
   if (event.type === 'account.updated') {
-    await setStripeReady(env, account, object['charges_enabled'] === true, now);
+    if (typeof event.created !== 'number' || !Number.isSafeInteger(event.created) || event.created < 0) return;
+    await setStripeReady(env, account, object['charges_enabled'] === true, now, event.created * 1000);
     return;
   }
   if (event.type === 'account.application.deauthorized') {

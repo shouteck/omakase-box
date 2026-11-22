@@ -517,8 +517,9 @@ async function connectStripe(request: Request, env: Env, url: URL, viewer: Viewe
 async function readReady(env: Env, viewer: Viewer): Promise<void> {
   const held = await env.DB.prepare('SELECT account_id FROM stripe_accounts WHERE github_id = ?').bind(viewer.github_id).first<{ account_id: string }>();
   if (held === null) return;
+  const observedAt = env.now?.() ?? Date.now();
   const about = await stripe(env, 'GET', `/v1/accounts/${held.account_id}`);
-  if (about.status === 200) await setStripeReady(env, held.account_id, about.json['charges_enabled'] === true, env.now?.() ?? Date.now());
+  if (about.status === 200) await setStripeReady(env, held.account_id, about.json['charges_enabled'] === true, env.now?.() ?? Date.now(), observedAt);
 }
 
 /** Saving a card happens on Stripe's page; the board only ever holds Stripe's id for it. */

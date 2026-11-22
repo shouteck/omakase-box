@@ -71,6 +71,23 @@ beforeEach(async () => {
 afterEach(async () => { vi.restoreAllMocks(); await stripe.stop(); await paypal.stop(); await r.close(); });
 
 describe('PF52: deployment cutoff and literal merge-time readiness', () => {
+  it.each(['webhook', 'read'] as const)('ignores a stale ready event after newer disabled evidence from %s', async source => {
+    await card(); await connectedStripe(false);
+    const event = (ready: boolean, minute: number) => ({ type: 'account.updated', account: 'acct_solver', created: (NOW + minute * MINUTE) / 1000, data: { object: { charges_enabled: ready } } });
+    await applyEvent(r.env, event(true, 1), NOW + MINUTE);
+    if (source === 'webhook') await applyEvent(r.env, event(false, 3), NOW + 3 * MINUTE);
+    else {
+      r.clock.at = NOW + 3 * MINUTE; stripe.accounts.set('acct_solver', { charges_enabled: false });
+      expect((await post('/api/me/stripe/read', {}, await session(7001, SOLVER))).status).toBe(200);
+    }
+    await applyEvent(r.env, event(true, 2), NOW + 4 * MINUTE);
+    expect(await r.env.DB.prepare('SELECT ready, ready_at FROM stripe_accounts').first()).toEqual({ ready: 0, ready_at: null });
+    stripe.accounts.set('acct_solver', { charges_enabled: true });
+    await applyEvent(r.env, event(true, 6), NOW + 6 * MINUTE);
+    expect(await r.env.DB.prepare('SELECT ready, ready_at FROM stripe_accounts').first()).toEqual({ ready: 1, ready_at: at(6) });
+    await approve(); await settleTwice(); expect(await state()).toMatchObject({ state: 'solver-not-ready' });
+    expect(stripe.charged()).toHaveLength(0);
+  });
   it.each([['stripe', 'late-ready'], ['paypal', 'late-ready'], ['stripe', 'old-consent'], ['paypal', 'old-consent']] as const)('only reads an unsafe %s automatic claim with %s evidence and does not starve new eligible merges', async (rail, reason) => {
     if (rail === 'stripe') { await card(); await connectedStripe(); } else await vault();
     await approve();
@@ -157,7 +174,7 @@ describe('PF52: deployment cutoff and literal merge-time readiness', () => {
     const token = await session(7001, SOLVER);
     const update = async (ready: boolean, minute: number) => {
       r.clock.at = NOW + minute * MINUTE;
-      if (mode === 'webhook') await applyEvent(r.env, { type: 'account.updated', account: 'acct_solver', data: { object: { charges_enabled: ready } } }, r.clock.at);
+      if (mode === 'webhook') await applyEvent(r.env, { type: 'account.updated', account: 'acct_solver', created: r.clock.at / 1000, data: { object: { charges_enabled: ready } } }, r.clock.at);
       else { stripe.accounts.set('acct_solver', { charges_enabled: ready }); expect((await post('/api/me/stripe/read', {}, token)).status).toBe(200); }
       return r.env.DB.prepare('SELECT ready, ready_at FROM stripe_accounts WHERE github_id = 7001').first();
     };
@@ -165,6 +182,34 @@ describe('PF52: deployment cutoff and literal merge-time readiness', () => {
     expect(await update(true, 3)).toEqual({ ready: 1, ready_at: at(1) });
     expect(await update(false, 4)).toEqual({ ready: 0, ready_at: null });
     expect(await update(true, 6)).toEqual({ ready: 1, ready_at: at(6) });
+  });
+  it('fails closed for tied, duplicated and missing Stripe event ordering evidence', async () => {
+    await connectedStripe(false);
+    const event = (ready: boolean, minute: number) => ({ type: 'account.updated', account: 'acct_solver', created: (NOW + minute * MINUTE) / 1000, data: { object: { charges_enabled: ready } } });
+    await applyEvent(r.env, event(true, 1), NOW + MINUTE);
+    await applyEvent(r.env, event(false, 1), NOW + 2 * MINUTE);
+    await applyEvent(r.env, event(true, 1), NOW + 3 * MINUTE);
+    await applyEvent(r.env, { type: 'account.updated', account: 'acct_solver', data: { object: { charges_enabled: true } } }, NOW + 4 * MINUTE);
+    expect(await r.env.DB.prepare('SELECT ready, ready_at FROM stripe_accounts').first()).toEqual({ ready: 0, ready_at: null });
+    await applyEvent(r.env, event(true, 6), NOW + 6 * MINUTE);
+    await applyEvent(r.env, event(false, 4), NOW + 7 * MINUTE);
+    await applyEvent(r.env, event(true, 6), NOW + 8 * MINUTE);
+    expect(await r.env.DB.prepare('SELECT ready, ready_at FROM stripe_accounts').first()).toEqual({ ready: 1, ready_at: at(6) });
+  });
+  it('does not let an account snapshot started before a disabled event overwrite that event', async () => {
+    await connectedStripe(); const token = await session(7001, SOLVER);
+    r.clock.at = NOW + MINUTE;
+    const nativeFetch = globalThis.fetch;
+    const fetch = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
+      const answer = await nativeFetch(input, init);
+      if (new URL(String(input)).pathname === '/v1/accounts/acct_solver') {
+        r.clock.at = NOW + 3 * MINUTE;
+        await applyEvent(r.env, { type: 'account.updated', account: 'acct_solver', created: (NOW + 2 * MINUTE) / 1000, data: { object: { charges_enabled: false } } }, r.clock.at);
+      }
+      return answer;
+    });
+    try { expect((await post('/api/me/stripe/read', {}, token)).status).toBe(200); } finally { fetch.mockRestore(); }
+    expect(await r.env.DB.prepare('SELECT ready, ready_at FROM stripe_accounts').first()).toEqual({ ready: 0, ready_at: null });
   });
 });
 
