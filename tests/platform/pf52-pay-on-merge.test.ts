@@ -108,6 +108,35 @@ describe('PF52: direct listing consent', () => {
 });
 
 describe('PF52: resumable payment comments', () => {
+  it.each(['earlier', 'anchor', 'many'])('does not skip an unread outside-payment record after deleting %s comments', async mode => {
+    await card(); await connectedStripe(); await approve();
+    await r.env.DB.prepare('DELETE FROM meta WHERE key = ?').bind(`payment_comments/${id}`).run();
+    const comments = Array.from({ length: 230 }, (_, n) => ({ id: n + 100, body: n === 200 ? `omakase paid ${id} $45 to @solver` : 'Discussion', created_at: at(25), user: { id: OWNER.github_id, login: OWNER.login } }));
+    let reads = 0, deleted = false, recorded = false;
+    const nativeFetch = globalThis.fetch;
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input, init) => {
+      const url = new URL(typeof input === 'string' || input instanceof URL ? input : input.url);
+      if (url.origin === r.env.GITHUB_API && url.pathname === `/repos/${REPO}/issues/12/comments`) {
+        reads += 1;
+        const page = Number(url.searchParams.get('page')), size = Number(url.searchParams.get('per_page'));
+        return Promise.resolve(Response.json(comments.slice((page - 1) * size, page * size)));
+      }
+      return nativeFetch(input, init);
+    });
+    for (let turn = 0; turn < 200 && !recorded; turn += 1) {
+      if (reads >= 2 && !deleted) {
+        const scan = JSON.parse((await r.env.DB.prepare('SELECT value FROM meta WHERE key = ?').bind(`payment_comment_scan/${id}`).first<{ value: string }>())!.value);
+        if (mode === 'anchor') comments.splice(comments.findIndex(comment => comment.id === scan.after), 1);
+        else comments.splice(0, mode === 'many' ? 120 : 1);
+        deleted = true;
+      }
+      r.clock.at += MINUTE; await worker.scheduled({}, r.env);
+      recorded = await r.env.DB.prepare('SELECT 1 FROM paid_clicks WHERE bounty_id = ?').bind(id).first() !== null;
+      expect(stripe.charged()).toHaveLength(0); expect(paypal.captures).toHaveLength(0);
+    }
+    expect(deleted).toBe(true); expect(recorded).toBe(true);
+    await settleTwice(); expect(stripe.charged()).toHaveLength(0);
+  });
   it.each(['pay', 'paid', 'paid-page-error', 'paid-landing-change'])('reaches page three through the two-read worker: %s', async mode => {
     await card(); await connectedStripe(); await approve();
     await r.env.DB.prepare('DELETE FROM meta WHERE key = ?').bind(`payment_comments/${id}`).run();
@@ -121,7 +150,8 @@ describe('PF52: resumable payment comments', () => {
       if (url.origin === r.env.GITHUB_API && url.pathname === `/repos/${REPO}/issues/12/comments`) {
         const page = Number(url.searchParams.get('page')); pages.push(page);
         if (mode === 'paid-page-error' && page === 3 && !refused) { refused = true; return Promise.resolve(Response.json({}, { status: 503 })); }
-        return Promise.resolve(Response.json(comments.slice((page - 1) * 100, page * 100)));
+        const size = Number(url.searchParams.get('per_page'));
+        return Promise.resolve(Response.json(comments.slice((page - 1) * size, page * size)));
       }
       return nativeFetch(input, init);
     });
