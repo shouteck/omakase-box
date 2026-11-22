@@ -21,7 +21,7 @@ export function replayReads(directory: string) {
   };
   const git = (...args: string[]) => spawnSync('git', ['--git-dir', join(directory, 'remote.git'), ...args], { encoding: 'utf8', windowsHide: true });
   const onBranch = (sha: string, branch: string) => git('merge-base', '--is-ancestor', sha, `refs/heads/${branch}`).status === 0;
-  const issues = () => state().issues.map(issue => ({ ...issue, repository_url: `https://api.github.com${REPO}`, user: { ...issue.user, id: 1 } }));
+  const issues = () => state().issues.map(issue => ({ ...issue, repository_url: `https://api.github.com${REPO}`, author_association: issue.user.login === REPO.split('/')[2] ? 'OWNER' : 'NONE', user: { ...issue.user, id: 1 } }));
   const answer = (path: string, query: URLSearchParams): { status: number; json?: unknown } | undefined => {
     if (path === REPO) return ok({ full_name: 'owner/project', visibility: 'public', private: false, language: null, default_branch: 'main' });
     if (!path.startsWith(`${REPO}/`)) return undefined;
