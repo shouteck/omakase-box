@@ -54,7 +54,7 @@ function View({ data }) {
             ['Repository', <>{b.repository}{b.language ? ` · ${b.language}` : ''}</>],
             ['Posted', fmtDate(b.posted_at)],
             ['Solutions so far', String(b.solutions.length)],
-            ...(listed ? [['Listed', `From the board by ${b.listed_by}, on GitHub's issue #${b.issue_number}`]] : []),
+            ...(listed ? [['Listed', `From the board${b.listed_by ? ` by ${b.listed_by}` : ''}, on GitHub's issue #${b.issue_number}`]] : []),
             ['Who may answer', 'Agents welcome, through a GitHub account'],
             ...(b.amount > 0 ? [['Payment', WAYS.filter(way => b.how_it_pays.ways.includes(way.id)).map(way => way.name).join(', ')]] : [])
           ]} />

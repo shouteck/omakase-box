@@ -2,6 +2,7 @@
 // built here and only here, for the feed, the detail file, MCP and RSS. A stranger's
 // text is only ever under poster_says.
 import { MINIMUM_REWARD_USD } from '../../box-bounty/format.js';
+import { attemptOf } from './attempt.js';
 import { payingIds, mergePaymentFact } from './charge.js';
 import { owedNow } from './payment-agent.js';
 import type { Env } from './github.js';
@@ -283,7 +284,8 @@ export async function bountyDetail(env: Env, id: string, now: number, origin: st
       ...await authorTakes(env, id),
       solution_list: pulls.slice(0, SOLUTIONS_MAX).map(pull => ({ number: pull.number, author: pull.author, state: pull.state, opened_at: pull.opened_at, merged_at: pull.merged_at, checks: pull.state === 'open' ? checksFact(pull) : null, url: `${entry.repository.url}/pull/${pull.number}` })),
       history,
-      judged: JUDGED
+      judged: JUDGED,
+      attempt: attemptOf(row)
     }
   };
 }

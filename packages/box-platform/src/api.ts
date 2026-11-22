@@ -1,6 +1,8 @@
 // What a browser may have: only facts about bounties on public repositories,
 // filtered here on the server. No unfiltered record ever leaves this file.
 import { accountResponse } from './account.js';
+import { agentImportResponse } from './agent-import.js';
+import { attemptOf } from './attempt.js';
 import { applyEvent, payingIds, payOnMergeOf, mergePaymentFact } from './charge.js';
 import { owedNow } from './payment-agent.js';
 import { paymentSetup } from './payment-setup.js';
@@ -84,7 +86,7 @@ async function bounty(env: Env, id: string, now: number, origin: string): Promis
       source: listed ? 'listed' : 'posted',
       issue_number: row.issue_number,
       issue_author: listed ? row.issue_author ?? null : row.poster,
-      listed_by: listed ? row.listed_by ?? row.poster : null,
+      listed_by: listed ? row.listed_by ?? null : null,
       open_to_answers: listed ? row.issue_state === 'open' && !settled && !pending : state === 'open' || state === 'solutions-waiting',
       closed_at: row.closed_at,
       repository: row.repository,
@@ -106,7 +108,8 @@ async function bounty(env: Env, id: string, now: number, origin: string): Promis
         ? { state: 'pending' as const, approve_with: approvalLine(row.id, row.amount), proof: null }
         : { state: 'approved' as const, approve_with: null, proof: row.approval === 'comment' ? row.approval_proof ?? null : null } } : {}),
       ...await authorTakes(env, row.id),
-      agents_welcome: true
+      agents_welcome: true,
+      attempt: attemptOf(row)
     }
   });
 }
@@ -154,6 +157,7 @@ async function route(request: Request, env: Env): Promise<Response> {
   }
   const now = env.now?.() ?? Date.now();
   if (url.pathname === '/mcp') return mcpResponse(request, env, now);
+  if (url.pathname === '/api/agents/import' && request.method === 'POST') return agentImportResponse(request, env, now);
   const account = await accountResponse(request, env, url, now);
   if (account !== null) return account;
   if (url.pathname === '/api/hint' && request.method === 'POST') return hintResponse(request, env, now);

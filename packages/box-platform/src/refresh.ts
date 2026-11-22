@@ -370,11 +370,12 @@ async function readListedIssue(env: Env, github: GitHub, id: string, repository:
 
 /**
  * PF44: an imported listing is approved by a comment on its issue, written after the import, that is exactly its approval
- * line, by the issue's author or by someone GitHub calls OWNER or COLLABORATOR of the repository. GitHub says who wrote it,
+ * line, by the issue's author or by someone GitHub calls OWNER or COLLABORATOR of the repository. Sessionless imports
+ * instead require OWNER or COLLABORATOR association, never just authorship (MEMBER is not write access). GitHub says who wrote it,
  * so nobody signs in to the board. The comment's address is kept as the proof, and its author becomes the poster.
  */
 async function readApproval(env: Env, github: GitHub, id: string, repository: string, number: number): Promise<void> {
-  const row = await env.DB.prepare(`SELECT amount, poster_id, created_at FROM bounties WHERE id = ? AND approval = 'pending'`).bind(id).first<{ amount: number; poster_id: number | null; created_at: string }>();
+  const row = await env.DB.prepare(`SELECT amount, poster_id, listed_by_id, created_at FROM bounties WHERE id = ? AND approval = 'pending'`).bind(id).first<{ amount: number; poster_id: number | null; listed_by_id: number | null; created_at: string }>();
   if (row === null) return;
   const line = approvalLine(id, row.amount);
   const comments: unknown[] = [];
@@ -395,7 +396,7 @@ async function readApproval(env: Env, github: GitHub, id: string, repository: st
     if (!Number.isFinite(Date.parse(comment['created_at']))) continue;
     if (Date.parse(comment['created_at']) < Date.parse(row.created_at)) continue;
     const association = typeof comment['author_association'] === 'string' ? comment['author_association'] : '';
-    if (userId !== row.poster_id && !APPROVERS.has(association)) continue;
+    if (row.listed_by_id === null ? !APPROVERS.has(association) : userId !== row.poster_id && !APPROVERS.has(association)) continue;
     await env.DB.prepare(`UPDATE bounties SET approval = 'comment', approval_proof = ?, poster = ?, poster_id = ?, approval_at = ?, approved_amount = amount, merge_consent = ?, listed_seq = (SELECT COALESCE(MAX(listed_seq), 0) + 1 FROM bounties) WHERE id = ? AND approval = 'pending'`)
       .bind(comment['html_url'] as string, login, userId as number, comment['created_at'], onMerge ? 1 : 0, id).run();
     return;
@@ -492,10 +493,18 @@ export type RefreshResult = { readonly requests: number; readonly state: 'done' 
 export async function refresh(env: Env): Promise<RefreshResult> {
   const db = env.DB;
   const now = env.now?.() ?? Date.now();
+  const initial = await db.prepare(`SELECT 'meta' AS kind, key, value FROM meta WHERE key IN ('search_tried_at', 'search_complete_at')
+    UNION ALL SELECT 'expired', id, 'https://github.com/' || repository || '/issues/' || issue_number FROM bounties
+    WHERE source = 'listed' AND approval = 'pending' AND listed_by_id IS NULL AND created_at <= ?`)
+    .bind(new Date(now - 14 * 24 * 60 * 60000).toISOString()).all<{ kind: 'meta' | 'expired'; key: string; value: string }>();
+  const meta = new Map(initial.results.filter(row => row.kind === 'meta').map(row => [row.key, row.value]));
+  for (const row of initial.results.filter(row => row.kind === 'expired')) {
+    await removeBounty(db, row.key);
+    await log(db, now, 'agent-import-expired', row.value);
+  }
   const github = new GitHub(env, true);
   let searched = false;
   try {
-    const meta = await getMetas(db, ['search_tried_at', 'search_complete_at']);
     let completeAt = Number(meta.get('search_complete_at') ?? 0);
     if (now - Number(meta.get('search_tried_at') ?? 0) >= SEARCH_EVERY_MS) {
       await setMeta(db, 'search_tried_at', String(now));

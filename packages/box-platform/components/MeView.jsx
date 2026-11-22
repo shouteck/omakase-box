@@ -257,7 +257,7 @@ function AccountMenu({ login, signOut }) {
   );
 }
 
-/** The role that opens: one the address names; else the one with something waiting; else the last used; a new person starts as a solver. */
+/** Address, waiting work, saved choice, then a poster-only account; otherwise Solver. */
 function firstRole(me) {
   const hash = typeof window === 'undefined' ? '' : window.location.hash;
   if (OWNER_HASHES.includes(hash)) return 'owner';
@@ -265,6 +265,7 @@ function firstRole(me) {
   if (me.you_owe.length > 0) return 'owner';
   if (me.owed_to_you.length > 0 || (me.to_confirm ?? []).length > 0) return 'solver';
   try { const last = window.localStorage.getItem(ROLE_KEY); if (last === 'owner' || last === 'solver') return last; } catch { /* storage may be blocked */ }
+  if ((me.bounties?.list ?? []).length > 0 && (me.solutions?.list ?? []).length === 0) return 'owner';
   return 'solver';
 }
 

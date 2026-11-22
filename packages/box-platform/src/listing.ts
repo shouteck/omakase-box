@@ -40,10 +40,11 @@ async function mayList(env: Env, lister: Lister, repository: string, issue: Reco
 }
 
 /**
- * `importing` (PF44): anyone signed in may import an issue; it waits as 'pending', its poster the issue's author, until a
+ * `importing`: a session or anonymous caller may import an issue; it waits as 'pending', its poster the issue's author, until a
  * comment on the issue approves it (refresh.ts). Without it, only someone with authority lists, approved at once.
  */
-export async function listIssue(env: Env, lister: Lister, address: unknown, reward: unknown, now: number, token?: string, importing = false): Promise<Listing> {
+export async function listIssue(env: Env, lister: Lister | null, address: unknown, reward: unknown, now: number, token?: string, importing = false): Promise<Listing> {
+  if (lister === null && !importing) return refuse(403, `Sign in to list an issue. ${nothing} Next: sign in at /sign-in/.`);
   const found = typeof address === 'string' ? ISSUE.exec(address.trim()) : null;
   if (found === null) return refuse(400, `That is not a GitHub issue's address. ${nothing} Next: paste it as https://github.com/owner/repository/issues/12.`);
   if (typeof reward !== 'number' || !Number.isSafeInteger(reward) || reward < MINIMUM_REWARD_USD || reward > REWARD_MAX) return refuse(400, `The reward must be whole US dollars from ${MINIMUM_REWARD_USD} to ${REWARD_MAX}. ${nothing} Next: type the amount.`);
@@ -61,7 +62,7 @@ export async function listIssue(env: Env, lister: Lister, address: unknown, rewa
     if (issue['state'] !== 'open') return refuse(409, `Issue #${number} in ${repository} is closed. ${nothing} Next: reopen it on GitHub first.`);
     const held = await env.DB.prepare('SELECT id FROM bounties WHERE repository = ? COLLATE NOCASE AND issue_number = ?').bind(repository, number).first<{ id: string }>();
     if (held !== null) return refuse(409, `Issue #${number} in ${repository} is already a bounty on this board, ${held.id}. ${nothing}`);
-    const allowed = importing || await mayList(env, lister, repository, issue, repo.json, token);
+    const allowed = importing || (lister !== null && await mayList(env, lister, repository, issue, repo.json, token));
     if (allowed === 'ask') return { needs_permission: true };
     if (!allowed) return refuse(403, `You did not open this issue and cannot write to ${repository}, so you cannot list it. ${nothing} Next: ask the issue's author or the repository's owner to list it.`);
     if (typeof issue['node_id'] !== 'string' || typeof issue['title'] !== 'string' || !record(issue['user']) || (importing && (typeof issue['user']['login'] !== 'string' || !Number.isSafeInteger(issue['user']['id'])))) return refuse(502, `GitHub's answer for this issue could not be read. ${nothing} Next: try again.`);
@@ -72,8 +73,8 @@ export async function listIssue(env: Env, lister: Lister, address: unknown, rewa
     const commit = record(head.json) && typeof head.json['sha'] === 'string' && /^[a-f\d]{40}$/.test(head.json['sha']) ? head.json['sha'] : '0'.repeat(40);
     await env.DB.prepare(`INSERT INTO bounties (id, repository, issue_number, title, task, poster, poster_id, issue_state, closed_at, amount, created_at, work_commit, seen_at, listed_seq, source, listed_by_id, listed_by, issue_author, approval)
       VALUES (?, ?, ?, ?, ?, ?, ?, 'open', NULL, ?, ?, ?, ?, (SELECT COALESCE(MAX(listed_seq), 0) + 1 FROM bounties), 'listed', ?, ?, ?, ?)`)
-      .bind(id, repository, number, issue['title'].slice(0, TITLE_MAX), (typeof issue['body'] === 'string' ? issue['body'] : '').trim().slice(0, TASK_MAX), importing ? issue['user']['login'] as string : lister.login, importing ? issue['user']['id'] as number : lister.github_id,
-        reward, new Date(now).toISOString(), commit, now, lister.github_id, lister.login, typeof issue['user']['login'] === 'string' ? issue['user']['login'] : null, importing ? 'pending' : null).run();
+      .bind(id, repository, number, issue['title'].slice(0, TITLE_MAX), (typeof issue['body'] === 'string' ? issue['body'] : '').trim().slice(0, TASK_MAX), importing ? issue['user']['login'] as string : lister!.login, importing ? issue['user']['id'] as number : lister!.github_id,
+        reward, new Date(now).toISOString(), commit, now, lister?.github_id ?? null, lister?.login ?? null, typeof issue['user']['login'] === 'string' ? issue['user']['login'] : null, importing ? 'pending' : null).run();
     return importing ? { id, approve_with: approvalLine(id, reward) } : { id };
   } catch (error) {
     if (error instanceof GitHubUnavailable || error instanceof BudgetSpent) return refuse(503, `GitHub could not be read just now. ${nothing} Next: try again in a few minutes.`);
