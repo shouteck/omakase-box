@@ -152,7 +152,7 @@ export default function PayWindow({ id, open, onClose, onChange }) {
         {person.methods.length > 0 ? (
           <Way label={`By hand, ${person.methods.length === 1 ? 'a way' : 'ways'} ${person.login} listed`}>
             <ul className="flex flex-col gap-3">{person.methods.map((method, i) => <WayRow key={i} method={method} />)}</ul>
-            <p className="text-sm text-soft">You pay outside the board, then tell it you did.</p>
+            <p className="text-sm text-soft">You pay outside the board, then record it here or have your agent comment omakase paid &lt;id&gt; $&lt;amount&gt; to @&lt;solver&gt; on the GitHub issue. It is your word, not provider-verified.</p>
           </Way>
         ) : null}
         {!oneClick && person.methods.length === 0 ? (
@@ -162,7 +162,7 @@ export default function PayWindow({ id, open, onClose, onChange }) {
           </Way>
         ) : null}
         <Wide quiet={oneClick} disabled={busy} onClick={() => recordPaid(person.login)}>I&apos;ve paid ${amount}{oneClick ? ' by hand' : ''}</Wide>
-        <p className="text-sm text-soft -mt-2">Use this only if you already paid {person.login} outside the board. Recording does not send money.</p>
+        <p className="text-sm text-soft -mt-2">Use this only if you already paid {person.login} outside the board. Recording does not send money. To charge a saved Stripe card or PayPal Vault method instead, the poster&apos;s agent can comment omakase pay &lt;id&gt; $&lt;amount&gt; to @&lt;solver&gt; on the GitHub issue, within the saved limit. Use the exact bounty reward.</p>
         {view.payee === null && chosen !== null ? <button type="button" className="text-sm text-left" style={{ color: 'var(--color-accent)' }} onClick={() => setChosen(null)}>← Choose someone else</button> : null}
       </>
     );

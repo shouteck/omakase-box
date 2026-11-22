@@ -158,7 +158,7 @@ describe('the pages', () => {
     expect(text).toContain('$45');
     expect(text).toContain('example-tidepool/ledger-lite · TypeScript · 4 days old · 2 solutions waiting');
     expect(text).toContain('example-mara: ');
-    expect(text).toMatch(/\d merged · \d paid, the owner's word · \d received, the solvers' word/);
+    expect(text).toMatch(/\d merged · \d paid, the owner or provider's word · \d received, the solvers' word/);
     expect(await page.locator('main').innerText()).toContain(`Titles are the posters' own words.`);
     await visit(page, '/board/?repository=example-org/repo-1&query=Add thing 1');
     await expect.poll(() => card.innerText()).toContain('poster-1: no payment history yet.');

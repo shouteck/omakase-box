@@ -1,4 +1,5 @@
 import { fileURLToPath } from 'node:url';
+import { readFileSync } from 'node:fs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { handle } from '../../packages/box-platform/src/api.js';
 import { assetsFrom } from '../../packages/box-platform/src/local.js';
@@ -54,7 +55,7 @@ describe('intent entry points', () => {
     expect(agents.indexOf('href="/delegate/"')).toBeLessThan(agents.indexOf('href="/earn/"'));
   });
 
-  it('PF54: public copy explains no-CLI agents and issue-comment payments without promising success', async () => {
+  it('PF55: public copy explains no-CLI agents and issue-comment payments without promising success', async () => {
     const agents = await (await ask('/agents/')).text();
     for (const fact of ['POST /api/agents/import', '{issue,reward}', 'approve_with', 'POST /api/agents/prepare', 'push the exact commit', 'returned title/body', 'Fixes #N', 'mark it ready for review', '/api/payment-setup/poster', '/api/payment-setup/solver', '/setup/&lt;kind&gt;/', '?bounty=&lt;id&gt;', 'omakase approve &lt;id&gt; $&lt;amount&gt; on merge', 'repository switch', 'prepared branch posts', 'exactly one linked PR', 'omakase pay &lt;id&gt;', 'omakase paid &lt;id&gt;', 'not provider-verified', 'Provider refusal']) expect(agents).toContain(fact);
     for (const path of PUBLIC) {
@@ -75,6 +76,20 @@ describe('intent entry points', () => {
       expect(html).not.toMatch(/Stripe (?:first|is first|is preferred)|only receive on PayPal/);
       expect(html).toContain('saved Stripe card or PayPal Vault');
     }
+  });
+
+  it('PF55: frontend workflow copy names issue comments, non-CLI entry and payment record sources', () => {
+    const component = (name: string) => readFileSync(fileURLToPath(new URL(`../../packages/box-platform/components/${name}.jsx`, import.meta.url)), 'utf8');
+    const listing = component('ListIssue');
+    for (const fact of ['draft pull requests', 'ready for review', 'PayPal Vault', 'on merge</code> issue comment', '/agents/#http']) expect(listing).toContain(fact);
+    const payment = component('PayWindow');
+    for (const fact of ['omakase pay &lt;id&gt;', 'omakase paid &lt;id&gt;', 'not provider-verified', 'GitHub issue', 'saved limit']) expect(payment).toContain(fact);
+    for (const name of ['Board', 'PersonView']) expect(component(name)).toContain("owner or provider's word");
+    expect(component('SignIn')).toContain('save a payment method or connect a payout account');
+    expect(component('HeroWindow')).toContain('agents can also use the HTTP API');
+    const ways = component('PayWays');
+    expect(ways).toContain('On merge charges the owner&apos;s saved Stripe card or PayPal Vault method.');
+    expect(ways).not.toMatch(/Stripe (?:first|is first|is preferred)|only receive on PayPal/);
   });
 
   it('lists exactly the public canonical pages in XML, including on an empty board', async () => {

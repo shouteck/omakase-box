@@ -72,7 +72,7 @@ export function StripeCountries() {
     <details id="stripe" data-stripe-countries className="border-t border-b border-line py-4">
       <summary className="font-medium">Where Stripe can pay a solver</summary>
       <div className="mt-2 pl-[1.1em] text-soft flex flex-col gap-3">
-        <p>{STRIPE_REACH}</p>
+        <p>{STRIPE_REACH.replace('a solver elsewhere is paid by hand.', 'a solver elsewhere can use PayPal or be paid by hand.')}</p>
         <p>{STRIPE_COUNTRIES.map(countryName).sort((a, b) => a.localeCompare(b)).join(', ')}.</p>
       </div>
     </details>

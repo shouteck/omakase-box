@@ -41,7 +41,7 @@ function Owner({ data }) {
         {data.record.has_history ? (
           <Facts rows={[
             ['Merged', `${data.record.merged}. Source: GitHub.`],
-            ['Recorded paid', `${data.record.recorded_paid}. The owner's word.`],
+            ['Recorded paid', `${data.record.recorded_paid}. The owner or provider's word.`],
             ['Confirmed received', `${data.record.confirmed_received}${data.record.from_solvers > 0 ? `, by ${plural(data.record.from_solvers, 'different solver')}` : ''}. The solvers' word.`],
             ['Says not received', `${data.record.says_not_received}. The solvers' word.`],
             ['Owed now', data.record.owed_now === 0 ? 'None.' : `${data.record.owed_now}, the oldest for ${plural(data.record.oldest_owed_days, 'day')}.`],

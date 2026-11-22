@@ -17,7 +17,7 @@ export default function SignIn() {
   }, []);
   return (
     <>
-      <Title sub="The board asks GitHub for your public profile only. It cannot see any repository, public or private, and it stores no GitHub token.">Sign in</Title>
+      <Title sub="The board asks GitHub for your public profile only. Sign-in grants no repository access, and the board stores no GitHub token. It reads public repositories separately. Sign in once to save a payment method or connect a payout account; agents can read and import work without signing in.">Sign in</Title>
       {error ? <p role="alert" className="mb-6 border-l-2 border-accent pl-4 max-w-prose">{error}</p> : null}
       <Primary href="/auth/github">Sign in with GitHub</Primary>
       <p className="mt-6 text-sm text-soft"><a href="/privacy/">What the board stores</a></p>

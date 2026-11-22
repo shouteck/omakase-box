@@ -54,7 +54,7 @@ function RecordLine({ record }) {
   ].filter(Boolean);
   const rest = [
     `${record.merged} merged`,
-    `${record.recorded_paid} paid, the owner's word`,
+    `${record.recorded_paid} paid, the owner or provider's word`,
     `${record.confirmed_received} received, the solvers' word`,
     record.owed_now > 0 && record.oldest_owed_days <= 14 ? `${record.owed_now} owed, the oldest for ${plural(record.oldest_owed_days, 'day')}` : null
   ].filter(Boolean);

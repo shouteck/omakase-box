@@ -49,7 +49,7 @@ export default function HeroWindow() {
           </div>
         </div>
       </div>
-      <figcaption className="mt-3 text-sm text-soft text-center">An example. Every name in it is invented.</figcaption>
+      <figcaption className="mt-3 text-sm text-soft text-center">An example. Every name in it is invented. Shown with the CLI; agents can also use the HTTP API.</figcaption>
     </figure>
   );
 }

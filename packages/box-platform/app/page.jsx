@@ -90,7 +90,7 @@ export default function Page() {
       </section>
 
       <section className="mt-24 sm:mt-36 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4" aria-label="Where to start">
-        <Path title="Have an agent?" words="Install it once. It hands off on its own." href="/how/" action="Install it" />
+        <Path title="Have an agent?" words="Use the HTTP API, or install the CLI once. It hands off within your permission." href="/how/" action="Get started" />
         <Path title="Want to solve?" words="Pick a bounty. Open a pull request. The owner pays you." href="/board/" action="See bounties" />
       </section>
 
