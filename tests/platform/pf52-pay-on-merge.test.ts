@@ -65,6 +65,62 @@ beforeEach(async () => {
 });
 afterEach(async () => { vi.restoreAllMocks(); await stripe.stop(); await paypal.stop(); await r.close(); });
 
+describe('PF52: payout connection after a refused payment', () => {
+  async function unconnected(rail: 'stripe' | 'paypal', automatic = true) {
+    if (rail === 'stripe') { await card(); await connectedStripe(false); }
+    else { await vault(); await r.env.DB.prepare('DELETE FROM paypal_accounts').run(); }
+    if (!automatic) { Object.assign(issue.pulls![0]!, { state: 'open', landed: false }); delete issue.pulls![0]!.merged_at; }
+    await approve(automatic ? ' on merge' : '');
+    if (automatic) { await settleCharges(r.env); expect(await state()).toMatchObject({ state: 'solver-not-ready' }); }
+  }
+  async function connect(rail: 'stripe' | 'paypal') {
+    if (rail === 'stripe') { await r.env.DB.prepare('UPDATE stripe_accounts SET ready = 1').run(); stripe.accounts.set('acct_solver', { charges_enabled: true }); }
+    else await r.env.DB.prepare(`INSERT INTO paypal_accounts (github_id, payer_id, at) VALUES (7001, 'SOLVERPAYPAL1', ?)`).bind(r.clock.at).run();
+  }
+  async function comments() {
+    const github = new GitHub(r.env, false);
+    try { await readPaymentComments(r.env, github, id, REPO, 12); } finally { await github.settle(); }
+  }
+  it.each(['stripe', 'paypal'] as const)('never auto-retries a %s-unready merge after connection, retains explicit fallback facts, and accepts an outside record', async rail => {
+    await unconnected(rail);
+    const before = await fact();
+    expect(before.pay_on_merge.solvers[0].setup_urls).toMatchObject({ stripe: expect.stringContaining('/setup/stripe-payouts/'), paypal: expect.stringContaining('/setup/paypal-payouts/') });
+    expect(before.owed_now).toMatchObject({ amount: 45, pay_now: { comment: `omakase pay ${id} $45 to @<solver-login>` } });
+    await connect(rail); r.clock.at += 10 * MINUTE; await settleTwice();
+    expect(stripe.charged()).toHaveLength(0); expect(paypal.captures).toHaveLength(0);
+    const after = await fact();
+    expect(after.pays_on_merge).toBe(false); expect(after.pay_on_merge.will_pay).toBe(false);
+    expect(after.pay_on_merge.reasons.join(' ')).toContain('Automatic charge on merge is off for this bounty');
+    expect(after.pay_on_merge.reasons.join(' ')).toContain('one-click (Checkout or a fresh omakase pay comment)');
+    expect((await post(`/api/b/${id}/paid`, { to: SOLVER }, await session())).status).toBe(200);
+    expect((await (await get(`/bounties/${id}.json`)).json() as any).bounty.payment.recorded_paid.source).toBe('board');
+    await settleTwice(); expect(stripe.charged()).toHaveLength(0); expect(paypal.captures).toHaveLength(0);
+  });
+  it.each(['stripe', 'paypal'] as const)('lets an owner actually complete %s Checkout after a terminal solver-not-ready merge', async rail => {
+    await unconnected(rail); await connect(rail); r.clock.at += 10 * MINUTE; await settleTwice();
+    expect(stripe.charged()).toHaveLength(0); expect(paypal.captures).toHaveLength(0);
+    const owner = await session();
+    const clicked = await post(`/api/b/${id}/${rail === 'stripe' ? 'pay' : 'pay-paypal'}`, { to: SOLVER }, owner);
+    expect(clicked.status).toBe(200); expect(await clicked.json()).toMatchObject({ url: expect.stringContaining(rail === 'stripe' ? 'checkout.stripe.test' : 'sandbox.paypal.test') });
+    if (rail === 'stripe') stripe.payPage([...stripe.sessions.keys()][0]!); else paypal.approve(paypal.orders[0]!.id);
+    const view = await (await get(`/api/b/${id}/payment`, owner)).json() as any;
+    expect(view.payment).toMatchObject({ state: 'recorded', recorded_paid: { source: rail } });
+    await settleTwice(); expect(await state()).toMatchObject({ state: 'paid' });
+    expect(stripe.charged()).toHaveLength(rail === 'stripe' ? 1 : 0); expect(paypal.captures).toHaveLength(rail === 'paypal' ? 1 : 0);
+  });
+  it.each(['stripe', 'paypal'] as const)('requires a fresh %s pay comment after solver connection; the old command never queues spending', async rail => {
+    await unconnected(rail, false);
+    const command = () => issue.comments!.push({ login: OWNER.login, association: 'OWNER', body: `omakase pay ${id} $45 to @solver`, created_at: new Date(r.clock.at).toISOString() });
+    r.clock.at += MINUTE; command(); await comments();
+    expect(await state()).toMatchObject({ state: 'solver-not-ready' });
+    await connect(rail); r.clock.at += 10 * MINUTE; await comments(); await settleTwice();
+    expect(stripe.charged()).toHaveLength(0); expect(paypal.captures).toHaveLength(0); expect(await state()).toMatchObject({ state: 'solver-not-ready' });
+    r.clock.at += MINUTE; command(); await comments(); await comments(); await settleTwice();
+    expect(await state()).toMatchObject({ state: 'paid' });
+    expect(stripe.charged()).toHaveLength(rail === 'stripe' ? 1 : 0); expect(paypal.captures).toHaveLength(rail === 'paypal' ? 1 : 0);
+  });
+});
+
 describe('PF52: owner and solver PayPal parity', () => {
   it('edits the saved PayPal limit without provider setup, with authentication, validation and private references', async () => {
     const owner = await session();

@@ -114,7 +114,7 @@ const DUE = `SELECT b.id, b.amount, b.poster, b.poster_id, ${COMMENTED} AS comme
     AND ${APPROVED}
     AND (NOT ${COMMENTED} OR ${paymentCommentsCurrent})
     AND EXISTS (SELECT 1 FROM pull_requests p WHERE p.bounty_id = b.id AND ${landedWhere('p')})
-    AND (c.state IS NULL OR c.state NOT IN ('paid', 'refunded', 'disputed', 'owner-must-authenticate', 'owner-paying'))
+    AND (c.state IS NULL OR c.state NOT IN ('paid', 'refunded', 'disputed', 'owner-must-authenticate', 'owner-paying', 'solver-not-ready'))
     AND (c.at IS NULL OR c.at <= ?)
   ORDER BY c.at IS NOT NULL, c.at, b.id LIMIT ?`;
 type DueRow = { id: string; amount: number; poster: string; poster_id: number; commented: number; stripe_limit: number | null; paypal_limit: number | null; on_at: string; customer_id: string | null; payment_method: string | null; payment_token: string | null };
@@ -181,7 +181,7 @@ export async function settleCharges(env: Env): Promise<number> {
     const method = usePayPal ? row.payment_token! : row.payment_method ?? row.payment_token!;
     const held = await db.prepare('SELECT state, payment_method, provider, at FROM charges WHERE bounty_id = ?').bind(row.id).first<ChargeRow & { provider: string | null }>();
     if (held?.state === 'charging' && (held.payment_method !== method || (held.provider === 'paypal') !== usePayPal)) continue;
-    const limit = usePayPal ? row.paypal_limit : row.stripe_limit;
+    const limit = usePayPal || row.payment_method === null ? row.paypal_limit : row.stripe_limit;
     const decision = decide({
       amount: row.amount, poster: row.poster, poster_id: row.poster_id, landed, on_at: row.on_at,
       card: { payment_method: method, customer: row.customer_id ?? '', limit: limit ?? 0 },
@@ -463,6 +463,7 @@ export async function payingIds(env: Env, ids: readonly string[]): Promise<Reado
     LEFT JOIN pay_settings s ON s.github_id = b.poster_id
     LEFT JOIN paypal_vault v ON v.github_id = b.poster_id
     WHERE b.id IN (SELECT value FROM json_each(?)) AND b.amount > 0 AND ${CONSENT_AT} IS NOT NULL AND ${APPROVED}
+      AND NOT EXISTS (SELECT 1 FROM charges WHERE bounty_id = b.id AND state = 'solver-not-ready')
       AND ((? AND s.payment_method IS NOT NULL AND (CASE WHEN ${COMMENTED} THEN b.amount <= ${STRIPE_LIMIT} ELSE b.amount = ${STRIPE_LIMIT} END))
         OR (? AND v.payment_token IS NOT NULL AND (CASE WHEN ${COMMENTED} THEN b.amount <= ${PAYPAL_LIMIT} ELSE b.amount = ${PAYPAL_LIMIT} END)))`).bind(JSON.stringify(ids), stripeOn(env) ? 1 : 0, paypalOn(env) ? 1 : 0).all<{ id: string }>();
   return new Set(results.map(row => row.id));
@@ -505,7 +506,7 @@ export async function mergePaymentFact(env: Env, id: string, origin: string) {
   if (landed.length === 1 && notCounted(landed[0]!, poster!.poster, poster!.poster_id) !== null) reasons.push('The author is the poster or has repository access, or GitHub did not state their association.');
   if (landed.length === 1 && provider === null) reasons.push('The solver is not ready to receive on an available pay-on-merge rail.');
   const charge = await chargeOf(env, id);
-  if (charge !== null && charge.state !== 'solver-not-ready' && charge.state !== 'owner-decides' && charge.state !== 'refused-over-limit') reasons.push((row.charge_provider === 'paypal' ? PAYPAL_WORDS[charge.state] : undefined) ?? CHARGE_WORDS[charge.state]);
+  if (charge !== null && charge.state !== 'owner-decides' && charge.state !== 'refused-over-limit') reasons.push((row.charge_provider === 'paypal' ? PAYPAL_WORDS[charge.state] : undefined) ?? CHARGE_WORDS[charge.state]);
   return { configured: (await payingIds(env, [id])).has(id), will_pay: reasons.length === 0, provider, reasons,
     setup_urls: { stripe: links.stripe_card, paypal: links.paypal_vault }, solvers,
     pay_now: { comment: payComment(id, row.amount), note: 'The poster can post this exact case-insensitive comment on the bounty issue to pay a linked PR author without a merge, repository switch or board session. The approved reward must fit the saved method’s default limit, with no self/repository-access payee or prior payment/record/in-flight charge. Stripe is preferred when ready, else PayPal Vault. A refused comment is not retried; after fixing setup, post a new comment. An in-flight charge must be resolved first.' },

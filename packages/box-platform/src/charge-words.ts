@@ -7,7 +7,7 @@ export const CHARGE_WORDS: Record<Exclude<ChargeState, 'looked'>, string> = {
   'not-counted': 'Pay on merge does not run here: the solver is the poster, or GitHub lists them as having access to the repository.',
   'owner-decides': 'More than one solution landed, so pay on merge did not choose. Nothing was charged.',
   'refused-over-limit': 'The reward is not the one the owner approved for pay on merge here. Nothing was charged.',
-  'solver-not-ready': 'The solver has no payout account ready for this payment. Nothing was charged.',
+  'solver-not-ready': 'Automatic charge on merge is off for this bounty because the solver had no usable payout account when payment was evaluated. Once connected, the poster can pay by one-click (Checkout or a fresh omakase pay comment), or record an outside payment. Nothing was charged.',
   'solver-disconnected': 'The solver\'s Stripe account is no longer connected. Nothing was charged.',
   declined: 'The card was declined. Nothing was charged.',
   'stripe-refused': 'Stripe refused this charge for a reason other than the card. Nothing was charged.',

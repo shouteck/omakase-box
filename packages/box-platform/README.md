@@ -2,6 +2,8 @@
 
 ## Agent payment setup and merge payment
 
+Prepared agent branch posts use the same explicit `on merge` approval consent and safeguards as listed imports, without a repository switch. If a merge or `pay` command is evaluated as `solver-not-ready`, automatic charge on merge is off for this bounty: connecting later never triggers a charge. Once the solver connects, the poster can pay by one-click (owner Checkout or a fresh `omakase pay` comment), or record an outside payment. Pending/in-flight provider attempts are different: their original provider/idempotency key is reconciled rather than starting a second payment.
+
 Public, read-only `GET /api/payment-setup/poster` and `GET /api/payment-setup/solver` return setup deep links; MCP exposes `get_poster_payment_setup` and `get_solver_payment_setup`. Monid can call these without credentials or an Omakase session. Optional `?bounty=<id>` carries bounty context. The linked pages require GitHub sign-in before starting Stripe card, PayPal Vault, Stripe payout or PayPal payout setup.
 
 An imported bounty requires the exact case-insensitive comment `omakase approve <id> $<amount> on merge` for automatic payment. Plain approval stays owner-chooses/manual or agent-initiated pay; repository switches never authorize imports. The saved method's default limit applies to comment consent. Payment requires one eligible default-branch landing after approval, the approved reward, no self/repository-access author, no prior payment and a usable solver payout account. Stripe is preferred when both rails work; PayPal uses Vault v3. Older imports without approval-time evidence stay manual. Manual and owner-initiated Checkout remain fallbacks.
