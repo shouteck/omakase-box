@@ -175,7 +175,7 @@ async function solverProfile(env: Env, login: string): Promise<Response> {
   const listed = merged.results.map(row => {
     const input = inputs.find(entry => entry.id === row.id);
     const mine = input === undefined ? undefined : landedOf(input).find(pull => same(pull.author, login));
-    const counted = input !== undefined && mine !== undefined && notCounted(mine, input.poster) === null;
+    const counted = input !== undefined && mine !== undefined && notCounted(mine, input.poster, input.poster_id) === null;
     const payment = input === undefined ? null : paymentOf(input);
     return { ...row, counted, payment_state: payment !== null && same(payment.owed?.to ?? null, login) ? payment.state : null };
   });

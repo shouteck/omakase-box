@@ -19,6 +19,7 @@ export type ChargeRow = { state: ChargeState; payment_method: string | null; at:
 export type ChargeFacts = {
   amount: number;
   poster: string;
+  poster_id?: number | null;
   landed: readonly Merged[];
   /** When the poster's switch for this repository went on, with the poster's GitHub id matched. Null: off. */
   on_at: string | null;
@@ -46,7 +47,7 @@ export function decide(facts: ChargeFacts, now: number): Decision {
   if (facts.landed.length > 1) return { act: 'settle', state: 'owner-decides', pull: null };
   const pull = facts.landed[0]!;
   if (facts.maximum ? Date.parse(pull.merged_at) <= Date.parse(facts.on_at) : Date.parse(pull.merged_at) < Date.parse(facts.on_at)) return { act: 'nothing' }; // Turning it on never charges an old merge.
-  if (notCounted(pull, facts.poster) !== null) return { act: 'settle', state: 'not-counted', pull };
+  if (notCounted(pull, facts.poster, facts.poster_id) !== null) return { act: 'settle', state: 'not-counted', pull };
   // One fixed amount (PF20, the owner): the reward approved for this repository. Any other waits for the owner.
   if (facts.maximum ? facts.amount > card.limit : facts.amount !== card.limit) return { act: 'settle', state: 'refused-over-limit', pull };
   if (facts.solver === null || !facts.solver.ready) return { act: 'settle', state: 'solver-not-ready', pull };
@@ -123,12 +124,12 @@ const LOOK_AGAIN_MS = 300000; // A state that may change is looked at this often
  * owner's choice (PF32): on a listed bounty any linked pull request's author, merged or not; on a posted bounty one of
  * the landed ones. The rest of the rule (connected, ready, not self-dealt) is unchanged.
  */
-export async function payeeFacts(env: Env, id: string, chosen?: string): Promise<Pick<ChargeFacts, 'landed' | 'solver' | 'recorded'>> {
+export async function payeeFacts(env: Env, id: string, chosen?: string): Promise<Pick<ChargeFacts, 'landed' | 'solver' | 'recorded' | 'poster_id'>> {
   const db = env.DB;
-  const listed = chosen !== undefined && (await db.prepare(`SELECT 1 AS yes FROM bounties WHERE id = ? AND source = 'listed'`).bind(id).first()) !== null;
+  const bounty = await db.prepare(`SELECT source, poster, poster_id, approval, ${APPROVED_AT} AS approval_at FROM bounties b WHERE id = ?`).bind(id).first<{ source: string; poster: string; poster_id: number | null; approval: string | null; approval_at: string | null }>();
+  const listed = chosen !== undefined && bounty?.source === 'listed';
   const all = (await db.prepare(`SELECT number, author, author_id, merged_at, association, on_default, landing_sha FROM pull_requests WHERE bounty_id = ? AND ${listed ? '1 = 1' : landedWhere()} ORDER BY number`).bind(id).all<Merged>()).results;
-  const bounty = chosen === undefined ? await db.prepare(`SELECT source, poster, approval, ${APPROVED_AT} AS approval_at FROM bounties b WHERE id = ?`).bind(id).first<{ source: string; poster: string; approval: string | null; approval_at: string | null }>() : null;
-  let eligible = bounty?.source === 'listed' ? all.filter(pull => bounty.approval !== 'pending' && bounty.approval_at !== null && Date.parse(pull.merged_at) > Date.parse(bounty.approval_at) && notCounted(pull, bounty.poster) === null) : all;
+  let eligible = bounty?.source === 'listed' ? all.filter(pull => bounty.approval !== 'pending' && bounty.approval_at !== null && Date.parse(pull.merged_at) > Date.parse(bounty.approval_at) && notCounted(pull, bounty.poster, bounty.poster_id) === null) : all;
   if (bounty?.source === 'listed') {
     const unknown = await db.prepare(`SELECT 1 FROM pull_requests WHERE bounty_id = ? AND state = 'merged' AND merged_at > ?
       AND ((on_default IS NULL AND landing_sha IS NULL) OR landing_check IS NOT NULL OR head_sha IS NULL) LIMIT 1`).bind(id, bounty.approval_at).first();
@@ -138,7 +139,7 @@ export async function payeeFacts(env: Env, id: string, chosen?: string): Promise
   const authorId = landed.length === 1 ? landed[0]!.author_id : null;
   const solver = authorId === null ? null : await db.prepare('SELECT account_id, ready FROM stripe_accounts WHERE github_id = ?').bind(authorId).first<{ account_id: string; ready: number }>();
   const events = await db.prepare(`SELECT 1 FROM events WHERE bounty_id = ? AND type = 'paid' AND withdrawn = 0 UNION SELECT 1 FROM paid_clicks WHERE bounty_id = ? AND withdrawn = 0 LIMIT 1`).bind(id, id).first();
-  return { landed, solver: solver === null ? null : { account_id: solver.account_id, ready: solver.ready === 1 }, recorded: events !== null };
+  return { landed, solver: solver === null ? null : { account_id: solver.account_id, ready: solver.ready === 1 }, recorded: events !== null, poster_id: bounty?.poster_id ?? null };
 }
 
 /** The switch is on, a merge landed: start what is due. Returns how many were looked at. */
@@ -157,7 +158,7 @@ export async function settleCharges(env: Env): Promise<number> {
     if (held?.state === 'charging' && (held.payment_method !== method || (held.provider === 'paypal') !== usePayPal)) continue;
     const limit = row.source === 'listed' && row.merge_consent === 1 ? (usePayPal ? row.paypal_limit : row.stripe_limit) : row.repository_limit ?? (usePayPal ? row.paypal_limit : row.stripe_limit);
     const decision = decide({
-      amount: row.amount, poster: row.poster, landed, on_at: row.on_at,
+      amount: row.amount, poster: row.poster, poster_id: row.poster_id, landed, on_at: row.on_at,
       card: { payment_method: method, customer: row.customer_id ?? '', limit: limit ?? 0 },
       solver: usePayPal ? { account_id: paypalSolver!.payer_id, ready: true } : useStripe ? solver : null,
       recorded, row: held, maximum: row.source === 'listed'
@@ -219,7 +220,7 @@ export async function paySaved(env: Env, id: string, posterId: number, amount: n
       WHERE charges.at = ? AND charges.state NOT IN ('paid', 'refunded', 'disputed', 'charging', 'owner-paying', 'owner-must-authenticate')`)
       .bind(id, state, pull.number, pull.author, amount, now, held?.at ?? -1).run();
   };
-  if (pull.author_id === posterId || notCounted(pull, bounty.poster) !== null) { await refuse('not-counted'); return; }
+  if (notCounted(pull, bounty.poster, posterId) !== null) { await refuse('not-counted'); return; }
   const solver = pull.author_id === null ? null : await db.prepare('SELECT account_id, ready FROM stripe_accounts WHERE github_id = ?').bind(pull.author_id).first<{ account_id: string; ready: number }>();
   const paypal = pull.author_id === null ? null : await db.prepare('SELECT payer_id FROM paypal_accounts WHERE github_id = ?').bind(pull.author_id).first<{ payer_id: string }>();
   const useStripe = stripeOn(env) && bounty.payment_method !== null && solver?.ready === 1;
@@ -307,7 +308,7 @@ export async function authenticationPage(env: Env, id: string, origin: string, n
 
 // ---- the owner's own click (PF13) ---------------------------------------------
 
-export type PayFacts = Pick<ChargeFacts, 'amount' | 'poster' | 'landed' | 'solver' | 'recorded'> & { state: ChargeState | null; provider?: 'Stripe' | 'PayPal' };
+export type PayFacts = Pick<ChargeFacts, 'amount' | 'poster' | 'poster_id' | 'landed' | 'solver' | 'recorded'> & { state: ChargeState | null; provider?: 'Stripe' | 'PayPal' };
 export type PayDecision =
   | { act: 'open'; pull: Merged; account: string }
   /** `shown`: a fact the owner's page states without being asked. */
@@ -327,7 +328,7 @@ export function decidePay(facts: PayFacts): PayDecision {
   if (facts.amount <= 0 || facts.landed.length === 0) return refuse('Nothing is owed on this bounty. Nothing was charged.');
   if (facts.landed.length > 1) return refuse('More than one solution landed. Nothing was charged. Next: pay the one you choose by a method they listed.');
   const pull = facts.landed[0]!;
-  const excluded = notCounted(pull, facts.poster);
+  const excluded = notCounted(pull, facts.poster, facts.poster_id);
   if (excluded !== null) return refuse(`Not paid from here: ${excluded.because}. Nothing was charged.`);
   if (facts.solver === null) return refuse(`${pull.author} has not connected ${provider}. Nothing was charged. Next: pay by a method they listed.`, true);
   if (!facts.solver.ready) return refuse(`${pull.author} has not finished connecting ${provider}. Nothing was charged. Next: pay by a method they listed.`, true);
@@ -473,7 +474,8 @@ export async function mergePaymentFact(env: Env, id: string, origin: string) {
   if (landed.length === 0) reasons.push('No eligible merged pull request with a verified default-branch landing after approval.');
   if (landed.length > 1) reasons.push('More than one eligible solution landed; the owner decides.');
   if (landed.length === 1 && row.consent_at !== null && (row.source === 'listed' ? Date.parse(landed[0]!.merged_at) <= Date.parse(row.consent_at) : Date.parse(landed[0]!.merged_at) < Date.parse(row.consent_at))) reasons.push('The merge predates pay-on-merge consent.');
-  if (landed.length === 1 && notCounted(landed[0]!, (await env.DB.prepare('SELECT poster FROM bounties WHERE id = ?').bind(id).first<{ poster: string }>())!.poster) !== null) reasons.push('The author is the poster or has repository access, or GitHub did not state their association.');
+  const poster = await env.DB.prepare('SELECT poster, poster_id FROM bounties WHERE id = ?').bind(id).first<{ poster: string; poster_id: number | null }>();
+  if (landed.length === 1 && notCounted(landed[0]!, poster!.poster, poster!.poster_id) !== null) reasons.push('The author is the poster or has repository access, or GitHub did not state their association.');
   if (landed.length === 1 && provider === null) reasons.push('The solver is not ready to receive on an available pay-on-merge rail.');
   const charge = await chargeOf(env, id);
   if (charge !== null && charge.state !== 'solver-not-ready' && charge.state !== 'owner-decides' && charge.state !== 'refused-over-limit') reasons.push(CHARGE_WORDS[charge.state]);

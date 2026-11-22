@@ -3,7 +3,7 @@ import { handle } from '../../packages/box-platform/src/api.js';
 import worker from '../../packages/box-platform/src/worker.js';
 import { GitHub } from '../../packages/box-platform/src/github.js';
 import { readPaymentComments } from '../../packages/box-platform/src/payment-comment.js';
-import { paySaved, settleCharges } from '../../packages/box-platform/src/charge.js';
+import { decidePay, payeeFacts, paySaved, settleCharges } from '../../packages/box-platform/src/charge.js';
 import { listIssue } from '../../packages/box-platform/src/listing.js';
 import { refreshUntilDone, rig, MINUTE, NOW, type Rig } from './support.js';
 import { StripeStandin } from './stripe-standin.js';
@@ -149,6 +149,23 @@ describe('PF52: approved listed pay on merge', () => {
     if (mode === 'two') expect(await state()).toMatchObject({ state: 'owner-decides' });
     if (mode === 'plain-off') expect((await fact()).pay_on_merge.reasons.join(' ')).toContain('No pay-on-merge consent');
     if (mode === 'over-limit') expect((await fact()).pay_on_merge.reasons.join(' ')).toContain('outside the authorized limit');
+  });
+  it.each(['listed', 'posted'])('refuses the renamed poster by numeric id across %s payment paths', async source => {
+    await card(45); await connectedStripe(); await approve();
+    await r.env.DB.prepare('UPDATE bounties SET source = ? WHERE id = ?').bind(source, id).run();
+    await r.env.DB.prepare('UPDATE pull_requests SET author_id = ? WHERE bounty_id = ?').bind(OWNER.github_id, id).run();
+    await r.env.DB.prepare('UPDATE stripe_accounts SET github_id = ?').bind(OWNER.github_id).run();
+    if (source === 'posted') {
+      await switched();
+      await r.env.DB.prepare('UPDATE pay_repositories SET limit_per_bounty = 45').run();
+    }
+    await settleTwice();
+    expect(stripe.charged()).toHaveLength(0); expect(paypal.captures).toHaveLength(0);
+    expect((await fact()).pay_on_merge.will_pay).toBe(false);
+    const chosen = await payeeFacts(r.env, id, SOLVER);
+    expect(decidePay({ amount: 45, poster: OWNER.login, ...chosen, state: null })).toMatchObject({ act: 'refuse', words: expect.stringContaining('the solver is the poster') });
+    await paySaved(r.env, id, OWNER.github_id, 45, SOLVER);
+    expect(await state()).toMatchObject({ state: 'not-counted' }); expect(stripe.charged()).toHaveLength(0);
   });
   it('verifies a listed squash landing on default before charging', async () => {
     await card(); await connectedStripe();

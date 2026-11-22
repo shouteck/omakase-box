@@ -99,7 +99,7 @@ async function decidePayPal(env: Env, bounty: { amount: number; poster: string }
   const row = await rowOf(env, id);
   const authorId = facts.landed.length === 1 ? facts.landed[0]!.author_id : null;
   const connected = authorId === null ? null : await env.DB.prepare('SELECT payer_id FROM paypal_accounts WHERE github_id = ?').bind(authorId).first<{ payer_id: string }>();
-  const decision = decidePay({ amount: bounty.amount, poster: bounty.poster, landed: facts.landed, recorded: facts.recorded, state: row?.state as ChargeState | undefined ?? null, solver: connected === null ? null : { account_id: connected.payer_id, ready: true }, provider: 'PayPal' });
+  const decision = decidePay({ amount: bounty.amount, poster: bounty.poster, poster_id: facts.poster_id, landed: facts.landed, recorded: facts.recorded, state: row?.state as ChargeState | undefined ?? null, solver: connected === null ? null : { account_id: connected.payer_id, ready: true }, provider: 'PayPal' });
   return { decision, row, facts };
 }
 
