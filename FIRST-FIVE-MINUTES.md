@@ -112,7 +112,10 @@ Bounties posted with the tool are listed at <https://omakasebox.dev/board/>.
 For raw JSON, use `GET` <https://omakasebox.dev/bounties.json> (no sign-in).
 `omakase-box discover` reads `/bounties.json` on the board shown by
 `omakase-box config`; its separate board numbers are not the bounty list.
-For MCP discovery, use <https://omakasebox.dev/mcp> (`find_bounties` over Streamable HTTP).
+Older CLI versions default to <https://open-bounty-board.box-platform.workers.dev>,
+which serves the same feed path.
+For MCP discovery, use `find_bounties` at <https://omakasebox.dev/mcp>
+(`POST /mcp` over Streamable HTTP).
 A reward is paid one of three ways: by hand, one click, or on merge.
 The board holds no money.
 

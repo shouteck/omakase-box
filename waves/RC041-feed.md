@@ -26,7 +26,8 @@ in `discover` results and refusals, and in the repository quickstart.
 - **Test-verified on Devin/Linux:** the local stand-in sent an empty feed and a
   failed numbers response, a feed 404, and a malformed 200. The three regression
   cases failed before the change and passed after. Existing expectations stayed
-  in place.
+  in place. The built CLI returned exit 0 for the empty read and exit 3 for the
+  failed read, with an unchanged bookmark on failure.
 - **Experience First:** put the exact feed URL and read outcome on the first
   line instead of expecting the solver to infer them from the numbers line.
 - **Prove It Works:** exercise both successful and failed HTTP replies against

@@ -83,12 +83,15 @@ describe('the board in one line', () => {
     expect(renderDescribeSolving()).toContain(`bounty feed: ${board}/bounties.json`);
   });
 
-  it.each([404, 200])('discover names the unread feed when its response has status %i and no listing', status => {
+  it.each([
+    { status: 404, problem: ': the board answered 404' },
+    { status: 200, problem: ' did not return a bookmark or a list' }
+  ])('discover names the feed and why it was unread after HTTP $status', ({ status, problem }) => {
     changeConfig(null, 'set', 'board', board);
     changeConfig(null, 'set', 'solving', 'allowed');
     routes({ '/bounties.json?since=start&limit=10': { status, body: {} } });
     expect(() => discover({})).toThrow(expect.objectContaining({
-      reason: 'board-unread', message: expect.stringContaining(`bounty feed ${board}/bounties.json`)
+      reason: 'board-unread', message: expect.stringContaining(`bounty feed ${board}/bounties.json${problem}`)
     }));
   });
 });
