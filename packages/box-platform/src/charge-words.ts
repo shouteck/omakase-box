@@ -34,6 +34,7 @@ export const PAYPAL_WORDS: Partial<typeof CHARGE_WORDS> = {
 };
 
 export function chargeWords(state: string, provider: string | null): string | null {
+  if (!Object.hasOwn(CHARGE_WORDS, state)) return null;
   const key = state as keyof typeof CHARGE_WORDS;
   return (provider === 'paypal' ? PAYPAL_WORDS[key] : undefined) ?? CHARGE_WORDS[key] ?? null;
 }

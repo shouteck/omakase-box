@@ -77,7 +77,7 @@ describe('PF52: explicit saved payment rail choice', () => {
       expect(chargeWords(state, null)).toBe(CHARGE_WORDS[state as keyof typeof CHARGE_WORDS]);
     }
     expect(chargeWords('paid', 'paypal')).toContain('PayPal took the payment');
-    expect(chargeWords('looked', 'paypal')).toBeNull(); expect(chargeWords('unknown', null)).toBeNull();
+    for (const state of ['looked', 'unknown', 'constructor', '__proto__']) expect(chargeWords(state, 'paypal')).toBeNull();
   });
   it('Monid: a completed PayPal capture names PayPal in both merge facts and the payment view', async () => {
     await vault(); await approve(); await settleTwice();
@@ -160,6 +160,7 @@ describe('PF52: explicit saved payment rail choice', () => {
     await both(); await unavailable(rail); await preference(rail, true); await approve(` on merge via ${rail}`); await settleTwice();
     expectRail(null); expect(await state()).toMatchObject({ state: 'solver-not-ready' });
     expect((await fact()).pay_on_merge.rail_choice).toMatchObject({ chosen_rail: rail, selected_rail: rail, fallback: false });
+    expect(await (await get(`/api/b/${id}/payment`)).json()).toMatchObject({ payment: { charge: { whose_word: "the board's" } } });
   });
   it.each([
     ['stripe', 'limit'], ['paypal', 'limit'], ['stripe', 'declined'], ['paypal', 'declined']

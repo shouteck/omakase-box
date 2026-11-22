@@ -82,7 +82,8 @@ export function paymentOf(input: BountyPayment) {
   const chargedPull = facts.record === null ? undefined : input.pulls.find(pull => same(pull.author, facts.record!.to ?? null));
   if (chargedPull !== undefined && !landed.includes(chargedPull)) landed.push(chargedPull);
   const viaPayPal = input.charge?.provider === 'paypal';
-  const charge = input.charge == null ? null : { state: input.charge.state, at: input.charge.at, origin: input.charge.origin ?? null, words: chargeWords(input.charge.state, input.charge.provider ?? null), whose_word: viaPayPal ? 'the board\'s, from PayPal\'s answer' as const : 'the board\'s, from Stripe\'s answer' as const };
+  const providerAnswer = input.charge != null && ['paid', 'refunded', 'disputed', 'declined', 'stripe-refused', 'provider-refused', 'owner-must-authenticate', 'owner-paying', 'solver-disconnected'].includes(input.charge.state);
+  const charge = input.charge == null ? null : { state: input.charge.state, at: input.charge.at, origin: input.charge.origin ?? null, words: chargeWords(input.charge.state, input.charge.provider ?? null), whose_word: !providerAnswer ? 'the board\'s' as const : viaPayPal ? 'the board\'s, from PayPal\'s answer' as const : 'the board\'s, from Stripe\'s answer' as const };
   const none = { owed: null, recorded_paid: null, solver_says: null, excluded_from_counts: null, charge };
   if (input.amount === 0) return { state: 'no-reward' as PaymentState, ...none, note: 'No reward is stated, so nothing is owed.' };
   if (input.source === 'listed' && facts.record === null) return { state: 'owner-chooses' as PaymentState, ...none, note: landed.length === 0 ? 'No linked pull request yet. The owner may choose whom to pay. Authorized pay on merge requires one eligible verified landing.' : 'Authorized pay on merge can pay one eligible verified landing. Otherwise the owner chooses from every linked pull request, merged or not.' };

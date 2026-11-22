@@ -325,7 +325,7 @@ async function solutionsOf(env: Env, viewer: Viewer, now: number) {
       if (payment.recorded_paid !== null) {
         if (!mine(payment.owed.to)) return { ...base, stage: 'closed', note: 'Another solution was paid.' };
         const provider = byProvider(payment.recorded_paid);
-        return { ...base, stage: 'paid', paid_by: paidBy(payment.recorded_paid.source, input.charge?.origin), paid_at: payment.recorded_paid.at, needs_confirm: !provider && payment.solver_says?.word !== 'received' };
+        return { ...base, stage: 'paid', paid_by: paidBy(payment.recorded_paid.source, input?.charge?.origin), paid_at: payment.recorded_paid.at, needs_confirm: !provider && payment.solver_says?.word !== 'received' };
       }
       if (owedToMe) return { ...base, stage: 'due', since: payment.owed.since, one_of: payment.owed.to === null };
       return { ...base, stage: 'closed', note: 'Another solution was merged.' };
