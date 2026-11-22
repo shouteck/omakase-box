@@ -159,6 +159,7 @@ export default function PaymentCard({ id, poster, amount, state, issue, children
           </>
         )}
         {view?.can_authenticate ? <button type="button" onClick={() => toStripe('authenticate')} className="mt-3 w-full rounded-full px-5 py-2.5 font-medium bg-button text-button-ink">Finish this payment on Stripe&apos;s page</button> : null}
+        {view?.role === 'owner' && view.paypal_action_url ? <a href={view.paypal_action_url} rel="nofollow noopener noreferrer" className="mt-3 flex justify-center rounded-full px-5 py-2.5 font-medium bg-button text-button-ink">Continue on PayPal</a> : null}
         {confirm ? <button type="button" data-confirm onClick={() => post('receipt', { says: 'received' })} className="mt-3 w-full rounded-full px-5 py-2.5 font-medium bg-button text-button-ink">Confirm I received ${view.recorded?.amount ?? owed?.amount}</button> : null}
         <a href={issue} rel="nofollow noopener" data-issue className="mt-3 flex justify-center items-center gap-1.5 rounded-full px-5 py-2.5 font-medium border border-line bg-card" style={{ color: 'var(--color-ink)', textDecoration: 'none' }}>View the issue on GitHub ↗</a>
         {error ? <p role="alert" className="mt-3 text-sm">{error}</p> : null}

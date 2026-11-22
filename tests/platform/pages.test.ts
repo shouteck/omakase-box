@@ -887,6 +887,21 @@ describe('the pages', () => {
       await close();
     });
 
+    it('PF52: an agent PayPal payment before merge has a visible continuation without owed payees', async () => {
+      const { page, close } = await open({ ...base, login: 'example-mara', pay: pay() }, '/me/#pay');
+      const original = await (await fetch(`${board.url}/api/b/${STATE_IDS.owed}/payment`)).json() as any;
+      const action = 'https://www.sandbox.paypal.test/checkoutnow?token=EARLY';
+      await page.route(`**/api/b/${STATE_IDS.owed}/payment`, route => route.fulfill({ json: { ...original, role: 'owner', payees: [], can_authenticate: false, recorded: null, paypal_action_url: action,
+        payment: { ...original.payment, state: 'not-owed', recorded_paid: null, owed: null } } }));
+      await visit(page, `/b/${STATE_IDS.owed}/`);
+      const link = page.getByRole('link', { name: 'Continue on PayPal', exact: true });
+      await expect.poll(() => link.isVisible()).toBe(true);
+      expect(await link.getAttribute('href')).toBe(action);
+      expect(await page.locator('[data-pay]').count()).toBe(0);
+      await page.screenshot({ path: join(SHOTS, 'pf52-early-paypal-action.png'), fullPage: true });
+      await close();
+    });
+
     it('PF52: a PayPal payer-action window offers the existing PayPal link, not Stripe authentication', async () => {
       const { page, close } = await open({ ...base, login: 'example-mara', pay: pay() }, '/me/#pay');
       const original = await (await fetch(`${board.url}/api/b/${STATE_IDS.owed}/payment`)).json() as any;
