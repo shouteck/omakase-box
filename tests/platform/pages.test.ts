@@ -1546,6 +1546,33 @@ describe('the pages', () => {
     await close();
   });
 
+  it('PF52: the payout country form can redirect to exactly the supported provider hosts under CSP', async () => {
+    const previous = board.env.STRIPE_SECRET_KEY;
+    Object.assign(board.env, { STRIPE_SECRET_KEY: 'standin' });
+    const { page, close } = await fresh();
+    const hosts = ['https://connect.stripe.com', 'https://checkout.stripe.com', 'https://www.paypal.com', 'https://www.sandbox.paypal.com'];
+    let target = '';
+    try {
+      board.standin.signInAs = { id: 7100, login: 'example-mara' };
+      await page.goto(`${board.url}/auth/github`);
+      await page.waitForURL(`${board.url}/me/`);
+      await page.route(`${board.url}/setup/stripe-payouts/`, route => route.request().method() === 'POST'
+        ? route.fulfill({ status: 302, headers: { location: target } }) : route.continue());
+      for (const host of hosts) {
+        target = `${host}/pf52-csp-proof`;
+        await page.route(target, route => route.fulfill({ contentType: 'text/html', body: '<h1>Provider continuation reached</h1>' }));
+        const response = await page.goto(`${board.url}/setup/stripe-payouts/`);
+        const policy = response!.headers()['content-security-policy']!;
+        expect(policy.split('; ').find(part => part.startsWith('form-action'))).toBe(`form-action 'self' ${hosts.join(' ')}`);
+        expect(policy).toContain("connect-src 'self'");
+        expect(policy).not.toContain('*.');
+        await page.getByLabel('Bank account country').selectOption('US');
+        await Promise.all([page.waitForURL(target), page.getByRole('button', { name: 'Continue to Stripe' }).click()]);
+        expect(await page.locator('h1').innerText()).toBe('Provider continuation reached');
+      }
+    } finally { await close(); Object.assign(board.env, { STRIPE_SECRET_KEY: previous }); }
+  });
+
   // PF38: the standard security headers, on every kind of answer the board gives.
   const NEXT_FILE = (): string => {
     const find = (dir: string): string | null => {
