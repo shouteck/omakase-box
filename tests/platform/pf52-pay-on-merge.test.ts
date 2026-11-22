@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { handle } from '../../packages/box-platform/src/api.js';
 import worker from '../../packages/box-platform/src/worker.js';
 import { GitHub } from '../../packages/box-platform/src/github.js';
@@ -361,6 +361,32 @@ describe('PF52: agent pay comments', () => {
     await read(); expect(rail === 'stripe' ? stripe.calls.length : paypal.calls.length).toBe(calls);
     await command(); expect(await state()).toMatchObject({ state: 'paid' });
   });
+  it.each([['stripe', 'before'], ['stripe', 'after'], ['paypal', 'before'], ['paypal', 'after']] as const)(
+    'reconciles a %s command timeout %s provider processing without a merge or fresh consent', async (rail, when) => {
+      await open(rail);
+      const nativeFetch = globalThis.fetch;
+      let dropped = false;
+      const fetch = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
+        const path = new URL(String(input)).pathname;
+        const charging = init?.method === 'POST' && path === (rail === 'stripe' ? '/v1/payment_intents' : '/v2/checkout/orders');
+        if (charging && !dropped && when === 'before') { dropped = true; throw new Error('Connection lost'); }
+        const answer = await nativeFetch(input, init);
+        if (charging && !dropped) { dropped = true; throw new Error('Response lost'); }
+        return answer;
+      });
+      try { await command(); } finally { fetch.mockRestore(); }
+      expect(dropped).toBe(true); expect(await state()).toMatchObject({ state: 'charging' });
+      expect(await r.env.DB.prepare('SELECT state FROM pull_requests WHERE bounty_id = ?').bind(id).first()).toEqual({ state: 'open' });
+      if (rail === 'paypal') { await card(); await connectedStripe(); }
+      if (rail === 'stripe' && when === 'after') await r.env.DB.prepare('DELETE FROM pay_settings').run();
+      r.clock.at += 3 * MINUTE;
+      await settleCharges(r.env); await settleTwice(); await read();
+      expect(await state()).toMatchObject({ state: 'paid', provider: rail === 'paypal' ? 'paypal' : null });
+      expect(stripe.charged()).toHaveLength(rail === 'stripe' ? 1 : 0);
+      expect(paypal.captures).toHaveLength(rail === 'paypal' ? 1 : 0);
+      if (rail === 'paypal') expect(paypal.orders).toHaveLength(1);
+    }
+  );
   it('keeps a non-completed Vault response out of paid', async () => {
     await open('paypal'); paypal.vaultStatus = 'PAYER_ACTION_REQUIRED';
     await command(); await read();

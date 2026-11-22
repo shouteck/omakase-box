@@ -77,6 +77,7 @@ async function attempt(env: Env, bounty: string, amount: number, decision: Extra
   const on = { account };
   const first = await lookFirst(env, bounty, account);
   if (first !== null) return first;
+  if (card.customer === '') return { state: 'charging', payment_intent: null };
   const key = keyOf(bounty, pull.number, card.payment_method);
   const clone = await stripe(env, 'POST', '/v1/payment_methods', { customer: card.customer, payment_method: card.payment_method }, { ...on, idempotency: `${key}/clone` });
   if (clone.status === 401 || clone.status === 403) return { state: 'solver-disconnected', payment_intent: null };
@@ -119,6 +120,24 @@ type DueRow = { id: string; amount: number; poster: string; poster_id: number; s
 
 const LOOK_AGAIN_MS = 300000; // A state that may change is looked at this often, never faster.
 
+async function reconcileCharge(env: Env, now: number): Promise<boolean> {
+  const held = await env.DB.prepare(`SELECT c.bounty_id, c.pull_number, c.solver, c.account_id, c.amount, c.payment_method, c.provider, c.at, s.customer_id
+    FROM charges c LEFT JOIN pay_settings s ON s.github_id = (SELECT poster_id FROM bounties WHERE id = c.bounty_id) AND s.payment_method = c.payment_method
+    WHERE c.state = 'charging' AND c.at <= ? AND c.pull_number IS NOT NULL AND c.solver IS NOT NULL AND c.account_id IS NOT NULL
+      AND c.amount > 0 AND c.payment_method IS NOT NULL AND ((c.provider = 'paypal' AND ?) OR (c.provider IS NULL AND ?))
+    ORDER BY c.at, c.bounty_id LIMIT 1`).bind(now - STALE_CLAIM_MS, paypalOn(env) ? 1 : 0, stripeOn(env) ? 1 : 0).first<{
+      bounty_id: string; pull_number: number; solver: string; account_id: string; amount: number; payment_method: string; provider: string | null; at: number; customer_id: string | null;
+    }>();
+  if (held === null) return false;
+  const pull: Merged = { number: held.pull_number, author: held.solver, author_id: null, merged_at: '', association: null, on_default: null };
+  if (held.provider === 'paypal') {
+    try { await chargeVault(env, held.bounty_id, held.amount, pull, held.account_id, held.payment_method, held.at, now); }
+    catch (error) { if (!(error instanceof PayPalUnavailable)) throw error; }
+  } else await chargeStripe(env, held.bounty_id, held.amount, { act: 'charge', pull, account: held.account_id,
+    card: { payment_method: held.payment_method, customer: held.customer_id ?? '', limit: held.amount } }, held.at, now);
+  return true;
+}
+
 /** Who can be paid here, by GitHub's facts and the account tied to the merged author's id. Shared by the machine and the owner's click. */
 /**
  * Who a payment on this bounty goes to. Without `chosen`, the merge decides (one landed pull request). With `chosen`, the
@@ -148,6 +167,7 @@ export async function settleCharges(env: Env): Promise<number> {
   if (!stripeOn(env) && !paypalOn(env)) return 0;
   const db = env.DB;
   const now = env.now?.() ?? Date.now();
+  if (await reconcileCharge(env, now)) return 1;
   const due = (await db.prepare(DUE).bind(now - LOOK_AGAIN_MS, CHARGES_PER_RUN).all<DueRow>()).results;
   for (const row of due) {
     const { landed, solver, recorded } = await payeeFacts(env, row.id);
