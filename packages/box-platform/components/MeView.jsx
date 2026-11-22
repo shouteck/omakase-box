@@ -221,7 +221,7 @@ function Solver({ me, setMe }) {
           <PayPalRow paypal={me.paypal} setPayPal={paypal => setMe(current => ({ ...current, paypal }))} />
         </Rows>
       </Way>
-      <Way name="On merge" note="The owner's saved card pays, with no click">
+      <Way name="On merge" note="The owner authorizes Stripe to charge their saved card when a solution merges">
         <Rows><Row icon="✓" tone="link" title={me.pay.set_up ? 'Uses your Stripe connection above' : 'Not set up on this board yet'} detail={me.pay.set_up ? 'Nothing more to do. It runs where the owner turned it on.' : null} actions={me.pay.set_up ? (ready ? <Badge tone="ok">Ready</Badge> : <Badge>Needs Stripe</Badge>) : null} /></Rows>
       </Way>
     </>

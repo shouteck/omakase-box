@@ -10,12 +10,19 @@ const fs = require('node:fs');
 const { spawnSync } = require('node:child_process');
 const statePath = process.env.REPLAY_STATE;
 const bare = process.env.REPLAY_BARE;
+const actor = process.env.REPLAY_ACTOR || 'owner';
 const load = () => JSON.parse(fs.readFileSync(statePath, 'utf8'));
-const save = state => fs.writeFileSync(statePath, JSON.stringify(state, null, 2));
+const save = state => {
+  const next = statePath + '.next';
+  fs.writeFileSync(next, JSON.stringify(state, null, 2));
+  fs.renameSync(next, statePath);
+};
+const git = (...args) => spawnSync('git', ['-C', bare, ...args], { encoding: 'utf8' });
+const now = () => new Date().toISOString();
 const args = process.argv.slice(2);
 const fail = () => { console.error('gh: not found'); process.exit(1); };
 if (args[0] === 'version') { console.log('gh version 2.74.0 (2025-01-01)'); process.exit(0); }
-if (args[0] === 'auth' && args[1] === 'status') { console.log('github.com\n  Logged in to github.com account owner'); process.exit(0); }
+if (args[0] === 'auth' && args[1] === 'status') { console.log('github.com\n  Logged in to github.com account ' + actor); process.exit(0); }
 if (args[0] !== 'api') fail();
 const endpoint = args.find((a, i) => i > 0 && !a.startsWith('-') && args[i - 1] !== '--hostname' && args[i - 1] !== '--input' && args[i - 1] !== '--method');
 const method = args.includes('--method') ? args[args.indexOf('--method') + 1] : 'GET';
@@ -32,12 +39,30 @@ const pageOf = rows => rows.slice((page - 1) * perPage, page * perPage);
 // Issues and pull requests share one number sequence on GitHub — after issue
 // #1 the first pull request is #2.
 const nextNumber = () => 1 + Math.max(0, ...state.issues.map(issue => issue.number), ...state.prs.map(pr => pr.number));
-if (endpoint === 'user') emit({ login: 'owner' });
+if (endpoint === 'user') emit({ login: actor });
 if (endpoint === 'repos/owner/project') emit({ full_name: 'owner/project', private: false, visibility: 'public', permissions: { push: true }, default_branch: 'main', html_url: 'https://github.com/owner/project' });
 if (endpoint === 'graphql') {
+  if ((input.query || '').includes('markPullRequestReadyForReview')) {
+    const pr = state.prs.find(pr => pr.head.ref && input.variables.id === `PR_${pr.number}`);
+    if (!pr || pr.user.login !== actor || pr.state !== 'open') fail();
+    pr.draft = false;
+    if (typeof input.variables.body === 'string') pr.body = input.variables.body;
+    pr.updated_at = now();
+    save(state);
+    emit({ data: { ready: { pullRequest: { isDraft: false } } } });
+  }
   if ((input.query || '').includes('pullRequest')) {
     const pr = state.prs.find(pr => pr.number === input.variables.number);
     if (!pr) fail();
+    if (pr.head.ref && input.query.includes('headRefName')) {
+      syncPull(pr);
+      const connection = { totalCount: 0, nodes: [] };
+      emit({ data: { repository: { pullRequest: {
+        id: `PR_${pr.number}`, isDraft: pr.draft, state: pr.merged ? 'MERGED' : pr.state.toUpperCase(), merged: pr.merged === true,
+        mergedAt: pr.merged_at ?? null, baseRefName: pr.base.ref, headRefName: pr.head.ref, author: pr.user, body: pr.body,
+        changedFiles: filesOf(pr).length, comments: connection, reviews: connection
+      } } } });
+    }
     emit({ data: { repository: { pullRequest: { body: pr.body ?? '', userContentEdits: { nodes: pr.editedBy ? [{ editor: { login: pr.editedBy } }] : [] } } } } });
   }
   const issue = state.issues.find(issue => issue.number === input.variables.number);
@@ -71,7 +96,10 @@ if (/^issues\/\d+$/.test(rest)) {
   const issue = state.issues.find(issue => issue.number === n);
   if (!issue) fail();
   if (method === 'PATCH' && input) {
-    if (input.state) issue.state = input.state;
+    if (input.state) {
+      issue.state = input.state;
+      if (process.env.REPLAY_ACTOR) issue.closed_at = input.state === 'closed' ? now() : null;
+    }
     if (typeof input.body === 'string') issue.body = input.body;
     save(state);
   }
@@ -86,20 +114,34 @@ if (rest === 'issues' && method === 'GET') {
 }
 if (rest === 'labels/box-bounty' && method === 'GET') { if (state.labels.some(label => label.name === 'box-bounty')) emit({ name: 'box-bounty' }); fail(); }
 if (rest === 'labels' && method === 'POST') { state.labels.push({ name: input.name }); save(state); emit({ name: input.name }); }
+function syncPull(pr) {
+  if (pr.head.ref && pr.state === 'open') {
+    const head = git('rev-parse', '--verify', 'refs/heads/' + pr.head.ref).stdout.trim();
+    if (head && head !== pr.head.sha) {
+      if (git('update-ref', 'refs/pull/' + pr.number + '/head', head).status !== 0) fail();
+      pr.head.sha = head;
+      pr.updated_at = now();
+      save(state);
+    }
+  }
+  // GitHub's rule (BT51): marked merged when its head reaches its base branch; the mark stays.
+  if (pr.merged !== true && git('merge-base', '--is-ancestor', pr.head.sha, 'refs/heads/' + pr.base.ref).status === 0) {
+    pr.merged = true; pr.merged_at = now(); pr.state = 'closed'; save(state);
+  }
+}
+function filesOf(pr) {
+  return git('diff', '--name-only', pr.base.ref, pr.head.sha).stdout.trim().split('\n').filter(Boolean).map(filename => ({ filename }));
+}
 if (/^pulls\/\d+$/.test(rest)) {
   const pr = state.prs.find(pr => pr.number === Number(rest.split('/')[1]));
   if (!pr) fail();
-  // GitHub's rule (BT51): marked merged when its head reaches its base branch; the mark stays.
-  if (pr.merged !== true && spawnSync('git', ['-C', bare, 'merge-base', '--is-ancestor', pr.head.sha, 'refs/heads/' + pr.base.ref]).status === 0) {
-    pr.merged = true; pr.merged_at = new Date().toISOString(); pr.state = 'closed'; save(state);
-  }
+  syncPull(pr);
   emit({ merged: false, merged_at: null, created_at: '2020-01-01T00:00:00Z', ...pr });
 }
 if (/^pulls\/\d+\/files$/.test(rest)) {
   const pr = state.prs.find(pr => pr.number === Number(rest.split('/')[1]));
   if (!pr) fail();
-  const base = spawnSync('git', ['-C', bare, 'diff', '--name-only', pr.base.ref, pr.head.sha], { encoding: 'utf8' });
-  emit(pageOf(base.stdout.trim().split('\n').filter(Boolean).map(filename => ({ filename }))));
+  emit(pageOf(filesOf(pr)));
 }
 if (rest === 'pulls' && method === 'GET') {
   const wanted = query.get('state') ?? 'open';
@@ -113,8 +155,15 @@ if (/^compare\/[^/]+\.\.\.[a-f\d]{40}$/.test(rest) && method === 'GET') {
 }
 if (rest === 'pulls' && method === 'POST') {
   const number = nextNumber();
-  const sha = spawnSync('git', ['-C', bare, 'rev-parse', 'refs/pull/' + number + '/head'], { encoding: 'utf8' }).stdout.trim();
-  const pr = { number, html_url: 'https://github.com/owner/project/pull/' + number, title: input.title, body: input.body, user: { login: input.author || 'solver' }, base: { ref: input.base, repo: { full_name: 'owner/project' } }, head: { sha }, state: 'open', draft: input.draft === true };
+  const ref = `refs/pull/${number}/head`;
+  const head = typeof input.head === 'string' ? input.head : null;
+  const sha = git('rev-parse', '--verify', head === null ? ref : 'refs/heads/' + head).stdout.trim();
+  if (head !== null && (!sha || git('update-ref', ref, sha).status !== 0)) fail();
+  const pr = { number, html_url: 'https://github.com/owner/project/pull/' + number, title: input.title, body: input.body, user: { login: input.author || (head === null ? 'solver' : actor) }, base: { ref: input.base, repo: { full_name: 'owner/project' } }, head: { sha }, state: 'open', draft: input.draft === true };
+  if (head !== null) {
+    pr.head.ref = head;
+    pr.created_at = pr.updated_at = now();
+  }
   state.prs.push(pr); save(state); emit(pr);
 }
 fail();

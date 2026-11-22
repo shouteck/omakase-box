@@ -114,7 +114,9 @@ describe('status on a taken bounty', { timeout: 120000 }, () => {
     // The poster's tool lands the attempt on the bounty branch; GitHub then marks the pull request merged.
     git(bare, ['update-ref', `refs/heads/box-bounty/${id}`, `refs/heads/box-solve/${id}`]);
     const said = attemptStatus(id);
+    expect(said).toContain(`${id} — merged on owner/project:`);
     expect(said).toMatch(new RegExp(`pull request #${number} is merged on \\d{4}-\\d{2}-\\d{2}`));
+    expect(said).not.toContain('file(s) changed');
     expect(said.split('\n').at(-1)).toBe(`next: nothing more to do on GitHub; omakase-box status ${id} later shows payment`);
   }));
 

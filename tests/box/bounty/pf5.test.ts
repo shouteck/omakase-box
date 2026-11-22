@@ -157,7 +157,7 @@ describe('the board unreachable or off', { timeout: 180000 }, () => {
   }));
 
   it('the default is the live board, and no test run may reach it', () => {
-    expect(BOARD_DEFAULT).toBe('https://open-bounty-board.box-platform.workers.dev');
+    expect(BOARD_DEFAULT).toBe('https://omakasebox.dev');
     expect(process.env['BOX_BOARD_DEFAULT']).toBe('');
     expect(boardAddress()).toBe('');
     // A fixture may build its own environment: settings kept elsewhere are enough.

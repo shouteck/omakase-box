@@ -96,6 +96,7 @@ export interface GhState {
   // exactly {body, user}. Seeded comments have no entry and show on every issue.
   commentIssue?: Record<string, number>;
   prs: { number: number; user: { login: string }; base: { ref: string; repo: { full_name: string } }; head: { sha: string }; files: { filename: string }[]; body?: string; editedBy?: string; merged?: boolean; merged_at?: string; created_at?: string; draft?: boolean; state?: string; headRef?: string;
+    merge_commit_sha?: string;
     /** PF26: conversation comments and reviews (with their line comments), read only through the attempt's graphql. */
     notes?: { body: string; user: { login: string } | null; created_at?: string }[];
     reviews?: { body?: string; user: { login: string } | null; state?: string; created_at?: string; lines?: { body: string; user: { login: string } | null; path?: string; created_at?: string }[] }[] }[];
@@ -223,7 +224,7 @@ else if (endpoint.includes('/pulls/')) {
   const pr = state.prs.find(pr => pr.number === n);
   if (!pr) fail();
   if (!endpoint.includes('/files')) markMerged(pr);
-  result = endpoint.includes('/files') ? paged(pr.files) : { merged: false, merged_at: null, created_at: '2020-01-01T00:00:00Z', ...publicPr(pr) };
+  result = endpoint.includes('/files') ? paged(pr.files) : { merged: false, merged_at: null, state: 'open', created_at: '2020-01-01T00:00:00Z', ...publicPr(pr) };
 } else if (endpoint.includes('/compare/')) {
   // compare/<base>...<head>: 'behind' or 'identical' when head is already on base.
   const [base, head] = resource.split('/compare/')[1].split('...');

@@ -9,7 +9,7 @@ import { actingOn, loadSettings, repositoryIdentity, applyBounty, BountyRefused,
 import { boardAddress, boardNotToldLine, flushBoardHints, readBoardFacts } from '../../box-bounty/index.js';
 import { waitBounty, renderWait } from '../../box-bounty/index.js';
 import type { ParsedOptions } from '../../box-bounty/index.js';
-import { applyDocument, closeAttemptDocument, closeDocument, createDocument, ownerDocument, postDocument, postPreviewDocument, previewGitHub, previewGitHubFacts, refusalDocument, submitDocument, submitTakenResult, takeDocument, textDocument } from '../../box-bounty/index.js';
+import { appliedRevert, applyDocument, closeAttemptDocument, closeDocument, createDocument, ownerDocument, postDocument, postPreviewDocument, previewGitHub, previewGitHubFacts, refusalDocument, submitDocument, submitTakenResult, takeDocument, textDocument, UNKNOWN_ROLLBACK } from '../../box-bounty/index.js';
 import { attemptStatus, closeTaken, discover, discoverDocument, loadTaken, renderDescribeSolving, renderDiscover, submitTaken, takeBounty, takenOverview } from '../../box-bounty/index.js';
 import { escapeControls, exportLook, findDocument, lookBounty, solverBlock, SOLVER_WORDS, renderFind, renderResume, openRecords, endedContaining, readGitPinsOncePerProcess, boundAmount, payToLine, gitOutcome } from '../../box-bounty/index.js';
 
@@ -167,7 +167,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       answer: 'collection is a step inside look and apply, not a command; next: omakase-box look <id> <number> collects a pull request and shows its change; omakase-box apply <id> <number> collects and merges',
       questions: 'reading what other accounts wrote is part of status; next: omakase-box status <id> --comments',
       reply: 'the tool no longer writes comments for you; next: comment on the issue in your own words with your own gh, for example gh issue comment <number> --body "<your own words>"',
-      undo: 'the tool no longer reverses an applied merge — the merge is one ordinary commit and ordinary Git reverses it; next: git revert -m 1 <merge>',
+      undo: 'the tool no longer reverses merges; next: omakase-box status <id> gives the Git revert command for a merge the tool made; for other landings, inspect the commits first',
       reject: 'ending a bounty with nothing merged is one command now; next: omakase-box close <id> --reason "<why>" keeps the reason on the record',
       withdraw: 'ending a bounty with nothing merged is one command now; next: omakase-box close <id>',
       remind: 'the tool no longer supplies reminders; next: omakase-box status shows the current overview',
@@ -407,13 +407,18 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       const applyRoot = resolveRepoRoot(repoPath(parsed), 'apply');
       sayActingOn(applyRoot);
       const result = applyBounty(applyRoot, id, attempt);
+      const revert = appliedRevert(result.record);
       let notOnGitHub: { upstream: string | null; ahead: number | null; publish: string | null } | null = null;
       let nextLine: string | null = null;
       if (result.firstMergeNotice !== undefined) say(result.firstMergeNotice);
       if (result.payMessage !== undefined) for (const line of result.payMessage) say(line);
       if (result.record.github?.pending !== null && result.record.github?.pending !== undefined) say(result.record.github.pending);
       if (result.record.github?.closedNote !== undefined) say(`github: ${result.record.github.closedNote}`);
-      if (result.outcome === 'applied') {
+      if (result.outcome === 'applied' && revert === null) {
+        say(`${result.record.id} — already applied${result.mergeCommit === undefined ? '' : ` — recorded at ${result.mergeCommit}`}`);
+        say(`ended — ${jobLine(result.record)}; ${UNKNOWN_ROLLBACK}`);
+        say(renderResume(result.record));
+      } else if (result.outcome === 'applied') {
         // The saved job the bounty came from is what the agent returns to —
         // the compact form names it; the commit hash is `status --full`'s.
         say(`${result.record.id} — applied — attempt ${result.attempt} merged as ${result.mergeCommit} on this branch`);
@@ -439,7 +444,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
             : `not on GitHub yet: this branch (${branch}) has no upstream and this checkout has no remote named origin — publish it by pushing ${branch} to the repository's remote`);
         }
         if (result.record.github !== undefined) say('this merge counts for the solver once it is on the default branch on GitHub; the tool never pushes it');
-        say(`ended — ${jobLine(result.record)}; to reverse it: git revert -m 1 ${result.mergeCommit}`);
+        say(`ended — ${jobLine(result.record)}; to reverse it: ${revert}`);
         say(renderResume(result.record));
       } else {
         const branch = result.record.resume?.kind === 'recorded' ? result.record.resume.branch : 'the branch the bounty was created on';

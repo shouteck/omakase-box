@@ -14,7 +14,7 @@ import { solverAccount } from './untrusted.js';
 import { quoteForeign } from './notice.js';
 
 /** The public deployment's address. Settings choose another or none; no test run may reach it (boardAddress). */
-export const BOARD_DEFAULT = 'https://open-bounty-board.box-platform.workers.dev';
+export const BOARD_DEFAULT = 'https://omakasebox.dev';
 
 const DEADLINE_MS = 2500;
 const ANSWER_BYTES_MAX = 65536;

@@ -79,6 +79,7 @@ export function readOpenPullRequests(root: string, publication: Pick<GitHubPubli
   const facts: { entry: unknown; n: number; commit: string; author: string; payTo: PayToFact }[] = [];
   for (const entry of data) {
     if (!isObject(entry) || !isObject(entry['user'])) return invalid('github-response-invalid', 'GitHub returned an unreadable pull request; next: check gh and rerun the same command');
+    if (entry['draft'] === true) continue;
     const n = number(entry['number']);
     if (!isObject(entry['head']) || typeof entry['head']['sha'] !== 'string' || !/^[a-f\d]{40}$/.test(entry['head']['sha'])) return invalid('github-response-invalid', 'GitHub returned an unreadable solution commit; next: check gh and rerun the same command');
     facts.push({ entry, n, commit: entry['head']['sha'], author: login(entry['user']['login']), payTo: parsePayTo(typeof entry['body'] === 'string' ? entry['body'] : '') });

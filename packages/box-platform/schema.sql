@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS pull_requests (
   -- failed). For the head in checks_sha only; a head that moved is due again.
   checks_state TEXT,
   checks_sha TEXT,
-  checks_read_at INTEGER NOT NULL DEFAULT 0, head_on_default_at_sight INTEGER,
+  checks_read_at INTEGER NOT NULL DEFAULT 0, head_on_default_at_sight INTEGER, landing_sha TEXT, landing_check TEXT, landing_checked_at INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (bounty_id, number)
 );
 CREATE TABLE IF NOT EXISTS events (
@@ -187,4 +187,7 @@ INSERT OR IGNORE INTO migrations (name, applied_at, note) VALUES
   ('pf32.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
   ('pf37.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
   ('pf38-bt67.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
-  ('pf44.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board');
+  ('pf44.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
+  ('pf45-bt68.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
+  ('pf46-bt68.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
+  ('pf47-bt68.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board');
