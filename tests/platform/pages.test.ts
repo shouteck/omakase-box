@@ -654,6 +654,7 @@ describe('the pages', () => {
       const solution = { ...bounty, pull_number: 10, from: 'example-mara', stage: 'progress', draft: true, checks: 'pending' };
       const { page, close } = await open({ ...base, login: 'example-rook', bounties: { list: owns ? [bounty] : [], more: false }, solutions: { list: solves ? [solution] : [], more: false }, pay: pay() }, `/me/${hash}`);
       expect(await selected(page)).toContain(want);
+      if (want === 'Owner') expect(await page.locator('#pay').innerText()).toContain('Save a card and authorize the repository before Stripe pays rewards on merge.');
       if (owns && !solves && hash === '') {
         await page.click('[aria-label="Your role"] [role=tab]:has-text("Solver")');
         await page.reload();
