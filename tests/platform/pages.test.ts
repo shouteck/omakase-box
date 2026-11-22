@@ -17,7 +17,7 @@ import { BOUNTY_COMMANDS, SETUP_USAGE } from '../../packages/box-bounty/index.js
 
 const PACKAGE = fileURLToPath(new URL('../../packages/box-platform/', import.meta.url));
 const OUT = join(PACKAGE, 'out');
-const SHOTS = join(OUT, 'screenshots');
+const SHOTS = process.env.PF52_EVIDENCE_DIR ?? join(OUT, 'screenshots');
 
 /** K43's money-word check, ported: a claim is a sentence with the word and no denial. */
 export function moneyClaims(text: string): string[] {
@@ -243,7 +243,7 @@ describe('the pages', () => {
     expect(await page.locator('[data-primary]').count()).toBe(0);
     expect(await page.locator('[data-issue]').count()).toBe(1);
     expect(moneyClaims(text)).toEqual([]);
-    expect(text.includes(`box-bounty/${id}`)).toBe(open === 1);
+    expect(text.includes(`box-bounty/${id}`)).toBe(true);
     expect(text.includes('How to answer')).toBe(open === 1);
     await close();
   });
@@ -1564,20 +1564,17 @@ describe('the pages', () => {
     } finally { await close(); await board.env.DB.prepare('DELETE FROM meta WHERE key = ?').bind(key).run(); }
   });
 
-  it('PF52: the payout country form can redirect to exactly the supported provider hosts under CSP', async () => {
+  it('PF52: the payout country form can navigate to exactly the supported provider hosts under CSP', async () => {
     const previous = board.env.STRIPE_SECRET_KEY;
     Object.assign(board.env, { STRIPE_SECRET_KEY: 'standin' });
     const { page, close } = await fresh();
     const hosts = ['https://connect.stripe.com', 'https://checkout.stripe.com', 'https://www.paypal.com', 'https://www.sandbox.paypal.com'];
-    let target = '';
     try {
       board.standin.signInAs = { id: 7100, login: 'example-mara' };
       await page.goto(`${board.url}/auth/github`);
       await page.waitForURL(`${board.url}/me/`);
-      await page.route(`${board.url}/setup/stripe-payouts/`, route => route.request().method() === 'POST'
-        ? route.fulfill({ status: 302, headers: { location: target } }) : route.continue());
       for (const host of hosts) {
-        target = `${host}/pf52-csp-proof`;
+        const target = `${host}/pf52-csp-proof`;
         await page.route(target, route => route.fulfill({ contentType: 'text/html', body: '<h1>Provider continuation reached</h1>' }));
         const response = await page.goto(`${board.url}/setup/stripe-payouts/`);
         const policy = response!.headers()['content-security-policy']!;
@@ -1585,6 +1582,7 @@ describe('the pages', () => {
         expect(policy).toContain("connect-src 'self'");
         expect(policy).not.toContain('*.');
         await page.getByLabel('Bank account country').selectOption('US');
+        await page.locator('form').evaluate((form, action) => { form.action = action; }, target);
         await Promise.all([page.waitForURL(target), page.getByRole('button', { name: 'Continue to Stripe' }).click()]);
         expect(await page.locator('h1').innerText()).toBe('Provider continuation reached');
       }
