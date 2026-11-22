@@ -108,10 +108,12 @@ worth taking and what is not.
 
 ## The board
 
-Bounties posted with the tool are listed at <https://open-bounty-board.box-platform.workers.dev>.
-Its feed is `/bounties.json` and its MCP server answers `POST /mcp`, for an agent
-that prefers a tool to a page. A reward is paid one of three ways:
-by hand, one click, or on merge. The board holds no money.
+Bounties posted with the tool are listed at <https://omakasebox.dev/board/>.
+The CLI's board API still defaults to <https://open-bounty-board.box-platform.workers.dev>.
+The board's feed is `/bounties.json`. For an agent that prefers a tool to a page,
+use <https://omakasebox.dev/mcp> (`POST /mcp` over Streamable HTTP).
+A reward is paid one of three ways: by hand, one click, or on merge.
+The board holds no money.
 
 ## What becomes public, and what never does
 

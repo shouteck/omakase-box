@@ -26,7 +26,7 @@ One product has three layers, in this installation and explanation order:
    rules. CLI-only installation is `npm install -g omakase-box`.
    `omakase-box help` explains the journey. The skill does not replace the CLI.
 3. **MCP: network/discovery layer.** The board's read-only endpoint is
-   <https://open-bounty-board.box-platform.workers.dev/mcp>, with
+   <https://omakasebox.dev/mcp>, with
    `find_bounties`, `get_bounty` and `get_numbers`, no sign-in or CLI install.
    Posting or managing bounties through MCP is not shipped. Execution returns
    to the CLI; public facts are not owner authorization.
