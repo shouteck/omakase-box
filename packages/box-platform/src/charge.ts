@@ -125,6 +125,8 @@ async function reconcileCharge(env: Env, now: number): Promise<boolean> {
     FROM charges c LEFT JOIN pay_settings s ON s.github_id = (SELECT poster_id FROM bounties WHERE id = c.bounty_id) AND s.payment_method = c.payment_method
     WHERE c.state = 'charging' AND c.at <= ? AND c.pull_number IS NOT NULL AND c.solver IS NOT NULL AND c.account_id IS NOT NULL
       AND c.amount > 0 AND c.payment_method IS NOT NULL AND ((c.provider = 'paypal' AND ?) OR (c.provider IS NULL AND ?))
+      AND NOT EXISTS (SELECT 1 FROM events WHERE bounty_id = c.bounty_id AND type = 'paid' AND withdrawn = 0
+        UNION SELECT 1 FROM paid_clicks WHERE bounty_id = c.bounty_id AND withdrawn = 0)
     ORDER BY c.at, c.bounty_id LIMIT 1`).bind(now - STALE_CLAIM_MS, paypalOn(env) ? 1 : 0, stripeOn(env) ? 1 : 0).first<{
       bounty_id: string; pull_number: number; solver: string; account_id: string; amount: number; payment_method: string; provider: string | null; at: number; customer_id: string | null;
     }>();

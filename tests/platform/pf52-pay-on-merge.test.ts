@@ -128,7 +128,7 @@ describe('PF52: approved listed pay on merge', () => {
       expect(stripe.charged()).toHaveLength(0); expect(paypal.captures).toHaveLength(0);
     }
     expect(verifiedBeforeRecord).toBe(true); expect(recorded).toBe(true);
-    expect((await fact()).payment.recorded_paid).toMatchObject({ source: 'board' });
+    expect((await (await get(`/bounties/${id}.json`)).json() as any).bounty.payment.recorded_paid).toMatchObject({ source: 'board' });
   });
   it('rehearses an imported open PR through approval, merge, verified landing and stand-in payment', async () => {
     Object.assign(issue.pulls![0]!, { state: 'open', landed: false }); delete issue.pulls![0]!.merged_at;
@@ -401,6 +401,21 @@ describe('PF52: agent pay comments', () => {
       if (rail === 'paypal') expect(paypal.orders).toHaveLength(1);
     }
   );
+  it('does not let a manually recorded in-flight command starve another authorized bounty', async () => {
+    await open();
+    await r.env.DB.prepare(`INSERT INTO charges (bounty_id, state, pull_number, solver, account_id, amount, payment_method, at)
+      VALUES (?, 'charging', 41, 'solver', 'acct_solver', 45, 'pm_owner', ?)`).bind(id, NOW).run();
+    await r.env.DB.prepare(`INSERT INTO paid_clicks (bounty_id, by_login, to_login, amount, withdrawn, at) VALUES (?, 'owner', 'solver', 45, 0, ?)`).bind(id, at(21)).run();
+    const next = 'bt-00000000a003';
+    await r.env.DB.prepare(`INSERT INTO bounties (id, repository, issue_number, title, task, poster, poster_id, issue_state, amount, created_at, work_commit, seen_at, source)
+      SELECT ?, repository, 13, title, task, poster, poster_id, issue_state, amount, created_at, work_commit, seen_at, 'posted' FROM bounties WHERE id = ?`).bind(next, id).run();
+    await r.env.DB.prepare(`INSERT INTO pull_requests (bounty_id, number, author, author_id, state, opened_at, merged_at, association, on_default)
+      VALUES (?, 42, 'solver', 7001, 'merged', ?, ?, 'NONE', 1)`).bind(next, at(2), at(5)).run();
+    await switched(); await r.env.DB.prepare('UPDATE pay_repositories SET limit_per_bounty = 45').run();
+    r.clock.at += 3 * MINUTE; await settleCharges(r.env);
+    expect(stripe.charged()).toHaveLength(1); expect(stripe.charged()[0]!.metadata.bounty).toBe(next);
+    expect(await state()).toMatchObject({ state: 'charging' });
+  });
   it('keeps a non-completed Vault response out of paid', async () => {
     await open('paypal'); paypal.vaultStatus = 'PAYER_ACTION_REQUIRED';
     await command(); await read();
