@@ -149,11 +149,11 @@ async function reconcileCharge(env: Env, now: number): Promise<boolean> {
  * owner's choice (PF32): on a listed bounty any linked pull request's author, merged or not; on a posted bounty one of
  * the landed ones. The rest of the rule (connected, ready, not self-dealt) is unchanged.
  */
-export async function payeeFacts(env: Env, id: string, chosen?: string): Promise<Pick<ChargeFacts, 'landed' | 'solver' | 'recorded' | 'poster_id'>> {
+export async function payeeFacts(env: Env, id: string, chosen?: string, forMerge = false): Promise<Pick<ChargeFacts, 'landed' | 'solver' | 'recorded' | 'poster_id'>> {
   const db = env.DB;
   const bounty = await db.prepare(`SELECT source, poster, poster_id, approval, ${APPROVED_AT} AS approval_at FROM bounties b WHERE id = ?`).bind(id).first<{ source: string; poster: string; poster_id: number | null; approval: string | null; approval_at: string | null }>();
   const listed = chosen !== undefined && bounty?.source === 'listed';
-  const commented = bounty?.source === 'listed' || bounty?.approval != null;
+  const commented = forMerge && (bounty?.source === 'listed' || bounty?.approval != null);
   const all = (await db.prepare(`SELECT number, author, author_id, merged_at, association, on_default, landing_sha FROM pull_requests WHERE bounty_id = ? AND ${listed ? '1 = 1' : landedWhere()} ORDER BY number`).bind(id).all<Merged>()).results;
   let eligible = commented && bounty != null ? all.filter(pull => bounty.approval !== 'pending' && bounty.approval_at !== null && Date.parse(pull.merged_at) > Date.parse(bounty.approval_at) && notCounted(pull, bounty.poster, bounty.poster_id) === null) : all;
   if (commented && bounty != null) {
@@ -176,7 +176,7 @@ export async function settleCharges(env: Env): Promise<number> {
   if (await reconcileCharge(env, now)) return 1;
   const due = (await db.prepare(DUE).bind(now - LOOK_AGAIN_MS, CHARGES_PER_RUN).all<DueRow>()).results;
   for (const row of due) {
-    const { landed, solver, recorded } = await payeeFacts(env, row.id);
+    const { landed, solver, recorded } = await payeeFacts(env, row.id, undefined, true);
     const paypalSolver = landed.length === 1 && landed[0]!.author_id !== null ? await db.prepare('SELECT payer_id FROM paypal_accounts WHERE github_id = ?').bind(landed[0]!.author_id).first<{ payer_id: string }>() : null;
     const rails = await paymentRail(env, row.poster_id, row.merge_rail, { stripe: solver?.ready === true, paypal: paypalSolver !== null });
     if (rails.needs_choice) { await saveCharge(env, row.id, 'choose-rail', landed.length === 1 ? landed[0]! : null, null, null, null, row.amount, now); continue; }
@@ -511,7 +511,7 @@ export async function mergePaymentFact(env: Env, id: string, origin: string) {
   if (row.consent_at === null) reasons.push(commented ? 'No pay-on-merge consent: the poster can opt in with the exact on merge approval comment, including an already-approved direct listing. A repository switch does not authorize imported bounties or agent-prepared branch posts.' : 'No pay-on-merge consent: enable the repository before the merge.');
   if (commented && (row.approval_at === null || row.amount !== row.approved_amount)) reasons.push('The approval time or approved reward is not verified.');
   if (commented && row.comments_current !== 1) reasons.push('Payment comments have not been read after the verified landing.');
-  const { landed, recorded } = await payeeFacts(env, id);
+  const { landed, recorded } = await payeeFacts(env, id, undefined, true);
   const owner = await env.DB.prepare('SELECT poster_id, merge_rail FROM bounties WHERE id = ?').bind(id).first<{ poster_id: number | null; merge_rail: Rail | null }>();
   const baseChoice = await paymentRail(env, owner!.poster_id, owner!.merge_rail);
   const pulls = await env.DB.prepare(`SELECT p.author, MAX(COALESCE(s.ready, 0)) AS stripe, MAX(a.payer_id IS NOT NULL) AS paypal

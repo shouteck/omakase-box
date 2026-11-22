@@ -455,6 +455,18 @@ describe('PF52: prepared agent branch payments', () => {
     expect(await state()).toMatchObject({ state: 'paid' });
     expect(stripe.charged()).toHaveLength(rail === 'stripe' ? 1 : 0); expect(paypal.captures).toHaveLength(rail === 'paypal' ? 1 : 0);
   });
+  it.each(['stripe', 'paypal'] as const)('offers owner Checkout for a prepared %s landing before approval without authorizing cron', async rail => {
+    await prepared(rail); await approve(); await merge(0.5); await settleTwice();
+    expect(stripe.charged()).toHaveLength(0); expect(paypal.captures).toHaveLength(0);
+    expect((await fact()).pay_on_merge.will_pay).toBe(false);
+    const owner = await session();
+    const view = await (await get(`/api/b/${id}/payment`, owner)).json() as any;
+    expect(view.payment.owed.to).toBe(SOLVER);
+    expect(rail === 'stripe' ? view.can_pay : view.can_pay_paypal).toBe(true);
+    const response = await post(`/api/b/${id}/${rail === 'stripe' ? 'pay' : 'pay-paypal'}`, {}, owner);
+    expect(response.status).toBe(200); expect(await response.json()).toHaveProperty('url');
+    expect(await state()).toMatchObject({ state: 'owner-paying' });
+  });
   it.each(['plain', 'over-limit', 'old-merge', 'manual-prior'])('preserves the %s guard for prepared branch posts', async mode => {
     await prepared('stripe', mode === 'over-limit' ? 40 : 50);
     await approve(mode === 'plain' ? '' : ' on merge');
