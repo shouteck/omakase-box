@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const compareProviders = (input: unknown): { ok: boolean; facts: { ok: boolean; words: string }[]; unadvertised: string[] } => JSON.parse(execFileSync(process.execPath, [
-  '--input-type=module', '-e', `import { compareProviders } from './scripts/live-providers.mjs'; console.log(JSON.stringify(compareProviders({ webhooks: { Stripe: true, PayPal: true }, ...${JSON.stringify(input)} })))`
+  '--input-type=module', '-e', `import { compareProviders } from './scripts/live-providers.mjs'; console.log(JSON.stringify(compareProviders({ webhooks: { Stripe: 'https://example.test/api/stripe/webhook', PayPal: 'https://example.test/api/paypal/webhook' }, ...${JSON.stringify(input)} })))`
 ], { cwd: root, encoding: 'utf8' }));
 
 const ways = { one_click: ['Stripe', 'PayPal'], on_merge: true };
@@ -49,12 +49,12 @@ describe('live provider sign-off cannot rely on sandbox availability', () => {
       const env = { PAYPAL_CLIENT_ID: 'test-id', PAYPAL_SECRET: 'test-secret', PAYPAL_WEBHOOK_ID: 'hook', STRIPE_WEBHOOKS_READ_KEY: 'rk_live_test-key' };
       const answers = [];
       const calls = [];
-      for (const scenario of ['present', 'wrong-url', 'missing', 'disabled', 'sandbox']) {
+      for (const scenario of ['present', 'worker-host', 'wrong-url', 'missing', 'disabled', 'sandbox']) {
         const request = async (url, options) => {
           calls.push([url, options.method ?? 'GET']);
           const token = url.endsWith('/token');
           const paypal = url.includes('paypal.com');
-          const expected = scenario === 'wrong-url' ? 'https://wrong.test' : origin;
+          const expected = scenario === 'wrong-url' ? 'https://wrong.test' : scenario === 'worker-host' ? 'https://open-bounty-board.box-platform.workers.dev' : origin;
           return { ok: scenario !== 'missing' || token, json: async () => token ? { access_token: 'test-token' } : paypal ? { id: 'hook', url: expected + '/api/paypal/webhook' } : { data: [{ id: 'stripe-hook', url: expected + '/api/stripe/webhook', livemode: scenario !== 'sandbox', status: scenario === 'disabled' ? 'disabled' : 'enabled' }], has_more: false } };
         };
         answers.push(await liveWebhooks(origin, ['Stripe', 'PayPal'], env, request));
@@ -67,9 +67,11 @@ describe('live provider sign-off cannot rely on sandbox availability', () => {
     `], { cwd: root, encoding: 'utf8' });
     const result = JSON.parse(output);
     expect(result.answers).toEqual([
-      { Stripe: true, PayPal: true }, { Stripe: false, PayPal: false },
-      { Stripe: false, PayPal: false }, { Stripe: false, PayPal: true },
-      { Stripe: false, PayPal: true }, {}, {}, {}
+      { Stripe: 'https://example.test/api/stripe/webhook', PayPal: 'https://example.test/api/paypal/webhook' },
+      { Stripe: 'https://open-bounty-board.box-platform.workers.dev/api/stripe/webhook', PayPal: 'https://open-bounty-board.box-platform.workers.dev/api/paypal/webhook' },
+      { Stripe: false, PayPal: false }, { Stripe: false, PayPal: false },
+      { Stripe: false, PayPal: 'https://example.test/api/paypal/webhook' },
+      { Stripe: false, PayPal: 'https://example.test/api/paypal/webhook' }, {}, {}, {}
     ]);
     expect(result.calls.filter((call: string[]) => call[1] === 'POST').every((call: string[]) => call[0] === 'https://api-m.paypal.com/v1/oauth2/token')).toBe(true);
     expect(result.calls.every((call: string[]) => !call[0]?.includes('example.test'))).toBe(true);

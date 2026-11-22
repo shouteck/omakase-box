@@ -21,9 +21,12 @@ Stripe and PayPal. Keep it aligned with copy changes. `--origin URL` and
 `--providers Stripe,PayPal` override those expectations for other checks;
 `--skip-secrets` reports NOT RUN and cannot pass sign-off. This is read-only
 availability/binding evidence, not proof of a payment or webhook delivery.
-Sign-off also requires live webhook registrations at the production origin's
-`/api/paypal/webhook` and `/api/stripe/webhook` URLs (Stripe is checked for live
-mode and enabled status). Supply `PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_WEBHOOK_ID` and
+Sign-off also requires live webhook registrations at `/api/paypal/webhook` and
+`/api/stripe/webhook`, on either the checked origin or this Worker's own host,
+`https://open-bounty-board.box-platform.workers.dev`. Override the accepted origins
+with `--webhook-origins https://host-a,https://host-b`; the report names each
+matched URL. Stripe is checked for live
+mode and enabled status. Supply `PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_WEBHOOK_ID` and
 `STRIPE_WEBHOOKS_READ_KEY` for these read-only lookups. The latter is a live-mode
 restricted key (`rk_live_...`) with only "Webhook Endpoints: Read" permission;
 there is no fallback to `STRIPE_SECRET_KEY` (still a required Worker secret name).

@@ -23,13 +23,14 @@ export function compareProviders({ advertised = ADVERTISED_PROVIDERS, ways = nul
     for (const name of Object.hasOwn(BINDINGS, provider) ? BINDINGS[provider] : []) {
       check(secretsValid && secretNames.includes(name), `Worker secret name present: ${name}`);
     }
-    check(webhooks[provider] === true, `Live ${provider} webhook: ${webhooks[provider] == null ? 'NOT RUN' : webhooks[provider] === true ? 'exists at expected URL' : 'lookup failed or expected URL missing'}`);
+    const matched = typeof webhooks[provider] === 'string' && webhooks[provider].length > 0;
+    check(matched, `Live ${provider} webhook: ${webhooks[provider] == null ? 'NOT RUN' : matched ? `matched ${webhooks[provider]}` : 'lookup failed or accepted URL missing'}`);
   }
   const unadvertised = waysValid ? ways.one_click.filter(name => !advertised.includes(name)) : [];
   return { ok: facts.every(fact => fact.ok), facts, unadvertised };
 }
 
-export async function liveWebhooks(origin, advertised, env = process.env, request = fetch) {
+export async function liveWebhooks(origin, advertised, env = process.env, request = fetch, webhookOrigins = [origin, 'https://open-bounty-board.box-platform.workers.dev']) {
   const results = {};
   const json = async (url, options = {}) => {
     const response = await request(url, { ...options, redirect: 'error', signal: AbortSignal.timeout(15000) });
@@ -43,7 +44,7 @@ export async function liveWebhooks(origin, advertised, env = process.env, reques
       });
       if (typeof token.access_token !== 'string' || !token.access_token) throw new Error();
       const webhook = await json(`https://api-m.paypal.com/v1/notifications/webhooks/${encodeURIComponent(env.PAYPAL_WEBHOOK_ID)}`, { headers: { Authorization: `Bearer ${token.access_token}` } });
-      results.PayPal = webhook.id === env.PAYPAL_WEBHOOK_ID && webhook.url === `${origin}/api/paypal/webhook`;
+      results.PayPal = webhook.id === env.PAYPAL_WEBHOOK_ID && webhookOrigins.some(accepted => webhook.url === `${accepted}/api/paypal/webhook`) ? webhook.url : false;
     } catch { results.PayPal = false; }
   }
   if (advertised.includes('Stripe') && env.STRIPE_WEBHOOKS_READ_KEY?.startsWith('rk_live_')) {
@@ -53,8 +54,9 @@ export async function liveWebhooks(origin, advertised, env = process.env, reques
       do {
         const page = await json(`https://api.stripe.com/v1/webhook_endpoints?limit=100${after ? `&starting_after=${encodeURIComponent(after)}` : ''}`, { headers: { Authorization: `Bearer ${env.STRIPE_WEBHOOKS_READ_KEY}` } });
         if (!Array.isArray(page.data)) throw new Error();
-        if (page.data.some(webhook => webhook.url === `${origin}/api/stripe/webhook` && webhook.livemode === true && webhook.status === 'enabled')) {
-          results.Stripe = true;
+        const matched = page.data.find(webhook => webhookOrigins.some(accepted => webhook.url === `${accepted}/api/stripe/webhook`) && webhook.livemode === true && webhook.status === 'enabled');
+        if (matched) {
+          results.Stripe = matched.url;
           break;
         }
         const next = page.has_more ? page.data.at(-1)?.id : '';
@@ -70,14 +72,21 @@ export async function main(args = process.argv.slice(2)) {
   let origin = 'https://omakasebox.dev';
   let advertised = ADVERTISED_PROVIDERS;
   let skipSecrets = false;
+  let webhookOrigins;
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--origin' && args[i + 1]) origin = args[++i];
     else if (args[i] === '--providers' && args[i + 1]) advertised = args[++i].split(',').map(name => name.trim()).filter(Boolean);
     else if (args[i] === '--skip-secrets') skipSecrets = true;
-    else throw new Error('Usage: node scripts/live-providers.mjs [--origin URL] [--providers Stripe,PayPal] [--skip-secrets]');
+    else if (args[i] === '--webhook-origins' && args[i + 1]) webhookOrigins = args[++i].split(',').map(value => value.trim());
+    else throw new Error('Usage: node scripts/live-providers.mjs [--origin URL] [--providers Stripe,PayPal] [--webhook-origins URL,URL] [--skip-secrets]');
   }
   const url = new URL(origin);
   if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.pathname !== '/' || url.search || url.hash) throw new Error('Origin must be an HTTP(S) origin without credentials, path, query or fragment');
+  webhookOrigins = (webhookOrigins ?? [url.origin, 'https://open-bounty-board.box-platform.workers.dev']).map(value => {
+    const accepted = new URL(value);
+    if (!['http:', 'https:'].includes(accepted.protocol) || accepted.username || accepted.password || accepted.pathname !== '/' || accepted.search || accepted.hash) throw new Error('Webhook origins must be HTTP(S) origins without credentials, path, query or fragment');
+    return accepted.origin;
+  });
   console.log(`Live provider verification: ${url.origin}`);
   console.log(`Checked at: ${new Date().toISOString()}`);
   let ways = null;
@@ -99,7 +108,8 @@ export async function main(args = process.argv.slice(2)) {
       secretNames = secrets.map(secret => secret.name);
     } catch { console.log('Worker secret names could not be read successfully (wrangler output withheld).'); }
   } else console.log(skipSecrets ? 'Worker secret lookup skipped by --skip-secrets.' : 'Worker secret lookup requires CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID.');
-  const webhooks = await liveWebhooks(url.origin, advertised);
+  console.log(`Accepted webhook origins: ${webhookOrigins.join(', ')}`);
+  const webhooks = await liveWebhooks(url.origin, advertised, process.env, fetch, webhookOrigins);
   if (advertised.includes('Stripe') && webhooks.Stripe == null) console.log('Stripe webhook lookup: NOT RUN; requires STRIPE_WEBHOOKS_READ_KEY (rk_live_ restricted key, Webhook Endpoints: Read).');
   const result = compareProviders({ advertised, ways, secretNames, webhooks });
   for (const fact of result.facts) console.log(`${fact.ok ? 'PASS' : 'FAIL'}: ${fact.words}`);
