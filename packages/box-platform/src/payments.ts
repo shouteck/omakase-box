@@ -47,6 +47,9 @@ export const landedWhere = (alias = ''): string => {
   const p = alias === '' ? '' : `${alias}.`;
   return `${p}state = 'merged' AND (${p}on_default = 1 OR ${p}landing_sha IS NOT NULL) AND COALESCE(${p}head_on_default_at_sight, 0) != 1`;
 };
+export const paymentLandingVersion = `SELECT json_group_array(json_array(number, head_sha, merged_at, on_default, landing_sha, landing_check))
+  FROM (SELECT number, head_sha, merged_at, on_default, landing_sha, landing_check FROM pull_requests WHERE bounty_id = b.id AND state = 'merged' ORDER BY number)`;
+export const paymentCommentsCurrent = `EXISTS (SELECT 1 FROM meta WHERE key = 'payment_comments/' || b.id AND value = (${paymentLandingVersion}))`;
 /** Only real merges: what a solver's record counts, on either kind of bounty. */
 const mergedOf = (input: Pick<BountyPayment, 'pulls' | 'source'>): MergedPull[] => input.source === 'listed' ? input.pulls.filter(pull => pull.state === 'merged') : landedOf(input);
 

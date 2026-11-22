@@ -105,6 +105,28 @@ describe('PF52: approved listed pay on merge', () => {
     }
     expect(stripe.charged()).toHaveLength(1); expect(await state()).toMatchObject({ state: 'paid' });
   });
+  it('waits for post-landing payment comments under the deployed cron budget before any charge', async () => {
+    Object.assign(issue.pulls![0]!, { state: 'open', landed: false }); delete issue.pulls![0]!.merged_at;
+    await card(); await connectedStripe(); await approve();
+    Object.assign(issue.pulls![0]!, { state: 'closed', merged_at: at(25), landed: true });
+    issue.comments!.push({ login: OWNER.login, association: 'OWNER', body: `omakase paid ${id} $45 to @solver`, created_at: at(26) });
+    await r.env.DB.prepare(`UPDATE pull_requests SET state = 'merged', merged_at = ?, head_on_default_at_sight = 0 WHERE bounty_id = ?`).bind(at(25), id).run();
+    r.clock.at += 20 * MINUTE;
+    await r.env.DB.prepare('UPDATE bounties SET details_read_at = ?, events_read_at = 0 WHERE id = ?').bind(r.clock.at, id).run();
+    await r.env.DB.prepare(`INSERT INTO meta (key, value) VALUES (?, '1') ON CONFLICT (key) DO UPDATE SET value = '1'`).bind(`listed_turn_${id}`).run();
+    let verifiedBeforeRecord = false;
+    let recorded = false;
+    for (let tick = 0; tick < 120 && !recorded; tick += 1) {
+      r.clock.at += MINUTE;
+      await worker.scheduled(undefined, r.env);
+      const pull = await r.env.DB.prepare('SELECT on_default FROM pull_requests WHERE bounty_id = ?').bind(id).first<{ on_default: number }>();
+      recorded = await r.env.DB.prepare('SELECT 1 FROM paid_clicks WHERE bounty_id = ?').bind(id).first() !== null;
+      if (pull?.on_default === 1 && !recorded) verifiedBeforeRecord = true;
+      expect(stripe.charged()).toHaveLength(0); expect(paypal.captures).toHaveLength(0);
+    }
+    expect(verifiedBeforeRecord).toBe(true); expect(recorded).toBe(true);
+    expect((await fact()).payment.recorded_paid).toMatchObject({ source: 'board' });
+  });
   it('rehearses an imported open PR through approval, merge, verified landing and stand-in payment', async () => {
     Object.assign(issue.pulls![0]!, { state: 'open', landed: false }); delete issue.pulls![0]!.merged_at;
     await card(); await connectedStripe(); await approve(); await settleCharges(r.env);

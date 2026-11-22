@@ -1,11 +1,14 @@
 import type { Env, GitHub } from './github.js';
 import { paySaved } from './charge.js';
+import { paymentLandingVersion } from './payments.js';
+import { setMeta } from './store.js';
 
 export async function readPaymentComments(env: Env, github: GitHub, id: string, repository: string, number: number): Promise<void> {
   const row = await env.DB.prepare(`SELECT b.amount, b.poster_id, b.created_at, b.approval_at, MAX(c.at) AS paid_at FROM bounties b
     LEFT JOIN paid_clicks c ON c.bounty_id = b.id WHERE b.id = ? AND COALESCE(b.approval, '') != 'pending'
     AND NOT EXISTS (SELECT 1 FROM charges WHERE bounty_id = b.id AND state IN ('paid', 'refunded', 'disputed', 'charging', 'owner-paying', 'owner-must-authenticate')) GROUP BY b.id`).bind(id).first<{ amount: number; poster_id: number | null; created_at: string; approval_at: string | null; paid_at: string | null }>();
   if (row === null || row.poster_id === null) return;
+  const landing = await env.DB.prepare(`SELECT (${paymentLandingVersion}) AS version FROM bounties b WHERE b.id = ?`).bind(id).first<{ version: string }>();
   for (let page = 1; page <= 10; page += 1) {
     const read = await github.get(`/repos/${repository}/issues/${number}/comments?since=${encodeURIComponent(row.paid_at ?? row.created_at)}&per_page=100&page=${page}`);
     if (read.status !== 200 || !Array.isArray(read.json)) return;
@@ -28,6 +31,9 @@ export async function readPaymentComments(env: Env, github: GitHub, id: string, 
         ON CONFLICT (bounty_id) DO UPDATE SET by_login = excluded.by_login, to_login = excluded.to_login, amount = excluded.amount, withdrawn = 0, at = excluded.at WHERE paid_clicks.at < excluded.at`)
         .bind(id, comment.user.login, pull.author, row.amount, comment.created_at).run();
     }
-    if (read.json.length < 100) return;
+    if (read.json.length < 100) {
+      await setMeta(env.DB, `payment_comments/${id}`, landing!.version);
+      return;
+    }
   }
 }

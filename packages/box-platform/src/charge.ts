@@ -4,7 +4,7 @@
 // the payee are enforced here and nowhere else; Stripe would accept any (K46).
 import { CHARGE_WORDS, type ChargeState } from './charge-words.js';
 import type { Env } from './github.js';
-import { landedWhere, notCounted, type MergedPull } from './payments.js';
+import { landedWhere, notCounted, paymentCommentsCurrent, type MergedPull } from './payments.js';
 import { errorCode, errorWords, isCardError, stripe, StripeUnavailable, stripeOn } from './stripe.js';
 import { paypalOn, PayPalUnavailable } from './paypal.js';
 import { chargeVault } from './paypal-pay.js';
@@ -110,6 +110,7 @@ const DUE = `SELECT b.id, b.amount, b.poster, b.poster_id, b.source, b.merge_con
   LEFT JOIN charges c ON c.bounty_id = b.id
   WHERE b.amount > 0 AND (s.payment_method IS NOT NULL OR v.payment_token IS NOT NULL) AND ${REWARD_LIMIT} IS NOT NULL AND ${CONSENT_AT} IS NOT NULL
     AND ${APPROVED}
+    AND (b.source != 'listed' OR ${paymentCommentsCurrent})
     AND EXISTS (SELECT 1 FROM pull_requests p WHERE p.bounty_id = b.id AND ${landedWhere('p')})
     AND (c.state IS NULL OR c.state NOT IN ('paid', 'refunded', 'disputed', 'owner-must-authenticate', 'owner-paying'))
     AND (c.at IS NULL OR c.at <= ?)
@@ -445,10 +446,10 @@ export async function payingIds(env: Env, ids: readonly string[]): Promise<Reado
 
 export async function mergePaymentFact(env: Env, id: string, origin: string) {
   const row = await env.DB.prepare(`SELECT b.source, b.approval, b.amount, ${APPROVED_AT} AS approval_at, ${APPROVED_AMOUNT} AS approved_amount,
-    ${CONSENT_AT} AS consent_at, ${STRIPE_LIMIT} AS stripe_limit, ${PAYPAL_LIMIT} AS paypal_limit, s.payment_method, v.payment_token
+    ${CONSENT_AT} AS consent_at, ${STRIPE_LIMIT} AS stripe_limit, ${PAYPAL_LIMIT} AS paypal_limit, s.payment_method, v.payment_token, ${paymentCommentsCurrent} AS comments_current
     FROM bounties b LEFT JOIN pay_settings s ON s.github_id = b.poster_id LEFT JOIN paypal_vault v ON v.github_id = b.poster_id
     LEFT JOIN pay_repositories r ON r.github_id = b.poster_id AND r.repository = b.repository WHERE b.id = ?`).bind(id).first<{
-      source: string; approval: string | null; amount: number; approval_at: string | null; approved_amount: number | null; consent_at: string | null; stripe_limit: number | null; paypal_limit: number | null; payment_method: string | null; payment_token: string | null;
+      source: string; approval: string | null; amount: number; approval_at: string | null; approved_amount: number | null; consent_at: string | null; stripe_limit: number | null; paypal_limit: number | null; payment_method: string | null; payment_token: string | null; comments_current: number;
     }>();
   if (row === null) return null;
   const links = setupLinks(origin, id);
@@ -459,6 +460,7 @@ export async function mergePaymentFact(env: Env, id: string, origin: string) {
   if (!stripeSaved && !paypalSaved) reasons.push('The poster has no saved payment method available on this board. A human can save Stripe or PayPal using the setup links.');
   if (row.consent_at === null) reasons.push(row.source === 'listed' ? 'No pay-on-merge consent: approve with the exact on merge comment. A repository switch does not authorize imported bounties.' : 'No pay-on-merge consent: enable the repository before the merge.');
   if (row.source === 'listed' && (row.approval_at === null || row.amount !== row.approved_amount)) reasons.push('The approval time or approved reward is not verified.');
+  if (row.source === 'listed' && row.comments_current !== 1) reasons.push('Payment comments have not been read after the verified landing.');
   const { landed, recorded } = await payeeFacts(env, id);
   const pulls = await env.DB.prepare(`SELECT p.author, MAX(COALESCE(s.ready, 0)) AS stripe, MAX(a.payer_id IS NOT NULL) AS paypal
     FROM pull_requests p LEFT JOIN stripe_accounts s ON s.github_id = p.author_id LEFT JOIN paypal_accounts a ON a.github_id = p.author_id
