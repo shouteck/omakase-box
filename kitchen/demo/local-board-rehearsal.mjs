@@ -63,7 +63,10 @@ const box = (actor, cwd, ...args) => {
   console.log(output);
   return output;
 };
-const get = path => fetch(board + path, { redirect: 'error', signal: AbortSignal.timeout(5000) });
+// Synchronous CLI steps can outlast the board's keep-alive timeout.
+const request = (path, options) => fetch(board + path, {
+  ...options, headers: { connection: 'close' }, redirect: 'error', signal: AbortSignal.timeout(5000)
+});
 
 git(directory, 'init', '--bare', '-b', 'main', bare);
 git(poster, 'init', '-b', 'main');
@@ -84,11 +87,11 @@ post('config', 'set', 'board', board);
 post('allow', '--reward', '10', '--reward-limit', '50');
 const { id } = post('create', '--title', 'Fix the demo app', '--task', 'TASK.md', '--why', 'Rehearse the local handoff', '--json');
 const pathname = `/bounties/${id}.json`;
-assert.equal((await get(pathname)).status, 404);
+assert.equal((await request(pathname)).status, 404);
 const posted = post('post', id, '--json');
 assert.equal(posted.posted, true);
 const detail = async () => {
-  const response = await get(pathname);
+  const response = await request(pathname);
   assert.equal(response.status, 200, `${pathname}: ${await response.clone().text()}`);
   return response.json();
 };
@@ -111,9 +114,8 @@ assert.equal(submitted.pullRequest.number, taken.pullRequest.number);
 post('apply', id, String(submitted.pullRequest.number));
 assert.equal(readFileSync(join(poster, 'app.txt'), 'utf8'), 'fixed\n');
 git(poster, 'push', bare, 'main');
-const look = await fetch(`${board}/api/hint`, {
-  method: 'POST', body: JSON.stringify({ repository: posted.repository, issue: posted.issue.number, bounty: id, event: 'merged' }),
-  redirect: 'error', signal: AbortSignal.timeout(5000)
+const look = await request('/api/hint', {
+  method: 'POST', body: JSON.stringify({ repository: posted.repository, issue: posted.issue.number, bounty: id, event: 'merged' })
 });
 assert.equal(look.status, 202);
 assert.deepEqual(await look.json(), { looked: 'read' });
