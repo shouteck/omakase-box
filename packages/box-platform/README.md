@@ -66,7 +66,7 @@ Sign-in is GitHub OAuth with no scope: public identity only. The token is used o
 
 The owner's setup is in [DEPLOY.md](DEPLOY.md). Without it the board works, and sign-in says it is not set up. Locally the stand-in signs you in as `example-quill`; nothing leaves localhost.
 
-Who may see an owner-only payment method is decided in `src/visibility.ts` and nowhere else, and read only by `src/account.ts`. The feed, MCP, RSS and the public bounty answer never read methods.
+Who may see an owner-only payment method is decided in `src/visibility.ts` and read only by `src/account.ts`. Public `owed_now` facts expose only methods marked everyone; owner-only destinations never leave the signed-in owner view.
 
 Tests: `node scripts/suite.mjs platform`.
 
