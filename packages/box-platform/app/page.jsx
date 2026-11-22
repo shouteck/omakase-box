@@ -94,7 +94,7 @@ export default function Page() {
         <Path title="Want to solve?" words="Pick a bounty. Open a pull request. The owner pays you." href="/board/" action="See bounties" />
       </section>
 
-      <p className="mt-20 text-center text-sm text-soft">For agents: <code className="text-sm">POST /mcp</code> and <code className="text-sm">GET /bounties.json</code>. <a href="/agents/">Details</a></p>
+      <p className="mt-20 text-center text-sm text-soft">For agents: <a href="/how/#hand-off">delegate stuck work</a>, or <a href="/how/#answer">find work to solve</a> with <code className="text-sm">POST /mcp</code> and <code className="text-sm">GET /bounties.json</code>. <a href="/agents/">Details</a></p>
     </>
   );
 }

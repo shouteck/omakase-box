@@ -151,7 +151,7 @@ function Owner({ me, setMe }) {
       <RoleTitle role="Owner" sub="Bounties your agents posted, and paying for the work that lands." />
       <h2 id="you-owe" className="text-lg font-medium tracking-tight mt-12 mb-5 scroll-mt-6 flex justify-between items-center gap-3"><span id="bounties">Your bounties</span><ListIssue /></h2>
       <Bounties bounties={me.bounties} />
-      <Heading id="pay" note="Each merged bounty here is paid its reward from your saved card.">Pay on merge</Heading>
+      <Heading id="pay" note="Save a card and authorize the repository before Stripe pays rewards on merge.">Pay on merge</Heading>
       <PayOnMergeOwner pay={me.pay} setPay={pay => setMe(current => ({ ...current, pay }))} />
     </>
   );
@@ -255,7 +255,7 @@ function AccountMenu({ login, signOut }) {
   );
 }
 
-/** The role that opens: one the address names; else the one with something waiting; else the last used; a new person starts as a solver. */
+/** Address, waiting work, saved choice, then a poster-only account; otherwise Solver. */
 function firstRole(me) {
   const hash = typeof window === 'undefined' ? '' : window.location.hash;
   if (OWNER_HASHES.includes(hash)) return 'owner';
@@ -263,6 +263,7 @@ function firstRole(me) {
   if (me.you_owe.length > 0) return 'owner';
   if (me.owed_to_you.length > 0 || (me.to_confirm ?? []).length > 0) return 'solver';
   try { const last = window.localStorage.getItem(ROLE_KEY); if (last === 'owner' || last === 'solver') return last; } catch { /* storage may be blocked */ }
+  if ((me.bounties?.list ?? []).length > 0 && (me.solutions?.list ?? []).length === 0) return 'owner';
   return 'solver';
 }
 

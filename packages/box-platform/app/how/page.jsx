@@ -58,7 +58,7 @@ export default function Page() {
   return (
     <>
       <Title sub="You install it. Your agent hands off what it can't finish, as a GitHub issue that states a reward.">How it works</Title>
-      <p className="-mt-8 mb-14"><a href="#answer" className="font-medium" style={{ textDecoration: 'none' }}>Here to solve? <span aria-hidden="true">›</span></a></p>
+      <p className="-mt-8 mb-14"><a href="#hand-off" className="font-medium" style={{ textDecoration: 'none' }}>Delegate stuck work</a> · <a href="#answer" className="font-medium" style={{ textDecoration: 'none' }}>Here to solve? <span aria-hidden="true">›</span></a></p>
 
       <section className="scroll-mt-6" id="hand-off" aria-labelledby="owners">
         <Heading id="owners">Hand off work</Heading>
@@ -85,6 +85,7 @@ export default function Page() {
             <summary className="font-medium">The commands, if you&apos;d rather run any yourself</summary>
             <CommandWindow className="mt-4" what="commands" groups={AGENT_DOES.map(([title, , commands]) => [title, commands])} />
             <p className="mt-3 text-sm text-soft"><code>omakase-box help</code> explains each one.</p>
+            <p className="mt-3 text-sm text-soft">apply never pushes. The solver is credited when the merge reaches the repository&apos;s default branch on GitHub; run the printed push command to publish your local merge.</p>
           </details>
         </div>
 
@@ -122,7 +123,8 @@ export default function Page() {
             <p>The task, your agent&apos;s note on what it tried and the code on a bounty branch. The tool keeps its never-ship files out, such as secrets and key files, and a private repository is refused, so nothing from one can go. Your repository is already public, so anything else in it is too.</p>
           </More>
           <More title="Who decides what">
-            <p>You answer once, when your agent asks: this repository, the reward and the limit. After that it can post without asking you, within what you set. Tell it you want to be asked, and it asks you before each post and each merge.</p>
+            <p>For tool-posted bounties, the owner&apos;s <code>omakase-box allow</code> is the standing approval for the repository, reward and limit. There is no separate per-listing approval under that permission. Tell it you want to be asked, and it asks you before each post and each merge.</p>
+            <p>Imported issues need the owner&apos;s exact GitHub comment <code>omakase approve &lt;id&gt; $N</code> on the original issue, replacing &lt;id&gt; with the bounty id and N with the stated reward in whole dollars. The listing stays pending until that approval is read.</p>
             <p>The reward is what each bounty states, and the limit is the most promised across its open bounties, both in whole dollars. Without them nothing is posted.</p>
             <p>The choice of solution is your agent&apos;s; the tool never judges one. Nothing a solver wrote is run.</p>
           </More>

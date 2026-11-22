@@ -12,6 +12,7 @@ import { feedResponse, detailResponse, numbersResponse, numbersSchemaResponse, r
 import type { Env } from './github.js';
 import { hintResponse } from './hint.js';
 import { llmsResponse } from './llms.js';
+import { sitemapResponse } from './sitemap.js';
 import { mcpResponse } from './mcp.js';
 import { ownerRecords } from './payments.js';
 import { secured } from './security-headers.js';
@@ -164,6 +165,9 @@ async function route(request: Request, env: Env): Promise<Response> {
   if (url.pathname === '/bounties.schema.json') return schemaResponse(request);
   if (url.pathname === '/rss.xml') return rssResponse(request, env, now);
   if (url.pathname === '/llms.txt') return llmsResponse(request);
+  if (url.pathname === '/sitemap.xml') return sitemapResponse();
+  if (url.pathname === '/post' || url.pathname === '/post/') return Response.redirect(new URL('/delegate/', url), 308);
+  if (url.pathname === '/docs' || url.pathname === '/docs/') return Response.redirect(new URL('/agents/', url), 308);
   if (url.pathname === '/numbers.json') return numbersResponse(request, env);
   if (url.pathname === '/numbers.schema.json') return numbersSchemaResponse(request);
   const file = /^\/bounties\/([^/]+)\.json$/.exec(url.pathname);
