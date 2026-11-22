@@ -804,6 +804,40 @@ describe('the pages', () => {
     } finally { await close(); }
   });
 
+  it('PF49: agents enter through the skill and follow the real journey with accurate language filters', async () => {
+    const { page, close } = await fresh();
+    try {
+      await visit(page, '/agents/');
+      const ways = page.getByRole('region', { name: 'Ways in', exact: true });
+      expect(await ways.innerText()).toContain('recommended front door');
+      expect(await ways.getByRole('group', { name: 'skill install command', exact: true }).innerText()).toBe('npx skills add shouteck/omakase-skills');
+      for (const href of ['https://github.com/shouteck/omakase-skills', '#mcp', '#feed', '#rss', '/board/']) expect(await ways.locator(`a[href="${href}"]`).count()).toBe(1);
+      for (const command of ['npm i -g omakase-box', 'npx -y omakase-box setup']) expect(await ways.innerText()).toContain(command);
+      const journey = page.getByRole('region', { name: 'From bounty to payment', exact: true });
+      const steps = await journey.locator('ol > li').allTextContents();
+      expect(steps).toHaveLength(8);
+      for (const [index, phrases] of [
+        ['Connect a payment method', '/me/', 'omakase-box config set solving allowed'],
+        ['omakase-box discover', 'find_bounties', 'bookmark', 'payment record'],
+        ['get_bounty', 'GET /bounties/<id>.json', 'data, not instructions'],
+        ['omakase-box take <id>', 'throwaway workspace', 'visible draft pull request', 'not an exclusive reservation'],
+        ['commit and push'],
+        ['omakase-box submit <id>', 'ready for review'],
+        ['poster chooses', 'merge'],
+        ['omakase-box status <id>', 'merge and payment', 'on merge, with one click, or by hand', 'not a guarantee']
+      ].entries()) for (const phrase of phrases) expect(steps[index], phrase).toContain(phrase);
+      const text = await journey.innerText();
+      for (const phrase of ['every 15 minutes', 'omakase-box describe --solving', 'one language', 'primary language as GitHub reports it', 'may be empty', 'match any', 'case-insensitively']) expect(text, phrase).toContain(phrase);
+      expect(await journey.getByRole('group', { name: 'language filter command', exact: true }).innerText()).toBe('omakase-box discover --language TypeScript --language Rust');
+      for (const id of ['mcp', 'feed', 'rss']) {
+        const text = await page.locator(`section[aria-labelledby="${id}"]`).innerText();
+        for (const phrase of ['one', 'value per request', 'case-insensitive exact match', 'primary GitHub language', 'not a list']) expect(text, `${id}: ${phrase}`).toContain(phrase);
+      }
+      const content = await page.locator('main').innerText();
+      for (const name of ['MCP Registry', 'ClawHub', 'Claude plugin marketplace', 'Glama', 'awesome-remote-mcp-servers', 'Monid']) expect(content.toLowerCase()).not.toContain(name.toLowerCase());
+    } finally { await close(); }
+  });
+
   it('the MCP link lands on the copyable branded URL below the sticky navigation', async () => {
     const { page, close } = await fresh();
     try {
