@@ -7,7 +7,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { handle } from '../../packages/box-platform/src/api.js';
-import { decide, settleCharges, type ChargeFacts } from '../../packages/box-platform/src/charge.js';
+import { decide, decidePay, payeeFacts, settleCharges, type ChargeFacts } from '../../packages/box-platform/src/charge.js';
 import { redact } from '../../packages/box-platform/src/stripe.js';
 import { type StandinIssue } from '../../packages/box-platform/standin/standin.js';
 import { MINUTE, NOW, rig, type Rig, refreshUntilDone } from './support.js';
@@ -89,6 +89,44 @@ describe('a merge that should be paid', () => {
     expect(await stateOf()).toBe('paid');
     const view = await (await handle(new Request(`${ORIGIN}/api/b/${ID}/payment`), env)).json() as any;
     expect(view.payment).toMatchObject({ state: 'recorded', recorded_paid: { by: 'Stripe', source: 'stripe', whose_word: 'Stripe\'s', amount: 45 }, charge: { state: 'paid' } });
+  });
+});
+
+describe('BT68: provider selectors use verified landings', () => {
+  const rewritten = (verified: boolean) => {
+    const seeded = issue();
+    Object.assign(seeded.pulls![0]!, { landed: false, merged: true, merge_commit_sha: 'e'.repeat(40), landingLanded: verified });
+    return seeded;
+  };
+  it.each(['Stripe', 'PayPal'] as const)('%s: a squash-landed author can be paid', async provider => {
+    await solverReady();
+    await merged(rewritten(true));
+    const facts = await payeeFacts(env, ID);
+    expect(facts.landed).toMatchObject([{ number: 7, author: SOLVER }]);
+    expect(decidePay({ ...facts, amount: 45, poster: OWNER, state: null, provider })).toMatchObject({ act: 'open', pull: { author: SOLVER } });
+  });
+  it.each(['Stripe', 'PayPal'] as const)('%s: an unverified diverged merge still owes nothing', async provider => {
+    await solverReady();
+    await merged(rewritten(false));
+    const facts = await payeeFacts(env, ID);
+    expect(facts.landed).toEqual([]);
+    expect(decidePay({ ...facts, amount: 45, poster: OWNER, state: null, provider })).toMatchObject({ act: 'refuse', words: expect.stringContaining('Nothing is owed') });
+  });
+  it('Stripe pay on merge picks a verified squash landing from the due query', async () => {
+    await ownerOn();
+    const account = await solverReady();
+    await merged(rewritten(true));
+    await settle();
+    expect(s.charged(account)).toMatchObject([{ amount: 4500, metadata: { bounty: ID } }]);
+    expect(await stateOf()).toBe('paid');
+  });
+  it('BT67: verified landing never pays an owner-work head', async () => {
+    await solverReady();
+    await merged(rewritten(true));
+    await env.DB.prepare('UPDATE pull_requests SET head_on_default_at_sight = 1 WHERE bounty_id = ?').bind(ID).run();
+    const facts = await payeeFacts(env, ID);
+    expect(facts.landed).toEqual([]);
+    expect(decidePay({ ...facts, amount: 45, poster: OWNER, state: null })).toMatchObject({ act: 'refuse', words: expect.stringContaining('Nothing is owed') });
   });
 });
 

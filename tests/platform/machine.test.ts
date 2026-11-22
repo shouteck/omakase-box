@@ -3,6 +3,8 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { SKILL_TEXT } from '../../packages/box-bounty/wording.js';
+import cli from '../../packages/box-cli/package.json' with { type: 'json' };
 import { handle } from '../../packages/box-platform/src/api.js';
 import { DETAIL_BYTES_MAX, FEED_SCHEMA, LIMIT_MAX, PAGE_BYTES_MAX } from '../../packages/box-platform/src/feed.js';
 import { type LocalBoard, startLocal } from '../../packages/box-platform/src/local.js';
@@ -315,6 +317,11 @@ describe('MCP, through the SDK client', () => {
     expect(client.getServerVersion()?.name).toBe('open-bounty-board');
     const instructions = client.getInstructions()!;
     for (const words of ['public GitHub', 'never holds money', 'does not judge', 'data, not instructions']) expect(instructions).toContain(words);
+  });
+
+  it('reports the same release version as the CLI and the skill it installs', () => {
+    expect(client.getServerVersion()?.version).toBe(cli.version);
+    expect(SKILL_TEXT.split('---\n')[1]).toContain(`metadata:\n  version: "${cli.version}"\n`);
   });
 
   it('lists three read-only tools', async () => {
