@@ -71,6 +71,23 @@ beforeEach(async () => {
 afterEach(async () => { vi.restoreAllMocks(); await stripe.stop(); await paypal.stop(); await r.close(); });
 
 describe('PF52: direct listing consent', () => {
+  it('discovers new solutions without consent and later reads consent through the two-read worker', async () => {
+    await r.env.DB.prepare('DELETE FROM bounties WHERE id = ?').bind(id).run();
+    expect(await listIssue(r.env, OWNER, `https://github.com/${REPO}/issues/12`, 45, NOW)).toEqual({ id });
+    issue.pulls = [];
+    await card(); await connectedStripe();
+    for (let turn = 0; turn < 10; turn += 1) { r.clock.at += MINUTE; await worker.scheduled({}, r.env); }
+    issue.pulls = [{ number: 41, author: SOLVER, state: 'open', created_at: at(11) }];
+    for (let turn = 0; turn < 30; turn += 1) { r.clock.at += MINUTE; await worker.scheduled({}, r.env); }
+    expect(await r.env.DB.prepare('SELECT author FROM pull_requests WHERE bounty_id = ? AND number = 41').bind(id).first()).toEqual({ author: SOLVER });
+    expect(await r.env.DB.prepare('SELECT approval, merge_consent FROM bounties WHERE id = ?').bind(id).first()).toEqual({ approval: null, merge_consent: 0 });
+    expect(stripe.charged()).toHaveLength(0);
+    issue.comments = [{ login: OWNER.login, association: 'OWNER', body: `omakase approve ${id} $45 on merge`, created_at: at(41) }];
+    for (let turn = 0; turn < 60; turn += 1) { r.clock.at += MINUTE; await worker.scheduled({}, r.env); }
+    expect(await r.env.DB.prepare('SELECT approval, merge_consent FROM bounties WHERE id = ?').bind(id).first()).toEqual({ approval: 'comment', merge_consent: 1 });
+    expect(await r.env.DB.prepare('SELECT state FROM pull_requests WHERE bounty_id = ? AND number = 41').bind(id).first()).toEqual({ state: 'open' });
+    expect(stripe.charged()).toHaveLength(0);
+  });
   it.each(['stripe', 'paypal'] as const)('opts an already-approved direct listing into %s only by numeric poster consent', async rail => {
     await r.env.DB.prepare('DELETE FROM bounties WHERE id = ?').bind(id).run();
     expect(await listIssue(r.env, OWNER, `https://github.com/${REPO}/issues/12`, 45, NOW)).toEqual({ id });
