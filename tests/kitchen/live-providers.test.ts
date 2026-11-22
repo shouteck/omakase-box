@@ -46,7 +46,7 @@ describe('live provider sign-off cannot rely on sandbox availability', () => {
     const output = execFileSync(process.execPath, ['--input-type=module', '-e', `
       import { liveWebhooks } from './scripts/live-providers.mjs';
       const origin = 'https://example.test';
-      const env = { PAYPAL_CLIENT_ID: 'test-id', PAYPAL_SECRET: 'test-secret', PAYPAL_WEBHOOK_ID: 'hook', STRIPE_SECRET_KEY: 'test-key' };
+      const env = { PAYPAL_CLIENT_ID: 'test-id', PAYPAL_SECRET: 'test-secret', PAYPAL_WEBHOOK_ID: 'hook', STRIPE_WEBHOOKS_READ_KEY: 'rk_live_test-key' };
       const answers = [];
       const calls = [];
       for (const scenario of ['present', 'wrong-url', 'missing', 'disabled', 'sandbox']) {
@@ -60,13 +60,16 @@ describe('live provider sign-off cannot rely on sandbox availability', () => {
         answers.push(await liveWebhooks(origin, ['Stripe', 'PayPal'], env, request));
       }
       answers.push(await liveWebhooks(origin, ['Stripe', 'PayPal'], {}, () => { throw new Error('must not call'); }));
+      for (const credentials of [{ STRIPE_SECRET_KEY: 'sk_live_test' }, { STRIPE_WEBHOOKS_READ_KEY: 'rk_test_test' }]) {
+        answers.push(await liveWebhooks(origin, ['Stripe'], credentials, () => { throw new Error('must not call'); }));
+      }
       console.log(JSON.stringify({ answers, calls }));
     `], { cwd: root, encoding: 'utf8' });
     const result = JSON.parse(output);
     expect(result.answers).toEqual([
       { Stripe: true, PayPal: true }, { Stripe: false, PayPal: false },
       { Stripe: false, PayPal: false }, { Stripe: false, PayPal: true },
-      { Stripe: false, PayPal: true }, {}
+      { Stripe: false, PayPal: true }, {}, {}, {}
     ]);
     expect(result.calls.filter((call: string[]) => call[1] === 'POST').every((call: string[]) => call[0] === 'https://api-m.paypal.com/v1/oauth2/token')).toBe(true);
     expect(result.calls.every((call: string[]) => !call[0]?.includes('example.test'))).toBe(true);

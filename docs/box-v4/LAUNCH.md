@@ -24,7 +24,10 @@ availability/binding evidence, not proof of a payment or webhook delivery.
 Sign-off also requires live webhook registrations at the production origin's
 `/api/paypal/webhook` and `/api/stripe/webhook` URLs (Stripe is checked for live
 mode and enabled status). Supply `PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_WEBHOOK_ID` and
-`STRIPE_SECRET_KEY` for these read-only lookups; absent credentials mean
+`STRIPE_WEBHOOKS_READ_KEY` for these read-only lookups. The latter is a live-mode
+restricted key (`rk_live_...`) with only "Webhook Endpoints: Read" permission;
+there is no fallback to `STRIPE_SECRET_KEY` (still a required Worker secret name).
+Absent credentials or a Stripe read key without the `rk_live_` prefix mean
 NOT RUN and fail sign-off. Only PayPal's OAuth token fetch uses POST; the
 POST-only board webhook routes are not probed and no payment is attempted.
 

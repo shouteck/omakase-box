@@ -46,12 +46,12 @@ export async function liveWebhooks(origin, advertised, env = process.env, reques
       results.PayPal = webhook.id === env.PAYPAL_WEBHOOK_ID && webhook.url === `${origin}/api/paypal/webhook`;
     } catch { results.PayPal = false; }
   }
-  if (advertised.includes('Stripe') && env.STRIPE_SECRET_KEY) {
+  if (advertised.includes('Stripe') && env.STRIPE_WEBHOOKS_READ_KEY?.startsWith('rk_live_')) {
     try {
       let after = '';
       results.Stripe = false;
       do {
-        const page = await json(`https://api.stripe.com/v1/webhook_endpoints?limit=100${after ? `&starting_after=${encodeURIComponent(after)}` : ''}`, { headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}` } });
+        const page = await json(`https://api.stripe.com/v1/webhook_endpoints?limit=100${after ? `&starting_after=${encodeURIComponent(after)}` : ''}`, { headers: { Authorization: `Bearer ${env.STRIPE_WEBHOOKS_READ_KEY}` } });
         if (!Array.isArray(page.data)) throw new Error();
         if (page.data.some(webhook => webhook.url === `${origin}/api/stripe/webhook` && webhook.livemode === true && webhook.status === 'enabled')) {
           results.Stripe = true;
@@ -100,6 +100,7 @@ export async function main(args = process.argv.slice(2)) {
     } catch { console.log('Worker secret names could not be read successfully (wrangler output withheld).'); }
   } else console.log(skipSecrets ? 'Worker secret lookup skipped by --skip-secrets.' : 'Worker secret lookup requires CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID.');
   const webhooks = await liveWebhooks(url.origin, advertised);
+  if (advertised.includes('Stripe') && webhooks.Stripe == null) console.log('Stripe webhook lookup: NOT RUN; requires STRIPE_WEBHOOKS_READ_KEY (rk_live_ restricted key, Webhook Endpoints: Read).');
   const result = compareProviders({ advertised, ways, secretNames, webhooks });
   for (const fact of result.facts) console.log(`${fact.ok ? 'PASS' : 'FAIL'}: ${fact.words}`);
   console.log(`Live but not advertised: ${result.unadvertised.join(', ') || '(none observed)'}`);
