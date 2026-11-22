@@ -840,6 +840,10 @@ describe('PF52: agent pay comments', () => {
     const view = await (await get(`/api/b/${id}/payment`, owner)).json() as any;
     const url = `https://www.sandbox.paypal.test/checkoutnow?token=${paypal.orders[0]!.id}`;
     expect(view).toMatchObject({ can_authenticate: false, paypal_action_url: url });
+    const successor = await session(8999, OWNER.login);
+    expect(await (await get(`/api/b/${id}/payment`, successor)).json()).toMatchObject({ role: 'other', paypal_action_url: null });
+    const renamed = await session(OWNER.github_id, 'owner-renamed');
+    expect(await (await get(`/api/b/${id}/payment`, renamed)).json()).toMatchObject({ role: 'owner', paypal_action_url: url });
     expect((await (await get(`/api/b/${id}/payment`)).json() as any).paypal_action_url).toBeNull();
     expect(await (await post(`/api/b/${id}/pay-paypal`, { to: SOLVER }, owner)).json()).toEqual({ url });
     expect(paypal.orders).toHaveLength(1);

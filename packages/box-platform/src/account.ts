@@ -372,11 +372,13 @@ async function paymentView(env: Env, id: string, viewer: Viewer | null, now: num
   if (input === null) return json(404, NOT_ON_BOARD);
   const facts = factsOf(input);
   const login = viewer?.login ?? null;
-  const role = roleOf(facts, login);
+  const poster = viewer !== null && await isPoster(env, id, viewer);
+  const namedRole = roleOf(facts, login);
+  const role = poster ? 'owner' : namedRole === 'owner' ? 'other' : namedRole;
   const payee = payeeOf(facts);
   const payees = facts.amount > 0 ? await Promise.all(facts.merged.map(async ({ author, number }) => {
     const all = await methodsOfLogin(env, author);
-    const methods = (author === payee && ownerOnlyAllowed(facts, login) ? all : publicOnly(all)).map(shown);
+    const methods = (author === payee && poster && ownerOnlyAllowed(facts, facts.poster) ? all : publicOnly(all)).map(shown);
     // Once a payment is recorded, asking how to be paid is no longer the next step (PF19).
     // PF32: when the owner chooses, each candidate carries their own one-click offers, so the window shows every way.
     const own = role === 'owner' && payee === null && facts.record === null ? await offers(env, id, viewer!, author) : null;
@@ -388,7 +390,7 @@ async function paymentView(env: Env, id: string, viewer: Viewer | null, now: num
     viewer: login, role, payee, payees, on_merge: onMerge,
     payment: paymentOf(input),
     recorded: facts.record === null ? null : { at: facts.record.at, amount: facts.record.amount },
-    owner_only_hidden: role === 'owner' && payee !== null && !ownerOnlyAllowed(facts, login),
+    owner_only_hidden: role === 'owner' && payee !== null && !ownerOnlyAllowed(facts, facts.poster),
     receipt: facts.receipt,
     // PF31b: only a payment the owner recorded by hand asks the solver; Stripe's or PayPal's word is the record itself.
     can_answer: role === 'payee' && facts.record !== null && !byProvider(facts.record),
