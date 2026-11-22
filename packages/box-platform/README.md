@@ -28,7 +28,7 @@ demo=/path/printed/in/the/first/terminal
 node kitchen/demo/local-board-rehearsal.mjs "$demo"
 ```
 
-The script prints the CLI commands as it runs them. The poster allows and posts a $10 sample bounty. Open the printed `/bounties/<id>.json` URL to see the post. The solver discovers it, takes it, commits and pushes a one-line fix, and submits the draft PR. The poster applies it, pushes `main`, asks the board to re-read the merge via `/api/hint`, and runs `omakase-box config set paid <id>`. The same URL then reports the merge and the owner's recorded payment; the solver's CLI status reports it too.
+The script prints the CLI commands as it runs them. The solver bookmarks the board before the poster allows and posts a $10 sample bounty. Open the printed `/bounties/<id>.json` URL to see the post. The solver discovers it from the bookmark, takes it, commits and pushes a one-line fix, and submits the draft PR. The poster applies it, pushes `main`, asks the board to re-read the merge via `/api/hint`, and runs `omakase-box config set paid <id>`. The same URL then reports the merge and the owner's recorded payment; the solver's CLI status reports it too.
 
 The poster and solver have separate temporary CLI settings. The GitHub URL is a stand-in identity: Git uses a bare repository in the scratch directory and the CLI's GitHub calls use the local stand-in, not a GitHub login. No money moves. Stop the board with Ctrl+C and discard the scratch directory when done.
 

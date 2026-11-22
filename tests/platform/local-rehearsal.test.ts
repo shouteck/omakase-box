@@ -15,6 +15,8 @@ it('rehearses a CLI post, discovery, take, submission, merge and recorded paymen
   try {
     const board = await startLocal({ schema: join(platform, 'schema.sql'), out: join(platform, 'out'), replayDir: scratch });
     try {
+      await board.refresh();
+      await board.env.DB.prepare("DELETE FROM meta WHERE key LIKE 'budget_%'").run();
       const { stdout } = await promisify(execFile)(process.execPath, [rehearsal, scratch, board.url], { timeout: 85000 });
       expect(stdout).toContain('Posted on the local board:');
       expect(stdout).toContain('Recorded paid on the local board (no money moved):');

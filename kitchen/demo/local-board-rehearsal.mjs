@@ -76,6 +76,10 @@ git(poster, 'push', bare, 'main');
 
 const post = (...args) => box('owner', poster, ...args);
 const solve = (...args) => box('solver', solver, ...args);
+solve('config', 'set', 'board', board);
+solve('config', 'set', 'solving', 'allowed');
+solve('discover', '--from', 'now', '--any-language');
+
 post('config', 'set', 'board', board);
 post('allow', '--reward', '10', '--reward-limit', '50');
 const { id } = post('create', '--title', 'Fix the demo app', '--task', 'TASK.md', '--why', 'Rehearse the local handoff', '--json');
@@ -91,9 +95,7 @@ const detail = async () => {
 assert.equal((await detail()).bounty.id, id);
 console.log(`Posted on the local board: ${board}${pathname}`);
 
-solve('config', 'set', 'board', board);
-solve('config', 'set', 'solving', 'allowed');
-const found = solve('discover', '--from', 'start', '--any-language', '--json').bounties.find(entry => entry.id === id);
+const found = solve('discover', '--json').bounties.find(entry => entry.id === id);
 assert(found, 'The solver did not discover the posted bounty');
 const taken = solve('take', found.id, '--into', join(solver, 'attempt'), '--json');
 assert.equal(taken.outcome, 'taken');
