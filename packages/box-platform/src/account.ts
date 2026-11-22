@@ -414,7 +414,7 @@ async function recordPaid(request: Request, env: Env, id: string, viewer: Viewer
   const input = await paymentInput(env, id, now);
   if (input === null) return json(404, NOT_ON_BOARD);
   const facts = factsOf(input);
-  if (roleOf(facts, viewer.login) !== 'owner') return json(403, { error: 'Only the poster of this bounty can record its payment. Nothing changed.' });
+  if (!await isPoster(env, id, viewer)) return json(403, { error: 'Only the poster of this bounty can record its payment. Nothing changed.' });
   const at = new Date(now).toISOString();
   const save = (to: string | null, amount: number | null, withdrawn: number) => env.DB.prepare(`INSERT INTO paid_clicks (bounty_id, by_login, to_login, amount, withdrawn, at) VALUES (?, ?, ?, ?, ?, ?)
     ON CONFLICT (bounty_id) DO UPDATE SET by_login = excluded.by_login, to_login = excluded.to_login, amount = excluded.amount, withdrawn = excluded.withdrawn, at = excluded.at`)
@@ -841,7 +841,7 @@ export async function accountResponse(request: Request, env: Env, url: URL, now:
       if (viewer === null) return json(401, SIGN_IN_FIRST);
       const input = await paymentInput(env, id, now);
       if (input === null) return json(404, NOT_ON_BOARD);
-      if (roleOf(factsOf(input), viewer.login) !== 'owner' || !await isPoster(env, id, viewer)) return json(403, { error: 'Only the poster of this bounty can pay from this page. Nothing changed.' });
+      if (!await isPoster(env, id, viewer)) return json(403, { error: 'Only the poster of this bounty can pay from this page. Nothing changed.' });
       const via = payment[2] === 'pay-paypal' ? { on: paypalOn(env), name: 'PayPal' } : { on: stripeOn(env), name: 'Stripe' };
       if (!via.on) return json(409, { error: `Paying through ${via.name} is not set up on this board. Nothing changed. Next: use the other ways to pay on this page.` });
       try {

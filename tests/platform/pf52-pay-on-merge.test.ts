@@ -107,6 +107,26 @@ describe('PF52: direct listing consent', () => {
   });
 });
 
+describe('PF52: renamed poster payment actions', () => {
+  it.each(['paid', 'withdraw', 'pay', 'pay-paypal', 'authenticate'])('allows only the numeric poster to use %s after a rename', async action => {
+    await card(); await connectedStripe(); await vault(); await approve('');
+    if (action === 'withdraw') expect((await post(`/api/b/${id}/paid`, { to: SOLVER }, await session())).status).toBe(200);
+    const renamed = await session(OWNER.github_id, 'owner-renamed');
+    const successor = await session(8999, OWNER.login);
+    if (action === 'authenticate') await r.env.DB.prepare(`INSERT INTO charges (bounty_id, state, account_id, amount, pull_number, solver, at) VALUES (?, 'owner-must-authenticate', 'acct_solver', 45, 41, 'solver', ?)`).bind(id, r.clock.at).run();
+    const path = `/api/b/${id}/${action === 'withdraw' ? 'paid' : action}`;
+    const body = action === 'withdraw' ? { withdraw: true } : { to: SOLVER };
+    const calls = stripe.calls.length + paypal.calls.length;
+    expect((await post(path, body, successor)).status).toBe(403);
+    expect(stripe.calls.length + paypal.calls.length).toBe(calls);
+    const response = await post(path, body, renamed);
+    expect(response.status, JSON.stringify(await response.clone().json())).toBe(200);
+    if (action === 'paid') expect(await r.env.DB.prepare('SELECT by_login, to_login, withdrawn FROM paid_clicks WHERE bounty_id = ?').bind(id).first()).toEqual({ by_login: 'owner-renamed', to_login: SOLVER, withdrawn: 0 });
+    else if (action === 'withdraw') expect(await r.env.DB.prepare('SELECT withdrawn FROM paid_clicks WHERE bounty_id = ?').bind(id).first()).toEqual({ withdrawn: 1 });
+    else expect(await response.json()).toHaveProperty('url');
+  });
+});
+
 describe('PF52: resumable payment comments', () => {
   it.each(['earlier', 'anchor', 'many'])('does not skip an unread outside-payment record after deleting %s comments', async mode => {
     await card(); await connectedStripe(); await approve();
