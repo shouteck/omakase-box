@@ -11,7 +11,7 @@ const INSTALL = ['npx -y omakase-box setup'];
 // What the agent does is one picture, its commands folded; a person only installs. One table,
 // so the cards and the commands under them cannot drift apart.
 const AGENT_DOES = [
-  ['Asks you a few things', 'The repository, the reward and limit, and whether to check with you first.', [
+  ['Asks you a few things', 'You give standing approval with omakase-box allow: set the repository, reward and limit, and choose whether to be asked each time. Only imported issues need the GitHub comment omakase approve <id> $<reward>.', [
     'omakase-box allow <owner>/<repository> --reward <reward> --reward-limit <limit>'
   ]],
   ['Packs and posts', 'The task, what it tried, and the code. A preview first shows what becomes public.', [
@@ -23,7 +23,7 @@ const AGENT_DOES = [
     'omakase-box status <id>',
     'omakase-box look <id> <n>'
   ]],
-  ['Merges one', 'It picks one, merges it and pushes, as with any other change.', [
+  ['Merges one', 'It picks one, merges it locally and prints the git push command for you to run.', [
     'omakase-box apply <id> <n>'
   ]]
 ];
@@ -65,7 +65,7 @@ export default function Page() {
         <Who>You install it</Who>
         <div className="border-t border-b border-line py-6 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-x-6 gap-y-3">
           <div className="text-soft max-w-prose">
-            <p>Run this once in your terminal. It needs Node 22.13 or later, Git, and <code>gh auth login</code>. Your next agent session finds the tool.</p>
+            <p>Run this once in your terminal to install both the CLI and the Agent Skill. If you already added the skill with <code>npx skills add shouteck/omakase-skills</code>, just install the CLI with <code>npm install -g omakase-box</code> instead. You need Node 22.13 or later, Git, and <code>gh auth login</code>.</p>
           </div>
           <div className="min-w-0"><CodeBlock lines={INSTALL} mark="install" what="install line" /></div>
         </div>
@@ -90,7 +90,7 @@ export default function Page() {
 
         <Who>If a reward is owed</Who>
         <div data-owed className="border-t border-b border-line py-6 text-soft">
-          <p className="max-w-prose">On merge pays without you: once you save a card and approve a repository's reward on your page, the board charges it when one solution lands. Otherwise you pay on the bounty&apos;s page, with one click or by hand. Your agent tells you once, with the link, and goes back to its work. The board shows what is due when you are signed in.</p>
+          <p className="max-w-prose">You approve how to pay. To pay on merge, save a card and authorize Stripe charges for the repository on your page before a solution lands. Otherwise you pay on the bounty&apos;s page, with one click or by hand. Your agent tells you once, with the link, and goes back to its work. The board shows what is due when you are signed in.</p>
           <div className="mt-3 max-w-prose"><WaysNotHere /></div>
         </div>
       </section>

@@ -17,7 +17,7 @@ if (!existsSync(join(here, 'out', 'index.html'))) {
 }
 await build({ root: here, logLevel: 'warn', build: { ssr: 'src/local.ts', outDir: 'dist', emptyOutDir: true, sourcemap: false } });
 const { startLocal } = await import(pathToFileURL(join(here, 'dist', 'local.js')).href);
-const board = await startLocal({ schema: join(here, 'schema.sql'), out: join(here, 'out'), port });
+const board = await startLocal({ schema: join(here, 'schema.sql'), out: join(here, 'out'), port, replayDir: process.env.BOX_DEMO_REPLAY_DIR });
 // The stand-in is local: read it until every bounty's details are in, a real board's budget aside.
 let result;
 do { result = await board.refresh(); await board.env.DB.prepare("DELETE FROM meta WHERE key LIKE 'budget_%'").run(); } while (result.state === 'budget-spent' && (await board.env.DB.prepare('SELECT COUNT(*) AS n FROM bounties WHERE details_read_at = 0').first()).n > 0);

@@ -30,7 +30,7 @@ import { applicableAttempts,attemptsOf,baseCommitOf,isOpenStage,listRecords,load
 import { promisedTotal } from './money.js';
 import { boardAddress,boardFact,boardTold } from './board.js';
 import { paymentOf } from './pay.js';
-import { bountyAge,endedNextStep,nextStep,notNext,staleReminderLines,validAt } from './render.js';
+import { appliedRevert,bountyAge,endedNextStep,nextStep,notNext,staleReminderLines,validAt } from './render.js';
 import { sharedEnded,sharedOpen,sharedRead } from './store.js';
 import { APPLY_FOREIGN_FIELDS,CLOSE_FOREIGN_FIELDS,CREATE_FOREIGN_FIELDS,LOOK_FOREIGN_FIELDS,POST_PREVIEW_FOREIGN_FIELDS,STATUS_FOREIGN_FIELDS,TAKE_FOREIGN_FIELDS } from './untrusted.js';
 import type { ForeignField } from './untrusted.js';
@@ -75,6 +75,7 @@ const eventEntry = (event: StageEvent): JsonObject => ({
   destination: event.destination ?? null,
   reason: event.reason ?? null,
   merge: event.merge ?? null,
+  landing: event.landing ?? null,
   unasked: event.unasked === true,
   partial: event.partial ?? null,
   // `paid` facts only — null on every transition event.
@@ -223,6 +224,7 @@ const bountyEntry = (repoRoot: string, record: BountyRecord, next: string | null
     resume: resumeEntry(record),
     waiting: record.waiting === undefined ? null : waitingEntry(record.waiting),
     github: record.github === undefined ? null : githubEntry(record.github, attempts),
+    landingChecks: record.landingChecks?.map(check => ({ ...check })) ?? [],
     allowedBy: record.allowedBy === undefined ? null : {
       decision: record.allowedBy.decision,
       level: record.allowedBy.level,
@@ -256,6 +258,7 @@ const corruptEntry = (file: string): JsonObject => ({
   resume: null,
   waiting: null,
   github: null,
+  landingChecks: [],
   allowedBy: null,
   scanFindings: [],
   solutions: [],
@@ -654,7 +657,7 @@ export function applyDocument(
     conflicts: list(result.conflicts), clean: list(result.clean), commitsTouchingConflicts: list(result.commits), base: result.base ?? null,
     firstMergeNotice: facts.firstMergeNotice, pay: [...facts.payMessage], github: { pending: facts.pending, closedNote: facts.closedNote },
     notOnGitHub: facts.notOnGitHub, resume: resumeEntry(result.record),
-    revert: result.outcome === 'applied' && result.mergeCommit !== null && result.mergeCommit !== undefined ? `git revert -m 1 ${result.mergeCommit}` : null,
+    revert: result.outcome === 'applied' ? appliedRevert(result.record) : null,
     job: facts.job, next: facts.next
   }, lines, notices, APPLY_FOREIGN_FIELDS);
 }

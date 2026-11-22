@@ -200,10 +200,13 @@ export function attemptStatus(id: string, options: { readonly comments?: boolean
   const poster = board?.poster ?? null;
   const solver = attempt.author;
   const same = (a: string | null, b: string | null): boolean => a !== null && b !== null && a.toLowerCase() === b.toLowerCase();
-  const pr = attempt.state === 'merged' ? `merged${attempt.mergedAt === null ? '' : ` on ${day(attempt.mergedAt)}`}`
+  const merged = attempt.state === 'merged';
+  const pr = merged ? `merged${attempt.mergedAt === null ? '' : ` on ${day(attempt.mergedAt)}`}`
     : attempt.state === 'closed' ? 'closed without a merge'
     : attempt.draft ? 'a draft' : 'ready for review';
-  const lines = [`${id} — ${stageWords(taken)} on ${taken.repository}: pull request #${number} is ${pr}, ${attempt.changedFiles} file(s) changed · ${taken.pullRequest!.url}`];
+  const stage = merged && attempt.base === taken.bountyBranch ? 'merged' : stageWords(taken);
+  const files = merged ? '' : `, ${attempt.changedFiles} file(s) changed`;
+  const lines = [`${id} — ${stage} on ${taken.repository}: pull request #${number} is ${pr}${files} · ${taken.pullRequest!.url}`];
   if (attempt.base !== taken.bountyBranch) lines.push(`  ${retargeted(taken, attempt)}; a merge there is not a merge into the bounty`);
   const fromPoster = attempt.notes.filter(note => same(note.author, poster)).length;
   const yours = attempt.notes.filter(note => same(note.author, solver) && !same(note.author, poster)).length;

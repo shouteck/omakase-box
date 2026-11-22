@@ -127,7 +127,7 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
     // ending from before this step stays as it ended.
     const solution = (event.command === 'apply' || event.command === 'merged') && publication.state !== 'closed' ? decidedSolution(record, event) : null;
     if (solution !== null) {
-      const advanced = advanceBountyBranch(root, record, publication, solution, event.merge);
+      const advanced = advanceBountyBranch(root, record, publication, solution, event.merge, event.landing);
       if (advanced.pushed) changed = true;
       if (advanced.notAdvanced !== null) {
         // A retry cannot change these: the head itself is the reason.
@@ -244,10 +244,18 @@ const MARK_WAITS = [1, 2, 3, 4];
 // reports it merged — `gh pr merge`'s order. Every way this stops leaves the
 // branch and is a named reason; only a branch changed by someone else keeps
 // today's refusal.
-function advanceBountyBranch(root: string, record: BountyRecord, publication: GitHubPublication, solution: { commit: string; pr: number; collectedAt?: string }, merge: string | undefined): { notAdvanced: string | null; pushed: boolean; deleted: boolean } {
+function advanceBountyBranch(root: string, record: BountyRecord, publication: GitHubPublication, solution: { commit: string; pr: number; collectedAt?: string }, merge: string | undefined, landing?: string): { notAdvanced: string | null; pushed: boolean; deleted: boolean } {
   let pushed = false;
   const stop = (notAdvanced: string) => ({ notAdvanced, pushed, deleted: false });
   try {
+    if (landing !== undefined) {
+      if (!readPull(root, publication, solution.pr).merged) return stop('not-marked-merged');
+      const tip = remoteBranchSha(root, publication.repository, publication.branch);
+      if (tip === null) return { notAdvanced: null, pushed, deleted: false };
+      if (tip !== publication.commit && tip !== landing) throw branchChanged(publication, tip);
+      remoteGit(root, publication.repository, ['push', `:refs/heads/${publication.branch}`]);
+      return { notAdvanced: null, pushed, deleted: true };
+    }
     if (gitOutcome(root, ['merge-base', '--is-ancestor', publication.commit, solution.commit]).status !== 0) return stop('head-not-descended');
     try { checkSolutionHistory(root, record, publication, solution.commit); }
     catch (error) {
