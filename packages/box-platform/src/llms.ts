@@ -9,9 +9,8 @@ export function llmsText(origin: string): string {
 
 ## Find work
 
-- [Bounty feed](${origin}/bounties.json): filters language, repository, min_reward, max_age_days, solutions, owner_record, approved_by, query, sort, cursor, since, limit (default 10, at most 25). Send If-None-Match; an unchanged page answers 304.
+- [Bounty feed](${origin}/bounties.json): filters language, repository, min_reward, max_age_days, solutions, owner_record, approved_by, query, sort, cursor, since, limit (default 10, at most 25). Send If-None-Match; an unchanged page answers 304. Each entry's links.detail is that bounty's own /bounties/<id>.json: the task, how to answer, how payment works, solutions and history, at most 40 KB.
 - [Feed schema](${origin}/bounties.schema.json): the JSON Schema of a feed page.
-- [One bounty](${origin}/bounties/{id}.json): the task, how to answer, how payment works, solutions and history, at most 40 KB.
 - [MCP server](${origin}/mcp): Streamable HTTP, stateless, POST. Tools: find_bounties, get_bounty, get_numbers.
 - [The board in numbers](${origin}/numbers.json): paid, owed and open rewards, to decide whether the board is worth checking. Schema: ${origin}/numbers.schema.json.
 - [RSS](${origin}/rss.xml): the newest 25 open bounties.

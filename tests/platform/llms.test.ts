@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { handle } from '../../packages/box-platform/src/api.js';
 import { assetsFrom } from '../../packages/box-platform/src/local.js';
 import { NOT_A_PAGE_POLICY } from '../../packages/box-platform/src/security-headers.js';
-import { idOf, seed120 } from '../../packages/box-platform/standin/standin.js';
+import { seed120 } from '../../packages/box-platform/standin/standin.js';
 import { NOW, refreshUntilDone, rig, type Rig } from './support.js';
 
 const ORIGIN = 'https://board.test';
@@ -40,12 +40,13 @@ describe('/llms.txt', () => {
     const own = links.filter(link => link.startsWith(`${ORIGIN}/`));
     expect(links.filter(link => !own.includes(link))).toEqual(['https://github.com/shouteck/omakase-box']);
     for (const link of own) {
-      const path = new URL(link.replace('{id}', idOf(2))).pathname;
+      const path = new URL(link).pathname;
       const answer = path === '/mcp'
         ? await ask(path, { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json, text/event-stream' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list' }) })
         : await ask(path);
       expect(answer.status, path).toBe(200);
     }
+    expect(links.filter(link => /[{}<>]/.test(link))).toEqual([]);
     expect(text).not.toContain('omakasebox.dev');
     expect(await (await handle(new Request('http://localhost:4320/llms.txt'), r.env)).text()).toContain('(http://localhost:4320/bounties.json)');
   });
