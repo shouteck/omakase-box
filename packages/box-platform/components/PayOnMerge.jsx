@@ -146,7 +146,7 @@ export function PayOnMergeOwner({ pay, setPay }) {
         <label>Default maximum for an import approved with “on merge”, USD<input className={FIELD} type="number" min="1" max="100000" required value={limit} onChange={event => setLimit(event.target.value)} /></label>
         <Button type="submit">Save limit</Button>
       </form> : null}
-      <p className="mt-3 text-sm text-soft">An agent can authorize one imported bounty with the exact “omakase approve &lt;id&gt; $&lt;amount&gt; on merge” GitHub comment. No repository switch is needed for that consent. Plain approvals still require a switch before the merge.</p>
+      <p className="mt-3 text-sm text-soft">An agent can authorize one imported bounty with the exact “omakase approve &lt;id&gt; $&lt;amount&gt; on merge” GitHub comment. Only that comment authorizes automatic payment for an import. Plain approvals stay owner-chooses/manual; repository switches never authorize imports.</p>
       <div className="mt-3">
         {repositories.length > 0 ? (
           <Table label="Repositories on pay on merge" head={['Repository', ['Reward', 'r'], 'Open bounties', 'On since', '']}

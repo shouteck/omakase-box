@@ -123,9 +123,14 @@ describe('PF52: approved listed pay on merge', () => {
     expect(await state()).toMatchObject({ state: 'paid' });
     expect((await fact()).pays_on_merge).toBe(true);
   });
-  it('a plain approval charges only when the repository was switched on before the merge', async () => {
+  it('a plain approval never inherits an old repository switch authorization', async () => {
     await card(); await connectedStripe(); await switched(); await approve(''); await settleTwice();
-    expect(stripe.charged()).toHaveLength(1);
+    expect(stripe.charged()).toHaveLength(0);
+    expect(paypal.captures).toHaveLength(0);
+    const bounty = await fact();
+    expect(bounty.pays_on_merge).toBe(false);
+    expect(bounty.pay_on_merge).toMatchObject({ configured: false, will_pay: false });
+    expect(bounty.pay_on_merge.reasons.join(' ')).toContain('repository switch does not authorize imported bounties');
   });
   it.each(['pending', 'before-approval', 'plain-off', 'switch-after', 'two', 'not-landed', 'self', 'access', 'not-ready', 'recorded', 'over-limit', 'changed-reward'])( 'does not charge: %s', async mode => {
     await card(mode === 'over-limit' ? 40 : 50); await connectedStripe(mode !== 'not-ready');

@@ -96,7 +96,7 @@ const CHARGES_PER_RUN = 1; // Workers Free: a charge is five calls to Stripe, an
 /** Only merged, rewarded bounties whose poster's GitHub id has switched this repository on. */
 const APPROVED_AT = `CASE WHEN b.approval IS NULL THEN b.created_at ELSE b.approval_at END`;
 const APPROVED_AMOUNT = `CASE WHEN b.approval IS NULL THEN b.amount ELSE b.approved_amount END`;
-const CONSENT_AT = `CASE WHEN b.source = 'listed' AND b.merge_consent = 1 THEN ${APPROVED_AT} ELSE r.on_at END`;
+const CONSENT_AT = `CASE WHEN b.source = 'listed' THEN CASE WHEN b.merge_consent = 1 THEN ${APPROVED_AT} END ELSE r.on_at END`;
 const REWARD_LIMIT = `CASE WHEN b.source = 'listed' AND b.merge_consent = 1 THEN COALESCE(s.limit_per_bounty, v.limit_per_bounty) ELSE COALESCE(r.limit_per_bounty, s.limit_per_bounty, v.limit_per_bounty) END`;
 const STRIPE_LIMIT = `CASE WHEN b.source = 'listed' AND b.merge_consent = 1 THEN s.limit_per_bounty ELSE COALESCE(r.limit_per_bounty, s.limit_per_bounty) END`;
 const PAYPAL_LIMIT = `CASE WHEN b.source = 'listed' AND b.merge_consent = 1 THEN v.limit_per_bounty ELSE COALESCE(r.limit_per_bounty, v.limit_per_bounty) END`;
@@ -456,7 +456,7 @@ export async function mergePaymentFact(env: Env, id: string, origin: string) {
   const paypalSaved = paypalOn(env) && row.payment_token !== null;
   if (row.approval === 'pending') reasons.push('The import is pending approval.');
   if (!stripeSaved && !paypalSaved) reasons.push('The poster has no saved payment method available on this board. A human can save Stripe or PayPal using the setup links.');
-  if (row.consent_at === null) reasons.push('No pay-on-merge consent: approve with the exact on merge comment, or enable the repository before the merge.');
+  if (row.consent_at === null) reasons.push(row.source === 'listed' ? 'No pay-on-merge consent: approve with the exact on merge comment. A repository switch does not authorize imported bounties.' : 'No pay-on-merge consent: enable the repository before the merge.');
   if (row.source === 'listed' && (row.approval_at === null || row.amount !== row.approved_amount)) reasons.push('The approval time or approved reward is not verified.');
   const { landed, recorded } = await payeeFacts(env, id);
   const pulls = await env.DB.prepare(`SELECT p.author, MAX(COALESCE(s.ready, 0)) AS stripe, MAX(a.payer_id IS NOT NULL) AS paypal
