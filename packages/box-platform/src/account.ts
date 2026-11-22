@@ -617,7 +617,7 @@ async function finishPayPal(request: Request, env: Env, url: URL, viewer: Viewer
   let payer: string | null = null;
   try { payer = await payerFrom(env, code); } catch (error) { if (!(error instanceof PayPalUnavailable)) throw error; }
   if (payer === null) return redirect('/me/?paypal=refused#paypal', [clear]);
-  await env.DB.prepare('INSERT INTO paypal_accounts (github_id, payer_id, at) VALUES (?, ?, ?) ON CONFLICT (github_id) DO UPDATE SET payer_id = excluded.payer_id, at = excluded.at').bind(viewer.github_id, payer, now).run();
+  await env.DB.prepare('INSERT INTO paypal_accounts (github_id, payer_id, at) VALUES (?, ?, ?) ON CONFLICT (github_id) DO UPDATE SET payer_id = excluded.payer_id, at = CASE WHEN paypal_accounts.payer_id = excluded.payer_id THEN paypal_accounts.at ELSE excluded.at END').bind(viewer.github_id, payer, now).run();
   return redirect(cookieOf(request, SETUP_RETURN_COOKIE) === null ? '/me/#paypal' : '/setup/finish/', [clear]);
 }
 

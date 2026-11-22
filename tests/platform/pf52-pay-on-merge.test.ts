@@ -71,6 +71,24 @@ beforeEach(async () => {
 afterEach(async () => { vi.restoreAllMocks(); await stripe.stop(); await paypal.stop(); await r.close(); });
 
 describe('PF52: deployment cutoff and literal merge-time readiness', () => {
+  it.each(['same', 'different', 'disconnected'] as const)('keeps PayPal merge readiness only across a continuous %s account reauthorization', async mode => {
+    await vault(); await approve();
+    const token = await session(7001, SOLVER);
+    if (mode === 'disconnected') {
+      expect((await post('/api/me/paypal/disconnect', {}, token)).status).toBe(200);
+      expect(await r.env.DB.prepare('SELECT at FROM paypal_accounts WHERE github_id = 7001').first()).toBeNull();
+    }
+    const start = await get('/auth/paypal', token);
+    expect(start.status).toBe(302);
+    const oauthState = new URL(start.headers.get('location')!).searchParams.get('state')!;
+    const payer = mode === 'different' ? 'OTHERPAYPAL22' : 'SOLVERPAYPAL1';
+    paypal.logins.set('reauthorize', { payer_id: payer });
+    const back = await handle(new Request(`${ORIGIN}/auth/paypal/callback?code=reauthorize&state=${oauthState}`, { headers: { cookie: `__Host-board_session=${token}; __Host-board_paypal_state=${oauthState}` } }), r.env);
+    expect(back.status).toBe(302);
+    expect(await r.env.DB.prepare('SELECT payer_id, at FROM paypal_accounts WHERE github_id = 7001').first()).toEqual({ payer_id: payer, at: mode === 'same' ? NOW : r.clock.at });
+    await settleTwice(); expect(await state()).toMatchObject({ state: mode === 'same' ? 'paid' : 'solver-not-ready' });
+    expect(paypal.captures).toHaveLength(mode === 'same' ? 1 : 0);
+  });
   it.each(['webhook', 'read'] as const)('ignores a stale ready event after newer disabled evidence from %s', async source => {
     await card(); await connectedStripe(false);
     const event = (ready: boolean, minute: number) => ({ type: 'account.updated', account: 'acct_solver', created: (NOW + minute * MINUTE) / 1000, data: { object: { charges_enabled: ready } } });
