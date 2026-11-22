@@ -325,6 +325,30 @@ describe('MCP, through the SDK client', () => {
     expect(tools[0]!.description).toContain('public GitHub');
   });
 
+  it('advertises resources and prompts and returns empty lists to the SDK client', async () => {
+    expect(client.getServerCapabilities()).toEqual({ tools: {}, resources: {}, prompts: {} });
+    expect(await client.listResources()).toEqual({ resources: [] });
+    expect(await client.listResourceTemplates()).toEqual({ resourceTemplates: [] });
+    expect(await client.listPrompts()).toEqual({ prompts: [] });
+    expect(await client.ping()).toEqual({});
+  });
+
+  it.each(['GET', 'DELETE', 'PUT'])('rejects %s for an SSE client and advertises POST', async method => {
+    const response = await http({ method, headers: { accept: 'text/event-stream' } });
+    expect(response.status).toBe(405);
+    expect(response.headers.get('allow')).toBe('POST');
+  });
+
+  it('accepts the initialized notification without a response body', async () => {
+    const response = await http({
+      method: 'POST',
+      headers: { 'content-type': 'application/json', accept: 'application/json, text/event-stream', 'mcp-protocol-version': '2025-06-18' },
+      body: JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' })
+    });
+    expect(response.status).toBe(202);
+    expect(await response.text()).toBe('');
+  });
+
   it('get_numbers answers exactly what /numbers.json answers, each group with its base', async () => {
     const numbers = await call('get_numbers');
     expect(numbers.isError).toBeFalsy();
@@ -416,7 +440,7 @@ describe('MCP, through the SDK client', () => {
     expect((await post(`[${ping}]`)).status).toBe(400);
     expect((await post(JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }))).status).toBe(202);
     expect((await post(`"${'x'.repeat(70000)}"`)).status).toBe(413);
-    const unknown = await (await post(JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'resources/list' }))).json() as { error: { code: number } };
+    const unknown = await (await post(JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'unknown/method' }))).json() as { error: { code: number } };
     expect(unknown.error.code).toBe(-32601);
     // Only /mcp takes a POST.
     expect((await fetch(`${board.url}/bounties.json`, { method: 'POST', body: '{}' })).status).toBe(405);
