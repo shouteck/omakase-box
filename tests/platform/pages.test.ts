@@ -1582,7 +1582,7 @@ describe('the pages', () => {
         expect(policy).toContain("connect-src 'self'");
         expect(policy).not.toContain('*.');
         await page.getByLabel('Bank account country').selectOption('US');
-        await page.locator('form').evaluate((form, action) => { form.action = action; }, target);
+        await page.locator('form').evaluate((form, action) => { form.setAttribute('action', action); }, target);
         await Promise.all([page.waitForURL(target), page.getByRole('button', { name: 'Continue to Stripe' }).click()]);
         expect(await page.locator('h1').innerText()).toBe('Provider continuation reached');
       }
