@@ -102,7 +102,7 @@ const CONSENT_AT = `CASE WHEN b.source = 'listed' THEN CASE WHEN b.merge_consent
 const STRIPE_LIMIT = `CASE WHEN b.source = 'listed' THEN s.limit_per_bounty ELSE MIN(s.limit_per_bounty, COALESCE(r.limit_per_bounty, s.limit_per_bounty)) END`;
 const PAYPAL_LIMIT = `CASE WHEN b.source = 'listed' THEN v.limit_per_bounty ELSE MIN(v.limit_per_bounty, COALESCE(r.limit_per_bounty, v.limit_per_bounty)) END`;
 const REWARD_LIMIT = `COALESCE(${STRIPE_LIMIT}, ${PAYPAL_LIMIT})`;
-const APPROVED = `(b.source = 'posted' OR (COALESCE(b.approval, '') != 'pending' AND ${APPROVED_AT} IS NOT NULL AND b.amount = ${APPROVED_AMOUNT}))`;
+const APPROVED = `(COALESCE(b.approval, '') != 'pending' AND (b.source = 'posted' OR (${APPROVED_AT} IS NOT NULL AND b.amount = ${APPROVED_AMOUNT})))`;
 const DUE = `SELECT b.id, b.amount, b.poster, b.poster_id, b.source, ${STRIPE_LIMIT} AS stripe_limit, ${PAYPAL_LIMIT} AS paypal_limit, ${CONSENT_AT} AS on_at, s.customer_id, s.payment_method, v.payment_token
   FROM bounties b
   LEFT JOIN pay_repositories r ON r.github_id = b.poster_id AND r.repository = b.repository

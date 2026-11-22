@@ -2,6 +2,7 @@
 // the stalest bounties' details, until the budget ends. Whatever is left waits
 // for the next refresh, which starts from the same stalest-first order.
 import { MINIMUM_REWARD_USD, readFormat } from '../../box-bounty/format.js';
+import { hasPrepareMarker } from '../../box-bounty/issue.js';
 import { readPaymentComments } from './payment-comment.js';
 import { BudgetSpent, type Env, GitHub, GitHubUnavailable, isPublicRepository, TICK_MINUTES } from './github.js';
 import { type Db, getMetas, log, logStatements, metaStatement, purgeRepository, removeBounty, runAll, setMeta, type Statement } from './store.js';
@@ -56,7 +57,15 @@ function readIssue(issue: unknown): Listed | { readonly refused: string; readonl
   return { id: format.value.id, repository: from, issue };
 }
 
-type Held = { id: string; repository: string; issue_number: number };
+type Held = { id: string; repository: string; issue_number: number; source?: string; approval?: string | null; work_commit?: string; amount?: number };
+
+function admittedPrepared(listed: Listed, held: Held | undefined): boolean {
+  const marked = hasPrepareMarker(listed.issue['body'] as string);
+  if (!marked && !(held?.source === 'posted' && held.approval != null)) return true;
+  const format = readFormat(listed.issue['body'] as string);
+  return marked && held?.source === 'posted' && held.approval === 'comment' && !claimedElsewhere(held, listed)
+    && format.kind === 'present' && format.value.workCommit === held.work_commit && format.value.reward.amount === held.amount;
+}
 
 /** The first issue to claim an id keeps it: a copy elsewhere cannot overwrite it. */
 const claimedElsewhere = (held: Held | undefined, listed: Listed): boolean =>
@@ -68,6 +77,9 @@ function issueStatement(db: Db, listed: Listed, now: number): Statement | null {
   const format = readFormat(body);
   if (format.kind !== 'present') return null;
   const value = format.value;
+  if (hasPrepareMarker(body)) return db.prepare(`UPDATE bounties SET title = ?, task = ?, issue_state = ?, closed_at = ?, seen_at = ? WHERE id = ?`)
+    .bind(titleOf(issue['title'] as string, value.id), taskOf(body, format.start), issue['state'] === 'closed' ? 'closed' : 'open',
+      typeof issue['closed_at'] === 'string' ? issue['closed_at'] : null, now, value.id);
   const posterId = (issue['user'] as Record<string, unknown>)['id'];
   // listed_seq: one more than any yet, taken once when the board first lists the bounty (PF22's "new since").
   return db.prepare(`INSERT INTO bounties (id, repository, issue_number, title, task, poster, poster_id, issue_state, closed_at, amount, created_at, work_commit, seen_at, listed_seq)
@@ -91,11 +103,12 @@ const rewardTooLow = (env: Env, listed: Listed): boolean => {
 /** False when the issue may not hold this id, or states no reward: a row already stored for it is removed. */
 async function storeIssue(env: Env, listed: Listed, now: number): Promise<boolean> {
   const db = env.DB;
-  const held = await db.prepare('SELECT id, repository, issue_number FROM bounties WHERE id = ?').bind(listed.id).first<Held>();
+  const held = await db.prepare('SELECT id, repository, issue_number, source, approval, work_commit, amount FROM bounties WHERE id = ?').bind(listed.id).first<Held>();
   if (claimedElsewhere(held ?? undefined, listed)) {
     await log(db, now, 'id-claimed-by-another-issue', listed.issue['html_url'] as string);
     return false;
   }
+  if (!admittedPrepared(listed, held ?? undefined)) return false;
   if (rewardTooLow(env, listed)) {
     await removeBounty(db, listed.id);
     await log(db, now, 'reward-below-minimum', listed.issue['html_url'] as string);
@@ -146,7 +159,7 @@ async function search(env: Env, github: GitHub, now: number): Promise<{ readonly
     const issues = read.filter((one): one is Listed => !('refused' in one));
     const held = new Map<string, Held>();
     if (issues.length > 0) {
-      const { results } = await db.prepare(`SELECT id, repository, issue_number FROM bounties WHERE id IN (${issues.map(() => '?').join()})`).bind(...issues.map(one => one.id)).all<Held>();
+      const { results } = await db.prepare(`SELECT id, repository, issue_number, source, approval, work_commit, amount FROM bounties WHERE id IN (${issues.map(() => '?').join()})`).bind(...issues.map(one => one.id)).all<Held>();
       for (const row of results) held.set(row.id, row);
     }
     const unread = [...new Set(issues.map(one => one.repository))].filter(name => !known.has(name.toLowerCase()));
@@ -163,12 +176,13 @@ async function search(env: Env, github: GitHub, now: number): Promise<{ readonly
       known.set(listed.repository.toLowerCase(), isPublic);
       if (!isPublic) continue;
       if (claimedElsewhere(held.get(listed.id), listed)) { writes.push(...logStatements(db, now, 'id-claimed-by-another-issue', listed.issue['html_url'] as string)); continue; }
+      if (!admittedPrepared(listed, held.get(listed.id))) continue;
       if (rewardTooLow(env, listed)) { await removeBounty(db, listed.id); writes.push(...logStatements(db, now, 'reward-below-minimum', listed.issue['html_url'] as string)); continue; }
       const statement = issueStatement(db, listed, now);
       if (statement === null) continue;
       writes.push(statement);
       // The same id later on this page meets this claim.
-      held.set(listed.id, { id: listed.id, repository: listed.repository, issue_number: listed.issue['number'] as number });
+      if (!held.has(listed.id)) held.set(listed.id, { id: listed.id, repository: listed.repository, issue_number: listed.issue['number'] as number });
     }
     await runAll(db, writes);
     if (items.length < 100) { complete = answer.json['incomplete_results'] !== true; break; }
@@ -462,7 +476,8 @@ export async function lookNow(env: Env, repository: string, number: number, id: 
     if (!await readRepository(env, github, repository, now)) return 'not-public';
     // A bounty the board already holds at this address: its pull requests before the issue is checked again (PF28), so a
     // look at 2 reads stores a new one. The repository was just read as public, and the stored bounty is the hint's own.
-    const held = await env.DB.prepare('SELECT 1 AS yes FROM bounties WHERE id = ? AND repository = ? AND issue_number = ?').bind(id, repository, number).first();
+    const held = await env.DB.prepare('SELECT approval FROM bounties WHERE id = ? AND repository = ? AND issue_number = ?').bind(id, repository, number).first<{ approval: string | null }>();
+    if (held?.approval === 'pending') return 'not-this-bounty';
     if (held !== null) { await readPullRequests(env, github, id, repository); await readFirstSight(env, github, id, repository); }
     const answer = await github.get(`/repos/${repository}/issues/${number}`);
     if (answer.status !== 200) return 'not-this-bounty';
@@ -495,7 +510,7 @@ export async function refresh(env: Env): Promise<RefreshResult> {
   const now = env.now?.() ?? Date.now();
   const initial = await db.prepare(`SELECT 'meta' AS kind, key, value FROM meta WHERE key IN ('search_tried_at', 'search_complete_at')
     UNION ALL SELECT 'expired', id, 'https://github.com/' || repository || '/issues/' || issue_number FROM bounties
-    WHERE source = 'listed' AND approval = 'pending' AND listed_by_id IS NULL AND created_at <= ?`)
+    WHERE approval = 'pending' AND listed_by_id IS NULL AND created_at <= ?`)
     .bind(new Date(now - 14 * 24 * 60 * 60000).toISOString()).all<{ kind: 'meta' | 'expired'; key: string; value: string }>();
   const meta = new Map(initial.results.filter(row => row.kind === 'meta').map(row => [row.key, row.value]));
   for (const row of initial.results.filter(row => row.kind === 'expired')) {
@@ -527,16 +542,16 @@ export async function refresh(env: Env): Promise<RefreshResult> {
     // PF29: a third step, per open attempt: its head's checks. Due when the head was never read, after the stale bound
     // while pending or unread, and while "none" only if the attempt was active in the last hour (CI starting late).
     const recent = new Date(now - RECENT_ACTIVITY_MS).toISOString();
-    const due = await db.prepare(`SELECT id, repository, issue_number, seen_at, issue_state, source, step, at, number, head FROM (
-        SELECT id, repository, issue_number, seen_at, issue_state, source, 'pulls' AS step, details_read_at AS at, NULL AS number, NULL AS head FROM bounties WHERE details_read_at <= ? AND (issue_state = 'open' OR details_read_at <= ?)
+    const due = await db.prepare(`SELECT id, repository, issue_number, seen_at, issue_state, source, approval, step, at, number, head FROM (
+        SELECT id, repository, issue_number, seen_at, issue_state, source, approval, 'pulls' AS step, details_read_at AS at, NULL AS number, NULL AS head FROM bounties WHERE details_read_at <= ? AND (issue_state = 'open' OR details_read_at <= ?)
         UNION ALL
-        SELECT id, repository, issue_number, seen_at, issue_state, source, 'events' AS step, events_read_at AS at, NULL AS number, NULL AS head FROM bounties WHERE events_read_at <= ? AND (issue_state = 'open' OR events_read_at <= ?)
+        SELECT id, repository, issue_number, seen_at, issue_state, source, approval, 'events' AS step, events_read_at AS at, NULL AS number, NULL AS head FROM bounties WHERE events_read_at <= ? AND (issue_state = 'open' OR events_read_at <= ?)
         UNION ALL
-        SELECT b.id, b.repository, b.issue_number, b.seen_at, b.issue_state, b.source, 'checks' AS step, p.checks_read_at AS at, p.number, p.head_sha AS head FROM pull_requests p JOIN bounties b ON b.id = p.bounty_id
+        SELECT b.id, b.repository, b.issue_number, b.seen_at, b.issue_state, b.source, b.approval, 'checks' AS step, p.checks_read_at AS at, p.number, p.head_sha AS head FROM pull_requests p JOIN bounties b ON b.id = p.bounty_id
           WHERE p.state = 'open' AND b.issue_state = 'open' AND p.head_sha IS NOT NULL AND (p.checks_sha IS NULL OR p.checks_sha != p.head_sha
             OR (p.checks_read_at <= ? AND (p.checks_state IN ('pending', 'unread') OR (p.checks_state = 'none' AND p.updated_at >= ?)))))
       ORDER BY at, id, step, number`)
-      .bind(stale, closedStale, stale, closedStale, stale, recent).all<{ id: string; repository: string; issue_number: number; seen_at: number; issue_state: string; source: string; step: 'pulls' | 'events' | 'checks'; at: number; number: number | null; head: string | null }>();
+      .bind(stale, closedStale, stale, closedStale, stale, recent).all<{ id: string; repository: string; issue_number: number; seen_at: number; issue_state: string; source: string; approval: string | null; step: 'pulls' | 'events' | 'checks'; at: number; number: number | null; head: string | null }>();
     const checked = new Map<string, boolean>();
     for (const row of due.results) {
       const spent = github.used;
@@ -545,6 +560,11 @@ export async function refresh(env: Env): Promise<RefreshResult> {
         : db.prepare(`UPDATE bounties SET ${row.step === 'pulls' ? 'details_read_at' : 'events_read_at'} = ? WHERE id = ?`).bind(at, row.id).run();
       await mark(row.issue_state === 'open' ? stale : closedStale);
       try {
+        if (row.source === 'posted' && row.approval === 'pending') {
+          if (row.step === 'pulls') await readApproval(env, github, row.id, row.repository, row.issue_number);
+          await mark(now);
+          continue;
+        }
         // Listed details and landing/payment reads take separate turns within the worker's small request budget.
         if (row.source === 'listed') {
           if (row.step === 'events') {

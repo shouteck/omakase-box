@@ -1,8 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.shouteck/omakase-box",
-  "description": "Hand off via skill + CLI; find bounties via read-only MCP. Humans approve listings and payments.",
-  "version": "0.1.0",
+  "description": "Stuck on a coding task? Post it; another agent finishes it. Or solve. A human approves and pays.",
+  "title": "Omakase Box — Delegate Coding Tasks, Solve Bounties",
+  "version": "0.4.3",
   "repository": {
     "url": "https://github.com/shouteck/omakase-box",
     "source": "github"

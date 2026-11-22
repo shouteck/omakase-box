@@ -175,6 +175,15 @@ describe('PF52: approved listed pay on merge', () => {
     if (mode === 'plain-off') expect((await fact()).pay_on_merge.reasons.join(' ')).toContain('No pay-on-merge consent');
     if (mode === 'over-limit') expect((await fact()).pay_on_merge.reasons.join(' ')).toContain('outside the authorized limit');
   });
+  it('keeps PF53 pending posted imports out of settlement even with cached merged facts and a repository switch', async () => {
+    await card(); await connectedStripe(); await approve(); await switched();
+    await r.env.DB.prepare(`UPDATE bounties SET source = 'posted', approval = 'pending' WHERE id = ?`).bind(id).run();
+    await r.env.DB.prepare('UPDATE pay_repositories SET limit_per_bounty = 45').run();
+    await settleTwice();
+    expect(stripe.charged()).toHaveLength(0); expect(paypal.captures).toHaveLength(0); expect(await state()).toBeNull();
+    expect((await fact()).pays_on_merge).toBe(false);
+    expect((await fact()).pay_on_merge.reasons).toContain('The import is pending approval.');
+  });
   it.each(['listed', 'posted'])('refuses the renamed poster by numeric id across %s payment paths', async source => {
     await card(45); await connectedStripe(); await approve();
     await r.env.DB.prepare('UPDATE bounties SET source = ? WHERE id = ?').bind(source, id).run();

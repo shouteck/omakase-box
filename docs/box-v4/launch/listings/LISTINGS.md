@@ -62,7 +62,7 @@ Owner-only submission steps:
 
 ## Official MCP Registry
 
-Fit: fits — remote-only metadata is supported; GitHub personal namespace authentication matches proposed `io.github.shouteck/omakase-box`. Source: [FORMATS.md §5](FORMATS.md#5-official-mcp-registry). Description limit 100 characters. The draft uses live server version 0.1.0, not the npm version. Registry acceptance and remote behavior beyond initialize/tools/list are unverified.
+Fit: fits — remote-only metadata is supported; GitHub personal namespace authentication matches proposed `io.github.shouteck/omakase-box`. Source: [FORMATS.md §5](FORMATS.md#5-official-mcp-registry). Description limit 100 characters. The server version tracks the release version. Registry acceptance and remote behavior beyond initialize/tools/list are unverified.
 
 Intent: hand-off/cross-list discovery routes to local posting; find paid work routes to bounties to solve.
 

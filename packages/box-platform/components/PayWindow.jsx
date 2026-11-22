@@ -1,8 +1,8 @@
 'use client';
 // The payment window (PF31): one place an owner pays a solver, opened from the bounty page or Your page, at the bounty's
 // own address with #pay. The amount and whom first (Apple's payment sheet), then the ways this person can be paid, one
-// click before by hand. Only by hand has "I've paid": a provider's payment is recorded by the provider's word. Closing
-// records nothing. It reads and calls the same routes the bounty page always used; it decides nothing itself.
+// click before by hand. "I've paid" records a payment made outside the board; a provider records its own payment.
+// Closing records nothing. It reads and calls the same routes the bounty page always used; it decides nothing itself.
 import { useEffect, useRef, useState } from 'react';
 import { LABELS } from './Methods.jsx';
 
@@ -159,17 +159,13 @@ export default function PayWindow({ id, open, onClose, onChange }) {
           </Way>
         ) : null}
         {!oneClick && person.methods.length === 0 ? (
-          <Way label="No way to pay yet">
+          <Way label="No payment method listed">
             <p>{person.login} has not connected an account or listed a way to be paid.</p>
             {person.next ? <p className="text-sm text-soft">{person.next}</p> : null}
           </Way>
         ) : null}
-        {person.methods.length > 0 ? (
-          <>
-            <Wide quiet={oneClick} disabled={busy} onClick={() => recordPaid(person.login)}>I&apos;ve paid ${amount}{oneClick ? ' by hand' : ''}</Wide>
-            <p className="text-sm text-soft -mt-2">Records your word that you paid {person.login}, and closes. ✕ closes without recording.</p>
-          </>
-        ) : null}
+        <Wide quiet={oneClick} disabled={busy} onClick={() => recordPaid(person.login)}>I&apos;ve paid ${amount}{oneClick ? ' by hand' : ''}</Wide>
+        <p className="text-sm text-soft -mt-2">Use this only if you already paid {person.login} outside the board. Recording does not send money.</p>
         {view.payee === null && chosen !== null ? <button type="button" className="text-sm text-left" style={{ color: 'var(--color-accent)' }} onClick={() => setChosen(null)}>← Choose someone else</button> : null}
       </>
     );

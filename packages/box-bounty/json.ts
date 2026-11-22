@@ -23,6 +23,7 @@ import { issueComments,refreshGitHubFormat,refreshGitHubStatus } from './collect
 import { dryMergeOnto } from './git.js';
 import { discoverInstructions,instructionNotices } from './instructions.js';
 import type { LookResult } from './look.js';
+import type { previewTake } from './take.js';
 import { publishLists } from './never-ship.js';
 import { adoptOpenShared } from './adopt.js';
 import { BountyRefused } from './errors.js';
@@ -682,6 +683,11 @@ export function closeDocument(
     id: result.record.id, outcome: result.outcome, stage: result.record.stage, reason: facts.reason, pay: [...facts.pay],
     github: { pending: facts.pending, closedNote: facts.closedNote }, job: facts.job
   }, lines, notices, CLOSE_FOREIGN_FIELDS);
+}
+
+export function takePreviewDocument(facts: ReturnType<typeof previewTake>, notices: readonly string[]): JsonObject {
+  const { lines, ...data } = facts;
+  return commandDocument('take-preview', data, lines, notices, TAKE_FOREIGN_FIELDS);
 }
 
 /** `take`: the attempt started. */

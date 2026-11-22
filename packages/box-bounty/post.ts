@@ -1,3 +1,4 @@
+import { bountyIssueTitle, ISSUE_BODY_MAX, ISSUE_TITLE_MAX, renderBountyIssue } from './issue.js';
 import { type GitHubPlan,PREVIEW_PUBLIC_NAMES,planGitHub,shownOfPlan } from './publish-plan.js';
 import { invalid,type GitHubChoice,digest,isObject,publicRepository,signedAccount,type GitHubPublication,publicationRef,remoteBranchSha,remoteGit,recoverIssue,ensureLabel,api,issueNumber,namesGitHubCause } from './gh.js';
 import { lstatSync,readFileSync } from 'node:fs';
@@ -13,7 +14,7 @@ import { assertMinimumReward, assertPromiseRoom, rewardForPost, withPromiseLock 
 import type { BountyRecord } from './record.js';
 import { repositoryAddress } from './repository.js';
 import { readReward, repoReward } from './settings.js';
-import { boundAmount,formatFor,publicText,renderFormat } from './format.js';
+import { boundAmount,formatFor,publicText } from './format.js';
 import { showPath } from './notice.js';
 import { checkOutbound } from './publish-sink.js';
 import { hitPlace, isTextField, scanFields } from './scan.js';
@@ -23,8 +24,7 @@ import { SCAN_LIMIT_LINE, WITHHELD } from './wording.js';
 // too long (maximum is 65536 characters)" and refuses a title over 256; both
 // count Unicode code points, so a character here is one code point. Checked
 // before anything is pushed, so the size is named instead of a failed create.
-export const ISSUE_BODY_MAX = 65_536;
-export const ISSUE_TITLE_MAX = 256;
+export { ISSUE_BODY_MAX, ISSUE_TITLE_MAX } from './issue.js';
 const characters = (text: string): number => [...text].length;
 const remake = (id: string): string => `omakase-box close ${id} ends this one, then omakase-box create makes it again`;
 
@@ -69,71 +69,18 @@ function bountyContent(record: BountyRecord): NonNullable<BountyRecord['content'
 
 function listingHistory(record: BountyRecord, repository: string, plan: GitHubPlan, reward: number): { branch: string; title: string; body: string } {
   const content = bountyContent(record);
-  // Generated folder notes describe the local snapshot, including work left home.
-  // An authored --note is public by choice; automatic job context stays local.
-  const note = record.noteSource === 'generated' ? null : content.note;
   const branch = `box-bounty/${record.id}`;
-  const title = issueTitle(record);
-  assertTitleFits(record.id, title);
-  // A commit's subject prints quoted (BT43 correction 4): the commits a post
-  // publishes for the first time can include a solver's, merged locally by
-  // apply, under the subject the solver wrote.
-  // PF33 (owner, 10 November 2026): the issue a solver reads, plain and in order: the reward first, a link to the
-  // board, three steps to answer, a hint for agents, then the reward's terms. Every fact the old text carried stays.
-  // A commit's subject prints quoted (BT43 correction 4): the commits a post publishes for the first time can include
-  // a solver's, merged locally by apply, under the subject the solver wrote.
-  const board = boardAddress();
-  const posted = new Date(record.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
-  const short = plan.base.slice(0, 12);
-  const work = plan.pushed.length === 0 ? [] : [publicText(`   It also carries the poster's work in progress, ${plan.pushed.length} commit(s): ${plan.pushed.map(c => `\`${c.sha.slice(0, 12)}\` ${showPath(c.subject)}`).join(', ')}.`)];
-  const body = [
-    `# Bounty: ${publicText(record.title)}`,
-    '',
-    `${reward > 0 ? `$${reward} for the merged solution` : 'No reward'} · ${record.id} · posted ${posted}`,
-    // Markdown joins lines with no blank line between, so each fact below is its own paragraph.
-    ...(board === '' ? [] : ['', `On the board: ${board}/b/${record.id}/`]),
-    '',
-    '## What is wanted',
-    '',
-    publicText(content.task.text.trim()),
-    '',
-    // The issue and the create preview agree on the note (BT14, F4): a generated note stays local, so the section is
-    // there only when the poster wrote one.
-    ...(note !== null ? ['## What was already tried', '', publicText(note.text.trim()), ''] : []),
-    '## How to answer',
-    '',
-    `1. Fork this repository (or push a branch inside it) and start from \`${branch}\` (commit ${short}). It holds the code as the poster left it.`,
-    ...work,
-    `2. Make the change and open a pull request against \`${branch}\`, not against the default branch.`,
-    '3. The poster reads the change and decides. The tool never runs anything you wrote.',
-    '',
-    `Agents: \`omakase-box take ${record.id}\` does steps 1 and 2 (npm i -g omakase-box).`,
-    '',
-    '## Reward',
-    '',
-    ...(reward > 0 ? [
-      `${reward} for the merged solution, paid by the poster directly. Other solutions and parts used by hand earn nothing.`,
-      '',
-      board === '' ? 'To be paid: say how in your pull request description.' : `To be paid: sign in with your GitHub account at ${board}/me/ and set up how you get paid there.`,
-      '',
-      board === '' ? 'Posting an answer doesn\'t guarantee payment.' : 'Posting an answer doesn\'t guarantee payment; the poster\'s payment record is on the board.'
-    ] : ['No reward is stated.']),
-    '',
-    // The licence file's name and package.json's declared licence are read from the branch root, where an applied
-    // solution can have put them: both quoted (BT43 correction 5).
-    plan.licence.file !== null
-      ? publicText(`Licence: ${showPath(plan.licence.file)}${plan.licence.declared !== null ? ` (package.json declares ${showPath(plan.licence.declared)})` : ''}`)
-      : 'Licence: no licence file was found at the branch root.',
-    '',
-    `<!-- box-bounty:${record.id} -->`,
-    ''
-  ].join('\n');
-  const block = renderFormat(formatFor(record, { repository, branch, commit: plan.tip, pushed: plan.pushed }, reward));
-  assertBodyFits(record.id, characters(body + block), characters(content.task.text.trim()));
-  return { branch, title, body: body + block };
+  const issue = renderBountyIssue({
+    format: formatFor(record, { repository, branch, commit: plan.tip, pushed: plan.pushed }, reward),
+    title: record.title, task: content.task.text, note: record.noteSource === 'generated' ? null : content.note?.text ?? null,
+    board: boardAddress(), base: plan.base, pushed: plan.pushed, licence: plan.licence
+  });
+  assertTitleFits(record.id, issue.title);
+  assertBodyFits(record.id, characters(issue.body), characters(content.task.text.trim()));
+  return issue;
 }
 
-const issueTitle = (record: BountyRecord): string => `[box bounty ${record.id}] ${publicText(record.title)}`;
+const issueTitle = (record: BountyRecord): string => bountyIssueTitle(record.id, record.title);
 
 // Before the owner is asked anything: the title exactly, the body by the text
 // the record itself holds. The rendered listing is measured exactly once the

@@ -2,6 +2,7 @@
 // filtered here on the server. No unfiltered record ever leaves this file.
 import { accountResponse } from './account.js';
 import { agentImportResponse } from './agent-import.js';
+import { agentPrepareResponse } from './agent-prepare.js';
 import { attemptOf } from './attempt.js';
 import { applyEvent, payingIds, payOnMergeOf, mergePaymentFact } from './charge.js';
 import { owedNow } from './payment-agent.js';
@@ -73,7 +74,7 @@ async function bounty(env: Env, id: string, now: number, origin: string): Promis
   const paying = (await payingIds(env, [row.id])).has(row.id);
   const settled = listed && (await env.DB.prepare(`SELECT 1 AS yes FROM paid_clicks WHERE bounty_id = ? AND withdrawn = 0 UNION SELECT 1 FROM charges WHERE bounty_id = ? AND state = 'paid'`).bind(row.id, row.id).first()) !== null;
   const state = stateOf(row.issue_state, pulls);
-  const pending = listed && row.approval === 'pending';
+  const pending = row.approval === 'pending';
   return json(200, {
     ...await freshness(env),
     bounty: {
@@ -87,7 +88,7 @@ async function bounty(env: Env, id: string, now: number, origin: string): Promis
       issue_number: row.issue_number,
       issue_author: listed ? row.issue_author ?? null : row.poster,
       listed_by: listed ? row.listed_by ?? null : null,
-      open_to_answers: listed ? row.issue_state === 'open' && !settled && !pending : state === 'open' || state === 'solutions-waiting',
+      open_to_answers: !pending && (listed ? row.issue_state === 'open' && !settled : state === 'open' || state === 'solutions-waiting'),
       closed_at: row.closed_at,
       repository: row.repository,
       language: row.language,
@@ -104,7 +105,7 @@ async function bounty(env: Env, id: string, now: number, origin: string): Promis
       owed_now: pending ? null : await owedNow(env, row.id),
       how_it_pays: { ways: pending ? [] : waysOfBounty(row.amount, waysOn(env), paying) },
       // PF44: whether the issue's owner approved this listing, and how. Pending: nothing is promised and nothing can be paid.
-      ...(listed ? { approval: pending
+      ...(listed || row.approval != null ? { approval: pending
         ? { state: 'pending' as const, approve_with: approvalLine(row.id, row.amount), proof: null }
         : { state: 'approved' as const, approve_with: null, proof: row.approval === 'comment' ? row.approval_proof ?? null : null } } : {}),
       ...await authorTakes(env, row.id),
@@ -157,6 +158,7 @@ async function route(request: Request, env: Env): Promise<Response> {
   }
   const now = env.now?.() ?? Date.now();
   if (url.pathname === '/mcp') return mcpResponse(request, env, now);
+  if (url.pathname === '/api/agents/prepare' && request.method === 'POST') return agentPrepareResponse(request, env, now);
   if (url.pathname === '/api/agents/import' && request.method === 'POST') return agentImportResponse(request, env, now);
   const account = await accountResponse(request, env, url, now);
   if (account !== null) return account;
