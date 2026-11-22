@@ -65,6 +65,7 @@ async function record(events: Record<string, unknown>[]): Promise<void> {
 beforeEach(async () => {
   // The token's budget: one tick reads every seeded bounty, so a new chain event lands at once.
   r = await rig('standin-read');
+  r.standin.accountIds.set(OWNER.login, OWNER.id);
   seedStates(r.standin, NOW);
   await refreshUntilDone(r);
 });
