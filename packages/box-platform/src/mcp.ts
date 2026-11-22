@@ -109,7 +109,7 @@ export async function mcpResponse(request: Request, env: Env, now: number): Prom
     return result({
       protocolVersion: typeof asked === 'string' && VERSIONS.includes(asked) ? asked : VERSIONS[0],
       capabilities: { tools: {}, resources: {}, prompts: {} },
-      serverInfo: { name: 'open-bounty-board', title: 'Open bounty board', version: '0.4.0' },
+      serverInfo: { name: 'open-bounty-board', title: 'Open bounty board', version: '0.4.1' },
       instructions: INSTRUCTIONS
     });
   }
