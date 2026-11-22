@@ -844,6 +844,7 @@ describe('PF52: agent pay comments', () => {
     expect(await (await get(`/api/b/${id}/payment`, successor)).json()).toMatchObject({ role: 'other', paypal_action_url: null });
     const renamed = await session(OWNER.github_id, 'owner-renamed');
     expect(await (await get(`/api/b/${id}/payment`, renamed)).json()).toMatchObject({ role: 'owner', paypal_action_url: url });
+    await session();
     expect((await (await get(`/api/b/${id}/payment`)).json() as any).paypal_action_url).toBeNull();
     expect(await (await post(`/api/b/${id}/pay-paypal`, { to: SOLVER }, owner)).json()).toEqual({ url });
     expect(paypal.orders).toHaveLength(1);
