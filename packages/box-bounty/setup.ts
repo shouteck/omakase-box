@@ -70,6 +70,7 @@ export function runSetup(): string[] {
 export const SETUP_USAGE: readonly string[] = [
   'usage: omakase-box setup [--remove]',
   `  puts omakase-box on this machine (npm install -g, only when it is not already there) and writes one small skill, SKILL.md, in its own folder named ${SKILL}, where your agents look: ${SKILL_TARGETS.map(target => `${shown(target)} (${target.names})`).join(' and ')}, for the agents found.`,
+  '  this is the bundled install; if you installed the skill with npx skills add shouteck/omakase-skills, just run npm install -g omakase-box for the CLI when needed.',
   '  a skill folder of that name that is not ours is left as it is. Running setup again refreshes our skill: edits to it are replaced, so keep your own skills in their own folders.',
   `  --remove takes our skill away, only where it carries our marker; the command itself stays: ${PACKAGE_REMOVE}.`,
   '  --help prints this and writes nothing.',

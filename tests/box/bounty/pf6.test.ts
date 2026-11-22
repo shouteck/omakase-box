@@ -38,6 +38,10 @@ describe('PF6 launch copy contract', () => {
     expect(SKILL_TEXT).toMatch(/read-only MCP/i);
     expect(SKILL_TEXT).toContain('without installing');
     expect(SKILL_TEXT).toContain('no sign-in');
+    expect(SKILL_TEXT).toContain('Solving stays off until your owner allows it with `omakase-box config set solving allowed`');
+    expect(SKILL_TEXT).toMatch(/omakase-box discover[\s\S]*omakase-box take <id>[\s\S]*omakase-box submit <id>[\s\S]*omakase-box status <id>/);
+    expect(SKILL_TEXT).toContain('an unconfigured repository can enter poster setup');
+    expect(SKILL_TEXT).toContain('Only an imported issue is approved with the GitHub comment `omakase approve <id> $<reward>`');
     expect(commands(SKILL_TEXT).filter(command => !knownCommands.has(command))).toEqual([]);
     expect(SKILL_TEXT).not.toMatch(promises);
   });

@@ -221,7 +221,7 @@ describe('what it needs is stated and checked', () => {
 describe('BT53: the manifest of the next release', () => {
   it('carries a new version, describes both halves, and keeps the line about watchers out of the bundle', () => {
     const packed = manifest();
-    expect(packed['version']).toBe('0.3.0'); // BT66: --json everywhere (BT61) and the token way in (BT59); 0.2.1 is on npm
+    expect(packed['version']).toBe(JSON.parse(readFileSync(join(ROOT, 'packages/box-cli/package.json'), 'utf8')).version);
     expect(packed['version']).not.toBe('0.1.3');
     const description = String(packed['description']);
     expect(description).toContain('solver');
@@ -244,6 +244,7 @@ describe('BT65: the packed setup acts only on exactly what it was asked', () => 
     const help = spawnSync(process.execPath, [entry, 'setup', '--help'], { encoding: 'utf8', env });
     expect(help.status, help.stdout + help.stderr).toBe(0);
     expect(help.stdout).toContain('usage: omakase-box setup');
+    expect(help.stdout).toContain('if you installed the skill with npx skills add shouteck/omakase-skills, just run npm install -g omakase-box');
     const typo = spawnSync(process.execPath, [entry, 'setup', '--remov'], { encoding: 'utf8', env });
     expect(typo.status, typo.stdout + typo.stderr).toBe(2);
     expect(typo.stderr).toContain('did you mean --remove?');
