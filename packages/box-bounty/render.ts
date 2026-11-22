@@ -240,8 +240,13 @@ export const nextStep = (record: BountyRecord): string => {
 // The one `next:` an ended bounty prints — the job to go back to, the
 // revert when its merge landed, and the ways to look again or start fresh.
 // Shared by the text status and the status --json document (BT19).
-export const endedNextStep = (record: BountyRecord): string =>
-  `${record.adopted !== undefined ? 'the saved job stayed on the machine that posted it' : 'continue the saved job'}${record.stage === 'applied' ? `; to reverse the merge: git revert -m 1 ${record.events.find(event => event.stage === 'applied')?.merge ?? '<merge>'}` : ''}; inspect: omakase-box status ${record.id} --full; or create another with omakase-box create --task <file> --why "<one line>"`;
+export const endedNextStep = (record: BountyRecord): string => {
+  const applied = record.events.find(event => event.stage === 'applied');
+  const rollback = applied?.landing !== undefined
+    ? '; rollback range unknown for this rewritten landing; inspect the landed commits before choosing what to revert'
+    : `; to reverse the merge: git revert -m 1 ${applied?.merge ?? '<merge>'}`;
+  return `${record.adopted !== undefined ? 'the saved job stayed on the machine that posted it' : 'continue the saved job'}${record.stage === 'applied' ? rollback : ''}; inspect: omakase-box status ${record.id} --full; or create another with omakase-box create --task <file> --why "<one line>"`;
+};
 
 // History events record the command that drove them, and records written
 // while older commands existed keep those names on disk — history is never
@@ -425,6 +430,11 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
     for (const entry of open) {
       const record = entry.record!;
       lines.push(`  ${record.id}  ${record.stage}  "${record.title}"${record.partOf !== undefined ? `  (part of: ${record.partOf})` : ''}  — ${ageClause(record)}`);
+      for (const check of (record.landingChecks ?? []).filter(check => check.state !== 'waiting')) lines.push(check.state === 'not-merged'
+        ? `      landing not recognised: GitHub does not mark #${check.pr} merged; omakase-box close ${record.id} ends it without pay`
+        : check.state === 'not-landed'
+          ? `      landing not recognised: #${check.pr} merge facts do not match this bounty or the landing is not on ${record.resume?.kind === 'recorded' ? record.resume.branch : 'the creating branch'} yet; next: pull the default branch, then run omakase-box status ${record.id} again`
+          : `      landing not recognised: merge facts for #${check.pr} could not be read; next: omakase-box status ${record.id} retries the read`);
       const attempts = attemptsOf(record);
       const unseen = attempts.filter(attempt => attempt.seenAt === undefined).length;
       const pays = (boundAmount(record) ?? 0) > 0;
