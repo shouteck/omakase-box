@@ -407,7 +407,7 @@ async function readApproval(env: Env, github: GitHub, id: string, repository: st
     const login = comment['user']['login'];
     const userId = comment['user']['id'];
     const body = comment['body'].trim().toLowerCase();
-    const via = body === `${line} on merge via stripe` ? 'stripe' : body === `${line} on merge via paypal` ? 'paypal' : null;
+    const via: 'stripe' | 'paypal' | null = body === `${line} on merge via stripe` ? 'stripe' : body === `${line} on merge via paypal` ? 'paypal' : null;
     const onMerge = body === `${line} on merge` || via !== null;
     if (typeof login !== 'string' || !LOGIN.test(login) || !Number.isSafeInteger(userId) || (body !== line && !onMerge)) continue;
     if (!Number.isFinite(Date.parse(comment['created_at']))) continue;

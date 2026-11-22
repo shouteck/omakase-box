@@ -237,7 +237,7 @@ describe('PF52: direct listing consent', () => {
     expect(await listIssue(r.env, OWNER, `https://github.com/${REPO}/issues/12`, 45, NOW)).toEqual({ id });
     await r.env.DB.prepare("UPDATE meta SET value = ? WHERE key = 'pf52_deployed_at'").bind(at(2)).run();
     if (rail === 'stripe') { await card(); await connectedStripe(); } else await vault();
-    issue.pulls[0]!.merged_at = at(mergedAt);
+    issue.pulls![0]!.merged_at = at(mergedAt);
     issue.comments = [{ login: OWNER.login, association: 'OWNER', body: `omakase approve ${id} $45 on merge`, created_at: at(1) }];
     r.clock.at += 20 * MINUTE; await refreshUntilDone(r); await settleCharges(r.env);
     const approval = () => r.env.DB.prepare('SELECT approval, approval_at, merge_consent, merge_rail, listed_seq FROM bounties WHERE id = ?').bind(id).first<any>();
