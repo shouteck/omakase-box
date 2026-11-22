@@ -248,6 +248,34 @@ describe('the pages', () => {
     await close();
   });
 
+  it('an owner can record an off-board payment from Your page when the solver has no listed or connected way to be paid', async () => {
+    board.standin.signInAs = { id: 7100, login: 'example-mara' };
+    const { page, close } = await fresh();
+    try {
+      await visit(page, '/me/');
+      await page.click('[data-primary]');
+      await page.waitForSelector('[role=tablist]');
+      await page.click(`[data-pay-row="${STATE_IDS.owed}"]:visible`);
+      const dialog = page.getByRole('dialog', { name: 'Pay example-quill' });
+      await expect.poll(() => dialog.innerText()).toContain('has not connected an account or listed a way to be paid');
+      expect(await dialog.locator('[data-way]').count()).toBe(0);
+      expect(await dialog.getByRole('button', { name: /with (Stripe|PayPal)/ }).count()).toBe(0);
+
+      const [recorded] = await Promise.all([
+        page.waitForResponse(response => response.request().method() === 'POST' && response.url() === `${board.url}/api/b/${STATE_IDS.owed}/paid`),
+        dialog.getByRole('button', { name: "I've paid $45", exact: true }).click({ timeout: 2000 })
+      ]);
+      expect(recorded.status()).toBe(200);
+      await expect.poll(() => dialog.innerText()).toContain('Recorded: you paid example-quill $45');
+      await dialog.getByRole('button', { name: 'Done' }).click();
+      await page.getByRole('tab', { name: /^Paid/ }).click();
+      await expect.poll(() => page.getByRole('link', { name: 'Duplicate rows after a retry' }).isVisible()).toBe(true);
+    } finally {
+      await close();
+      await board.env.DB.prepare('DELETE FROM paid_clicks WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
+    }
+  });
+
   it('a solver signs in and lists a method in two steps, an owner-only one reaches only the owner it is owed by, and a page never holds it signed out', async () => {
     const secret = 'browser-sentinel@example.com';
     const standin = board.standin;
