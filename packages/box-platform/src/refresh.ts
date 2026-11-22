@@ -389,7 +389,7 @@ async function readListedIssue(env: Env, github: GitHub, id: string, repository:
  * so nobody signs in to the board. The comment's address is kept as the proof, and its author becomes the poster.
  */
 async function readApproval(env: Env, github: GitHub, id: string, repository: string, number: number): Promise<void> {
-  const row = await env.DB.prepare(`SELECT amount, poster_id, listed_by_id, created_at, approval FROM bounties WHERE id = ? AND (approval = 'pending' OR (source = 'listed' AND approval IS NULL))`).bind(id).first<{ amount: number; poster_id: number | null; listed_by_id: number | null; created_at: string; approval: string | null }>();
+  const row = await env.DB.prepare(`SELECT amount, poster_id, listed_by_id, created_at, approval FROM bounties WHERE id = ? AND merge_consent = 0 AND (approval = 'pending' OR source = 'listed' OR approval = 'comment')`).bind(id).first<{ amount: number; poster_id: number | null; listed_by_id: number | null; created_at: string; approval: string | null }>();
   if (row === null) return;
   const line = approvalLine(id, row.amount);
   const cutoff = await env.DB.prepare("SELECT value FROM meta WHERE key = 'pf52_deployed_at'").first<{ value: string }>();
@@ -401,6 +401,7 @@ async function readApproval(env: Env, github: GitHub, id: string, repository: st
     comments.push(...answer.json as unknown[]);
     if (answer.json.length < 100) break;
   }
+  let chosen: { proof: string; login: string; userId: number; at: string; consent: boolean; via: 'stripe' | 'paypal' | null } | null = null;
   for (const comment of comments) {
     if (!record(comment) || !record(comment['user']) || typeof comment['body'] !== 'string' || typeof comment['html_url'] !== 'string' || typeof comment['created_at'] !== 'string') continue;
     const login = comment['user']['login'];
@@ -412,12 +413,15 @@ async function readApproval(env: Env, github: GitHub, id: string, repository: st
     if (!Number.isFinite(Date.parse(comment['created_at']))) continue;
     if (Date.parse(comment['created_at']) < Date.parse(row.created_at)) continue;
     const association = typeof comment['author_association'] === 'string' ? comment['author_association'] : '';
-    if (row.approval === null ? userId !== row.poster_id || !onMerge : row.listed_by_id === null ? !APPROVERS.has(association) : userId !== row.poster_id && !APPROVERS.has(association)) continue;
+    if (row.approval !== 'pending' ? userId !== row.poster_id || !onMerge : row.listed_by_id === null ? !APPROVERS.has(association) : userId !== row.poster_id && !APPROVERS.has(association)) continue;
     const consent = onMerge && cutoff !== null && Date.parse(comment['created_at']) >= Date.parse(cutoff.value);
-    await env.DB.prepare(`UPDATE bounties SET approval = 'comment', approval_proof = ?, poster = ?, poster_id = ?, approval_at = ?, approved_amount = amount, merge_consent = ?, merge_rail = ?, listed_seq = CASE WHEN approval = 'pending' THEN (SELECT COALESCE(MAX(listed_seq), 0) + 1 FROM bounties) ELSE listed_seq END WHERE id = ? AND approval IS ?`)
-      .bind(comment['html_url'] as string, login, userId as number, comment['created_at'], consent ? 1 : 0, consent ? via : null, id, row.approval).run();
-    return;
+    const candidate = { proof: comment['html_url'], login, userId: userId as number, at: comment['created_at'], consent, via };
+    if (row.approval === 'pending' || consent) { chosen = candidate; break; }
+    if (row.approval === null && chosen === null) chosen = candidate;
   }
+  if (chosen === null) return;
+  await env.DB.prepare(`UPDATE bounties SET approval = 'comment', approval_proof = ?, poster = ?, poster_id = ?, approval_at = ?, approved_amount = amount, merge_consent = ?, merge_rail = ?, listed_seq = CASE WHEN approval = 'pending' THEN (SELECT COALESCE(MAX(listed_seq), 0) + 1 FROM bounties) ELSE listed_seq END WHERE id = ? AND approval IS ? AND merge_consent = 0`)
+    .bind(chosen.proof, chosen.login, chosen.userId, chosen.at, chosen.consent ? 1 : 0, chosen.consent ? chosen.via : null, id, row.approval).run();
 }
 
 /**
@@ -545,16 +549,16 @@ export async function refresh(env: Env): Promise<RefreshResult> {
     // PF29: a third step, per open attempt: its head's checks. Due when the head was never read, after the stale bound
     // while pending or unread, and while "none" only if the attempt was active in the last hour (CI starting late).
     const recent = new Date(now - RECENT_ACTIVITY_MS).toISOString();
-    const due = await db.prepare(`SELECT id, repository, issue_number, seen_at, issue_state, source, approval, step, at, number, head FROM (
-        SELECT id, repository, issue_number, seen_at, issue_state, source, approval, 'pulls' AS step, details_read_at AS at, NULL AS number, NULL AS head FROM bounties WHERE details_read_at <= ? AND (issue_state = 'open' OR details_read_at <= ?)
+    const due = await db.prepare(`SELECT id, repository, issue_number, seen_at, issue_state, source, approval, merge_consent, step, at, number, head FROM (
+        SELECT id, repository, issue_number, seen_at, issue_state, source, approval, merge_consent, 'pulls' AS step, details_read_at AS at, NULL AS number, NULL AS head FROM bounties WHERE details_read_at <= ? AND (issue_state = 'open' OR details_read_at <= ?)
         UNION ALL
-        SELECT id, repository, issue_number, seen_at, issue_state, source, approval, 'events' AS step, events_read_at AS at, NULL AS number, NULL AS head FROM bounties WHERE events_read_at <= ? AND (issue_state = 'open' OR events_read_at <= ?)
+        SELECT id, repository, issue_number, seen_at, issue_state, source, approval, merge_consent, 'events' AS step, events_read_at AS at, NULL AS number, NULL AS head FROM bounties WHERE events_read_at <= ? AND (issue_state = 'open' OR events_read_at <= ?)
         UNION ALL
-        SELECT b.id, b.repository, b.issue_number, b.seen_at, b.issue_state, b.source, b.approval, 'checks' AS step, p.checks_read_at AS at, p.number, p.head_sha AS head FROM pull_requests p JOIN bounties b ON b.id = p.bounty_id
+        SELECT b.id, b.repository, b.issue_number, b.seen_at, b.issue_state, b.source, b.approval, b.merge_consent, 'checks' AS step, p.checks_read_at AS at, p.number, p.head_sha AS head FROM pull_requests p JOIN bounties b ON b.id = p.bounty_id
           WHERE p.state = 'open' AND b.issue_state = 'open' AND p.head_sha IS NOT NULL AND (p.checks_sha IS NULL OR p.checks_sha != p.head_sha
             OR (p.checks_read_at <= ? AND (p.checks_state IN ('pending', 'unread') OR (p.checks_state = 'none' AND p.updated_at >= ?)))))
       ORDER BY at, id, step, number`)
-      .bind(stale, closedStale, stale, closedStale, stale, recent).all<{ id: string; repository: string; issue_number: number; seen_at: number; issue_state: string; source: string; approval: string | null; step: 'pulls' | 'events' | 'checks'; at: number; number: number | null; head: string | null }>();
+      .bind(stale, closedStale, stale, closedStale, stale, recent).all<{ id: string; repository: string; issue_number: number; seen_at: number; issue_state: string; source: string; approval: string | null; merge_consent: number; step: 'pulls' | 'events' | 'checks'; at: number; number: number | null; head: string | null }>();
     const checked = new Map<string, boolean>();
     for (const row of due.results) {
       const spent = github.used;
@@ -575,7 +579,7 @@ export async function refresh(env: Env): Promise<RefreshResult> {
             const key = `listed_turn_${row.id}`;
             const turn = Number((await getMetas(db, [key])).get(key) ?? 0);
             listedTurn = { key, value: turn };
-            await setMeta(db, key, String((turn + 1) % (row.source === 'listed' && row.approval === null ? 4 : 3)));
+            await setMeta(db, key, String((turn + 1) % (row.merge_consent === 0 ? 4 : 3)));
             if (turn === 0) {
               if (row.source === 'listed') {
                 const linked = new Set((await db.prepare('SELECT number FROM pull_requests WHERE bounty_id = ?').bind(row.id).all<{ number: number }>()).results.map(p => p.number));
