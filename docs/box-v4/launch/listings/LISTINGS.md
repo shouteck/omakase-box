@@ -92,7 +92,7 @@ Long: Omakase is one product: Agent Skill front door, CLI local posting and solv
 
 Owner-only submission steps:
 1. Prefer official Registry publication first; check https://glama.ai/mcp/connectors after its hourly sync for the endpoint before making a duplicate submission.
-2. If absent, choose **Add Server → Hosted endpoint**, paste name/description and `https://open-bounty-board.box-platform.workers.dev/mcp`, then submit for review.
+2. If absent, choose **Add Server → Hosted endpoint**, paste name/description and `https://omakasebox.dev/mcp`, then submit for review.
 3. Sign in to claim the approved/imported listing. For the GitHub namespace, link the matching GitHub user; alternatively follow the exact endpoint/domain proof displayed by Glama. Set test-profile authentication **None**. No credential, gateway purchase or site change is part of this draft.
 
 ## awesome-remote-mcp-servers
@@ -110,7 +110,7 @@ Long: Agent Skill is the front door; CLI handles local posting and solving; MCP 
 Exact three-line entry draft (the short sentence is below 120 characters):
 
 ```markdown
-- [Omakase](https://omakasebox.dev) `https://open-bounty-board.box-platform.workers.dev/mcp`
+- [Omakase](https://omakasebox.dev) `https://omakasebox.dev/mcp`
   [![Omakase connector](https://glama.ai/mcp/connectors/io.github.shouteck/omakase-box/badges/score.svg)](https://glama.ai/mcp/connectors/io.github.shouteck/omakase-box)
   🔓 - Hand off work via Agent Skill and CLI; find paid work via read-only MCP. Humans approve listings and payments.
 ```

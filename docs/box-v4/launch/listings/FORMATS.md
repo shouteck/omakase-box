@@ -128,7 +128,7 @@ Sources fetched (HTTP 200):
 
 ## 7. Our endpoint — observed, not inferred from source
 
-URL: https://open-bounty-board.box-platform.workers.dev/mcp
+URL: https://omakasebox.dev/mcp
 
 At **2026-11-19 15:12:20 UTC**, curl POSTed two JSON-RPC requests with `Content-Type: application/json`, `Accept: application/json, text/event-stream`, **no auth**:
 
