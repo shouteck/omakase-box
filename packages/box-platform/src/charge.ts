@@ -8,7 +8,7 @@ import { landedWhere, notCounted, type MergedPull } from './payments.js';
 import { errorCode, errorWords, isCardError, stripe, StripeUnavailable, stripeOn } from './stripe.js';
 import { paypalOn, PayPalUnavailable } from './paypal.js';
 import { chargeVault } from './paypal-pay.js';
-import { setupLinks } from './payment-setup.js';
+import { payComment, setupLinks } from './payment-setup.js';
 
 /** Nothing can change these by trying again. Everything else is looked at again when its facts change. */
 const SETTLED: readonly ChargeState[] = ['paid', 'refunded', 'disputed'];
@@ -170,19 +170,68 @@ export async function settleCharges(env: Env): Promise<number> {
       catch (error) { if (!(error instanceof PayPalUnavailable)) throw error; }
       continue;
     }
-    // The claim first: whoever gets the row is the only one who calls Stripe.
-    const claim = await db.prepare(`INSERT INTO charges (bounty_id, state, pull_number, solver, account_id, amount, payment_method, at) VALUES (?, 'charging', ?, ?, ?, ?, ?, ?)
-      ON CONFLICT (bounty_id) DO UPDATE SET state = 'charging', provider = NULL, pull_number = excluded.pull_number, solver = excluded.solver, account_id = excluded.account_id, amount = excluded.amount, payment_method = excluded.payment_method, at = excluded.at
-      WHERE charges.at = ? RETURNING bounty_id`).bind(row.id, decision.pull.number, decision.pull.author, decision.account, row.amount, decision.card.payment_method, now, held?.at ?? -1).first();
-    if (claim === null) continue;
-    try {
-      const result = await attempt(env, row.id, row.amount, decision);
-      await saveCharge(env, row.id, result.state, decision.pull, decision.account, decision.card.payment_method, result.payment_intent, row.amount, now);
-    } catch (error) {
-      if (!(error instanceof StripeUnavailable)) throw error; // Stays `charging`: the next look finds what happened, under the same key.
-    }
+    await chargeStripe(env, row.id, row.amount, decision, held?.at ?? null, now);
   }
   return due.length;
+}
+
+export async function claimCharge(env: Env, id: string, amount: number, pull: Merged, account: string, method: string, provider: 'paypal' | null, heldAt: number | null, now: number): Promise<boolean> {
+  const claim = await env.DB.prepare(`INSERT INTO charges (bounty_id, state, pull_number, solver, account_id, amount, payment_method, provider, at)
+    SELECT ?, 'charging', ?, ?, ?, ?, ?, ?, ? WHERE NOT EXISTS
+      (SELECT 1 FROM events WHERE bounty_id = ? AND type = 'paid' AND withdrawn = 0 UNION SELECT 1 FROM paid_clicks WHERE bounty_id = ? AND withdrawn = 0)
+    ON CONFLICT (bounty_id) DO UPDATE SET state = 'charging', provider = excluded.provider, pull_number = excluded.pull_number, solver = excluded.solver,
+      account_id = excluded.account_id, amount = excluded.amount, payment_method = excluded.payment_method, at = excluded.at
+    WHERE charges.at = ? AND charges.state NOT IN ('paid', 'refunded', 'disputed', 'owner-paying', 'owner-must-authenticate')
+      AND (charges.state != 'charging' OR (charges.at <= ? AND charges.payment_method IS excluded.payment_method AND charges.provider IS excluded.provider))
+    RETURNING bounty_id`).bind(id, pull.number, pull.author, account, amount, method, provider, now, id, id, heldAt ?? -1, now - STALE_CLAIM_MS).first();
+  return claim !== null;
+}
+
+async function chargeStripe(env: Env, id: string, amount: number, decision: Extract<Decision, { act: 'charge' }>, heldAt: number | null, now: number): Promise<void> {
+  if (!await claimCharge(env, id, amount, decision.pull, decision.account, decision.card.payment_method, null, heldAt, now)) return;
+  try {
+    const result = await attempt(env, id, amount, decision);
+    await saveCharge(env, id, result.state, decision.pull, decision.account, decision.card.payment_method, result.payment_intent, amount, now);
+  } catch (error) {
+    if (!(error instanceof StripeUnavailable)) throw error;
+  }
+}
+
+export async function paySaved(env: Env, id: string, posterId: number, amount: number, login: string): Promise<void> {
+  const db = env.DB;
+  const bounty = await db.prepare(`SELECT b.poster, s.customer_id, s.payment_method, s.limit_per_bounty AS stripe_limit,
+    v.payment_token, v.limit_per_bounty AS paypal_limit FROM bounties b
+    LEFT JOIN pay_settings s ON s.github_id = b.poster_id LEFT JOIN paypal_vault v ON v.github_id = b.poster_id
+    WHERE b.id = ? AND b.poster_id = ? AND b.amount = ? AND b.amount > 0 AND COALESCE(b.approval, '') != 'pending'`)
+    .bind(id, posterId, amount).first<{ poster: string; customer_id: string | null; payment_method: string | null; stripe_limit: number | null; payment_token: string | null; paypal_limit: number | null }>();
+  if (bounty === null) return;
+  const held = await db.prepare('SELECT state, payment_method, at FROM charges WHERE bounty_id = ?').bind(id).first<ChargeRow>();
+  if (held !== null && [...SETTLED, 'charging', 'owner-paying', 'owner-must-authenticate'].includes(held.state)) return;
+  if (await db.prepare(`SELECT 1 FROM events WHERE bounty_id = ? AND type = 'paid' AND withdrawn = 0 UNION SELECT 1 FROM paid_clicks WHERE bounty_id = ? AND withdrawn = 0`).bind(id, id).first() !== null) return;
+  const pull = await db.prepare(`SELECT number, author, author_id, merged_at, association, on_default, landing_sha FROM pull_requests
+    WHERE bounty_id = ? AND author = ? COLLATE NOCASE ORDER BY number DESC LIMIT 1`).bind(id, login).first<Merged>();
+  if (pull === null) return;
+  const now = env.now?.() ?? Date.now();
+  const refuse = async (state: ChargeState) => {
+    await db.prepare(`INSERT INTO charges (bounty_id, state, pull_number, solver, amount, at) VALUES (?, ?, ?, ?, ?, ?)
+      ON CONFLICT (bounty_id) DO UPDATE SET state = excluded.state, pull_number = excluded.pull_number, solver = excluded.solver,
+        amount = excluded.amount, provider = NULL, payment_method = NULL, payment_intent = NULL, account_id = NULL, at = excluded.at
+      WHERE charges.at = ? AND charges.state NOT IN ('paid', 'refunded', 'disputed', 'charging', 'owner-paying', 'owner-must-authenticate')`)
+      .bind(id, state, pull.number, pull.author, amount, now, held?.at ?? -1).run();
+  };
+  if (notCounted(pull, bounty.poster) !== null) { await refuse('not-counted'); return; }
+  const solver = pull.author_id === null ? null : await db.prepare('SELECT account_id, ready FROM stripe_accounts WHERE github_id = ?').bind(pull.author_id).first<{ account_id: string; ready: number }>();
+  const paypal = pull.author_id === null ? null : await db.prepare('SELECT payer_id FROM paypal_accounts WHERE github_id = ?').bind(pull.author_id).first<{ payer_id: string }>();
+  const useStripe = stripeOn(env) && bounty.payment_method !== null && solver?.ready === 1;
+  const usePayPal = !useStripe && paypalOn(env) && bounty.payment_token !== null && paypal !== null;
+  if (!useStripe && !usePayPal) { await refuse(bounty.payment_method === null && bounty.payment_token === null ? 'looked' : 'solver-not-ready'); return; }
+  const limit = usePayPal ? bounty.paypal_limit : bounty.stripe_limit;
+  if (limit === null || amount > limit) { await refuse('refused-over-limit'); return; }
+  if (usePayPal) {
+    try { await chargeVault(env, id, amount, pull, paypal!.payer_id, bounty.payment_token!, held?.at ?? null, now); }
+    catch (error) { if (!(error instanceof PayPalUnavailable)) throw error; }
+  } else await chargeStripe(env, id, amount, { act: 'charge', pull, account: solver!.account_id,
+    card: { payment_method: bounty.payment_method!, customer: bounty.customer_id!, limit } }, held?.at ?? null, now);
 }
 
 async function saveCharge(env: Env, id: string, state: ChargeState, pull: Merged | null, account: string | null, card: string | null, intent: string | null, amount: number, now: number): Promise<void> {
@@ -429,6 +478,7 @@ export async function mergePaymentFact(env: Env, id: string, origin: string) {
   if (charge !== null && charge.state !== 'solver-not-ready' && charge.state !== 'owner-decides' && charge.state !== 'refused-over-limit') reasons.push(CHARGE_WORDS[charge.state]);
   return { configured: (await payingIds(env, [id])).has(id), will_pay: reasons.length === 0, provider, reasons,
     setup_urls: { stripe: links.stripe_card, paypal: links.paypal_vault }, solvers,
+    pay_now: { comment: payComment(id, row.amount), note: 'The poster can post this exact case-insensitive comment on the bounty issue to pay a linked PR author without a merge, repository switch or board session. The approved reward must fit the saved method’s default limit, with no self/repository-access payee or prior payment/record/in-flight charge. Stripe is preferred when ready, else PayPal Vault. A refused comment is not retried; after fixing setup, post a new comment. An in-flight charge must be resolved first.' },
     fallback: 'The owner may choose a linked author and pay through Checkout or by hand.' };
 }
 

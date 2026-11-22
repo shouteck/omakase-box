@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { handle } from '../../packages/box-platform/src/api.js';
 import worker from '../../packages/box-platform/src/worker.js';
+import { GitHub } from '../../packages/box-platform/src/github.js';
+import { readPaymentComments } from '../../packages/box-platform/src/payment-comment.js';
 import { settleCharges } from '../../packages/box-platform/src/charge.js';
 import { listIssue } from '../../packages/box-platform/src/listing.js';
 import { refreshUntilDone, rig, MINUTE, NOW, type Rig } from './support.js';
@@ -221,6 +223,93 @@ describe('PF52: PayPal Vault', () => {
     await r.env.DB.prepare('UPDATE pay_repositories SET limit_per_bounty = 45').run();
     await r.env.DB.prepare(`INSERT INTO pull_requests (bounty_id, number, author, author_id, state, opened_at, merged_at, association, on_default) VALUES (?, 41, 'solver', 7001, 'merged', ?, ?, 'NONE', 1)`).bind(id, at(2), at(5)).run();
     await settleTwice(); expect(paypal.captures).toHaveLength(1);
+  });
+});
+
+describe('PF52: agent pay comments', () => {
+  async function open(rail: 'stripe' | 'paypal' | 'both' = 'stripe') {
+    Object.assign(issue.pulls![0]!, { state: 'open', landed: false }); delete issue.pulls![0]!.merged_at;
+    await approve('');
+    if (rail !== 'paypal') { await card(); await connectedStripe(); }
+    if (rail !== 'stripe') await vault();
+  }
+  async function read() { await readPaymentComments(r.env, new GitHub(r.env), id, REPO, 12); }
+  async function command(body = `omakase pay ${id} $45 to @solver`, login = OWNER.login) {
+    r.clock.at += MINUTE;
+    (issue.comments ??= []).push({ login, association: 'OWNER', body, created_at: new Date(r.clock.at).toISOString() });
+    await read();
+  }
+  it.each(['stripe', 'paypal', 'both'] as const)('pays an open linked PR through %s without a session, switch or merge, once', async rail => {
+    await open(rail);
+    await command(`OMAKASE PAY ${id.toUpperCase()} $45 TO @SOLVER`);
+    await read(); r.clock.at += 20 * MINUTE; await refreshUntilDone(r); await settleTwice();
+    expect(await state()).toMatchObject({ state: 'paid', provider: rail === 'paypal' ? 'paypal' : null });
+    expect(stripe.charged()).toHaveLength(rail === 'paypal' ? 0 : 1);
+    expect(paypal.captures).toHaveLength(rail === 'paypal' ? 1 : 0);
+    expect((await fact()).payment.recorded_paid).toMatchObject({ source: rail === 'paypal' ? 'paypal' : 'stripe' });
+    expect(await r.env.DB.prepare('SELECT * FROM sessions').first()).toBeNull();
+    expect(await r.env.DB.prepare('SELECT * FROM pay_repositories').first()).toBeNull();
+    expect(await r.env.DB.prepare('SELECT state FROM pull_requests WHERE bounty_id = ?').bind(id).first()).toEqual({ state: 'open' });
+  });
+  it.each(['stripe', 'paypal'] as const)('records payment for an unmerged posted bounty too: %s', async rail => {
+    await open(rail);
+    await r.env.DB.prepare(`UPDATE bounties SET source = 'posted', approval = NULL WHERE id = ?`).bind(id).run();
+    await command();
+    expect((await fact()).payment).toMatchObject({ state: 'recorded', recorded_paid: { source: rail === 'paypal' ? 'paypal' : 'stripe' } });
+  });
+  it.each(['wrong-author', 'unlinked', 'self', 'access', 'over-limit', 'not-ready', 'recorded', 'in-flight', 'wrong-amount', 'extra-prose'])(
+    'does not charge: %s', async mode => {
+      await open();
+      if (mode === 'self') await r.env.DB.prepare('UPDATE pull_requests SET author = ?, author_id = ? WHERE bounty_id = ?').bind(OWNER.login, OWNER.github_id, id).run();
+      if (mode === 'access') await r.env.DB.prepare(`UPDATE pull_requests SET association = 'COLLABORATOR' WHERE bounty_id = ?`).bind(id).run();
+      if (mode === 'over-limit') await r.env.DB.prepare('UPDATE pay_settings SET limit_per_bounty = 40').run();
+      if (mode === 'not-ready') await r.env.DB.prepare('UPDATE stripe_accounts SET ready = 0').run();
+      if (mode === 'recorded') await r.env.DB.prepare(`INSERT INTO paid_clicks (bounty_id, by_login, to_login, amount, withdrawn, at) VALUES (?, 'owner', 'solver', 45, 0, ?)`).bind(id, at(20)).run();
+      if (mode === 'in-flight') await r.env.DB.prepare(`INSERT INTO charges (bounty_id, state, at) VALUES (?, 'charging', ?)`).bind(id, NOW).run();
+      await command(`omakase pay ${id} $${mode === 'wrong-amount' ? 46 : 45} to @${mode === 'self' ? OWNER.login : mode === 'unlinked' ? 'stranger' : SOLVER}${mode === 'extra-prose' ? ' please' : ''}`, mode === 'wrong-author' ? 'stranger' : OWNER.login);
+      expect(stripe.charged()).toHaveLength(0); expect(paypal.captures).toHaveLength(0);
+      if (mode === 'self' || mode === 'access') expect(await state()).toMatchObject({ state: 'not-counted' });
+      if (mode === 'over-limit') expect(await state()).toMatchObject({ state: 'refused-over-limit' });
+      if (mode === 'not-ready') expect(await state()).toMatchObject({ state: 'solver-not-ready' });
+    }
+  );
+  it('ignores a pending import command, including after a later approval', async () => {
+    await card(); await connectedStripe();
+    await command(); expect((await fact()).approval.state).toBe('pending'); expect(stripe.charged()).toHaveLength(0);
+    issue.comments!.push({ login: OWNER.login, association: 'OWNER', body: `omakase approve ${id} $45`, created_at: at(2) });
+    r.clock.at += 20 * MINUTE; await refreshUntilDone(r); await read();
+    expect((await fact()).approval.state).toBe('comment'); expect(stripe.charged()).toHaveLength(0);
+    await command(); expect(stripe.charged()).toHaveLength(1);
+  });
+  it.each(['stripe', 'paypal'] as const)('keeps declined %s honest and does not replay the comment after setup changes', async rail => {
+    await open(rail);
+    if (rail === 'stripe') stripe.card = 'declined'; else paypal.vaultDeclined = true;
+    await command(); expect(await state()).toMatchObject({ state: 'declined' });
+    const calls = rail === 'stripe' ? stripe.calls.length : paypal.calls.length;
+    if (rail === 'stripe') { stripe.card = 'ok'; await r.env.DB.prepare(`UPDATE pay_settings SET payment_method = 'pm_replaced'`).run(); }
+    else { paypal.vaultDeclined = false; await r.env.DB.prepare(`UPDATE paypal_vault SET payment_token = 'VAULT2'`).run(); }
+    await read(); expect(rail === 'stripe' ? stripe.calls.length : paypal.calls.length).toBe(calls);
+    await command(); expect(await state()).toMatchObject({ state: 'paid' });
+  });
+  it('keeps a non-completed Vault response out of paid', async () => {
+    await open('paypal'); paypal.vaultStatus = 'PAYER_ACTION_REQUIRED';
+    await command(); await read();
+    expect(await state()).toMatchObject({ state: 'owner-must-authenticate' }); expect(paypal.captures).toHaveLength(0);
+  });
+  it('handles missing saved methods without spending and exposes setup/command facts', async () => {
+    await approve(''); await command();
+    expect(stripe.charged()).toHaveLength(0); expect(paypal.captures).toHaveLength(0);
+    const view = await fact();
+    expect(view.pay_on_merge.pay_now.comment).toBe(`omakase pay ${id} $45 to @<solver-login>`);
+    expect(view.owed_now.pay_now.comment).toBe(`omakase pay ${id} $45 to @<solver-login>`);
+    expect((await (await get('/api/payment-setup/poster')).json() as any).pay_now).toBe('omakase pay <id> $<amount> to @<solver-login>');
+  });
+  it('claims a repeated comment atomically even when two readers run together', async () => {
+    await open();
+    issue.comments!.push({ login: OWNER.login, association: 'OWNER', body: `omakase pay ${id} $45 to @solver`, created_at: at(21) });
+    r.clock.at += MINUTE;
+    await Promise.all([read(), read()]);
+    expect(stripe.charged()).toHaveLength(1);
   });
 });
 

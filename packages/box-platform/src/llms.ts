@@ -32,6 +32,8 @@ An imported issue waits for an authorized GitHub approval comment. The exact cas
 
 After paying by hand, the poster can comment the exact "omakase paid <id> $<amount> to @<solver-login>" on the original issue. This records the owner's word, not provider verification. CLI project records use "omakase-box config set paid <id>"; status --json includes owed_now. Owner-only payout methods remain private.
 
+To pay now without a browser or merge, the poster's GitHub account can comment the exact case-insensitive "omakase pay <id> $<amount> to @<solver-login>" on the bounty issue. The import must be approved, the solver must author a linked PR and not be the poster or a repository-access author, and the amount must equal the reward and fit the saved method's default limit. Stripe is preferred when the solver is ready, else PayPal Vault. A prior payment, manual record or in-flight charge blocks payment. The board polls GitHub; processing is not immediate on comment submission. Each comment is handled once; after fixing a refusal, post a new comment, not an edit. Payment facts and owed_now expose pay_now instructions. Provider failure states are facts, not confirmed payment.
+
 - [Source](https://github.com/shouteck/omakase-box): the CLI and this board.
 - [Privacy](${origin}/privacy/): what the board stores.
 - [Terms](${origin}/terms/)

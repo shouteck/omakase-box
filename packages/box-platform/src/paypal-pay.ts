@@ -1,7 +1,7 @@
 // The owner's click through PayPal (PF13). PayPal's `payee` sends the money straight to the
 // account the merged author connected, and only the board's capture moves it: an order the
 // board has dropped can never be paid. The payee and amount are enforced here; PayPal would take any.
-import { claimPage, decidePay, payeeFacts, retireStripePage, type Merged } from './charge.js';
+import { claimCharge, claimPage, decidePay, payeeFacts, retireStripePage, type Merged } from './charge.js';
 import type { ChargeState } from './charge-words.js';
 import type { Env } from './github.js';
 import { issueOf, paypal, paypalOn } from './paypal.js';
@@ -62,11 +62,7 @@ async function recordCapture(env: Env, id: string, capture: string, now: number)
 }
 
 export async function chargeVault(env: Env, id: string, amount: number, pull: Merged, account: string, token: string, heldAt: number | null, now: number): Promise<void> {
-  const claimed = await env.DB.prepare(`INSERT INTO charges (bounty_id, state, provider, pull_number, solver, account_id, amount, payment_method, at)
-    VALUES (?, 'charging', 'paypal', ?, ?, ?, ?, ?, ?)
-    ON CONFLICT (bounty_id) DO UPDATE SET state = 'charging', provider = 'paypal', pull_number = excluded.pull_number, solver = excluded.solver, account_id = excluded.account_id, amount = excluded.amount, payment_method = excluded.payment_method, at = excluded.at
-    WHERE charges.at = ? RETURNING bounty_id`).bind(id, pull.number, pull.author, account, amount, token, now, heldAt ?? -1).first();
-  if (claimed === null) return;
+  if (!await claimCharge(env, id, amount, pull, account, token, 'paypal', heldAt, now)) return;
   const made = await paypal(env, 'POST', '/v2/checkout/orders', {
     intent: 'CAPTURE', purchase_units: [{ custom_id: id, amount: { currency_code: 'USD', value: usd(amount) }, payee: { merchant_id: account } }],
     payment_source: { paypal: { vault_id: token } }

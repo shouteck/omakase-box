@@ -29,7 +29,7 @@ export type BountyPayment = {
 /** The standing word, or null. A charge a provider made outranks anyone's word; a record that names no merged author, or none where several merged, settles nothing. */
 function standing(input: BountyPayment, landed: readonly MergedPull[]): Paid | null {
   const charged = input.charge;
-  if (charged?.state === 'paid' && landed.some(pull => same(pull.author, charged.solver))) return { at: charged.at, amount: input.amount, withdrawn: 0, to: charged.solver, ...(charged.provider === 'paypal' ? { by: 'PayPal', source: 'paypal' as const } : { by: 'Stripe', source: 'stripe' as const }) };
+  if (charged?.state === 'paid' && input.pulls.some(pull => same(pull.author, charged.solver))) return { at: charged.at, amount: input.amount, withdrawn: 0, to: charged.solver, ...(charged.provider === 'paypal' ? { by: 'PayPal', source: 'paypal' as const } : { by: 'Stripe', source: 'stripe' as const }) };
   const clicked = input.click === null ? [] : [input.click];
   const latest = standingRecord([...input.chain, ...clicked]);
   if (latest === null || landed.length === 0) return null;
@@ -73,6 +73,8 @@ export type PaymentState ='no-reward' | 'nothing-owed' | 'merged-not-on-default'
 export function paymentOf(input: BountyPayment) {
   const facts = factsOf(input);
   const landed = landedOf(input);
+  const chargedPull = input.charge?.state === 'paid' ? input.pulls.find(pull => same(pull.author, input.charge!.solver)) : undefined;
+  if (chargedPull !== undefined && !landed.includes(chargedPull)) landed.push(chargedPull);
   const viaPayPal = input.charge?.provider === 'paypal';
   const charge = input.charge == null ? null : { state: input.charge.state, at: input.charge.at, words: (viaPayPal ? PAYPAL_WORDS[input.charge.state as keyof typeof CHARGE_WORDS] : undefined) ?? CHARGE_WORDS[input.charge.state as keyof typeof CHARGE_WORDS] ?? null, whose_word: viaPayPal ? 'the board\'s, from PayPal\'s answer' as const : 'the board\'s, from Stripe\'s answer' as const };
   const none = { owed: null, recorded_paid: null, solver_says: null, excluded_from_counts: null, charge };
@@ -87,8 +89,8 @@ export function paymentOf(input: BountyPayment) {
   }
   const payee = payeeOf(facts);
   const paidPull = payee === null ? undefined : landed.find(pull => same(pull.author, payee));
-  const since = input.source === 'listed' ? (facts.record?.at ?? new Date(0).toISOString()) : (paidPull ?? landed.reduce((first, pull) => pull.merged_at < first.merged_at ? pull : first)).merged_at;
-  const fact = input.source === 'listed' && paidPull !== undefined ? `pull request #${paidPull.number} ${paidPull.state === 'merged' ? 'merged' : 'linked to the issue'}` : paidPull === undefined ? `pull requests ${shownOf(landed).map(pull => `#${pull.number}`).join(' and ')}${landed.length > AUTHORS_SHOWN ? ` and ${landed.length - AUTHORS_SHOWN} more` : ''} merged` : `pull request #${paidPull.number} merged`;
+  const since = input.source === 'listed' || (chargedPull !== undefined && chargedPull.state !== 'merged') ? (facts.record?.at ?? new Date(0).toISOString()) : (paidPull ?? landed.reduce((first, pull) => pull.merged_at < first.merged_at ? pull : first)).merged_at;
+  const fact = (input.source === 'listed' || chargedPull !== undefined) && paidPull !== undefined ? `pull request #${paidPull.number} ${paidPull.state === 'merged' ? 'merged' : 'linked to the issue'}` : paidPull === undefined ? `pull requests ${shownOf(landed).map(pull => `#${pull.number}`).join(' and ')}${landed.length > AUTHORS_SHOWN ? ` and ${landed.length - AUTHORS_SHOWN} more` : ''} merged` : `pull request #${paidPull.number} merged`;
   const owed = { to: payee, ...(payee === null ? { to_one_of: shownOf(landed).map(pull => pull.author) } : {}), amount: input.amount, since, fact, source: 'github' as const };
   const reasons = (paidPull === undefined ? landed : [paidPull]).map(pull => notCounted(pull, input.poster));
   const excluded = reasons.every(reason => reason !== null) ? reasons[0]! : null;

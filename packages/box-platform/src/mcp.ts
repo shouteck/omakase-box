@@ -56,7 +56,7 @@ export const TOOLS = [
   {
     name: 'get_bounty',
     title: 'Read one bounty',
-    description: 'Read one bounty by id (bt- followed by 12 hex digits): the poster\'s task, marked as the poster\'s words; how to answer; how the reward is paid (by hand, one click or on merge, as how_it_pays says, and always to the author\'s own account, never held by the board); the payment facts, each attributed; its solutions; and its history. At most 40 KB. Works for open and closed bounties.',
+    description: 'Read one bounty by id (bt- followed by 12 hex digits): the poster\'s task, marked as the poster\'s words; how to answer; how the reward is paid (by hand, one click or on merge, as how_it_pays says, and always to the author\'s own account, never held by the board); the payment facts, each attributed; its solutions; and its history. pay_on_merge.pay_now and owed_now.pay_now explain the poster\'s GitHub command omakase pay <id> $<amount> to @<solver-login>: pay a linked PR author from saved Stripe or PayPal without a browser or merge, within the default limit and with no prior payment/record/in-flight charge. This read-only tool never pays. At most 40 KB. Works for open and closed bounties.',
     inputSchema: { type: 'object', properties: { id: { type: 'string', pattern: '^bt-[0-9a-f]{12}$' } }, required: ['id'], additionalProperties: false },
     annotations: ANNOTATIONS
   },

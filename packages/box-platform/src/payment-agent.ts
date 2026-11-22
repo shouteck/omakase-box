@@ -1,6 +1,7 @@
 import { payeeFacts } from './charge.js';
 import type { Env } from './github.js';
 import { parseStored, publicOnly } from './methods.js';
+import { payComment } from './payment-setup.js';
 
 export async function owedNow(env: Env, id: string) {
   const bounty = await env.DB.prepare('SELECT amount, repository, issue_number FROM bounties WHERE id = ?').bind(id).first<{ amount: number; repository: string; issue_number: number }>();
@@ -14,6 +15,7 @@ export async function owedNow(env: Env, id: string) {
     return { login, methods: publicOnly(all), methods_more: all.filter(method => method.visibility !== 'everyone').length };
   }));
   return { state: authors.length === 1 ? 'owed' : 'owner-decides', amount: bounty.amount, currency: 'USD', payees,
+    pay_now: { comment: payComment(id, bounty.amount), note: 'The poster may request payment from a saved method within its default limit. Stripe is preferred when ready, else PayPal Vault. No browser or merge is required for this command; a prior payment, record or in-flight charge blocks it.' },
     record_payment: {
       cli: `omakase-box config set paid ${id}`,
       github_issue: `https://github.com/${bounty.repository}/issues/${bounty.issue_number}`,
