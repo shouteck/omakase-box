@@ -65,7 +65,7 @@ for (const mode of ['search', 'hint']) describe(`PF54 ${mode} CLI authority`, ()
     expect(await row()).toBeNull();
     expect(branchReads).toEqual([BRANCH]);
     branchStatus = 200;
-    r.clock.at += 20 * MINUTE;
+    r.clock.at += 80 * MINUTE;
     await discover(mode);
     expect(await row()).toEqual({ title: issue.title });
     expect(branchReads).toEqual([BRANCH, BRANCH]);
@@ -128,4 +128,38 @@ it('PF54 local CLI replay represents its repository owner, not strangers, as OWN
     writeFileSync(join(directory, 'state.json'), JSON.stringify({ issues: [{ number: 1, state: 'open', user: { login: 'owner' } }, { number: 2, state: 'open', user: { login: 'stranger' } }], prs: [] }));
     expect(replayReads(directory).issues().map(one => one.author_association)).toEqual(['OWNER', 'NONE']);
   } finally { rmSync(directory, { recursive: true, force: true }); }
+});
+
+it('PF54 search keeps an OWNER after a missing MEMBER when a later MEMBER exhausts two reads', async () => {
+  issue.association = 'MEMBER';
+  branchStatus = 404;
+  const owner = { ...issue, id: idOf(0x5402), number: 55, association: 'OWNER' };
+  const later = { ...issue, id: idOf(0x5403), number: 56 };
+  r.standin.issues.push(owner, later);
+  for (let tick = 0; tick < 2; tick += 1) {
+    await refresh({ ...r.env, tickReads: 2 });
+    r.clock.at += 20 * MINUTE;
+  }
+  expect((await r.env.DB.prepare('SELECT id FROM bounties ORDER BY listed_seq').all<{ id: string }>()).results).toEqual([{ id: owner.id }]);
+  expect(branchReads).toEqual([BRANCH]);
+  await refresh({ ...r.env, tickReads: 2 });
+  expect(branchReads.filter(path => path === BRANCH)).toHaveLength(1);
+  expect(branchReads).toHaveLength(2);
+});
+
+for (const mode of ['search', 'hint']) it(`PF54 ${mode} remembers a branch miss for an hour, then admits a later push`, async () => {
+  issue.association = 'MEMBER';
+  branchStatus = 404;
+  await discover(mode);
+  expect(await row()).toBeNull();
+  expect(branchReads).toEqual([BRANCH]);
+  branchStatus = 200;
+  r.clock.at += 20 * MINUTE;
+  await discover(mode);
+  expect(await row()).toBeNull();
+  expect(branchReads).toEqual([BRANCH]);
+  r.clock.at += 60 * MINUTE;
+  await discover(mode);
+  expect(await row()).toEqual({ title: issue.title });
+  expect(branchReads).toEqual([BRANCH, BRANCH]);
 });

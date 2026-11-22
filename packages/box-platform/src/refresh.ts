@@ -11,6 +11,7 @@ const SEARCH_PAGES = 10; // GitHub search answers at most 1,000 results.
 const REPOSITORY_STALE_MS = TICK_MINUTES * 60000;
 const DETAILS_STALE_MS = TICK_MINUTES * 60000;
 const SEARCH_EVERY_MS = TICK_MINUTES * 60000;
+const MEMBER_BRANCH_RETRY_MS = 60 * 60000;
 /** PF29: a head with no checks yet is read again only while its attempt was active this recently: CI often starts after a push. */
 const RECENT_ACTIVITY_MS = 60 * 60000;
 const TITLE_MAX = 300;
@@ -77,8 +78,25 @@ async function admittedPoster(env: Env, github: GitHub, listed: Listed, held: He
   if (association === 'MEMBER') {
     const format = readFormat(listed.issue['body'] as string);
     if (format.kind !== 'present') return false;
-    const branch = await github.get(`/repos/${listed.repository}/branches/${encodeURIComponent(format.value.branch)}`);
-    if (branch.status === 200) return true;
+    const key = `member_branch_miss:${listed.repository.toLowerCase()}#${listed.issue['number']}`;
+    const misses = await getMetas(env.DB, [key]);
+    if (Number(misses.get(key) ?? 0) > now) return false;
+    const rememberMiss = () => env.DB.batch([
+      env.DB.prepare("DELETE FROM meta WHERE key GLOB 'member_branch_miss:*' AND CAST(value AS INTEGER) <= ?").bind(now),
+      metaStatement(env.DB, key, String(now + MEMBER_BRANCH_RETRY_MS))
+    ]);
+    let status: number;
+    try {
+      status = (await github.get(`/repos/${listed.repository}/branches/${encodeURIComponent(format.value.branch)}`)).status;
+    } catch (error) {
+      if (error instanceof GitHubUnavailable) await rememberMiss();
+      throw error;
+    }
+    if (status === 200) {
+      if (misses.has(key)) await env.DB.prepare('DELETE FROM meta WHERE key = ?').bind(key).run();
+      return true;
+    }
+    await rememberMiss();
     await log(env.DB, now, 'poster-branch-not-confirmed', listed.issue['html_url'] as string);
     return false;
   }
@@ -193,6 +211,7 @@ async function search(env: Env, github: GitHub, now: number): Promise<{ readonly
       if (!isPublic) continue;
       if (claimedElsewhere(held.get(listed.id), listed)) { writes.push(...logStatements(db, now, 'id-claimed-by-another-issue', listed.issue['html_url'] as string)); continue; }
       if (!admittedPrepared(listed, held.get(listed.id))) continue;
+      if (!held.has(listed.id) && listed.issue['author_association'] === 'MEMBER') await runAll(db, writes.splice(0));
       if (!await admittedPoster(env, github, listed, held.get(listed.id), now)) continue;
       if (rewardTooLow(env, listed)) { await removeBounty(db, listed.id); writes.push(...logStatements(db, now, 'reward-below-minimum', listed.issue['html_url'] as string)); continue; }
       const statement = issueStatement(db, listed, now);
