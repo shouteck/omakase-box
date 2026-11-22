@@ -2,7 +2,7 @@
 // is the whole rule and calls nothing. The board never holds money: a direct charge
 // goes from the owner's saved card to the solver's own Stripe account. The limit and
 // the payee are enforced here and nowhere else; Stripe would accept any (K46).
-import { CHARGE_WORDS, type ChargeState } from './charge-words.js';
+import { CHARGE_WORDS, PAYPAL_WORDS, type ChargeState } from './charge-words.js';
 import type { Env } from './github.js';
 import { landedWhere, notCounted, paymentCommentsCurrent, type MergedPull } from './payments.js';
 import { errorCode, errorWords, isCardError, stripe, StripeUnavailable, stripeOn } from './stripe.js';
@@ -470,10 +470,10 @@ export async function payingIds(env: Env, ids: readonly string[]): Promise<Reado
 
 export async function mergePaymentFact(env: Env, id: string, origin: string) {
   const row = await env.DB.prepare(`SELECT b.source, b.approval, b.amount, ${APPROVED_AT} AS approval_at, ${APPROVED_AMOUNT} AS approved_amount,
-    ${CONSENT_AT} AS consent_at, ${STRIPE_LIMIT} AS stripe_limit, ${PAYPAL_LIMIT} AS paypal_limit, s.payment_method, v.payment_token, ${paymentCommentsCurrent} AS comments_current
+    ${CONSENT_AT} AS consent_at, ${STRIPE_LIMIT} AS stripe_limit, ${PAYPAL_LIMIT} AS paypal_limit, s.payment_method, v.payment_token, ${paymentCommentsCurrent} AS comments_current, (SELECT provider FROM charges WHERE bounty_id = b.id) AS charge_provider
     FROM bounties b LEFT JOIN pay_settings s ON s.github_id = b.poster_id LEFT JOIN paypal_vault v ON v.github_id = b.poster_id
     LEFT JOIN pay_repositories r ON r.github_id = b.poster_id AND r.repository = b.repository WHERE b.id = ?`).bind(id).first<{
-      source: string; approval: string | null; amount: number; approval_at: string | null; approved_amount: number | null; consent_at: string | null; stripe_limit: number | null; paypal_limit: number | null; payment_method: string | null; payment_token: string | null; comments_current: number;
+      source: string; approval: string | null; amount: number; approval_at: string | null; approved_amount: number | null; consent_at: string | null; stripe_limit: number | null; paypal_limit: number | null; payment_method: string | null; payment_token: string | null; comments_current: number; charge_provider: string | null;
     }>();
   if (row === null) return null;
   const links = setupLinks(origin, id);
@@ -505,7 +505,7 @@ export async function mergePaymentFact(env: Env, id: string, origin: string) {
   if (landed.length === 1 && notCounted(landed[0]!, poster!.poster, poster!.poster_id) !== null) reasons.push('The author is the poster or has repository access, or GitHub did not state their association.');
   if (landed.length === 1 && provider === null) reasons.push('The solver is not ready to receive on an available pay-on-merge rail.');
   const charge = await chargeOf(env, id);
-  if (charge !== null && charge.state !== 'solver-not-ready' && charge.state !== 'owner-decides' && charge.state !== 'refused-over-limit') reasons.push(CHARGE_WORDS[charge.state]);
+  if (charge !== null && charge.state !== 'solver-not-ready' && charge.state !== 'owner-decides' && charge.state !== 'refused-over-limit') reasons.push((row.charge_provider === 'paypal' ? PAYPAL_WORDS[charge.state] : undefined) ?? CHARGE_WORDS[charge.state]);
   return { configured: (await payingIds(env, [id])).has(id), will_pay: reasons.length === 0, provider, reasons,
     setup_urls: { stripe: links.stripe_card, paypal: links.paypal_vault }, solvers,
     pay_now: { comment: payComment(id, row.amount), note: 'The poster can post this exact case-insensitive comment on the bounty issue to pay a linked PR author without a merge, repository switch or board session. The approved reward must fit the saved method’s default limit, with no self/repository-access payee or prior payment/record/in-flight charge. Stripe is preferred when ready, else PayPal Vault. A refused comment is not retried; after fixing setup, post a new comment. An in-flight charge must be resolved first.' },

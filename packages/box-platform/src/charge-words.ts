@@ -7,7 +7,7 @@ export const CHARGE_WORDS: Record<Exclude<ChargeState, 'looked'>, string> = {
   'not-counted': 'Pay on merge does not run here: the solver is the poster, or GitHub lists them as having access to the repository.',
   'owner-decides': 'More than one solution landed, so pay on merge did not choose. Nothing was charged.',
   'refused-over-limit': 'The reward is not the one the owner approved for pay on merge here. Nothing was charged.',
-  'solver-not-ready': 'The solver has not finished connecting Stripe. Nothing was charged.',
+  'solver-not-ready': 'The solver has no payout account ready for this payment. Nothing was charged.',
   'solver-disconnected': 'The solver\'s Stripe account is no longer connected. Nothing was charged.',
   declined: 'The card was declined. Nothing was charged.',
   'stripe-refused': 'Stripe refused this charge for a reason other than the card. Nothing was charged.',
@@ -21,8 +21,9 @@ export const CHARGE_WORDS: Record<Exclude<ChargeState, 'looked'>, string> = {
 
 /** Where the owner's click went through PayPal, the words that differ. */
 export const PAYPAL_WORDS: Partial<typeof CHARGE_WORDS> = {
+  declined: 'PayPal declined the payment. Nothing was charged.',
   'owner-must-authenticate': 'PayPal has not confirmed a completed payment. The owner must finish payment; no automatic retry is made.',
-  'owner-paying': 'The owner opened PayPal\'s page. Nothing has been charged yet.',
+  'owner-paying': 'PayPal has not confirmed a completed payment. The owner can continue on PayPal if requested.',
   paid: 'PayPal took the payment from the owner and paid the solver\'s own account. PayPal\'s fee comes out of the reward.',
   refunded: 'PayPal records this payment as refunded or reversed.',
   disputed: 'The payer is disputing this payment. The dispute is on the solver\'s PayPal account.'

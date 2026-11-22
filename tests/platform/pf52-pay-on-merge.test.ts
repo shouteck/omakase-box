@@ -5,7 +5,7 @@ import { GitHub } from '../../packages/box-platform/src/github.js';
 import { readPaymentComments } from '../../packages/box-platform/src/payment-comment.js';
 import { decidePay, payeeFacts, paySaved, settleCharges } from '../../packages/box-platform/src/charge.js';
 import { listIssue } from '../../packages/box-platform/src/listing.js';
-import { settlePayPal } from '../../packages/box-platform/src/paypal-pay.js';
+import { applyPayPalEvent, settlePayPal } from '../../packages/box-platform/src/paypal-pay.js';
 import { refreshUntilDone, rig, MINUTE, NOW, type Rig } from './support.js';
 import { StripeStandin } from './stripe-standin.js';
 import { PayPalStandin } from './paypal-standin.js';
@@ -64,6 +64,70 @@ beforeEach(async () => {
   expect(listed).toHaveProperty('id'); id = (listed as { id: string }).id;
 });
 afterEach(async () => { vi.restoreAllMocks(); await stripe.stop(); await paypal.stop(); await r.close(); });
+
+describe('PF52: owner and solver PayPal parity', () => {
+  it('edits the saved PayPal limit without provider setup, with authentication, validation and private references', async () => {
+    const owner = await session();
+    expect((await post('/api/me/paypal/vault/limit', { limit: 75 })).status).toBe(401);
+    expect((await post('/api/me/paypal/vault/limit', { limit: 75 }, owner)).status).toBe(409);
+    await vault();
+    const calls = paypal.calls.length;
+    for (const limit of [undefined, 0, -1, 1.5, '50', 100001]) expect((await post('/api/me/paypal/vault/limit', { limit }, owner)).status).toBe(400);
+    const csrf = await handle(new Request(`${ORIGIN}/api/me/paypal/vault/limit`, { method: 'POST', headers: { origin: 'https://elsewhere.test', 'content-type': 'application/json', cookie: `__Host-board_session=${owner}` }, body: JSON.stringify({ limit: 75 }) }), r.env);
+    expect(csrf.status).toBe(403);
+    expect((await post('/api/me/paypal/vault/limit', { limit: 100000 }, owner)).status).toBe(200);
+    const shown = await (await get('/api/me/paypal/vault', owner)).json();
+    expect(shown).toMatchObject({ saved: { label: 'Saved PayPal', limit_per_bounty: 100000 }, pay: { saved_paypal: true } });
+    expect(JSON.stringify(shown)).not.toMatch(/VAULT1|payment_token|customer_id/);
+    expect(paypal.calls).toHaveLength(calls);
+  });
+  it.each(['stripe', 'paypal', 'both-remove-stripe', 'both-remove-paypal'])('removes %s without disabling another saved rail', async mode => {
+    const owner = await session();
+    if (mode !== 'paypal') await card();
+    if (mode !== 'stripe') await vault();
+    await switched();
+    const response = mode === 'stripe' || mode === 'both-remove-stripe'
+      ? await post('/api/me/pay', { remove_card: true }, owner) : await post('/api/me/paypal/vault/remove', {}, owner);
+    expect(response.status).toBe(200);
+    const both = mode.startsWith('both');
+    expect((await r.env.DB.prepare('SELECT COUNT(*) AS n FROM pay_repositories').first())?.n).toBe(both ? 1 : 0);
+    const me = await (await get('/api/me', owner)).json() as any;
+    expect(me.pay.repositories).toHaveLength(both ? 1 : 0);
+    if (mode.endsWith('remove-stripe')) expect(me.pay).toMatchObject({ saved_paypal: true, card: null });
+    if (mode.endsWith('remove-paypal')) expect(me.pay.card).not.toBeNull();
+  });
+  it('offers PayPal-only setup and repository switches, including a legacy repository default, and pays without Stripe', async () => {
+    delete r.env.STRIPE_SECRET_KEY;
+    const owner = await session();
+    expect(await (await get('/api/me', owner)).json()).toMatchObject({ pay: { set_up: true, stripe_set_up: false, card: null } });
+    await vault(); await approve(); await switched();
+    await r.env.DB.prepare('UPDATE pay_repositories SET limit_per_bounty = NULL').run();
+    expect(await (await get('/api/me', owner)).json()).toMatchObject({ pay: { saved_paypal: true, repositories: [{ limit: 50 }] } });
+    expect((await post('/api/me/pay', { repositories: [{ repository: REPO, limit: 45 }] }, owner)).status).toBe(200);
+    await r.env.DB.prepare(`UPDATE bounties SET source = 'posted', approval = NULL WHERE id = ?`).bind(id).run();
+    await r.env.DB.prepare('UPDATE pull_requests SET merged_at = ? WHERE bounty_id = ?').bind(at(25), id).run();
+    r.clock.at += 10 * MINUTE;
+    await settleTwice(); expect(paypal.captures).toHaveLength(1); expect(stripe.charged()).toHaveLength(0);
+  });
+  it('names PayPal rather than a card or Stripe when a Vault payment is declined', async () => {
+    await vault(); await approve(); paypal.vaultDeclined = true; await settleTwice();
+    const payment = (await (await get(`/bounties/${id}.json`)).json() as any).bounty.payment;
+    expect(payment.charge.words).toBe('PayPal declined the payment. Nothing was charged.');
+    expect((await fact()).pay_on_merge.reasons).toContain(payment.charge.words);
+    expect(JSON.stringify(payment.charge)).not.toMatch(/card was declined|from Stripe|provider prose/);
+  });
+  it.each(['refunded', 'disputed'])('keeps Vault captures in the %s history/watch path', async state => {
+    await vault(); await approve(); await settleTwice();
+    const charge = await r.env.DB.prepare('SELECT payment_intent FROM charges WHERE bounty_id = ?').bind(id).first<{ payment_intent: string }>();
+    if (state === 'refunded') { paypal.captureStatus.set(charge!.payment_intent, 'REFUNDED'); await settlePayPal(r.env); }
+    else await applyPayPalEvent(r.env, { event_type: 'CUSTOMER.DISPUTE.CREATED', resource: { disputed_transactions: [{ seller_transaction_id: charge!.payment_intent }] } }, r.clock.at);
+    expect(await stateOf()).toBe(state);
+    const payment = (await (await get(`/bounties/${id}.json`)).json() as any).bounty.payment;
+    expect(payment.charge).toMatchObject({ state, words: expect.stringContaining('PayPal') });
+    await settleTwice(); expect(paypal.captures).toHaveLength(1);
+  });
+  async function stateOf() { return (await state() as { state: string } | null)?.state; }
+});
 
 describe('PF52: prepared agent branch payments', () => {
   async function prepared(rail: 'stripe' | 'paypal' = 'stripe', limit = 50) {

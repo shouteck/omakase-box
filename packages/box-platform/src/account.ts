@@ -465,11 +465,11 @@ const SWITCHES_MAX = 50;
 /** What this person has set up, for their own page only. Never an id of Stripe's. */
 async function payOf(env: Env, viewer: Viewer) {
   const vault = await env.DB.prepare('SELECT 1 FROM paypal_vault WHERE github_id = ?').bind(viewer.github_id).first();
-  if (!stripeOn(env) && !(paypalOn(env) && vault !== null)) return { set_up: false };
+  if (!stripeOn(env) && !paypalOn(env)) return { set_up: false };
   const solver = await env.DB.prepare('SELECT ready FROM stripe_accounts WHERE github_id = ?').bind(viewer.github_id).first<{ ready: number }>();
   const owner = await env.DB.prepare('SELECT payment_method, card_label, limit_per_bounty FROM pay_settings WHERE github_id = ?').bind(viewer.github_id).first<{ payment_method: string | null; card_label: string | null; limit_per_bounty: number | null }>();
   // Each repository's own limit (PF19); a row from before PF19's migration falls back to the owner's one limit.
-  const on = (await env.DB.prepare('SELECT r.repository, r.on_at, COALESCE(r.limit_per_bounty, s.limit_per_bounty) AS "limit" FROM pay_repositories r LEFT JOIN pay_settings s ON s.github_id = r.github_id WHERE r.github_id = ? ORDER BY r.repository').bind(viewer.github_id).all<{ repository: string; on_at: string; limit: number | null }>()).results;
+  const on = (await env.DB.prepare('SELECT r.repository, r.on_at, COALESCE(r.limit_per_bounty, s.limit_per_bounty, v.limit_per_bounty) AS "limit" FROM pay_repositories r LEFT JOIN pay_settings s ON s.github_id = r.github_id LEFT JOIN paypal_vault v ON v.github_id = r.github_id WHERE r.github_id = ? ORDER BY r.repository').bind(viewer.github_id).all<{ repository: string; on_at: string; limit: number | null }>()).results;
   // The repositories pay on merge can act on: where GitHub says this person opened bounty issues (PF20). Nothing typed,
   // so nothing to verify by hand. Each with its open bounties and the reward its latest bounty states.
   const mine = (await env.DB.prepare(`SELECT b.repository, SUM(CASE WHEN b.issue_state = 'open' THEN 1 ELSE 0 END) AS open,
@@ -559,7 +559,7 @@ async function savePay(request: Request, env: Env, viewer: Viewer, now: number):
     if (owner?.payment_method != null) await stripe(env, 'POST', `/v1/payment_methods/${owner.payment_method}/detach`, {});
     await env.DB.batch([
       env.DB.prepare('UPDATE pay_settings SET payment_method = NULL, card_label = NULL WHERE github_id = ?').bind(viewer.github_id),
-      env.DB.prepare('DELETE FROM pay_repositories WHERE github_id = ?').bind(viewer.github_id)
+      env.DB.prepare('DELETE FROM pay_repositories WHERE github_id = ? AND NOT EXISTS (SELECT 1 FROM paypal_vault WHERE github_id = ?)').bind(viewer.github_id, viewer.github_id)
     ]);
     return json(200, { pay: await payOf(env, viewer) });
   }
@@ -675,14 +675,22 @@ export async function accountResponse(request: Request, env: Env, url: URL, now:
     const body = await made.json() as { url?: string };
     return typeof body.url === 'string' ? redirect(body.url) : json(made.status, body);
   }
-  if (path === '/api/me/paypal/vault' || path === '/api/me/paypal/vault/saved' || path === '/api/me/paypal/vault/remove') {
+  if (path === '/api/me/paypal/vault' || path === '/api/me/paypal/vault/saved' || path === '/api/me/paypal/vault/remove' || path === '/api/me/paypal/vault/limit') {
     if (method !== 'GET' && method !== 'POST') return json(405, { error: 'Use GET or POST.' });
     if (method === 'POST') { const refusal = writeRefusal(request, url, true); if (refusal !== null) return refusal; }
     const viewer = await viewerOf(request, env, now);
     if (viewer === null) return json(401, SIGN_IN_FIRST);
-    if (method === 'GET') return json(200, { set_up: paypalOn(env), saved: await env.DB.prepare('SELECT label, limit_per_bounty FROM paypal_vault WHERE github_id = ?').bind(viewer.github_id).first() });
+    if (method === 'GET') return json(200, { set_up: paypalOn(env), saved: await env.DB.prepare('SELECT label, limit_per_bounty FROM paypal_vault WHERE github_id = ?').bind(viewer.github_id).first(), pay: await payOf(env, viewer) });
     if (!paypalOn(env)) return json(409, { error: 'PayPal is not set up on this board.' });
     try {
+      if (path.endsWith('/limit')) {
+        const body = await readBody(request); if ('refused' in body) return body.refused;
+        const limit = (body.value as { limit?: unknown } | null)?.limit;
+        if (!Number.isSafeInteger(limit) || (limit as number) < 1 || (limit as number) > 100000) return json(400, { error: 'The limit is whole dollars from 1 to 100000. Nothing changed.' });
+        const saved = await env.DB.prepare('UPDATE paypal_vault SET limit_per_bounty = ? WHERE github_id = ? RETURNING github_id').bind(limit as number, viewer.github_id).first();
+        if (saved === null) return json(409, { error: 'Save PayPal first. Nothing changed.' });
+        return json(200, { updated: true });
+      }
       if (path.endsWith('/remove')) { await removeVault(env, viewer.github_id); return json(200, { removed: true }); }
       if (path.endsWith('/saved')) {
         const body = await readBody(request); if ('refused' in body) return body.refused;

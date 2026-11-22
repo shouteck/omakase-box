@@ -154,7 +154,7 @@ function Owner({ me, setMe }) {
       <Bounties bounties={me.bounties} />
       <Heading id="pay" note="Posted bounties: Save a card and authorize the repository before Stripe pays rewards on merge. Listed approvals can instead authorize on merge within the saved-method limit; eligible merges can also use saved PayPal.">Pay on merge</Heading>
       <PayOnMergeOwner pay={me.pay} setPay={pay => setMe(current => ({ ...current, pay }))} />
-      <PayPalVault />
+      <PayPalVault onChange={pay => setMe(current => ({ ...current, pay }))} />
     </>
   );
 }
@@ -208,7 +208,7 @@ function YourSolutions({ me, setMe }) {
 }
 
 function Solver({ me, setMe }) {
-  const ready = me.pay.set_up && me.pay.solver?.ready;
+  const ready = (me.pay.set_up && me.pay.solver?.ready) || (me.paypal.set_up && me.paypal.connected);
   return (
     <>
       <RoleTitle role="Solver" sub="Bounties you solved, and getting paid for them." />
@@ -223,8 +223,8 @@ function Solver({ me, setMe }) {
           <PayPalRow paypal={me.paypal} setPayPal={paypal => setMe(current => ({ ...current, paypal }))} />
         </Rows>
       </Way>
-      <Way name="On merge" note="The owner authorizes Stripe to charge their saved card when a solution merges">
-        <Rows><Row icon="✓" tone="link" title={me.pay.set_up ? 'Uses your Stripe connection above' : 'Not set up on this board yet'} detail={me.pay.set_up ? 'Nothing more to do. It runs where the owner turned it on.' : null} actions={me.pay.set_up ? (ready ? <Badge tone="ok">Ready</Badge> : <Badge>Needs Stripe</Badge>) : null} /></Rows>
+      <Way name="On merge" note="The owner authorizes a saved Stripe card or PayPal when a solution merges">
+        <Rows><Row icon="✓" tone="link" title={me.pay.set_up || me.paypal.set_up ? me.paypal.set_up ? 'Uses your Stripe or PayPal connection above' : 'Uses your Stripe connection above' : 'Not set up on this board yet'} detail={me.pay.set_up || me.paypal.set_up ? 'Nothing more to connect. Payment requires the owner’s consent and a usable saved method.' : null} actions={me.pay.set_up || me.paypal.set_up ? (ready ? <Badge tone="ok">Ready</Badge> : <Badge>{me.paypal.set_up ? 'Needs Stripe or PayPal' : 'Needs Stripe'}</Badge>) : null} /></Rows>
       </Way>
     </>
   );

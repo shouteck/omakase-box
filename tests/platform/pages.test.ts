@@ -770,6 +770,74 @@ describe('the pages', () => {
       await close();
     });
 
+    it('PF52: PayPal-only owner edits its limit and repository reward, cancels removal, then removes; solver sees PayPal readiness', async () => {
+      const { page, close } = await fresh();
+      const yours = [{ repository: 'example-org/ledger', open: 1, reward: 45 }];
+      let saved: { label: string; limit_per_bounty: number } | null = { label: 'Saved PayPal', limit_per_bounty: 50 };
+      let current = pay({ stripe_set_up: false, saved_paypal: true, yours });
+      const sent: unknown[] = [];
+      await page.route('**/api/me', route => route.fulfill({ json: { ...base, login: 'example-mara', pay: current, paypal: { set_up: true, connected: true } } }));
+      await page.route('**/api/me/paypal/vault**', route => {
+        if (route.request().method() === 'POST') {
+          sent.push(route.request().postDataJSON());
+          if (route.request().url().endsWith('/limit')) saved!.limit_per_bounty = route.request().postDataJSON().limit;
+          if (route.request().url().endsWith('/remove')) { saved = null; current = pay({ stripe_set_up: false, yours }); }
+          return route.fulfill({ json: { updated: saved !== null, removed: saved === null } });
+        }
+        return route.fulfill({ json: { set_up: true, saved, pay: current } });
+      });
+      await page.route('**/api/me/pay', route => {
+        const body = route.request().postDataJSON();
+        sent.push(body);
+        current = pay({ stripe_set_up: false, saved_paypal: true, yours, repositories: body.repositories.map((entry: object) => ({ ...entry, on_at: new Date(NOW).toISOString(), open: 1 })) });
+        return route.fulfill({ json: { pay: current } });
+      });
+      await visit(page, '/me/#pay');
+      const vault = page.locator('#paypal-vault');
+      await expect.poll(() => vault.innerText()).toContain('Saved PayPal · maximum $50 per bounty.');
+      expect(await page.getByRole('button', { name: "Save a card on Stripe's page" }).count()).toBe(0);
+      await vault.getByLabel('PayPal maximum USD per bounty').fill('75');
+      await vault.getByRole('button', { name: 'Save PayPal limit', exact: true }).click();
+      await expect.poll(() => vault.innerText()).toContain('maximum $75');
+      await page.getByRole('button', { name: '+ Add a repository', exact: true }).click();
+      await page.locator('dialog[open]').getByRole('button', { name: 'Add', exact: true }).click();
+      const rows = page.locator('table[aria-label="Repositories on pay on merge"] tbody');
+      await expect.poll(() => rows.innerText()).toContain('$45');
+      await rows.getByRole('button', { name: 'Edit', exact: true }).click();
+      await page.locator('dialog[open] input[name=reward]').fill('40');
+      await page.locator('dialog[open]').getByRole('button', { name: 'Save', exact: true }).click();
+      await expect.poll(() => rows.innerText()).toContain('$40');
+      await vault.getByRole('button', { name: 'Remove saved PayPal', exact: true }).click();
+      await page.locator('dialog[open]').getByRole('button', { name: 'Cancel', exact: true }).click();
+      expect(sent).toHaveLength(3);
+      await page.screenshot({ path: join(SHOTS, 'pf52-paypal-owner.png'), fullPage: true });
+      await vault.getByRole('button', { name: 'Remove saved PayPal', exact: true }).click();
+      await page.locator('dialog[open]').getByRole('button', { name: 'Remove PayPal', exact: true }).click();
+      await expect.poll(() => page.locator('main').innerText()).toContain('Pay on merge is off.');
+      expect(await page.locator('table[aria-label="Repositories on pay on merge"]').count()).toBe(0);
+      await page.getByRole('tab', { name: /Solver/ }).click();
+      await expect.poll(() => page.locator('main').innerText()).toContain('Uses your Stripe or PayPal connection above');
+      expect(await page.locator('main').innerText()).toContain('Ready');
+      await page.screenshot({ path: join(SHOTS, 'pf52-paypal-solver.png'), fullPage: true });
+      await close();
+    });
+
+    it('PF52: a PayPal payer-action window offers the existing PayPal link, not Stripe authentication', async () => {
+      const { page, close } = await open({ ...base, login: 'example-mara', pay: pay() }, '/me/#pay');
+      const original = await (await fetch(`${board.url}/api/b/${STATE_IDS.owed}/payment`)).json() as any;
+      const action = 'https://www.sandbox.paypal.test/checkoutnow?token=EXISTING';
+      await page.route(`**/api/b/${STATE_IDS.owed}/payment`, route => route.fulfill({ json: { ...original, role: 'owner', payee: 'example-quill', can_record: true, can_authenticate: false, recorded: null, paypal_action_url: action,
+        payment: { ...original.payment, state: 'owed', recorded_paid: null, owed: { to: 'example-quill', amount: 45, since: new Date(NOW).toISOString(), fact: 'pull request #68 merged', source: 'github' } } } }));
+      await visit(page, `/b/${STATE_IDS.owed}/`);
+      await page.locator('[data-pay]').click();
+      const window = page.locator('[data-pay-window]');
+      await expect.poll(() => window.innerText()).toContain('PayPal needs the owner to finish this payment.');
+      expect(await window.getByRole('link', { name: 'Continue on PayPal' }).getAttribute('href')).toBe(action);
+      expect(await window.innerText()).not.toContain('Authenticate');
+      await page.screenshot({ path: join(SHOTS, 'pf52-paypal-action.png'), fullPage: true });
+      await close();
+    });
+
     // PF20, the owner: removing the card is the page's one destructive action, so it sits on the card and is said in full first.
     it('removing the card asks first, names what stops, and Cancel changes nothing', async () => {
       const card = { card: 'visa ending 3155', repositories: [{ repository: 'example-org/ledger', on_at: new Date(NOW).toISOString(), limit: 45, open: 2 }, { repository: 'example-org/lite', on_at: new Date(NOW).toISOString(), limit: 75, open: 1 }], yours: [] };

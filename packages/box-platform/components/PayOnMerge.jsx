@@ -132,7 +132,7 @@ export function PayOnMergeOwner({ pay, setPay }) {
   if (!pay.card && !pay.saved_paypal) {
     return (
       <>
-        <Empty title="Pay on merge is off." why="Save a card, then choose which of your repositories it pays for, and the reward." action={<Button primary onClick={() => leave('/api/me/card')}>Save a card on Stripe&apos;s page</Button>} />
+        <Empty title="Pay on merge is off." why="Save a card or PayPal, then authorize eligible bounties." action={pay.stripe_set_up === false ? null : <Button primary onClick={() => leave('/api/me/card')}>Save a card on Stripe&apos;s page</Button>} />
         <Said message={message} />
       </>
     );
@@ -141,7 +141,7 @@ export function PayOnMergeOwner({ pay, setPay }) {
     <>
       {pay.card ? <Rows>
         <Row icon="▭" tone="card" title={pay.card} detail="Pays for every repository below. Saved on Stripe's page; the board never sees the number." actions={<><Button onClick={() => leave('/api/me/card')}>Replace</Button><Button danger onClick={() => setRemoving(true)}>Remove</Button></>} />
-      </Rows> : <p>Saved PayPal can pay eligible merges to connected PayPal accounts. Manage it below.</p>}
+      </Rows> : <div><p>Saved PayPal can pay eligible merges to connected PayPal accounts. Manage it below.</p>{pay.stripe_set_up === false ? null : <Button onClick={() => leave('/api/me/card')}>Save a card on Stripe&apos;s page</Button>}</div>}
       {pay.card ? <form className="mt-4 flex flex-wrap items-end gap-3" onSubmit={async event => { event.preventDefault(); if (await call('/api/me/pay', { limit: Number(limit), repositories })) window.location.href = '/setup/finish/'; }}>
         <label>Default maximum for an import approved with “on merge”, USD<input className={FIELD} type="number" min="1" max="100000" required value={limit} onChange={event => setLimit(event.target.value)} /></label>
         <Button type="submit">Save limit</Button>
@@ -169,7 +169,7 @@ export function PayOnMergeOwner({ pay, setPay }) {
       <Dialog open={removing} onClose={() => setRemoving(false)} title="Remove your card?" danger submit="Remove card"
         onSubmit={async event => { event.preventDefault(); if (await call('/api/me/pay', { remove_card: true }) !== null) setRemoving(false); }}>
         <ul data-removing className="flex flex-col gap-2 list-disc pl-5">
-          <li>{repositories.length === 0 ? 'Pay on merge stops.' : `Pay on merge stops for ${repositories.length === 1 ? 'your 1 repository' : `all ${repositories.length} repositories`}.`}</li>
+          <li>{pay.saved_paypal ? 'Saved PayPal and repository switches stay available for eligible PayPal payments.' : repositories.length === 0 ? 'Pay on merge stops.' : `Pay on merge stops for ${repositories.length === 1 ? 'your 1 repository' : `all ${repositories.length} repositories`}.`}</li>
           <li>{pay.card} is removed from Stripe; the board can no longer charge it.</li>
           <li>Payments already made do not change. You can still pay any bounty from its page.</li>
         </ul>

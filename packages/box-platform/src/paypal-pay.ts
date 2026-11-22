@@ -20,7 +20,7 @@ export async function vaultSetup(env: Env, githubId: number, origin: string, now
 }
 
 export async function vaultSaved(env: Env, githubId: number, setupId: unknown, limit: unknown, now: number): Promise<{ saved: true } | { error: string }> {
-  if (typeof setupId !== 'string' || !Number.isSafeInteger(limit) || (limit as number) < 1 || (limit as number) > 10000) return { error: 'Name your setup token and a whole-dollar limit from 1 to 10000. Nothing was saved.' };
+  if (typeof setupId !== 'string' || !Number.isSafeInteger(limit) || (limit as number) < 1 || (limit as number) > 100000) return { error: 'Name your setup token and a whole-dollar limit from 1 to 100000. Nothing was saved.' };
   const held = await env.DB.prepare('SELECT setup_id FROM paypal_vault_setup WHERE github_id = ? AND setup_id = ? AND expires_at > ?').bind(githubId, setupId, now).first();
   if (held === null) return { error: 'That setup was not started by this GitHub account or has expired. Nothing was saved.' };
   const made = await paypal(env, 'POST', '/v3/vault/payment-tokens', { payment_source: { token: { id: setupId, type: 'SETUP_TOKEN' } } }, `pf52/vault/${githubId}/${setupId}`);
@@ -35,6 +35,7 @@ export async function removeVault(env: Env, githubId: number): Promise<void> {
   const held = await env.DB.prepare('SELECT payment_token FROM paypal_vault WHERE github_id = ?').bind(githubId).first<{ payment_token: string }>();
   await env.DB.prepare('DELETE FROM paypal_vault WHERE github_id = ?').bind(githubId).run();
   await env.DB.prepare('DELETE FROM paypal_vault_setup WHERE github_id = ?').bind(githubId).run();
+  await env.DB.prepare('DELETE FROM pay_repositories WHERE github_id = ? AND NOT EXISTS (SELECT 1 FROM pay_settings WHERE github_id = ? AND payment_method IS NOT NULL)').bind(githubId, githubId).run();
   if (held !== null) await paypal(env, 'DELETE', `/v3/vault/payment-tokens/${encodeURIComponent(held.payment_token)}`);
 }
 
