@@ -40,6 +40,7 @@ describe('BT60: no bounty is posted without a reward', () => {
   it('2. the same for post --preview: refused before GitHub is asked anything', () => fixture(world => {
     const calls = world.state().calls.length;
     refused(() => previewGitHub(world.repo, world.id), 'reward-required');
+    expect(() => previewGitHub(world.repo, world.id)).toThrow(/in this checkout, the owner runs omakase-box allow --reward N --reward-limit LIMIT.*at least N.*--ask.*retry your command/);
     expect(world.state().calls.length, 'a gh call was made').toBe(calls);
   }));
 

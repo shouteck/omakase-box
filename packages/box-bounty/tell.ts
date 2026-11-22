@@ -3,7 +3,7 @@ import { ownerStatusLine } from './owner-text.js';
 import { renderOpenLine } from './render.js';
 import { instructionBlock, solvingAllowed } from './instructions.js';
 import { readDecision, repoReward } from './settings.js';
-import { boardAddress, readBoardNumbers } from './board.js';
+import { boardAddress, BOUNTY_FEED_PATH, readBoardNumbers } from './board.js';
 import { solvingLines, solvingOf } from './solving.js';
 import { DESCRIBE_LINES, describeModeLine, describeRewardLine, renderRulesBlock, SOLVING_LINES } from './wording.js';
 
@@ -62,7 +62,7 @@ export function renderDescribeSolving(): string {
     ...SOLVING_LINES,
     '',
     ...solvingLines(false),
-    board === '' ? 'board: none named, so there is nothing to discover; the owner names one with omakase-box config set board <address>' : `board: ${board} — discover reads its public feed`,
+    board === '' ? 'board: none named, so there is nothing to discover; the owner names one with omakase-box config set board <address>' : `bounty feed: ${board}${BOUNTY_FEED_PATH} — public JSON, no sign-in; omakase-box discover reads this feed`,
     ...(board === '' ? [] : [readBoardNumbers() ?? '']),
     '',
     solvingOf().mode === 'off'

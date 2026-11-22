@@ -38,7 +38,7 @@ export function promisedTotal(open: readonly BountyRecord[]): number {
 // minimum is a rule, and what to set is the owner's word.
 export function assertMinimumReward(amount: number): void {
   if (amount >= MINIMUM_REWARD_USD || process.env['BOX_BOUNTY_ALLOW_ZERO_FOR_TESTING'] === '1') return;
-  throw new BountyRefused('reward-required', `a bounty is not posted without a reward: this repository has none set (the least is ${MINIMUM_REWARD_USD}, in whole dollars); nothing was posted; next: the owner sets one with omakase-box allow --reward <whole dollars> --reward-limit <whole dollars>`);
+  throw new BountyRefused('reward-required', `a bounty is not posted without a reward: this repository has none set (the least is ${MINIMUM_REWARD_USD}, in whole dollars); nothing was posted; next: in this checkout, the owner runs omakase-box allow --reward N --reward-limit LIMIT, replacing N with the whole-dollar reward and LIMIT with the maximum promised across open bounties (at least N); add --ask to require approval each time, then retry your command`);
 }
 
 export function rewardForPost(repoRoot: string): { readonly amount: number } {

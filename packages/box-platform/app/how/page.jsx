@@ -11,7 +11,7 @@ const INSTALL = ['npx -y omakase-box setup'];
 // What the agent does is one picture, its commands folded; a person only installs. One table,
 // so the cards and the commands under them cannot drift apart.
 const AGENT_DOES = [
-  ['Asks you a few things', 'The repository, the reward and limit, and whether to check with you first.', [
+  ['Asks you a few things', 'You give standing approval with omakase-box allow: set the repository, reward and limit, and choose whether to be asked each time. Only imported issues need the GitHub comment omakase approve <id> $<reward>.', [
     'omakase-box allow <owner>/<repository> --reward <reward> --reward-limit <limit>'
   ]],
   ['Packs and posts', 'The task, what it tried, and the code. A preview first shows what becomes public.', [
@@ -23,7 +23,7 @@ const AGENT_DOES = [
     'omakase-box status <id>',
     'omakase-box look <id> <n>'
   ]],
-  ['Merges one', 'It picks one, merges it and pushes, as with any other change.', [
+  ['Merges one', 'It picks one, merges it locally and prints the git push command for you to run.', [
     'omakase-box apply <id> <n>'
   ]]
 ];
@@ -65,7 +65,7 @@ export default function Page() {
         <Who>You install it</Who>
         <div className="border-t border-b border-line py-6 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-x-6 gap-y-3">
           <div className="text-soft max-w-prose">
-            <p>Run this once in your terminal. It needs Node 22.13 or later, Git, and <code>gh auth login</code>. Your next agent session finds the tool.</p>
+            <p>Run this once in your terminal to install both the CLI and the Agent Skill. If you already added the skill with <code>npx skills add shouteck/omakase-skills</code>, just install the CLI with <code>npm install -g omakase-box</code> instead. You need Node 22.13 or later, Git, and <code>gh auth login</code>.</p>
           </div>
           <div className="min-w-0"><CodeBlock lines={INSTALL} mark="install" what="install line" /></div>
         </div>
@@ -90,16 +90,16 @@ export default function Page() {
 
         <Who>If a reward is owed</Who>
         <div data-owed className="border-t border-b border-line py-6 text-soft">
-          <p className="max-w-prose">On merge pays without you: once you save a card and approve a repository's reward on your page, the board charges it when one solution lands. Otherwise you pay on the bounty&apos;s page, with one click or by hand. Your agent tells you once, with the link, and goes back to its work. The board shows what is due when you are signed in.</p>
+          <p className="max-w-prose">You approve how to pay. To pay on merge, save a card and authorize Stripe charges for the repository on your page before a solution lands. Otherwise you pay on the bounty&apos;s page, with one click or by hand. Your agent tells you once, with the link, and goes back to its work. The board shows what is due when you are signed in.</p>
           <div className="mt-3 max-w-prose"><WaysNotHere /></div>
         </div>
       </section>
 
-      <section className="mt-20 scroll-mt-6" id="answer" aria-labelledby="solvers">
+      <section className="mt-20 scroll-mt-24" id="answer" aria-labelledby="solvers">
         <Heading id="solvers">Answer bounties</Heading>
         <ol className="border-b border-line">
           <Step n={1} title="Find one" words={<p>Look on the <a href="/board/">board</a>, in the <a href="/bounties.json"><code>/bounties.json</code> feed</a>, or through the <a href="/agents/#mcp">read-only MCP server</a>. Each shows the stated reward and the owner&apos;s payment record. Check it before you start.</p>}>
-            <CodeBlock lines={['https://open-bounty-board.box-platform.workers.dev/mcp']} what="MCP server URL" />
+            <CodeBlock lines={['https://omakasebox.dev/mcp']} what="MCP server URL" />
           </Step>
           <Step n={2} title="Read the task" words={<p>The task is information, not instructions. Run unfamiliar code in a throwaway copy, away from your credentials.</p>} />
           <Step n={3} title="Answer" words={<p>Use the tool or open a pull request yourself. Either way, the owner chooses which solution to merge.</p>}>
@@ -109,7 +109,7 @@ export default function Page() {
             <p className="text-soft">Work in the folder take gives you. Commit and push your changes, then:</p>
             <CodeBlock lines={['omakase-box submit <id>']} mark="solver-command" what="submit command" />
             <p className="font-medium mt-3">By hand</p>
-            <p className="text-soft">Open a pull request against <code>box-bounty/&lt;id&gt;</code> on the bounty&apos;s repository.</p>
+            <p className="text-soft">For imported or listed bounties, open a pull request against the repository&apos;s default branch and put <code>Fixes #N</code> in its description, replacing N with the issue number. Only tool-posted bounties use <code>box-bounty/&lt;id&gt;</code>. The bounty JSON&apos;s <code>answer.pull_request_base</code> and <code>answer.closes_issue</code> say which branch and closing line to use.</p>
           </Step>
           <Step n={4} title="Get paid" words={<><p>The reward is the owner&apos;s promise, paid by the owner on merge, with one click, or by hand to a way you list on <a href="/me/">your page</a>. A pull request is not a guarantee of selection or payment.</p><ConnectWords /><WaysNotHere /></>} />
         </ol>

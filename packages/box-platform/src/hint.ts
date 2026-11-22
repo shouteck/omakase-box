@@ -54,7 +54,7 @@ export async function hintResponse(request: Request, env: Env, now: number): Pro
   await db.batch([
     metaStatement(db, 'hint_minute', minute),
     metaStatement(db, 'hint_count', String(count + 1)),
-    db.prepare('DELETE FROM hints WHERE at <= ?').bind(now - BOUNTY_GAP_MS)
+    db.prepare('DELETE FROM hints WHERE at <= ?').bind(now - (env.hintGapMs ?? BOUNTY_GAP_MS))
   ]);
   if (await db.prepare('SELECT at FROM hints WHERE bounty_id = ?').bind(hint.bounty).first() !== null) return LATER('This bounty was looked at in the last minute.');
   if (budgetHalfSpent(env, meta, now)) return LATER('The board is saving its GitHub reads this hour.');

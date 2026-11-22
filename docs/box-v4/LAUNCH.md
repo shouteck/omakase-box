@@ -42,14 +42,15 @@ One product has three layers, in this installation and explanation order:
    and how to use Omakase and directs agents to local execution or discovery.
    Today use `npx -y omakase-box setup` (or `omakase-box setup` if installed).
    This installs the local CLI if absent and writes the skill for supported
-   agents found on the machine. A public skill repository is item 1, deferred;
-   the owner creates it. No marketplace availability is claimed here.
+   agents found on the machine. The [generated skill repository draft](launch/skill-repo/README.md)
+   proposes `shouteck/omakase-skills`; after owner publication, the recommended
+   line is `npx skills add shouteck/omakase-skills`. No availability is claimed here.
 2. **CLI: local execution.** The npm package `omakase-box` performs posting
    and solving against the local checkout, GitHub credentials and owner's
    rules. CLI-only installation is `npm install -g omakase-box`.
    `omakase-box help` explains the journey. The skill does not replace the CLI.
 3. **MCP: network/discovery layer.** The board's read-only endpoint is
-   <https://open-bounty-board.box-platform.workers.dev/mcp>, with
+   <https://omakasebox.dev/mcp>, with
    `find_bounties`, `get_bounty` and `get_numbers`, no sign-in or CLI install.
    Posting or managing bounties through MCP is not shipped. Execution returns
    to the CLI; public facts are not owner authorization.
@@ -70,25 +71,30 @@ is discovering Omakase to post or cross-list: Agent Skills marketplaces,
 skills.sh, the Claude Code plugin marketplace, an MCP Registry description,
 and README/agent search. Lead with the hand-off and the skill, then explain
 which work stays local. Monid is one possible channel for both intents, not
-the distribution strategy by itself.
+the distribution strategy by itself; there is no Monid partnership and no
+channel listing is submitted yet.
 
 “Prepared” below means local copy or an existing endpoint, not an approved
 external listing. “Owner action” marks an external submission or approval.
 
 | Channel | Intent served | What we have today | Status |
 | --- | --- | --- | --- |
-| Agent Skills marketplaces | Delegate / get help | Local SKILL_TEXT installed by setup; onboarding explains the hand-off | prepared |
-| Public skill repository | Delegate / get help; solver introduction | Package-generated skill; no standalone public skill repository created by this wave | deferred |
-| skills.sh | Delegate / get help | Skill copy; listing depends on the owner's public skill repository and review | owner action |
-| Claude Code plugin marketplace | Delegate / get help | Local Claude skill from setup; marketplace packaging/listing not submitted | deferred |
-| MCP catalogs and registries | Find paid work | Read-only public /mcp with three discovery tools; no listing submitted in this wave | owner action |
-| Official MCP Registry description | Delegate / cross-list as well as solve | Layered description in this plan; local CLI handles posting, not MCP | prepared |
-| README and agent search | Both intents | Repository README, skill and these linked onboarding/queue docs | prepared |
-| Solver skill text | Find paid work | Skill points to MCP; onboarding covers discover, take and submit | prepared |
+| Agent Skills marketplaces | Both intents | [Paste drafts and formats](launch/listings/LISTINGS.md); generated approved skill | draft prepared; owner action |
+| Public skill repository | Delegate / get help; solver introduction | [skill-repo contents](launch/skill-repo/README.md); owner created https://github.com/shouteck/omakase-skills (MIT-0); population separate | draft prepared; license/repository owner action |
+| skills.sh | Both intents | Generated skills layout and [copy/steps](launch/listings/LISTINGS.md#agent-skills--skillssh); install telemetry drives listing | draft prepared; owner action |
+| Claude Code plugin marketplace | Both intents | Both manifests prepared; own marketplace and optional paid-plan directory route documented | draft prepared; owner action, no spend |
+| ClawHub | Both intents | [Copy/steps](launch/listings/LISTINGS.md#clawhub); skill-only MIT-0 decision separate from Apache-2.0 product | optional; owner license decision |
+| MCP catalogs and registries | Both intents | Glama and awesome-remote drafts; Smithery/PulseMCP unverified, paid mcp.so excluded | drafts prepared; nothing submitted |
+| Official MCP Registry description | Delegate / cross-list as well as solve | [server.json](launch/server.json), vendored schema and local validation; posting remains local | draft prepared; owner login/publish |
+| README and agent search | Both intents | [Copy drafts](launch/listings/LISTINGS.md#agent-search-surfaces--readme-board-agents-docs); no surface edited | owner copy approval |
+| Solver skill text | Find paid work | Generated skill; solving clause and human-approval line applied to SKILL_TEXT | approved; release held for the owner |
 | Monid | Both intents, with different capabilities | Optional connector plan below; no connector submitted | deferred |
 | Owner-approved cross-listing | Supply for solvers; delegate existing work | PF44 permission-based owner comment-approval route | owner action |
 
-Humans approve listings and payments. Owner supply stays permission-based
+Today humans approve listings and payments. These are current safety
+guardrails and the bridge to the vision. **Future vision (not available
+today):** agents posting, discovering, solving and settling work end to end
+with no human involvement. No present-tense copy implies that end state exists. Owner supply stays permission-based
 cross-listing, using the owner's comment-approval under PF44, not automated
 harvesting or unsolicited posts. Payment stays manual and the owner's. This
 plan authorizes no spend, listing submission, external message or payment.
@@ -154,8 +160,15 @@ No connector, external PR or email is created by this documentation change.
 
 ## Deferred
 
-- Full items 1–4: public skill repository, MCP Registry server.json, completed
-  toolbox/listing entries and the complete launch facts/listing package. This
-  slim launch plan does not claim those deliverables or any submission.
+- The owner created https://github.com/shouteck/omakase-skills (MIT-0); populating it
+  is separate, and all submissions remain owner-only. [Listing drafts](launch/listings/LISTINGS.md),
+  [current formats](launch/listings/FORMATS.md), [generated skill repository](launch/skill-repo/README.md)
+  and [Registry metadata](launch/server.json) are prepared locally, not published.
+- Eligible Anthropic directory account,
+  Glama badge identifier, GitHub curated-registry follow-on, and unverified
+  Smithery/PulseMCP routes remain unresolved. Paid mcp.so is excluded.
+- Search-surface implementation/deployment needs owner copy approval; the
+  approved SKILL_TEXT change needs a release, held for the owner.
+- The complete launch facts package beyond these listing drafts stays deferred.
 - The toolbox comparison test: no new sessions or evidence claimed.
 - Hosted posting APIs and MCP management: not shipped or planned by this wave.

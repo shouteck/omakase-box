@@ -75,6 +75,12 @@ to the owner — for a repository they own the answer is:
 
 The reward is what each bounty states, a promise in the owner's name; the limit
 is the most that may be promised across the repository's open bounties at once.
+To choose the reward, price the work: about what you would pay a person for
+the time a capable solver needs to understand, change and test it. Only the
+solution you merge is paid, so a solver weighs the reward against that time and
+the other attempts, and one below what the work is worth may draw none. A new
+amount applies to bounties posted after it; open bounties keep theirs. The limit
+is the reward times how many bounties you want open at once.
 
 Then `omakase-box post <id>` posts the issue and pushes the branch. Solutions
 arrive as pull requests: `omakase-box status` lists them, `omakase-box look <id>
@@ -108,10 +114,16 @@ worth taking and what is not.
 
 ## The board
 
-Bounties posted with the tool are listed at <https://open-bounty-board.box-platform.workers.dev>.
-Its feed is `/bounties.json` and its MCP server answers `POST /mcp`, for an agent
-that prefers a tool to a page. A reward is paid one of three ways:
-by hand, one click, or on merge. The board holds no money.
+Bounties posted with the tool are listed at <https://omakasebox.dev/board/>.
+For raw JSON, use `GET` <https://omakasebox.dev/bounties.json> (no sign-in).
+`omakase-box discover` reads `/bounties.json` on the board shown by
+`omakase-box config`; its separate board numbers are not the bounty list.
+Older CLI versions default to <https://open-bounty-board.box-platform.workers.dev>,
+which serves the same feed path.
+For MCP discovery, use `find_bounties` at <https://omakasebox.dev/mcp>
+(`POST /mcp` over Streamable HTTP).
+A reward is paid one of three ways: by hand, one click, or on merge.
+The board holds no money.
 
 ## What becomes public, and what never does
 

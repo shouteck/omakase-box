@@ -34,10 +34,14 @@ describe('PF6 launch copy contract', () => {
     expect(SKILL_TEXT).toContain('It says what is set up and what to do next; `omakase-box help` shows the journey.');
     expect(SKILL_TEXT).toContain('Posting is free apart from any reward the owner set, and goes only to this repository\'s own public GitHub, as an issue. The owner decides once. If they have not yet, `omakase-box` says what to ask them. Using it is always your call.');
     expect(SKILL_TEXT).toContain('npm install -g omakase-box');
-    expect(SKILL_TEXT).toContain('https://open-bounty-board.box-platform.workers.dev/mcp');
+    expect(SKILL_TEXT).toContain('https://omakasebox.dev/mcp');
     expect(SKILL_TEXT).toMatch(/read-only MCP/i);
     expect(SKILL_TEXT).toContain('without installing');
     expect(SKILL_TEXT).toContain('no sign-in');
+    expect(SKILL_TEXT).toContain('Solving stays off until your owner allows it with `omakase-box config set solving allowed`');
+    expect(SKILL_TEXT).toMatch(/omakase-box discover[\s\S]*omakase-box take <id>[\s\S]*omakase-box submit <id>[\s\S]*omakase-box status <id>/);
+    expect(SKILL_TEXT).toContain('an unconfigured repository can enter poster setup');
+    expect(SKILL_TEXT).toContain('Standing approval: `omakase-box allow`. Imports only: GitHub comment `omakase approve <id> $<reward>`');
     expect(commands(SKILL_TEXT).filter(command => !knownCommands.has(command))).toEqual([]);
     expect(SKILL_TEXT).not.toMatch(promises);
   });
@@ -51,15 +55,27 @@ describe('PF6 launch copy contract', () => {
     expect(post).toBeGreaterThan(layers);
     expect(solve).toBeGreaterThan(post);
   });
+  it('the launch plan and onboarding point to the branded MCP endpoint', () => {
+    for (const path of [documents[0]!, documents[2]!, 'FIRST-FIVE-MINUTES.md']) {
+      expect(read(path)).toContain('<https://omakasebox.dev/mcp>');
+    }
+  });
   it('setup installs exactly the skill bytes that the launch describes', () => {
     const home = runRoot('pf6-skill');
     const bin = join(home, 'bin');
     mkdirSync(bin); mkdirSync(join(home, '.claude'));
     for (const name of ['omakase-box', 'omakase-box.cmd']) writeFileSync(join(bin, name), '');
-    const run = spawnSync(process.execPath, [CLI_DIST, 'setup'], {
+    const setup = () => spawnSync(process.execPath, [CLI_DIST, 'setup'], {
       encoding: 'utf8', env: { ...process.env, HOME: home, USERPROFILE: home, PATH: [bin, process.env['PATH']].join(delimiter) }
     });
+    const run = setup();
     expect(run.status, run.stderr).toBe(0);
     expect(readFileSync(join(home, '.claude', 'skills', 'omakase-box', 'SKILL.md'), 'utf8')).toBe(SKILL_TEXT);
+
+    const skill = join(home, '.claude', 'skills', 'omakase-box', 'SKILL.md');
+    writeFileSync(skill, SKILL_TEXT.replace('https://omakasebox.dev/mcp', 'https://open-bounty-board.box-platform.workers.dev/mcp'));
+    const refresh = setup();
+    expect(refresh.status, refresh.stderr).toBe(0);
+    expect(readFileSync(skill, 'utf8')).toBe(SKILL_TEXT);
   });
 });

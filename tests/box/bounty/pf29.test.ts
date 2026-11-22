@@ -77,8 +77,22 @@ describe('the board in one line', () => {
     changeConfig(null, 'set', 'solving', 'allowed');
     routes({ '/bounties.json?since=start&limit=10': listing([]) });
     const lines = renderDiscover(discover({})).join('\n');
+    expect(lines).toContain(`discover: read bounty feed ${board}/bounties.json — 0 new bounties`);
     expect(lines).toContain(`board numbers: not read (the board answered 404) · ${board}/numbers/`);
     expect(lines).not.toContain('0 of 0');
+    expect(renderDescribeSolving()).toContain(`bounty feed: ${board}/bounties.json`);
+  });
+
+  it.each([
+    { status: 404, problem: ': the board answered 404' },
+    { status: 200, problem: ' did not return a bookmark or a list' }
+  ])('discover names the feed and why it was unread after HTTP $status', ({ status, problem }) => {
+    changeConfig(null, 'set', 'board', board);
+    changeConfig(null, 'set', 'solving', 'allowed');
+    routes({ '/bounties.json?since=start&limit=10': { status, body: {} } });
+    expect(() => discover({})).toThrow(expect.objectContaining({
+      reason: 'board-unread', message: expect.stringContaining(`bounty feed ${board}/bounties.json${problem}`)
+    }));
   });
 });
 

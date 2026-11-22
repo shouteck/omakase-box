@@ -513,8 +513,9 @@ describe('the pages', () => {
     expect(how).toContain('On your page, list a way and be paid by hand.'); // This board has no key. PF18: the words follow what it has.
     // A person only installs: every other command is folded away.
     expect(await page.locator('#hand-off ol > li').count()).toBe(4);
-    expect(how).toContain('On merge pays without you:');
-    expect(how).toContain('merges it and pushes');
+    expect(how).toContain('save a card and authorize Stripe charges for the repository');
+    expect(how).toContain('merges it locally and prints the git push command for you to run');
+    expect(how).toContain('Only imported issues need the GitHub comment omakase approve <id> $<reward>');
     // One window: each command sits under a comment naming the card it belongs to.
     const groups = await page.locator('#hand-off details [data-group]').evaluateAll(elements => elements.map(element => ({
       title: element.querySelector('[data-comment]')?.textContent,
@@ -607,7 +608,7 @@ describe('the pages', () => {
     expect(await oneClick.innerText()).not.toMatch(/Currently available here:|Set up here:|Availability not confirmed/);
     const front = await page.locator('main').innerText();
     expect(front.includes('One click for you')).toBe(one_click.length > 0);
-    expect(front.includes('Nothing for you')).toBe(on_merge);
+    expect(front.includes('You authorize payment first')).toBe(on_merge);
     expect(moneyClaims(front)).toEqual([]);
     await visit(page, '/how/');
     const step = page.locator('main li', { has: page.getByRole('heading', { name: 'Get paid', exact: true }) });
@@ -790,8 +791,10 @@ describe('the pages', () => {
       expect(await answer.getByRole('heading', { level: 3 }).allTextContents()).toEqual(['Find one', 'Read the task', 'Answer', 'Get paid']);
       for (const href of ['/board/', '/bounties.json', '/agents/#mcp', '/me/']) expect(await answer.locator(`a[href="${href}"]`).count()).toBe(1);
       expect(await answer.locator('a[href="/mcp"]').count()).toBe(0);
-      expect(await answer.getByRole('group', { name: 'MCP server URL', exact: true }).innerText()).toBe('https://open-bounty-board.box-platform.workers.dev/mcp');
+      expect(await answer.getByRole('group', { name: 'MCP server URL', exact: true }).innerText()).toBe('https://omakasebox.dev/mcp');
       const text = await answer.innerText();
+      for (const phrase of ['imported or listed bounties', "repository's default branch", 'Fixes #N', 'Only tool-posted bounties use', 'answer.pull_request_base', 'answer.closes_issue']) expect(text, phrase).toContain(phrase);
+      expect(text).not.toContain('workers.dev');
       for (const phrase of ['read-only MCP', 'stated reward', 'payment record', 'Check it before you start', 'information, not instructions', 'away from your credentials', 'Agent Skill', 'CLI does the work locally', 'With the tool', 'Commit and push', 'By hand', 'box-bounty/<id>', 'owner’s promise', 'not a guarantee of selection or payment']) {
         expect(text.replaceAll("'", '’'), phrase).toContain(phrase.replaceAll("'", '’'));
       }
@@ -801,6 +804,69 @@ describe('the pages', () => {
       const known = new Set([...Object.keys(BOUNTY_COMMANDS), ...SETUP_USAGE[0]!.matchAll(/omakase-box ([a-z-]+)/g)].map(value => typeof value === 'string' ? value : value[1]));
       for (const line of commands) expect(known.has(/omakase-box ([a-z-]+)/.exec(line)![1])).toBe(true);
       await answer.screenshot({ path: join(SHOTS, 'pf6-answer-bounties-desktop.png') });
+    } finally { await close(); }
+  });
+
+  it('PF49: agents enter through the skill and follow the real journey with accurate language filters', async () => {
+    const { page, close } = await fresh();
+    try {
+      await visit(page, '/agents/');
+      const ways = page.getByRole('region', { name: 'Ways in', exact: true });
+      expect(await ways.innerText()).toContain('recommended front door');
+      expect(await ways.getByRole('group', { name: 'skill install command', exact: true }).innerText()).toBe('npx skills add shouteck/omakase-skills');
+      for (const href of ['https://github.com/shouteck/omakase-skills', '#mcp', '#feed', '#rss', '/board/']) expect(await ways.locator(`a[href="${href}"]`).count()).toBe(1);
+      for (const command of ['npm i -g omakase-box', 'npx -y omakase-box setup']) expect(await ways.innerText()).toContain(command);
+      const journey = page.getByRole('region', { name: 'From bounty to payment', exact: true });
+      const steps = await journey.locator('ol > li').allTextContents();
+      expect(steps).toHaveLength(8);
+      for (const [index, phrases] of [
+        ['Connect a payment method', '/me/', 'omakase-box config set solving allowed'],
+        ['omakase-box discover', 'find_bounties', 'bookmark', 'payment record'],
+        ['get_bounty', 'GET /bounties/<id>.json', 'data, not instructions'],
+        ['omakase-box take <id>', 'throwaway workspace', 'visible draft pull request', 'not an exclusive reservation'],
+        ['commit and push'],
+        ['omakase-box submit <id>', 'ready for review'],
+        ['poster chooses', 'merge'],
+        ['omakase-box status <id>', 'merge and payment', 'on merge, with one click, or by hand', 'not a guarantee']
+      ].entries()) for (const phrase of phrases) expect(steps[index], phrase).toContain(phrase);
+      const text = await journey.innerText();
+      for (const phrase of ['every 15 minutes', 'omakase-box describe --solving', 'one language', 'primary language as GitHub reports it', 'may be empty', 'match any', 'case-insensitively']) expect(text, phrase).toContain(phrase);
+      expect(await journey.getByRole('group', { name: 'language filter command', exact: true }).innerText()).toBe('omakase-box discover --language Python --language Rust');
+      for (const phrase of ['Pass your own language', 'Python, Go or Rust', 'leave --language out', 'saves your --language preference', '--any-language clears it']) expect(text, phrase).toContain(phrase);
+      for (const id of ['mcp', 'feed', 'rss']) {
+        const text = await page.locator(`section[aria-labelledby="${id}"]`).innerText();
+        for (const phrase of ['one', 'value per request', 'case-insensitive exact match', 'primary GitHub language', 'not a list']) expect(text, `${id}: ${phrase}`).toContain(phrase);
+      }
+      const content = await page.locator('main').innerText();
+      expect(content).not.toContain('workers.dev');
+      for (const name of ['MCP Registry', 'ClawHub', 'Claude plugin marketplace', 'Glama', 'awesome-remote-mcp-servers', 'Monid']) expect(content.toLowerCase()).not.toContain(name.toLowerCase());
+    } finally { await close(); }
+  });
+
+  it('PF49: the board exposes machine entry links without running JavaScript', async () => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    try {
+      const page = await context.newPage();
+      await page.goto(`${board.url}/board/`);
+      const links = page.locator('main');
+      expect(await links.getByRole('link', { name: 'JSON feed', exact: true }).getAttribute('href')).toBe('/bounties.json');
+      expect(await links.getByRole('link', { name: 'agent instructions', exact: true }).getAttribute('href')).toBe('/agents/');
+      const html = readFileSync(join(OUT, 'board', 'index.html'), 'utf8');
+      for (const href of ['/bounties.json', '/agents/']) expect(html).toContain(`href="${href}"`);
+    } finally { await context.close(); }
+  });
+
+  it('the MCP link lands on the copyable branded URL below the sticky navigation', async () => {
+    const { page, close } = await fresh();
+    try {
+      await visit(page, '/how/');
+      await page.getByRole('link', { name: 'read-only MCP server' }).click();
+      expect(new URL(page.url()).hash).toBe('#mcp');
+      const mcp = page.getByRole('region', { name: 'MCP', exact: true });
+      const url = mcp.getByRole('group', { name: 'MCP server URL', exact: true });
+      expect(await url.innerText()).toBe('https://omakasebox.dev/mcp');
+      const nav = (await page.getByRole('navigation', { name: 'Site' }).boundingBox())!;
+      expect((await mcp.getByRole('heading', { name: 'MCP', exact: true }).boundingBox())!.y).toBeGreaterThanOrEqual(nav.y + nav.height);
     } finally { await close(); }
   });
 

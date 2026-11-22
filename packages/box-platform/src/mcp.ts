@@ -108,12 +108,15 @@ export async function mcpResponse(request: Request, env: Env, now: number): Prom
     const asked = params?.['protocolVersion'];
     return result({
       protocolVersion: typeof asked === 'string' && VERSIONS.includes(asked) ? asked : VERSIONS[0],
-      capabilities: { tools: {} },
-      serverInfo: { name: 'open-bounty-board', title: 'Open bounty board', version: '0.1.0' },
+      capabilities: { tools: {}, resources: {}, prompts: {} },
+      serverInfo: { name: 'open-bounty-board', title: 'Open bounty board', version: '0.4.1' },
       instructions: INSTRUCTIONS
     });
   }
   if (method === 'ping') return result({});
+  if (method === 'resources/list') return result({ resources: [] });
+  if (method === 'resources/templates/list') return result({ resourceTemplates: [] });
+  if (method === 'prompts/list') return result({ prompts: [] });
   if (method === 'tools/list') return result({ tools: TOOLS });
   if (method === 'tools/call') {
     const called = await callTool(env, now, url.origin, params?.['name'], params?.['arguments']);

@@ -1,0 +1,14 @@
+{
+  "name": "omakase-box",
+  "version": "0.4.1",
+  "description": "Omakase Agent Skill: hand off work or find paid work to solve. Humans approve listings and payments.",
+  "author": {
+    "name": "shouteck"
+  },
+  "homepage": "https://omakasebox.dev",
+  "repository": "https://github.com/shouteck/omakase-skills",
+  "skills": [
+    "./skills/"
+  ],
+  "license": "MIT-0"
+}
