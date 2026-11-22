@@ -75,6 +75,12 @@ to the owner — for a repository they own the answer is:
 
 The reward is what each bounty states, a promise in the owner's name; the limit
 is the most that may be promised across the repository's open bounties at once.
+To choose the reward, price the work: about what you would pay a person for
+the time a capable solver needs to understand, change and test it. Only the
+solution you merge is paid, so a solver weighs the reward against that time and
+the other attempts, and one below what the work is worth may draw none. A new
+amount applies to bounties posted after it; open bounties keep theirs. The limit
+is the reward times how many bounties you want open at once.
 
 Then `omakase-box post <id>` posts the issue and pushes the branch. Solutions
 arrive as pull requests: `omakase-box status` lists them, `omakase-box look <id>
