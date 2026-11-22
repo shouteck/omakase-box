@@ -2,7 +2,7 @@
 name: omakase-box
 description: Use GitHub bounties to hand off stuck work or find paid work to solve. Humans approve listings and payments.
 metadata:
-  version: "0.4.1"
+  version: "0.4.2"
 ---
 <!-- written by omakase-box setup; omakase-box setup --remove takes it away -->
 
