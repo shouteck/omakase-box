@@ -516,6 +516,12 @@ describe('the pages', () => {
     expect(how).toContain('save a card and authorize Stripe charges for the repository');
     expect(how).toContain('merges it locally and prints the git push command for you to run');
     expect(how).toContain('Only imported issues need the GitHub comment omakase approve <id> $<reward>');
+    expect(how).toContain('There is no separate per-listing approval under that permission');
+    expect(how).toContain('omakase approve <id> $N');
+    expect(how).toContain('The listing stays pending until that approval is read');
+    expect(how).not.toContain('After that it can post without asking you');
+    expect(how).toContain('apply never pushes');
+    expect(how).toContain('The solver is credited when the merge reaches the repository\'s default branch on GitHub');
     // One window: each command sits under a comment naming the card it belongs to.
     const groups = await page.locator('#hand-off details [data-group]').evaluateAll(elements => elements.map(element => ({
       title: element.querySelector('[data-comment]')?.textContent,
@@ -636,6 +642,35 @@ describe('the pages', () => {
       return view;
     };
     const selected = (page: Page) => page.locator('[aria-label="Your role"] [role=tab][aria-selected=true]').innerText();
+
+    it.each([
+      ['poster only', true, false, '', 'Owner'],
+      ['no activity', false, false, '', 'Solver'],
+      ['both roles', true, true, '', 'Solver'],
+      ['explicit solver anchor', true, false, '#methods', 'Solver'],
+      ['explicit owner anchor', false, true, '#bounties', 'Owner']
+    ])('PF51: default role for %s', async (_name, owns, solves, hash, want) => {
+      const bounty = { id: STATE_IDS.owed, title: 'Waiting task', repository: 'example-org/ledger', issue_number: 4, created_at: new Date(NOW).toISOString(), reward: 45, solutions: 0, stage: 'waiting' };
+      const solution = { ...bounty, pull_number: 10, from: 'example-mara', stage: 'progress', draft: true, checks: 'pending' };
+      const { page, close } = await open({ ...base, login: 'example-rook', bounties: { list: owns ? [bounty] : [], more: false }, solutions: { list: solves ? [solution] : [], more: false }, pay: pay() }, `/me/${hash}`);
+      expect(await selected(page)).toContain(want);
+      if (owns && !solves && hash === '') {
+        await page.click('[aria-label="Your role"] [role=tab]:has-text("Solver")');
+        await page.reload();
+        await page.waitForSelector('[role=tablist]');
+        expect(await selected(page)).toContain('Solver');
+      }
+      await close();
+    });
+
+    it('PF51: a failed account read still gives a reload instruction rather than choosing a role', async () => {
+      const { page, close } = await fresh();
+      await page.route('**/api/me', route => route.abort());
+      await visit(page, '/me/');
+      await expect.poll(() => page.locator('main').innerText()).toContain('The board could not be reached. Next: reload this page.');
+      expect(await page.locator('[role=tablist]').count()).toBe(0);
+      await close();
+    });
 
     it('an owner: what they owe, and pay on merge per repository; nothing about ways an owner need not set up', async () => {
       const owed = { id: STATE_IDS.owed, title: 'Pay me', repository: 'example-org/ledger', issue_number: 4, created_at: new Date(NOW - 2 * 86400000).toISOString(), reward: 45, solutions: 1, stage: 'due', merged: 'example-quill', note: null, card_failed: false };
@@ -781,6 +816,24 @@ describe('the pages', () => {
     await page.click('#limits summary >> text=What becomes public');
     expect(await page.locator('#limits details[open]').innerText()).toContain('a private repository is refused');
     await close();
+  });
+
+  it.each(['/', '/how/', '/agents/', '/board/', '/post/', '/docs/'])('PF51: %s has static delegate-first links to existing guides', async path => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    const response = await page.goto(`${board.url}${path}`);
+    expect(response?.status()).toBe(200);
+    const links = await page.locator('main a').evaluateAll(elements => elements.map(a => a.getAttribute('href')));
+    const delegate = links.findIndex(href => href === '/how/#hand-off' || href === '#hand-off');
+    const earn = links.findIndex(href => href === '/how/#answer' || href === '#answer');
+    expect(delegate).toBeGreaterThanOrEqual(0);
+    expect(earn).toBeGreaterThan(delegate);
+    if (path === '/agents/') {
+      const sections = await page.locator('main section').allTextContents();
+      expect(sections.findIndex(words => words.includes('Post work you cannot or should not finish'))).toBeLessThan(sections.findIndex(words => words.includes('From bounty to payment')));
+      expect(await page.locator('section[aria-labelledby="delegate"]').innerText()).toContain('MCP is read-only and cannot post, approve or pay');
+    }
+    await context.close();
   });
 
   it('PF6: answering explains discovery, safe work, both submission paths and owner payment', async () => {
