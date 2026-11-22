@@ -468,16 +468,18 @@ export type RefreshResult = { readonly requests: number; readonly state: 'done' 
 export async function refresh(env: Env): Promise<RefreshResult> {
   const db = env.DB;
   const now = env.now?.() ?? Date.now();
-  const expired = await db.prepare(`SELECT id, repository, issue_number FROM bounties WHERE source = 'listed' AND approval = 'pending' AND listed_by_id IS NULL AND created_at <= ?`)
-    .bind(new Date(now - 14 * 24 * 60 * 60000).toISOString()).all<{ id: string; repository: string; issue_number: number }>();
-  for (const row of expired.results) {
-    await removeBounty(db, row.id);
-    await log(db, now, 'agent-import-expired', `https://github.com/${row.repository}/issues/${row.issue_number}`);
+  const initial = await db.prepare(`SELECT 'meta' AS kind, key, value FROM meta WHERE key IN ('search_tried_at', 'search_complete_at')
+    UNION ALL SELECT 'expired', id, 'https://github.com/' || repository || '/issues/' || issue_number FROM bounties
+    WHERE source = 'listed' AND approval = 'pending' AND listed_by_id IS NULL AND created_at <= ?`)
+    .bind(new Date(now - 14 * 24 * 60 * 60000).toISOString()).all<{ kind: 'meta' | 'expired'; key: string; value: string }>();
+  const meta = new Map(initial.results.filter(row => row.kind === 'meta').map(row => [row.key, row.value]));
+  for (const row of initial.results.filter(row => row.kind === 'expired')) {
+    await removeBounty(db, row.key);
+    await log(db, now, 'agent-import-expired', row.value);
   }
   const github = new GitHub(env, true);
   let searched = false;
   try {
-    const meta = await getMetas(db, ['search_tried_at', 'search_complete_at']);
     let completeAt = Number(meta.get('search_complete_at') ?? 0);
     if (now - Number(meta.get('search_tried_at') ?? 0) >= SEARCH_EVERY_MS) {
       await setMeta(db, 'search_tried_at', String(now));
