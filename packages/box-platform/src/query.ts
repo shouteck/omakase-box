@@ -26,10 +26,10 @@ const ENUMS: Record<string, readonly string[]> = {
 const WHOLE = /^\d{1,9}$/;
 
 /** Open and unmerged, as listed: what every list starts from. */
-export const OPEN_WHERE = [`b.issue_state = 'open'`, `b.approval IS NOT 'pending'`, `NOT EXISTS (SELECT 1 FROM pull_requests m WHERE m.bounty_id = b.id AND m.state = 'merged')`,
-  `NOT EXISTS (SELECT 1 FROM charges c WHERE c.bounty_id = b.id AND c.state = 'paid')`,
+export const UNSETTLED_WHERE = [`NOT EXISTS (SELECT 1 FROM charges c WHERE c.bounty_id = b.id AND c.state = 'paid')`,
   `NOT EXISTS (SELECT 1 FROM (SELECT at, withdrawn, 0 AS by_click FROM events WHERE bounty_id = b.id AND type = 'paid'
     UNION ALL SELECT at, withdrawn, 1 AS by_click FROM paid_clicks WHERE bounty_id = b.id ORDER BY at DESC, by_click DESC LIMIT 1) WHERE withdrawn = 0)`];
+export const OPEN_WHERE = [`b.issue_state = 'open'`, `b.approval IS NOT 'pending'`, `NOT EXISTS (SELECT 1 FROM pull_requests m WHERE m.bounty_id = b.id AND m.state = 'merged')`, ...UNSETTLED_WHERE];
 export const OPEN_COUNT = `(SELECT COUNT(*) FROM pull_requests p WHERE p.bounty_id = b.id AND p.state = 'open')`;
 export const FROM_LISTED = 'FROM bounties b JOIN repositories r ON r.name = b.repository';
 

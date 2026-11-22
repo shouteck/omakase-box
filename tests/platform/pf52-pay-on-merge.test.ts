@@ -363,6 +363,7 @@ describe('PF52: Monid settled open-PR bounties', () => {
     try { await readPaymentComments(r.env, github, id, REPO, 12); } finally { await github.settle(); }
     expect(await (await get('/bounties.json')).text()).not.toContain(id);
     expect(await (await get('/api/board')).text()).not.toContain(id);
+    expect((await fact()).open_to_answers).toBe(false);
     const mcp = await post('/mcp', { jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'find_bounties', arguments: {} } });
     expect(await mcp.text()).not.toContain(id);
     const detail = await (await get(`/api/b/${id}/payment`)).json() as any;
@@ -376,6 +377,7 @@ describe('PF52: Monid settled open-PR bounties', () => {
     } else {
       await r.env.DB.prepare('UPDATE paid_clicks SET withdrawn = 1 WHERE bounty_id = ?').bind(id).run();
       expect(await (await get('/bounties.json')).text()).toContain(id);
+      expect((await fact()).open_to_answers).toBe(true);
     }
   });
   it('does not hide an unpaid or declined open bounty', async () => {

@@ -19,7 +19,7 @@ import { sitemapResponse } from './sitemap.js';
 import { mcpResponse } from './mcp.js';
 import { ownerRecords } from './payments.js';
 import { secured } from './security-headers.js';
-import { addOwnerRecord, DAY, filterOf, freshness, FROM_LISTED, OPEN_COUNT, OPEN_WHERE, readBounty, stateOf } from './query.js';
+import { addOwnerRecord, DAY, filterOf, freshness, FROM_LISTED, OPEN_COUNT, OPEN_WHERE, UNSETTLED_WHERE, readBounty, stateOf } from './query.js';
 import { approvalLine } from './refresh.js';
 
 const PAGE_SIZE = 20;
@@ -72,7 +72,7 @@ async function bounty(env: Env, id: string, now: number, origin: string): Promis
   const base = `https://github.com/${row.repository}`;
   const listed = row.source === 'listed';
   const paying = (await payingIds(env, [row.id])).has(row.id);
-  const settled = listed && (await env.DB.prepare(`SELECT 1 AS yes FROM paid_clicks WHERE bounty_id = ? AND withdrawn = 0 UNION SELECT 1 FROM charges WHERE bounty_id = ? AND state = 'paid'`).bind(row.id, row.id).first()) !== null;
+  const settled = (await env.DB.prepare(`SELECT NOT (${UNSETTLED_WHERE.join(' AND ')}) AS settled FROM bounties b WHERE b.id = ?`).bind(row.id).first<{ settled: number }>())?.settled === 1;
   const state = stateOf(row.issue_state, pulls);
   const pending = row.approval === 'pending';
   return json(200, {
@@ -88,7 +88,7 @@ async function bounty(env: Env, id: string, now: number, origin: string): Promis
       issue_number: row.issue_number,
       issue_author: listed ? row.issue_author ?? null : row.poster,
       listed_by: listed ? row.listed_by ?? null : null,
-      open_to_answers: !pending && (listed ? row.issue_state === 'open' && !settled : state === 'open' || state === 'solutions-waiting'),
+      open_to_answers: !pending && !settled && (listed ? row.issue_state === 'open' : state === 'open' || state === 'solutions-waiting'),
       closed_at: row.closed_at,
       repository: row.repository,
       language: row.language,
