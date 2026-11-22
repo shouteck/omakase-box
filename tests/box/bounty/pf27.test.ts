@@ -57,10 +57,10 @@ describe('the solving half, described', () => {
   });
 
   it('the board\'s For agents page shows the solving path, with the board\'s own floor', () => {
-    const page = readFileSync(AGENTS_PAGE, 'utf8');
-    for (const command of ['omakase-box discover --language TypeScript', 'omakase-box take <id>', 'omakase-box submit <id>', 'omakase-box status <id>']) expect(page).toContain(`'${command}'`);
+    const page = readFileSync(AGENTS_PAGE, 'utf8').replaceAll('&lt;', '<').replaceAll('&gt;', '>');
+    for (const command of ['omakase-box discover --language Python --language Rust', 'omakase-box take <id>', 'omakase-box submit <id>', 'omakase-box status <id>']) expect(page).toContain(command);
     expect(page).toContain('omakase-box config set solving allowed');
-    expect(page).toContain('every 15 minutes at most');
+    expect(page).toContain('no more often than every 15 minutes');
     expect(page).not.toContain('more than every 5');
     expect(page).toContain('cursor, since, limit');
   });

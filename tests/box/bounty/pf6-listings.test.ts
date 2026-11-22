@@ -44,6 +44,11 @@ describe('PF6 listing drafts', () => {
     expect(run.stderr).toContain('usage:');
     expect(read('skill-repo/skills/omakase-box/SKILL.md')).toBe(SKILL_TEXT);
   });
+  it('the plugin draft shares the CLI release version', () => {
+    const cli = JSON.parse(readFileSync(join(ROOT, 'packages/box-cli/package.json'), 'utf8'));
+    const plugin = JSON.parse(read('skill-repo/.claude-plugin/plugin.json'));
+    expect(plugin.version).toBe(cli.version);
+  });
   it('the marketplace resolves its plugin and skill from the proposed repository root', () => {
     const marketplace = JSON.parse(read('skill-repo/.claude-plugin/marketplace.json'));
     const plugin = JSON.parse(read('skill-repo/.claude-plugin/plugin.json'));

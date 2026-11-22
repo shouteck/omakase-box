@@ -9,6 +9,7 @@ export default function Page() {
       <Title sub="Public GitHub issues with a stated reward. The owner pays the solver directly.">
         Open bounties
       </Title>
+      <p className="mb-6 text-sm text-soft">For programs: the <a href="/bounties.json">JSON feed</a> and <a href="/agents/">agent instructions</a>.</p>
       <Board />
     </>
   );

@@ -34,6 +34,8 @@ export interface Env extends PayPalEnv {
   readonly tickReads?: number;
   /** How long a closed bounty's details may stand, when longer than an open one's. A hint reads it sooner. */
   readonly closedStaleMs?: number;
+  /** The local CLI rehearsal can read consecutive actions without waiting a minute. */
+  readonly hintGapMs?: number;
   /** PF9b: repositories this board never lists, comma-separated (the kitchen's sandbox). Set only by whoever deploys the board. */
   readonly UNLISTED_REPOSITORIES?: string;
   /** BT60: set only by the test board (tests/platform/support.ts): with it the board lists a bounty whose reward is below the minimum. Never in wrangler.toml. */

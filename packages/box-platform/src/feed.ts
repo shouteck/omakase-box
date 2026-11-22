@@ -271,7 +271,7 @@ export async function bountyDetail(env: Env, id: string, now: number, origin: st
         paying
           ? `If your pull request is the one merged and you have connected Stripe at ${origin}/me/, the board starts a charge of $${row.amount} from the owner's saved card to your own Stripe account; Stripe's fee comes out of it, and a dispute lands on your account. Without Stripe, the owner owes you $${row.amount} and pays you directly. The board never holds or guarantees money.`
           : `If your pull request is the one merged, the owner owes you $${row.amount} and pays you directly. The board never holds or guarantees money.`,
-        ...(here.one_click.length > 0 ? [`Connecting ${here.one_click.join(' or ')} at ${origin}/me/ lets the owner pay you with one click, on the provider's page${here.on_merge ? '; with Stripe connected, a bounty on pay on merge pays you with no click' : ''}. Otherwise the owner pays you by a way you listed.`] : []),
+        ...(here.one_click.length > 0 ? [`Connecting ${here.one_click.join(' or ')} at ${origin}/me/ lets the owner pay you with one click, on the provider's page${here.on_merge ? '; pay on merge requires the owner to authorize Stripe charges in advance and you to connect Stripe' : ''}. Otherwise the owner pays you by a way you listed.`] : []),
         ...(here.on_merge ? [`${STRIPE_REACH} The countries are stripe_countries in the legend at ${origin}/bounties.json.`] : []),
         `Once the owner records it paid, say on the bounty's page (${origin}/b/${row.id}/, signed in) whether it arrived. That is your word, and you can withdraw it.`
       ] : ['No reward is stated, so nothing is owed if your pull request is merged.'],

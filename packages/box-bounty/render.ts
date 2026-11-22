@@ -226,7 +226,9 @@ export const nextStep = (record: BountyRecord): string => {
     case 'drafted':
     case 'confirmed': return `deliver it — omakase-box post ${record.id} (preview first with --preview)`;
     case 'waiting': return `waiting for the owner — ${waitingSummary(record)}`;
-    case 'posted': return `omakase-box look ${record.id} <number> collects a pull request and shows its change; omakase-box apply ${record.id} <number> collects and merges`;
+    case 'posted': return record.github?.availablePullRequests?.length === 0
+      ? `wait for a submitted solution — omakase-box status ${record.id} reads GitHub again`
+      : `omakase-box look ${record.id} <number> collects a pull request and shows its change; omakase-box apply ${record.id} <number> collects and merges`;
     case 'taken': return 'a solution is being read against the snapshot it was made for — run omakase-box status again in a moment';
     case 'answered': {
       const conflicts = record.conflicts?.paths;
@@ -237,11 +239,23 @@ export const nextStep = (record: BountyRecord): string => {
   }
 };
 
+export const UNKNOWN_ROLLBACK = 'rollback range unknown; inspect the landed commits before choosing what to revert';
+
+export function appliedRevert(record: BountyRecord): string | null {
+  const applied = record.events.findLast(event => event.stage === 'applied');
+  return record.stage === 'applied' && applied?.command === 'apply' && applied.merge !== undefined
+    ? `git revert -m 1 ${applied.merge}`
+    : null;
+}
+
 // The one `next:` an ended bounty prints — the job to go back to, the
 // revert when its merge landed, and the ways to look again or start fresh.
 // Shared by the text status and the status --json document (BT19).
-export const endedNextStep = (record: BountyRecord): string =>
-  `${record.adopted !== undefined ? 'the saved job stayed on the machine that posted it' : 'continue the saved job'}${record.stage === 'applied' ? `; to reverse the merge: git revert -m 1 ${record.events.find(event => event.stage === 'applied')?.merge ?? '<merge>'}` : ''}; inspect: omakase-box status ${record.id} --full; or create another with omakase-box create --task <file> --why "<one line>"`;
+export const endedNextStep = (record: BountyRecord): string => {
+  const revert = appliedRevert(record);
+  const rollback = revert === null ? `; ${UNKNOWN_ROLLBACK}` : `; to reverse the merge: ${revert}`;
+  return `${record.adopted !== undefined ? 'the saved job stayed on the machine that posted it' : 'continue the saved job'}${record.stage === 'applied' ? rollback : ''}; inspect: omakase-box status ${record.id} --full; or create another with omakase-box create --task <file> --why "<one line>"`;
+};
 
 // History events record the command that drove them, and records written
 // while older commands existed keep those names on disk — history is never
@@ -425,6 +439,11 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
     for (const entry of open) {
       const record = entry.record!;
       lines.push(`  ${record.id}  ${record.stage}  "${record.title}"${record.partOf !== undefined ? `  (part of: ${record.partOf})` : ''}  — ${ageClause(record)}`);
+      for (const check of (record.landingChecks ?? []).filter(check => check.state !== 'waiting')) lines.push(check.state === 'not-merged'
+        ? `      landing not recognised: GitHub does not mark #${check.pr} merged; omakase-box close ${record.id} ends it without pay`
+        : check.state === 'not-landed'
+          ? `      landing not recognised: #${check.pr} merge facts do not match this bounty or the landing is not on ${record.resume?.kind === 'recorded' ? record.resume.branch : 'the creating branch'} yet; next: pull the default branch, then run omakase-box status ${record.id} again`
+          : `      landing not recognised: merge facts for #${check.pr} could not be read; next: omakase-box status ${record.id} retries the read`);
       const attempts = attemptsOf(record);
       const unseen = attempts.filter(attempt => attempt.seenAt === undefined).length;
       const pays = (boundAmount(record) ?? 0) > 0;
@@ -660,13 +679,13 @@ export function renderHelp(): string {
     'nothing a solver wrote is ever run — checks were removed on 11 October 2026: a solution arrives as a',
     'numbered attempt, the report states facts about the change, and apply/close is always your call.',
     '',
-    'a bounty is not posted without a reward, which the owner sets (at least $1, whole dollars). Setting BOX_BOUNTY_ALLOW_ZERO_FOR_TESTING=1 posts without one — for testing the tool; such a bounty is never listed.',
+    'a bounty is not posted without a reward, which the owner sets (at least $1, whole dollars; allow --help says how to choose it). Setting BOX_BOUNTY_ALLOW_ZERO_FOR_TESTING=1 posts without one — for testing the tool; such a bounty is never listed.',
     boardAddress() === '' ? 'three ways to pay a reward: by hand, one click, on merge.' : `three ways to pay a reward: by hand, one click, on merge. See ${boardAddress()}/how/`,
     '',
     'what ends a bounty: apply, or close — or a solution merged onto the bounty\'s branch with your own',
-    'Git, which the next bounty command recognises. A merge is one ordinary commit: git revert -m 1',
-    'reverses it whenever you like, no tool command needed. A solution that does not land never ends',
-    'the bounty — it is kept as a numbered attempt and the bounty stays open.',
+    'Git, which the next bounty command recognises. For a merge the tool made, status gives the Git',
+    'revert command. For other landings, inspect the commits before choosing what to revert.',
+    'A solution that does not land stays a numbered attempt, and the bounty stays open.',
     '',
     `needs: git ${GIT_LEAST} or later; GitHub bounties also need GitHub CLI gh ${GH_LEAST} or later, signed in, or a GitHub token in GH_TOKEN.`,
     'run inside a git checkout or pass --repo <path>; every refusal names itself and exits 3, usage errors exit 2.',

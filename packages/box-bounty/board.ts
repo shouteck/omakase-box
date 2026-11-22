@@ -14,7 +14,7 @@ import { solverAccount } from './untrusted.js';
 import { quoteForeign } from './notice.js';
 
 /** The public deployment's address. Settings choose another or none; no test run may reach it (boardAddress). */
-export const BOARD_DEFAULT = 'https://open-bounty-board.box-platform.workers.dev';
+export const BOARD_DEFAULT = 'https://omakasebox.dev';
 
 const DEADLINE_MS = 2500;
 const ANSWER_BYTES_MAX = 65536;
@@ -96,11 +96,12 @@ const jsonOf = (reply: Reply): Record<string, unknown> | null => {
   } catch { return null; }
 };
 
-/** One page of the board's feed (PF24's discover): its answer, or why it was not read. A page is at most 100 KB, the board's own stated bound. */
+export const BOUNTY_FEED_PATH = '/bounties.json';
 const FEED_PAGE_BYTES_MAX = 100_000;
+/** One page of the board's feed (PF24's discover): its answer, or why it was not read. A page is at most 100 KB, the board's own stated bound. */
 export function readFeedPage(query: string): { readonly page: Record<string, unknown> } | { readonly failed: string } {
   if (boardAddress() === '') return { failed: 'the board is off' };
-  const reply = boardCalls([{ path: `/bounties.json?${query}` }], FEED_PAGE_BYTES_MAX)[0]!;
+  const reply = boardCalls([{ path: `${BOUNTY_FEED_PATH}?${query}` }], FEED_PAGE_BYTES_MAX)[0]!;
   if ('failed' in reply) return { failed: reply.failed };
   const page = jsonOf(reply);
   if (page !== null) return { page };

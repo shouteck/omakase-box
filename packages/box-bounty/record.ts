@@ -77,6 +77,7 @@ export interface StageEvent {
   readonly attempt?: number; // which attempt this transition was about
   readonly command?: string; // the command that drove it — apply, look, close, merged — so history says what ended the bounty. Records written before BT7c can still name removed commands; status prints them remapped to what replaced them.
   readonly merge?: string; // the commit the command made (the apply or merged land; on older records the reversal)
+  readonly landing?: string;
   /** Recorded on `paid` only: the amount the owner said was paid — copied
       from the bound reward at write, never typed (BT36). */
   readonly amount?: number;
@@ -285,6 +286,7 @@ export interface BountyRecord {
       record stays `answered` and these paths are the next step.
       Cleared when a later apply lands. */
   conflicts?: { readonly paths: readonly string[]; readonly at: string } | null;
+  landingChecks?: { readonly pr: number; readonly head: string; readonly tip: string; readonly state: 'unknown' | 'waiting' | 'not-merged' | 'not-landed' }[];
   events: StageEvent[];
   /** Set while an action is held for the owner — the named waiting state
       status and the open-bounties line show. Cleared when the action runs. */
@@ -491,12 +493,16 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
     if (event.amount !== undefined || event.by !== undefined || event.withdrawn !== undefined) return null;
     if (!OPEN_STAGES.has(event.stage) && !ENDED_STAGES.has(event.stage)) return null;
     if (event.merge !== undefined && (typeof event.merge !== 'string' || !sha.test(event.merge))) return null;
+    if (event.landing !== undefined && (typeof event.landing !== 'string' || !sha.test(event.landing) || event.stage !== 'applied' || event.command !== 'merged')) return null;
     if (event.attempt !== undefined && (!Number.isSafeInteger(event.attempt) || event.attempt < 1)) return null;
     if (event.reason !== undefined && typeof event.reason !== 'string') return null;
     if (event.unasked !== undefined && event.unasked !== true) return null;
     if (event.partial !== undefined && (!Array.isArray(event.partial) || !strings(event.partial))) return null;
   }
   if (!OPEN_STAGES.has(record.stage) && !ENDED_STAGES.has(record.stage)) return null;
+  if (record.landingChecks !== undefined && (!Array.isArray(record.landingChecks) || record.landingChecks.some(check =>
+    !object(check) || !Number.isSafeInteger(check.pr) || check.pr < 1 || typeof check.head !== 'string' || !sha.test(check.head)
+    || typeof check.tip !== 'string' || !sha.test(check.tip) || !['unknown', 'waiting', 'not-merged', 'not-landed'].includes(check.state)))) return null;
   if (record.resume.kind === 'recorded' && !safeBranch(record.resume.branch)) return null;
   if (record.attempts !== undefined && !Array.isArray(record.attempts)) return null;
   for (const attempt of record.attempts ?? []) {
@@ -676,7 +682,7 @@ export function endedCount(repoRoot: string): number {
 // `attempt`, `command` and `merge` say which attempt a transition was about,
 // which command drove it and which commit it made — so the history alone says
 // what ended the bounty and on which attempt.
-export const transitionTo = (repoRoot: string, record: BountyRecord, stage: BountyStage, extra?: { destination?: string; reason?: string; attempt?: number; command?: string; merge?: string; unasked?: boolean; partial?: readonly string[] }): void => {
+export const transitionTo = (repoRoot: string, record: BountyRecord, stage: BountyStage, extra?: { destination?: string; reason?: string; attempt?: number; command?: string; merge?: string; landing?: string; unasked?: boolean; partial?: readonly string[] }): void => {
   record.events.push({
     stage,
     at: new Date().toISOString(),
@@ -685,10 +691,12 @@ export const transitionTo = (repoRoot: string, record: BountyRecord, stage: Boun
     ...(extra?.attempt !== undefined ? { attempt: extra.attempt } : {}),
     ...(extra?.command !== undefined ? { command: extra.command } : {}),
     ...(extra?.merge !== undefined ? { merge: extra.merge } : {}),
+    ...(extra?.landing !== undefined ? { landing: extra.landing } : {}),
     ...(extra?.unasked === true ? { unasked: true } : {}),
     ...(extra?.partial !== undefined && extra.partial.length > 0 ? { partial: [...extra.partial] } : {})
   });
   record.stage = stage;
+  if (!isOpenStage(stage)) delete record.landingChecks;
   if (stage !== 'waiting') delete record.waiting; // a landed action is no longer held
   persistRecord(repoRoot, record);
 };
@@ -721,4 +729,3 @@ export function requireCurrentDelivery(record: BountyRecord): void {
     throw new BountyRefused(retired, `this bounty used a retired delivery route; its history is still readable; next: end it with omakase-box close ${record.id}`);
   }
 }
-

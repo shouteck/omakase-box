@@ -8,6 +8,7 @@ import type { Env } from './github.js';
 import { localDb } from './local-db.js';
 import { refresh } from './refresh.js';
 import { seedDemo, Standin } from '../standin/standin.js';
+import { replayReads } from '../standin/replay.js';
 
 const TYPES: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.txt': 'text/plain; charset=utf-8', '.woff2': 'font/woff2', '.woff': 'font/woff', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.png': 'image/png' };
 
@@ -34,14 +35,16 @@ export function assetsFrom(directory: string): NonNullable<Env['ASSETS']> {
 
 export type LocalBoard = { url: string; standin: Standin; env: Env; refresh(): ReturnType<typeof refresh>; stop(): Promise<void> };
 
-export async function startLocal(options: { schema: string; out: string; port?: number; now?: () => number; seed?: (standin: Standin) => void }): Promise<LocalBoard> {
-  const standin = new Standin();
+export async function startLocal(options: { schema: string; out: string; port?: number; now?: () => number; seed?: (standin: Standin) => void; replayDir?: string }): Promise<LocalBoard> {
+  const replay = options.replayDir === undefined ? undefined : replayReads(resolve(options.replayDir));
+  const standin = new Standin(replay);
   const api = await standin.start();
   (options.seed ?? (s => seedDemo(s, Date.now())))(standin);
   const db = localDb(options.schema);
   const env: Env = { DB: db, GITHUB_API: api, GITHUB_WEB: api, GITHUB_OAUTH_CLIENT_ID: standin.oauthClientId, GITHUB_OAUTH_CLIENT_SECRET: standin.oauthClientSecret, ASSETS: assetsFrom(options.out), SAMPLE: true,
     // BT60: this board runs on invented data and is never deployed; its designed states include a bounty with no reward, so it keeps the testing allowance (the live board never has it: wrangler.toml, and a test).
-    ALLOW_ZERO_FOR_TESTING: '1', ...(options.now ? { now: options.now } : {}) };
+    ALLOW_ZERO_FOR_TESTING: '1', ...(options.now ? { now: options.now } : {}),
+    ...(replay === undefined ? {} : { hintGapMs: 0 }) };
   // eslint-disable-next-line @typescript-eslint/no-misused-promises -- Node ignores the listener return; this handler sends the response and catches request failures.
   const server = createServer(async (request, response) => {
     try {
