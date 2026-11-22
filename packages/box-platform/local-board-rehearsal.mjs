@@ -6,10 +6,10 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const cli = join(root, 'packages/box-cli/dist/cli.js');
-const standin = fileURLToPath(new URL('./gh-standin.cjs', import.meta.url));
+const standin = join(root, 'kitchen/demo/gh-standin.cjs');
 const remote = 'https://github.com/owner/project.git';
 const [scratch, board = 'http://localhost:4320'] = process.argv.slice(2);
-assert(scratch && /^http:\/\/(localhost|127\.0\.0\.1):\d{1,5}$/.test(board), 'Usage: node kitchen/demo/local-board-rehearsal.mjs <empty scratch directory> [http://localhost:4320]');
+assert(scratch && /^http:\/\/(localhost|127\.0\.0\.1):\d{1,5}$/.test(board), 'Usage: node packages/box-platform/local-board-rehearsal.mjs <empty scratch directory> [http://localhost:4320]');
 assert(existsSync(cli), 'Build the CLI first: node scripts/workspace.mjs build');
 const directory = resolve(scratch);
 const home = join(directory, 'home');

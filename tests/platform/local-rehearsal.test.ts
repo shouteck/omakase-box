@@ -8,7 +8,7 @@ import { expect, it } from 'vitest';
 import { startLocal } from '../../packages/box-platform/src/local.js';
 
 const platform = fileURLToPath(new URL('../../packages/box-platform/', import.meta.url));
-const rehearsal = fileURLToPath(new URL('../../kitchen/demo/local-board-rehearsal.mjs', import.meta.url));
+const rehearsal = join(platform, 'local-board-rehearsal.mjs');
 
 it('rehearses a CLI post, discovery, take, submission, merge and recorded payment on the local board', async () => {
   const scratch = await mkdtemp(join(tmpdir(), 'box-local-rehearsal-'));
