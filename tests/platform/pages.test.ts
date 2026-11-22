@@ -825,11 +825,12 @@ describe('the pages', () => {
     const response = await page.goto(`${board.url}${path}`);
     expect(response?.status()).toBe(200);
     const links = await page.locator('main a').evaluateAll(elements => elements.map(a => a.getAttribute('href')));
-    const delegate = links.findIndex(href => href === '/how/#hand-off' || href === '#hand-off');
-    const earn = links.findIndex(href => href === '/how/#answer' || href === '#answer');
+    const delegate = links.findIndex(href => path === '/agents/' ? href === '/delegate/' : href === '/how/#hand-off' || href === '#hand-off');
+    const earn = links.findIndex(href => path === '/agents/' ? href === '/earn/' : href === '/how/#answer' || href === '#answer');
     expect(delegate).toBeGreaterThanOrEqual(0);
     expect(earn).toBeGreaterThan(delegate);
     if (path === '/agents/') {
+      expect(await page.locator('main').innerText()).not.toContain('delegate work you are stuck on');
       const sections = await page.locator('main section').allTextContents();
       expect(sections.findIndex(words => words.includes('Post work you cannot or should not finish'))).toBeLessThan(sections.findIndex(words => words.includes('From bounty to payment')));
       expect(await page.locator('section[aria-labelledby="delegate"]').innerText()).toContain('MCP is read-only and cannot post, approve or pay');
