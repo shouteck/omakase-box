@@ -219,7 +219,7 @@ export async function paySaved(env: Env, id: string, posterId: number, amount: n
       WHERE charges.at = ? AND charges.state NOT IN ('paid', 'refunded', 'disputed', 'charging', 'owner-paying', 'owner-must-authenticate')`)
       .bind(id, state, pull.number, pull.author, amount, now, held?.at ?? -1).run();
   };
-  if (notCounted(pull, bounty.poster) !== null) { await refuse('not-counted'); return; }
+  if (pull.author_id === posterId || notCounted(pull, bounty.poster) !== null) { await refuse('not-counted'); return; }
   const solver = pull.author_id === null ? null : await db.prepare('SELECT account_id, ready FROM stripe_accounts WHERE github_id = ?').bind(pull.author_id).first<{ account_id: string; ready: number }>();
   const paypal = pull.author_id === null ? null : await db.prepare('SELECT payer_id FROM paypal_accounts WHERE github_id = ?').bind(pull.author_id).first<{ payer_id: string }>();
   const useStripe = stripeOn(env) && bounty.payment_method !== null && solver?.ready === 1;

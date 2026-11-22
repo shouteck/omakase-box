@@ -262,10 +262,14 @@ describe('PF52: agent pay comments', () => {
     await command();
     expect(await payment()).toMatchObject({ state: 'recorded', recorded_paid: { source: rail === 'paypal' ? 'paypal' : 'stripe' } });
   });
-  it.each(['wrong-author', 'unlinked', 'self', 'access', 'over-limit', 'not-ready', 'recorded', 'in-flight', 'wrong-amount', 'extra-prose'])(
+  it.each(['wrong-author', 'unlinked', 'self', 'renamed-self', 'access', 'over-limit', 'not-ready', 'recorded', 'in-flight', 'wrong-amount', 'extra-prose'])(
     'does not charge: %s', async mode => {
       await open();
       if (mode === 'self') await r.env.DB.prepare('UPDATE pull_requests SET author = ?, author_id = ? WHERE bounty_id = ?').bind(OWNER.login, OWNER.github_id, id).run();
+      if (mode === 'renamed-self') {
+        await r.env.DB.prepare('UPDATE pull_requests SET author_id = ? WHERE bounty_id = ?').bind(OWNER.github_id, id).run();
+        await r.env.DB.prepare('UPDATE stripe_accounts SET github_id = ?').bind(OWNER.github_id).run();
+      }
       if (mode === 'access') await r.env.DB.prepare(`UPDATE pull_requests SET association = 'COLLABORATOR' WHERE bounty_id = ?`).bind(id).run();
       if (mode === 'over-limit') await r.env.DB.prepare('UPDATE pay_settings SET limit_per_bounty = 40').run();
       if (mode === 'not-ready') await r.env.DB.prepare('UPDATE stripe_accounts SET ready = 0').run();
@@ -273,7 +277,7 @@ describe('PF52: agent pay comments', () => {
       if (mode === 'in-flight') await r.env.DB.prepare(`INSERT INTO charges (bounty_id, state, at) VALUES (?, 'charging', ?)`).bind(id, NOW).run();
       await command(`omakase pay ${id} $${mode === 'wrong-amount' ? 46 : 45} to @${mode === 'self' ? OWNER.login : mode === 'unlinked' ? 'stranger' : SOLVER}${mode === 'extra-prose' ? ' please' : ''}`, mode === 'wrong-author' ? 'stranger' : OWNER.login);
       expect(stripe.charged()).toHaveLength(0); expect(paypal.captures).toHaveLength(0);
-      if (mode === 'self' || mode === 'access') expect(await state()).toMatchObject({ state: 'not-counted' });
+      if (mode === 'self' || mode === 'renamed-self' || mode === 'access') expect(await state()).toMatchObject({ state: 'not-counted' });
       if (mode === 'over-limit') expect(await state()).toMatchObject({ state: 'refused-over-limit' });
       if (mode === 'not-ready') expect(await state()).toMatchObject({ state: 'solver-not-ready' });
     }
