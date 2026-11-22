@@ -37,7 +37,7 @@ function parse(text: string): Hint | null {
 }
 
 /** So hints can never spend the hour's GitHub budget the scheduled refresh needs. */
-function budgetHalfSpent(env: Env, meta: ReadonlyMap<string, string>, now: number): boolean {
+export function budgetHalfSpent(env: Env, meta: ReadonlyMap<string, string>, now: number): boolean {
   if (meta.get('budget_hour') !== String(Math.floor(now / HOUR))) return false;
   const limit = env.GITHUB_TOKEN === undefined ? LIMITS.anonymous : LIMITS.token;
   return Number(meta.get('budget_used') ?? 0) >= limit.hour / 2;
