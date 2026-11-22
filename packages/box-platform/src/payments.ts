@@ -56,6 +56,8 @@ const mergedOf = (input: Pick<BountyPayment, 'pulls' | 'source'>): MergedPull[] 
 export function factsOf(input: BountyPayment): PaymentFacts {
   const landed = landedOf(input);
   const record = standing(input, landed);
+  const paid = record?.source === 'stripe' || record?.source === 'paypal' ? input.pulls.find(pull => same(pull.author, record.to ?? null)) : undefined;
+  if (paid !== undefined && !landed.includes(paid)) landed.push(paid);
   return { amount: input.amount, poster: input.poster, merged: landed.map(({ number, author }) => ({ number, author })), record, receipt: currentReceipt(record, input.receipt), listed: input.source === 'listed' };
 }
 

@@ -324,6 +324,17 @@ describe('PF52: agent pay comments', () => {
     await command();
     expect(await payment()).toMatchObject({ state: 'recorded', recorded_paid: { source: rail === 'paypal' ? 'paypal' : 'stripe' } });
   });
+  it.each(['stripe', 'paypal'] as const)('credits the provider-paid %s solver, not another sole merged author', async rail => {
+    await open(rail);
+    await r.env.DB.prepare(`UPDATE bounties SET source = 'posted' WHERE id = ?`).bind(id).run();
+    await r.env.DB.prepare(`INSERT INTO pull_requests (bounty_id, number, author, author_id, state, opened_at, merged_at, association, on_default)
+      VALUES (?, 42, 'other', 7002, 'merged', ?, ?, 'NONE', 1)`).bind(id, at(2), at(5)).run();
+    await command();
+    expect(await payment()).toMatchObject({ state: 'recorded', owed: { to: SOLVER }, recorded_paid: { source: rail === 'paypal' ? 'paypal' : 'stripe' } });
+    expect(await (await get(`/api/b/${id}/payment`, await session())).json()).toMatchObject({ payee: SOLVER, role: 'owner' });
+    expect(await (await get(`/api/b/${id}/payment`, await session(7001, SOLVER))).json()).toMatchObject({ payee: SOLVER, role: 'payee' });
+    expect(await (await get(`/api/b/${id}/payment`, await session(7002, 'other'))).json()).toMatchObject({ payee: SOLVER, role: 'other' });
+  });
   it.each(['wrong-author', 'unlinked', 'self', 'renamed-self', 'access', 'over-limit', 'not-ready', 'recorded', 'in-flight', 'wrong-amount', 'extra-prose'])(
     'does not charge: %s', async mode => {
       await open();
