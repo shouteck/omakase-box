@@ -1,0 +1,17 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.shouteck/omakase-box",
+  "description": "Hand off via skill + CLI; find bounties via read-only MCP. Humans approve listings and payments.",
+  "version": "0.1.0",
+  "repository": {
+    "url": "https://github.com/shouteck/omakase-box",
+    "source": "github"
+  },
+  "websiteUrl": "https://omakasebox.dev",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://omakasebox.dev/mcp"
+    }
+  ]
+}
