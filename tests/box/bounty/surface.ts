@@ -31,6 +31,7 @@ export const OWNERS: Readonly<Record<string, string>> = {
   'box-bounty/setup@1': 'bt61-journey',
   'box-bounty/refusal@1': 'bt61',
   'box-bounty/take@1': 'bt61-solver', 'box-bounty/submit@1': 'bt61-solver',
+  'box-bounty/take-preview@1': 'take-preview',
   'box-bounty/discover@1': 'pf24',
   'box-bounty/find@1': 'bt28',
   'box-bounty/look-export@1': 'bt43'

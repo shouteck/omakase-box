@@ -90,6 +90,7 @@ export const SKILL_TEXT = [
   'Find work without installing: https://omakasebox.dev/mcp (read-only MCP, no sign-in).',
   '',
   'Solving stays off until your owner allows it with `omakase-box config set solving allowed`.',
+  'Before taking work, `omakase-box take <id> --preview` shows the fork, workspace and draft pull request it would create, without writing anything.',
   '`omakase-box discover` → `omakase-box take <id>` → `omakase-box submit <id>` → `omakase-box status <id>`.',
   '',
   'Run bare `omakase-box` in a project; an unconfigured repository can enter poster setup.',

@@ -324,6 +324,7 @@ const NOT_FOREIGN: readonly { readonly file: string; readonly text: string; read
   // apply the owner's tracked files include names a solver chose, so the
   // work-in-progress lists print through showPath like every other path.
   { file: 'packages/box-bounty/post.ts', text: 'text.body', count: 1, why: 'the issue body the tool itself composes from the owner\'s task, printed by post --preview before anything is published' },
+  { file: 'packages/box-bounty/take.ts', text: 'pullRequest.body', count: 1, why: 'the draft body composed by the tool from its fixed start text, validated issue closing line and credit, before anything is published' },
   { file: 'packages/box-bounty/git.ts', text: 'path', count: 1, why: 'gitBlobs builds `<commit>:<path>` object names for one cat-file batch read — a Git argument, never printed' },
   { file: 'packages/box-bounty/hook.ts', text: 'paths', count: 1, why: 'the told-once key for a conflict set, written to .box/hook-told.json — never printed; the line beside it prints only the count' },
   { file: 'packages/box-bounty/pay.ts', text: 'method.shown', count: 1, why: 'PF5 methodWords, the one print of a solver\'s payment methods: `shown` was rendered when the board\'s answer was read (checkedAccepts: a link only in its kind\'s checked shape, anything else through quoteForeign), and every kept copy passes acceptsShape again before it prints (pf5.test.ts edits one on disk)' },

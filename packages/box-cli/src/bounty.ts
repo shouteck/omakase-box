@@ -12,6 +12,7 @@ import type { ParsedOptions } from '../../box-bounty/index.js';
 import { appliedRevert, applyDocument, closeAttemptDocument, closeDocument, createDocument, ownerDocument, postDocument, postPreviewDocument, previewGitHub, previewGitHubFacts, refusalDocument, submitDocument, submitTakenResult, takeDocument, textDocument, UNKNOWN_ROLLBACK } from '../../box-bounty/index.js';
 import { attemptStatus, closeTaken, discover, discoverDocument, loadTaken, renderDescribeSolving, renderDiscover, submitTaken, takeBounty, takenOverview } from '../../box-bounty/index.js';
 import { escapeControls, exportLook, findDocument, lookBounty, solverBlock, SOLVER_WORDS, renderFind, renderResume, openRecords, endedContaining, readGitPinsOncePerProcess, boundAmount, payToLine, gitOutcome } from '../../box-bounty/index.js';
+import { previewTake, takePreviewDocument } from '../../box-bounty/index.js';
 
 // Does .git/config name this remote — read as bytes, so the apply output
 // costs no extra Git start. `.git` can be a linked worktree's `gitdir:`
@@ -107,7 +108,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
   setMergeNoticeListener(aside);
   // PF5: whatever this command changed, or an earlier one left unsent, goes to
   // the board as the process ends, on every exit path. A hook has a time budget.
-  if (subcommand !== 'hook' && !(subcommand === 'status' && bountyArgs.some(arg => arg === '--wait' || arg === '--timeout' || arg.startsWith('--timeout=')))) {
+  if (!(subcommand === 'take' && bountyArgs.includes('--preview')) && subcommand !== 'hook' && !(subcommand === 'status' && bountyArgs.some(arg => arg === '--wait' || arg === '--timeout' || arg.startsWith('--timeout=')))) {
     const named = bountyArgs.indexOf('--repo');
     process.once('exit', () => {
       if (boardAddress() === '') return;
@@ -286,8 +287,14 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       // The solver's half (PF25): no checkout needed; the workspace is a new folder outside every repository.
       const parsed = parse('take');
       const [id] = parsed.positionals;
-      if (id === undefined) usageError('omakase-box take <id> [--into <new folder>]');
+      if (id === undefined) usageError('omakase-box take <id> [--preview] [--into <new folder>]');
       const into = parsed.values['--into'];
+      if (parsed.switches.has('--preview')) {
+        const result = previewTake(id, into === undefined ? {} : { into: resolve(into) });
+        if (jsonRequested) printDocument(takePreviewDocument(result, notices));
+        else say(result.lines.join('\n'));
+        return;
+      }
       const result = takeBounty(id, into === undefined ? {} : { into: resolve(into) });
       if (jsonRequested) printDocument(takeDocument(result, id, notices));
       else say(result.lines.join('\n'));

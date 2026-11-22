@@ -278,10 +278,11 @@ const BASE_COMMANDS: Readonly<Record<string, CommandSpec>> = {
     }
   },
   take: {
-    label: 'omakase-box take', usage: 'omakase-box take <id> [--into <new folder>]',
+    label: 'omakase-box take', usage: 'omakase-box take <id> [--preview] [--into <new folder>]',
     blurb: 'start an attempt: fork if needed, a throwaway workspace, and a draft pull request others can see → taken',
     example: 'omakase-box take bt-a1b2c3d4e5f6',
     positionals: 1,
+    switches: { '--preview': { help: 'show what take would create; takes nothing' } },
     values: { '--into': { arg: '<new folder>', missing: 'a folder', help: 'clone here instead of a fresh folder under the system\'s temporary folder; it must not exist yet' } }
   },
   submit: {
