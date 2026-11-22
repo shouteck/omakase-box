@@ -144,6 +144,10 @@ const merged = (await detail()).bounty;
 assert(merged.solution_list.some(pr => pr.number === taken.pullRequest.number && pr.author === 'solver' && pr.state === 'merged'), 'The board did not see the solver PR merge');
 assert.equal(merged.payment.state, 'owed');
 assert.equal(merged.payment.owed.to, 'solver');
+const solverStatus = solve('status', id);
+assert(solverStatus.startsWith(`${id} — merged on owner/project:`));
+assert.match(solverStatus, /board: owed \$10 to you/);
+assert.doesNotMatch(solverStatus, /file\(s\) changed/);
 
 post('config', 'set', 'paid', id);
 const { bounty } = await detail();
