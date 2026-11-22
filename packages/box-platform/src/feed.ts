@@ -229,10 +229,10 @@ export async function findBounties(env: Env, q: URLSearchParams, now: number, or
 }
 
 /** The first characters of the task, bounded in what they cost once encoded: a hostile task is mostly escapes. */
-function capTask(task: string): string {
+function capTask(task: string, bytes = TASK_JSON_BYTES_MAX): string {
   let cut = task.slice(0, TASK_CHARS_MAX);
   const encoder = new TextEncoder();
-  while (encoder.encode(JSON.stringify(cut)).length > TASK_JSON_BYTES_MAX) cut = cut.slice(0, Math.floor(cut.length * 0.8));
+  while (encoder.encode(JSON.stringify(cut)).length > bytes) cut = cut.slice(0, Math.floor(cut.length * 0.8));
   return /[\ud800-\udbff]$/.test(cut) ? cut.slice(0, -1) : cut;
 }
 
@@ -250,7 +250,7 @@ export async function bountyDetail(env: Env, id: string, now: number, origin: st
   const here = waysOn(env);
   const entry = entryOf(row, records.get(row.poster.toLowerCase())!, stateOf(row.issue_state, pulls), pulls.filter(pull => pull.state === 'open').length, pulls.length, origin, now, paying, here, (await weighOf(env, [row])).get(row.id));
   const branch = entry.answer.branch;
-  return {
+  const detail = {
     legend_url: `${origin}/bounties.json`,
     ...await facts(env),
     bounty: {
@@ -288,6 +288,13 @@ export async function bountyDetail(env: Env, id: string, now: number, origin: st
       attempt: attemptOf(row)
     }
   };
+  const encoder = new TextEncoder();
+  const remaining = DETAIL_BYTES_MAX - encoder.encode(JSON.stringify(detail)).length + encoder.encode(JSON.stringify(task)).length;
+  if (remaining < TASK_JSON_BYTES_MAX) {
+    detail.bounty.poster_says.task = capTask(row.task, Math.max(2, remaining));
+    detail.bounty.poster_says.task_truncated = detail.bounty.poster_says.task.length < row.task.length;
+  }
+  return detail;
 }
 
 const nullable = (type: string) => ({ type: [type, 'null'] });

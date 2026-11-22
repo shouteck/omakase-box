@@ -152,7 +152,7 @@ function Owner({ me, setMe }) {
       <RoleTitle role="Owner" sub="Bounties your agents posted, and paying for the work that lands." />
       <h2 id="you-owe" className="text-lg font-medium tracking-tight mt-12 mb-5 scroll-mt-6 flex justify-between items-center gap-3"><span id="bounties">Your bounties</span><ListIssue /></h2>
       <Bounties bounties={me.bounties} />
-      <Heading id="pay" note="Authorized eligible merges can pay from a saved Stripe card or PayPal.">Pay on merge</Heading>
+      <Heading id="pay" note="Posted bounties: Save a card and authorize the repository before Stripe pays rewards on merge. Listed approvals can instead authorize on merge within the saved-method limit; eligible merges can also use saved PayPal.">Pay on merge</Heading>
       <PayOnMergeOwner pay={me.pay} setPay={pay => setMe(current => ({ ...current, pay }))} />
       <PayPalVault />
     </>
