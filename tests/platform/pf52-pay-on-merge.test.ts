@@ -289,6 +289,46 @@ describe('PF52: payout connection after a refused payment', () => {
   });
 });
 
+describe('PF52: Monid settled open-PR bounties', () => {
+  it.each([
+    ['listed', 'stripe'], ['posted', 'stripe'], ['listed', 'paypal'], ['posted', 'paypal'], ['listed', 'paid'], ['posted', 'paid']
+  ] as const)('removes %s settled through %s from human/API/MCP open listings without claiming a merge', async (source, method) => {
+    if (method === 'stripe') { await card(); await connectedStripe(); }
+    if (method === 'paypal') await vault();
+    Object.assign(issue.pulls![0]!, { state: 'open', landed: false }); delete issue.pulls![0]!.merged_at;
+    await approve('');
+    if (source === 'posted') await r.env.DB.prepare(`UPDATE bounties SET source = 'posted', approval = NULL WHERE id = ?`).bind(id).run();
+    expect(await (await get('/bounties.json')).text()).toContain(id);
+    issue.comments!.push({ login: OWNER.login, association: 'OWNER', body: `omakase ${method === 'paid' ? 'paid' : 'pay'} ${id} $45 to @solver`, created_at: at(25) });
+    r.clock.at += MINUTE;
+    const github = new GitHub(r.env, false);
+    try { await readPaymentComments(r.env, github, id, REPO, 12); } finally { await github.settle(); }
+    expect(await (await get('/bounties.json')).text()).not.toContain(id);
+    expect(await (await get('/api/board')).text()).not.toContain(id);
+    const mcp = await post('/mcp', { jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'find_bounties', arguments: {} } });
+    expect(await mcp.text()).not.toContain(id);
+    const detail = await (await get(`/api/b/${id}/payment`)).json() as any;
+    expect(detail).toMatchObject({ on_merge: false, payment: { state: 'recorded', recorded_paid: { source: method === 'paid' ? 'board' : method } } });
+    expect(detail.payment.owed.fact).toContain('linked to the issue');
+    if (method !== 'paid') {
+      expect(detail.payment.charge.origin).toBe('agent');
+      expect(detail.payment.recorded_paid.origin).toBe('agent');
+      const me = await (await get('/api/me', await session())).json() as any;
+      expect(me.bounties.list.find((row: any) => row.id === id).paid_by).toBe(`${method === 'stripe' ? 'Stripe' : 'PayPal'}, agent pay`);
+    } else {
+      await r.env.DB.prepare('UPDATE paid_clicks SET withdrawn = 1 WHERE bounty_id = ?').bind(id).run();
+      expect(await (await get('/bounties.json')).text()).toContain(id);
+    }
+  });
+  it('does not hide an unpaid or declined open bounty', async () => {
+    await card(); await connectedStripe(); stripe.card = 'declined';
+    Object.assign(issue.pulls![0]!, { state: 'open', landed: false }); delete issue.pulls![0]!.merged_at;
+    await approve(''); await paySaved(r.env, id, OWNER.github_id, 45, SOLVER);
+    expect(await state()).toMatchObject({ state: 'declined' });
+    expect(await (await get('/bounties.json')).text()).toContain(id);
+  });
+});
+
 describe('PF52: owner and solver PayPal parity', () => {
   it('edits the saved PayPal limit without provider setup, with authentication, validation and private references', async () => {
     const owner = await session();

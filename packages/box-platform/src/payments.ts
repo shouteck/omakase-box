@@ -32,6 +32,7 @@ function standing(input: BountyPayment, landed: readonly MergedPull[]): Paid | n
   if (charged?.state === 'paid' && input.pulls.some(pull => same(pull.author, charged.solver))) return { at: charged.at, amount: input.amount, withdrawn: 0, to: charged.solver, ...(charged.provider === 'paypal' ? { by: 'PayPal', source: 'paypal' as const } : { by: 'Stripe', source: 'stripe' as const }) };
   const clicked = input.click === null ? [] : [input.click];
   const latest = standingRecord([...input.chain, ...clicked]);
+  if (latest !== null && input.click !== null && latest.at === input.click.at && latest.to === input.click.to && input.pulls.some(pull => same(pull.author, latest.to ?? null))) return { ...latest, by: input.click.by, source: 'board' };
   if (latest === null || landed.length === 0) return null;
   if (latest.to != null ? !landed.some(pull => same(pull.author, latest.to!)) : landed.length !== 1 || input.source === 'listed') return null;
   const fromClick = input.click !== null && latest.at === input.click.at && latest.to === input.click.to;
@@ -56,7 +57,7 @@ const mergedOf = (input: Pick<BountyPayment, 'pulls' | 'source'>): MergedPull[] 
 export function factsOf(input: BountyPayment): PaymentFacts {
   const landed = landedOf(input);
   const record = standing(input, landed);
-  const paid = record?.source === 'stripe' || record?.source === 'paypal' ? input.pulls.find(pull => same(pull.author, record.to ?? null)) : undefined;
+  const paid = record === null ? undefined : input.pulls.find(pull => same(pull.author, record.to ?? null));
   if (paid !== undefined && !landed.includes(paid)) landed.push(paid);
   return { amount: input.amount, poster: input.poster, merged: landed.map(({ number, author }) => ({ number, author })), record, receipt: currentReceipt(record, input.receipt), listed: input.source === 'listed' };
 }
@@ -78,7 +79,7 @@ export type PaymentState ='no-reward' | 'nothing-owed' | 'merged-not-on-default'
 export function paymentOf(input: BountyPayment) {
   const facts = factsOf(input);
   const landed = landedOf(input);
-  const chargedPull = input.charge?.state === 'paid' ? input.pulls.find(pull => same(pull.author, input.charge!.solver)) : undefined;
+  const chargedPull = facts.record === null ? undefined : input.pulls.find(pull => same(pull.author, facts.record!.to ?? null));
   if (chargedPull !== undefined && !landed.includes(chargedPull)) landed.push(chargedPull);
   const viaPayPal = input.charge?.provider === 'paypal';
   const charge = input.charge == null ? null : { state: input.charge.state, at: input.charge.at, origin: input.charge.origin ?? null, words: chargeWords(input.charge.state, input.charge.provider ?? null), whose_word: viaPayPal ? 'the board\'s, from PayPal\'s answer' as const : 'the board\'s, from Stripe\'s answer' as const };
@@ -106,6 +107,7 @@ export function paymentOf(input: BountyPayment) {
     state, owed, charge,
     recorded_paid: record === null ? null : {
       by: record.by, at: record.at, amount: record.amount, whose_word: record.source === 'stripe' ? 'Stripe\'s' as const : record.source === 'paypal' ? 'PayPal\'s' as const : 'the owner\'s' as const, source: record.source,
+      ...((record.source === 'stripe' || record.source === 'paypal') ? { origin: input.charge?.origin ?? null } : {}),
       ...(landed.length > 1 ? { chosen_by_owner_from: shownOf(landed).map(pull => pull.author) } : {})
     },
     solver_says: receipt === null ? null : { by: receipt.payee, at: receipt.at, word: receipt.says, whose_word: 'the solver\'s' as const, source: 'board' as const },
@@ -169,11 +171,11 @@ export const OWNER_RECORD_FILTERS: Record<string, (record: OwnerRecord) => boole
 
 /** Every bounty matching `where` with a merge, listed choice or provider attempt. `where` is SQL over `b`. */
 export async function loadPayments(db: Db, where: string, ...values: readonly (string | number)[]): Promise<BountyPayment[]> {
-  const scope = `FROM bounties b WHERE ${where} AND (EXISTS (SELECT 1 FROM pull_requests m WHERE m.bounty_id = b.id AND (m.state = 'merged' OR b.source = 'listed')) OR EXISTS (SELECT 1 FROM charges c WHERE c.bounty_id = b.id AND c.state != 'looked'))`;
+  const scope = `FROM bounties b WHERE ${where} AND (EXISTS (SELECT 1 FROM pull_requests m WHERE m.bounty_id = b.id AND (m.state = 'merged' OR b.source = 'listed')) OR EXISTS (SELECT 1 FROM charges c WHERE c.bounty_id = b.id AND c.state != 'looked') OR EXISTS (SELECT 1 FROM paid_clicks c WHERE c.bounty_id = b.id))`;
   const rows = (await db.prepare(`SELECT b.id, b.title, b.repository, b.amount, b.poster, b.poster_id, b.source ${scope}`).bind(...values).all<Pick<BountyPayment, 'id' | 'title' | 'repository' | 'amount' | 'poster' | 'poster_id' | 'source'>>()).results;
   if (rows.length === 0) return [];
   const within = `bounty_id IN (SELECT b.id ${scope})`;
-  const pulls = (await db.prepare(`SELECT bounty_id, number, author, author_id, merged_at, association, on_default, landing_sha, head_on_default_at_sight, state FROM pull_requests WHERE (state = 'merged' OR bounty_id IN (SELECT id FROM bounties WHERE source = 'listed') OR EXISTS (SELECT 1 FROM charges c WHERE c.bounty_id = pull_requests.bounty_id AND c.pull_number = pull_requests.number AND c.state = 'paid')) AND ${within} ORDER BY number`).bind(...values).all<MergedPull & { bounty_id: string }>()).results;
+  const pulls = (await db.prepare(`SELECT bounty_id, number, author, author_id, merged_at, association, on_default, landing_sha, head_on_default_at_sight, state FROM pull_requests WHERE (state = 'merged' OR bounty_id IN (SELECT id FROM bounties WHERE source = 'listed') OR EXISTS (SELECT 1 FROM charges c WHERE c.bounty_id = pull_requests.bounty_id AND c.pull_number = pull_requests.number AND c.state = 'paid') OR EXISTS (SELECT 1 FROM paid_clicks c WHERE c.bounty_id = pull_requests.bounty_id AND c.to_login = pull_requests.author COLLATE NOCASE AND c.withdrawn = 0)) AND ${within} ORDER BY number`).bind(...values).all<MergedPull & { bounty_id: string }>()).results;
   const chain = (await db.prepare(`SELECT bounty_id, at, amount, withdrawn FROM events WHERE type = 'paid' AND ${within}`).bind(...values).all<PaidEvent & { bounty_id: string }>()).results;
   const clicks = (await db.prepare(`SELECT bounty_id, by_login AS by, to_login AS "to", at, amount, withdrawn FROM paid_clicks WHERE ${within}`).bind(...values).all<PaidEvent & { bounty_id: string; by: string }>()).results;
   const receipts = (await db.prepare(`SELECT bounty_id, payee, says, record_at, at FROM receipts WHERE ${within}`).bind(...values).all<Receipt & { bounty_id: string; payee: string }>()).results;
