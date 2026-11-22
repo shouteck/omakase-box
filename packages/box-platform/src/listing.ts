@@ -2,8 +2,10 @@
 // everything else is read from GitHub. Each refusal says why, that nothing was listed, and what to do next. The issue is
 // never edited: the bounty is the board's record that its owner put a reward on it.
 import { type Env, GitHub, GitHubUnavailable, BudgetSpent } from './github.js';
-import { approvalLine, readRepository, unlisted } from './refresh.js';
+import { approvalLine, readRepository, taskOf, titleOf, unlisted } from './refresh.js';
 import { MINIMUM_REWARD_USD } from '../../box-bounty/format.js';
+import { hasPrepareMarker } from '../../box-bounty/issue.js';
+import { preparedFormat, verifyAgentBranch } from './agent-branch.js';
 import { removeBounty } from './store.js';
 
 export type Lister = { github_id: number; login: string };
@@ -66,6 +68,19 @@ export async function listIssue(env: Env, lister: Lister | null, address: unknow
     if (allowed === 'ask') return { needs_permission: true };
     if (!allowed) return refuse(403, `You did not open this issue and cannot write to ${repository}, so you cannot list it. ${nothing} Next: ask the issue's author or the repository's owner to list it.`);
     if (typeof issue['node_id'] !== 'string' || typeof issue['title'] !== 'string' || !record(issue['user']) || (importing && (typeof issue['user']['login'] !== 'string' || !Number.isSafeInteger(issue['user']['id'])))) return refuse(502, `GitHub's answer for this issue could not be read. ${nothing} Next: try again.`);
+    if (typeof issue['body'] === 'string' && hasPrepareMarker(issue['body'])) {
+      if (!importing || lister !== null) return refuse(400, `A prepared branch must use /api/agents/import. ${nothing} Next: send its issue URL and reward there without a session.`);
+      const format = preparedFormat(issue['body'], repository, reward);
+      if (format === null) return refuse(400, `The prepared issue format or reward does not match. ${nothing} Next: open the issue with the exact prepared title/body and import its stated reward.`);
+      if (await env.DB.prepare('SELECT 1 AS yes FROM bounties WHERE id = ?').bind(format.id).first() !== null) return refuse(409, `This bounty id is already taken. ${nothing} Next: prepare a new bounty.`);
+      const why = await verifyAgentBranch(github, repository, format);
+      if (why !== null) return refuse(409, `${nothing} ${why}`);
+      await env.DB.prepare(`INSERT INTO bounties (id, repository, issue_number, title, task, poster, poster_id, issue_state, amount, created_at, work_commit, seen_at, source, listed_by_id, listed_by, issue_author, approval)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 'open', ?, ?, ?, ?, 'posted', NULL, NULL, ?, 'pending')`)
+        .bind(format.id, repository, number, titleOf(issue['title'], format.id), taskOf(issue['body'], issue['body'].indexOf('<!-- box-bounty-format')),
+          issue['user']['login'] as string, issue['user']['id'] as number, reward, new Date(now).toISOString(), format.workCommit, now, issue['user']['login'] as string).run();
+      return { id: format.id, approve_with: approvalLine(format.id, reward) };
+    }
     const id = await idFor(issue['node_id']);
     if (await env.DB.prepare('SELECT 1 AS yes FROM bounties WHERE id = ?').bind(id).first() !== null) return refuse(409, `This issue's bounty id is already taken on the board. ${nothing}`);
     const branch = typeof repo.json['default_branch'] === 'string' ? repo.json['default_branch'] : 'main';

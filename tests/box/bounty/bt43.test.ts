@@ -319,7 +319,6 @@ const NOT_FOREIGN: readonly { readonly file: string; readonly text: string; read
   { file: 'packages/box-bounty/answer.ts', text: 'author', count: 1, why: 'renderAttemptReport has no caller left in the package (folder delivery was retired) — dead code, reported to the head chef, not this wave\'s file' },
   { file: 'packages/box-bounty/answer.ts', text: 'counts.added', count: 1, why: 'a number of added lines, not a path — in the dead renderAttemptReport' },
   { file: 'packages/box-bounty/collect.ts', text: 'counts.added', count: 2, why: 'a number of added lines the tool counted, not a path' },
-  { file: 'packages/box-bounty/never-ship.ts', text: 'body', count: 3, why: 'a regular expression\'s source built from the owner\'s own .boxignore line (correction 2: back by spelling, as the pass asked)' },
   // Correction 5 removed the three `post.ts` `plan.wip.*` entries: after an
   // apply the owner's tracked files include names a solver chose, so the
   // work-in-progress lists print through showPath like every other path.

@@ -8,7 +8,7 @@
     "P2",
     "R3"
    ],
-   "file": "packages/box-bounty/never-ship.ts",
+   "file": "packages/box-bounty/never-ship-paths.ts",
    "find": "/^\\.env(?:\\.|$)/.test(basename(path))",
    "replace": "false",
    "note": "the .env rule stops naming .env files: create, publish and return all stop removing them",
@@ -33,7 +33,7 @@
     "P2",
     "R3"
    ],
-   "file": "packages/box-bounty/never-ship.ts",
+   "file": "packages/box-bounty/never-ship-paths.ts",
    "find": ".normalize('NFKC').toLowerCase()",
    "replace": ".normalize('NFKC')",
    "note": "paths stop being case-folded before the rules see them",
