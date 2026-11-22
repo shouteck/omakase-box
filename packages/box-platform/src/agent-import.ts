@@ -1,7 +1,7 @@
 import type { Env } from './github.js';
 import { budgetHalfSpent } from './hint.js';
 import { listIssue } from './listing.js';
-import { getMetas, metaStatement } from './store.js';
+import { getMetas } from './store.js';
 
 const BODY_BYTES_MAX = 1024;
 const PER_MINUTE = 10;
@@ -29,11 +29,14 @@ export async function agentImportResponse(request: Request, env: Env, now: numbe
   try { body = JSON.parse(text); } catch { return bad(); }
   if (body === null || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).sort().join() !== 'issue,reward') return bad();
   const sent = body as { issue: unknown; reward: unknown };
-  const meta = await getMetas(env.DB, ['agent_import_minute', 'agent_import_count', 'budget_hour', 'budget_used']);
+  const saving = () => json(429, { error: 'The board is saving its GitHub reads. Nothing was listed. Next: try again later.' });
+  if (budgetHalfSpent(env, await getMetas(env.DB, ['budget_hour', 'budget_used']), now)) return saving();
   const minute = String(Math.floor(now / 60000));
-  const count = meta.get('agent_import_minute') === minute ? Number(meta.get('agent_import_count') ?? 0) : 0;
-  if (count >= PER_MINUTE || budgetHalfSpent(env, meta, now)) return json(429, { error: 'The board is saving its GitHub reads. Nothing was listed. Next: try again later.' });
-  await env.DB.batch([metaStatement(env.DB, 'agent_import_minute', minute), metaStatement(env.DB, 'agent_import_count', String(count + 1))]);
+  // One atomic upsert, so concurrent requests cannot read the same count and all pass.
+  const slot = await env.DB.prepare(`INSERT INTO meta (key, value) VALUES ('agent_import_slot', ? || ':1')
+    ON CONFLICT (key) DO UPDATE SET value = CASE WHEN value LIKE ? || ':%' THEN ? || ':' || (CAST(substr(value, length(?) + 2) AS INTEGER) + 1) ELSE ? || ':1' END
+    RETURNING value`).bind(minute, minute, minute, minute, minute).first<{ value: string }>();
+  if (slot === null || Number(slot.value.slice(minute.length + 1)) > PER_MINUTE) return saving();
   const listing = await listIssue(env, null, sent.issue, sent.reward, now, undefined, true);
   if ('id' in listing) return json(200, {
     listed: listing.id, pending: true, approve_with: listing.approve_with, approve_on: typeof sent.issue === 'string' ? sent.issue.trim() : sent.issue,

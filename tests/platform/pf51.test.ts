@@ -59,7 +59,7 @@ describe('PF51 sessionless imports', () => {
     expect(await row(body.listed)).toMatchObject({ listed_by_id: null, listed_by: null, poster_id: AUTHOR.id });
   });
 
-  it.each(['OWNER', 'COLLABORATOR', 'MEMBER'])('accepts the issue author approving with GitHub association %s', async association => {
+  it.each(['OWNER', 'COLLABORATOR'])('accepts the issue author approving with GitHub association %s', async association => {
     const body = await imported();
     r.standin.issues.find(i => i.number === 14)!.comments!.push({ login: AUTHOR.login, body: body.approve_with, association, created_at: new Date(NOW + MINUTE).toISOString() });
     await tick();
@@ -68,7 +68,7 @@ describe('PF51 sessionless imports', () => {
     expect(feed.bounties.map((b: any) => b.id)).toContain(body.listed);
   });
 
-  it.each(['NONE', 'CONTRIBUTOR'])('does not let the issue author self-approve with association %s', async association => {
+  it.each(['NONE', 'CONTRIBUTOR', 'MEMBER'])('does not let the issue author self-approve with association %s', async association => {
     const body = await imported();
     r.standin.issues.find(i => i.number === 14)!.comments!.push({ login: AUTHOR.login, body: body.approve_with, association, created_at: new Date(NOW + MINUTE).toISOString() });
     await tick();
@@ -100,6 +100,12 @@ describe('PF51 sessionless imports', () => {
     expect((await post({ issue: issueUrl(), reward: 50 })).status).toBe(429);
     r.clock.at += MINUTE;
     expect((await post({ issue: issueUrl(), reward: 50 })).status).toBe(200);
+  });
+
+  it('counts concurrent attempts atomically', async () => {
+    const statuses = (await Promise.all(Array.from({ length: 15 }, () => post({ issue: 'bad', reward: 50 })))).map(r => r.status);
+    expect(statuses.filter(s => s === 400)).toHaveLength(10);
+    expect(statuses.filter(s => s === 429)).toHaveLength(5);
   });
 
   it('preserves half the hourly GitHub budget without fetching or listing', async () => {
