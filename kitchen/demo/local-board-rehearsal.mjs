@@ -8,8 +8,9 @@ const root = fileURLToPath(new URL('../../', import.meta.url));
 const cli = join(root, 'packages/box-cli/dist/cli.js');
 const standin = fileURLToPath(new URL('./gh-standin.cjs', import.meta.url));
 const remote = 'https://github.com/owner/project.git';
-const [scratch, board = 'http://localhost:4320'] = process.argv.slice(2);
-assert(scratch && /^http:\/\/(localhost|127\.0\.0\.1):\d{1,5}$/.test(board), 'Usage: node kitchen/demo/local-board-rehearsal.mjs <empty scratch directory> [http://localhost:4320]');
+const squash = process.argv.includes('--squash');
+const [scratch, board = 'http://localhost:4320'] = process.argv.slice(2).filter(arg => arg !== '--squash');
+assert(scratch && /^http:\/\/(localhost|127\.0\.0\.1):\d{1,5}$/.test(board), 'Usage: node kitchen/demo/local-board-rehearsal.mjs <empty scratch directory> [http://localhost:4320] [--squash]');
 assert(existsSync(cli), 'Build the CLI first: node scripts/workspace.mjs build');
 const directory = resolve(scratch);
 const home = join(directory, 'home');
@@ -110,7 +111,28 @@ const submitted = solve('submit', id, '--json');
 assert.equal(submitted.outcome, 'submitted');
 assert.equal(submitted.pullRequest.number, taken.pullRequest.number);
 
-post('apply', id, String(submitted.pullRequest.number));
+if (squash) {
+  assert.match(post('status', id), /1 solution\(s\) waiting/);
+  // GitHub's "Squash and merge": one new commit on the bounty branch, the pull request marked merged with it as merge_commit_sha; the solver's head never reaches the branch.
+  const facts = JSON.parse(readFileSync(state, 'utf8'));
+  const pr = facts.prs.find(entry => entry.number === submitted.pullRequest.number);
+  const squashed = join(directory, 'squash');
+  git(directory, 'clone', '-q', bare, squashed);
+  git(squashed, 'checkout', '-q', pr.base.ref);
+  git(squashed, 'merge', '--squash', pr.head.sha);
+  git(squashed, 'commit', '-q', '-m', `${pr.title} (#${pr.number})`);
+  const landing = git(squashed, 'rev-parse', 'HEAD');
+  git(squashed, 'push', '-q', bare, `HEAD:refs/heads/${pr.base.ref}`);
+  const at = new Date().toISOString();
+  Object.assign(pr, { merged: true, merged_at: at, updated_at: at, state: 'closed', merge_commit_sha: landing });
+  writeFileSync(state, JSON.stringify(facts));
+  console.log(`Squash merged pull request #${pr.number} into ${pr.base.ref} as ${landing}`);
+  git(poster, 'fetch', '-q', bare, pr.base.ref);
+  git(poster, 'merge', '-q', '--ff-only', 'FETCH_HEAD');
+  assert.match(post('status', id), new RegExp(`merged on main at ${landing.slice(0, 12)} — the bounty is closed`));
+} else {
+  post('apply', id, String(submitted.pullRequest.number));
+}
 assert.equal(readFileSync(join(poster, 'app.txt'), 'utf8'), 'fixed\n');
 git(poster, 'push', bare, 'main');
 const look = await boardFetch('/api/hint', {

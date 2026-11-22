@@ -10,14 +10,17 @@ import { startLocal } from '../../packages/box-platform/src/local.js';
 const platform = fileURLToPath(new URL('../../packages/box-platform/', import.meta.url));
 const rehearsal = fileURLToPath(new URL('../../kitchen/demo/local-board-rehearsal.mjs', import.meta.url));
 
-it('rehearses a CLI post, discovery, take, submission, merge and recorded payment on the local board', async () => {
+it.each([
+  ['applied by the CLI', []],
+  ['squash merged on GitHub', ['--squash']]
+])('rehearses a CLI post, discovery, take, submission, merge (%s) and recorded payment on the local board', async (_, extra: string[]) => {
   const scratch = await mkdtemp(join(tmpdir(), 'box-local-rehearsal-'));
   try {
     const board = await startLocal({ schema: join(platform, 'schema.sql'), out: join(platform, 'out'), replayDir: scratch });
     try {
       await board.refresh();
       await board.env.DB.prepare("DELETE FROM meta WHERE key LIKE 'budget_%'").run();
-      const { stdout } = await promisify(execFile)(process.execPath, [rehearsal, scratch, board.url], { timeout: 85000 });
+      const { stdout } = await promisify(execFile)(process.execPath, [rehearsal, scratch, board.url, ...extra], { timeout: 85000 });
       expect(stdout).toContain('Posted on the local board:');
       expect(stdout).toContain('Recorded paid on the local board (no money moved):');
     } finally {
