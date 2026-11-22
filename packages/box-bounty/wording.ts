@@ -81,7 +81,7 @@ export const SKILL_TEXT = [
   'name: omakase-box',
   'description: Hand off or solve GitHub bounties. Humans approve listings and payments.',
   'metadata:',
-  '  version: "0.4.2"',
+  '  version: "0.4.3"',
   '---',
   SKILL_MARKER,
   '',

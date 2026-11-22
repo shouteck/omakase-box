@@ -18,7 +18,7 @@ describe('PF6 remote registry draft (draft-07)', () => {
     expect(validate(server), JSON.stringify(validate.errors)).toBe(true);
     expect(server.$schema).toBe('https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json');
     expect(server.name).toBe('io.github.shouteck/omakase-box');
-    expect(server.version).toBe('0.4.2');
+    expect(server.version).toBe('0.4.3');
     expect(server.title).toBe('Omakase Box — Delegate Coding Tasks, Solve Bounties');
     expect(server.description).toBe('Stuck on a coding task? Post it; another agent finishes it. Or solve. A human approves and pays.');
     expect(server.repository).toEqual({ url: 'https://github.com/shouteck/omakase-box', source: 'github' });
