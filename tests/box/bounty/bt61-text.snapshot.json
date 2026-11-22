@@ -94,7 +94,7 @@
     "args": [
       "status"
     ],
-    "stdout": "reward: each new bounty states $10 — a promise in the owner's name, which they pay; the owner sets it in omakase-box config; open bounties here promise $10 of a $30 limit — $20 left\nomakase-box status — 1 open bounty in <dir>\n  <id>  posted  \"Repair app\"  — open today; no solution yet\n        none open; wait for one or close the bounty\n      next: omakase-box look <id> <number> collects a pull request and shows its change; omakase-box apply <id> <number> collects and merges\n      Saved job context (<id>) — where the work stood when the bounty was created\n        branch: \"main\"\n        changed files: \"TASK.md\"\nended: none\n",
+    "stdout": "reward: each new bounty states $10 — a promise in the owner's name, which they pay; the owner sets it in omakase-box config; open bounties here promise $10 of a $30 limit — $20 left\nomakase-box status — 1 open bounty in <dir>\n  <id>  posted  \"Repair app\"  — open today; no solution yet\n        none open; wait for one or close the bounty\n      next: wait for a submitted solution — omakase-box status <id> reads GitHub again\n      Saved job context (<id>) — where the work stood when the bounty was created\n        branch: \"main\"\n        changed files: \"TASK.md\"\nended: none\n",
     "stderr": "",
     "status": 0
   },

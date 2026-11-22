@@ -226,7 +226,9 @@ export const nextStep = (record: BountyRecord): string => {
     case 'drafted':
     case 'confirmed': return `deliver it — omakase-box post ${record.id} (preview first with --preview)`;
     case 'waiting': return `waiting for the owner — ${waitingSummary(record)}`;
-    case 'posted': return `omakase-box look ${record.id} <number> collects a pull request and shows its change; omakase-box apply ${record.id} <number> collects and merges`;
+    case 'posted': return record.github?.availablePullRequests?.length === 0
+      ? `wait for a submitted solution — omakase-box status ${record.id} reads GitHub again`
+      : `omakase-box look ${record.id} <number> collects a pull request and shows its change; omakase-box apply ${record.id} <number> collects and merges`;
     case 'taken': return 'a solution is being read against the snapshot it was made for — run omakase-box status again in a moment';
     case 'answered': {
       const conflicts = record.conflicts?.paths;
