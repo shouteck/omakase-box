@@ -646,7 +646,7 @@ describe('PF52: agent pay comments', () => {
     await approve('');
     if (rail !== 'paypal') { await card(); await connectedStripe(); }
     if (rail !== 'stripe') await vault();
-    if (rail === 'both') await preference('stripe');
+    if (rail === 'both') await r.env.DB.prepare(`INSERT INTO payment_preferences (github_id, rail, fallback) VALUES (?, 'stripe', 0)`).bind(OWNER.github_id).run();
   }
   async function read() {
     const github = new GitHub(r.env, false);

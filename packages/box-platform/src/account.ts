@@ -712,7 +712,7 @@ export async function accountResponse(request: Request, env: Env, url: URL, now:
   }
   if (method === 'POST' && path === '/api/me/payment-rail') {
     const refusal = writeRefusal(request, url, true); if (refusal !== null) return refusal;
-    const viewer = await viewerOf(request, env, now); if (viewer === null) return json(401, { error: 'Sign in with GitHub first.' });
+    const viewer = await viewerOf(request, env, now); if (viewer === null) return json(401, SIGN_IN_FIRST);
     const body = await readBody(request); if ('refused' in body) return body.refused;
     const input = (body.value ?? {}) as { rail?: unknown; fallback?: unknown };
     if ((input.rail !== 'stripe' && input.rail !== 'paypal') || typeof input.fallback !== 'boolean') return json(400, { error: 'Choose stripe or paypal and explicitly enable or disable fallback. Nothing changed.' });
