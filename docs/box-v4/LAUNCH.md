@@ -21,9 +21,9 @@ Stripe and PayPal. Keep it aligned with copy changes. `--origin URL` and
 `--providers Stripe,PayPal` override those expectations for other checks;
 `--skip-secrets` reports NOT RUN and cannot pass sign-off. This is read-only
 availability/binding evidence, not proof of a payment or webhook delivery.
-Live webhook registrations must also exist at the production origin's
-`/api/paypal/webhook` and `/api/stripe/webhook` URLs (Stripe must be live and
-enabled). Supply `PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_WEBHOOK_ID` and
+Sign-off also requires live webhook registrations at the production origin's
+`/api/paypal/webhook` and `/api/stripe/webhook` URLs (Stripe is checked for live
+mode and enabled status). Supply `PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_WEBHOOK_ID` and
 `STRIPE_SECRET_KEY` for these read-only lookups; absent credentials mean
 NOT RUN and fail sign-off. Only PayPal's OAuth token fetch uses POST; the
 POST-only board webhook routes are not probed and no payment is attempted.
