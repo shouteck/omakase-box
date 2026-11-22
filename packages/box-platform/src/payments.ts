@@ -1,7 +1,7 @@
 // What a bounty's payment facts are, and what they add up to (PLATFORM-UX section 5).
 // Every rule is here, computed on read, so no count outlives a click, a refresh or a
 // purge. Each fact says whose word it is; none of this says who is right.
-import { CHARGE_WORDS, PAYPAL_WORDS } from './charge-words.js';
+import { chargeWords } from './charge-words.js';
 import type { Db } from './store.js';
 import { currentReceipt, type PaidEvent, payeeOf, type PaymentFacts, type Receipt, same, standingRecord } from './visibility.js';
 
@@ -81,7 +81,7 @@ export function paymentOf(input: BountyPayment) {
   const chargedPull = input.charge?.state === 'paid' ? input.pulls.find(pull => same(pull.author, input.charge!.solver)) : undefined;
   if (chargedPull !== undefined && !landed.includes(chargedPull)) landed.push(chargedPull);
   const viaPayPal = input.charge?.provider === 'paypal';
-  const charge = input.charge == null ? null : { state: input.charge.state, at: input.charge.at, words: (viaPayPal ? PAYPAL_WORDS[input.charge.state as keyof typeof CHARGE_WORDS] : undefined) ?? CHARGE_WORDS[input.charge.state as keyof typeof CHARGE_WORDS] ?? null, whose_word: viaPayPal ? 'the board\'s, from PayPal\'s answer' as const : 'the board\'s, from Stripe\'s answer' as const };
+  const charge = input.charge == null ? null : { state: input.charge.state, at: input.charge.at, words: chargeWords(input.charge.state, input.charge.provider ?? null), whose_word: viaPayPal ? 'the board\'s, from PayPal\'s answer' as const : 'the board\'s, from Stripe\'s answer' as const };
   const none = { owed: null, recorded_paid: null, solver_says: null, excluded_from_counts: null, charge };
   if (input.amount === 0) return { state: 'no-reward' as PaymentState, ...none, note: 'No reward is stated, so nothing is owed.' };
   if (input.source === 'listed' && facts.record === null) return { state: 'owner-chooses' as PaymentState, ...none, note: landed.length === 0 ? 'No linked pull request yet. The owner may choose whom to pay. Authorized pay on merge requires one eligible verified landing.' : 'Authorized pay on merge can pay one eligible verified landing. Otherwise the owner chooses from every linked pull request, merged or not.' };

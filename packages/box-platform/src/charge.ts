@@ -2,7 +2,7 @@
 // is the whole rule and calls nothing. The board never holds money: a direct charge
 // goes from the owner's saved card to the solver's own Stripe account. The limit and
 // the payee are enforced here and nowhere else; Stripe would accept any (K46).
-import { CHARGE_WORDS, PAYPAL_WORDS, type ChargeState } from './charge-words.js';
+import { CHARGE_WORDS, chargeWords, type ChargeState } from './charge-words.js';
 import type { Env } from './github.js';
 import { landedWhere, notCounted, paymentCommentsCurrent, type MergedPull } from './payments.js';
 import { errorCode, errorWords, isCardError, stripe, StripeUnavailable, stripeOn } from './stripe.js';
@@ -541,7 +541,9 @@ export async function mergePaymentFact(env: Env, id: string, origin: string) {
   if (landed.length === 1 && selectedAvailable && provider === null) reasons.push('The solver is not ready to receive on an available pay-on-merge rail.');
   const charge = await chargeOf(env, id);
   if (charge?.state !== 'solver-not-ready' && await env.DB.prepare('SELECT 1 FROM meta WHERE key = ?').bind(`merge_payment_off/${id}`).first() !== null) reasons.push(CHARGE_WORDS['solver-not-ready']);
-  if (charge !== null && charge.state !== 'owner-decides' && charge.state !== 'refused-over-limit') reasons.push((row.charge_provider === 'paypal' ? PAYPAL_WORDS[charge.state] : undefined) ?? CHARGE_WORDS[charge.state]);
+  if (charge !== null && charge.state !== 'owner-decides' && charge.state !== 'refused-over-limit') {
+    const words = chargeWords(charge.state, row.charge_provider); if (words !== null) reasons.push(words);
+  }
   return { configured: (await payingIds(env, [id])).has(id), will_pay: reasons.length === 0, provider, reasons, rail_choice: { ...rails, choice_url: links.payment_rail },
     setup_urls: { stripe: links.stripe_card, paypal: links.paypal_vault }, solvers,
     pay_now: { comment: payComment(id, row.amount), note: 'The poster can post this exact case-insensitive comment on the bounty issue to pay a linked PR author without a merge, repository switch or board session. The approved reward must fit the saved method’s default limit, with no self/repository-access payee or prior payment/record/in-flight charge. The poster chooses a default rail when both are saved. Fallback is off unless explicitly enabled; a via stripe or via paypal override never falls back. A refused comment is not retried; after fixing setup, post a new comment. An in-flight charge must be resolved first.' },

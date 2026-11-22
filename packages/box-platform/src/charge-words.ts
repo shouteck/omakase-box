@@ -22,6 +22,9 @@ export const CHARGE_WORDS: Record<Exclude<ChargeState, 'looked'>, string> = {
 
 /** Where the owner's click went through PayPal, the words that differ. */
 export const PAYPAL_WORDS: Partial<typeof CHARGE_WORDS> = {
+  'solver-disconnected': 'The solver\'s PayPal account is no longer connected. Nothing was charged.',
+  'stripe-refused': 'PayPal refused this payment. No payment is confirmed.',
+  'provider-refused': 'PayPal refused this payment. No payment is confirmed. Use Checkout or pay by hand.',
   declined: 'PayPal declined the payment. Nothing was charged.',
   'owner-must-authenticate': 'PayPal has not confirmed a completed payment. The owner must finish payment; no automatic retry is made.',
   'owner-paying': 'PayPal has not confirmed a completed payment. The owner can continue on PayPal if requested.',
@@ -29,3 +32,8 @@ export const PAYPAL_WORDS: Partial<typeof CHARGE_WORDS> = {
   refunded: 'PayPal records this payment as refunded or reversed.',
   disputed: 'The payer is disputing this payment. The dispute is on the solver\'s PayPal account.'
 };
+
+export function chargeWords(state: string, provider: string | null): string | null {
+  const key = state as keyof typeof CHARGE_WORDS;
+  return (provider === 'paypal' ? PAYPAL_WORDS[key] : undefined) ?? CHARGE_WORDS[key] ?? null;
+}

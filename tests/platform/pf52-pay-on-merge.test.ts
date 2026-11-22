@@ -11,6 +11,7 @@ import { StripeStandin } from './stripe-standin.js';
 import { PayPalStandin } from './paypal-standin.js';
 import type { StandinIssue } from '../../packages/box-platform/standin/standin.js';
 import { chooseRail } from '../../packages/box-platform/src/payment-rail.js';
+import { CHARGE_WORDS, chargeWords } from '../../packages/box-platform/src/charge-words.js';
 
 const ORIGIN = 'https://board.test';
 const REPO = 'owner/project';
@@ -70,6 +71,22 @@ beforeEach(async () => {
 afterEach(async () => { vi.restoreAllMocks(); await stripe.stop(); await paypal.stop(); await r.close(); });
 
 describe('PF52: explicit saved payment rail choice', () => {
+  it('Monid: every PayPal charge state has provider-aware words; Stripe words and unknown states stay honest', () => {
+    for (const state of Object.keys(CHARGE_WORDS)) {
+      expect(chargeWords(state, 'paypal')).not.toMatch(/Stripe|the card|card.s bank/i);
+      expect(chargeWords(state, null)).toBe(CHARGE_WORDS[state as keyof typeof CHARGE_WORDS]);
+    }
+    expect(chargeWords('paid', 'paypal')).toContain('PayPal took the payment');
+    expect(chargeWords('looked', 'paypal')).toBeNull(); expect(chargeWords('unknown', null)).toBeNull();
+  });
+  it('Monid: a completed PayPal capture names PayPal in both merge facts and the payment view', async () => {
+    await vault(); await approve(); await settleTwice();
+    const words = (await fact()).pay_on_merge.reasons.join(' ');
+    expect(words).toContain('PayPal took the payment'); expect(words).not.toContain('Stripe');
+    const payment = await (await get(`/api/b/${id}/payment`)).json() as any;
+    expect(payment.payment.charge.words).toContain('PayPal took the payment');
+    expect(payment.payment.charge.words).not.toContain('Stripe');
+  });
   async function both() { await card(); await connectedStripe(); await vault(); }
   async function commands(body: string) {
     r.clock.at += MINUTE;
