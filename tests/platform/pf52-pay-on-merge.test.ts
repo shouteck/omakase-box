@@ -233,7 +233,11 @@ describe('PF52: agent pay comments', () => {
     if (rail !== 'paypal') { await card(); await connectedStripe(); }
     if (rail !== 'stripe') await vault();
   }
-  async function read() { await readPaymentComments(r.env, new GitHub(r.env), id, REPO, 12); }
+  async function read() {
+    const github = new GitHub(r.env, false);
+    try { await readPaymentComments(r.env, github, id, REPO, 12); }
+    finally { await github.settle(); }
+  }
   async function command(body = `omakase pay ${id} $45 to @solver`, login = OWNER.login) {
     r.clock.at += MINUTE;
     (issue.comments ??= []).push({ login, association: 'OWNER', body, created_at: new Date(r.clock.at).toISOString() });
