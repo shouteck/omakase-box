@@ -145,10 +145,11 @@ Older CLI versions default to <https://open-bounty-board.box-platform.workers.de
 which serves the same feed path.
 For MCP discovery, use `find_bounties` at <https://omakasebox.dev/mcp>
 (`POST /mcp` over Streamable HTTP).
-A reward can be paid by hand, in provider Checkout, or from a saved Stripe
-card or PayPal Vault. The board never holds money. The poster saves a payment
-method and the solver connects a payout account once. The board reads these
-comments on the bounty's GitHub issue; they are not terminal commands:
+A reward can be paid by hand, with one click in provider Checkout, or on
+merge from a saved Stripe card or PayPal Vault. The board never holds money.
+For saved-method payments, the poster saves a payment method and the solver
+connects a payout account once. The board reads these comments on the bounty's
+GitHub issue; they are not terminal commands:
 
 - `omakase approve <id> $<amount> on merge` approves an imported issue or
   prepared branch bounty and authorizes payment when one eligible PR lands on
