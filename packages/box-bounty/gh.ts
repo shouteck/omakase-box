@@ -351,7 +351,7 @@ export function api(root: string, endpoint: string, payload?: object, method?: s
 
 export interface GitHubReadOptions { readonly readOnly?: boolean; readonly deadline?: number }
 
-function readOnlyApi(root: string, endpoint: string, deadline?: number): unknown {
+export function readOnlyApi(root: string, endpoint: string, deadline?: number): unknown {
   const body = splitResponse(gh(root, ['api', '--hostname', 'github.com', endpoint, '--include'], true, deadline)).body;
   try { return JSON.parse(body); }
   catch { return invalid('github-response-invalid', 'GitHub returned unreadable data; nothing changed; next: run the wait again'); }

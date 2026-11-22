@@ -214,6 +214,12 @@ else if (state.forked && resource === 'repos/' + state.forked) result = { full_n
 else if (resource.includes('/pulls/') && input && typeof input.state === 'string') { const pr = state.prs.find(entry => entry.number === Number(resource.split('/pulls/')[1])); if (!pr) fail(); pr.state = input.state; result = publicPr(pr); }
 else if (endpoint === 'user') result = { login: state.account };
 else if (endpoint === 'repos/' + state.repository) result = state.malformed ? { visibility: '${leakCanary}' } : { full_name: state.repository, private: state.private, visibility: state.visibility, permissions: { push: state.push ?? true }, html_url: 'https://github.com/' + state.repository, default_branch: 'main' };
+else if (resource.startsWith('repos/' + state.repository + '/git/ref/heads/')) {
+  const branch = resource.split('/git/ref/heads/')[1].split('/').map(decodeURIComponent).join('/');
+  const ref = require('node:child_process').spawnSync('git', ['-C', process.env.BT8A_GIT_REMOTE, 'rev-parse', 'refs/heads/' + branch], { encoding: 'utf8', windowsHide: true });
+  if (ref.status !== 0) fail();
+  result = { ref: 'refs/heads/' + branch, object: { type: 'commit', sha: ref.stdout.trim() } };
+}
 else if (resource.endsWith('/pulls') && input) {
   const n = nextNumber();
   result = { number: n, html_url: 'https://github.com/' + state.repository + '/pull/' + n, state: 'open', draft: input.draft === true, title: input.title, body: input.body, user: { login: input.user ?? input.author ?? 'solver' }, head: { sha: input.head ?? '0'.repeat(40) }, base: { ref: input.base ?? 'main', repo: { full_name: state.repository } } };

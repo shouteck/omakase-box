@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { boardAddress, readBountyDetail } from './board.js';
 import { BountyRefused } from './errors.js';
-import { api, invalid, isObject, remoteGit, signedAccount } from './gh.js';
+import { api, invalid, isObject, login as accountLogin, readOnlyApi, remoteGit, signedAccount } from './gh.js';
 import { git } from './git.js';
 import { repositoryAddress } from './repository.js';
 import { loadSettings, saveSettings, settingsDir, writeToolFile } from './settings.js';
@@ -80,7 +80,7 @@ function forkOf(root: string, repository: string, login: string): string {
 /** The draft's own words; submit replaces exactly these, and leaves anything the solver wrote. */
 export const DRAFT_BODY = (id: string): string => `Started on bounty ${id}. A draft: work in progress, opened at once so other agents can see this attempt.`;
 
-export function takeBounty(id: string, options: TakeOptions = {}): TakeResult {
+function eligibleTake(id: string) {
   if (!ID.test(id)) throw new BountyRefused('bounty-id-invalid', `"${id.slice(0, 40)}" is not a bounty id; nothing was taken; next: an id from omakase-box discover, such as bt-0123456789ab`);
   const limits = solvingOf();
   if (limits.mode === 'off') throw new BountyRefused('solving-off', 'solving is off — the owner has not allowed your agents to take bounties; nothing was taken; next: ask the owner to run omakase-box config set solving allowed (or ask, to be asked before each one)');
@@ -94,6 +94,65 @@ export function takeBounty(id: string, options: TakeOptions = {}): TakeResult {
     ...(limits.skip.includes(facts.repository) ? [`the owner never takes from ${facts.repository}`] : [])
   ];
   if (outside.length > 0) throw new BountyRefused('outside-owner-limits', `${id} is outside the owner's limits: ${outside.join('; ')}; nothing was taken; next: choose another bounty from omakase-box discover`);
+  return { facts, limits };
+}
+
+function checkWorkspace(into: string | undefined): void {
+  if (into !== undefined && existsSync(into)) throw new BountyRefused('workspace-exists', `${into} already exists, and the workspace must be a new folder; nothing was taken; next: name a folder that does not exist, or leave --into out`);
+}
+
+function draftPullRequest(id: string, facts: Facts, target: string, fork: boolean) {
+  const branch = `box-solve/${id}`;
+  return {
+    title: `Attempt on bounty ${id}`,
+    head: fork ? `${target.split('/')[0]}:${branch}` : branch,
+    base: facts.bountyBranch,
+    draft: true as const,
+    body: `${facts.closesIssue === null ? DRAFT_BODY(id) : `${DRAFT_BODY(id)}\n\n${facts.closesIssue}`}\n\n${creditLine(boardAddress())}`
+  };
+}
+
+export function previewTake(id: string, options: TakeOptions = {}) {
+  const { facts, limits } = eligibleTake(id);
+  checkWorkspace(options.into);
+  const root = process.cwd();
+  const account = readOnlyApi(root, 'user');
+  const login = accountLogin(isObject(account) ? account['login'] : undefined);
+  const info = readOnlyApi(root, `repos/${facts.repository}`);
+  const fork = !(isObject(info) && isObject(info['permissions']) && info['permissions']['push'] === true);
+  const target = fork ? `${login}/${facts.repository.split('/')[1]}` : facts.repository;
+  const ref = readOnlyApi(root, `repos/${facts.repository}/git/ref/heads/${facts.bountyBranch.split('/').map(encodeURIComponent).join('/')}`);
+  const head = isObject(ref) && isObject(ref['object']) ? ref['object']['sha'] : undefined;
+  if (typeof head !== 'string' || !/^[a-f\d]{40}$/.test(head)) return invalid('github-response-invalid', 'GitHub did not answer with the bounty branch head; nothing was taken; next: check the branch on GitHub, then take the bounty again');
+  if (facts.closesIssue === null && head !== facts.baseCommit) throw new BountyRefused('bounty-branch-moved', `${facts.bountyBranch} is at ${head.slice(0, 12)} on GitHub, not the ${facts.baseCommit.slice(0, 12)} the board lists; nothing was taken; next: wait for the board to read the bounty again, then take it`);
+  const approval: 'standing' | 'one-use' | 'needed' = limits.mode === 'ask' ? (limits.approved?.includes(id) ? 'one-use' : 'needed') : 'standing';
+  const ownBounty = facts.owner.toLowerCase() === login.toLowerCase();
+  const branch = `box-solve/${id}`;
+  const pullRequest = draftPullRequest(id, facts, target, fork);
+  return {
+    id, taken: false as const, repository: facts.repository, target, fork, branch, bountyBranch: facts.bountyBranch,
+    baseCommit: facts.baseCommit, pullRequest, reward: facts.reward, ownBounty, approval,
+    lines: [
+      `${id} — take preview`,
+      `repository: ${facts.repository}`,
+      `target: ${target}${fork ? ` — predicted name only; fork would be created or reused under ${login}. GitHub assigns the name; an existing fork may have a different name.` : ' — push to the original repository'}`,
+      `clone: https://github.com/${facts.repository}.git — ${facts.closesIssue === null ? 'bounty' : 'default'} branch ${facts.bountyBranch} at ${head}`,
+      `solver branch: ${branch}, with an empty start commit`,
+      `base commit: ${facts.baseCommit}`,
+      ...(options.into === undefined ? ['workspace: a fresh temporary folder, with the checkout in work/'] : [`workspace: ${join(options.into, 'work')}`]),
+      `draft pull request: title: ${pullRequest.title}`,
+      `base: ${pullRequest.base}; head: ${pullRequest.head}; draft: true`,
+      `body:\n${pullRequest.body}`,
+      `reward: $${facts.reward}`,
+      ...(ownBounty ? [`${id} was posted by ${login}, the account taking it: a merge here is not counted in the owner's record.`] : []),
+      approval === 'needed' ? `approval: needed — the owner runs omakase-box allow ${id}` : approval === 'one-use' ? 'approval: one-use — the real take would consume it' : 'approval: standing — the owner allows solving',
+      'preview only — nothing was taken. Run again without --preview to take it.'
+    ]
+  };
+}
+
+export function takeBounty(id: string, options: TakeOptions = {}): TakeResult {
+  const { facts, limits } = eligibleTake(id);
   // "Ask each time": the owner's yes on this one bounty, written by the owner's own command, is used once.
   if (limits.mode === 'ask' && !(limits.approved ?? []).includes(id)) {
     saveTaken({ id, repository: facts.repository, stage: 'waiting', at: new Date().toISOString(), reward: facts.reward });
@@ -106,7 +165,7 @@ export function takeBounty(id: string, options: TakeOptions = {}): TakeResult {
   }
   const root = options.into === undefined ? mkdtempSync(join(tmpdir(), `box-take-${id}-`)) : options.into;
   if (options.into !== undefined) {
-    if (existsSync(options.into)) throw new BountyRefused('workspace-exists', `${options.into} already exists, and the workspace must be a new folder; nothing was taken; next: name a folder that does not exist, or leave --into out`);
+    checkWorkspace(options.into);
     mkdirSync(options.into, { recursive: true });
   }
   const login = signedAccount(root);
@@ -131,15 +190,7 @@ export function takeBounty(id: string, options: TakeOptions = {}): TakeResult {
       Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2000);
     }
   }
-  const opened = api(root, `repos/${facts.repository}/pulls`, {
-    title: `Attempt on bounty ${id}`,
-    head: canPush ? branch : `${target.split('/')[0]}:${branch}`,
-    base: facts.bountyBranch,
-    draft: true,
-    // A listed bounty's draft closes its issue, so GitHub links it and the board reads it as this bounty's.
-    // The credit line goes last (BT57), after the closing line when there is one, which stays alone on its own line.
-    body: `${facts.closesIssue === null ? DRAFT_BODY(id) : `${DRAFT_BODY(id)}\n\n${facts.closesIssue}`}\n\n${creditLine(boardAddress())}`
-  });
+  const opened = api(root, `repos/${facts.repository}/pulls`, draftPullRequest(id, facts, target, !canPush));
   const number = isObject(opened) ? opened['number'] : undefined;
   const url = isObject(opened) ? opened['html_url'] : undefined;
   if (typeof number !== 'number' || !Number.isSafeInteger(number) || number < 1 || typeof url !== 'string' || !url.startsWith('https://github.com/')) return invalid('github-response-invalid', `GitHub did not answer with the draft pull request; the branch ${branch} is on ${target}; next: open a draft pull request from it against ${facts.bountyBranch} on GitHub`);

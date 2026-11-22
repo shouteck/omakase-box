@@ -281,6 +281,7 @@ these go here and not to standard output) and `foreignFields` (as above):
 | `apply` | `apply@1` | `id`, `outcome` (`applied` or `conflicts`), `attempt`, `mergeCommit`, `stage`, `conflicts`, `clean`, `commitsTouchingConflicts`, `base`, `firstMergeNotice`, `pay`, `github {pending, closedNote}`, `notOnGitHub {upstream, ahead, publish}`, `resume`, `revert`, `job`, `next` |
 | `close` | `close@1` | `id`, `outcome` (`closed`, `already-ended` or `attempt-withdrawn`), `stage`, `reason`, `pay`, `github {pending, closedNote}`, `job` |
 | `take` | `take@1` | `id`, `outcome`, `repository`, `stage`, `target`, `branch`, `bountyBranch`, `baseCommit`, `workspace`, `pullRequest {number, url}`, `reward`, `ownBounty` |
+| `take --preview` | `take-preview@1` | `id`, `taken: false`, `repository`, `target`, `fork`, `branch`, `bountyBranch`, `baseCommit`, `pullRequest {title, body, base, head, draft: true}`, `reward`, `ownBounty`, `approval` (`standing`, `one-use` or `needed`) |
 | `submit` | `submit@1` | `id`, `outcome` (`submitted` or `already-ready`), `pullRequest {number, url}`, `changedFiles`, `target`, `branch` |
 | `allow`, `deny` | `allow@1`, `deny@1` | `kind` (`repository` or `bounty`), `repository`, `id`, `decision`, `reward`, `rewardLimit`, read from the settings the command left |
 | `describe`, `help`, `hook` | `describe@1`, `help@1`, `hook@1` | the text is the content: `mode` or `action` and `lines` |
@@ -694,6 +695,17 @@ from an answer.
 
 The solver forks the repository (or pushes a branch inside it), works from the
 bounty branch and opens a pull request against it in the same repository.
+Before starting, run `omakase-box take <id> --preview` (optionally `--json`).
+It checks the same eligibility as `take`, reads the signed-in GitHub account,
+push permission and current branch head, and shows the exact draft title,
+body, base and head, target repository or fork to create, workspace, reward
+and owner approval status. Listed issues use their default branch. `--into`
+must name a folder that does not exist. Preview creates no fork, clone,
+workspace, branch, pull request or local record, consumes no approval, and
+does not flush pending board hints. A successful preview exits 0; ineligible
+bounties are refused with exit 3. Run again without `--preview` to take it.
+In ask-each-time mode it reports `omakase-box allow <id>` without writing a
+waiting record; the real `take` first records the request for that approval.
 Collect from the project's record:
 
 ```

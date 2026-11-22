@@ -12,7 +12,7 @@ import { root, runNode } from './process.mjs';
 const RECORD = join(root, 'tests', 'box', 'bounty', 'SURFACE.txt');
 // bt62 holds the static half; each owner in surface.ts's OWNERS checks its documents' fields. bt62-record checks the
 // record's own shape, so it runs only when comparing: under --write the record is the thing being replaced.
-const FILES = ['bt62', 'json-agreement', 'bt61-journey', 'bt61', 'bt61-solver', 'pf24', 'bt28', 'bt43', 'pf6-wait'].map(name => `tests/box/bounty/${name}.test.ts`);
+const FILES = ['bt62', 'json-agreement', 'bt61-journey', 'bt61', 'bt61-solver', 'pf24', 'bt28', 'bt43', 'pf6-wait', 'take-preview'].map(name => `tests/box/bounty/${name}.test.ts`);
 const RECORD_SHAPE = 'tests/box/bounty/bt62-record.test.ts';
 
 const args = process.argv.slice(2);

@@ -484,6 +484,31 @@ field box-bounty/submit@1 pullRequest.number number
 field box-bounty/submit@1 pullRequest.url string
 field box-bounty/submit@1 schema string
 field box-bounty/submit@1 target string
+field box-bounty/take-preview@1 approval string
+field box-bounty/take-preview@1 baseCommit string
+field box-bounty/take-preview@1 bountyBranch string
+field box-bounty/take-preview@1 branch string
+field box-bounty/take-preview@1 foreignFields array
+field box-bounty/take-preview@1 foreignFields[] object
+field box-bounty/take-preview@1 foreignFields[].field string
+field box-bounty/take-preview@1 foreignFields[].source string
+field box-bounty/take-preview@1 fork boolean
+field box-bounty/take-preview@1 id string
+field box-bounty/take-preview@1 lines array
+field box-bounty/take-preview@1 lines[] string
+field box-bounty/take-preview@1 notices array
+field box-bounty/take-preview@1 ownBounty boolean
+field box-bounty/take-preview@1 pullRequest object
+field box-bounty/take-preview@1 pullRequest.base string
+field box-bounty/take-preview@1 pullRequest.body string
+field box-bounty/take-preview@1 pullRequest.draft boolean
+field box-bounty/take-preview@1 pullRequest.head string
+field box-bounty/take-preview@1 pullRequest.title string
+field box-bounty/take-preview@1 repository string
+field box-bounty/take-preview@1 reward number
+field box-bounty/take-preview@1 schema string
+field box-bounty/take-preview@1 taken boolean
+field box-bounty/take-preview@1 target string
 field box-bounty/take@1 baseCommit string
 field box-bounty/take@1 bountyBranch string
 field box-bounty/take@1 branch string
@@ -608,6 +633,7 @@ option submit -h switch
 option take --help switch
 option take --into value
 option take --json switch
+option take --preview switch
 option take -h switch
 positionals allow 1
 positionals apply 2
@@ -818,4 +844,5 @@ schema box-bounty/setup@1
 schema box-bounty/status-wait@1
 schema box-bounty/status@1
 schema box-bounty/submit@1
+schema box-bounty/take-preview@1
 schema box-bounty/take@1
