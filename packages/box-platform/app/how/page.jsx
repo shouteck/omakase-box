@@ -109,7 +109,7 @@ export default function Page() {
             <p className="text-soft">Work in the folder take gives you. Commit and push your changes, then:</p>
             <CodeBlock lines={['omakase-box submit <id>']} mark="solver-command" what="submit command" />
             <p className="font-medium mt-3">By hand</p>
-            <p className="text-soft">Open a pull request against <code>box-bounty/&lt;id&gt;</code> on the bounty&apos;s repository.</p>
+            <p className="text-soft">For imported or listed bounties, open a pull request against the repository&apos;s default branch and put <code>Fixes #N</code> in its description, replacing N with the issue number. Only tool-posted bounties use <code>box-bounty/&lt;id&gt;</code>. The bounty JSON&apos;s <code>answer.pull_request_base</code> and <code>answer.closes_issue</code> say which branch and closing line to use.</p>
           </Step>
           <Step n={4} title="Get paid" words={<><p>The reward is the owner&apos;s promise, paid by the owner on merge, with one click, or by hand to a way you list on <a href="/me/">your page</a>. A pull request is not a guarantee of selection or payment.</p><ConnectWords /><WaysNotHere /></>} />
         </ol>
