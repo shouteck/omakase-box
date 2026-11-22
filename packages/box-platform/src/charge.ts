@@ -98,11 +98,11 @@ const CHARGES_PER_RUN = 1; // Workers Free: a charge is five calls to Stripe, an
 const APPROVED_AT = `CASE WHEN b.approval IS NULL THEN b.created_at ELSE b.approval_at END`;
 const APPROVED_AMOUNT = `CASE WHEN b.approval IS NULL THEN b.amount ELSE b.approved_amount END`;
 const CONSENT_AT = `CASE WHEN b.source = 'listed' THEN CASE WHEN b.merge_consent = 1 THEN ${APPROVED_AT} END ELSE r.on_at END`;
-const REWARD_LIMIT = `CASE WHEN b.source = 'listed' AND b.merge_consent = 1 THEN COALESCE(s.limit_per_bounty, v.limit_per_bounty) ELSE COALESCE(r.limit_per_bounty, s.limit_per_bounty, v.limit_per_bounty) END`;
-const STRIPE_LIMIT = `CASE WHEN b.source = 'listed' AND b.merge_consent = 1 THEN s.limit_per_bounty ELSE COALESCE(r.limit_per_bounty, s.limit_per_bounty) END`;
-const PAYPAL_LIMIT = `CASE WHEN b.source = 'listed' AND b.merge_consent = 1 THEN v.limit_per_bounty ELSE COALESCE(r.limit_per_bounty, v.limit_per_bounty) END`;
+const STRIPE_LIMIT = `CASE WHEN b.source = 'listed' THEN s.limit_per_bounty ELSE MIN(s.limit_per_bounty, COALESCE(r.limit_per_bounty, s.limit_per_bounty)) END`;
+const PAYPAL_LIMIT = `CASE WHEN b.source = 'listed' THEN v.limit_per_bounty ELSE MIN(v.limit_per_bounty, COALESCE(r.limit_per_bounty, v.limit_per_bounty)) END`;
+const REWARD_LIMIT = `COALESCE(${STRIPE_LIMIT}, ${PAYPAL_LIMIT})`;
 const APPROVED = `(b.source = 'posted' OR (COALESCE(b.approval, '') != 'pending' AND ${APPROVED_AT} IS NOT NULL AND b.amount = ${APPROVED_AMOUNT}))`;
-const DUE = `SELECT b.id, b.amount, b.poster, b.poster_id, b.source, b.merge_consent, r.limit_per_bounty AS repository_limit, s.limit_per_bounty AS stripe_limit, v.limit_per_bounty AS paypal_limit, ${CONSENT_AT} AS on_at, s.customer_id, s.payment_method, v.payment_token, ${REWARD_LIMIT} AS limit_per_bounty
+const DUE = `SELECT b.id, b.amount, b.poster, b.poster_id, b.source, ${STRIPE_LIMIT} AS stripe_limit, ${PAYPAL_LIMIT} AS paypal_limit, ${CONSENT_AT} AS on_at, s.customer_id, s.payment_method, v.payment_token
   FROM bounties b
   LEFT JOIN pay_repositories r ON r.github_id = b.poster_id AND r.repository = b.repository
   LEFT JOIN pay_settings s ON s.github_id = b.poster_id
@@ -115,7 +115,7 @@ const DUE = `SELECT b.id, b.amount, b.poster, b.poster_id, b.source, b.merge_con
     AND (c.state IS NULL OR c.state NOT IN ('paid', 'refunded', 'disputed', 'owner-must-authenticate', 'owner-paying'))
     AND (c.at IS NULL OR c.at <= ?)
   ORDER BY c.at IS NOT NULL, c.at, b.id LIMIT ?`;
-type DueRow = { id: string; amount: number; poster: string; poster_id: number; source: string; merge_consent: number; repository_limit: number | null; stripe_limit: number | null; paypal_limit: number | null; on_at: string; customer_id: string | null; payment_method: string | null; payment_token: string | null; limit_per_bounty: number };
+type DueRow = { id: string; amount: number; poster: string; poster_id: number; source: string; stripe_limit: number | null; paypal_limit: number | null; on_at: string; customer_id: string | null; payment_method: string | null; payment_token: string | null };
 
 const LOOK_AGAIN_MS = 300000; // A state that may change is looked at this often, never faster.
 
@@ -157,7 +157,7 @@ export async function settleCharges(env: Env): Promise<number> {
     const method = usePayPal ? row.payment_token! : row.payment_method ?? row.payment_token!;
     const held = await db.prepare('SELECT state, payment_method, provider, at FROM charges WHERE bounty_id = ?').bind(row.id).first<ChargeRow & { provider: string | null }>();
     if (held?.state === 'charging' && (held.payment_method !== method || (held.provider === 'paypal') !== usePayPal)) continue;
-    const limit = row.source === 'listed' && row.merge_consent === 1 ? (usePayPal ? row.paypal_limit : row.stripe_limit) : row.repository_limit ?? (usePayPal ? row.paypal_limit : row.stripe_limit);
+    const limit = usePayPal ? row.paypal_limit : row.stripe_limit;
     const decision = decide({
       amount: row.amount, poster: row.poster, poster_id: row.poster_id, landed, on_at: row.on_at,
       card: { payment_method: method, customer: row.customer_id ?? '', limit: limit ?? 0 },

@@ -189,6 +189,23 @@ describe('PF52: approved listed pay on merge', () => {
     await paySaved(r.env, id, OWNER.github_id, 45, SOLVER);
     expect(await state()).toMatchObject({ state: 'not-counted' }); expect(stripe.charged()).toHaveLength(0);
   });
+  it.each([
+    ['stripe', 40, 100, false], ['paypal', 40, 100, false],
+    ['stripe', 50, 40, false], ['paypal', 50, 40, false],
+    ['stripe', 50, 45, true], ['paypal', 50, 45, true],
+    ['stripe', 45, null, true], ['paypal', 45, null, true]
+  ] as const)('caps posted %s limits: method %s, repository %s', async (rail, savedLimit, repositoryLimit, pays) => {
+    if (rail === 'stripe') { await card(savedLimit); await connectedStripe(); } else await vault(savedLimit);
+    await approve();
+    await r.env.DB.prepare(`UPDATE bounties SET source = 'posted' WHERE id = ?`).bind(id).run();
+    await switched();
+    await r.env.DB.prepare('UPDATE pay_repositories SET limit_per_bounty = ?').bind(repositoryLimit).run();
+    expect((await fact()).pays_on_merge).toBe(pays);
+    await settleTwice();
+    expect(stripe.charged()).toHaveLength(pays && rail === 'stripe' ? 1 : 0);
+    expect(paypal.captures).toHaveLength(pays && rail === 'paypal' ? 1 : 0);
+    expect(await state()).toMatchObject({ state: pays ? 'paid' : 'refused-over-limit' });
+  });
   it('verifies a listed squash landing on default before charging', async () => {
     await card(); await connectedStripe();
     Object.assign(issue.pulls![0]!, { landed: false, merge_commit_sha: 'b'.repeat(40), landingLanded: true });
