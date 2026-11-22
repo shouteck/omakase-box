@@ -25,7 +25,7 @@ export function Section({ title, children, id }) {
 export function SideSection({ title, children, id }) {
   return (
     <section className="grid grid-cols-1 md:grid-cols-[14rem_minmax(0,1fr)] gap-x-10 gap-y-4 border-t border-line py-10" aria-labelledby={id}>
-      <h2 id={id} className="text-lg font-medium tracking-tight">{title}</h2>
+      <h2 id={id} className="scroll-mt-24 text-lg font-medium tracking-tight">{title}</h2>
       <div className="min-w-0">{children}</div>
     </section>
   );
