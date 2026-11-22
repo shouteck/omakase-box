@@ -609,6 +609,7 @@ describe('PF52: approved listed pay on merge', () => {
   });
   it.each([
     ['stripe', 40, 100, false], ['paypal', 40, 100, false],
+    ['stripe', 45, 50, false], ['paypal', 45, 50, false],
     ['stripe', 50, 40, false], ['paypal', 50, 40, false],
     ['stripe', 50, 45, true], ['paypal', 50, 45, true],
     ['stripe', 45, null, true], ['paypal', 45, null, true]
