@@ -81,7 +81,7 @@ describe.each(['stripe', 'paypal'] as const)('PF52 migrated pre-PF52 data: %s sc
     stripe.accounts.set('acct_solver', { charges_enabled: !scenario.lateSolver });
     await r.env.DB.prepare("INSERT INTO stripe_accounts (github_id, account_id, ready) VALUES (7001, 'acct_solver', ?)").bind(scenario.lateSolver ? 0 : 1).run();
     if (!scenario.lateSolver) await r.env.DB.prepare("INSERT INTO paypal_accounts (github_id, payer_id, at) VALUES (7001, 'SOLVERPAYPAL1', ?)").bind(NOW - 115 * MINUTE).run();
-    if (rail === 'stripe') await r.env.DB.prepare("INSERT INTO pay_settings (github_id, customer_id, payment_method, limit_per_bounty) VALUES (8001, 'cus_owner', 'pm_owner', 50)").run();
+    await r.env.DB.prepare("INSERT INTO pay_settings (github_id, customer_id, payment_method, limit_per_bounty) VALUES (8001, 'cus_owner', 'pm_owner', 50)").run();
     if (scenario.refused) await r.env.DB.prepare("INSERT INTO charges (bounty_id, state, at) VALUES (?, 'solver-not-ready', ?)").bind(ID, NOW - 55 * MINUTE).run();
 
     await r.env.DB.batch(migration.split(';').filter(sql => sql.trim()).map(sql => r.env.DB.prepare(sql)));
@@ -90,7 +90,10 @@ describe.each(['stripe', 'paypal'] as const)('PF52 migrated pre-PF52 data: %s sc
     expect(await r.env.DB.prepare('SELECT on_default FROM pull_requests WHERE bounty_id = ?').bind(ID).first()).toEqual({ on_default: scenario.source === 'listed' ? null : 1 });
     expect(await r.env.DB.prepare("SELECT name FROM migrations WHERE name = 'pf52.sql'").first()).toEqual({ name: 'pf52.sql' });
     if (scenario.refused) expect(await r.env.DB.prepare('SELECT value FROM meta WHERE key = ?').bind(`merge_payment_off/${ID}`).first()).toEqual({ value: 'solver-not-ready' });
-    if (rail === 'paypal') await r.env.DB.prepare("INSERT INTO paypal_vault (github_id, payment_token, label, limit_per_bounty) VALUES (8001, 'VAULT1', 'Saved PayPal', 50)").run();
+    if (rail === 'paypal') {
+      await r.env.DB.prepare("INSERT INTO paypal_vault (github_id, payment_token, label, limit_per_bounty) VALUES (8001, 'VAULT1', 'Saved PayPal', 50)").run();
+      await r.env.DB.prepare("INSERT INTO payment_preferences (github_id, rail, fallback) VALUES (8001, 'paypal', 0)").run();
+    }
     if (scenario.lateSolver) {
       stripe.accounts.set('acct_solver', { charges_enabled: true });
       await r.env.DB.prepare('UPDATE stripe_accounts SET ready = 1 WHERE github_id = 7001').run();
