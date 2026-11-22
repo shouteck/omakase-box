@@ -74,10 +74,11 @@ async function lookFirst(env: Env, bounty: string, account: string): Promise<Att
 }
 
 /** The calls, once decide() said to charge. */
-async function attempt(env: Env, bounty: string, amount: number, decision: Extract<Decision, { act: 'charge' }>): Promise<Attempt> {
+async function attempt(env: Env, bounty: string, amount: number, decision: Extract<Decision, { act: 'charge' }>, allowCharge: boolean): Promise<Attempt> {
   const { account, card, pull } = decision;
   const on = { account };
   const first = await lookFirst(env, bounty, account);
+  if (!allowCharge) return first?.state === 'paid' ? first : { state: 'charging', payment_intent: null };
   if (first !== null) return first;
   if (card.customer === '') return { state: 'charging', payment_intent: null };
   const key = keyOf(bounty, pull.number, card.payment_method);
@@ -124,24 +125,41 @@ type DueRow = { id: string; amount: number; poster: string; poster_id: number; m
 
 const LOOK_AGAIN_MS = 300000; // A state that may change is looked at this often, never faster.
 
+async function retryMergeAllowed(env: Env, id: string, number: number, account: string, provider: string | null): Promise<boolean> {
+  const row = await env.DB.prepare(`SELECT ${CONSENT_AT} AS consent_at, ${COMMENTED} AS commented, ${DEPLOYED_AT} AS deployed_at, p.merged_at,
+    s.account_id, s.ready, s.ready_at, a.payer_id, a.at AS paypal_at FROM bounties b
+    JOIN pull_requests p ON p.bounty_id = b.id AND p.number = ?
+    LEFT JOIN pay_repositories r ON r.github_id = b.poster_id AND r.repository = b.repository
+    LEFT JOIN stripe_accounts s ON s.github_id = p.author_id LEFT JOIN paypal_accounts a ON a.github_id = p.author_id WHERE b.id = ?`).bind(number, id).first<{
+      consent_at: string | null; commented: number; deployed_at: string | null; merged_at: string | null;
+      account_id: string | null; ready: number | null; ready_at: string | null; payer_id: string | null; paypal_at: number | null;
+    }>();
+  if (row === null || row.consent_at === null || row.deployed_at === null || row.merged_at === null) return false;
+  const merged = Date.parse(row.merged_at);
+  if (!(merged >= Date.parse(row.deployed_at)) || !(row.commented === 1 ? merged > Date.parse(row.consent_at) : merged >= Date.parse(row.consent_at))) return false;
+  return provider === 'paypal' ? row.payer_id === account && row.paypal_at !== null && Number.isFinite(row.paypal_at) && row.paypal_at <= merged
+    : row.account_id === account && row.ready === 1 && row.ready_at !== null && Date.parse(row.ready_at) <= merged;
+}
+
 async function reconcileCharge(env: Env, now: number): Promise<boolean> {
-  const held = await env.DB.prepare(`SELECT c.bounty_id, c.pull_number, c.solver, c.account_id, c.amount, c.payment_method, c.provider, c.at, s.customer_id
+  const held = await env.DB.prepare(`SELECT c.bounty_id, c.pull_number, c.solver, c.account_id, c.amount, c.payment_method, c.provider, c.origin, c.at, s.customer_id
     FROM charges c LEFT JOIN pay_settings s ON s.github_id = (SELECT poster_id FROM bounties WHERE id = c.bounty_id) AND s.payment_method = c.payment_method
     WHERE c.state = 'charging' AND c.at <= ? AND c.pull_number IS NOT NULL AND c.solver IS NOT NULL AND c.account_id IS NOT NULL
       AND c.amount > 0 AND c.payment_method IS NOT NULL AND ((c.provider = 'paypal' AND ?) OR (c.provider IS NULL AND ?))
       AND NOT EXISTS (SELECT 1 FROM events WHERE bounty_id = c.bounty_id AND type = 'paid' AND withdrawn = 0
         UNION SELECT 1 FROM paid_clicks WHERE bounty_id = c.bounty_id AND withdrawn = 0)
     ORDER BY c.at, c.bounty_id LIMIT 1`).bind(now - STALE_CLAIM_MS, paypalOn(env) ? 1 : 0, stripeOn(env) ? 1 : 0).first<{
-      bounty_id: string; pull_number: number; solver: string; account_id: string; amount: number; payment_method: string; provider: string | null; at: number; customer_id: string | null;
+      bounty_id: string; pull_number: number; solver: string; account_id: string; amount: number; payment_method: string; provider: string | null; origin: string | null; at: number; customer_id: string | null;
     }>();
   if (held === null) return false;
+  const allowCharge = held.origin === 'agent' || held.origin === 'owner' || await retryMergeAllowed(env, held.bounty_id, held.pull_number, held.account_id, held.provider);
   const pull: Merged = { number: held.pull_number, author: held.solver, author_id: null, merged_at: '', association: null, on_default: null };
   if (held.provider === 'paypal') {
-    try { await chargeVault(env, held.bounty_id, held.amount, pull, held.account_id, held.payment_method, held.at, now); }
+    try { await chargeVault(env, held.bounty_id, held.amount, pull, held.account_id, held.payment_method, held.at, now, 'merge', allowCharge); }
     catch (error) { if (!(error instanceof PayPalUnavailable)) throw error; }
   } else await chargeStripe(env, held.bounty_id, held.amount, { act: 'charge', pull, account: held.account_id,
-    card: { payment_method: held.payment_method, customer: held.customer_id ?? '', limit: held.amount } }, held.at, now);
-  return true;
+    card: { payment_method: held.payment_method, customer: held.customer_id ?? '', limit: held.amount } }, held.at, now, 'merge', allowCharge);
+  return allowCharge;
 }
 
 /** Who can be paid here, by GitHub's facts and the account tied to the merged author's id. Shared by the machine and the owner's click. */
@@ -221,11 +239,11 @@ export async function claimCharge(env: Env, id: string, amount: number, pull: Me
   return claim !== null;
 }
 
-async function chargeStripe(env: Env, id: string, amount: number, decision: Extract<Decision, { act: 'charge' }>, heldAt: number | null, now: number, origin: 'merge' | 'agent' = 'merge'): Promise<void> {
+async function chargeStripe(env: Env, id: string, amount: number, decision: Extract<Decision, { act: 'charge' }>, heldAt: number | null, now: number, origin: 'merge' | 'agent' = 'merge', allowCharge = true): Promise<void> {
   if (!await claimCharge(env, id, amount, decision.pull, decision.account, decision.card.payment_method, null, heldAt, now, origin)) return;
   try {
-    const result = await attempt(env, id, amount, decision);
-    await saveCharge(env, id, result.state, decision.pull, decision.account, decision.card.payment_method, result.payment_intent, amount, now);
+    const result = await attempt(env, id, amount, decision, allowCharge);
+    if (allowCharge || result.state === 'paid') await saveCharge(env, id, result.state, decision.pull, decision.account, decision.card.payment_method, result.payment_intent, amount, now);
   } catch (error) {
     if (!(error instanceof StripeUnavailable)) throw error;
   }

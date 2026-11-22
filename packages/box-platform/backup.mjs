@@ -67,7 +67,7 @@ INSERT INTO events (bounty_id, sha, type) VALUES ('sample-bounty', 'sample-event
 INSERT INTO sessions VALUES ('sample-hash', 45, 'sample-owner', 1);
 INSERT INTO methods VALUES (45, 'sample-solver', 0, 'sample', 'sample-address', NULL, 'public');
 INSERT INTO paid_clicks VALUES ('sample-bounty', 'sample-owner', 'sample-solver', 500, 0, '2026-01-01');
-INSERT INTO stripe_accounts VALUES (45, 'sample-stripe-account', 1);
+INSERT INTO stripe_accounts (github_id, account_id, ready) VALUES (45, 'sample-stripe-account', 1);
 INSERT INTO paypal_accounts VALUES (45, 'sample-paypal-account', 1);
 INSERT INTO pay_settings VALUES (45, 'sample-customer', 'sample-method', 'sample card', 500);
 INSERT INTO pay_repositories VALUES (45, 'sample/repo', '2026-01-01', 500);

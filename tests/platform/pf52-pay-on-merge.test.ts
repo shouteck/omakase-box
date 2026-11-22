@@ -71,6 +71,41 @@ beforeEach(async () => {
 afterEach(async () => { vi.restoreAllMocks(); await stripe.stop(); await paypal.stop(); await r.close(); });
 
 describe('PF52: deployment cutoff and literal merge-time readiness', () => {
+  it.each([['stripe', 'late-ready'], ['paypal', 'late-ready'], ['stripe', 'old-consent'], ['paypal', 'old-consent']] as const)('only reads an unsafe %s automatic claim with %s evidence and does not starve new eligible merges', async (rail, reason) => {
+    if (rail === 'stripe') { await card(); await connectedStripe(); } else await vault();
+    await approve();
+    if (reason === 'old-consent') await r.env.DB.prepare("UPDATE meta SET value = ? WHERE key = 'pf52_deployed_at'").bind(at(2)).run();
+    else if (rail === 'stripe') await r.env.DB.prepare('UPDATE stripe_accounts SET ready_at = ?').bind(at(6)).run();
+    else await r.env.DB.prepare('UPDATE paypal_accounts SET at = ?').bind(NOW + 6 * MINUTE).run();
+    await r.env.DB.prepare("INSERT INTO charges (bounty_id, state, pull_number, solver, account_id, amount, payment_method, provider, origin, at) VALUES (?, 'charging', 41, 'solver', ?, 45, ?, ?, 'merge', ?)")
+      .bind(id, rail === 'stripe' ? 'acct_solver' : 'SOLVERPAYPAL1', rail === 'stripe' ? 'pm_owner' : 'VAULT1', rail === 'stripe' ? null : 'paypal', NOW).run();
+    await r.env.DB.prepare('UPDATE charges SET payment_intent = ? WHERE bounty_id = ?').bind('known-pending-payment', id).run();
+    await settleTwice(); expect(await state()).toMatchObject({ state: 'charging' });
+    expect(await r.env.DB.prepare('SELECT payment_intent FROM charges WHERE bounty_id = ?').bind(id).first()).toEqual({ payment_intent: 'known-pending-payment' });
+    expect(stripe.charged()).toHaveLength(0); expect(paypal.orders).toHaveLength(0);
+    const second = 'bt-00000000000b';
+    await r.env.DB.prepare("INSERT INTO bounties (id, repository, issue_number, title, task, poster, poster_id, issue_state, amount, created_at, work_commit, seen_at) VALUES (?, ?, 13, 'Next merge', 'Next task', 'owner', 8001, 'closed', 45, ?, ?, ?)").bind(second, REPO, at(0), 'e'.repeat(40), NOW).run();
+    await r.env.DB.prepare("INSERT INTO pull_requests (bounty_id, number, author, author_id, state, opened_at, merged_at, association, on_default, head_on_default_at_sight) VALUES (?, 42, 'solver', 7001, 'merged', ?, ?, 'NONE', 1, 0)").bind(second, at(0), at(15)).run();
+    await r.env.DB.prepare('INSERT INTO pay_repositories (github_id, repository, on_at, limit_per_bounty) VALUES (8001, ?, ?, 45)').bind(REPO, at(0)).run();
+    r.clock.at += 3 * MINUTE; await settleCharges(r.env);
+    expect(await state()).toMatchObject({ state: 'charging' });
+    expect(await r.env.DB.prepare('SELECT state FROM charges WHERE bounty_id = ?').bind(second).first()).toEqual({ state: 'paid' });
+  });
+  it.each(['stripe', 'paypal'] as const)('records an existing completed %s payment without spending when automatic retry is unsafe', async rail => {
+    if (rail === 'stripe') { await card(); await connectedStripe(); } else await vault();
+    await approve(); await settleCharges(r.env); expect(await state()).toMatchObject({ state: 'paid' });
+    if (rail === 'stripe') await r.env.DB.prepare('UPDATE stripe_accounts SET ready_at = ?').bind(at(6)).run();
+    else {
+      await r.env.DB.prepare('UPDATE paypal_accounts SET at = ?').bind(NOW + 6 * MINUTE).run();
+      await r.env.DB.prepare('UPDATE charges SET payment_intent = ? WHERE bounty_id = ?').bind(paypal.orders[0]!.id, id).run();
+    }
+    await r.env.DB.prepare("UPDATE charges SET state = 'charging', at = ? WHERE bounty_id = ?").bind(NOW, id).run();
+    const paymentPosts = () => rail === 'stripe' ? stripe.calls.filter(call => call.startsWith('POST')).length : paypal.calls.filter(call => call.startsWith('POST /v2/checkout/orders')).length;
+    const calls = paymentPosts();
+    await settleCharges(r.env); expect(await state()).toMatchObject({ state: 'paid' });
+    expect(paymentPosts()).toBe(calls);
+    expect(stripe.charged()).toHaveLength(rail === 'stripe' ? 1 : 0); expect(paypal.captures).toHaveLength(rail === 'paypal' ? 1 : 0);
+  });
   it.each([['stripe', 'pay'], ['paypal', 'pay'], ['stripe', 'paid'], ['paypal', 'paid']] as const)('keeps historical consent a plain approval with %s explicit %s available', async (rail, action) => {
     if (rail === 'stripe') { await card(); await connectedStripe(); } else await vault();
     await r.env.DB.prepare("UPDATE meta SET value = ? WHERE key = 'pf52_deployed_at'").bind(at(2)).run();

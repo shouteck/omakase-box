@@ -1556,7 +1556,7 @@ describe('the pages', () => {
       await visit(page, `/b/${STATE_IDS.owed}/`);
       const stopped = page.locator('[data-automatic-charge-off]');
       await expect.poll(() => stopped.innerText()).toContain('Automatic charge on merge is off for this bounty');
-      expect(await stopped.innerText()).toContain('solver had no usable payout account when payment was evaluated');
+      expect(await stopped.innerText()).toContain('solver had no payout account connected and ready by merge time');
       expect(await stopped.innerText()).toContain('one-click (Checkout or a fresh omakase pay comment), or record an outside payment');
       expect(await stopped.getByRole('link', { name: 'Connect Stripe payouts' }).getAttribute('href')).toContain(`/setup/stripe-payouts/?bounty=${STATE_IDS.owed}`);
       expect(await stopped.getByRole('link', { name: 'Connect PayPal payouts' }).getAttribute('href')).toContain(`/setup/paypal-payouts/?bounty=${STATE_IDS.owed}`);

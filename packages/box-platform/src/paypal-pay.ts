@@ -72,8 +72,17 @@ export async function paypalAction(env: Env, id: string): Promise<string | null>
   return held !== null && typeof held.url === 'string' && held.url.startsWith('https://') ? held.url : null;
 }
 
-export async function chargeVault(env: Env, id: string, amount: number, pull: Merged, account: string, token: string, heldAt: number | null, now: number, origin: 'merge' | 'agent' = 'merge'): Promise<void> {
+export async function chargeVault(env: Env, id: string, amount: number, pull: Merged, account: string, token: string, heldAt: number | null, now: number, origin: 'merge' | 'agent' = 'merge', allowCharge = true): Promise<void> {
   if (!await claimCharge(env, id, amount, pull, account, token, 'paypal', heldAt, now, origin)) return;
+  if (!allowCharge) {
+    const row = await rowOf(env, id);
+    if (row?.payment_intent != null) {
+      const read = await paypal(env, 'GET', `/v2/checkout/orders/${encodeURIComponent(row.payment_intent)}`);
+      const capture = read.status === 200 && isOurs(read.json, id, row) ? completedCapture(read.json) : null;
+      if (capture !== null) await recordCapture(env, id, capture, now);
+    }
+    return;
+  }
   const made = await paypal(env, 'POST', '/v2/checkout/orders', {
     intent: 'CAPTURE', purchase_units: [{ custom_id: id, amount: { currency_code: 'USD', value: usd(amount) }, payee: { merchant_id: account } }],
     payment_source: { paypal: { vault_id: token } }

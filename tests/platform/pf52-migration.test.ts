@@ -53,6 +53,7 @@ type Scenario = {
   landed?: boolean;
   refused?: boolean;
   postDeployMerge?: boolean;
+  inFlight?: boolean;
 };
 const scenarios: Scenario[] = [
   { name: 'plain listed approval stays uncharged despite enabled repository and ready solver', source: 'listed', approval: 'comment', comment: 'plain' },
@@ -61,6 +62,7 @@ const scenarios: Scenario[] = [
   { name: 'pending prepared import cannot gain merge consent from a plain comment', source: 'posted', approval: 'pending', comment: 'plain' },
   { name: 'legacy posted merge before the repository switch stays uncharged', source: 'posted', approval: null, lateSwitch: true },
   { name: 'legacy solver-not-ready stays terminal after the solver connects', source: 'posted', approval: null, refused: true, lateSolver: true },
+  { name: 'pre-existing automatic Stripe claim cannot create a charge while reconciling', source: 'posted', approval: null, inFlight: true },
   { name: 'new direct-listing consent cannot charge its pre-approval merge', source: 'listed', approval: null, comment: 'late-consent' },
   { name: 'already authorized legacy posted merge is excluded by the deployment cutoff', source: 'posted', approval: null },
   { name: 'never-evaluated legacy posted merge cannot use readiness acquired after deployment', source: 'posted', approval: null, lateSolver: true },
@@ -91,6 +93,7 @@ describe.each(['stripe', 'paypal'] as const)('PF52 migrated pre-PF52 data: %s sc
     if (!scenario.lateSolver) await r.env.DB.prepare("INSERT INTO paypal_accounts (github_id, payer_id, at) VALUES (7001, 'SOLVERPAYPAL1', ?)").bind(NOW - 115 * MINUTE).run();
     await r.env.DB.prepare("INSERT INTO pay_settings (github_id, customer_id, payment_method, limit_per_bounty) VALUES (8001, 'cus_owner', 'pm_owner', 50)").run();
     if (scenario.refused) await r.env.DB.prepare("INSERT INTO charges (bounty_id, state, at) VALUES (?, 'solver-not-ready', ?)").bind(ID, NOW - 55 * MINUTE).run();
+    if (scenario.inFlight) await r.env.DB.prepare("INSERT INTO charges (bounty_id, state, pull_number, solver, account_id, amount, payment_method, at) VALUES (?, 'charging', 41, 'solver', 'acct_solver', 45, 'pm_owner', ?)").bind(ID, NOW - 55 * MINUTE).run();
 
     await r.env.DB.batch(migration.split(/;(?!\s*END\b)/).filter(sql => sql.trim()).map(sql => r.env.DB.prepare(sql)));
     const cutoff = (await r.env.DB.prepare("SELECT value FROM meta WHERE key = 'pf52_deployed_at'").first<{ value: string }>())!.value;
@@ -141,6 +144,7 @@ describe.each(['stripe', 'paypal'] as const)('PF52 migrated pre-PF52 data: %s sc
     expect(await r.env.DB.prepare("SELECT COUNT(*) AS n FROM charges WHERE state = 'paid'").first()).toEqual({ n: scenario.postDeployMerge ? 1 : 0 });
     if (scenario.source === 'posted' && scenario.approval === null && !scenario.postDeployMerge) expect(await mergePaymentFact(r.env, ID, 'http://localhost')).toMatchObject({ will_pay: false, automatic_charge_off: true, reasons: expect.arrayContaining([expect.stringContaining('pre-deployment merges')]) });
     if (scenario.refused) expect(await r.env.DB.prepare('SELECT state FROM charges WHERE bounty_id = ?').bind(ID).first()).toEqual({ state: 'solver-not-ready' });
+    if (scenario.inFlight) expect(await r.env.DB.prepare('SELECT state FROM charges WHERE bounty_id = ?').bind(ID).first()).toEqual({ state: 'charging' });
   });
 });
 
