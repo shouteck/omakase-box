@@ -71,6 +71,10 @@ beforeEach(async () => {
 afterEach(async () => { vi.restoreAllMocks(); await stripe.stop(); await paypal.stop(); await r.close(); });
 
 describe('PF52: direct listing consent', () => {
+  it('sends PayPal a fragment-free Vault return address', async () => {
+    expect((await post('/api/me/paypal/vault', {}, await session())).status).toBe(200);
+    expect(paypal.vaultRequests[0]).toMatchObject({ payment_source: { paypal: { experience_context: { return_url: `${ORIGIN}/me/?vault=return` } } } });
+  });
   it('resumes an untouched consent turn after routine reads exhaust the worker budget', async () => {
     await r.env.DB.prepare('DELETE FROM bounties WHERE id = ?').bind(id).run();
     expect(await listIssue(r.env, OWNER, `https://github.com/${REPO}/issues/12`, 45, NOW)).toEqual({ id });

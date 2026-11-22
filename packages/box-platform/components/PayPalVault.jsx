@@ -21,7 +21,7 @@ export default function PayPalVault({ onChange }) {
   };
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
-    setToken(q.get('approval_token') ?? q.get('setup_token') ?? q.get('token'));
+    setToken(q.get('approval_token_id') ?? q.get('approval_token') ?? q.get('setup_token') ?? q.get('token'));
     read();
   }, []);
   const send = async (suffix, body = {}) => {

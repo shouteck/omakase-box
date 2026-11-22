@@ -30,6 +30,33 @@ beforeAll(async () => {
 }, 300000);
 afterAll(async () => { await browser?.close(); });
 
+it.each(['approval_token_id', 'setup_token', 'missing'])('PF52 PayPal Vault browser return: %s', async field => {
+  const board = await startLocal({ schema: SCHEMA, out: OUT, seed: s => { s.signInAs = OWNER; s.accountIds.set(OWNER.login, OWNER.id); } });
+  const paypal = new PayPalStandin();
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  try {
+    Object.assign(board.env, { PAYPAL_CLIENT_ID: 'standin', PAYPAL_SECRET: 'standin', PAYPAL_API: await paypal.start() });
+    await page.route('**/*', route => ['localhost', '127.0.0.1'].includes(new URL(route.request().url()).hostname) ? route.continue() : route.abort());
+    await page.addInitScript(() => localStorage.setItem('board-role', 'solver'));
+    await page.goto(`${board.url}/auth/github`);
+    expect((await page.request.post(`${board.url}/api/me/paypal/vault`, { headers: { origin: board.url }, data: {} })).status()).toBe(200);
+    const callback = field === 'missing' ? '?vault=return#[' : `?vault=return&${field}=SETUP1&approval_session_id=SETUP1`;
+    await page.goto(`${board.url}/me/${callback}`);
+    await expect.poll(() => page.getByRole('tab', { name: 'Owner', exact: true }).getAttribute('aria-selected')).toBe('true');
+    if (field === 'missing') {
+      await expect.poll(() => page.getByRole('button', { name: 'Save PayPal', exact: true }).isVisible()).toBe(true);
+      expect(await page.getByRole('button', { name: 'Save PayPal and limit', exact: true }).count()).toBe(0);
+      expect((await (await page.request.get(`${board.url}/api/me/paypal/vault`)).json()).saved).toBeNull();
+    } else {
+      await page.getByLabel('Maximum USD per bounty', { exact: true }).fill('50');
+      await page.getByRole('button', { name: 'Save PayPal and limit', exact: true }).click();
+      await page.waitForURL('**/setup/finish/');
+      expect((await (await page.request.get(`${board.url}/api/me/paypal/vault`)).json()).saved).toEqual({ label: 'Saved PayPal', limit_per_bounty: 50 });
+    }
+  } finally { await context.close(); await paypal.stop(); await board.stop(); }
+});
+
 describe.each(['stripe', 'paypal'] as const)('PF52 funded local worker: %s', rail => {
   it.each(['prepared-merge', 'listed-merge', 'agent-pay', 'manual-paid', 'not-ready'] as const)('%s', async mode => {
     let clock = NOW;

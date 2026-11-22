@@ -11,7 +11,7 @@ import { requireRailChoice } from './payment-rail.js';
 
 export async function vaultSetup(env: Env, githubId: number, origin: string, now: number): Promise<{ url: string } | { error: string }> {
   const made = await paypal(env, 'POST', '/v3/vault/setup-tokens', { payment_source: { paypal: { usage_type: 'MERCHANT', customer_type: 'CONSUMER',
-    experience_context: { return_url: `${origin}/me/?vault=return#pay`, cancel_url: `${origin}/me/#pay` } } } });
+    experience_context: { return_url: `${origin}/me/?vault=return`, cancel_url: `${origin}/me/#pay` } } } });
   const links = made.json['links'] as { rel?: string; href?: string }[] | undefined;
   const url = Array.isArray(links) ? links.find(link => link.rel === 'approve' || link.rel === 'payer-action')?.href : undefined;
   if (made.status >= 300 || typeof made.json['id'] !== 'string' || typeof url !== 'string' || !url.startsWith('https://')) return { error: 'PayPal did not start setup. Nothing was saved. Next: try again.' };

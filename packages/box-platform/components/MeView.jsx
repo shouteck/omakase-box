@@ -263,7 +263,7 @@ function AccountMenu({ login, signOut }) {
 function firstRole(me) {
   if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('card')) return 'owner';
   const hash = typeof window === 'undefined' ? '' : window.location.hash;
-  if (OWNER_HASHES.includes(hash)) return 'owner';
+  if ((typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('vault') === 'return') || OWNER_HASHES.includes(hash)) return 'owner';
   if (SOLVER_HASHES.includes(hash)) return 'solver';
   if (me.you_owe.length > 0) return 'owner';
   if (me.owed_to_you.length > 0 || (me.to_confirm ?? []).length > 0) return 'solver';
@@ -304,7 +304,7 @@ export default function MeView() {
   // Once the page is drawn, a section the address names is scrolled to.
   useEffect(() => {
     if (role === null || window.location.hash === '') return;
-    document.querySelector(window.location.hash)?.scrollIntoView();
+    document.getElementById(window.location.hash.slice(1))?.scrollIntoView();
   }, [role]);
   const setRole = next => {
     setRoleState(next);
