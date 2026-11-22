@@ -81,6 +81,17 @@ describe('take preview', { timeout: 120000 }, () => {
     expect(state().prs).toEqual(prsBefore);
   }));
 
+  it('labels the fork target as a prediction when an existing fork may have another name', () => postedFixture(({ bare, id, update, state }) => {
+    configure(); listed(bare, id); update({ push: false, account: 'solver1', forked: 'solver1/renamed-project' });
+    const result = previewTake(id);
+    const document = takePreviewDocument(result, []);
+    expect(document).toMatchObject({ target: 'solver1/project', fork: true });
+    expect(result.lines.join('\n')).toContain('predicted name only; fork would be created or reused under solver1');
+    expect(result.lines.join('\n')).toContain('GitHub assigns the name; an existing fork may have a different name.');
+    expect(state().forked).toBe('solver1/renamed-project');
+    expect(state().calls.some(call => call.includes('--input') || call.includes('--method'))).toBe(false);
+  }));
+
   it('ask mode names the approval command but writes no waiting record', () => postedFixture(({ bare, id }) => {
     configure('ask'); listed(bare, id);
     const before = loadSettings();

@@ -37,3 +37,10 @@ Human and `box-bounty/take-preview@1` output; help, solver docs and skill agree.
 - Terminal behavior is exercised through the built CLI; no graphical UI changes or live GitHub mutations tested.
 - Existing ask-mode approval flow is preserved: preview names the allow command, while real take records the waiting request first.
 - First full verify failed: the known github-history WIP-author flake (isolated rerun: 23/23 passed), and the skill exceeded its existing 1200-character budget. The second full run exposed a pinned setup sentence after shortening it; restored that sentence and shortened the skill description instead. Skill/launch-copy checks pass: 2 files / 16 tests, with existing expectations unchanged. The history flake recurred and its second isolated rerun passed 23/23.
+
+## PR review follow-up
+
+- Implementation commit 445eec57 passed hosted run 45054868941 on Linux, macOS and Windows.
+- Renamed forks: `target` is a prediction when forking. The human line (also in JSON `lines`) now explicitly says GitHub assigns the name and may reuse an existing fork with a different name. No extra GitHub calls or mutations; a regression test seeds a renamed fork and checks this disclosure and unchanged fork state.
+- Legacy settings migration remains unresolved, per the follow-up's scope limit. There is no existing non-writing owner-settings reader: `loadSettings` validates, resolves legacy projects and writes migrated settings/state in one function. Preview reaches it through `solvingOf`, board reads and the draft credit's `boardAddress`; changing only the first call would not prevent writes. Separating those paths needs more than a few lines and is not attempted here.
+- The same first-read migration is reachable in other commands: discover calls `solvingOf`; config display calls `loadSettings` directly; status calls `ownerStatusLine`/`readDecision`; post preview calls `repoReward` for an unposted bounty and `boardAddress` while composing the listing. All reach `loadSettings`, whose carried-state and legacy-project branches persist the migration. These are code-path checks, not live legacy-file experiments.

@@ -135,7 +135,7 @@ export function previewTake(id: string, options: TakeOptions = {}) {
     lines: [
       `${id} — take preview`,
       `repository: ${facts.repository}`,
-      `target: ${target}${fork ? ' — fork would be created' : ' — push to the original repository'}`,
+      `target: ${target}${fork ? ` — predicted name only; fork would be created or reused under ${login}. GitHub assigns the name; an existing fork may have a different name.` : ' — push to the original repository'}`,
       `clone: https://github.com/${facts.repository}.git — ${facts.closesIssue === null ? 'bounty' : 'default'} branch ${facts.bountyBranch} at ${head}`,
       `solver branch: ${branch}, with an empty start commit`,
       `base commit: ${facts.baseCommit}`,
