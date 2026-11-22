@@ -169,7 +169,7 @@ describe('PF52: PayPal Vault', () => {
     await vault(45); await switched();
     await r.env.DB.prepare(`UPDATE bounties SET source = 'posted', approval = NULL WHERE id = ?`).bind(id).run();
     await r.env.DB.prepare('UPDATE pay_repositories SET limit_per_bounty = 45').run();
-    await r.env.DB.prepare(`INSERT INTO pull_requests (bounty_id, number, author, author_id, state, merged_at, association, on_default) VALUES (?, 41, 'solver', 7001, 'merged', ?, 'NONE', 1)`).bind(id, at(5)).run();
+    await r.env.DB.prepare(`INSERT INTO pull_requests (bounty_id, number, author, author_id, state, opened_at, merged_at, association, on_default) VALUES (?, 41, 'solver', 7001, 'merged', ?, ?, 'NONE', 1)`).bind(id, at(2), at(5)).run();
     await settleTwice(); expect(paypal.captures).toHaveLength(1);
   });
 });
