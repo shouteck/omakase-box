@@ -5,7 +5,7 @@
 // the agent's host wakes it.
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { boardAddress, readBoardNumbers, readFeedPage } from './board.js';
+import { boardAddress, BOUNTY_FEED_PATH, readBoardNumbers, readFeedPage } from './board.js';
 import { BountyRefused } from './errors.js';
 import { repositoryAddress } from './repository.js';
 import { loadSettings, saveSettings, settingsDir, writeToolFile, type SolvingSettings } from './settings.js';
@@ -175,11 +175,12 @@ export function discover(options: DiscoverOptions): DiscoverResult {
   const query = new URLSearchParams({ since, limit: String(DISCOVER_PAGE) });
   if (minReward > 0) query.set('min_reward', String(minReward));
   if (languages.length === 1) query.set('language', languages[0]!);
+  const feed = `${board}${BOUNTY_FEED_PATH}`;
   const read = readFeedPage(query.toString());
-  if ('failed' in read) throw new BountyRefused('board-unread', `the board could not be read: ${read.failed}; nothing changed and the bookmark stays; next: run omakase-box discover again later`);
+  if ('failed' in read) throw new BountyRefused('board-unread', `could not read bounty feed ${feed}: ${read.failed}; nothing changed and the bookmark stays; next: run omakase-box discover again later`);
   const next = read.page['since_next'];
   const entries = read.page['bounties'];
-  if (typeof next !== 'string' || !/^[A-Za-z\d_-]{1,200}$/.test(next) || !Array.isArray(entries)) throw new BountyRefused('board-unread', 'the board\'s answer did not carry a bookmark or a list; nothing changed and the bookmark stays; next: run omakase-box discover again later');
+  if (typeof next !== 'string' || !/^[A-Za-z\d_-]{1,200}$/.test(next) || !Array.isArray(entries)) throw new BountyRefused('board-unread', `bounty feed ${feed} did not return a bookmark or a list; nothing changed and the bookmark stays; next: run omakase-box discover again later`);
   let unreadable = 0;
   let skipped = 0;
   const bounties: DiscoveredBounty[] = [];
@@ -203,7 +204,7 @@ const plural = (n: number, one: string, many: string): string => `${n} ${n === 1
 export function renderDiscover(result: DiscoverResult): string[] {
   const filter = [result.filter.languages.length === 0 ? 'any language' : result.filter.languages.join(' or '), `at least $${result.filter.minReward}`, ...(result.limits.paysOnMergeOnly ? ['pays on merge only'] : []), ...(result.limits.skip.length > 0 ? [`never from ${result.limits.skip.join(', ')}`] : [])].join('; ');
   const lines = [
-    `discover: ${plural(result.bounties.length, 'new bounty', 'new bounties')} on ${result.board} ${result.began === 'bookmark' ? 'since your bookmark' : result.began === 'start' ? 'from every open bounty' : 'from now'} — filter: ${filter}`,
+    `discover: read bounty feed ${result.board}${BOUNTY_FEED_PATH} — ${plural(result.bounties.length, 'new bounty', 'new bounties')} ${result.began === 'bookmark' ? 'since your bookmark' : result.began === 'start' ? 'from every open bounty' : 'from now'} — filter: ${filter}`,
     ...(result.resetNote === null ? [] : [result.resetNote]),
     ...(result.numbers === null ? [] : [result.numbers]),
     NOT_RUN
