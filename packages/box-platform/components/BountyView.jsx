@@ -53,6 +53,7 @@ function View({ data }) {
           <Facts stacked rows={[
             ['Posted by', <a key="poster" href={`/owner/${b.poster}/`}>{b.poster}</a>],
             ['Repository', <>{b.repository}{b.language ? ` · ${b.language}` : ''}</>],
+            ['PR target branch', <code className="text-sm break-all">{listed ? b.default_branch : b.branch}</code>],
             ['Posted', fmtDate(b.posted_at)],
             ['Solutions so far', String(b.solutions.length)],
             ...(listed ? [['Listed', `From the board${b.listed_by ? ` by ${b.listed_by}` : ''}, on GitHub's issue #${b.issue_number}`]] : []),

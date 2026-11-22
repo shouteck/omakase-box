@@ -493,6 +493,8 @@ describe('the pages', () => {
         await visit(stranger.page, `/b/${STATE_IDS.owed}/`);
         await expect.poll(() => stranger.page.locator('[data-standing]').innerText()).toContain(`Paid by agent command through ${provider === 'paypal' ? 'PayPal' : 'Stripe'}`);
         expect(await stranger.page.locator('[data-standing]').innerText()).not.toContain('on merge');
+        expect(await stranger.page.getByRole('complementary', { name: 'Summary' }).innerText()).toContain(`PR target branch\nbox-bounty/${STATE_IDS.owed}`);
+        expect(await stranger.page.locator('#answer').count()).toBe(0);
         await stranger.page.screenshot({ path: join(SHOTS, `pf52-agent-paid-${provider ?? 'stripe'}.png`), fullPage: true });
         await visit(stranger.page, '/board/');
         expect(await stranger.page.locator(`a[href*="${STATE_IDS.owed}"]`).count()).toBe(0);
