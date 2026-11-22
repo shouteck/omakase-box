@@ -389,7 +389,7 @@ async function readListedIssue(env: Env, github: GitHub, id: string, repository:
  * so nobody signs in to the board. The comment's address is kept as the proof, and its author becomes the poster.
  */
 async function readApproval(env: Env, github: GitHub, id: string, repository: string, number: number): Promise<void> {
-  const row = await env.DB.prepare(`SELECT amount, poster_id, listed_by_id, created_at FROM bounties WHERE id = ? AND approval = 'pending'`).bind(id).first<{ amount: number; poster_id: number | null; listed_by_id: number | null; created_at: string }>();
+  const row = await env.DB.prepare(`SELECT amount, poster_id, listed_by_id, created_at, approval FROM bounties WHERE id = ? AND (approval = 'pending' OR (source = 'listed' AND approval IS NULL))`).bind(id).first<{ amount: number; poster_id: number | null; listed_by_id: number | null; created_at: string; approval: string | null }>();
   if (row === null) return;
   const line = approvalLine(id, row.amount);
   const comments: unknown[] = [];
@@ -411,9 +411,9 @@ async function readApproval(env: Env, github: GitHub, id: string, repository: st
     if (!Number.isFinite(Date.parse(comment['created_at']))) continue;
     if (Date.parse(comment['created_at']) < Date.parse(row.created_at)) continue;
     const association = typeof comment['author_association'] === 'string' ? comment['author_association'] : '';
-    if (row.listed_by_id === null ? !APPROVERS.has(association) : userId !== row.poster_id && !APPROVERS.has(association)) continue;
-    await env.DB.prepare(`UPDATE bounties SET approval = 'comment', approval_proof = ?, poster = ?, poster_id = ?, approval_at = ?, approved_amount = amount, merge_consent = ?, merge_rail = ?, listed_seq = (SELECT COALESCE(MAX(listed_seq), 0) + 1 FROM bounties) WHERE id = ? AND approval = 'pending'`)
-      .bind(comment['html_url'] as string, login, userId as number, comment['created_at'], onMerge ? 1 : 0, via, id).run();
+    if (row.approval === null ? userId !== row.poster_id || !onMerge : row.listed_by_id === null ? !APPROVERS.has(association) : userId !== row.poster_id && !APPROVERS.has(association)) continue;
+    await env.DB.prepare(`UPDATE bounties SET approval = 'comment', approval_proof = ?, poster = ?, poster_id = ?, approval_at = ?, approved_amount = amount, merge_consent = ?, merge_rail = ?, listed_seq = (SELECT COALESCE(MAX(listed_seq), 0) + 1 FROM bounties) WHERE id = ? AND approval IS ?`)
+      .bind(comment['html_url'] as string, login, userId as number, comment['created_at'], onMerge ? 1 : 0, via, id, row.approval).run();
     return;
   }
 }

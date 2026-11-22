@@ -70,6 +70,26 @@ beforeEach(async () => {
 });
 afterEach(async () => { vi.restoreAllMocks(); await stripe.stop(); await paypal.stop(); await r.close(); });
 
+describe('PF52: direct listing consent', () => {
+  it.each(['stripe', 'paypal'] as const)('opts an already-approved direct listing into %s only by numeric poster consent', async rail => {
+    await r.env.DB.prepare('DELETE FROM bounties WHERE id = ?').bind(id).run();
+    expect(await listIssue(r.env, OWNER, `https://github.com/${REPO}/issues/12`, 45, NOW)).toEqual({ id });
+    if (rail === 'stripe') { await card(); await connectedStripe(); } else await vault();
+    issue.comments = [
+      { login: OWNER.login, association: 'OWNER', body: `omakase approve ${id} $45`, created_at: at(1) },
+      { login: 'other-owner', association: 'OWNER', body: `omakase approve ${id} $45 on merge`, created_at: at(2) }
+    ];
+    r.clock.at += 20 * MINUTE; await refreshUntilDone(r); await settleCharges(r.env);
+    expect(await r.env.DB.prepare('SELECT approval, merge_consent FROM bounties WHERE id = ?').bind(id).first()).toEqual({ approval: null, merge_consent: 0 });
+    expect(stripe.charged()).toHaveLength(0); expect(paypal.captures).toHaveLength(0);
+    expect((await fact()).pay_on_merge.reasons.join(' ')).toContain('already-approved direct listing');
+    issue.comments.push({ login: OWNER.login, association: 'NONE', body: `omakase approve ${id} $45 on merge via ${rail}`, created_at: at(3) });
+    r.clock.at += 20 * MINUTE; await refreshUntilDone(r); await settleTwice();
+    expect(await state()).toMatchObject({ state: 'paid' });
+    expect(stripe.charged()).toHaveLength(rail === 'stripe' ? 1 : 0); expect(paypal.captures).toHaveLength(rail === 'paypal' ? 1 : 0);
+  });
+});
+
 describe('PF52: explicit saved payment rail choice', () => {
   it('Monid: every PayPal charge state has provider-aware words; Stripe words and unknown states stay honest', () => {
     for (const state of Object.keys(CHARGE_WORDS)) {

@@ -508,7 +508,7 @@ export async function mergePaymentFact(env: Env, id: string, origin: string) {
   const paypalSaved = paypalOn(env) && row.payment_token !== null;
   if (row.approval === 'pending') reasons.push('The import is pending approval.');
   if (!stripeSaved && !paypalSaved) reasons.push('The poster has no saved payment method available on this board. A human can save Stripe or PayPal using the setup links.');
-  if (row.consent_at === null) reasons.push(commented ? 'No pay-on-merge consent: approve with the exact on merge comment. A repository switch does not authorize imported bounties or agent-prepared branch posts.' : 'No pay-on-merge consent: enable the repository before the merge.');
+  if (row.consent_at === null) reasons.push(commented ? 'No pay-on-merge consent: the poster can opt in with the exact on merge approval comment, including an already-approved direct listing. A repository switch does not authorize imported bounties or agent-prepared branch posts.' : 'No pay-on-merge consent: enable the repository before the merge.');
   if (commented && (row.approval_at === null || row.amount !== row.approved_amount)) reasons.push('The approval time or approved reward is not verified.');
   if (commented && row.comments_current !== 1) reasons.push('Payment comments have not been read after the verified landing.');
   const { landed, recorded } = await payeeFacts(env, id);
