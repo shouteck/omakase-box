@@ -34,7 +34,7 @@ beforeEach(async () => {
 });
 afterEach(async () => { await r.close(); });
 
-describe('PF51 sessionless imports', () => {
+describe('PF52 sessionless imports', () => {
   it('returns the pending approval instructions without Origin or authentication and hides it from discovery', async () => {
     const body = await imported();
     expect(body).toEqual({ listed: expect.stringMatching(/^bt-[a-f\d]{12}$/), pending: true,
@@ -52,7 +52,7 @@ describe('PF51 sessionless imports', () => {
   });
 
   it('ignores even a valid session cookie and a foreign Origin', async () => {
-    const token = 'session-for-pf51';
+    const token = 'session-for-pf52';
     const hash = [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token)))].map(b => b.toString(16).padStart(2, '0')).join('');
     await r.env.DB.prepare('INSERT INTO sessions (token_hash, github_id, login, expires_at) VALUES (?, ?, ?, ?)').bind(hash, 7400, 'example-importer', NOW + DAY).run();
     const body = await imported(14, { cookie: `__Host-board_session=${token}`, origin: 'https://elsewhere.test' });
