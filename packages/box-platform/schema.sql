@@ -152,9 +152,8 @@ CREATE TABLE IF NOT EXISTS charges (
   payment_intent TEXT,
   at INTEGER NOT NULL,
   -- NULL is Stripe. 'paypal': account_id is the PayPal account ID, payment_intent the order, then the capture.
-  provider TEXT,
-  origin TEXT CHECK (origin IN ('merge', 'agent', 'owner'))
-);
+  provider TEXT
+, origin TEXT CHECK (origin IN ('merge', 'agent', 'owner')));
 CREATE INDEX IF NOT EXISTS charges_intent ON charges (payment_intent);
 -- A solver's connected PayPal account. Only the account ID: never an email.
 CREATE TABLE IF NOT EXISTS paypal_accounts (

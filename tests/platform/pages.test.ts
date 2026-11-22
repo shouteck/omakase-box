@@ -477,6 +477,8 @@ describe('the pages', () => {
     await db.prepare('DELETE FROM receipts WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
     await db.prepare(`INSERT INTO charges (bounty_id, state, pull_number, solver, account_id, amount, payment_method, payment_intent, at, provider) VALUES (?, 'paid', 68, 'example-quill', 'acct_sample', 45, 'pm_saved', 'pi_sample', ?, NULL)`).bind(STATE_IDS.owed, clock).run();
     await db.prepare(`UPDATE charges SET origin = 'merge' WHERE bounty_id = ?`).bind(STATE_IDS.owed).run();
+    const beforeIssue = (await db.prepare('SELECT issue_state, closed_at FROM bounties WHERE id = ?').bind(STATE_IDS.owed).first<{ issue_state: string; closed_at: string | null }>())!;
+    const beforePull = (await db.prepare('SELECT state, merged_at, on_default, landing_sha FROM pull_requests WHERE bounty_id = ? AND number = 68').bind(STATE_IDS.owed).first<{ state: string; merged_at: string | null; on_default: number | null; landing_sha: string | null }>())!;
     const stranger = await fresh();
     try {
       await visit(stranger.page, `/b/${STATE_IDS.owed}/`);
@@ -484,19 +486,35 @@ describe('the pages', () => {
       await db.prepare(`UPDATE charges SET payment_method = NULL, origin = NULL WHERE bounty_id = ?`).bind(STATE_IDS.owed).run();
       await visit(stranger.page, `/b/${STATE_IDS.owed}/`);
       await expect.poll(() => stranger.page.locator('[data-standing]').innerText()).toMatch(/^Paid through Stripe/);
+      await db.prepare(`UPDATE bounties SET issue_state = 'open', closed_at = NULL WHERE id = ?`).bind(STATE_IDS.owed).run();
+      await db.prepare(`UPDATE pull_requests SET state = 'open', merged_at = NULL, on_default = NULL, landing_sha = NULL WHERE bounty_id = ? AND number = 68`).bind(STATE_IDS.owed).run();
       for (const provider of [null, 'paypal']) {
         await db.prepare(`UPDATE charges SET origin = 'agent', provider = ? WHERE bounty_id = ?`).bind(provider, STATE_IDS.owed).run();
         await visit(stranger.page, `/b/${STATE_IDS.owed}/`);
         await expect.poll(() => stranger.page.locator('[data-standing]').innerText()).toContain(`Paid by agent command through ${provider === 'paypal' ? 'PayPal' : 'Stripe'}`);
         expect(await stranger.page.locator('[data-standing]').innerText()).not.toContain('on merge');
         await stranger.page.screenshot({ path: join(SHOTS, `pf52-agent-paid-${provider ?? 'stripe'}.png`), fullPage: true });
+        await visit(stranger.page, '/board/');
+        expect(await stranger.page.locator(`a[href*="${STATE_IDS.owed}"]`).count()).toBe(0);
       }
+      await stranger.page.screenshot({ path: join(SHOTS, 'pf52-paid-open-feed.png'), fullPage: true });
+      await db.prepare('DELETE FROM charges WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
+      await db.prepare(`INSERT OR REPLACE INTO paid_clicks (bounty_id, by_login, to_login, at, amount, withdrawn) VALUES (?, 'example-mara', 'example-quill', ?, 45, 0)`).bind(STATE_IDS.owed, new Date(clock).toISOString()).run();
+      await visit(stranger.page, '/board/');
+      expect(await stranger.page.locator(`a[href*="${STATE_IDS.owed}"]`).count()).toBe(0);
+      await stranger.page.screenshot({ path: join(SHOTS, 'pf52-recorded-open-feed.png'), fullPage: true });
+      await visit(stranger.page, `/b/${STATE_IDS.owed}/`);
+      await expect.poll(() => stranger.page.locator('[data-standing]').innerText()).toContain('Recorded paid by example-mara');
+      await stranger.page.screenshot({ path: join(SHOTS, 'pf52-recorded-open-detail.png'), fullPage: true });
       // One way to GitHub on every bounty, and no bounty-branch button.
       expect(await stranger.page.locator('[data-issue]').getAttribute('href')).toContain('/issues/');
       expect(await stranger.page.locator('main').innerText()).not.toContain('Open the bounty branch on GitHub');
     } finally {
       // The later tests read this bounty as owed: the charge leaves even when a check above fails.
       await db.prepare('DELETE FROM charges WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
+      await db.prepare('DELETE FROM paid_clicks WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
+      await db.prepare('UPDATE bounties SET issue_state = ?, closed_at = ? WHERE id = ?').bind(beforeIssue.issue_state, beforeIssue.closed_at, STATE_IDS.owed).run();
+      await db.prepare('UPDATE pull_requests SET state = ?, merged_at = ?, on_default = ?, landing_sha = ? WHERE bounty_id = ? AND number = 68').bind(beforePull.state, beforePull.merged_at, beforePull.on_default, beforePull.landing_sha, STATE_IDS.owed).run();
       await stranger.close();
     }
   });
