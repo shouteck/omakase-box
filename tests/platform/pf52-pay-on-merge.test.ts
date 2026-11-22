@@ -71,6 +71,29 @@ beforeEach(async () => {
 afterEach(async () => { vi.restoreAllMocks(); await stripe.stop(); await paypal.stop(); await r.close(); });
 
 describe('PF52: direct listing consent', () => {
+  it('resumes an untouched consent turn after routine reads exhaust the worker budget', async () => {
+    await r.env.DB.prepare('DELETE FROM bounties WHERE id = ?').bind(id).run();
+    expect(await listIssue(r.env, OWNER, `https://github.com/${REPO}/issues/12`, 45, NOW)).toEqual({ id });
+    issue.pulls = [];
+    issue.comments = [{ login: OWNER.login, association: 'OWNER', body: `omakase approve ${id} $45 on merge`, created_at: at(1) }];
+    r.clock.at += 20 * MINUTE;
+    r.standin.repositories.set('poster/other', { visibility: 'public', language: 'TypeScript' });
+    await r.env.DB.prepare("INSERT INTO repositories (name, default_branch, read_at) VALUES ('poster/other', 'main', 0)").run();
+    await r.env.DB.prepare('UPDATE repositories SET read_at = 0').run();
+    await r.env.DB.prepare('UPDATE bounties SET details_read_at = ?, events_read_at = 0 WHERE id = ?').bind(r.clock.at, id).run();
+    await r.env.DB.prepare("INSERT INTO meta (key, value) VALUES ('search_tried_at', ?), ('search_complete_at', ?), (?, '3') ON CONFLICT (key) DO UPDATE SET value = excluded.value")
+      .bind(String(r.clock.at), String(r.clock.at), `listed_turn_${id}`).run();
+    const before = r.standin.requests.length;
+    await worker.scheduled({}, r.env);
+    expect(r.standin.requests.slice(before).filter(path => path.includes('/comments'))).toHaveLength(0);
+    expect(await r.env.DB.prepare('SELECT value FROM meta WHERE key = ?').bind(`listed_turn_${id}`).first()).toEqual({ value: '3' });
+    expect(await r.env.DB.prepare('SELECT approval FROM bounties WHERE id = ?').bind(id).first()).toEqual({ approval: null });
+    r.clock.at += MINUTE;
+    await worker.scheduled({}, r.env);
+    expect(await r.env.DB.prepare('SELECT approval, approval_at, merge_consent FROM bounties WHERE id = ?').bind(id).first())
+      .toEqual({ approval: 'comment', approval_at: at(1), merge_consent: 1 });
+    expect(await r.env.DB.prepare('SELECT value FROM meta WHERE key = ?').bind(`listed_turn_${id}`).first()).toEqual({ value: '0' });
+  });
   it.each([false, true])('only newly approved imports appear after an existing feed bookmark: pending=%s', async pending => {
     await r.env.DB.prepare('DELETE FROM bounties WHERE id = ?').bind(id).run();
     expect(await listIssue(r.env, OWNER, `https://github.com/${REPO}/issues/12`, 45, NOW, undefined, pending)).toHaveProperty('id', id);

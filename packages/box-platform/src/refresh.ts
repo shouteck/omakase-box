@@ -556,6 +556,7 @@ export async function refresh(env: Env): Promise<RefreshResult> {
     const checked = new Map<string, boolean>();
     for (const row of due.results) {
       const spent = github.used;
+      let listedTurn: { key: string; value: number } | null = null;
       const mark = (at: number) => row.step === 'checks'
         ? db.prepare('UPDATE pull_requests SET checks_read_at = ? WHERE bounty_id = ? AND number = ?').bind(at, row.id, row.number).run()
         : db.prepare(`UPDATE bounties SET ${row.step === 'pulls' ? 'details_read_at' : 'events_read_at'} = ? WHERE id = ?`).bind(at, row.id).run();
@@ -571,6 +572,7 @@ export async function refresh(env: Env): Promise<RefreshResult> {
           if (row.step === 'events') {
             const key = `listed_turn_${row.id}`;
             const turn = Number((await getMetas(db, [key])).get(key) ?? 0);
+            listedTurn = { key, value: turn };
             await setMeta(db, key, String((turn + 1) % (row.source === 'listed' && row.approval === null ? 4 : 3)));
             if (turn === 0) {
               if (row.source === 'listed') {
@@ -612,7 +614,10 @@ export async function refresh(env: Env): Promise<RefreshResult> {
         }
       } catch (error) {
         // A step the budget stopped before its first read keeps its place.
-        if (error instanceof BudgetSpent && github.used === spent) await mark(row.at);
+        if (error instanceof BudgetSpent && github.used === spent) {
+          await mark(row.at);
+          if (listedTurn !== null) await setMeta(db, listedTurn.key, String(listedTurn.value));
+        }
         throw error;
       }
     }
