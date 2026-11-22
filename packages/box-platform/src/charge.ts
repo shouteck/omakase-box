@@ -493,15 +493,15 @@ export async function payingIds(env: Env, ids: readonly string[]): Promise<Reado
 }
 
 export async function mergePaymentFact(env: Env, id: string, origin: string) {
-  const row = await env.DB.prepare(`SELECT b.source, b.approval, b.amount, ${APPROVED_AT} AS approval_at, ${APPROVED_AMOUNT} AS approved_amount,
+  const row = await env.DB.prepare(`SELECT b.source, b.approval, b.amount, ${COMMENTED} AS commented, ${APPROVED_AT} AS approval_at, ${APPROVED_AMOUNT} AS approved_amount,
     ${CONSENT_AT} AS consent_at, ${STRIPE_LIMIT} AS stripe_limit, ${PAYPAL_LIMIT} AS paypal_limit, s.payment_method, v.payment_token, ${paymentCommentsCurrent} AS comments_current, (SELECT provider FROM charges WHERE bounty_id = b.id) AS charge_provider
     FROM bounties b LEFT JOIN pay_settings s ON s.github_id = b.poster_id LEFT JOIN paypal_vault v ON v.github_id = b.poster_id
     LEFT JOIN pay_repositories r ON r.github_id = b.poster_id AND r.repository = b.repository WHERE b.id = ?`).bind(id).first<{
-      source: string; approval: string | null; amount: number; approval_at: string | null; approved_amount: number | null; consent_at: string | null; stripe_limit: number | null; paypal_limit: number | null; payment_method: string | null; payment_token: string | null; comments_current: number; charge_provider: string | null;
+      source: string; approval: string | null; amount: number; commented: number; approval_at: string | null; approved_amount: number | null; consent_at: string | null; stripe_limit: number | null; paypal_limit: number | null; payment_method: string | null; payment_token: string | null; comments_current: number; charge_provider: string | null;
     }>();
   if (row === null) return null;
   const links = setupLinks(origin, id);
-  const commented = row.source === 'listed' || row.approval !== null;
+  const commented = row.commented === 1;
   const reasons: string[] = [];
   const stripeSaved = stripeOn(env) && row.payment_method !== null;
   const paypalSaved = paypalOn(env) && row.payment_token !== null;

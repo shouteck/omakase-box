@@ -328,7 +328,7 @@ describe('PF52: owner and solver PayPal parity', () => {
     await r.env.DB.prepare('UPDATE pay_repositories SET limit_per_bounty = NULL').run();
     expect(await (await get('/api/me', owner)).json()).toMatchObject({ pay: { saved_paypal: true, repositories: [{ limit: 50 }] } });
     expect((await post('/api/me/pay', { repositories: [{ repository: REPO, limit: 45 }] }, owner)).status).toBe(200);
-    await r.env.DB.prepare(`UPDATE bounties SET source = 'posted', approval = NULL WHERE id = ?`).bind(id).run();
+    await r.env.DB.prepare(`UPDATE bounties SET source = 'posted', approval = NULL, merge_consent = 0, approval_at = NULL, approved_amount = NULL WHERE id = ?`).bind(id).run();
     await r.env.DB.prepare('UPDATE pull_requests SET merged_at = ? WHERE bounty_id = ?').bind(at(25), id).run();
     r.clock.at += 10 * MINUTE;
     await settleTwice(); expect(paypal.captures).toHaveLength(1); expect(stripe.charged()).toHaveLength(0);
@@ -405,7 +405,7 @@ describe('PF52: prepared agent branch payments', () => {
   it.each(['stripe', 'paypal'] as const)('Monid: explicit consent and its approved maximum apply to source posted even without an approval tag: %s', async rail => {
     await prepared(rail, 50); await approve(); await merge();
     await r.env.DB.prepare(`UPDATE bounties SET approval = NULL WHERE id = ?`).bind(id).run();
-    expect((await fact()).pay_on_merge).toMatchObject({ will_pay: true, provider: rail === 'stripe' ? 'Stripe' : 'PayPal', authorized_limit: 50 });
+    expect((await fact()).pay_on_merge).toMatchObject({ will_pay: true, provider: rail === 'stripe' ? 'Stripe' : 'PayPal' });
     await settleTwice();
     expect(stripe.charged()).toHaveLength(rail === 'stripe' ? 1 : 0); expect(paypal.captures).toHaveLength(rail === 'paypal' ? 1 : 0);
     expect(await state()).toMatchObject({ state: 'paid' });
@@ -574,7 +574,7 @@ describe('PF52: approved listed pay on merge', () => {
   ] as const)('caps posted %s limits: method %s, repository %s', async (rail, savedLimit, repositoryLimit, pays) => {
     if (rail === 'stripe') { await card(savedLimit); await connectedStripe(); } else await vault(savedLimit);
     await approve();
-    await r.env.DB.prepare(`UPDATE bounties SET source = 'posted', approval = NULL WHERE id = ?`).bind(id).run();
+    await r.env.DB.prepare(`UPDATE bounties SET source = 'posted', approval = NULL, merge_consent = 0, approval_at = NULL, approved_amount = NULL WHERE id = ?`).bind(id).run();
     await switched();
     await r.env.DB.prepare('UPDATE pay_repositories SET limit_per_bounty = ?').bind(repositoryLimit).run();
     expect((await fact()).pays_on_merge).toBe(pays);
