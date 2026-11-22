@@ -6,7 +6,7 @@ const REPO = '/repos/owner/project';
 const missing = { status: 404 };
 const ok = (json: unknown) => ({ status: 200, json });
 type Issue = { number: number; state: string; user: { login: string } };
-type Pull = { state: string; head: { sha: string }; base: { ref: string }; user: { login: string }; merged_at?: string; created_at: string; updated_at: string };
+type Pull = { number: number; state: string; head: { sha: string }; base: { ref: string; repo?: { full_name: string } }; merge_commit_sha?: string; user: { login: string }; merged_at?: string; created_at: string; updated_at: string };
 type ReplayState = { issues: Issue[]; prs: Pull[] };
 
 export type ReplayReads = ReturnType<typeof replayReads>;
@@ -31,10 +31,18 @@ export function replayReads(directory: string) {
       const issue = issues().find(entry => entry.number === Number(issueNumber));
       return issue === undefined ? missing : ok(issue);
     }
-    if (route === 'pulls') return ok(state().prs.filter(pr => pr.base.ref === query.get('base')).map(pr => {
+    const pull = (pr: Pull) => {
       const merged = pr.merged_at ?? (onBranch(pr.head.sha, pr.base.ref) ? pr.updated_at : null);
       return { ...pr, merged_at: merged, state: merged === null ? pr.state : 'closed', user: { ...pr.user, id: 2 }, author_association: 'NONE' };
-    }));
+    };
+    if (route === 'pulls') return ok(state().prs.filter(pr => pr.base.ref === query.get('base')).map(pull));
+    const pullNumber = /^pulls\/(\d+)$/.exec(route)?.[1];
+    if (pullNumber !== undefined) {
+      const pr = state().prs.find(entry => entry.number === Number(pullNumber));
+      if (pr === undefined) return missing;
+      const shown = pull(pr);
+      return ok({ ...shown, merged: shown.merged_at !== null, merge_commit_sha: pr.merge_commit_sha ?? null, base: { ...pr.base, repo: { full_name: 'owner/project' } } });
+    }
     const compare = /^compare\/([a-f\d]{40})\.\.\.main$/.exec(route);
     if (compare !== null) return ok({ status: onBranch(compare[1]!, 'main') ? 'ahead' : 'diverged' });
     if (route === 'commits') {
