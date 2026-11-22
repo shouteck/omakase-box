@@ -47,6 +47,7 @@ const Done = ({ title, children }) => (
 /** What the window shows, from the payment answer and the person chosen: one state, never a pile of flags. */
 export function windowState(view, chosen) {
   if (view === null) return { kind: 'reading' };
+  if (view.role === 'owner' && view.recorded === null && view.paypal_action_url) return { kind: 'paypal-action' };
   // PF32: a listed bounty has nothing owed, and its owner still chooses whom to pay from its linked pull requests.
   const chooses = view.payment.state === 'owner-chooses' && view.payees.length > 0;
   if (view.role !== 'owner' || (view.payment.owed === null && !chooses)) return { kind: 'nothing' };
@@ -116,6 +117,8 @@ export default function PayWindow({ id, open, onClose, onChange }) {
     body = provider
       ? <><Done title={`Paid $${recorded.amount ?? amount} to ${view.payee}`}>{recorded.by} confirmed it. This bounty and your record show it now; {view.payee} sees it on their page.</Done><Wide quiet onClick={close}>Done</Wide></>
       : <><Done title={`Recorded: you paid ${view.payee} $${recorded.amount ?? amount}`}>Your word, shown on this bounty since {fmtDate(recorded.at)}. {view.payee} can confirm it was received. Recorded by mistake? Withdraw it under Payment details.</Done><Wide quiet onClick={close}>Done</Wide></>;
+  } else if (state.kind === 'paypal-action') {
+    body = <><Big amount={amount} line="PayPal needs the owner to finish this payment." /><a href={view.paypal_action_url} rel="noopener noreferrer" target="_blank" className="w-full rounded-full px-5 py-2.5 font-medium bg-button text-button-ink text-center">Continue on PayPal ↗</a><p className="text-sm text-soft">The existing order is recorded when PayPal confirms payment. No second payment is started.</p></>;
   } else if (state.kind === 'choose') {
     body = (
       <>

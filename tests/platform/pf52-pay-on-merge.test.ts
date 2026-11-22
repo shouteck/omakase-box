@@ -5,6 +5,7 @@ import { GitHub } from '../../packages/box-platform/src/github.js';
 import { readPaymentComments } from '../../packages/box-platform/src/payment-comment.js';
 import { decidePay, payeeFacts, paySaved, settleCharges } from '../../packages/box-platform/src/charge.js';
 import { listIssue } from '../../packages/box-platform/src/listing.js';
+import { settlePayPal } from '../../packages/box-platform/src/paypal-pay.js';
 import { refreshUntilDone, rig, MINUTE, NOW, type Rig } from './support.js';
 import { StripeStandin } from './stripe-standin.js';
 import { PayPalStandin } from './paypal-standin.js';
@@ -263,7 +264,7 @@ describe('PF52: PayPal Vault', () => {
     if (mode === 'removed') await post('/api/me/paypal/vault/remove', {}, await session());
     await settleTwice(); expect(paypal.captures).toHaveLength(0);
     expect((await state() as any)?.state).not.toBe('paid');
-    if (mode === 'pending') expect(await state()).toMatchObject({ state: 'owner-must-authenticate', provider: 'paypal' });
+    if (mode === 'pending') expect(await state()).toMatchObject({ state: 'owner-paying', provider: 'paypal' });
   });
   it('prefers Stripe when both work, and uses PayPal when Stripe payouts are not ready', async () => {
     await card(); await connectedStripe(); await vault(); await approve(); await settleTwice();
@@ -390,7 +391,27 @@ describe('PF52: agent pay comments', () => {
   it('keeps a non-completed Vault response out of paid', async () => {
     await open('paypal'); paypal.vaultStatus = 'PAYER_ACTION_REQUIRED';
     await command(); await read();
-    expect(await state()).toMatchObject({ state: 'owner-must-authenticate' }); expect(paypal.captures).toHaveLength(0);
+    expect(await state()).toMatchObject({ state: 'owner-paying', provider: 'paypal' }); expect(paypal.captures).toHaveLength(0);
+    const owner = await session();
+    const view = await (await get(`/api/b/${id}/payment`, owner)).json() as any;
+    const url = `https://www.sandbox.paypal.test/checkoutnow?token=${paypal.orders[0]!.id}`;
+    expect(view).toMatchObject({ can_authenticate: false, paypal_action_url: url });
+    expect((await (await get(`/api/b/${id}/payment`)).json() as any).paypal_action_url).toBeNull();
+    expect(await (await post(`/api/b/${id}/pay-paypal`, { to: SOLVER }, owner)).json()).toEqual({ url });
+    expect(paypal.orders).toHaveLength(1);
+    paypal.approve(paypal.orders[0]!.id); r.clock.at += 2 * MINUTE;
+    await settlePayPal(r.env); await settlePayPal(r.env);
+    expect(await state()).toMatchObject({ state: 'paid' }); expect(paypal.captures).toHaveLength(1);
+    expect((await (await get(`/api/b/${id}/payment`, owner)).json() as any).paypal_action_url).toBeNull();
+  });
+  it('refuses a non-completed Vault response with no valid order instead of offering Stripe authentication', async () => {
+    await open('paypal');
+    const nativeFetch = globalThis.fetch;
+    const fetch = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => init?.method === 'POST' && new URL(String(input)).pathname === '/v2/checkout/orders'
+      ? Response.json({ status: 'PAYER_ACTION_REQUIRED' }) : nativeFetch(input, init));
+    try { await command(); } finally { fetch.mockRestore(); }
+    expect(await state()).toMatchObject({ state: 'provider-refused' }); expect(paypal.captures).toHaveLength(0);
+    expect(await (await get(`/api/b/${id}/payment`, await session())).json()).toMatchObject({ can_authenticate: false, paypal_action_url: null });
   });
   it('handles missing saved methods without spending and exposes setup/command facts', async () => {
     await approve(''); await command();

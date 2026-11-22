@@ -6,6 +6,7 @@ import type { ChargeState } from './charge-words.js';
 import type { Env } from './github.js';
 import { issueOf, paypal, paypalOn } from './paypal.js';
 import { stripeOn } from './stripe.js';
+import { setMeta } from './store.js';
 
 export async function vaultSetup(env: Env, githubId: number, origin: string, now: number): Promise<{ url: string } | { error: string }> {
   const made = await paypal(env, 'POST', '/v3/vault/setup-tokens', { payment_source: { paypal: { usage_type: 'MERCHANT', customer_type: 'CONSUMER',
@@ -59,6 +60,13 @@ const completedCapture = (order: Order): string | null => {
 /** PayPal says it was paid. From here the row holds the capture's id, because a refund or a dispute names the capture. */
 async function recordCapture(env: Env, id: string, capture: string, now: number): Promise<void> {
   await env.DB.prepare(`UPDATE charges SET state = 'paid', payment_intent = ?, at = ? WHERE bounty_id = ? AND state IN ('owner-paying', 'charging') AND provider = 'paypal'`).bind(capture, now, id).run();
+  await env.DB.prepare('DELETE FROM meta WHERE key = ?').bind(`paypal_action/${id}`).run();
+}
+
+export async function paypalAction(env: Env, id: string): Promise<string | null> {
+  const held = await env.DB.prepare(`SELECT json_extract(m.value, '$.url') AS url FROM charges c JOIN meta m ON m.key = 'paypal_action/' || c.bounty_id
+    WHERE c.bounty_id = ? AND c.provider = 'paypal' AND c.state = 'owner-paying' AND json_extract(m.value, '$.order') = c.payment_intent`).bind(id).first<{ url: string }>();
+  return held !== null && typeof held.url === 'string' && held.url.startsWith('https://') ? held.url : null;
 }
 
 export async function chargeVault(env: Env, id: string, amount: number, pull: Merged, account: string, token: string, heldAt: number | null, now: number): Promise<void> {
@@ -70,7 +78,10 @@ export async function chargeVault(env: Env, id: string, amount: number, pull: Me
   const capture = made.json['status'] === 'COMPLETED' && isOurs(made.json, id, { account_id: account, amount }) ? completedCapture(made.json) : null;
   if (capture !== null) { await recordCapture(env, id, capture, now); return; }
   const order = typeof made.json['id'] === 'string' ? made.json['id'] : null;
-  const state = made.status >= 500 ? 'charging' : made.status >= 400 ? (issueOf(made) === 'INSTRUMENT_DECLINED' ? 'declined' : 'provider-refused') : 'owner-must-authenticate';
+  const state = made.status >= 500 ? 'charging' : made.status >= 400 ? (issueOf(made) === 'INSTRUMENT_DECLINED' ? 'declined' : 'provider-refused') : order !== null && isOurs(made.json, id, { account_id: account, amount }) ? 'owner-paying' : 'provider-refused';
+  const links = made.json['links'] as { rel?: unknown; href?: unknown }[] | undefined;
+  const link = Array.isArray(links) ? links.find(entry => entry.rel === 'payer-action' || entry.rel === 'approve')?.href : undefined;
+  if (state === 'owner-paying' && typeof link === 'string' && link.startsWith('https://')) await setMeta(env.DB, `paypal_action/${id}`, JSON.stringify({ order, url: link }));
   await env.DB.prepare(`UPDATE charges SET state = ?, payment_intent = ?, at = ? WHERE bounty_id = ? AND state = 'charging' AND provider = 'paypal'`).bind(state, order, now, id).run();
 }
 

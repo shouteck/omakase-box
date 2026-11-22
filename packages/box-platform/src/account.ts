@@ -2,7 +2,7 @@
 // answer that may carry an owner-only method. The feed, MCP and RSS never come here.
 import { authenticationPage, openPayPage, payOffer, readPayPage } from './charge.js';
 import type { Env } from './github.js';
-import { finishOrder, openPayPalPage, paypalOffer, removeVault, vaultSaved, vaultSetup } from './paypal-pay.js';
+import { finishOrder, openPayPalPage, paypalAction, paypalOffer, removeVault, vaultSaved, vaultSetup } from './paypal-pay.js';
 import { loginAddress, payerFrom, paypalOn, PayPalUnavailable } from './paypal.js';
 import { errorWords, redact, stripe, stripeOn, StripeUnavailable } from './stripe.js';
 import { checkMethod, isLink, MAX_METHODS, type Method, parseStored, publicOnly } from './methods.js';
@@ -398,7 +398,8 @@ async function paymentView(env: Env, id: string, viewer: Viewer | null, now: num
     can_remove: role === 'owner' && input.source === 'listed' && facts.record === null && !input.pulls.some(pull => pull.state === 'merged') && (input.charge?.state ?? null) !== 'paid',
     source: input.source === 'listed' ? 'listed' : 'posted',
     amount: facts.amount,
-    can_authenticate: role === 'owner' && input.charge?.state === 'owner-must-authenticate',
+    can_authenticate: role === 'owner' && input.charge?.provider !== 'paypal' && input.charge?.state === 'owner-must-authenticate',
+    paypal_action_url: role === 'owner' ? await paypalAction(env, id) : null,
     ...(role === 'owner' ? await offers(env, id, viewer!) : { can_pay: false, can_pay_paypal: false, pay_note: null })
   });
 }
