@@ -90,6 +90,43 @@ describe('PF52: direct listing consent', () => {
   });
 });
 
+describe('PF52: resumable payment comments', () => {
+  it.each(['pay', 'paid', 'paid-page-error', 'paid-landing-change'])('reaches page three through the two-read worker: %s', async mode => {
+    await card(); await connectedStripe(); await approve();
+    await r.env.DB.prepare('DELETE FROM meta WHERE key = ?').bind(`payment_comments/${id}`).run();
+    const comments = Array.from({ length: 201 }, (_, n) => ({ id: n + 100, body: 'Discussion', created_at: at(2), user: { id: 9999, login: 'reader' } }));
+    comments.push({ id: 999, body: `omakase ${mode === 'pay' ? 'pay' : 'paid'} ${id} $45 to @solver`, created_at: at(25), user: { id: OWNER.github_id, login: OWNER.login } });
+    const pages: number[] = [];
+    let refused = false, changed = false;
+    const nativeFetch = globalThis.fetch;
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input, init) => {
+      const url = new URL(typeof input === 'string' || input instanceof URL ? input : input.url);
+      if (url.origin === r.env.GITHUB_API && url.pathname === `/repos/${REPO}/issues/12/comments`) {
+        const page = Number(url.searchParams.get('page')); pages.push(page);
+        if (mode === 'paid-page-error' && page === 3 && !refused) { refused = true; return Promise.resolve(Response.json({}, { status: 503 })); }
+        return Promise.resolve(Response.json(comments.slice((page - 1) * 100, page * 100)));
+      }
+      return nativeFetch(input, init);
+    });
+    let recorded = false;
+    for (let turn = 0; turn < 200 && !recorded; turn += 1) {
+      if (mode === 'paid-landing-change' && pages.includes(2) && !changed) {
+        changed = true;
+        issue.pulls![0]!.head = 'd'.repeat(40);
+        await r.env.DB.prepare('UPDATE pull_requests SET head_sha = ? WHERE bounty_id = ?').bind(issue.pulls![0]!.head, id).run();
+      }
+      r.clock.at += MINUTE; await worker.scheduled({}, r.env);
+      recorded = mode === 'pay' ? (await state())?.state === 'paid' : await r.env.DB.prepare('SELECT 1 FROM paid_clicks WHERE bounty_id = ?').bind(id).first() !== null;
+      if (!recorded) expect(stripe.charged()).toHaveLength(0);
+    }
+    expect(recorded, `comment pages read: ${pages.join(',')}`).toBe(true); expect(pages).toContain(3);
+    expect(pages.slice(0, 2)).toEqual([1, 2]);
+    if (mode === 'paid-page-error') expect(pages.filter(page => page === 3)).toHaveLength(2);
+    if (mode === 'paid-landing-change') { expect(changed).toBe(true); expect(pages.filter(page => page === 1).length).toBeGreaterThan(1); }
+    await settleTwice(); expect(stripe.charged()).toHaveLength(mode === 'pay' ? 1 : 0);
+  });
+});
+
 describe('PF52: explicit saved payment rail choice', () => {
   it('Monid: every PayPal charge state has provider-aware words; Stripe words and unknown states stay honest', () => {
     for (const state of Object.keys(CHARGE_WORDS)) {

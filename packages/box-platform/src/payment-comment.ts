@@ -1,7 +1,7 @@
 import type { Env, GitHub } from './github.js';
 import { paySaved } from './charge.js';
 import { paymentLandingVersion } from './payments.js';
-import { setMeta } from './store.js';
+import { getMeta, setMeta } from './store.js';
 import type { Rail } from './payment-rail.js';
 
 export async function readPaymentComments(env: Env, github: GitHub, id: string, repository: string, number: number): Promise<void> {
@@ -10,8 +10,13 @@ export async function readPaymentComments(env: Env, github: GitHub, id: string, 
     AND NOT EXISTS (SELECT 1 FROM charges WHERE bounty_id = b.id AND state IN ('paid', 'refunded', 'disputed', 'charging', 'owner-paying', 'owner-must-authenticate')) GROUP BY b.id`).bind(id).first<{ amount: number; poster_id: number | null; created_at: string; approval_at: string | null; paid_at: string | null }>();
   if (row === null || row.poster_id === null) return;
   const landing = await env.DB.prepare(`SELECT (${paymentLandingVersion}) AS version FROM bounties b WHERE b.id = ?`).bind(id).first<{ version: string }>();
-  for (let page = 1; page <= 10; page += 1) {
-    const read = await github.get(`/repos/${repository}/issues/${number}/comments?since=${encodeURIComponent(row.paid_at ?? row.created_at)}&per_page=100&page=${page}`);
+  const key = `payment_comment_scan/${id}`;
+  const since = row.paid_at ?? row.created_at;
+  const stored = await getMeta(env.DB, key);
+  const scan = stored === null ? null : JSON.parse(stored) as { since: string; version: string; page: number };
+  const first = scan?.since === since && scan.version === landing!.version ? scan.page : 1;
+  for (let page = first; ; page += 1) {
+    const read = await github.get(`/repos/${repository}/issues/${number}/comments?since=${encodeURIComponent(since)}&per_page=100&page=${page}`);
     if (read.status !== 200 || !Array.isArray(read.json)) return;
     for (const comment of read.json as { id?: unknown; body?: unknown; user?: { id?: unknown; login?: unknown }; created_at?: unknown }[]) {
       if (typeof comment.body !== 'string' || typeof comment.created_at !== 'string' || comment.user?.id !== row.poster_id || typeof comment.user.login !== 'string') continue;
@@ -35,7 +40,9 @@ export async function readPaymentComments(env: Env, github: GitHub, id: string, 
     }
     if (read.json.length < 100) {
       await setMeta(env.DB, `payment_comments/${id}`, landing!.version);
+      await env.DB.prepare('DELETE FROM meta WHERE key = ?').bind(key).run();
       return;
     }
+    await setMeta(env.DB, key, JSON.stringify({ since, version: landing!.version, page: page + 1 }));
   }
 }
