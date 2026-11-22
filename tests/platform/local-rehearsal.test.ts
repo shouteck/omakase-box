@@ -8,7 +8,7 @@ import { expect, it } from 'vitest';
 import { startLocal } from '../../packages/box-platform/src/local.js';
 
 const platform = fileURLToPath(new URL('../../packages/box-platform/', import.meta.url));
-const rehearsal = fileURLToPath(new URL('../../kitchen/demo/local-board-rehearsal.mjs', import.meta.url));
+const rehearsal = join(platform, 'local-board-rehearsal.mjs');
 
 it.each([
   ['applied by the CLI', []],

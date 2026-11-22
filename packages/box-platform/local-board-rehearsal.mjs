@@ -6,11 +6,11 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const cli = join(root, 'packages/box-cli/dist/cli.js');
-const standin = fileURLToPath(new URL('./gh-standin.cjs', import.meta.url));
+const standin = join(root, 'kitchen/demo/gh-standin.cjs');
 const remote = 'https://github.com/owner/project.git';
 const squash = process.argv.includes('--squash');
 const [scratch, board = 'http://localhost:4320'] = process.argv.slice(2).filter(arg => arg !== '--squash');
-assert(scratch && /^http:\/\/(localhost|127\.0\.0\.1):\d{1,5}$/.test(board), 'Usage: node kitchen/demo/local-board-rehearsal.mjs <empty scratch directory> [http://localhost:4320] [--squash]');
+assert(scratch && /^http:\/\/(localhost|127\.0\.0\.1):\d{1,5}$/.test(board), 'Usage: node packages/box-platform/local-board-rehearsal.mjs <empty scratch directory> [http://localhost:4320] [--squash]');
 assert(existsSync(cli), 'Build the CLI first: node scripts/workspace.mjs build');
 const directory = resolve(scratch);
 const home = join(directory, 'home');
@@ -64,8 +64,9 @@ const box = (actor, cwd, ...args) => {
   console.log(output);
   return output;
 };
-const boardFetch = (path, init) => fetch(board + path, {
-  ...init, headers: { connection: 'close' }, redirect: 'error', signal: AbortSignal.timeout(5000)
+// Synchronous CLI steps can outlast the board's keep-alive timeout.
+const request = (path, options) => fetch(board + path, {
+  ...options, headers: { connection: 'close' }, redirect: 'error', signal: AbortSignal.timeout(5000)
 });
 
 git(directory, 'init', '--bare', '-b', 'main', bare);
@@ -87,11 +88,11 @@ post('config', 'set', 'board', board);
 post('allow', '--reward', '10', '--reward-limit', '50');
 const { id } = post('create', '--title', 'Fix the demo app', '--task', 'TASK.md', '--why', 'Rehearse the local handoff', '--json');
 const pathname = `/bounties/${id}.json`;
-assert.equal((await boardFetch(pathname)).status, 404);
+assert.equal((await request(pathname)).status, 404);
 const posted = post('post', id, '--json');
 assert.equal(posted.posted, true);
 const detail = async () => {
-  const response = await boardFetch(pathname);
+  const response = await request(pathname);
   assert.equal(response.status, 200, `${pathname}: ${await response.clone().text()}`);
   return response.json();
 };
@@ -135,7 +136,7 @@ if (squash) {
 }
 assert.equal(readFileSync(join(poster, 'app.txt'), 'utf8'), 'fixed\n');
 git(poster, 'push', bare, 'main');
-const look = await boardFetch('/api/hint', {
+const look = await request('/api/hint', {
   method: 'POST', body: JSON.stringify({ repository: posted.repository, issue: posted.issue.number, bounty: id, event: 'merged' })
 });
 assert.equal(look.status, 202);
