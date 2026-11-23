@@ -256,6 +256,37 @@ describe('PF52: deployment cutoff and literal merge-time readiness', () => {
 });
 
 describe('PF52: direct listing consent', () => {
+  it.each((['stripe', 'paypal'] as const).flatMap(rail => (['pending', 'plain', 'stored'] as const).flatMap(mode => [3, 5].map(mergedAt => ({ rail, mode, mergedAt })))))('uses the earliest effective $rail poster consent for $mode approval and merge at $mergedAt, and only corrects it earlier', async ({ rail, mode, mergedAt }) => {
+    if (rail === 'stripe') { await card(); await connectedStripe(); } else await vault();
+    issue.pulls![0]!.merged_at = at(mergedAt);
+    await r.env.DB.prepare("UPDATE meta SET value = ? WHERE key = 'pf52_deployed_at'").bind(at(2)).run();
+    if (mode === 'plain') await r.env.DB.prepare("UPDATE bounties SET approval = 'comment', approval_at = ?, approved_amount = amount WHERE id = ?").bind(at(1), id).run();
+    const late = { login: OWNER.login, association: 'OWNER', body: `omakase approve ${id} $45 on merge via ${rail}`, created_at: at(1), updated_at: at(6) };
+    issue.comments = [late];
+    if (mode === 'stored') {
+      r.clock.at += 20 * MINUTE; await refreshUntilDone(r);
+      expect(await r.env.DB.prepare('SELECT approval_at, merge_consent FROM bounties WHERE id = ?').bind(id).first()).toEqual({ approval_at: at(6), merge_consent: 1 });
+    }
+    issue.comments.push(
+      { ...late, created_at: at(1.5), updated_at: at(1.5) },
+      { ...late, login: 'another-owner', created_at: at(2.5), updated_at: at(2.5) },
+      { ...late, created_at: at(2.25), updated_at: 'invalid' },
+      { ...late, created_at: at(3), updated_at: at(3) });
+    if (mode === 'stored') for (let tick = 0; tick < 60; tick += 1) { r.clock.at += MINUTE; await worker.scheduled({}, r.env); }
+    else { r.clock.at += 20 * MINUTE; await refreshUntilDone(r); }
+    await settleTwice();
+    const paid = mergedAt > 3 ? 1 : 0;
+    expect(stripe.charged()).toHaveLength(rail === 'stripe' ? paid : 0); expect(paypal.captures).toHaveLength(rail === 'paypal' ? paid : 0);
+    const proof = () => r.env.DB.prepare('SELECT approval_at, approval_proof, approved_amount, merge_consent, merge_rail, listed_seq FROM bounties WHERE id = ?').bind(id).first();
+    const earliest = await proof();
+    expect(earliest).toMatchObject({ approval_at: at(3), approval_proof: `https://github.com/${REPO}/issues/12#issuecomment-5`, approved_amount: 45, merge_consent: 1, merge_rail: rail });
+    issue.comments = [];
+    r.clock.at += 20 * MINUTE; await refreshUntilDone(r); expect(await proof()).toEqual(earliest);
+    issue.comments = [{ ...late, updated_at: at(8) }];
+    r.clock.at += 20 * MINUTE; await refreshUntilDone(r); await settleTwice();
+    expect(await proof()).toEqual(earliest);
+    expect(stripe.charged()).toHaveLength(rail === 'stripe' ? paid : 0); expect(paypal.captures).toHaveLength(rail === 'paypal' ? paid : 0);
+  });
   it.each(['budget', 'missing-issue'] as const)('resumes the shared discovery phase after %s without losing its place or retrying a missing timeline forever', async failure => {
     r.clock.at += 20 * MINUTE;
     issue.pulls = [{ number: 41, author: SOLVER, state: 'open', created_at: at(2) }];
