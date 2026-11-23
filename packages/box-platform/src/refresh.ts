@@ -598,10 +598,17 @@ export async function refresh(env: Env): Promise<RefreshResult> {
           }
           if (row.step === 'checks') { await readChecks(env, github, row.id, row.repository, row.number!, row.head!, now); continue; }
           if (row.step === 'pulls' && row.source === 'listed') {
-            if (!await readListedIssue(env, github, row.id, row.repository, row.issue_number, now)) continue;
-            if (row.approval !== null) await readApproval(env, github, row.id, row.repository, row.issue_number);
-            await readLinkedPulls(env, github, row.id, row.repository, row.issue_number, () => mark(now));
-            if (row.approval === null) await readApproval(env, github, row.id, row.repository, row.issue_number);
+            const key = `listed_details_${row.id}`;
+            if ((await getMetas(db, [key])).get(key) !== 'links') {
+              if (!await readListedIssue(env, github, row.id, row.repository, row.issue_number, now)) continue;
+              await setMeta(db, key, 'links');
+            }
+            await readLinkedPulls(env, github, row.id, row.repository, row.issue_number, async () => {
+              await setMeta(db, key, 'issue');
+              await mark(now);
+            });
+            await setMeta(db, key, 'issue');
+            await readApproval(env, github, row.id, row.repository, row.issue_number);
             await readPaymentComments(env, github, row.id, row.repository, row.issue_number);
             await mark(now);
             continue;

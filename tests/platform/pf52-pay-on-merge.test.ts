@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { handle } from '../../packages/box-platform/src/api.js';
+import { refresh } from '../../packages/box-platform/src/refresh.js';
 import worker from '../../packages/box-platform/src/worker.js';
 import { GitHub } from '../../packages/box-platform/src/github.js';
 import { readPaymentComments } from '../../packages/box-platform/src/payment-comment.js';
@@ -255,6 +256,39 @@ describe('PF52: deployment cutoff and literal merge-time readiness', () => {
 });
 
 describe('PF52: direct listing consent', () => {
+  it.each(['budget', 'missing-issue'] as const)('resumes the shared discovery phase after %s without losing its place or retrying a missing timeline forever', async failure => {
+    r.clock.at += 20 * MINUTE;
+    issue.pulls = [{ number: 41, author: SOLVER, state: 'open', created_at: at(2) }];
+    await r.env.DB.prepare('UPDATE repositories SET read_at = ?').bind(r.clock.at).run();
+    await r.env.DB.prepare('UPDATE bounties SET details_read_at = 0, events_read_at = ? WHERE id = ?').bind(r.clock.at, id).run();
+    await r.env.DB.prepare("INSERT INTO meta (key, value) VALUES ('search_tried_at', ?), ('search_complete_at', ?), (?, 'links') ON CONFLICT (key) DO UPDATE SET value = excluded.value").bind(String(r.clock.at), String(r.clock.at), `listed_details_${id}`).run();
+    if (failure === 'missing-issue') r.standin.issues.length = 0;
+    const before = r.standin.requests.length;
+    await refresh({ ...r.env, tickReads: failure === 'budget' ? 0 : 1 });
+    expect(await r.env.DB.prepare('SELECT value FROM meta WHERE key = ?').bind(`listed_details_${id}`).first()).toEqual({ value: failure === 'budget' ? 'links' : 'issue' });
+    if (failure === 'budget') expect(r.standin.requests).toHaveLength(before);
+    r.clock.at += MINUTE; await refresh({ ...r.env, tickReads: 1 });
+    if (failure === 'budget') expect(await r.env.DB.prepare('SELECT author FROM pull_requests WHERE bounty_id = ? AND number = 41').bind(id).first()).toEqual({ author: SOLVER });
+    else expect(await r.env.DB.prepare('SELECT id FROM bounties WHERE id = ?').bind(id).first()).toBeNull();
+  });
+  it.each((['direct', 'pending', 'plain', 'consented'] as const).flatMap(approval => [1, 2].map(budget => ({ approval, budget }))))('discovers new PRs for $approval listings with only one remaining read under budget $budget', async ({ approval, budget }) => {
+    await r.env.DB.prepare('DELETE FROM bounties WHERE id = ?').bind(id).run();
+    expect(await listIssue(r.env, OWNER, `https://github.com/${REPO}/issues/12`, 45, NOW, undefined, approval === 'pending')).toMatchObject({ id });
+    issue.pulls = []; issue.comments = [];
+    if (approval === 'plain' || approval === 'consented') await r.env.DB.prepare("UPDATE bounties SET approval = 'comment', approval_at = ?, approved_amount = amount, merge_consent = ? WHERE id = ?").bind(at(1), approval === 'consented' ? 1 : 0, id).run();
+    const tick = async () => {
+      r.clock.at += MINUTE;
+      await r.env.DB.prepare("INSERT INTO meta (key, value) VALUES ('search_tried_at', ?), ('search_complete_at', ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value").bind(String(r.clock.at), String(r.clock.at)).run();
+      await r.env.DB.prepare('UPDATE repositories SET read_at = ?').bind(budget === 2 ? 0 : r.clock.at).run();
+      if (budget === 2) await worker.scheduled({}, r.env); else await refresh({ ...r.env, tickReads: 1 });
+    };
+    for (let turn = 0; turn < 10; turn += 1) await tick();
+    issue.pulls = [{ number: 41, author: SOLVER, state: 'open', created_at: at(11) }];
+    for (let turn = 0; turn < 45; turn += 1) await tick();
+    expect(await r.env.DB.prepare('SELECT author FROM pull_requests WHERE bounty_id = ? AND number = 41').bind(id).first()).toEqual({ author: SOLVER });
+    expect(await r.env.DB.prepare('SELECT approval, merge_consent FROM bounties WHERE id = ?').bind(id).first()).toEqual({ approval: approval === 'direct' ? null : approval === 'pending' ? 'pending' : 'comment', merge_consent: approval === 'consented' ? 1 : 0 });
+    expect(stripe.charged()).toHaveLength(0); expect(paypal.captures).toHaveLength(0);
+  });
   it.each((['stripe', 'paypal'] as const).flatMap(rail => [undefined, 0, 3, 5, 6, 'invalid'].map(edit => ({ rail, edit }))))('dates $rail consent edited at $edit by its last edit, never retroactively by plain approval', async ({ rail, edit }) => {
     await r.env.DB.prepare('DELETE FROM bounties WHERE id = ?').bind(id).run();
     expect(await listIssue(r.env, OWNER, `https://github.com/${REPO}/issues/12`, 45, NOW, undefined, true)).toMatchObject({ id });
