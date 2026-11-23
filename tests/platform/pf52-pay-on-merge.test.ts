@@ -71,6 +71,29 @@ beforeEach(async () => {
 afterEach(async () => { vi.restoreAllMocks(); await stripe.stop(); await paypal.stop(); await r.close(); });
 
 describe('PF52: deployment cutoff and literal merge-time readiness', () => {
+  it('starts a new ready interval from Stripe transition evidence even when its disabled event arrives later', async () => {
+    await card(); await connectedStripe(false); stripe.accounts.set('acct_solver', { charges_enabled: true });
+    const event = (ready: boolean, minute: number) => ({ type: 'account.updated', account: 'acct_solver', created: (NOW + minute * MINUTE) / 1000, data: { object: { charges_enabled: ready }, previous_attributes: { charges_enabled: !ready } } });
+    await applyEvent(r.env, event(true, 1), NOW + MINUTE);
+    await applyEvent(r.env, event(true, 6), NOW + 6 * MINUTE);
+    await applyEvent(r.env, event(false, 3), NOW + 7 * MINUTE);
+    await applyEvent(r.env, event(true, 1), NOW + 8 * MINUTE);
+    await approve(); await settleTwice(); expect(await state()).toMatchObject({ state: 'solver-not-ready' });
+    expect(stripe.charged()).toHaveLength(0);
+    expect(await r.env.DB.prepare('SELECT ready, ready_at FROM stripe_accounts').first()).toEqual({ ready: 1, ready_at: new Date(NOW + 6 * MINUTE + 1000).toISOString() });
+  });
+  it.each(['disabled', 'reenabled'] as const)('retains historical %s interval evidence even when a newer account read already says ready', async evidence => {
+    await card(); await connectedStripe();
+    await setStripeReady(r.env, 'acct_solver', true, NOW + 10 * MINUTE);
+    const ready = evidence === 'reenabled'; const minute = ready ? 6 : 3;
+    const event = { type: 'account.updated', account: 'acct_solver', created: (NOW + minute * MINUTE) / 1000,
+      data: { object: { charges_enabled: ready }, previous_attributes: { charges_enabled: !ready } } };
+    await applyEvent(r.env, event, NOW + 11 * MINUTE);
+    await applyEvent(r.env, event, NOW + 12 * MINUTE);
+    expect(await r.env.DB.prepare('SELECT ready, ready_at, ready_version FROM stripe_accounts').first()).toEqual({ ready: 1, ready_at: at(11), ready_version: (NOW + 10 * MINUTE) / 1000 * 2 });
+    await approve(); await settleTwice(); expect(await state()).toMatchObject({ state: 'solver-not-ready' });
+    expect(stripe.charged()).toHaveLength(0);
+  });
   it.each(['same', 'different', 'disconnected'] as const)('keeps PayPal merge readiness only across a continuous %s account reauthorization', async mode => {
     await vault(); await approve();
     const token = await session(7001, SOLVER);

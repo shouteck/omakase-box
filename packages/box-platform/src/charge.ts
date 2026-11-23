@@ -301,14 +301,25 @@ async function saveCharge(env: Env, id: string, state: ChargeState, pull: Merged
 
 // ---- what Stripe tells the board ---------------------------------------------
 
-type Event = { type?: unknown; account?: unknown; created?: unknown; data?: { object?: Record<string, unknown> } };
+type Event = { type?: unknown; account?: unknown; created?: unknown; data?: { object?: Record<string, unknown>; previous_attributes?: Record<string, unknown> } };
 
-export async function setStripeReady(env: Env, account: string, ready: boolean, now: number, observedAt = now): Promise<void> {
+export async function setStripeReady(env: Env, account: string, ready: boolean, now: number, observation: { at: number; intervalBreak?: number } = { at: now }): Promise<void> {
   // Disabled wins when Stripe's second-resolution event times are equal.
-  const version = Math.floor(observedAt / 1000) * 2 + (ready ? 0 : 1);
+  const version = Math.floor(observation.at / 1000) * 2 + (ready ? 0 : 1);
   if (!Number.isSafeInteger(version)) return;
-  await env.DB.prepare(`UPDATE stripe_accounts SET ready_at = CASE WHEN ? = 0 THEN NULL WHEN ready = 0 OR ready_at IS NULL THEN ? ELSE ready_at END, ready = ?, ready_version = ? WHERE account_id = ? AND (ready_version IS NULL OR ready_version < ? OR (ready_version = ? AND ready = 1 AND ? = 0))`)
-    .bind(ready ? 1 : 0, new Date(now).toISOString(), ready ? 1 : 0, version, account, version, version, ready ? 1 : 0).run();
+  const at = new Date(Math.max(now, observation.intervalBreak ?? now)).toISOString();
+  await env.DB.prepare(`WITH incoming (ready, version, at, interval_break) AS (VALUES (?, ?, ?, ?)), evidence AS (
+      SELECT s.account_id, (s.ready_version IS NULL OR s.ready_version < i.version OR (s.ready_version = i.version AND s.ready = 1 AND i.ready = 0)) AS wins,
+        (i.interval_break IS NOT NULL AND julianday(s.ready_at) < julianday(i.interval_break)) AS interrupted
+      FROM stripe_accounts s CROSS JOIN incoming i WHERE s.account_id = ?)
+    UPDATE stripe_accounts SET ready_at = CASE
+      WHEN e.wins AND i.ready = 0 THEN NULL
+      WHEN e.wins AND (stripe_accounts.ready = 0 OR stripe_accounts.ready_at IS NULL) THEN i.at
+      WHEN stripe_accounts.ready = 1 AND e.interrupted THEN i.at ELSE stripe_accounts.ready_at END,
+      ready = CASE WHEN e.wins THEN i.ready ELSE stripe_accounts.ready END,
+      ready_version = CASE WHEN e.wins THEN i.version ELSE stripe_accounts.ready_version END
+    FROM incoming i, evidence e WHERE stripe_accounts.account_id = e.account_id AND (e.wins OR (stripe_accounts.ready = 1 AND e.interrupted))`)
+    .bind(ready ? 1 : 0, version, at, observation.intervalBreak === undefined ? null : new Date(observation.intervalBreak).toISOString(), account).run();
 }
 
 /** A signed event. Only the row whose account and payment both match changes, so a stray event moves nothing. */
@@ -319,7 +330,9 @@ export async function applyEvent(env: Env, event: Event, now: number): Promise<v
   if (account === null) return;
   if (event.type === 'account.updated') {
     if (typeof event.created !== 'number' || !Number.isSafeInteger(event.created) || event.created < 0) return;
-    await setStripeReady(env, account, object['charges_enabled'] === true, now, event.created * 1000);
+    const ready = object['charges_enabled'] === true;
+    await setStripeReady(env, account, ready, now, { at: event.created * 1000,
+      ...(!ready || event.data?.previous_attributes?.['charges_enabled'] === false ? { intervalBreak: (event.created + 1) * 1000 } : {}) });
     return;
   }
   if (event.type === 'account.application.deauthorized') {

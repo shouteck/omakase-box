@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS stripe_accounts (
   ready INTEGER NOT NULL DEFAULT 0
 , ready_at TEXT, ready_version INTEGER);
 CREATE TRIGGER IF NOT EXISTS stripe_ready_changed AFTER UPDATE OF ready ON stripe_accounts
-WHEN NEW.ready_version IS OLD.ready_version OR (NEW.ready = 0 AND NEW.ready_at IS NOT NULL) OR (NEW.ready = 1 AND (NEW.ready_at IS NULL OR (OLD.ready = 0 AND NEW.ready_at IS OLD.ready_at)))
+WHEN (NEW.ready_version IS OLD.ready_version AND NEW.ready_at IS OLD.ready_at) OR (NEW.ready = 0 AND NEW.ready_at IS NOT NULL) OR (NEW.ready = 1 AND (NEW.ready_at IS NULL OR (OLD.ready = 0 AND NEW.ready_at IS OLD.ready_at)))
 BEGIN
   UPDATE stripe_accounts SET ready_at = CASE WHEN NEW.ready = 0 THEN NULL WHEN OLD.ready = 0 OR NEW.ready_at IS NULL THEN strftime('%Y-%m-%dT%H:%M:%fZ', 'now') ELSE NEW.ready_at END,
     ready_version = CASE WHEN NEW.ready_version IS OLD.ready_version THEN MAX(COALESCE(OLD.ready_version, 0), CAST(strftime('%s', 'now') AS INTEGER) * 2 + CASE WHEN NEW.ready = 0 THEN 1 ELSE 0 END) ELSE NEW.ready_version END WHERE github_id = NEW.github_id;
