@@ -48,7 +48,7 @@ There is no reviewer, so the CTO checks its own commit from the real artifact, n
 
 The result carries its level, because "passed" means different things: `ui-verified` (a person-facing flow was exercised for real), `test-verified` (behavioural tests ran on the commit) or `typecheck-only`. Behavioural work needs better than `typecheck-only`.
 
-**Lenses.** The brief ticks the lenses that apply (security, user experience, measurement fairness), and the CTO answers each ticked one in the Result: what was tried and what was found. An unanswered ticked lens means no merge. Tick only what applies; most waves need one or none. With no second reader, blind spots are covered mechanically: tests that must fail, hostile inputs, scripted checks of what an agent would see (fresh-agent runs only when the owner asks, 23 November 2026), and the hosted run on three systems.
+**Lenses.** The brief ticks the lenses that apply (security, user experience, measurement fairness), and the CTO answers each ticked one in the Result: what was tried and what was found. An unanswered ticked lens means no merge. Tick only what applies; most waves need one or none. With no second reader, blind spots are covered mechanically: tests that must fail, hostile inputs, scripted checks of what an agent sees, and the hosted run on three systems.
 
 **Models.** Record the host and model that carried out the wave in the Result. Never claim one that was not used.
 
