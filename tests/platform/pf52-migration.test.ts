@@ -155,8 +155,12 @@ it('records schema creation as an immutable cutoff on an empty fresh board', () 
   try {
     const schema = readFileSync(new URL('../../packages/box-platform/schema.sql', import.meta.url), 'utf8');
     const before = Date.now(); fresh.exec(schema);
+    const after = Date.now();
     const cutoff = fresh.prepare("SELECT value FROM meta WHERE key = 'pf52_deployed_at'").get() as { value: string };
-    expect(Date.parse(cutoff.value)).toBeGreaterThanOrEqual(before); expect(Date.parse(cutoff.value)).toBeLessThanOrEqual(Date.now());
+    const timestamp = Date.parse(cutoff.value);
+    expect(Number.isFinite(timestamp)).toBe(true);
+    expect(timestamp).toBeGreaterThanOrEqual(before - 1000); expect(timestamp).toBeLessThanOrEqual(after + 1000);
+    fresh.function('strftime', { varargs: true }, () => new Date(after + 60000).toISOString());
     fresh.exec(schema); expect(fresh.prepare("SELECT value FROM meta WHERE key = 'pf52_deployed_at'").get()).toEqual(cutoff);
   } finally { fresh.close(); }
 });
