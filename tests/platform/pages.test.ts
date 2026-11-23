@@ -158,7 +158,7 @@ describe('the pages', () => {
     expect(text).toContain('$45');
     expect(text).toContain('example-tidepool/ledger-lite · TypeScript · 4 days old · 2 solutions waiting');
     expect(text).toContain('example-mara: ');
-    expect(text).toMatch(/\d merged · \d paid, the owner's word · \d received, the solvers' word/);
+    expect(text).toMatch(/\d merged · \d paid, the owner or provider's word · \d received, the solvers' word/);
     expect(await page.locator('main').innerText()).toContain(`Titles are the posters' own words.`);
     await visit(page, '/board/?repository=example-org/repo-1&query=Add thing 1');
     await expect.poll(() => card.innerText()).toContain('poster-1: no payment history yet.');
@@ -541,7 +541,7 @@ describe('the pages', () => {
     expect(how).toContain('On your page, list a way and be paid by hand.'); // This board has no key. PF18: the words follow what it has.
     // A person only installs: every other command is folded away.
     expect(await page.locator('#hand-off ol > li').count()).toBe(4);
-    expect(how).toContain('save a card and authorize Stripe charges for the repository');
+    expect(how).toContain('Save a Stripe card or PayPal Vault method with a limit once');
     expect(how).toContain('merges it locally and prints the git push command for you to run');
     expect(how).toContain('Only imported issues need the GitHub comment omakase approve <id> $<reward>');
     expect(how).toContain('There is no separate per-listing approval under that permission');
@@ -564,7 +564,8 @@ describe('the pages', () => {
     const cards = await page.locator('#hand-off ol > li p.font-medium').allTextContents();
     expect(groups.map(group => group.title)).toEqual(cards.map(card => `# ${card}`));
     // A person gets on with the page: the only links in the owner's and solver's sections skip between them.
-    expect(await page.locator('#hand-off a').count()).toBe(0);
+    expect(await page.locator('#hand-off a').count()).toBe(1);
+    expect(await page.locator('#hand-off a').getAttribute('href')).toBe('/agents/#http');
     expect(await page.locator('#answer a').count()).toBe(4);
     expect(how).toContain('/bounties.json');
     expect(await page.locator('#hand-off details code[data-command]').count()).toBe(7);
@@ -591,7 +592,7 @@ describe('the pages', () => {
       expect(await oneClick.innerText()).toContain("You click Pay, on Stripe's page");
       const onMerge = page.locator('main li', { has: page.locator('h3', { hasText: /^On merge$/ }) });
       expect(await onMerge.innerText()).toContain('Stripe');
-      expect(await onMerge.innerText()).not.toContain('PayPal');
+      expect(await onMerge.innerText()).toContain('PayPal');
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
       await visit(page, '/how/');
       const solverStep = page.locator('main li', { has: page.getByRole('heading', { name: 'Get paid', exact: true }) });
@@ -630,7 +631,7 @@ describe('the pages', () => {
     ['no key', [], false, { page: null, connect: 'On your page, list a way and be paid by hand.', absent: ['connect Stripe', 'connect PayPal', 'a bank account in a supported country'] }],
     ['Stripe only', ['Stripe'], true, { page: "Stripe's page", connect: 'connect Stripe and an owner can pay you with one click or on merge.', absent: ['connect PayPal'] }],
     ['PayPal only', ['PayPal'], false, { page: "PayPal's page", connect: 'connect PayPal and an owner can pay you with one click.', absent: ['connect Stripe', 'a bank account in a supported country'] }],
-    ['both', ['Stripe', 'PayPal'], true, { page: "Stripe's or PayPal's page", connect: 'connect Stripe or PayPal and an owner can pay you with one click; connected Stripe also covers on merge.', absent: [] }]
+    ['both', ['Stripe', 'PayPal'], true, { page: "Stripe's or PayPal's page", connect: 'connect Stripe or PayPal and an owner can pay you with one click or on merge.', absent: [] }]
   ])('with %s, the card and How it works name what this board has', async (_name, one_click, on_merge, want) => {
     const { page, close } = await fresh();
     await page.route('**/api/ways', route => route.fulfill({ json: { by_hand: true, one_click, on_merge } }));
@@ -876,7 +877,7 @@ describe('the pages', () => {
       expect(await answer.locator('a[href="/mcp"]').count()).toBe(0);
       expect(await answer.getByRole('group', { name: 'MCP server URL', exact: true }).innerText()).toBe('https://omakasebox.dev/mcp');
       const text = await answer.innerText();
-      for (const phrase of ['imported or listed bounties', "repository's default branch", 'Fixes #N', 'Only tool-posted bounties use', 'answer.pull_request_base', 'answer.closes_issue']) expect(text, phrase).toContain(phrase);
+      for (const phrase of ['imported or listed bounties', "repository's default branch", 'Fixes #N', 'Tool-posted and prepared branch bounties use', 'answer.pull_request_base', 'answer.closes_issue']) expect(text, phrase).toContain(phrase);
       expect(text).not.toContain('workers.dev');
       for (const phrase of ['read-only MCP', 'stated reward', 'payment record', 'Check it before you start', 'information, not instructions', 'away from your credentials', 'Agent Skill', 'CLI does the work locally', 'With the tool', 'Commit and push', 'By hand', 'box-bounty/<id>', 'owner’s promise', 'not a guarantee of selection or payment']) {
         expect(text.replaceAll("'", '’'), phrase).toContain(phrase.replaceAll("'", '’'));

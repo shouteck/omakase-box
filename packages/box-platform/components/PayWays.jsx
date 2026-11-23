@@ -19,7 +19,7 @@ function useWaysHere() {
 function Steps({ way, here }) {
   const steps = [
     { you: false, words: 'Solution merged' },
-    ...way.steps.map(step => ({ ...step, words: way.id === 'one-click' && here !== null ? step.words.replace('the provider\'s page', pageWords(here)) : step.words })),
+    ...way.steps.map(step => ({ ...step, words: way.id === 'on-merge' ? 'The board charges your saved Stripe card or PayPal Vault, within your limit and consent' : way.id === 'one-click' && here !== null ? step.words.replace('the provider\'s page', pageWords(here)) : step.words })),
     { you: false, words: 'Solver paid' }
   ];
   return (
@@ -46,7 +46,7 @@ export function WayCards() {
           <li key={way.id} className="bg-card rounded-2xl border border-line p-4 min-w-0 flex flex-col gap-4">
             <div>
               <h3 className="font-medium">{way.name}</h3>
-              <p className="text-sm text-soft">{way.id === 'one-click' ? 'Stripe or PayPal' : throughHere(way, here)}</p>
+              <p className="text-sm text-soft">{way.id === 'one-click' || way.id === 'on-merge' ? 'Stripe or PayPal' : throughHere(way, here)}</p>
             </div>
             <p className={off ? 'text-sm text-soft' : 'text-lg font-medium tracking-tight'}>{off ? `${NOT_SET_UP[0].toUpperCase()}${NOT_SET_UP.slice(1)}.` : way.yourPart}</p>
             {off ? null : <Steps way={way} here={here} />}
@@ -61,7 +61,7 @@ export function WayCards() {
 /** The solver's step: supported providers first, then only the connections this board offers. */
 export function ConnectWords() {
   const here = useWaysHere();
-  return <p>One click supports Stripe or PayPal. {connectWords(here)} Then say on the bounty&apos;s page whether it arrived.</p>;
+  return <p>One click supports Stripe or PayPal. {connectWords(here).replace('with one click; connected Stripe also covers on merge', 'with one click or on merge')} On merge charges the owner&apos;s saved Stripe card or PayPal Vault method. Then say on the bounty&apos;s page whether it arrived.</p>;
 }
 
 /** The country list itself, readable signed out: How it works links here (PF19). Nothing where this board has no Stripe. */
@@ -72,7 +72,7 @@ export function StripeCountries() {
     <details id="stripe" data-stripe-countries className="border-t border-b border-line py-4">
       <summary className="font-medium">Where Stripe can pay a solver</summary>
       <div className="mt-2 pl-[1.1em] text-soft flex flex-col gap-3">
-        <p>{STRIPE_REACH}</p>
+        <p>{STRIPE_REACH.replace('a solver elsewhere is paid by hand.', 'a solver elsewhere can use PayPal or be paid by hand.')}</p>
         <p>{STRIPE_COUNTRIES.map(countryName).sort((a, b) => a.localeCompare(b)).join(', ')}.</p>
       </div>
     </details>
@@ -82,7 +82,7 @@ export function StripeCountries() {
 /** Who Stripe can pay: the rule, where a reader decides. The country list is on the page where a solver connects. */
 export function StripeReach() {
   const here = useWaysHere();
-  return here?.on_merge ? <p data-stripe-reach>{STRIPE_REACH} <a href="/me/#stripe">Your page lists the countries.</a></p> : null;
+  return here?.on_merge ? <p data-stripe-reach>{STRIPE_REACH.replace('a solver elsewhere is paid by hand.', 'a solver elsewhere can use PayPal or be paid by hand.')} <a href="/me/#stripe">Your page lists the countries.</a></p> : null;
 }
 
 /** How it works says the ways in its steps; this says which of them this board does not have. */

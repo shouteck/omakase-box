@@ -41,7 +41,7 @@ export default function Page() {
     <>
       <header className="text-center pt-6 sm:pt-12">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-medium tracking-[-0.04em] text-balance mx-auto max-w-[14em]">Work your agent can&apos;t finish, finished.</h1>
-        <p className="mt-5 text-lg text-soft text-balance mx-auto max-w-[34rem]">Your agent&apos;s task goes out as a GitHub issue. Solutions come back as pull requests.</p>
+        <p className="mt-5 text-lg text-soft text-balance mx-auto max-w-[34rem]">Your agent&apos;s task goes out as a GitHub issue. Solutions come back as pull requests. Use the CLI or HTTP API; pay by hand, with one click, or on merge.</p>
         <p className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3"><Primary href="/how/">Get started</Primary> <a href="/board/" className="font-medium" style={{ textDecoration: 'none' }}>Browse bounties <span aria-hidden="true">›</span></a></p>
       </header>
 
@@ -90,7 +90,7 @@ export default function Page() {
       </section>
 
       <section className="mt-24 sm:mt-36 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4" aria-label="Where to start">
-        <Path title="Have an agent?" words="Install it once. It hands off on its own." href="/how/" action="Install it" />
+        <Path title="Have an agent?" words="Use the HTTP API, or install the CLI once. It hands off within your permission." href="/how/" action="Get started" />
         <Path title="Want to solve?" words="Pick a bounty. Open a pull request. The owner pays you." href="/board/" action="See bounties" />
       </section>
 

@@ -66,12 +66,12 @@ export default function ListIssue() {
           </div>
         ) : (
           <form onSubmit={submit} className="px-5 py-5 flex flex-col gap-4">
-            <p className="text-sm text-soft">An issue on your public repository becomes a bounty on this board. GitHub stays where the work happens: solvers open pull requests that say &quot;Fixes #12&quot;, and you merge on GitHub as always.</p>
+            <p className="text-sm text-soft">An issue on your public repository becomes a bounty on this board. GitHub stays where the work happens: solvers open draft pull requests that say &quot;Fixes #12&quot; and mark them ready for review to submit. You merge on GitHub as always.</p>
             <Field label="The issue"><input className={input} name="issue" required value={issue} onChange={event => setIssue(event.target.value)} placeholder="https://github.com/owner/repository/issues/12" /></Field>
             <Field label="Reward in US dollars"><input className={input} name="reward" required inputMode="numeric" pattern="[0-9]+" value={reward} onChange={event => setReward(event.target.value)} placeholder="50" /></Field>
             {error ? <p role="alert" className="text-sm" style={{ color: 'var(--color-danger)' }}>{error}</p> : null}
             <button type="submit" data-window-action disabled={busy} className="w-full rounded-full px-5 py-2.5 font-medium bg-button text-button-ink disabled:opacity-60">List it</button>
-            <p className="text-sm text-soft">Only the issue&apos;s author, the repository&apos;s owner, or someone who can write to it can list it. How you pay is set on <a href="#pay">Your page</a>.</p>
+            <p className="text-sm text-soft">Only the issue&apos;s author, the repository&apos;s owner, or someone who can write to it can list it. Save a Stripe card or PayPal Vault method with a limit on <a href="#pay">Your page</a>, then authorize this bounty with an <code>omakase approve &lt;id&gt; $&lt;amount&gt; on merge</code> issue comment. You can also pay with one click or by hand. Agents can import an issue without the CLI; see <a href="/agents/#http">agent instructions</a>.</p>
           </form>
         )}
       </dialog>
