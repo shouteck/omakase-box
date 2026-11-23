@@ -38,7 +38,7 @@ What will be true when this is done, as something a person can observe or a comm
 Tick the ones that apply. The CTO answers every ticked one in the Result.
 
 - [ ] **Security:** does this add or change a check that keeps something out (hosts, paths, roles, identities, inputs)? Attack it with hostile inputs and say which you tried.
-- [ ] **User experience:** does a person see or operate this? Use it as that person would and say what was unclear; a fresh-agent check is stronger where the brief can name one.
+- [ ] **User experience:** does a person see or operate this? Use it as that person would and say what was unclear; prefer a scripted check of what they would see (a second clone, the exact text or document) to a fresh-agent run, which the owner uses only on request (23 November 2026).
 - [ ] **Measurement fairness:** does this produce a number or comparison someone will rely on? Check both sides had equal obligations, every attempt is counted, missing data is shown as missing, and each number comes with its run count, its spread and what limits it.
 
 ## Notes
