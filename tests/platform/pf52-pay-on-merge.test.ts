@@ -298,7 +298,7 @@ describe('PF52: direct listing consent', () => {
     expect(await r.env.DB.prepare('SELECT approval, approval_at, merge_consent FROM bounties WHERE id = ?').bind(id).first()).toEqual({ approval: 'comment', approval_at: at(1), merge_consent: 0 });
     issue.comments[0]!.body += ` on merge via ${rail}`;
     const editAt = edit === undefined ? undefined : typeof edit === 'number' ? at(edit) : edit;
-    issue.comments[0]!.updated_at = editAt;
+    if (editAt !== undefined) issue.comments[0]!.updated_at = editAt;
     r.clock.at += 20 * MINUTE; await refreshUntilDone(r); await settleTwice();
     const pays = edit === undefined || typeof edit === 'number' && edit < 5;
     expect(stripe.charged()).toHaveLength(rail === 'stripe' && pays ? 1 : 0); expect(paypal.captures).toHaveLength(rail === 'paypal' && pays ? 1 : 0);
