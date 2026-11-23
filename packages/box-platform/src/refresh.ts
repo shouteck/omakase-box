@@ -412,10 +412,13 @@ async function readApproval(env: Env, github: GitHub, id: string, repository: st
     if (typeof login !== 'string' || !LOGIN.test(login) || !Number.isSafeInteger(userId) || (body !== line && !onMerge)) continue;
     if (!Number.isFinite(Date.parse(comment['created_at']))) continue;
     if (Date.parse(comment['created_at']) < Date.parse(row.created_at)) continue;
+    const updatedAt = comment['updated_at'];
+    if (updatedAt !== undefined && (typeof updatedAt !== 'string' || !Number.isFinite(Date.parse(updatedAt)))) continue;
+    const at = typeof updatedAt === 'string' && Date.parse(updatedAt) > Date.parse(comment['created_at']) ? updatedAt : comment['created_at'];
     const association = typeof comment['author_association'] === 'string' ? comment['author_association'] : '';
     if (row.approval !== 'pending' ? userId !== row.poster_id || !onMerge : row.listed_by_id === null ? !APPROVERS.has(association) : userId !== row.poster_id && !APPROVERS.has(association)) continue;
-    const consent = onMerge && cutoff !== null && Date.parse(comment['created_at']) >= Date.parse(cutoff.value);
-    const candidate = { proof: comment['html_url'], login, userId: userId as number, at: comment['created_at'], consent, via };
+    const consent = onMerge && cutoff !== null && Date.parse(at) >= Date.parse(cutoff.value);
+    const candidate = { proof: comment['html_url'], login, userId: userId as number, at, consent, via };
     if (row.approval === 'pending' || consent) { chosen = candidate; break; }
     if (row.approval === null && chosen === null) chosen = candidate;
   }

@@ -255,6 +255,21 @@ describe('PF52: deployment cutoff and literal merge-time readiness', () => {
 });
 
 describe('PF52: direct listing consent', () => {
+  it.each((['stripe', 'paypal'] as const).flatMap(rail => [undefined, 0, 3, 5, 6, 'invalid'].map(edit => ({ rail, edit }))))('dates $rail consent edited at $edit by its last edit, never retroactively by plain approval', async ({ rail, edit }) => {
+    await r.env.DB.prepare('DELETE FROM bounties WHERE id = ?').bind(id).run();
+    expect(await listIssue(r.env, OWNER, `https://github.com/${REPO}/issues/12`, 45, NOW, undefined, true)).toMatchObject({ id });
+    if (rail === 'stripe') { await card(); await connectedStripe(); } else await vault();
+    issue.comments = [{ login: OWNER.login, association: 'OWNER', body: `omakase approve ${id} $45`, created_at: at(1) }];
+    r.clock.at += 20 * MINUTE; await refreshUntilDone(r);
+    expect(await r.env.DB.prepare('SELECT approval, approval_at, merge_consent FROM bounties WHERE id = ?').bind(id).first()).toEqual({ approval: 'comment', approval_at: at(1), merge_consent: 0 });
+    issue.comments[0]!.body += ` on merge via ${rail}`;
+    const editAt = edit === undefined ? undefined : typeof edit === 'number' ? at(edit) : edit;
+    issue.comments[0]!.updated_at = editAt;
+    r.clock.at += 20 * MINUTE; await refreshUntilDone(r); await settleTwice();
+    const pays = edit === undefined || typeof edit === 'number' && edit < 5;
+    expect(stripe.charged()).toHaveLength(rail === 'stripe' && pays ? 1 : 0); expect(paypal.captures).toHaveLength(rail === 'paypal' && pays ? 1 : 0);
+    expect(await r.env.DB.prepare('SELECT approval_at, merge_consent FROM bounties WHERE id = ?').bind(id).first()).toEqual({ approval_at: typeof edit === 'number' && edit > 1 ? at(edit) : at(1), merge_consent: edit === 'invalid' ? 0 : 1 });
+  });
   it.each([['stripe', 5], ['paypal', 5], ['stripe', 2.5], ['paypal', 2.5]] as const)('upgrades historical plain approval with fresh numeric-poster %s consent for a merge at %s', async (rail, mergedAt) => {
     await r.env.DB.prepare('DELETE FROM bounties WHERE id = ?').bind(id).run();
     expect(await listIssue(r.env, OWNER, `https://github.com/${REPO}/issues/12`, 45, NOW)).toEqual({ id });
