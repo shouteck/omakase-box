@@ -815,10 +815,13 @@ describe('BT43 a solver\'s file names in the pay message and the history', () =>
   it('a file name with a bidi override and an 8-bit CSI, from a real pull request, prints escaped wherever the pay message is read', () => fixture(context => {
     const { repo, id } = context;
     partialMerge(context, { [HOSTILE_FILE]: 'the solver added this\n' });
-    // The next read recognises the merge; the pay message rides along.
+    // The next read recognises the merge and names the partial fact; the pay message comes with the close that sends the
+    // decision (BT101 stage 3), which payReads runs.
     const status = inRepo(repo, ['status']);
     expect(status.status, status.stderr).toBe(0);
-    for (const [name, text] of [['status', status.stdout] as [string, string], ...payReads(repo, id)]) {
+    expect(status.stdout).not.toMatch(RAW_CONTROL);
+    expect(status.stdout).toContain(`the merge left these as they were: "app.txt", ${SHOWN_FILE}`);
+    for (const [name, text] of payReads(repo, id)) {
       expect(text, name).not.toMatch(RAW_CONTROL);
       // Escaped, never stripped: the owner still reads every name.
       expect(text, name).toContain(`${LEFT} "app.txt", ${SHOWN_FILE}.`);

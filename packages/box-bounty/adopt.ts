@@ -18,7 +18,7 @@ import { dropDurabilityRefs,isOpenStage,persistRecord,setSharedAdopter,transitio
 import type { BountyRecord,BountyStage } from './record.js';
 import { readDecision,requireRepository } from './settings.js';
 import { readStored,sharedFor,sharedOpen,sharedRead } from './store.js';
-import { syncChains } from './chain.js';
+import { observeChains,syncChains } from './chain.js';
 import { RESUME_STAYED } from './wording.js';
 
 // A shared record grants nothing: an adopted bounty on a machine whose owner
@@ -150,7 +150,19 @@ export function settleFromChain(root: string, record: BountyRecord, known?: unkn
 export function syncBeforeAction(root: string, id: string): void {
   const stored = readStored(root, id);
   const force = stored.state === 'missing' || stored.record?.adopted !== undefined;
-  try { syncChains(root, force); } catch { /* the cache answers; an unreachable remote is no reason to refuse */ }
+  try { syncChains(root, force, id); } catch { /* the cache answers; an unreachable remote is no reason to refuse */ }
+  settleBefore(root, stored);
+}
+
+// BT101 stage 3: what `look`, a read, does first: the same fetch and import, with no push.
+export function observeBeforeAction(root: string, id: string): void {
+  const stored = readStored(root, id);
+  const force = stored.state === 'missing' || stored.record?.adopted !== undefined;
+  try { observeChains(root, force); } catch { /* the cache answers; an unreachable remote is no reason to refuse */ }
+  settleBefore(root, stored);
+}
+
+function settleBefore(root: string, stored: ReturnType<typeof readStored>): void {
   if (stored.state !== 'missing' && stored.record !== null) {
     try { settleFromChain(root, stored.record); }
     catch (error) { if (!(error instanceof BountyRefused)) throw error; /* GitHub unread: the command's own reads name it */ }

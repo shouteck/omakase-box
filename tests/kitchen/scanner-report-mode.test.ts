@@ -44,6 +44,17 @@ describe('report-mode scanners bite on a planted fault', () => {
     expect(found.map(f => `${f.fn}: ${f.detail.split(':')[0]}`)).toEqual(['refresh: github-write', 'refresh: git-push']);
   });
 
+  it('read-writes-outward (BT101): a send under `if (!inRead())` is not reached from a read only while the CLI marks its reads', () => {
+    const lib = 'function refresh(root) { if (!inRead()) gitOutcome(root, ["push", "origin", "x"]); if (inRead()) owe(root); }';
+    const branches = `if (subcommand === 'status') { refresh(root); }`;
+    const marked = `if (subcommand === undefined || ['look', 'status', 'find', 'hook', 'describe', 'discover'].includes(subcommand)) readOnlyProcess();\n${branches}`;
+    expect(readWrites.scan([{ file: readWrites.CLI, text: marked }, { file: 'packages/box-bounty/lib.ts', text: lib }])).toEqual([]);
+    const unmarked: Finding[] = readWrites.scan([{ file: readWrites.CLI, text: branches }, { file: 'packages/box-bounty/lib.ts', text: lib }]);
+    expect(unmarked.map(f => `${f.fn}: ${f.detail.split(':')[0]}`)).toEqual(['refresh: git-push']);
+    expect(readWrites.mode).toBe('fail');
+    expect(readWrites.failing(unmarked)).toHaveLength(1);
+  });
+
   it('git-defences (BT97): pending until the table exists; once it does, it says BT97 must replace it', () => {
     const scratch = mkdtempSync(join(tmpdir(), 'kitchen-K75-'));
     try {

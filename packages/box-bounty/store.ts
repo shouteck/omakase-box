@@ -1065,7 +1065,7 @@ export function storedIds(repoRoot: string): string[] {
 export type OutboxKind = 'issue' | 'decision' | 'chain';
 export interface OutboxRow { readonly key: string; readonly bountyId: string; readonly eventSeq: number; readonly kind: string; readonly state: string; readonly result: string | null; readonly doneAt: string | null }
 /** What an owed event says: its row's key and kind, and the owe-time facts the door weighs (a chain tip, a grant). */
-export interface Owed { readonly key: string; readonly kind: OutboxKind; readonly tip?: string; readonly authorised?: true }
+export interface Owed { readonly key: string; readonly kind: OutboxKind; readonly tip?: string; readonly authorised?: true; /** When it was owed, from the event's own column. */ readonly at?: string }
 
 function inTransaction<T>(repoRoot: string, run: (entry: StoreEntry) => T): T {
   return withDb(repoRoot, true, entry => {
@@ -1076,7 +1076,7 @@ function inTransaction<T>(repoRoot: string, run: (entry: StoreEntry) => T): T {
 }
 
 /** Owe one effect: its `owed` event and its row, in one transaction. Owing it again re-arms the row. */
-export function owe(repoRoot: string, id: string, kind: OutboxKind, detail: Omit<Owed, 'key' | 'kind'> = {}): string {
+export function owe(repoRoot: string, id: string, kind: OutboxKind, detail: Omit<Owed, 'key' | 'kind' | 'at'> = {}): string {
   const key = `${kind}:${id}`;
   inTransaction(repoRoot, entry => {
     const seq = appendLocal(entry, id, 'owed', { key, kind, ...detail });
@@ -1101,11 +1101,11 @@ export function outboxRows(repoRoot: string, id?: string): OutboxRow[] {
 export function owedBehind(repoRoot: string, row: OutboxRow): Owed | null {
   return withDb(repoRoot, false, entry => {
     if (entry === undefined) return null;
-    const event = stmt(entry, 'SELECT kind, json FROM events WHERE bounty_id=? AND seq=?').get(row.bountyId, row.eventSeq) as { kind: string; json: string } | undefined;
+    const event = stmt(entry, 'SELECT kind, json, at FROM events WHERE bounty_id=? AND seq=?').get(row.bountyId, row.eventSeq) as { kind: string; json: string; at: string } | undefined;
     if (event?.kind !== 'owed') return null;
     try {
       const owed = JSON.parse(event.json) as Owed;
-      return owed.key === row.key && owed.kind === row.kind && row.key === `${row.kind}:${row.bountyId}` ? owed : null;
+      return owed.key === row.key && owed.kind === row.kind && row.key === `${row.kind}:${row.bountyId}` ? { ...owed, at: event.at } : null;
     } catch { return null; }
   });
 }

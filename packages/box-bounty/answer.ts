@@ -15,7 +15,7 @@ import { sendDecision } from './reconcile.js';
 import { dropMergeAnswer,readDecision,readMergeAnswer,recordFirstMerge } from './settings.js';
 import { boundAmount } from './format.js';
 import { payNotice } from './pay.js';
-import { shareMerged } from './chain.js';
+import { noteMerged, shareMerged } from './chain.js';
 const TAIL = 2000;
 
 const tail = (text: string): string => text.slice(-TAIL);
@@ -311,9 +311,13 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget, 
     // and all the other attempts'.
     dropDurabilityRefs(repoRoot, record);
     // Past the gate above, the owner's answer is the authority (BT52): the owed decision carries it as its grant.
-    if (record.github !== undefined) record = sendDecision(repoRoot, id, { authorised: true });
-    // BT32: the merge milestone is a shared chain event.
-    shareMerged(repoRoot, record, attempt.n, mergeCommit, false);
+    // BT32: the merge milestone is a shared chain event. On a posted bounty it is owed first, so the one reconcile
+    // pushes the chain once, with anything a read owed under it (BT101).
+    if (record.github === undefined) shareMerged(repoRoot, record, attempt.n, mergeCommit, false);
+    else {
+      noteMerged(repoRoot, record, attempt.n, mergeCommit, false);
+      record = sendDecision(repoRoot, id, { authorised: true });
+    }
     const notice = attempt.author !== undefined && attempt.author === record.github?.account ? null : recordFirstMerge(repoRoot, mergeCommit);
     // A recorded first merge fuses into the payment block (BT14) — one
     // block, one 'for the owner'. With no payment to make, or when the

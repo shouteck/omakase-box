@@ -633,7 +633,8 @@ text is never echoed. `look` and `status` state which of the four facts each
 solution carries: a recognised link, a recognised test-mode link, a `pay-to:`
 line the tool does not recognise, or no line at all. The tool never opens the
 link, never fetches it and cannot know the amount it asks for; when the
-bounty closes on a merged solution the closing output and `status` carry the
+bounty closes on a merged solution the output of the command that closes it on
+GitHub (`apply`, or the `close` after a hand merge) and `status` carry the
 message for the owner — whom to pay, how much (the amount from the owner's
 setting, to be paid by hand) and where, with a sentence to check the checkout
 shows the right amount and account name, plus who last edited the description
@@ -764,8 +765,13 @@ still a decision, not a consequence — `apply <id> <n>` is always the agent's
 call.
 
 `apply` and `close` comment the recorded fact on the issue, close it
-and remove the bounty branch — a merge the next command recognises on the
-bounty's branch does the same, naming the solution and the commit. If the branch carried work published only there —
+and remove the bounty branch. A merge the next command recognises on the
+bounty's branch ends the bounty here, naming the solution and the commit; a
+read (`look`, `status`, `find`, the hook) sends nothing, so the comment, the
+closed issue, the removed branch and the pay message come with the next
+`close` or `apply` of that bounty, which names each send it makes for an
+earlier command (`sent decision:<id>: …`). What is owed is listed by
+`status <id> --history`. If the branch carried work published only there —
 the poster's unpushed commits or the work-in-progress commit — the issue names
 those commits before the branch is removed, so nothing the agent published is
 lost by surprise; the local work was never touched. If an outside step fails, the local decision stands and the record
@@ -1170,9 +1176,10 @@ run a command at fixed moments, the owner can switch on the hook:
 `omakase-box hook on --host <devin|claude>` prints a complete disclosure —
 what the entries run, which files they read and write, what the context
 costs, what may follow (including that a recognised merged solution closes
-the GitHub issue with a comment — under `allowed` nobody is asked; under
-"ask me each time" a hand merge still closes and the closing output states
-the owner was not asked — while publication is allowed), what it never does
+the bounty here and the next `close` or `apply` of it closes the GitHub issue
+with a comment — under `allowed` nobody is asked; under "ask me each time" a
+hand merge still closes and the closing output states the owner was not
+asked — while publication is allowed), what it never does
 and how to stop it — and writes nothing until
 the same command is repeated with `--confirm`. `omakase-box hook` reports
 per-host state; `omakase-box hook off --host <name>` removes exactly the

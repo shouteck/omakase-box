@@ -243,12 +243,17 @@ describe('messages meant for the owner', () => {
     // The agent keeps none of the solver's files — a merge that lands the
     // solution's commit but not its content.
     git(repo, ['merge', '--no-ff', '-s', 'ours', '-m', 'hand merge, keeping none', prSha]);
+    // BT101 stage 3: the read notices the merge and owes the decision; the pay message comes from the command that sends it.
     const status = cli(repo, 'status');
     expect(status.status).toBe(0);
-    expect(status.stdout).toContain('for the owner — pass this on in these words:');
-    expect(status.stdout).toContain('The bounty "Repair app" ended with a solution merged into your code');
-    expect(status.stdout).toContain('Pay solver at https://buy.stripe.com/test_28E7sLbHrbu70eC5C5afS00');
-    expect(status.stdout).toContain('Of the files the solution changed, the merge left these as they were: "app.txt", "new-file.txt"');
+    expect(status.stdout).toContain('fact: of the files the solution changed, the merge left these as they were: "app.txt", "new-file.txt"');
+    expect(status.stdout).not.toContain('Pay solver at');
+    const close = cli(repo, 'close', id);
+    expect(close.status, close.stderr).toBe(0);
+    expect(close.stdout).toContain('for the owner — pass this on in these words:');
+    expect(close.stdout).toContain('The bounty "Repair app" ended with a solution merged into your code');
+    expect(close.stdout).toContain('Pay solver at https://buy.stripe.com/test_28E7sLbHrbu70eC5C5afS00');
+    expect(close.stdout).toContain('Of the files the solution changed, the merge left these as they were: "app.txt", "new-file.txt"');
     const event = loadRecord(repo, id).events.at(-1);
     expect(event).toMatchObject({ command: 'merged', partial: ['app.txt', 'new-file.txt'] });
     expect(event?.unasked).toBeUndefined(); // allowed — the owner waived asking

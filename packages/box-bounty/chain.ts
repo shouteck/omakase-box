@@ -34,7 +34,7 @@ import type { RefWrite } from './git.js';
 import { isObject } from './gh.js';
 import { firstSightShape,type FirstSight } from './pay.js';
 import { queueBoardHint } from './board.js';
-import { emitMergeNotice } from './notice.js';
+import { emitMergeNotice, emitSentEarlier, inRead } from './notice.js';
 import type { Attempt, BountyRecord } from './record.js';
 import { scanText } from './scan.js';
 import { loadState, requireRepository, saveState } from './settings.js';
@@ -300,11 +300,17 @@ export function pushChain(root: string, id: string, knownTip?: string): PushResu
 
 const actorOf = (record: BountyRecord): string => record.github?.account ?? 'unknown';
 
-function share(root: string, record: BountyRecord, scanned: Record<string, string | null | undefined>, event: ChainEvent): PushResult | 'held' {
+// BT101 stage 3: append the event and owe its push (the `chain:<id>` row), sending nothing. A read records a milestone
+// this way; the next mutating command for the bounty pushes it.
+function note(root: string, scanned: Record<string, string | null | undefined>, id: string, event: ChainEvent): string {
   // The scan runs before anything is built into an object or written: a hit
   // holds the whole event exactly as a publish hit holds a post.
   scanHold(scanned);
-  const tip = appendEvent(root, record.id, event);
+  return appendEvent(root, id, event);
+}
+
+function share(root: string, record: BountyRecord, scanned: Record<string, string | null | undefined>, event: ChainEvent): PushResult | 'held' {
+  const tip = note(root, scanned, record.id, event);
   const result = pushChain(root, record.id, tip);
   if (!result.pushed) emitMergeNotice(`shared bounty memory not pushed yet (${result.reason}); it will be retried`);
   else if (result.restored === true) emitMergeNotice(`shared bounty memory for ${record.id} was gone from the remote — restored from this machine`);
@@ -339,8 +345,15 @@ export function sharePosted(root: string, record: BountyRecord, task: string): P
 // `solution` — when a pull request is collected (look, apply, status refresh).
 // BT67: `firstSight` is the posting machine's evidence for that head, carried unchanged so another machine decides
 // the payee by the same rule; absent, the shared record names nobody.
+// BT101 stage 3: collection inside a read (`look`) only owes the event (noteSolution); any other command pushes it now.
 export function shareSolution(root: string, record: BountyRecord, attempt: Attempt, firstSight?: FirstSight): PushResult | 'held' {
-  const event: ChainEvent = {
+  return share(root, record, {}, solutionEvent(record, attempt, firstSight));
+}
+export function noteSolution(root: string, record: BountyRecord, attempt: Attempt, firstSight?: FirstSight): void {
+  note(root, {}, record.id, solutionEvent(record, attempt, firstSight));
+}
+function solutionEvent(record: BountyRecord, attempt: Attempt, firstSight?: FirstSight): ChainEvent {
+  return {
     v: 1, type: 'solution', at: new Date().toISOString(), actor: actorOf(record),
     n: attempt.n,
     ...(attempt.pullRequest !== undefined ? { pullRequest: attempt.pullRequest } : {}),
@@ -351,19 +364,22 @@ export function shareSolution(root: string, record: BountyRecord, attempt: Attem
     ...(attempt.payTo !== undefined ? { payTo: { state: attempt.payTo.state } } : {}),
     ...(attempt.pullRequest !== undefined && firstSight !== undefined ? { firstSight: { local: firstSight.local, remote: firstSight.remote } } : {})
   };
-  return share(root, record, {}, event);
 }
 
-// `merged` — at apply or outside-merge recognition.
+// `merged` — at apply, pushed now; at outside-merge recognition, which a read can run, owed (noteMerged).
+const mergedEvent = (record: BountyRecord, n: number | undefined, mergeCommit: string, unasked: boolean): ChainEvent => ({
+  v: 1, type: 'merged', at: new Date().toISOString(), actor: actorOf(record),
+  ...(n !== undefined ? { n } : {}),
+  mergeCommit,
+  ...(unasked ? { unasked: true } : {})
+});
 export function shareMerged(root: string, record: BountyRecord, n: number | undefined, mergeCommit: string, unasked: boolean): PushResult | 'held' {
-  const event: ChainEvent = {
-    v: 1, type: 'merged', at: new Date().toISOString(), actor: actorOf(record),
-    ...(n !== undefined ? { n } : {}),
-    mergeCommit,
-    ...(unasked ? { unasked: true } : {})
-  };
   queueBoardHint(root, record, 'merged');
-  return share(root, record, {}, event);
+  return share(root, record, {}, mergedEvent(record, n, mergeCommit, unasked));
+}
+export function noteMerged(root: string, record: BountyRecord, n: number | undefined, mergeCommit: string, unasked: boolean): void {
+  queueBoardHint(root, record, 'merged');
+  note(root, {}, record.id, mergedEvent(record, n, mergeCommit, unasked));
 }
 
 // `closed` — at close, for an ending with nothing merged.
@@ -412,17 +428,27 @@ const writeChainState = (root: string, next: { fetchedAt?: string; error?: { at:
 // a minute, fold remote tips into local chains, import what changed, and
 // retry whatever push is still pending. A fetch failure answers from the
 // cache and the notice is emitted once per spell.
-export function syncChains(root: string, force = false): void {
+// BT101 stage 3: a mutating command's sync. It fetches and imports, then pushes the chains this machine still owes.
+// `own` is the command's own bounty, whose chain its own send pushes (with whatever a read owed under it): pushing it
+// here too would cost a second push of a tip about to move.
+export function syncChains(root: string, force = false, own?: string): void {
+  const fetched = fetchAndImport(root, force);
+  if (fetched !== null) retryPending(root, fetched.url, fetched.view, own);
+}
+
+// A read's sync: fetch and import alone. Whatever the import owes (a merge event of a diverged chain) waits in the outbox
+// for the next mutating command.
+export function observeChains(root: string, force = false): void {
+  fetchAndImport(root, force);
+}
+
+// Inside the throttle window the remote-tracking refs cannot have moved since the fetch that set it, so there is nothing
+// to fetch; only owed pushes can still need work. Null when nothing more is to be done.
+function fetchAndImport(root: string, force: boolean): { url?: string; view?: ChainView } | null {
   const prior = loadChainState(root);
-  if (!force && prior.fetchedAt !== undefined && Date.now() - Date.parse(prior.fetchedAt) < FETCH_INTERVAL_MS) {
-    // Inside the throttle window the remote-tracking refs cannot have moved
-    // since the fetch that set it — only pending pushes can still need work,
-    // and only they resolve the remote.
-    retryPending(root);
-    return;
-  }
+  if (!force && prior.fetchedAt !== undefined && Date.now() - Date.parse(prior.fetchedAt) < FETCH_INTERVAL_MS) return {};
   const url = remoteUrl(root);
-  if (url === null) return;
+  if (url === null) return null;
   // The record namespace into a tracking namespace of its own (BT58). --prune acts only on that destination, never on a branch's.
   const fetched = gitOutcome(root, ['fetch', '--no-tags', '--prune', url, `+${CHAIN_NS}/*:${CHAIN_REMOTE_NS}/*`]);
   if (fetched.status !== 0 || fetched.error !== undefined) {
@@ -431,19 +457,22 @@ export function syncChains(root: string, force = false): void {
     const reason = (fetched.stderr || fetched.error?.message || 'fetch failed').trim().split('\n')[0] ?? 'fetch failed';
     if (prior.error === undefined) emitMergeNotice(`shared bounty memory not refreshed (${reason}); showing what this machine last saw`);
     writeChainState(root, { fetchedAt: new Date().toISOString(), error: { at: new Date().toISOString(), reason } });
-    return;
+    return null;
   }
   writeChainState(root, { fetchedAt: new Date().toISOString() });
-  const view = adoptAndImport(root);
-  retryPending(root, url, view);
+  return { url, view: adoptAndImport(root) };
 }
 
 // The only commands allowed to touch the remote for memory (brief, reading):
 // `omakase-box`, `status`, `find`, `status --json` and `hook start` call this
 // before they read records. Every other command works the imported cache.
 // A failure never blocks the read — the cache answers and says so once.
+// BT101 stage 3: inside a read it fetches and imports and never pushes.
 export function refreshSharedMemory(root: string): void {
-  try { syncChains(root); } catch { /* shared memory is a read cache — never a reason a read fails */ }
+  try {
+    if (inRead()) observeChains(root);
+    if (!inRead()) syncChains(root);
+  } catch { /* shared memory is a read cache — never a reason a read fails */ }
 }
 
 // ---------------------------------------------------------------------------
@@ -659,7 +688,7 @@ function adoptAndImport(root: string): ChainView {
 // local namespace is NOT authorization: a planted ref, or a trusted ref
 // swapped for an unscanned descendant, matches neither record and its
 // objects are never uploaded.
-function retryPending(root: string, url?: string, view?: ChainView): void {
+function retryPending(root: string, url?: string, view?: ChainView, own?: string): void {
   // The view's listings are the post-fetch snapshot; where adoption may
   // have just moved a ref (a pending merge commit) the check falls back to
   // one fresh rev-parse for that id only — reads stay at a fixed handful of
@@ -669,13 +698,16 @@ function retryPending(root: string, url?: string, view?: ChainView): void {
   const remoteTip = (id: string): string | null =>
     view !== undefined ? view.remoteTips.get(id) ?? null : tipOf(root, remoteRef(root, id));
   const ids = new Set<string>();
+  const owedAt = new Map<string, string | undefined>();
   for (const row of outboxRows(root)) {
     if (row.kind !== 'chain' || row.state !== 'pending') continue;
     const id = row.bountyId;
-    if (!CHAIN_ID.test(id)) continue;
+    if (!CHAIN_ID.test(id) || id === own) continue;
     // A row no owed event stands behind names no tip, so it can never drive a push.
-    const expected = owedBehind(root, row)?.tip ?? null;
+    const owed = owedBehind(root, row);
+    const expected = owed?.tip ?? null;
     if (expected === null) continue;
+    owedAt.set(id, owed?.at);
     // A replaced or foreign ref never matches the recorded tip. Where the
     // view's snapshot predates an adoption-time merge of this very chain,
     // one fresh read settles it — a rev-parse only for ids that actually
@@ -713,8 +745,12 @@ function retryPending(root: string, url?: string, view?: ChainView): void {
     const hadCopy = metaGet(root, `chain_pushed:${id}`) !== null || metaGet(root, `chain_tip:${id}`) !== null;
     const remote = remoteTip(id);
     const result = pushChain(root, id);
+    // An owed row's push says itself whether it restored a deleted chain; with no tracking ref fetched yet, a missing
+    // remote tip is not evidence of a deletion. A recovery found by the anchors keeps its own line.
+    const restored = owedAt.has(id) ? result.restored === true : remote === null && hadCopy;
     if (!result.pushed) emitMergeNotice(`shared bounty memory not pushed yet (${result.reason}); it will be retried`);
-    else if (remote === null && hadCopy) emitMergeNotice(`shared bounty memory for ${id} was gone from the remote — restored from this machine`);
+    else if (restored) emitMergeNotice(`shared bounty memory for ${id} was gone from the remote — restored from this machine`);
+    else if (owedAt.has(id)) emitSentEarlier(`chain:${id}`, 'chain pushed', owedAt.get(id));
   }
 }
 

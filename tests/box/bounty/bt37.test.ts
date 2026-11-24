@@ -89,6 +89,9 @@ describe('1. an applied merge says it is local and how it reaches GitHub', () =>
     git(repo, ['merge', '--no-ff', '-m', 'solver solution', waitingPr]);
     const run = box(repo, ['status']);
     expect(run.status).toBe(0);
+    // BT101 stage 3: the read ends the bounty here and owes the decision; the next close sends the comment.
+    expect(state().comments.some(comment => comment.body.includes(`<!-- box-bounty:${id}:merged -->`))).toBe(false);
+    expect(box(repo, ['close', id]).status).toBe(0);
     const bodies = state().comments.map(comment => comment.body);
     const decision = bodies.find(body => body.includes(`<!-- box-bounty:${id}:merged -->`));
     expect(decision, `no merged comment in: ${JSON.stringify(bodies)}`).toContain('merged in the owner\'s checkout; it reaches this repository when the owner pushes it');
