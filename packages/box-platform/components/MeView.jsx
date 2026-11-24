@@ -9,6 +9,8 @@ import ListIssue from './ListIssue.jsx';
 import Dialog from './Dialog.jsx';
 import { LABELS } from './Methods.jsx';
 import { PayOnMergeOwner, StripeRow } from './PayOnMerge.jsx';
+import PayPalVault from './PayPalVault.jsx';
+import PaymentRail from './PaymentRail.jsx';
 import { StripeCountries } from './PayWays.jsx';
 import { Badge, Button, Empty, fmtDate, Primary, Row, Rows, Table, Title } from './ui.jsx';
 
@@ -151,8 +153,10 @@ function Owner({ me, setMe }) {
       <RoleTitle role="Owner" sub="Bounties your agents posted, and paying for the work that lands." />
       <h2 id="you-owe" className="text-lg font-medium tracking-tight mt-12 mb-5 scroll-mt-6 flex justify-between items-center gap-3"><span id="bounties">Your bounties</span><ListIssue /></h2>
       <Bounties bounties={me.bounties} />
-      <Heading id="pay" note="Save a card and authorize the repository before Stripe pays rewards on merge.">Pay on merge</Heading>
+      <Heading id="pay" note="Posted bounties: Save a card and authorize the repository before Stripe pays rewards on merge. Listed approvals can instead authorize on merge within the saved-method limit; eligible merges can also use saved PayPal.">Pay on merge</Heading>
       <PayOnMergeOwner pay={me.pay} setPay={pay => setMe(current => ({ ...current, pay }))} />
+      <PaymentRail choice={me.pay.rail_choice} onChange={pay => setMe(current => ({ ...current, pay }))} />
+      <PayPalVault onChange={pay => setMe(current => ({ ...current, pay }))} />
     </>
   );
 }
@@ -206,7 +210,7 @@ function YourSolutions({ me, setMe }) {
 }
 
 function Solver({ me, setMe }) {
-  const ready = me.pay.set_up && me.pay.solver?.ready;
+  const ready = (me.pay.set_up && me.pay.solver?.ready) || (me.paypal.set_up && me.paypal.connected);
   return (
     <>
       <RoleTitle role="Solver" sub="Bounties you solved, and getting paid for them." />
@@ -221,8 +225,8 @@ function Solver({ me, setMe }) {
           <PayPalRow paypal={me.paypal} setPayPal={paypal => setMe(current => ({ ...current, paypal }))} />
         </Rows>
       </Way>
-      <Way name="On merge" note="The owner authorizes Stripe to charge their saved card when a solution merges">
-        <Rows><Row icon="✓" tone="link" title={me.pay.set_up ? 'Uses your Stripe connection above' : 'Not set up on this board yet'} detail={me.pay.set_up ? 'Nothing more to do. It runs where the owner turned it on.' : null} actions={me.pay.set_up ? (ready ? <Badge tone="ok">Ready</Badge> : <Badge>Needs Stripe</Badge>) : null} /></Rows>
+      <Way name="On merge" note="The owner authorizes a saved Stripe card or PayPal when a solution merges">
+        <Rows><Row icon="✓" tone="link" title={me.pay.set_up || me.paypal.set_up ? me.paypal.set_up ? 'Uses your Stripe or PayPal connection above' : 'Uses your Stripe connection above' : 'Not set up on this board yet'} detail={me.pay.set_up || me.paypal.set_up ? 'Nothing more to connect. Payment requires the owner’s consent and a usable saved method.' : null} actions={me.pay.set_up || me.paypal.set_up ? (ready ? <Badge tone="ok">Ready</Badge> : <Badge>{me.paypal.set_up ? 'Needs Stripe or PayPal' : 'Needs Stripe'}</Badge>) : null} /></Rows>
       </Way>
     </>
   );
@@ -257,8 +261,9 @@ function AccountMenu({ login, signOut }) {
 
 /** Address, waiting work, saved choice, then a poster-only account; otherwise Solver. */
 function firstRole(me) {
+  if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('card')) return 'owner';
   const hash = typeof window === 'undefined' ? '' : window.location.hash;
-  if (OWNER_HASHES.includes(hash)) return 'owner';
+  if ((typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('vault') === 'return') || OWNER_HASHES.includes(hash)) return 'owner';
   if (SOLVER_HASHES.includes(hash)) return 'solver';
   if (me.you_owe.length > 0) return 'owner';
   if (me.owed_to_you.length > 0 || (me.to_confirm ?? []).length > 0) return 'solver';
@@ -299,7 +304,7 @@ export default function MeView() {
   // Once the page is drawn, a section the address names is scrolled to.
   useEffect(() => {
     if (role === null || window.location.hash === '') return;
-    document.querySelector(window.location.hash)?.scrollIntoView();
+    document.getElementById(window.location.hash.slice(1))?.scrollIntoView();
   }, [role]);
   const setRole = next => {
     setRoleState(next);

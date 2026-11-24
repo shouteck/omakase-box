@@ -324,10 +324,10 @@ describe('MCP, through the SDK client', () => {
     expect(SKILL_TEXT.split('---\n')[1]).toContain(`metadata:\n  version: "${cli.version}"\n`);
   });
 
-  it('lists three read-only tools', async () => {
+  it('lists bounty and public payment setup read-only tools', async () => {
     const { tools } = await client.listTools();
     // PF29 added get_numbers, the board as a whole.
-    expect(tools.map(tool => tool.name)).toEqual(['find_bounties', 'get_bounty', 'get_numbers']);
+    expect(tools.map(tool => tool.name)).toEqual(['get_poster_payment_setup', 'get_solver_payment_setup', 'find_bounties', 'get_bounty', 'get_numbers']);
     for (const tool of tools) expect(tool.annotations?.readOnlyHint).toBe(true);
     expect(tools[0]!.description).toContain('public GitHub');
   });

@@ -65,6 +65,7 @@ async function record(events: Record<string, unknown>[]): Promise<void> {
 beforeEach(async () => {
   // The token's budget: one tick reads every seeded bounty, so a new chain event lands at once.
   r = await rig('standin-read');
+  r.standin.accountIds.set(OWNER.login, OWNER.id);
   seedStates(r.standin, NOW);
   await refreshUntilDone(r);
 });
@@ -591,8 +592,10 @@ describe('your bounties (PF21)', () => {
     await charge('charging', 'pm_saved');
     expect(await owed()).toMatchObject({ stage: 'due', card_failed: false, note: 'A charge has been started and has not finished.' });
     await charge('paid', 'pm_saved');
-    expect(await owed()).toMatchObject({ stage: 'paid', paid_by: 'Pay on merge', merged: PAYEE.login });
+    await r.env.DB.prepare(`UPDATE charges SET origin = 'merge' WHERE bounty_id = ?`).bind(STATE_IDS.owed).run();
+    expect(await owed()).toMatchObject({ stage: 'paid', paid_by: 'Stripe, pay on merge', merged: PAYEE.login });
     await charge('paid', null);
+    await r.env.DB.prepare(`UPDATE charges SET origin = 'owner' WHERE bounty_id = ?`).bind(STATE_IDS.owed).run();
     expect(await owed()).toMatchObject({ stage: 'paid', paid_by: 'Stripe, one click' });
   });
 });

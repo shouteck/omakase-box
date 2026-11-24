@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS bounties (
   listed_by TEXT,
   -- The issue's own author, whose words the task is (the lister may be someone who can write to the repository).
   issue_author TEXT
-, approval TEXT, approval_proof TEXT);
+, approval TEXT, approval_proof TEXT, approval_at TEXT, approved_amount INTEGER, merge_consent INTEGER NOT NULL DEFAULT 0, merge_rail TEXT CHECK (merge_rail IN ('stripe', 'paypal')));
 -- PF44 (written as the live board's ALTER TABLE leaves it, so both schemas read the same): approval NULL, approved when it
 -- came in (posted, or listed by someone with authority). 'pending': imported by anyone and not yet approved: hidden from the
 -- open list, nothing promised, nothing paid. 'comment': approved by the comment whose address is approval_proof, written on
@@ -118,7 +118,13 @@ CREATE TABLE IF NOT EXISTS stripe_accounts (
   github_id INTEGER PRIMARY KEY,
   account_id TEXT NOT NULL UNIQUE,
   ready INTEGER NOT NULL DEFAULT 0
-);
+, ready_at TEXT, ready_version INTEGER);
+CREATE TRIGGER IF NOT EXISTS stripe_ready_changed AFTER UPDATE OF ready ON stripe_accounts
+WHEN (NEW.ready_version IS OLD.ready_version AND NEW.ready_at IS OLD.ready_at) OR (NEW.ready = 0 AND NEW.ready_at IS NOT NULL) OR (NEW.ready = 1 AND (NEW.ready_at IS NULL OR (OLD.ready = 0 AND NEW.ready_at IS OLD.ready_at)))
+BEGIN
+  UPDATE stripe_accounts SET ready_at = CASE WHEN NEW.ready = 0 THEN NULL WHEN OLD.ready = 0 OR NEW.ready_at IS NULL THEN strftime('%Y-%m-%dT%H:%M:%fZ', 'now') ELSE NEW.ready_at END,
+    ready_version = CASE WHEN NEW.ready_version IS OLD.ready_version THEN MAX(COALESCE(OLD.ready_version, 0), CAST(strftime('%s', 'now') AS INTEGER) * 2 + CASE WHEN NEW.ready = 0 THEN 1 ELSE 0 END) ELSE NEW.ready_version END WHERE github_id = NEW.github_id;
+END;
 -- An owner's saved card and the most one bounty may charge it.
 CREATE TABLE IF NOT EXISTS pay_settings (
   github_id INTEGER PRIMARY KEY,
@@ -126,6 +132,11 @@ CREATE TABLE IF NOT EXISTS pay_settings (
   payment_method TEXT,
   card_label TEXT,
   limit_per_bounty INTEGER
+);
+CREATE TABLE IF NOT EXISTS payment_preferences (
+  github_id INTEGER PRIMARY KEY,
+  rail TEXT CHECK (rail IN ('stripe', 'paypal')),
+  fallback INTEGER NOT NULL DEFAULT 0 CHECK (fallback IN (0, 1))
 );
 -- The owner's switch, per repository, with its own limit (PF19). A merge from before on_at is never charged.
 CREATE TABLE IF NOT EXISTS pay_repositories (
@@ -148,7 +159,7 @@ CREATE TABLE IF NOT EXISTS charges (
   at INTEGER NOT NULL,
   -- NULL is Stripe. 'paypal': account_id is the PayPal account ID, payment_intent the order, then the capture.
   provider TEXT
-);
+, origin TEXT CHECK (origin IN ('merge', 'agent', 'owner')));
 CREATE INDEX IF NOT EXISTS charges_intent ON charges (payment_intent);
 -- A solver's connected PayPal account. Only the account ID: never an email.
 CREATE TABLE IF NOT EXISTS paypal_accounts (
@@ -161,6 +172,17 @@ CREATE TABLE IF NOT EXISTS hints (
   bounty_id TEXT PRIMARY KEY,
   at INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS paypal_vault (
+  github_id INTEGER PRIMARY KEY,
+  payment_token TEXT NOT NULL,
+  label TEXT NOT NULL,
+  limit_per_bounty INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS paypal_vault_setup (
+  github_id INTEGER PRIMARY KEY,
+  setup_id TEXT NOT NULL,
+  expires_at INTEGER NOT NULL
+);
 CREATE TABLE IF NOT EXISTS log (
   at INTEGER NOT NULL,
   reason TEXT NOT NULL,
@@ -170,6 +192,7 @@ CREATE TABLE IF NOT EXISTS meta (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL
 );
+INSERT OR IGNORE INTO meta (key, value) VALUES ('pf52_deployed_at', strftime('%Y-%m-%dT%H:%M:%fZ', 'now'));
 -- PF37: which migration files this database holds. A new board is built from this schema, which already holds every one;
 -- a live board gets the table from migrations/pf37.sql. A new migration adds its own line here and ends with its own insert.
 CREATE TABLE IF NOT EXISTS migrations (
@@ -190,4 +213,5 @@ INSERT OR IGNORE INTO migrations (name, applied_at, note) VALUES
   ('pf44.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
   ('pf45-bt68.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
   ('pf46-bt68.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
-  ('pf47-bt68.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board');
+  ('pf47-bt68.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board'),
+  ('pf52.sql', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'in the schema of a new board');

@@ -20,8 +20,7 @@ export const FIXED_HEADERS: Readonly<Record<string, string>> = {
 /** The policy of an answer that is not a page: it may load nothing and be framed by nothing. */
 export const NOT_A_PAGE_POLICY = "default-src 'none'; frame-ancestors 'none'";
 
-/** A page's policy: its own origin for everything, its own inline scripts by hash, never framed, forms only to itself.
-    No provider is named: Stripe and PayPal are reached by a redirect, which needs no allowance. */
+/** Provider form redirects are checked against the submitting page's form-action, including their final host. */
 export function pagePolicy(scriptHashes: readonly string[]): string {
   return [
     "default-src 'self'",
@@ -32,7 +31,7 @@ export function pagePolicy(scriptHashes: readonly string[]): string {
     "connect-src 'self'",
     "frame-ancestors 'none'",
     "base-uri 'self'",
-    "form-action 'self'",
+    "form-action 'self' https://connect.stripe.com https://checkout.stripe.com https://www.paypal.com https://www.sandbox.paypal.com",
     "object-src 'none'"
   ].join('; ');
 }

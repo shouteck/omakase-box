@@ -30,8 +30,10 @@ export type PaymentFacts = {
 /** The one merged author of a rewarded bounty. More than one: the owner decides, and nobody is named until a record names one of them. */
 export function payeeOf(facts: Pick<PaymentFacts, 'amount' | 'merged' | 'listed'> & { record?: PaidEvent | null }): string | null {
   if (facts.amount === 0) return null;
+  const recorded = facts.merged.find(pull => same(pull.author, facts.record?.to ?? null));
+  if (recorded !== undefined) return recorded.author;
   if (facts.merged.length === 1 && facts.listed !== true) return facts.merged[0]!.author;
-  return facts.merged.find(pull => same(pull.author, facts.record?.to ?? null))?.author ?? null;
+  return null;
 }
 
 export function roleOf(facts: PaymentFacts, viewer: string | null): Role {

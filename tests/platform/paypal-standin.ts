@@ -8,6 +8,10 @@ export class PayPalStandin {
   orders: Order[] = [];
   calls: string[] = [];
   captures: string[] = [];
+  vaultStatus = 'COMPLETED';
+  vaultDeclined = false;
+  setupApproved = true;
+  vaultRequests: Record<string, unknown>[] = [];
   /** Who logs in on PayPal's page, by the code they come back with. */
   logins = new Map<string, Record<string, unknown>>();
   /** What PayPal's own signature check answers. */
@@ -40,13 +44,30 @@ export class PayPalStandin {
       this.verified.push(body);
       return { status: 200, json: { verification_status: this.verification } };
     }
+    if (method === 'POST' && path === '/v3/vault/setup-tokens') {
+      this.vaultRequests.push(JSON.parse(body) as Record<string, unknown>);
+      return { status: 201, json: { id: 'SETUP1', links: [{ rel: 'approve', href: 'https://www.sandbox.paypal.test/vault/SETUP1' }] } };
+    }
+    if (method === 'POST' && path === '/v3/vault/payment-tokens') {
+      this.vaultRequests.push(JSON.parse(body) as Record<string, unknown>);
+      return this.setupApproved ? { status: 201, json: { id: 'VAULT1' } } : { status: 422, json: { details: [{ issue: 'SETUP_TOKEN_NOT_APPROVED' }], message: 'provider prose must not escape' } };
+    }
+    if (method === 'DELETE' && path.startsWith('/v3/vault/payment-tokens/')) return { status: 204, json: {} };
     if (method === 'POST' && path === '/v2/checkout/orders') {
       const stored = request === null ? undefined : this.byRequest.get(request);
       if (stored !== undefined) return { status: 200, json: this.show(stored) };
-      const sent = JSON.parse(body) as { purchase_units: [{ custom_id: string; amount: { value: string }; payee: { merchant_id: string } }] };
+      const sent = JSON.parse(body) as { payment_source?: { paypal?: { vault_id?: string } }; purchase_units: [{ custom_id: string; amount: { value: string }; payee: { merchant_id: string } }] };
+      if (sent.payment_source?.paypal?.vault_id) {
+        this.vaultRequests.push(sent);
+        if (this.vaultDeclined) return { status: 422, json: { details: [{ issue: 'INSTRUMENT_DECLINED' }], message: 'provider prose must not escape' } };
+      }
       const unit = sent.purchase_units[0];
       if (!this.known.has(unit.payee.merchant_id)) return { status: 422, json: { name: 'UNPROCESSABLE_ENTITY', message: 'words of PayPal that must not reach a page', details: [{ issue: 'PAYEE_ACCOUNT_INVALID' }] } };
       const order: Order = { id: `ORDER${this.next++}`, status: 'PAYER_ACTION_REQUIRED', request, payee: unit.payee.merchant_id, amount: unit.amount.value, custom_id: unit.custom_id, capture: null };
+      if (sent.payment_source?.paypal?.vault_id) {
+        order.status = this.vaultStatus;
+        if (order.status === 'COMPLETED') { order.capture = { id: `CAPTURE${this.next++}`, status: 'COMPLETED' }; this.captures.push(order.id); }
+      }
       this.orders.push(order);
       if (request !== null) this.byRequest.set(request, order);
       return { status: 200, json: this.show(order) };

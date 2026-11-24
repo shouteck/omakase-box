@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { WAYS } from '../src/pay-ways.ts';
+import { CHARGE_WORDS } from '../src/charge-words.ts';
 import PaymentCard from './PaymentPanel.jsx';
 import { CodeBlock, Facts, SampleNote, Section, Soft, Stale, TheirWords, Title, fmtDate } from './ui.jsx';
 
@@ -45,19 +46,27 @@ function View({ data }) {
         <aside className="lg:col-start-2 lg:row-start-1 lg:sticky lg:top-6 bg-surface rounded-3xl px-6 pt-6 pb-3" aria-label="Summary">
           <PaymentCard id={b.id} poster={b.poster} amount={b.amount} state={b.state} issue={b.links.issue}
             terms={<Facts stacked rows={[
-              ['Terms', pending ? 'Not approved by the issue\'s owner. No payout is promised.' : listed ? 'The owner chooses whom to pay, from every pull request linked to the issue, merged or not. One is paid.' : 'The merged solution earns the whole reward. Other solutions and parts used by hand earn nothing.'],
+              ['Terms', pending ? 'Not approved by the issue\'s owner. No payout is promised.' : listed ? 'With a saved payment method and owner consent, one eligible verified merge can pay automatically. Otherwise the owner chooses from every linked pull request, merged or not.' : 'The merged solution earns the whole reward. Other solutions and parts used by hand earn nothing.'],
               ...(listed ? [] : [['Posting approved', b.approved_by ? APPROVED[b.approved_by] : 'The project\'s record does not say.']]),
               ['Read from GitHub', data.read_at ? `${fmtDate(data.read_at)}, ${data.read_at.slice(11, 16)} UTC` : 'Not yet']
             ]} />}>
           <Facts stacked rows={[
             ['Posted by', <a key="poster" href={`/owner/${b.poster}/`}>{b.poster}</a>],
             ['Repository', <>{b.repository}{b.language ? ` · ${b.language}` : ''}</>],
+            ['PR target branch', <code className="text-sm break-all">{listed ? b.default_branch : b.branch}</code>],
             ['Posted', fmtDate(b.posted_at)],
             ['Solutions so far', String(b.solutions.length)],
             ...(listed ? [['Listed', `From the board${b.listed_by ? ` by ${b.listed_by}` : ''}, on GitHub's issue #${b.issue_number}`]] : []),
             ['Who may answer', 'Agents welcome, through a GitHub account'],
             ...(b.amount > 0 ? [['Payment', WAYS.filter(way => b.how_it_pays.ways.includes(way.id)).map(way => way.name).join(', ')]] : [])
           ]} />
+          {b.pay_on_merge?.automatic_charge_off && b.owed_now ? <div className="mt-4 text-sm" data-automatic-charge-off>
+            <p>{CHARGE_WORDS['solver-not-ready']}</p>
+            <p className="mt-2 flex flex-wrap gap-x-3">
+              <a href={b.owed_now.payout_setup_urls.stripe}>Connect Stripe payouts</a>
+              <a href={b.owed_now.payout_setup_urls.paypal}>Connect PayPal payouts</a>
+            </p>
+          </div> : null}
           </PaymentCard>
         </aside>
 
@@ -74,7 +83,7 @@ function View({ data }) {
                   <p>2. Open a pull request against {b.default_branch} in {b.repository} whose description says:</p>
                   <CodeBlock lines={[`Fixes #${b.issue_number}`]} what="line" className="mt-2" />
                 </li>
-                <li>3. The board links it to this bounty from GitHub. The owner chooses whom to pay.</li>
+                <li>3. The board links it from GitHub. Authorized pay on merge can pay one eligible verified landing; otherwise the owner chooses whom to pay.</li>
               </ol>
             </Section>
           ) : open ? (

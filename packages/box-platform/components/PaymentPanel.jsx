@@ -58,8 +58,11 @@ export function standing(view, amount, state) {
     ? { line: `Owed to one of ${owed.to_one_of.join(' or ')}`, sub: `Since ${fmtDate(owed.since)}. The owner chooses whom to pay.` }
     : { line: `Owed to ${owed.to} since ${fmtDate(owed.since)}`, sub: `GitHub records ${owed.fact}. Not yet recorded paid.` };
   // PF31b: the provider's word is the record; the solver is not asked, so nothing about confirming is said.
-  if (recorded.source === 'stripe') return { line: view.on_merge ? `Paid on merge through Stripe, ${fmtDate(recorded.at)}` : `Paid through Stripe, ${fmtDate(recorded.at)}`, sub: `Stripe's word: paid to ${owed.to}'s own account.` };
-  if (recorded.source === 'paypal') return { line: `Paid through PayPal, ${fmtDate(recorded.at)}`, sub: `PayPal's word: paid to ${owed.to}'s own account.` };
+  if (recorded.source === 'stripe' || recorded.source === 'paypal') {
+    const provider = recorded.source === 'stripe' ? 'Stripe' : 'PayPal';
+    const how = p.charge?.origin === 'merge' ? ' on merge' : p.charge?.origin === 'agent' ? ' by agent command' : p.charge?.origin === 'owner' ? ' by owner click' : '';
+    return { line: `Paid${how} through ${provider}, ${fmtDate(recorded.at)}`, sub: `${provider}'s word: paid to ${owed.to}'s own account.` };
+  }
   if (view.role === 'payee') return { line: `${recorded.by} recorded paying you, ${fmtDate(recorded.at)}`, sub: `The owner's word. ${says?.word === 'received' ? 'You confirmed it was received.' : 'Not yet confirmed by you.'}` };
   return { line: `Recorded paid by ${you ? 'you' : recorded.by}, ${fmtDate(recorded.at)}`, sub: `${you ? 'Your' : 'The owner\'s'} word. ${confirmed}` };
 }
@@ -156,6 +159,7 @@ export default function PaymentCard({ id, poster, amount, state, issue, children
           </>
         )}
         {view?.can_authenticate ? <button type="button" onClick={() => toStripe('authenticate')} className="mt-3 w-full rounded-full px-5 py-2.5 font-medium bg-button text-button-ink">Finish this payment on Stripe&apos;s page</button> : null}
+        {view?.role === 'owner' && view.paypal_action_url ? <a href={view.paypal_action_url} rel="nofollow noopener noreferrer" className="mt-3 flex justify-center rounded-full px-5 py-2.5 font-medium bg-button text-button-ink">Continue on PayPal</a> : null}
         {confirm ? <button type="button" data-confirm onClick={() => post('receipt', { says: 'received' })} className="mt-3 w-full rounded-full px-5 py-2.5 font-medium bg-button text-button-ink">Confirm I received ${view.recorded?.amount ?? owed?.amount}</button> : null}
         <a href={issue} rel="nofollow noopener" data-issue className="mt-3 flex justify-center items-center gap-1.5 rounded-full px-5 py-2.5 font-medium border border-line bg-card" style={{ color: 'var(--color-ink)', textDecoration: 'none' }}>View the issue on GitHub ↗</a>
         {error ? <p role="alert" className="mt-3 text-sm">{error}</p> : null}

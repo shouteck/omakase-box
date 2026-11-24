@@ -17,7 +17,7 @@ import { BOUNTY_COMMANDS, SETUP_USAGE } from '../../packages/box-bounty/index.js
 
 const PACKAGE = fileURLToPath(new URL('../../packages/box-platform/', import.meta.url));
 const OUT = join(PACKAGE, 'out');
-const SHOTS = join(OUT, 'screenshots');
+const SHOTS = process.env.PF52_EVIDENCE_DIR ?? join(OUT, 'screenshots');
 
 /** K43's money-word check, ported: a claim is a sentence with the word and no denial. */
 export function moneyClaims(text: string): string[] {
@@ -243,7 +243,7 @@ describe('the pages', () => {
     expect(await page.locator('[data-primary]').count()).toBe(0);
     expect(await page.locator('[data-issue]').count()).toBe(1);
     expect(moneyClaims(text)).toEqual([]);
-    expect(text.includes(`box-bounty/${id}`)).toBe(open === 1);
+    expect(text.includes(`box-bounty/${id}`)).toBe(true);
     expect(text.includes('How to answer')).toBe(open === 1);
     await close();
   });
@@ -476,19 +476,47 @@ describe('the pages', () => {
     await db.prepare('DELETE FROM paid_clicks WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
     await db.prepare('DELETE FROM receipts WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
     await db.prepare(`INSERT INTO charges (bounty_id, state, pull_number, solver, account_id, amount, payment_method, payment_intent, at, provider) VALUES (?, 'paid', 68, 'example-quill', 'acct_sample', 45, 'pm_saved', 'pi_sample', ?, NULL)`).bind(STATE_IDS.owed, clock).run();
+    await db.prepare(`UPDATE charges SET origin = 'merge' WHERE bounty_id = ?`).bind(STATE_IDS.owed).run();
+    const beforeIssue = (await db.prepare('SELECT issue_state, closed_at FROM bounties WHERE id = ?').bind(STATE_IDS.owed).first<{ issue_state: string; closed_at: string | null }>())!;
+    const beforePull = (await db.prepare('SELECT state, merged_at, on_default, landing_sha FROM pull_requests WHERE bounty_id = ? AND number = 68').bind(STATE_IDS.owed).first<{ state: string; merged_at: string | null; on_default: number | null; landing_sha: string | null }>())!;
     const stranger = await fresh();
     try {
       await visit(stranger.page, `/b/${STATE_IDS.owed}/`);
       await expect.poll(() => stranger.page.locator('[data-standing]').innerText()).toContain('Paid on merge through Stripe');
-      await db.prepare('UPDATE charges SET payment_method = NULL WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
+      await db.prepare(`UPDATE charges SET payment_method = NULL, origin = NULL WHERE bounty_id = ?`).bind(STATE_IDS.owed).run();
       await visit(stranger.page, `/b/${STATE_IDS.owed}/`);
       await expect.poll(() => stranger.page.locator('[data-standing]').innerText()).toMatch(/^Paid through Stripe/);
+      await db.prepare(`UPDATE bounties SET issue_state = 'open', closed_at = NULL WHERE id = ?`).bind(STATE_IDS.owed).run();
+      await db.prepare(`UPDATE pull_requests SET state = 'open', merged_at = NULL, on_default = NULL, landing_sha = NULL WHERE bounty_id = ? AND number = 68`).bind(STATE_IDS.owed).run();
+      for (const provider of [null, 'paypal']) {
+        await db.prepare(`UPDATE charges SET origin = 'agent', provider = ? WHERE bounty_id = ?`).bind(provider, STATE_IDS.owed).run();
+        await visit(stranger.page, `/b/${STATE_IDS.owed}/`);
+        await expect.poll(() => stranger.page.locator('[data-standing]').innerText()).toContain(`Paid by agent command through ${provider === 'paypal' ? 'PayPal' : 'Stripe'}`);
+        expect(await stranger.page.locator('[data-standing]').innerText()).not.toContain('on merge');
+        expect(await stranger.page.getByRole('complementary', { name: 'Summary' }).innerText()).toContain(`PR target branch\nbox-bounty/${STATE_IDS.owed}`);
+        expect(await stranger.page.locator('#answer').count()).toBe(0);
+        await stranger.page.screenshot({ path: join(SHOTS, `pf52-agent-paid-${provider ?? 'stripe'}.png`), fullPage: true });
+        await visit(stranger.page, '/board/');
+        expect(await stranger.page.locator(`a[href*="${STATE_IDS.owed}"]`).count()).toBe(0);
+      }
+      await stranger.page.screenshot({ path: join(SHOTS, 'pf52-paid-open-feed.png'), fullPage: true });
+      await db.prepare('DELETE FROM charges WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
+      await db.prepare(`INSERT OR REPLACE INTO paid_clicks (bounty_id, by_login, to_login, at, amount, withdrawn) VALUES (?, 'example-mara', 'example-quill', ?, 45, 0)`).bind(STATE_IDS.owed, new Date(clock).toISOString()).run();
+      await visit(stranger.page, '/board/');
+      expect(await stranger.page.locator(`a[href*="${STATE_IDS.owed}"]`).count()).toBe(0);
+      await stranger.page.screenshot({ path: join(SHOTS, 'pf52-recorded-open-feed.png'), fullPage: true });
+      await visit(stranger.page, `/b/${STATE_IDS.owed}/`);
+      await expect.poll(() => stranger.page.locator('[data-standing]').innerText()).toContain('Recorded paid by example-mara');
+      await stranger.page.screenshot({ path: join(SHOTS, 'pf52-recorded-open-detail.png'), fullPage: true });
       // One way to GitHub on every bounty, and no bounty-branch button.
       expect(await stranger.page.locator('[data-issue]').getAttribute('href')).toContain('/issues/');
       expect(await stranger.page.locator('main').innerText()).not.toContain('Open the bounty branch on GitHub');
     } finally {
       // The later tests read this bounty as owed: the charge leaves even when a check above fails.
       await db.prepare('DELETE FROM charges WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
+      await db.prepare('DELETE FROM paid_clicks WHERE bounty_id = ?').bind(STATE_IDS.owed).run();
+      await db.prepare('UPDATE bounties SET issue_state = ?, closed_at = ? WHERE id = ?').bind(beforeIssue.issue_state, beforeIssue.closed_at, STATE_IDS.owed).run();
+      await db.prepare('UPDATE pull_requests SET state = ?, merged_at = ?, on_default = ?, landing_sha = ? WHERE bounty_id = ? AND number = 68').bind(beforePull.state, beforePull.merged_at, beforePull.on_default, beforePull.landing_sha, STATE_IDS.owed).run();
       await stranger.close();
     }
   });
@@ -630,7 +658,7 @@ describe('the pages', () => {
     ['no key', [], false, { page: null, connect: 'On your page, list a way and be paid by hand.', absent: ['connect Stripe', 'connect PayPal', 'a bank account in a supported country'] }],
     ['Stripe only', ['Stripe'], true, { page: "Stripe's page", connect: 'connect Stripe and an owner can pay you with one click or on merge.', absent: ['connect PayPal'] }],
     ['PayPal only', ['PayPal'], false, { page: "PayPal's page", connect: 'connect PayPal and an owner can pay you with one click.', absent: ['connect Stripe', 'a bank account in a supported country'] }],
-    ['both', ['Stripe', 'PayPal'], true, { page: "Stripe's or PayPal's page", connect: 'connect Stripe or PayPal and an owner can pay you with one click; connected Stripe also covers on merge.', absent: [] }]
+    ['both', ['Stripe', 'PayPal'], true, { page: "Stripe's or PayPal's page", connect: 'connect Stripe or PayPal and an owner can pay you with one click or on merge.', absent: [] }]
   ])('with %s, the card and How it works name what this board has', async (_name, one_click, on_merge, want) => {
     const { page, close } = await fresh();
     await page.route('**/api/ways', route => route.fulfill({ json: { by_hand: true, one_click, on_merge } }));
@@ -759,7 +787,7 @@ describe('the pages', () => {
       const { page, close } = await open({ ...base, login: 'example-mara', pay: pay({ card: 'visa ending 3155', repositories: [{ repository: 'example-org/ledger', on_at: new Date(NOW).toISOString(), limit: 45, open: 2 }], yours }) }, '/me/#pay');
       const section = async () => { const text = await page.locator('main').innerText(); return text.slice(text.indexOf('Pay on merge')); };
       expect(await page.locator('table[aria-label="Repositories on pay on merge"] th').allInnerTexts()).toEqual(['Repository', 'Reward', 'Open bounties', 'On since', '']);
-      expect(await section()).not.toMatch(/limit|charge up to/i);
+      expect(await section()).toContain('Default maximum for an import approved with “on merge”, USD');
       await page.click('text=+ Add a repository');
       const dialog = page.locator('dialog[open]');
       expect(await dialog.locator('input[name=repository]').evaluateAll(inputs => inputs.map(input => [(input as HTMLInputElement).type, (input as HTMLInputElement).value]))).toEqual([['radio', 'example-org/lite']]);
@@ -767,6 +795,128 @@ describe('the pages', () => {
       // The dialog fills the reward from the chosen repository just after it opens; wait for it, as a person would see it.
       await expect.poll(() => page.inputValue('dialog[open] input[name=reward]')).toBe('75');
       expect(await dialog.innerText()).not.toMatch(/limit/i);
+      await close();
+    });
+
+    it('PF52: PayPal-only owner edits its limit and repository reward, cancels removal, then removes; solver sees PayPal readiness', async () => {
+      const { page, close } = await fresh();
+      const yours = [{ repository: 'example-org/ledger', open: 1, reward: 45 }];
+      let saved: { label: string; limit_per_bounty: number } | null = { label: 'Saved PayPal', limit_per_bounty: 50 };
+      let current = pay({ stripe_set_up: false, saved_paypal: true, yours });
+      const sent: unknown[] = [];
+      await page.route('**/api/me', route => route.fulfill({ json: { ...base, login: 'example-mara', pay: current, paypal: { set_up: true, connected: true } } }));
+      await page.route('**/api/me/paypal/vault**', route => {
+        if (route.request().method() === 'POST') {
+          sent.push(route.request().postDataJSON());
+          if (route.request().url().endsWith('/limit')) saved!.limit_per_bounty = route.request().postDataJSON().limit;
+          if (route.request().url().endsWith('/remove')) { saved = null; current = pay({ stripe_set_up: false, yours }); }
+          return route.fulfill({ json: { updated: saved !== null, removed: saved === null } });
+        }
+        return route.fulfill({ json: { set_up: true, saved, pay: current } });
+      });
+      await page.route('**/api/me/pay', route => {
+        const body = route.request().postDataJSON();
+        sent.push(body);
+        current = pay({ stripe_set_up: false, saved_paypal: true, yours, repositories: body.repositories.map((entry: object) => ({ ...entry, on_at: new Date(NOW).toISOString(), open: 1 })) });
+        return route.fulfill({ json: { pay: current } });
+      });
+      await visit(page, '/me/#pay');
+      const vault = page.locator('#paypal-vault');
+      await expect.poll(() => vault.innerText()).toContain('Saved PayPal · maximum $50 per bounty.');
+      expect(await page.getByRole('button', { name: "Save a card on Stripe's page" }).count()).toBe(0);
+      await vault.getByLabel('PayPal maximum USD per bounty').fill('75');
+      await vault.getByRole('button', { name: 'Save PayPal limit', exact: true }).click();
+      await expect.poll(() => vault.innerText()).toContain('maximum $75');
+      await page.getByRole('button', { name: '+ Add a repository', exact: true }).click();
+      await page.locator('dialog[open]').getByRole('button', { name: 'Add', exact: true }).click();
+      const rows = page.locator('table[aria-label="Repositories on pay on merge"] tbody');
+      await expect.poll(() => rows.innerText()).toContain('$45');
+      await rows.getByRole('button', { name: 'Edit', exact: true }).click();
+      await page.locator('dialog[open] input[name=reward]').fill('40');
+      await page.locator('dialog[open]').getByRole('button', { name: 'Save', exact: true }).click();
+      await expect.poll(() => rows.innerText()).toContain('$40');
+      await vault.getByRole('button', { name: 'Remove saved PayPal', exact: true }).click();
+      await page.locator('dialog[open]').getByRole('button', { name: 'Cancel', exact: true }).click();
+      expect(sent).toHaveLength(3);
+      await page.screenshot({ path: join(SHOTS, 'pf52-paypal-owner.png'), fullPage: true });
+      await vault.getByRole('button', { name: 'Remove saved PayPal', exact: true }).click();
+      await page.locator('dialog[open]').getByRole('button', { name: 'Remove PayPal', exact: true }).click();
+      await expect.poll(() => page.locator('main').innerText()).toContain('Pay on merge is off.');
+      expect(await page.locator('table[aria-label="Repositories on pay on merge"]').count()).toBe(0);
+      await page.getByRole('tab', { name: /Solver/ }).click();
+      await expect.poll(() => page.locator('main').innerText()).toContain('Uses your Stripe or PayPal connection above');
+      expect(await page.locator('main').innerText()).toContain('Ready');
+      await page.screenshot({ path: join(SHOTS, 'pf52-paypal-solver.png'), fullPage: true });
+      await close();
+    });
+
+    it.each(['stripe-first', 'paypal-first'])('PF52: saving the second method prompts an unanswered default question and saves only the answer: %s', async order => {
+      const { page, close } = await fresh();
+      const pending = { saved_rails: ['stripe', 'paypal'], chosen_rail: null, selected_rail: null, account_rail: null, fallback: false, override: null, needs_choice: true };
+      let current = pay(order === 'stripe-first' ? { card: 'visa ending 3155' } : { saved_paypal: true });
+      let saved: { label: string; limit_per_bounty: number } | null = order === 'stripe-first' ? null : { label: 'Saved PayPal', limit_per_bounty: 50 };
+      const sent: unknown[] = [];
+      const both = () => { saved = { label: 'Saved PayPal', limit_per_bounty: 50 }; current = pay({ card: 'visa ending 3155', saved_paypal: true, rail_choice: pending }); };
+      await page.route('**/api/me', route => route.fulfill({ json: { ...base, login: 'example-mara', pay: current } }));
+      await page.route('**/api/me/card/saved', route => { both(); return route.fulfill({ json: { pay: current } }); });
+      await page.route('**/api/me/paypal/vault**', route => {
+        if (route.request().method() === 'POST') { both(); return route.fulfill({ json: { saved: true } }); }
+        return route.fulfill({ json: { set_up: true, saved, pay: current } });
+      });
+      await page.route('**/setup/finish/', route => route.fulfill({ status: 302, headers: { location: '/me/?choose-rail=1#pay' } }));
+      await page.route('**/api/me/payment-rail', route => {
+        const body = route.request().postDataJSON(); sent.push(body);
+        current = pay({ card: 'visa ending 3155', saved_paypal: true, rail_choice: { ...pending, account_rail: body.rail, chosen_rail: body.rail, selected_rail: body.rail, fallback: body.fallback, needs_choice: false } });
+        return route.fulfill({ json: { pay: current } });
+      });
+      await visit(page, order === 'stripe-first' ? '/me/?approval_token=SETUP1#pay' : '/me/?card=cs_second#pay');
+      if (order === 'stripe-first') {
+        await page.locator('#paypal-vault').getByLabel('Maximum USD per bounty', { exact: true }).fill('50');
+        await page.getByRole('button', { name: 'Save PayPal and limit', exact: true }).click();
+      }
+      const choice = page.locator('#payment-rail');
+      await expect.poll(() => choice.innerText()).toContain('Which one is the default for pay on merge?');
+      expect(await choice.locator('input[type=radio]:checked').count()).toBe(0);
+      expect(await choice.locator('input[type=checkbox]').isChecked()).toBe(false);
+      expect(sent).toEqual([]);
+      const rail = order === 'stripe-first' ? 'paypal' : 'stripe';
+      await choice.getByRole('radio', { name: rail === 'stripe' ? 'Stripe card' : 'PayPal', exact: true }).check();
+      if (order === 'paypal-first') await choice.getByRole('checkbox').check();
+      await choice.getByRole('button', { name: 'Save default payment rail', exact: true }).click();
+      await expect.poll(() => choice.innerText()).toContain('Default payment rail saved.');
+      expect(sent).toEqual([{ rail, fallback: order === 'paypal-first' }]);
+      await page.screenshot({ path: join(SHOTS, `pf52-default-${order}.png`), fullPage: true });
+      await close();
+    });
+
+    it('PF52: an agent PayPal payment before merge has a visible continuation without owed payees', async () => {
+      const { page, close } = await open({ ...base, login: 'example-mara', pay: pay() }, '/me/#pay');
+      const original = await (await fetch(`${board.url}/api/b/${STATE_IDS.owed}/payment`)).json() as any;
+      const action = 'https://www.sandbox.paypal.test/checkoutnow?token=EARLY';
+      await page.route(`**/api/b/${STATE_IDS.owed}/payment`, route => route.fulfill({ json: { ...original, role: 'owner', payees: [], can_authenticate: false, recorded: null, paypal_action_url: action,
+        payment: { ...original.payment, state: 'not-owed', recorded_paid: null, owed: null } } }));
+      await visit(page, `/b/${STATE_IDS.owed}/`);
+      const link = page.getByRole('link', { name: 'Continue on PayPal', exact: true });
+      await expect.poll(() => link.isVisible()).toBe(true);
+      expect(await link.getAttribute('href')).toBe(action);
+      expect(await page.locator('[data-pay]').count()).toBe(0);
+      await page.screenshot({ path: join(SHOTS, 'pf52-early-paypal-action.png'), fullPage: true });
+      await close();
+    });
+
+    it('PF52: a PayPal payer-action window offers the existing PayPal link, not Stripe authentication', async () => {
+      const { page, close } = await open({ ...base, login: 'example-mara', pay: pay() }, '/me/#pay');
+      const original = await (await fetch(`${board.url}/api/b/${STATE_IDS.owed}/payment`)).json() as any;
+      const action = 'https://www.sandbox.paypal.test/checkoutnow?token=EXISTING';
+      await page.route(`**/api/b/${STATE_IDS.owed}/payment`, route => route.fulfill({ json: { ...original, role: 'owner', payee: 'example-quill', can_record: true, can_authenticate: false, recorded: null, paypal_action_url: action,
+        payment: { ...original.payment, state: 'owed', recorded_paid: null, owed: { to: 'example-quill', amount: 45, since: new Date(NOW).toISOString(), fact: 'pull request #68 merged', source: 'github' } } } }));
+      await visit(page, `/b/${STATE_IDS.owed}/`);
+      await page.locator('[data-pay]').click();
+      const window = page.locator('[data-pay-window]');
+      await expect.poll(() => window.innerText()).toContain('PayPal needs the owner to finish this payment.');
+      expect(await window.getByRole('link', { name: 'Continue on PayPal' }).getAttribute('href')).toBe(action);
+      expect(await window.innerText()).not.toContain('Authenticate');
+      await page.screenshot({ path: join(SHOTS, 'pf52-paypal-action.png'), fullPage: true });
       await close();
     });
 
@@ -1396,6 +1546,47 @@ describe('the pages', () => {
     await visit(page, `/board/?repository=${repository}`);
     await expect.poll(() => page.locator('main').innerText()).toContain('No open bounty matches');
     await close();
+  });
+
+  it('PF52: an unready merge explains stopped automation and offers payout setup on the detail page', async () => {
+    const { page, close } = await fresh();
+    const key = `merge_payment_off/${STATE_IDS.owed}`;
+    await board.env.DB.prepare(`INSERT INTO meta (key, value) VALUES (?, 'solver-not-ready')`).bind(key).run();
+    try {
+      await visit(page, `/b/${STATE_IDS.owed}/`);
+      const stopped = page.locator('[data-automatic-charge-off]');
+      await expect.poll(() => stopped.innerText()).toContain('Automatic charge on merge is off for this bounty');
+      expect(await stopped.innerText()).toContain('solver had no payout account connected and ready by merge time');
+      expect(await stopped.innerText()).toContain('one-click (Checkout or a fresh omakase pay comment), or record an outside payment');
+      expect(await stopped.getByRole('link', { name: 'Connect Stripe payouts' }).getAttribute('href')).toContain(`/setup/stripe-payouts/?bounty=${STATE_IDS.owed}`);
+      expect(await stopped.getByRole('link', { name: 'Connect PayPal payouts' }).getAttribute('href')).toContain(`/setup/paypal-payouts/?bounty=${STATE_IDS.owed}`);
+      await page.screenshot({ path: join(SHOTS, 'pf52-automatic-charge-off.png'), fullPage: true });
+    } finally { await close(); await board.env.DB.prepare('DELETE FROM meta WHERE key = ?').bind(key).run(); }
+  });
+
+  it('PF52: the payout country form can navigate to exactly the supported provider hosts under CSP', async () => {
+    const previous = board.env.STRIPE_SECRET_KEY;
+    Object.assign(board.env, { STRIPE_SECRET_KEY: 'standin' });
+    const { page, close } = await fresh();
+    const hosts = ['https://connect.stripe.com', 'https://checkout.stripe.com', 'https://www.paypal.com', 'https://www.sandbox.paypal.com'];
+    try {
+      board.standin.signInAs = { id: 7100, login: 'example-mara' };
+      await page.goto(`${board.url}/auth/github`);
+      await page.waitForURL(`${board.url}/me/`);
+      for (const host of hosts) {
+        const target = `${host}/pf52-csp-proof`;
+        await page.route(target, route => route.fulfill({ contentType: 'text/html', body: '<h1>Provider continuation reached</h1>' }));
+        const response = await page.goto(`${board.url}/setup/stripe-payouts/`);
+        const policy = response!.headers()['content-security-policy']!;
+        expect(policy.split('; ').find(part => part.startsWith('form-action'))).toBe(`form-action 'self' ${hosts.join(' ')}`);
+        expect(policy).toContain("connect-src 'self'");
+        expect(policy).not.toContain('*.');
+        await page.getByLabel('Bank account country').selectOption('US');
+        await page.locator('form').evaluate((form, action) => { form.setAttribute('action', action); }, target);
+        await Promise.all([page.waitForURL(target), page.getByRole('button', { name: 'Continue to Stripe' }).click()]);
+        expect(await page.locator('h1').innerText()).toBe('Provider continuation reached');
+      }
+    } finally { await close(); Object.assign(board.env, { STRIPE_SECRET_KEY: previous }); }
   });
 
   // PF38: the standard security headers, on every kind of answer the board gives.

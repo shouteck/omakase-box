@@ -411,6 +411,14 @@ field box-bounty/status@1 bounties[].mergeNow.detail null
 field box-bounty/status@1 bounties[].mergeNow.result string
 field box-bounty/status@1 bounties[].next string
 field box-bounty/status@1 bounties[].openedAt null|string
+field box-bounty/status@1 bounties[].owed_now null|object
+field box-bounty/status@1 bounties[].owed_now.amount number
+field box-bounty/status@1 bounties[].owed_now.currency string
+field box-bounty/status@1 bounties[].owed_now.methods null
+field box-bounty/status@1 bounties[].owed_now.note string
+field box-bounty/status@1 bounties[].owed_now.payment_link null
+field box-bounty/status@1 bounties[].owed_now.record_payment string
+field box-bounty/status@1 bounties[].owed_now.solver string
 field box-bounty/status@1 bounties[].payment null|object
 field box-bounty/status@1 bounties[].payment.owed number
 field box-bounty/status@1 bounties[].payment.paidAt null

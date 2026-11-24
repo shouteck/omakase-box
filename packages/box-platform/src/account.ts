@@ -1,21 +1,25 @@
 // Everything that knows who is asking: sign-in, sessions, profiles, and the one
 // answer that may carry an owner-only method. The feed, MCP and RSS never come here.
-import { authenticationPage, openPayPage, payOffer, readPayPage } from './charge.js';
+import { authenticationPage, openPayPage, payOffer, readPayPage, setStripeReady } from './charge.js';
 import type { Env } from './github.js';
-import { finishOrder, openPayPalPage, paypalOffer } from './paypal-pay.js';
+import { finishOrder, openPayPalPage, paypalAction, paypalOffer, removeVault, vaultSaved, vaultSetup } from './paypal-pay.js';
 import { loginAddress, payerFrom, paypalOn, PayPalUnavailable } from './paypal.js';
 import { errorWords, redact, stripe, stripeOn, StripeUnavailable } from './stripe.js';
 import { checkMethod, isLink, MAX_METHODS, type Method, parseStored, publicOnly } from './methods.js';
-import { waysSetUp } from './pay-ways.js';
+import { waysSetUp, STRIPE_COUNTRIES } from './pay-ways.js';
 import { type BountyPayment, emptyPayment, factsOf, landedOf, loadPayments, notCounted, notCountedOf, ownerRecord, paymentOf, solverRecord } from './payments.js';
 import { listIssue, removeListed } from './listing.js';
 import { FROM_LISTED, readBounty, stateOf } from './query.js';
 import { LOGIN } from './refresh.js';
 import { ownerOnlyAllowed, payeeOf, roleOf, same } from './visibility.js';
+import { SETUP_KINDS } from './payment-setup.js';
+import { paymentRail, requireRailChoice } from './payment-rail.js';
 
 const SESSION_COOKIE = '__Host-board_session';
 const STATE_COOKIE = '__Host-board_oauth_state';
 const PAYPAL_STATE_COOKIE = '__Host-board_paypal_state';
+const SETUP_COOKIE = '__Host-board_setup';
+const SETUP_RETURN_COOKIE = '__Host-board_setup_return';
 // PF32: a listing waiting on a one-time sign-in that asks GitHub for the lister's permission on the repository.
 const LIST_COOKIE = '__Host-board_list';
 const SESSION_DAYS = 30;
@@ -127,7 +131,9 @@ async function finishSignIn(request: Request, env: Env, url: URL, now: number): 
   await db.prepare('DELETE FROM sessions WHERE expires_at <= ?').bind(now).run();
   const token = randomToken();
   await db.prepare('INSERT INTO sessions (token_hash, github_id, login, expires_at) VALUES (?, ?, ?, ?)').bind(await hashOf(token), github_id, login, now + SESSION_DAYS * DAY_SECONDS * 1000).run();
-  return redirect('/me/', [clearState, cookie(SESSION_COOKIE, token, SESSION_DAYS * DAY_SECONDS)]);
+  const setup = cookieOf(request, SETUP_COOKIE);
+  const next = setup !== null && /^\/setup\/(stripe-card|paypal-vault|stripe-payouts|paypal-payouts|payment-rail)\/(\?bounty=bt-[a-f\d]{12})?$/.test(setup) ? setup : '/me/';
+  return redirect(next, [clearState, cookie(SETUP_COOKIE, '', 0), cookie(SESSION_COOKIE, token, SESSION_DAYS * DAY_SECONDS)]);
 }
 
 async function signOut(request: Request, env: Env): Promise<Response> {
@@ -170,7 +176,7 @@ async function solverProfile(env: Env, login: string): Promise<Response> {
   const listed = merged.results.map(row => {
     const input = inputs.find(entry => entry.id === row.id);
     const mine = input === undefined ? undefined : landedOf(input).find(pull => same(pull.author, login));
-    const counted = input !== undefined && mine !== undefined && notCounted(mine, input.poster) === null;
+    const counted = input !== undefined && mine !== undefined && notCounted(mine, input.poster, input.poster_id) === null;
     const payment = input === undefined ? null : paymentOf(input);
     return { ...row, counted, payment_state: payment !== null && same(payment.owed?.to ?? null, login) ? payment.state : null };
   });
@@ -239,9 +245,11 @@ const OWN_MAX = 200;
 const CARD_FAILED = new Set(['declined', 'stripe-refused', 'owner-must-authenticate']);
 type OwnRow = { id: string; title: string; repository: string; issue_number: number; issue_state: string; amount: number; created_at: string; solutions: number };
 
-/** How a recorded payment was made, in the words of whoever made it (PF21). A Stripe charge with a saved card is pay on merge. */
-const paidBy = (source: string, savedCard: boolean): string =>
-  source === 'stripe' ? (savedCard ? 'Pay on merge' : 'Stripe, one click') : source === 'paypal' ? 'PayPal, one click' : 'Recorded by you';
+/** How a recorded payment was initiated, separately from its provider. */
+const paidBy = (source: string, origin: string | null | undefined): string => {
+  const provider = source === 'stripe' ? 'Stripe' : source === 'paypal' ? 'PayPal' : null;
+  return provider === null ? 'Recorded by you' : origin === 'merge' ? `${provider}, pay on merge` : origin === 'agent' ? `${provider}, agent pay` : origin === 'owner' ? `${provider}, one click` : `${provider} payment`;
+};
 
 /**
  * Every bounty GitHub says this person opened (the issue's author id, never a typed name), newest first, each in the
@@ -260,7 +268,6 @@ async function bountiesOf(env: Env, viewer: Viewer, now: number) {
   const rows = read.filter(row => !gone.has(row.repository.toLowerCase()));
   const pulls = (await env.DB.prepare('SELECT p.bounty_id, p.state FROM pull_requests p JOIN bounties b ON b.id = p.bounty_id WHERE b.poster_id = ?').bind(viewer.github_id).all<{ bounty_id: string; state: string }>()).results;
   const inputs = new Map((await loadPayments(env.DB, 'b.poster_id = ?', viewer.github_id)).map(input => [input.id, input]));
-  const savedCard = new Set((await env.DB.prepare('SELECT c.bounty_id FROM charges c JOIN bounties b ON b.id = c.bounty_id WHERE b.poster_id = ? AND c.payment_method IS NOT NULL').bind(viewer.github_id).all<{ bounty_id: string }>()).results.map(row => row.bounty_id));
   const payOn = new Set((await env.DB.prepare('SELECT repository FROM pay_repositories WHERE github_id = ?').bind(viewer.github_id).all<{ repository: string }>()).results.map(row => row.repository.toLowerCase()));
   const list = rows.slice(0, OWN_MAX).map(row => {
     const base = { id: row.id, title: row.title, repository: row.repository, issue_number: row.issue_number, created_at: row.created_at, reward: row.amount, solutions: row.solutions };
@@ -276,7 +283,7 @@ async function bountiesOf(env: Env, viewer: Viewer, now: number) {
       return { ...base, stage: 'due', merged: payment.owed!.to, merged_one_of: payment.owed!.to === null ? (payment.owed as { to_one_of?: readonly string[] }).to_one_of ?? [] : undefined, note, card_failed: charge !== null && CARD_FAILED.has(charge.state) };
     }
     if (payment.state === 'recorded' || payment.state === 'confirmed' || payment.state === 'says-not-received') {
-      return { ...base, stage: 'paid', merged: payment.owed!.to, paid_by: paidBy(payment.recorded_paid!.source, savedCard.has(row.id)), note: payment.state === 'says-not-received' ? 'The solver says it has not arrived.' : null };
+      return { ...base, stage: 'paid', merged: payment.owed!.to, paid_by: paidBy(payment.recorded_paid!.source, input.charge?.origin), note: payment.state === 'says-not-received' ? 'The solver says it has not arrived.' : null };
     }
     if (payment.state === 'no-reward') return { ...base, stage: 'paid', merged: landedOf(input)[0]?.author ?? null, paid_by: null, note: 'No reward was stated.' };
     if (payment.state === 'owner-chooses') {
@@ -308,7 +315,6 @@ async function solutionsOf(env: Env, viewer: Viewer, now: number) {
   const rows = read.filter(row => !gone.has(row.repository.toLowerCase()) && !same(row.poster, viewer.login));
   const ids = rows.map(row => row.id);
   const inputs = new Map(ids.length === 0 ? [] : (await loadPayments(env.DB, `b.id IN (${ids.map(() => '?').join(', ')})`, ...ids)).map(input => [input.id, input]));
-  const savedCard = new Set(ids.length === 0 ? [] : (await env.DB.prepare(`SELECT bounty_id FROM charges WHERE payment_method IS NOT NULL AND bounty_id IN (${ids.map(() => '?').join(', ')})`).bind(...ids).all<{ bounty_id: string }>()).results.map(row => row.bounty_id));
   const list = rows.slice(0, OWN_MAX).map(row => {
     const base = { id: row.id, title: row.title, repository: row.repository, issue_number: row.issue_number, pull_number: row.number, created_at: row.opened_at, reward: row.amount, from: row.poster };
     const input = inputs.get(row.id);
@@ -319,7 +325,7 @@ async function solutionsOf(env: Env, viewer: Viewer, now: number) {
       if (payment.recorded_paid !== null) {
         if (!mine(payment.owed.to)) return { ...base, stage: 'closed', note: 'Another solution was paid.' };
         const provider = byProvider(payment.recorded_paid);
-        return { ...base, stage: 'paid', paid_by: paidBy(payment.recorded_paid.source, savedCard.has(row.id)), paid_at: payment.recorded_paid.at, needs_confirm: !provider && payment.solver_says?.word !== 'received' };
+        return { ...base, stage: 'paid', paid_by: paidBy(payment.recorded_paid.source, input?.charge?.origin), paid_at: payment.recorded_paid.at, needs_confirm: !provider && payment.solver_says?.word !== 'received' };
       }
       if (owedToMe) return { ...base, stage: 'due', since: payment.owed.since, one_of: payment.owed.to === null };
       return { ...base, stage: 'closed', note: 'Another solution was merged.' };
@@ -366,24 +372,25 @@ async function paymentView(env: Env, id: string, viewer: Viewer | null, now: num
   if (input === null) return json(404, NOT_ON_BOARD);
   const facts = factsOf(input);
   const login = viewer?.login ?? null;
-  const role = roleOf(facts, login);
+  const poster = viewer !== null && await isPoster(env, id, viewer);
+  const namedRole = roleOf(facts, login);
+  const role = poster ? 'owner' : namedRole === 'owner' ? 'other' : namedRole;
   const payee = payeeOf(facts);
   const payees = facts.amount > 0 ? await Promise.all(facts.merged.map(async ({ author, number }) => {
     const all = await methodsOfLogin(env, author);
-    const methods = (author === payee && ownerOnlyAllowed(facts, login) ? all : publicOnly(all)).map(shown);
+    const methods = (author === payee && poster && ownerOnlyAllowed(facts, facts.poster) ? all : publicOnly(all)).map(shown);
     // Once a payment is recorded, asking how to be paid is no longer the next step (PF19).
     // PF32: when the owner chooses, each candidate carries their own one-click offers, so the window shows every way.
     const own = role === 'owner' && payee === null && facts.record === null ? await offers(env, id, viewer!, author) : null;
     const state = input.pulls.find(pull => pull.number === number)?.state ?? 'merged';
     return { login: author, number, state, methods, next: methods.length === 0 && facts.record === null ? ask(author, number) : null, ...(own === null ? {} : { can_pay: own.can_pay, can_pay_paypal: own.can_pay_paypal }) };
   })) : [];
-  // PF31: a Stripe payment from the owner's saved card is pay on merge; from Stripe's page, one click. Said apart on the page.
-  const onMerge = (await env.DB.prepare('SELECT 1 AS yes FROM charges WHERE bounty_id = ? AND payment_method IS NOT NULL').bind(id).first()) !== null;
+  const onMerge = input.charge?.origin === 'merge';
   return json(200, {
     viewer: login, role, payee, payees, on_merge: onMerge,
     payment: paymentOf(input),
     recorded: facts.record === null ? null : { at: facts.record.at, amount: facts.record.amount },
-    owner_only_hidden: role === 'owner' && payee !== null && !ownerOnlyAllowed(facts, login),
+    owner_only_hidden: role === 'owner' && payee !== null && !ownerOnlyAllowed(facts, facts.poster),
     receipt: facts.receipt,
     // PF31b: only a payment the owner recorded by hand asks the solver; Stripe's or PayPal's word is the record itself.
     can_answer: role === 'payee' && facts.record !== null && !byProvider(facts.record),
@@ -393,7 +400,8 @@ async function paymentView(env: Env, id: string, viewer: Viewer | null, now: num
     can_remove: role === 'owner' && input.source === 'listed' && facts.record === null && !input.pulls.some(pull => pull.state === 'merged') && (input.charge?.state ?? null) !== 'paid',
     source: input.source === 'listed' ? 'listed' : 'posted',
     amount: facts.amount,
-    can_authenticate: role === 'owner' && input.charge?.state === 'owner-must-authenticate',
+    can_authenticate: role === 'owner' && input.charge?.provider !== 'paypal' && input.charge?.state === 'owner-must-authenticate',
+    paypal_action_url: role === 'owner' ? await paypalAction(env, id) : null,
     ...(role === 'owner' ? await offers(env, id, viewer!) : { can_pay: false, can_pay_paypal: false, pay_note: null })
   });
 }
@@ -406,7 +414,7 @@ async function recordPaid(request: Request, env: Env, id: string, viewer: Viewer
   const input = await paymentInput(env, id, now);
   if (input === null) return json(404, NOT_ON_BOARD);
   const facts = factsOf(input);
-  if (roleOf(facts, viewer.login) !== 'owner') return json(403, { error: 'Only the poster of this bounty can record its payment. Nothing changed.' });
+  if (!await isPoster(env, id, viewer)) return json(403, { error: 'Only the poster of this bounty can record its payment. Nothing changed.' });
   const at = new Date(now).toISOString();
   const save = (to: string | null, amount: number | null, withdrawn: number) => env.DB.prepare(`INSERT INTO paid_clicks (bounty_id, by_login, to_login, amount, withdrawn, at) VALUES (?, ?, ?, ?, ?, ?)
     ON CONFLICT (bounty_id) DO UPDATE SET by_login = excluded.by_login, to_login = excluded.to_login, amount = excluded.amount, withdrawn = excluded.withdrawn, at = excluded.at`)
@@ -458,11 +466,12 @@ const SWITCHES_MAX = 50;
 
 /** What this person has set up, for their own page only. Never an id of Stripe's. */
 async function payOf(env: Env, viewer: Viewer) {
-  if (!stripeOn(env)) return { set_up: false };
+  const vault = await env.DB.prepare('SELECT 1 FROM paypal_vault WHERE github_id = ?').bind(viewer.github_id).first();
+  if (!stripeOn(env) && !paypalOn(env)) return { set_up: false };
   const solver = await env.DB.prepare('SELECT ready FROM stripe_accounts WHERE github_id = ?').bind(viewer.github_id).first<{ ready: number }>();
   const owner = await env.DB.prepare('SELECT payment_method, card_label, limit_per_bounty FROM pay_settings WHERE github_id = ?').bind(viewer.github_id).first<{ payment_method: string | null; card_label: string | null; limit_per_bounty: number | null }>();
   // Each repository's own limit (PF19); a row from before PF19's migration falls back to the owner's one limit.
-  const on = (await env.DB.prepare('SELECT r.repository, r.on_at, COALESCE(r.limit_per_bounty, s.limit_per_bounty) AS "limit" FROM pay_repositories r LEFT JOIN pay_settings s ON s.github_id = r.github_id WHERE r.github_id = ? ORDER BY r.repository').bind(viewer.github_id).all<{ repository: string; on_at: string; limit: number | null }>()).results;
+  const on = (await env.DB.prepare('SELECT r.repository, r.on_at, COALESCE(r.limit_per_bounty, s.limit_per_bounty, v.limit_per_bounty) AS "limit" FROM pay_repositories r LEFT JOIN pay_settings s ON s.github_id = r.github_id LEFT JOIN paypal_vault v ON v.github_id = r.github_id WHERE r.github_id = ? ORDER BY r.repository').bind(viewer.github_id).all<{ repository: string; on_at: string; limit: number | null }>()).results;
   // The repositories pay on merge can act on: where GitHub says this person opened bounty issues (PF20). Nothing typed,
   // so nothing to verify by hand. Each with its open bounties and the reward its latest bounty states.
   const mine = (await env.DB.prepare(`SELECT b.repository, SUM(CASE WHEN b.issue_state = 'open' THEN 1 ELSE 0 END) AS open,
@@ -470,6 +479,8 @@ async function payOf(env: Env, viewer: Viewer) {
     FROM bounties b WHERE b.poster_id = ? GROUP BY b.repository ORDER BY open DESC, b.repository LIMIT 50`).bind(viewer.github_id).all<{ repository: string; open: number; reward: number }>()).results;
   const openIn = new Map(mine.map(entry => [entry.repository.toLowerCase(), entry.open]));
   return {
+    ...(vault !== null ? { saved_paypal: true } : {}), ...(!stripeOn(env) ? { stripe_set_up: false } : {}),
+    rail_choice: await paymentRail(env, viewer.github_id),
     set_up: true, solver: { connected: solver !== null, ready: solver?.ready === 1 }, card: owner?.payment_method == null ? null : owner.card_label ?? 'a saved card', limit: owner?.limit_per_bounty ?? null,
     repositories: on.map(entry => ({ ...entry, open: openIn.get(entry.repository.toLowerCase()) ?? 0 })),
     yours: mine.map(entry => ({ repository: entry.repository, open: entry.open, reward: entry.reward }))
@@ -497,7 +508,7 @@ async function connectStripe(request: Request, env: Env, url: URL, viewer: Viewe
     held = { account_id: made.json['id'] };
     await env.DB.prepare('INSERT INTO stripe_accounts (github_id, account_id) VALUES (?, ?)').bind(viewer.github_id, held.account_id).run();
   }
-  const link = await stripe(env, 'POST', '/v1/account_links', { account: held.account_id, type: 'account_onboarding', refresh_url: `${url.origin}/me/`, return_url: `${url.origin}/me/` });
+  const link = await stripe(env, 'POST', '/v1/account_links', { account: held.account_id, type: 'account_onboarding', refresh_url: `${url.origin}/me/`, return_url: `${url.origin}${url.pathname.startsWith('/setup/') ? '/setup/stripe-return/' : '/me/'}` });
   if (link.status !== 200 || typeof link.json['url'] !== 'string') return json(409, { error: `${errorWords(link)} Next: try again.` });
   return json(200, { url: link.json['url'] });
 }
@@ -506,8 +517,9 @@ async function connectStripe(request: Request, env: Env, url: URL, viewer: Viewe
 async function readReady(env: Env, viewer: Viewer): Promise<void> {
   const held = await env.DB.prepare('SELECT account_id FROM stripe_accounts WHERE github_id = ?').bind(viewer.github_id).first<{ account_id: string }>();
   if (held === null) return;
+  const observedAt = env.now?.() ?? Date.now();
   const about = await stripe(env, 'GET', `/v1/accounts/${held.account_id}`);
-  if (about.status === 200) await env.DB.prepare('UPDATE stripe_accounts SET ready = ? WHERE github_id = ?').bind(about.json['charges_enabled'] === true ? 1 : 0, viewer.github_id).run();
+  if (about.status === 200) await setStripeReady(env, held.account_id, about.json['charges_enabled'] === true, env.now?.() ?? Date.now(), { at: observedAt });
 }
 
 /** Saving a card happens on Stripe's page; the board only ever holds Stripe's id for it. */
@@ -538,6 +550,7 @@ async function finishCard(request: Request, env: Env, viewer: Viewer): Promise<R
   const { brand, last4 } = method.card ?? {};
   const label = typeof brand === 'string' && typeof last4 === 'string' && /^[a-z_ ]{1,20}$/.test(brand) && /^\d{4}$/.test(last4) ? `${brand} ending ${last4}` : null;
   await env.DB.prepare('UPDATE pay_settings SET payment_method = ?, card_label = ? WHERE github_id = ?').bind(method.id, label, viewer.github_id).run();
+  await requireRailChoice(env, viewer.github_id);
   return json(200, { pay: await payOf(env, viewer) });
 }
 
@@ -551,11 +564,12 @@ async function savePay(request: Request, env: Env, viewer: Viewer, now: number):
     if (owner?.payment_method != null) await stripe(env, 'POST', `/v1/payment_methods/${owner.payment_method}/detach`, {});
     await env.DB.batch([
       env.DB.prepare('UPDATE pay_settings SET payment_method = NULL, card_label = NULL WHERE github_id = ?').bind(viewer.github_id),
-      env.DB.prepare('DELETE FROM pay_repositories WHERE github_id = ?').bind(viewer.github_id)
+      env.DB.prepare('DELETE FROM pay_repositories WHERE github_id = ? AND NOT EXISTS (SELECT 1 FROM paypal_vault WHERE github_id = ?)').bind(viewer.github_id, viewer.github_id)
     ]);
     return json(200, { pay: await payOf(env, viewer) });
   }
-  if (owner?.payment_method == null) return json(409, { error: 'Save a card first. Nothing changed. Next: save a card on this page.' });
+  const vault = await env.DB.prepare('SELECT payment_token FROM paypal_vault WHERE github_id = ?').bind(viewer.github_id).first();
+  if (owner?.payment_method == null && vault === null) return json(409, { error: 'Save a card or PayPal first. Nothing changed. Next: save a method on this page.' });
   // Each repository with its own limit (PF19). The older form, one limit for a list of names, still works: it gives each the same limit.
   if (!Array.isArray(repositories) || repositories.length > SWITCHES_MAX) return json(400, { error: `Name up to ${SWITCHES_MAX} repositories as owner/name. Nothing changed.` });
   const entries = (repositories as unknown[]).map(entry => typeof entry === 'string' ? { repository: entry, limit } : (entry ?? {}) as { repository?: unknown; limit?: unknown });
@@ -575,7 +589,7 @@ async function savePay(request: Request, env: Env, viewer: Viewer, now: number):
 }
 
 async function payRoute(request: Request, env: Env, url: URL, viewer: Viewer, now: number): Promise<Response> {
-  if (!stripeOn(env)) return json(409, NOT_SET_UP);
+  if (!stripeOn(env) && !(url.pathname === '/api/me/pay' && paypalOn(env))) return json(409, NOT_SET_UP);
   try {
     switch (url.pathname) {
       case '/api/me/stripe/connect': return await connectStripe(request, env, url, viewer);
@@ -603,8 +617,8 @@ async function finishPayPal(request: Request, env: Env, url: URL, viewer: Viewer
   let payer: string | null = null;
   try { payer = await payerFrom(env, code); } catch (error) { if (!(error instanceof PayPalUnavailable)) throw error; }
   if (payer === null) return redirect('/me/?paypal=refused#paypal', [clear]);
-  await env.DB.prepare('INSERT INTO paypal_accounts (github_id, payer_id, at) VALUES (?, ?, ?) ON CONFLICT (github_id) DO UPDATE SET payer_id = excluded.payer_id, at = excluded.at').bind(viewer.github_id, payer, now).run();
-  return redirect('/me/#paypal', [clear]);
+  await env.DB.prepare('INSERT INTO paypal_accounts (github_id, payer_id, at) VALUES (?, ?, ?) ON CONFLICT (github_id) DO UPDATE SET payer_id = excluded.payer_id, at = CASE WHEN paypal_accounts.payer_id = excluded.payer_id THEN paypal_accounts.at ELSE excluded.at END').bind(viewer.github_id, payer, now).run();
+  return redirect(cookieOf(request, SETUP_RETURN_COOKIE) === null ? '/me/#paypal' : '/setup/finish/', [clear]);
 }
 
 const paypalOf = async (env: Env, viewer: Viewer) => paypalOn(env)
@@ -621,6 +635,94 @@ const loginFrom = (text: string): string | null => {
 export async function accountResponse(request: Request, env: Env, url: URL, now: number): Promise<Response | null> {
   const { pathname: path } = url;
   const { method } = request;
+  if (method === 'GET' && (path === '/setup/finish/' || path === '/setup/stripe-return/')) {
+    const viewer = await viewerOf(request, env, now);
+    if (viewer === null) return redirect('/auth/github');
+    if (path === '/setup/stripe-return/' && stripeOn(env)) await readReady(env, viewer);
+    const target = cookieOf(request, SETUP_RETURN_COOKIE);
+    if ((await paymentRail(env, viewer.github_id)).needs_choice) return redirect('/me/?choose-rail=1#pay');
+    return redirect(target !== null && /^\/b\/bt-[a-f\d]{12}\/$/.test(target) ? target : '/me/', [cookie(SETUP_RETURN_COOKIE, '', 0)]);
+  }
+  const setup = /^\/setup\/([^/]+)\/$/.exec(path);
+  if (method === 'GET' && setup !== null && SETUP_KINDS.some(kind => kind === setup[1])) {
+    const viewer = await viewerOf(request, env, now);
+    const bounty = /^bt-[a-f\d]{12}$/.test(url.searchParams.get('bounty') ?? '') ? url.searchParams.get('bounty') : null;
+    const carry = (response: Response) => { if (bounty !== null) response.headers.append('set-cookie', cookie(SETUP_RETURN_COOKIE, `/b/${bounty}/`, 3600)); return response; };
+    if (viewer === null) return carry(redirect('/auth/github', [cookie(SETUP_COOKIE, `${path}${bounty === null ? '' : `?bounty=${bounty}`}`, 600)]));
+    if (setup[1] === 'payment-rail') return carry(redirect('/me/#pay'));
+    if (setup[1] === 'paypal-payouts') return carry(paypalOn(env) ? startPayPal(env, url) : redirect('/me/?paypal=not-set-up#paypal'));
+    try {
+      if (setup[1] === 'paypal-vault') {
+        if (!paypalOn(env)) return json(409, { error: 'PayPal is not set up on this board.' });
+        const started = await vaultSetup(env, viewer.github_id, url.origin, now);
+        return carry('url' in started ? redirect(started.url) : json(409, started));
+      }
+      if (!stripeOn(env)) return json(409, NOT_SET_UP);
+      if (setup[1] === 'stripe-card') {
+        const started = await startCard(env, url, viewer);
+        const body = await started.json() as { url?: string };
+        return carry(typeof body.url === 'string' ? redirect(body.url) : json(started.status, body));
+      }
+      return carry(new Response(`<!doctype html><html><head><title>Connect Stripe payouts</title></head><body><h1>Connect Stripe payouts</h1><form method="post" action="/setup/stripe-payouts/"><label>Bank account country <select name="country">${STRIPE_COUNTRIES.map(code => `<option value="${code}">${code}</option>`).join('')}</select></label><button>Continue to Stripe</button></form></body></html>`, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } }));
+    } catch (error) {
+      if (error instanceof StripeUnavailable || error instanceof PayPalUnavailable) return json(503, { error: 'The payment provider could not be reached. Next: try again.' });
+      throw error;
+    }
+  }
+  if (method === 'POST' && path === '/setup/stripe-payouts/') {
+    const refusal = writeRefusal(request, url, false);
+    if (refusal !== null) return refusal;
+    const viewer = await viewerOf(request, env, now);
+    if (viewer === null) return redirect('/auth/github');
+    if (!/^application\/x-www-form-urlencoded\b/i.test(request.headers.get('content-type') ?? '')) return json(415, { error: 'Use the country form on this page.' });
+    const text = await request.text();
+    if (new TextEncoder().encode(text).length > 512) return json(413, { error: 'The country form is too large.' });
+    const form = new URLSearchParams(text);
+    const made = await connectStripe(new Request(url, { method: 'POST', body: JSON.stringify({ country: form.get('country') }) }), env, url, viewer);
+    const body = await made.json() as { url?: string };
+    return typeof body.url === 'string' ? redirect(body.url) : json(made.status, body);
+  }
+  if (path === '/api/me/paypal/vault' || path === '/api/me/paypal/vault/saved' || path === '/api/me/paypal/vault/remove' || path === '/api/me/paypal/vault/limit') {
+    if (method !== 'GET' && method !== 'POST') return json(405, { error: 'Use GET or POST.' });
+    if (method === 'POST') { const refusal = writeRefusal(request, url, true); if (refusal !== null) return refusal; }
+    const viewer = await viewerOf(request, env, now);
+    if (viewer === null) return json(401, SIGN_IN_FIRST);
+    if (method === 'GET') return json(200, { set_up: paypalOn(env), saved: await env.DB.prepare('SELECT label, limit_per_bounty FROM paypal_vault WHERE github_id = ?').bind(viewer.github_id).first(), pay: await payOf(env, viewer) });
+    if (!paypalOn(env)) return json(409, { error: 'PayPal is not set up on this board.' });
+    try {
+      if (path.endsWith('/limit')) {
+        const body = await readBody(request); if ('refused' in body) return body.refused;
+        const limit = (body.value as { limit?: unknown } | null)?.limit;
+        if (!Number.isSafeInteger(limit) || (limit as number) < 1 || (limit as number) > 100000) return json(400, { error: 'The limit is whole dollars from 1 to 100000. Nothing changed.' });
+        const saved = await env.DB.prepare('UPDATE paypal_vault SET limit_per_bounty = ? WHERE github_id = ? RETURNING github_id').bind(limit as number, viewer.github_id).first();
+        if (saved === null) return json(409, { error: 'Save PayPal first. Nothing changed.' });
+        return json(200, { updated: true });
+      }
+      if (path.endsWith('/remove')) { await removeVault(env, viewer.github_id); return json(200, { removed: true }); }
+      if (path.endsWith('/saved')) {
+        const body = await readBody(request); if ('refused' in body) return body.refused;
+        const input = (body.value ?? {}) as { setup_token?: unknown; limit?: unknown };
+        const result = await vaultSaved(env, viewer.github_id, input.setup_token, input.limit, now);
+        return json('error' in result ? 409 : 200, result);
+      }
+      const result = await vaultSetup(env, viewer.github_id, url.origin, now);
+      return json('error' in result ? 409 : 200, result);
+    } catch (error) {
+      if (error instanceof PayPalUnavailable) return json(503, { error: 'PayPal could not be reached. Next: try again.' });
+      throw error;
+    }
+  }
+  if (method === 'POST' && path === '/api/me/payment-rail') {
+    const refusal = writeRefusal(request, url, true); if (refusal !== null) return refusal;
+    const viewer = await viewerOf(request, env, now); if (viewer === null) return json(401, SIGN_IN_FIRST);
+    const body = await readBody(request); if ('refused' in body) return body.refused;
+    const input = (body.value ?? {}) as { rail?: unknown; fallback?: unknown };
+    if ((input.rail !== 'stripe' && input.rail !== 'paypal') || typeof input.fallback !== 'boolean') return json(400, { error: 'Choose stripe or paypal and explicitly enable or disable fallback. Nothing changed.' });
+    const saved = await paymentRail(env, viewer.github_id);
+    if (!saved.saved_rails.includes(input.rail)) return json(409, { error: 'Save the selected payment method first. Nothing changed.' });
+    await env.DB.prepare('INSERT INTO payment_preferences (github_id, rail, fallback) VALUES (?, ?, ?) ON CONFLICT (github_id) DO UPDATE SET rail = excluded.rail, fallback = excluded.fallback').bind(viewer.github_id, input.rail, input.fallback ? 1 : 0).run();
+    return json(200, { pay: await payOf(env, viewer), next: cookieOf(request, SETUP_RETURN_COOKIE) === null ? null : '/setup/finish/' });
+  }
   if (method === 'GET' && path === '/auth/github') return startSignIn(env, url);
   if (method === 'GET' && path === '/auth/github/callback') return finishSignIn(request, env, url, now);
   if (method === 'POST' && path === '/auth/sign-out') return writeRefusal(request, url, false) ?? signOut(request, env);
@@ -740,7 +842,7 @@ export async function accountResponse(request: Request, env: Env, url: URL, now:
       if (viewer === null) return json(401, SIGN_IN_FIRST);
       const input = await paymentInput(env, id, now);
       if (input === null) return json(404, NOT_ON_BOARD);
-      if (roleOf(factsOf(input), viewer.login) !== 'owner' || !await isPoster(env, id, viewer)) return json(403, { error: 'Only the poster of this bounty can pay from this page. Nothing changed.' });
+      if (!await isPoster(env, id, viewer)) return json(403, { error: 'Only the poster of this bounty can pay from this page. Nothing changed.' });
       const via = payment[2] === 'pay-paypal' ? { on: paypalOn(env), name: 'PayPal' } : { on: stripeOn(env), name: 'Stripe' };
       if (!via.on) return json(409, { error: `Paying through ${via.name} is not set up on this board. Nothing changed. Next: use the other ways to pay on this page.` });
       try {

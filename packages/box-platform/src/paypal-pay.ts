@@ -1,11 +1,45 @@
 // The owner's click through PayPal (PF13). PayPal's `payee` sends the money straight to the
 // account the merged author connected, and only the board's capture moves it: an order the
 // board has dropped can never be paid. The payee and amount are enforced here; PayPal would take any.
-import { claimPage, decidePay, payeeFacts, retireStripePage } from './charge.js';
+import { claimCharge, claimPage, decidePay, payeeFacts, retireStripePage, type Merged } from './charge.js';
 import type { ChargeState } from './charge-words.js';
 import type { Env } from './github.js';
 import { issueOf, paypal, paypalOn } from './paypal.js';
 import { stripeOn } from './stripe.js';
+import { setMeta } from './store.js';
+import { requireRailChoice } from './payment-rail.js';
+
+export async function vaultSetup(env: Env, githubId: number, origin: string, now: number): Promise<{ url: string } | { error: string }> {
+  const made = await paypal(env, 'POST', '/v3/vault/setup-tokens', { payment_source: { paypal: { usage_type: 'MERCHANT', customer_type: 'CONSUMER',
+    experience_context: { return_url: `${origin}/me/?vault=return`, cancel_url: `${origin}/me/#pay` } } } });
+  const links = made.json['links'] as { rel?: string; href?: string }[] | undefined;
+  const url = Array.isArray(links) ? links.find(link => link.rel === 'approve' || link.rel === 'payer-action')?.href : undefined;
+  if (made.status >= 300 || typeof made.json['id'] !== 'string' || typeof url !== 'string' || !url.startsWith('https://')) return { error: 'PayPal did not start setup. Nothing was saved. Next: try again.' };
+  await env.DB.prepare('INSERT INTO paypal_vault_setup (github_id, setup_id, expires_at) VALUES (?, ?, ?) ON CONFLICT (github_id) DO UPDATE SET setup_id = excluded.setup_id, expires_at = excluded.expires_at')
+    .bind(githubId, made.json['id'], now + 3600000).run();
+  return { url };
+}
+
+export async function vaultSaved(env: Env, githubId: number, setupId: unknown, limit: unknown, now: number): Promise<{ saved: true } | { error: string }> {
+  if (typeof setupId !== 'string' || !Number.isSafeInteger(limit) || (limit as number) < 1 || (limit as number) > 100000) return { error: 'Name your setup token and a whole-dollar limit from 1 to 100000. Nothing was saved.' };
+  const held = await env.DB.prepare('SELECT setup_id FROM paypal_vault_setup WHERE github_id = ? AND setup_id = ? AND expires_at > ?').bind(githubId, setupId, now).first();
+  if (held === null) return { error: 'That setup was not started by this GitHub account or has expired. Nothing was saved.' };
+  const made = await paypal(env, 'POST', '/v3/vault/payment-tokens', { payment_source: { token: { id: setupId, type: 'SETUP_TOKEN' } } }, `pf52/vault/${githubId}/${setupId}`);
+  if (made.status >= 300 || typeof made.json['id'] !== 'string') return { error: 'PayPal did not confirm a saved payment method. Nothing was saved. Next: approve setup on PayPal and try again.' };
+  await env.DB.prepare('INSERT INTO paypal_vault (github_id, payment_token, label, limit_per_bounty) VALUES (?, ?, ?, ?) ON CONFLICT (github_id) DO UPDATE SET payment_token = excluded.payment_token, label = excluded.label, limit_per_bounty = excluded.limit_per_bounty')
+    .bind(githubId, made.json['id'], 'Saved PayPal', limit as number).run();
+  await env.DB.prepare('DELETE FROM paypal_vault_setup WHERE github_id = ?').bind(githubId).run();
+  await requireRailChoice(env, githubId);
+  return { saved: true };
+}
+
+export async function removeVault(env: Env, githubId: number): Promise<void> {
+  const held = await env.DB.prepare('SELECT payment_token FROM paypal_vault WHERE github_id = ?').bind(githubId).first<{ payment_token: string }>();
+  await env.DB.prepare('DELETE FROM paypal_vault WHERE github_id = ?').bind(githubId).run();
+  await env.DB.prepare('DELETE FROM paypal_vault_setup WHERE github_id = ?').bind(githubId).run();
+  await env.DB.prepare('DELETE FROM pay_repositories WHERE github_id = ? AND NOT EXISTS (SELECT 1 FROM pay_settings WHERE github_id = ? AND payment_method IS NOT NULL)').bind(githubId, githubId).run();
+  if (held !== null) await paypal(env, 'DELETE', `/v3/vault/payment-tokens/${encodeURIComponent(held.payment_token)}`);
+}
 
 type Row = { state: string; provider: string | null; account_id: string | null; amount: number | null; payment_intent: string | null; at: number };
 type Order = Record<string, unknown>;
@@ -28,7 +62,39 @@ const completedCapture = (order: Order): string | null => {
 
 /** PayPal says it was paid. From here the row holds the capture's id, because a refund or a dispute names the capture. */
 async function recordCapture(env: Env, id: string, capture: string, now: number): Promise<void> {
-  await env.DB.prepare(`UPDATE charges SET state = 'paid', payment_intent = ?, at = ? WHERE bounty_id = ? AND state = 'owner-paying' AND provider = 'paypal'`).bind(capture, now, id).run();
+  await env.DB.prepare(`UPDATE charges SET state = 'paid', payment_intent = ?, at = ? WHERE bounty_id = ? AND state IN ('owner-paying', 'charging') AND provider = 'paypal'`).bind(capture, now, id).run();
+  await env.DB.prepare('DELETE FROM meta WHERE key = ?').bind(`paypal_action/${id}`).run();
+}
+
+export async function paypalAction(env: Env, id: string): Promise<string | null> {
+  const held = await env.DB.prepare(`SELECT json_extract(m.value, '$.url') AS url FROM charges c JOIN meta m ON m.key = 'paypal_action/' || c.bounty_id
+    WHERE c.bounty_id = ? AND c.provider = 'paypal' AND c.state = 'owner-paying' AND json_extract(m.value, '$.order') = c.payment_intent`).bind(id).first<{ url: string }>();
+  return held !== null && typeof held.url === 'string' && held.url.startsWith('https://') ? held.url : null;
+}
+
+export async function chargeVault(env: Env, id: string, amount: number, pull: Merged, account: string, token: string, heldAt: number | null, now: number, origin: 'merge' | 'agent' = 'merge', allowCharge = true): Promise<void> {
+  if (!await claimCharge(env, id, amount, pull, account, token, 'paypal', heldAt, now, origin)) return;
+  if (!allowCharge) {
+    const row = await rowOf(env, id);
+    if (row?.payment_intent != null) {
+      const read = await paypal(env, 'GET', `/v2/checkout/orders/${encodeURIComponent(row.payment_intent)}`);
+      const capture = read.status === 200 && isOurs(read.json, id, row) ? completedCapture(read.json) : null;
+      if (capture !== null) await recordCapture(env, id, capture, now);
+    }
+    return;
+  }
+  const made = await paypal(env, 'POST', '/v2/checkout/orders', {
+    intent: 'CAPTURE', purchase_units: [{ custom_id: id, amount: { currency_code: 'USD', value: usd(amount) }, payee: { merchant_id: account } }],
+    payment_source: { paypal: { vault_id: token } }
+  }, `pf52/${id}/${pull.number}/${token}`);
+  const capture = made.json['status'] === 'COMPLETED' && isOurs(made.json, id, { account_id: account, amount }) ? completedCapture(made.json) : null;
+  if (capture !== null) { await recordCapture(env, id, capture, now); return; }
+  const order = typeof made.json['id'] === 'string' ? made.json['id'] : null;
+  const state = made.status >= 500 ? 'charging' : made.status >= 400 ? (issueOf(made) === 'INSTRUMENT_DECLINED' ? 'declined' : 'provider-refused') : order !== null && isOurs(made.json, id, { account_id: account, amount }) ? 'owner-paying' : 'provider-refused';
+  const links = made.json['links'] as { rel?: unknown; href?: unknown }[] | undefined;
+  const link = Array.isArray(links) ? links.find(entry => entry.rel === 'payer-action' || entry.rel === 'approve')?.href : undefined;
+  if (state === 'owner-paying' && typeof link === 'string' && link.startsWith('https://')) await setMeta(env.DB, `paypal_action/${id}`, JSON.stringify({ order, url: link }));
+  await env.DB.prepare(`UPDATE charges SET state = ?, payment_intent = ?, at = ? WHERE bounty_id = ? AND state = 'charging' AND provider = 'paypal'`).bind(state, order, now, id).run();
 }
 
 /**
@@ -56,7 +122,7 @@ async function decidePayPal(env: Env, bounty: { amount: number; poster: string }
   const row = await rowOf(env, id);
   const authorId = facts.landed.length === 1 ? facts.landed[0]!.author_id : null;
   const connected = authorId === null ? null : await env.DB.prepare('SELECT payer_id FROM paypal_accounts WHERE github_id = ?').bind(authorId).first<{ payer_id: string }>();
-  const decision = decidePay({ amount: bounty.amount, poster: bounty.poster, landed: facts.landed, recorded: facts.recorded, state: row?.state as ChargeState | undefined ?? null, solver: connected === null ? null : { account_id: connected.payer_id, ready: true }, provider: 'PayPal' });
+  const decision = decidePay({ amount: bounty.amount, poster: bounty.poster, poster_id: facts.poster_id ?? null, landed: facts.landed, recorded: facts.recorded, state: row?.state as ChargeState | undefined ?? null, solver: connected === null ? null : { account_id: connected.payer_id, ready: true }, provider: 'PayPal' });
   return { decision, row, facts };
 }
 

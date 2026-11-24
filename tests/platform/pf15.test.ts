@@ -23,13 +23,13 @@ describe('the one source', () => {
   it('holds the three ways with the brief\'s facts, and no other word for them', () => {
     expect(WAYS.map(way => way.name)).toEqual(['By hand', 'One click', 'On merge']);
     expect(WAYS.map(way => way.whoSays)).toEqual(['The owner', 'The provider', 'The provider']);
-    expect(WAYS[2]!.through).toBe('Stripe');
+    expect(WAYS[2]!.through).toBe('Stripe or saved PayPal');
     expect(JSON.stringify(WAYS)).not.toMatch(/level|monid|balance/i);
   });
   it.each([
     ['no key', { stripe: false, paypal: false }, [], false],
     ['Stripe', { stripe: true, paypal: false }, ['Stripe'], true],
-    ['PayPal', { stripe: false, paypal: true }, ['PayPal'], false],
+    ['PayPal', { stripe: false, paypal: true }, ['PayPal'], true],
     ['both', { stripe: true, paypal: true }, ['Stripe', 'PayPal'], true]
   ])('with %s, says what is set up', (_name, keys, oneClick, onMerge) => {
     const here = waysSetUp(keys);
@@ -62,7 +62,7 @@ describe('what a machine reads', () => {
   it.each([
     ['no key', KEYS.none, [], false, ['by-hand'], 'by hand, by the owner'],
     ['Stripe', KEYS.stripe, ['Stripe'], true, ['by-hand', 'one-click'], 'by hand, by the owner; one click, by the owner, through Stripe'],
-    ['PayPal', KEYS.paypal, ['PayPal'], false, ['by-hand', 'one-click'], 'by hand, by the owner; one click, by the owner, through PayPal']
+    ['PayPal', KEYS.paypal, ['PayPal'], true, ['by-hand', 'one-click'], 'by hand, by the owner; one click, by the owner, through PayPal']
   ])('the feed, with %s', async (_name, keys, oneClick, onMerge, ways, paid) => {
     const page = await read('/bounties.json', keys);
     expect(page.ways_set_up).toEqual({ by_hand: true, one_click: oneClick, on_merge: onMerge });
@@ -76,10 +76,10 @@ describe('what a machine reads', () => {
     expect(none).not.toMatch(/Connecting/);
     const paypal = (await read(`/bounties/${ID}.json`, KEYS.paypal)).bounty.how_to_get_paid.join(' ');
     expect(paypal).toContain('Connecting PayPal');
-    expect(paypal).not.toContain('pay on merge');
+    expect(paypal).toContain('pay on merge requires the owner to authorize a saved payment method');
     const both = (await read(`/bounties/${ID}.json`, KEYS.both)).bounty.how_to_get_paid.join(' ');
     expect(both).toContain('Connecting Stripe or PayPal');
-    expect(both).toContain('pay on merge requires the owner to authorize Stripe charges in advance');
+    expect(both).toContain('pay on merge requires the owner to authorize a saved payment method in advance');
   });
 
   // PF18: a solver's agent learns who Stripe can pay before it does the work, on a board with Stripe, and nowhere else.

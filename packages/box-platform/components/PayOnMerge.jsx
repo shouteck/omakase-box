@@ -1,7 +1,6 @@
 'use client';
 // Stripe on Your page (PF19): the solver's connection, a row with its status; the owner's pay on merge,
-// one card and a table of repositories, each with what it may charge ("charge up to"; the CLI's limit is another thing). Signed-in only: this page is the one place
-// charging can be turned on. The card itself is typed on Stripe's page.
+// one card and a table of repositories. Per-bounty approval comments can also authorize listed bounties.
 import { useEffect, useRef, useState } from 'react';
 import { countryName, STRIPE_COUNTRIES } from '../src/pay-ways.ts';
 import Dialog from './Dialog.jsx';
@@ -41,7 +40,7 @@ export function StripeRow({ pay, setPay }) {
   // Once, on arrival.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  if (!pay.set_up) return <Row icon="S" tone="stripe" title="Stripe" detail="Not set up on this board yet." />;
+  if (!pay.set_up || pay.stripe_set_up === false) return <Row icon="S" tone="stripe" title="Stripe" detail="Not set up on this board yet." />;
   const { connected, ready } = pay.solver;
   const status = ready ? <Badge tone="ok">Connected</Badge> : connected ? <Badge tone="wait">Stripe is checking your details</Badge> : <Badge>Not connected</Badge>;
   return (
@@ -104,7 +103,7 @@ function RepositoryDialog({ open, onClose, editing, repositories, yours, save })
         <span>Reward each merged bounty is paid, in whole dollars</span>
         <input name="reward" type="number" min="1" className={FIELD} value={reward} onChange={event => setReward(event.target.value)} required />
       </label>
-      <p className="text-sm text-soft">When exactly one solution to your bounty there lands and its reward is this amount, the board charges it to your card and pays the solver&apos;s own Stripe account. A bounty stating another reward waits for you on its page. A merge from before you turned it on is never charged.</p>
+      <p className="text-sm text-soft">One eligible verified landing can pay from your saved Stripe card or PayPal to a connected payout account. Posted bounties must state this exact reward; listed bounties must be within it. A merge from before you turned it on is never charged. Checkout and by-hand payment remain available.</p>
     </Dialog>
   );
 }
@@ -114,6 +113,7 @@ export function PayOnMergeOwner({ pay, setPay }) {
   const { call, leave, message } = usePayCall(setPay);
   const [dialog, setDialog] = useState(null);
   const [removing, setRemoving] = useState(false);
+  const [limit, setLimit] = useState(String(pay.limit ?? ''));
   const done = useRef(false);
   // Back from Stripe's page: a saved card names its session.
   useEffect(() => {
@@ -129,19 +129,24 @@ export function PayOnMergeOwner({ pay, setPay }) {
   const yours = pay.yours ?? [];
   const more = yours.some(entry => !repositories.some(on => on.repository.toLowerCase() === entry.repository.toLowerCase()));
   const save = async list => (await call('/api/me/pay', { repositories: list.map(({ repository, limit }) => ({ repository, limit })) })) !== null;
-  if (!pay.card) {
+  if (!pay.card && !pay.saved_paypal) {
     return (
       <>
-        <Empty title="Pay on merge is off." why="Save a card, then choose which of your repositories it pays for, and the reward." action={<Button primary onClick={() => leave('/api/me/card')}>Save a card on Stripe&apos;s page</Button>} />
+        <Empty title="Pay on merge is off." why="Save a card or PayPal, then authorize eligible bounties." action={pay.stripe_set_up === false ? null : <Button primary onClick={() => leave('/api/me/card')}>Save a card on Stripe&apos;s page</Button>} />
         <Said message={message} />
       </>
     );
   }
   return (
     <>
-      <Rows>
+      {pay.card ? <Rows>
         <Row icon="▭" tone="card" title={pay.card} detail="Pays for every repository below. Saved on Stripe's page; the board never sees the number." actions={<><Button onClick={() => leave('/api/me/card')}>Replace</Button><Button danger onClick={() => setRemoving(true)}>Remove</Button></>} />
-      </Rows>
+      </Rows> : <div><p>Saved PayPal can pay eligible merges to connected PayPal accounts. Manage it below.</p>{pay.stripe_set_up === false ? null : <Button onClick={() => leave('/api/me/card')}>Save a card on Stripe&apos;s page</Button>}</div>}
+      {pay.card ? <form className="mt-4 flex flex-wrap items-end gap-3" onSubmit={async event => { event.preventDefault(); if (await call('/api/me/pay', { limit: Number(limit), repositories })) window.location.href = '/setup/finish/'; }}>
+        <label>Default maximum for an import approved with “on merge”, USD<input className={FIELD} type="number" min="1" max="100000" required value={limit} onChange={event => setLimit(event.target.value)} /></label>
+        <Button type="submit">Save limit</Button>
+      </form> : null}
+      <p className="mt-3 text-sm text-soft">An agent can authorize one imported bounty with the exact “omakase approve &lt;id&gt; $&lt;amount&gt; on merge” GitHub comment. Only that comment authorizes automatic payment for an import. Plain approvals stay owner-chooses/manual; repository switches never authorize imports.</p>
       <div className="mt-3">
         {repositories.length > 0 ? (
           <Table label="Repositories on pay on merge" head={['Repository', ['Reward', 'r'], 'Open bounties', 'On since', '']}
@@ -164,7 +169,7 @@ export function PayOnMergeOwner({ pay, setPay }) {
       <Dialog open={removing} onClose={() => setRemoving(false)} title="Remove your card?" danger submit="Remove card"
         onSubmit={async event => { event.preventDefault(); if (await call('/api/me/pay', { remove_card: true }) !== null) setRemoving(false); }}>
         <ul data-removing className="flex flex-col gap-2 list-disc pl-5">
-          <li>{repositories.length === 0 ? 'Pay on merge stops.' : `Pay on merge stops for ${repositories.length === 1 ? 'your 1 repository' : `all ${repositories.length} repositories`}.`}</li>
+          <li>{pay.saved_paypal ? 'Saved PayPal and repository switches stay available for eligible PayPal payments.' : repositories.length === 0 ? 'Pay on merge stops.' : `Pay on merge stops for ${repositories.length === 1 ? 'your 1 repository' : `all ${repositories.length} repositories`}.`}</li>
           <li>{pay.card} is removed from Stripe; the board can no longer charge it.</li>
           <li>Payments already made do not change. You can still pay any bounty from its page.</li>
         </ul>
