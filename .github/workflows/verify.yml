@@ -51,6 +51,18 @@ on:
       - '.devin/plugins/box-pstack/DEVIN-COMPATIBILITY.md'
       - '.claude/skills/kitchen/SKILL.md'
       - '.cursor/rules/box-kitchen.mdc'
+      # K76: doc-shaped files a product test or package names (suite.mjs productNames). A kitchen test
+      # checks every tracked file against isInert, so this list cannot drift from it.
+      - '.gitignore'
+      - 'CLAUDE.md'
+      - 'FIRST-FIVE-MINUTES.md'
+      - 'README.md'
+      - 'docs/box-v4/BOUNTY-FORMAT.md'
+      - 'docs/box-v4/LAUNCH.md'
+      - 'docs/box-v4/launch/getting-started.md'
+      - 'docs/box-v4/launch/queue-handoff.md'
+      - 'kitchen/memory/measure.mjs'
+      - 'kitchen/scenarios/bt4.md'
 
 # A newer push to the same ref cancels a stale run, queued or in progress.
 concurrency:
@@ -62,7 +74,29 @@ permissions:
   contents: read
 
 jobs:
+  # K76: which jobs this push owes. full=false when every changed path is read by the kitchen suite alone
+  # (scripts/ci-select.mjs, the rule verify's local reuse uses); then bounty, platform and install-node22
+  # are skipped and kitchen and audit run. A new branch, a forced push or anything unreadable is full=true,
+  # and the heavy jobs run on anything but an explicit full=false.
+  select:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      full: ${{ steps.select.outputs.full }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+      - name: Select the jobs this push owes
+        id: select
+        run: node scripts/ci-select.mjs "${{ github.event.before }}" "${{ github.sha }}"
+
   bounty:
+    needs: select
+    if: needs.select.outputs.full != 'false'
     # K50: named images and independent results on every OS; no failure cancels another.
     name: bounty (${{ matrix.os }} shard ${{ matrix.shard }}/${{ matrix.shards }})
     strategy:
@@ -297,6 +331,8 @@ jobs:
           if-no-files-found: ignore
 
   platform:
+    needs: select
+    if: needs.select.outputs.full != 'false'
     # K50: named images and independent results on every OS; no failure cancels another.
     name: platform (${{ matrix.os }})
     strategy:
@@ -455,6 +491,8 @@ jobs:
   # again under 22 and drive the whole $0 journey through it.
   # K50: on all three systems, each reported apart.
   install-node22:
+    needs: select
+    if: needs.select.outputs.full != 'false'
     name: install-node22 (${{ matrix.os }})
     strategy:
       fail-fast: false
