@@ -5,7 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { DatabaseSync } from 'node:sqlite';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { applyBounty, BountyRefused, closeBounty, loadRecord, lookBounty, persistRecord, transitionTo } from '../../../packages/box-bounty/index.js';
+import { applyBounty, BountyRefused, closeBounty, loadRecord, lookBounty, appendEvents, transitionTo } from '../../../packages/box-bounty/index.js';
 import { closeStores, localEvents, recordIds, storedRaw } from '../../../packages/box-bounty/store.js';
 import { foldLocal } from '../../../packages/box-bounty/fold.js';
 import { fixture, postedFixture } from './github-fixture.js';
@@ -26,7 +26,7 @@ describe('BT101 stage 1: no lost update', () => {
     const stale = loadRecord(repo, id);
     transitionTo(repo, loadRecord(repo, id), 'applied', { command: 'merged', attempt: 1 });
     (stale as { why?: string }).why = 'the stale writer\'s change';
-    persistRecord(repo, stale);
+    appendEvents(repo, stale, 'stage-changed');
     const after = loadRecord(repo, id);
     expect(after.stage).toBe('applied');
     expect(after.why).toBe('the stale writer\'s change');
@@ -36,10 +36,10 @@ describe('BT101 stage 1: no lost update', () => {
     const first = loadRecord(repo, id);
     const second = loadRecord(repo, id);
     (first.github as { pending: string | null }).pending = 'first writer';
-    persistRecord(repo, first);
+    appendEvents(repo, first, 'stage-changed');
     (second as { why?: string }).why = 'second writer';
     second.github!.state = 'posted';
-    persistRecord(repo, second);
+    appendEvents(repo, second, 'stage-changed');
     const after = loadRecord(repo, id);
     expect(after.github!.pending).toBe('first writer');
     expect(after.why).toBe('second writer');
@@ -49,9 +49,9 @@ describe('BT101 stage 1: no lost update', () => {
     const first = loadRecord(repo, id);
     const second = loadRecord(repo, id);
     (first as { why?: string }).why = 'first';
-    persistRecord(repo, first);
+    appendEvents(repo, first, 'stage-changed');
     (second as { why?: string }).why = 'second';
-    expect(refusalOf(() => persistRecord(repo, second))).toBe('record-changed');
+    expect(refusalOf(() => appendEvents(repo, second, 'stage-changed'))).toBe('record-changed');
     expect(loadRecord(repo, id).why).toBe('first');
   }));
 });
@@ -99,12 +99,12 @@ describe('BT101 stage 1: status <id> --history', () => {
   it('lists every local event oldest first, by kind and the paths it changed, never their values', () => postedFixture(({ repo, id }) => {
     const record = loadRecord(repo, id);
     (record as { why?: string }).why = 'SECRET-VALUE-NOT-SHOWN';
-    persistRecord(repo, record);
+    appendEvents(repo, record, 'stage-changed');
     const run = spawnSync(process.execPath, [CLI_DIST, 'bounty', 'status', id, '--history'], { cwd: repo, encoding: 'utf8', env: process.env, timeout: 120000 });
     expect(run.status, run.stderr).toBe(0);
     const lines = run.stdout.split('\n').filter(line => /^\s*\d+\s/.test(line));
     expect(lines.length).toBe(localEvents(repo, id).length);
-    expect(lines.at(-1)).toContain('patched');
+    expect(lines.at(-1)).toContain('stage-changed');
     expect(lines.at(-1)).toContain('why');
     expect(run.stdout).not.toContain('SECRET-VALUE-NOT-SHOWN');
   }));

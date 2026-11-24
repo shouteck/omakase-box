@@ -161,3 +161,8 @@ export const rulesBlockInterior = (state: 'idle' | 'open' | 'new', solving = fal
 
 export const renderRulesBlock = (state: 'idle' | 'open' | 'new', solving = false): string =>
   [RULES_MARKERS.open, ...rulesBlockInterior(state, solving), RULES_MARKERS.close].join('\n');
+
+// BT101: what a command says when it sends what an earlier command (a read, or a send that failed) left owed.
+export const sentEarlierLine = (key: string, detail: string): string => `sent ${key}: ${detail}`;
+// BT101: a read that noticed a hand merge sends nothing, so the pay message comes with the command that closes it up.
+export const payComesWithClosingLine = (id: string): string => `${id} — the owner's message about paying the solver comes with the closing on GitHub; next: omakase-box close ${id}`;

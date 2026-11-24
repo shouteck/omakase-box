@@ -1,7 +1,8 @@
-// BT101: the local log's one reducer. A bounty's record is the fold of its events: `created`, `imported` and `replaced`
-// carry a whole document; `patched` carries the leaves one write changed (path and new value, or the path removed) and the
-// stage history it appended; `dropped` ends the row but not the history. store.ts keeps the record row as this fold's
-// cache, and a test checks the two agree after every write path.
+// BT101: the local log's one reducer. A bounty's record is the fold of its events: `created` and `imported` carry a whole
+// document; every other intent (INTENTS, below) carries the leaves one write changed (path and new value, or the path
+// removed) and the stage history it appended; `dropped` ends the row but not the history. Logs from before stage 4 also
+// hold `replaced` (a whole document) and `patched` (a patch), which still fold. store.ts keeps the record row as this
+// fold's cache, and a test checks the two agree after every write path.
 export type JsonPath = readonly string[];
 export interface Patch { readonly set: readonly (readonly [JsonPath, unknown])[]; readonly unset: readonly JsonPath[]; readonly events: readonly unknown[] }
 export interface LocalEvent { readonly seq: number; readonly at: string; readonly kind: string; readonly json: string }
@@ -48,13 +49,35 @@ export function applyPatch(doc: Record<string, unknown>, patch: Patch): void {
   if (patch.events.length > 0) (doc['events'] as unknown[]).push(...structuredClone(patch.events));
 }
 
+// BT101 stage 4: every change names what happened. `created` and `imported` carry a whole document; `dropped` ends the
+// row; every other intent carries a patch (the leaves changed, or, for a copy with no read behind it, every leaf that
+// differs from the row). The generic `patched` and `replaced` are never written again; logs from before still fold.
+export const INTENTS = [
+  'created', 'imported', 'dropped',
+  // posting
+  'post-planned', 'post-held', 'branch-pushed', 'issue-recorded', 'post-incomplete', 'posted', 'held', 'owner-answered',
+  // solutions coming back
+  'solution-collected', 'answers-seen', 'seen-marked', 'conflicts-recorded',
+  // what GitHub and the shared memory say
+  'github-refreshed', 'format-observed', 'landing-checked', 'adopted',
+  // endings
+  'applied', 'merge-observed', 'closed', 'undone', 'stage-changed',
+  // the ending going out, and the money
+  'decision-sent', 'decision-pending', 'decision-refused', 'paid-recorded'
+] as const;
+export type Intent = (typeof INTENTS)[number];
+const WHOLE = new Set(['created', 'imported', 'replaced']);
+const PATCHES = new Set<string>(['patched', ...INTENTS.filter(intent => !WHOLE.has(intent) && intent !== 'dropped')]);
+/** Does this event kind carry a patch (the paths `status <id> --history` names)? */
+export const carriesPatch = (kind: string): boolean => PATCHES.has(kind);
+
 /** The record a bounty's events describe, or null before the first document. */
 export function foldLocal(events: readonly LocalEvent[]): Record<string, unknown> | null {
   let doc: Record<string, unknown> | null = null;
   for (const event of events) {
     const value = JSON.parse(event.json) as unknown;
-    if (event.kind === 'created' || event.kind === 'imported' || event.kind === 'replaced') doc = structuredClone(value as Record<string, unknown>);
-    else if (event.kind === 'patched' && doc !== null) applyPatch(doc, value as Patch);
+    if (WHOLE.has(event.kind)) doc = structuredClone(value as Record<string, unknown>);
+    else if (PATCHES.has(event.kind) && doc !== null) applyPatch(doc, value as Patch);
   }
   return doc;
 }

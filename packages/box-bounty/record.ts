@@ -22,6 +22,7 @@ import { basename,dirname,join,resolve } from 'node:path';
 import { canonicalPath } from './folder.js';
 import { BountyRefused } from './errors.js';
 import { allRecords,listOpen,listEndedRecent,countEnded,readStored,writeStored,setStoreCodec } from './store.js';
+import type { Intent } from './fold.js';
 import { gitOutcome,gitRefsWrite } from './git.js';
 import { publishListed,publishLists } from './never-ship.js';
 import { firstSightShape,payOutcomeShape,payToFactShape } from './pay.js';
@@ -426,8 +427,10 @@ export function trackedRecordFiles(repoRoot: string): string[] {
   return listed.stdout.split('\0').filter(entry => entry !== '');
 }
 
-export const persistRecord = (repoRoot: string, record: BountyRecord): void => {
-  writeStored(repoRoot, record);
+/** BT101 stage 4: the one way a command changes a record. The change is appended to the bounty's log as `intent`, the
+    name of what happened (fold.ts `INTENTS`), and the row is its fold. */
+export const appendEvents = (repoRoot: string, record: BountyRecord, intent: Intent): void => {
+  writeStored(repoRoot, record, intent);
   syncOpenSurfaces(repoRoot);
 };
 
@@ -635,7 +638,7 @@ export function writeNewRecord(repoRoot: string, seed: RecordSeed): { record: Bo
   // record's logical spelling (`.box/bounties/<id>.json`) for `--full`'s
   // record line and for callers that name it — the bytes live in box.db.
   const path = recordPath(repoRoot, seed.id);
-  writeStored(repoRoot, record);
+  writeStored(repoRoot, record, 'created');
   syncOpenSurfaces(repoRoot);
   return { record, path };
 }
@@ -676,6 +679,18 @@ export function endedCount(repoRoot: string): number {
 
 
 
+// A stage change's intent, by the stage and the command that drove it.
+const intentOfStage = (stage: BountyStage, command: string | undefined): Intent =>
+  command === 'merged' ? 'merge-observed'
+    : command === 'shared' ? 'adopted'
+    : stage === 'applied' ? 'applied'
+    : stage === 'rejected' || stage === 'withdrawn' ? 'closed'
+    : stage === 'undone' ? 'undone'
+    : stage === 'posted' ? 'posted'
+    : stage === 'waiting' ? 'held'
+    : stage === 'taken' || stage === 'answered' ? 'solution-collected'
+    : 'stage-changed';
+
 // Appends one stage event and persists — history is appended, never rewritten.
 // `reason` records why a `rejected` transition happened (and, on older records,
 // why a `posted` one went back); `destination` records where `posted` went;
@@ -698,7 +713,7 @@ export const transitionTo = (repoRoot: string, record: BountyRecord, stage: Boun
   record.stage = stage;
   if (!isOpenStage(stage)) delete record.landingChecks;
   if (stage !== 'waiting') delete record.waiting; // a landed action is no longer held
-  persistRecord(repoRoot, record);
+  appendEvents(repoRoot, record, intentOfStage(stage, extra?.command));
 };
 
 const toPosix = (path: string): string => path.split('\\').join('/');

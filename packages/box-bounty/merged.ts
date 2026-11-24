@@ -18,7 +18,7 @@ import { resolve } from 'node:path';
 import { canonicalFolder } from './folder.js';
 import { gitOutcome,gitProgram } from './git.js';
 import { shipRules } from './never-ship.js';
-import { attemptsOf,baseCommitOf,dropDurabilityRefs,openRecords,persistRecord,setRecordReadScan,transitionTo } from './record.js';
+import { attemptsOf,baseCommitOf,dropDurabilityRefs,openRecords,appendEvents,setRecordReadScan,transitionTo } from './record.js';
 import { api,isObject } from './gh.js';
 import type { Attempt,BountyRecord } from './record.js';
 import { adoptedWithoutPermission } from './adopt.js';
@@ -29,6 +29,7 @@ import { emitMergeNotice as emit,showPath } from './notice.js';
 import { readDecision,recordFirstMerge } from './settings.js';
 import { boundAmount } from './format.js';
 import { noteMerged, shareMerged } from './chain.js';
+import { payComesWithClosingLine } from './wording.js';
 
 // One line per recognised merge or un-checkable record, printed by whichever
 // command noticed. The CLI registers a printer; library callers see the same
@@ -229,7 +230,7 @@ function checkRewritten(repoRoot: string, record: BountyRecord, branch: string, 
   if (JSON.stringify(record.landingChecks ?? []) !== JSON.stringify(checks)) {
     if (checks.length === 0) delete record.landingChecks;
     else record.landingChecks = checks;
-    persistRecord(repoRoot, record);
+    appendEvents(repoRoot, record, 'landing-checked');
   }
 }
 
@@ -338,7 +339,7 @@ function closeOne(repoRoot: string, record: BountyRecord, branch: string, candid
   const pay = reading ? null : payNotice(record, boundAmount(record), firstMerge?.recorded === true ? { firstMerge: true } : undefined);
   pay?.forEach(emit);
   if (firstMerge !== null && (firstMerge.recorded !== true || pay === null)) emit(firstMerge.line);
-  if (reading && record.github !== undefined && (boundAmount(record) ?? 0) > 0) emit(`${record.id} — the owner's message about paying the solver comes with the closing on GitHub; next: omakase-box close ${record.id}`);
+  if (reading && record.github !== undefined && (boundAmount(record) ?? 0) > 0) emit(payComesWithClosingLine(record.id));
   for (const hit of extras) {
     emit(`${record.id} — fact: the merge also carries ${showPath(hit.path)}, which the never-ship rule '${hit.rule}' keeps out — the history stays as the owner made it`);
   }

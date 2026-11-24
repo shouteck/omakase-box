@@ -5,8 +5,8 @@
 // is by function name across packages/box-bounty and packages/box-cli/src, so it over-reaches where two functions share a
 // name, never under-reaches a direct call. tests/box/bounty/exit-sites.ts is the full exit walk; this is its read-side view.
 // Mode: fail since BT101 stage 3, where a read only owes: the hand-merge scan, the chain refresh and collection inside a
-// read append and owe, and the next mutating command sends. One read send stays, by the owner's design, and is listed
-// with its reason: the board hint (PF5), identifiers only, to the board rather than GitHub.
+// read append and owe, and the next mutating command sends. Since stage 4 the board hint is owed too
+// (D-2026-11-25-board-hint-behind-the-door), so no read send is allowed: the list below is empty on purpose.
 import { enclosingFunction, functionName, lineOf, parse, short, ts, visit } from './ast.mjs';
 
 export const id = 'read-writes-outward';
@@ -14,10 +14,8 @@ export const mode = 'fail';
 export const from = 'BT100: a read that writes outward';
 export const switchesIn = 'BT101';
 
-/** `file#function: kind` → why a read may send it. */
-export const ALLOWED = {
-  'packages/box-bounty/board.ts#flushBoardHints: board-send': 'PF5: a read tells the board what an earlier command left untold — the bounty, event, issue and repository identifiers only (pf5.test.ts "T1 and T4"); the board is not GitHub'
-};
+/** `file#function: kind` → why a read may send it. None: a read sends nothing (BT101). */
+export const ALLOWED = {};
 export const failing = findings => findings.filter(finding => finding.allowed === null);
 export const dirs = ['packages/box-bounty', 'packages/box-cli/src'];
 export const READ_COMMANDS = ['look', 'status', 'find', 'describe', 'discover'];

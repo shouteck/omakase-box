@@ -6,7 +6,7 @@ import { syncBeforeAction } from './adopt.js';
 import { BountyRefused } from './errors.js';
 import { GitFailed,git,gitOutcome,mergeBase,ownerGitOutcome,unsafeOwnerCommands } from './git.js';
 import type { DryMerge } from './git.js';
-import { applicableAttempts,attemptsOf,dropDurabilityRefs,isOpenStage,loadRecord,persistRecord,requireCurrentDelivery,transitionTo } from './record.js';
+import { applicableAttempts,attemptsOf,dropDurabilityRefs,isOpenStage,loadRecord,appendEvents,requireCurrentDelivery,transitionTo } from './record.js';
 import { waitForOwner } from './gate.js';
 import { mergeWaitLines,waitingSummary } from './owner-text.js';
 import type { Attempt,BountyRecord } from './record.js';
@@ -342,7 +342,7 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget, 
     // which a genuinely different restore would want shown anyway.
     ownerGitOutcome(repoRoot, ['update-index', '-q', '--refresh'], ownerAttrs);
     record.conflicts = { paths, at: new Date().toISOString() };
-    persistRecord(repoRoot, record);
+    appendEvents(repoRoot, record, 'conflicts-recorded');
     // The facts a clashing apply owes: which of the solution's files would
     // have merged cleanly, and which commits on this branch touched the
     // clashing files since the shared commit. Nothing was changed — the

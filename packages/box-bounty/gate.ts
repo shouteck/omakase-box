@@ -8,7 +8,7 @@ import { BountyRefused } from './errors.js';
 import { planGitHub,shownOfPlan } from './publish-plan.js';
 import { shipRules } from './never-ship.js';
 import { ownerWaitLines,waitingSummary } from './owner-text.js';
-import { persistRecord,transitionTo } from './record.js';
+import { appendEvents,transitionTo } from './record.js';
 import { anyJsonContaining } from './store.js';
 import type { AllowedBy,BountyRecord,WaitingFor } from './record.js';
 import { readDecision,requireRepository } from './settings.js';
@@ -73,7 +73,7 @@ export function waitForOwner(repoRoot: string, record: BountyRecord, waiting: Wa
   const carried = waiting.for !== 'merge' && record.waiting !== undefined && record.waiting.for === waiting.for && record.waiting.to === waiting.to
     ? record.waiting.answered : undefined;
   record.waiting = { ...waiting, at: record.waiting?.at ?? waiting.at, ...(carried !== undefined ? { answered: carried } : {}) };
-  if (record.stage === 'waiting') persistRecord(repoRoot, record);
+  if (record.stage === 'waiting') appendEvents(repoRoot, record, 'held');
   else transitionTo(repoRoot, record, 'waiting');
 }
 

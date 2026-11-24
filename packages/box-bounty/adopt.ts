@@ -14,7 +14,7 @@ import { api,invalid,isObject,namesGitHubCause,type GitHubPublication } from './
 import { gitOutcome } from './git.js';
 import { readFormat } from './format.js';
 import { emitMergeNotice } from './notice.js';
-import { dropDurabilityRefs,isOpenStage,persistRecord,setSharedAdopter,transitionTo } from './record.js';
+import { dropDurabilityRefs,isOpenStage,appendEvents,setSharedAdopter,transitionTo } from './record.js';
 import type { BountyRecord,BountyStage } from './record.js';
 import { readDecision,requireRepository } from './settings.js';
 import { readStored,sharedFor,sharedOpen,sharedRead } from './store.js';
@@ -97,7 +97,7 @@ function adoptShared(root: string, id: string, shared: BountyRecord): BountyReco
     github: publication,
     adopted: { at: new Date().toISOString() }
   };
-  persistRecord(root, record);
+  appendEvents(root, record, 'adopted');
   emitMergeNotice(`${id} — posted from another machine; picked up here from its issue. ${RESUME_STAYED}`);
   return record;
 }

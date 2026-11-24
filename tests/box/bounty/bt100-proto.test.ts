@@ -7,7 +7,7 @@
 //   5  "what changed in my name", from the store alone
 import { spawnSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
-import { closeBounty, loadRecord, persistRecord, postBounty, transitionTo } from '../../../packages/box-bounty/index.js';
+import { closeBounty, loadRecord, appendEvents, postBounty, transitionTo } from '../../../packages/box-bounty/index.js';
 import { outboxRows } from '../../../packages/box-bounty/store.js';
 import { fixture, postedFixture, refused } from './github-fixture.js';
 import { CLI_DIST, git } from './support.js';
@@ -22,7 +22,7 @@ describe('BT100 harness, on BT101', () => {
     const stale = loadRecord(repo, id);
     transitionTo(repo, loadRecord(repo, id), 'applied', { command: 'merged', attempt: 1 });
     (stale as { why?: string }).why = 'the stale writer';
-    persistRecord(repo, stale);
+    appendEvents(repo, stale, 'stage-changed');
     expect(loadRecord(repo, id).stage).toBe('applied');
     expect(loadRecord(repo, id).why).toBe('the stale writer');
   }, { collected: true }));
@@ -66,6 +66,6 @@ describe('BT100 harness, on BT101', () => {
     closeBounty(repo, id);
     const run = cli(repo, 'status', id, '--history');
     expect(run.status, run.stderr).toBe(0);
-    for (const expected of ['created', 'patched', `owed      issue:${id}`, `sent      issue:${id}`, `owed      decision:${id}`, `sent      decision:${id}`]) expect(run.stdout).toContain(expected);
+    for (const expected of ['created', 'post-planned', 'issue-recorded', `owed      issue:${id}`, `sent      issue:${id}`, `owed      decision:${id}`, `sent      decision:${id}`]) expect(run.stdout).toContain(expected);
   }));
 });

@@ -178,9 +178,9 @@ async function openBoxStore(dir) {
       r.stage = stage;
       r.endedAt = isOpen(stage) ? null : at;
       r.events = [...r.events, { stage, at, command: 'benchmark' }];
-      store.writeStored(dir, r);
+      store.writeStored(dir, r, 'stage-changed');
     },
-    upsert(r) { store.writeStored(dir, clean(r)); },
+    upsert(r) { store.writeStored(dir, clean(r), 'stage-changed'); },
     checkpoint() { /* WAL is the store's own business */ },
     close() { store.closeStores(); },
     dbFile: () => join(dir, '.box', 'local', 'box.db')

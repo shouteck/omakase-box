@@ -5,7 +5,7 @@ import { BountyRefused } from './errors.js';
 import { dryMergeOnto,git,gitOutcome } from './git.js';
 import type { DryMerge } from './git.js';
 import { shipRules } from './never-ship.js';
-import { attemptRefName,attemptsOf,isOpenStage,loadRecord,persistRecord,requireCurrentDelivery,retiredRoute,transitionTo } from './record.js';
+import { attemptRefName,attemptsOf,isOpenStage,loadRecord,appendEvents,requireCurrentDelivery,retiredRoute,transitionTo } from './record.js';
 import type { Attempt,BountyRecord } from './record.js';
 import { boundAmount,formatFact,formatFor } from './format.js';
 import { parsePayTo,payToLine,UNATTRIBUTED,unattributedOf,type Containment,type FirstSight,type PayToFact } from './pay.js';
@@ -115,7 +115,7 @@ export function listGitHubAnswers(root: string, id: string, record = loadRecord(
         record.github.seenPullRequests = [...record.github.seenPullRequests ?? [], { n: fact.n, commit: fact.commit, at: stamp(fact), author: fact.author, payTo: fact.payTo, ...sight(fact.n, fact.commit) }];
       }
     }
-    persistRecord(root, record);
+    appendEvents(root, record, 'answers-seen');
     return record.github.outside.answers;
   }
   const answersKey = key;
@@ -144,7 +144,7 @@ export function listGitHubAnswers(root: string, id: string, record = loadRecord(
   if (facts.length === 0) lines.push('  none open; wait for one or close the bounty');
   record.github.availablePullRequests = available;
   record.github.answersKey = answersKey;
-  persistRecord(root, record);
+  appendEvents(root, record, 'answers-seen');
   return lines.join('\n');
 }
 
@@ -178,7 +178,7 @@ export function refreshGitHubStatus(root: string, record: BountyRecord): void {
     // apart from one it can (BT14, F6).
     publication.unavailableReason = error instanceof BountyRefused ? error.reason : 'github-status-unavailable';
   }
-  persistRecord(root, record);
+  appendEvents(root, record, 'github-refreshed');
 }
 
 // `author` is null when GitHub returned an account name the tool will not
@@ -195,7 +195,7 @@ export function refreshGitHubFormat(root: string, record: BountyRecord): void {
   if (publication === undefined || publication.issue === null) return;
   try { observeIssueFormat(record, publication, api(root, `repos/${publication.repository}/issues/${publication.issue.number}`)); }
   catch { publication.formatUnavailableAt = new Date().toISOString(); }
-  persistRecord(root, record);
+  appendEvents(root, record, 'format-observed');
 }
 
 // `fromPoster`: written under the account that posted the bounty, which may be
@@ -340,7 +340,7 @@ export function answerGitHub(root: string, id: string, pr: number, via?: 'look' 
   const result = collectHistoryPullRequest(root, record, publication, commit, author, pr, via, payTo, redact(body), sight.firstSight);
   if (publication.seenPullRequests?.some(entry => entry.n === pr && entry.commit === commit) !== true) {
     publication.seenPullRequests = [...publication.seenPullRequests ?? [], { n: pr, commit, at: result.record.attempts?.find(attempt => attempt.commit === commit)?.seenAt ?? new Date().toISOString(), ...sight }];
-    persistRecord(root, result.record);
+    appendEvents(root, result.record, 'solution-collected');
   }
   return result;
 }
@@ -482,7 +482,7 @@ function collectHistoryPullRequest(root: string, record: BountyRecord, publicati
     ...(description !== undefined ? { description } : {})
   };
   record.attempts = [...attemptsOf(record), attempt];
-  persistRecord(root, record);
+  appendEvents(root, record, 'solution-collected');
   // BT32: collecting a pull request is a shared chain milestone. A machine
   // with no permission reads and pushes nothing to the remote (BT52).
   if (!adoptedWithoutPermission(root, record)) {

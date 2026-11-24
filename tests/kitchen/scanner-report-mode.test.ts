@@ -44,6 +44,12 @@ describe('report-mode scanners bite on a planted fault', () => {
     expect(found.map(f => `${f.fn}: ${f.detail.split(':')[0]}`)).toEqual(['refresh: github-write', 'refresh: git-push']);
   });
 
+  it('record-write (BT101): fail mode; a named intent append is allowed, the generic write and a stray store write fail', () => {
+    const found: Finding[] = recordWrite.scan([{ file: 'packages/box-bounty/x.ts', text: 'export function bump(root, record) { appendEvents(root, record, "posted"); persistRecord(root, record); writeStored(root, record, "posted"); }' }]);
+    expect(recordWrite.mode).toBe('fail');
+    expect(recordWrite.failing(found).map((f: Finding) => f.detail)).toEqual(['persistRecord(root, record)', 'writeStored(root, record, "posted")']);
+  });
+
   it('read-writes-outward (BT101): a send under `if (!inRead())` is not reached from a read only while the CLI marks its reads', () => {
     const lib = 'function refresh(root) { if (!inRead()) gitOutcome(root, ["push", "origin", "x"]); if (inRead()) owe(root); }';
     const branches = `if (subcommand === 'status') { refresh(root); }`;

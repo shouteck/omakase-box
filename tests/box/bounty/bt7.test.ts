@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, rmSync, writeFileSync, mkdirSync, chmodSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { answerGitHub, applyBounty, loadRecord, lookBounty, persistRecord, postBounty, renderStatus, listGitHubAnswers } from '../../../packages/box-bounty/index.js';
+import { answerGitHub, applyBounty, loadRecord, lookBounty, appendEvents, postBounty, renderStatus, listGitHubAnswers } from '../../../packages/box-bounty/index.js';
 import { BountyRefused } from '../../../packages/box-bounty/errors.js';
 import { fixture, postedFixture } from './github-fixture.js';
 import type { GithubFixture } from './github-fixture.js';
@@ -206,7 +206,7 @@ describe('BT7 questions', () => {
     const record = loadRecord(context.repo, context.id);
     if (record.github === undefined) throw new Error('publication missing');
     record.github = { ...record.github, issue: { number: 999, url: 'https://github.com/owner/project/issues/999' } };
-    persistRecord(context.repo, record);
+    appendEvents(context.repo, record, 'stage-changed');
     expect(refusalOf(() => renderStatus(context.repo, { id: context.id, comments: true }))).toBe('github-issue-mismatch');
   }, { files, prAuthor: 'outside-solver', collected: true }));
   it('a comment from an account whose name cannot be read is still counted and shown, with the name left out', () => postedFixture(context => {
