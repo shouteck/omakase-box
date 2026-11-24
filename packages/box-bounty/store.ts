@@ -4,7 +4,7 @@
 // `.box/bounties/*.json`); the store answers the same questions from
 // indexed columns and, for find, a lower-cased search_text column — one
 // plain substring search, the same on every Node (BT31-ci). The `json` column holds
-// the record exactly as persistRecord writes it — pretty JSON plus a
+// the record exactly as appendEvents writes it — pretty JSON plus a
 // trailing newline — so the record shape and `asRecord` validation are
 // unchanged: the database is where records are kept, never a new shape.
 //
@@ -25,7 +25,7 @@ import { join } from 'node:path';
 import type { DatabaseSync,StatementSync } from 'node:sqlite';
 import { BountyRefused } from './errors.js';
 import type { BountyRecord,ListedBounty } from './record.js';
-import { applyPatch, diffLeaves, readPath, type LocalEvent, type Patch } from './fold.js';
+import { applyPatch, diffLeaves, INTENTS, readPath, type Intent, type LocalEvent, type Patch } from './fold.js';
 
 // The record shape is record.ts's to define, and record.ts imports this
 // module — the store validates through a seam registered at record.ts's
@@ -177,7 +177,7 @@ function dropFts(db: DatabaseSync): void {
   }
 }
 
-const SCHEMA_VERSION = 6;
+const SCHEMA_VERSION = 7;
 
 // BT101: every write to a record row appends one local event in the same savepoint, so the row is always the fold of the
 // bounty's events (fold.ts). A copy handed out by the store remembers, out of band, the row text it was read from; its write
@@ -245,6 +245,17 @@ function setUp(db: DatabaseSync): void {
         db.prepare("INSERT INTO events(bounty_id, seq, at, kind, json) VALUES(?, ?, ?, 'owed', ?)").run(id, seq, new Date().toISOString(), JSON.stringify({ key: `chain:${id}`, kind: 'chain', tip: pending.value }));
         db.prepare(OWE_ROW).run(`chain:${id}`, id, seq, 'chain');
         db.prepare('DELETE FROM meta WHERE key=?').run(pending.key);
+      }
+      // BT101 stage 4: a board hint an older store still queued (`board_hint:<id>:<event>`) becomes an owed board row,
+      // one per bounty as the board reads the whole bounty on one look; the keys go in the same transaction.
+      for (const queued of db.prepare("SELECT key FROM meta WHERE key GLOB 'board_hint:*' ORDER BY key").all() as unknown as { key: string }[]) {
+        const [id, event] = queued.key.slice('board_hint:'.length).split(':');
+        if (id !== undefined && /^bt-[a-f\d]{12}$/.test(id) && event !== undefined) {
+          const seq = (db.prepare('SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM events WHERE bounty_id=?').get(id) as { n: number }).n;
+          db.prepare("INSERT INTO events(bounty_id, seq, at, kind, json) VALUES(?, ?, ?, 'owed', ?)").run(id, seq, new Date().toISOString(), JSON.stringify({ key: `board:${id}`, kind: 'board', event }));
+          db.prepare(OWE_ROW).run(`board:${id}`, id, seq, 'board');
+        }
+        db.prepare('DELETE FROM meta WHERE key=?').run(queued.key);
       }
       const columns = (db.prepare('PRAGMA table_info(records)').all() as unknown as { name: string }[]).map(column => column.name);
       if (!columns.includes('search_text')) db.exec("ALTER TABLE records ADD COLUMN search_text TEXT NOT NULL DEFAULT ''");
@@ -442,31 +453,39 @@ const atomically = <T>(entry: StoreEntry, run: () => T): T => {
   try { const result = run(); entry.db.exec('RELEASE bt101_write'); return result; }
   catch (error) { entry.db.exec('ROLLBACK TO bt101_write'); entry.db.exec('RELEASE bt101_write'); throw error; }
 };
-type WriteKind = 'auto' | 'created' | 'imported';
-// The document this write stores, and the event that records it.
-function foldWrite(entry: StoreEntry, given: BountyRecord, kind: WriteKind): BountyRecord {
+// The document this write stores, and the event that records it, named by its intent (BT101 stage 4). A new row is
+// `created` (or `imported` from a legacy file) with the whole document. Any other write is a patch under its intent: a
+// copy handed out by the store patches only what it changed since its read; a copy with no read behind it (built by
+// spreading) patches every leaf that differs from the row, which is the whole-document replace it always was.
+function foldWrite(entry: StoreEntry, given: BountyRecord, intent: Intent): BountyRecord {
   const row = stmt(entry, 'SELECT json FROM records WHERE id=?').get(given.id) as { json: string } | undefined;
-  if (kind !== 'auto' || row === undefined || !readFrom.has(given)) {
-    appendLocal(entry, given.id, kind === 'imported' ? 'imported' : row === undefined ? 'created' : 'replaced', given);
+  if (intent === 'imported' || row === undefined) {
+    appendLocal(entry, given.id, intent === 'imported' ? 'imported' : 'created', given);
     return given;
   }
-  const base = JSON.parse(readFrom.get(given)!) as BountyRecord & Record<string, unknown>;
   const current = JSON.parse(row.json) as BountyRecord & Record<string, unknown>;
+  const read = readFrom.get(given);
+  const base = read === undefined ? current : JSON.parse(read) as BountyRecord & Record<string, unknown>;
   const changed = diffLeaves(base, given);
-  const touched = [...changed.set.map(([path]) => path), ...changed.unset];
-  for (const path of touched) {
-    const now = JSON.stringify(readPath(current, path));
-    if (now !== JSON.stringify(readPath(base, path)) && now !== JSON.stringify(readPath(given, path))) {
-      throw new BountyRefused('record-changed', `bounty ${given.id} changed at ${path.join('.')} since this command read it; nothing was written; next: rerun the same command`);
+  if (read !== undefined) {
+    for (const path of [...changed.set.map(([path]) => path), ...changed.unset]) {
+      const now = JSON.stringify(readPath(current, path));
+      if (now !== JSON.stringify(readPath(base, path)) && now !== JSON.stringify(readPath(given, path))) {
+        throw new BountyRefused('record-changed', `bounty ${given.id} changed at ${path.join('.')} since this command read it; nothing was written; next: rerun the same command`);
+      }
     }
   }
-  const patch: Patch = { set: changed.set, unset: changed.unset, events: given.events.slice(base.events.length) };
-  appendLocal(entry, given.id, 'patched', patch);
+  // The stage history is appended; a copy whose history does not extend the row's replaces it, as a whole write did.
+  const extends_ = JSON.stringify(given.events.slice(0, base.events.length)) === JSON.stringify(base.events);
+  const patch: Patch = extends_
+    ? { set: changed.set, unset: changed.unset, events: given.events.slice(base.events.length) }
+    : { set: [...changed.set, [['events'], given.events]], unset: changed.unset, events: [] };
+  appendLocal(entry, given.id, intent, patch);
   applyPatch(current, patch);
   return current;
 }
-const upsertRow = (entry: StoreEntry, given: BountyRecord, kind: WriteKind = 'auto'): void => atomically(entry, () => {
-  const record = foldWrite(entry, given, kind);
+const upsertRow = (entry: StoreEntry, given: BountyRecord, intent: Intent): void => atomically(entry, () => {
+  const record = foldWrite(entry, given, intent);
   const last = record.events.at(-1)?.at ?? record.createdAt;
   const ended = openStage(record.stage) ? null : last;
   const json = JSON.stringify(record, null, 2) + '\n';
@@ -789,12 +808,13 @@ export function storedRaw(repoRoot: string, id: string): string | null {
 // JSON file is stamped to the file's CURRENT bytes — a stale file an older
 // tool or test left behind can never roll this write back, while a genuine
 // later edit still reimports through its new hash.
-export function writeStored(repoRoot: string, record: BountyRecord): void {
+export function writeStored(repoRoot: string, record: BountyRecord, intent: Intent): void {
+  if (!(INTENTS as readonly string[]).includes(intent)) throw new Error(`box-bounty wiring: a record write names what happened, one of fold.ts INTENTS; got ${String(intent)}`);
   withDb(repoRoot, true, entry => {
     refreshDataVersion(entry!);
     entry!.db.exec('BEGIN IMMEDIATE');
     try {
-      upsertRow(entry!, record);
+      upsertRow(entry!, record, intent);
       // The compat stamp exists for a sibling JSON file still on disk —
       // this acquire's scan already proved none is there, so a clean
       // checkout skips the stat and both meta writes entirely.
@@ -1062,10 +1082,10 @@ export function storedIds(repoRoot: string): string[] {
 // the issue's state and the branch's removal) and `chain:<id>` (the shared chain's push). A row is only a queue: what it
 // may send stands on its `owed` event, and what it sends is rebuilt from the folded record at send time (reconcile.ts).
 
-export type OutboxKind = 'issue' | 'decision' | 'chain';
+export type OutboxKind = 'issue' | 'decision' | 'chain' | 'board';
 export interface OutboxRow { readonly key: string; readonly bountyId: string; readonly eventSeq: number; readonly kind: string; readonly state: string; readonly result: string | null; readonly doneAt: string | null }
 /** What an owed event says: its row's key and kind, and the owe-time facts the door weighs (a chain tip, a grant). */
-export interface Owed { readonly key: string; readonly kind: OutboxKind; readonly tip?: string; readonly authorised?: true; /** When it was owed, from the event's own column. */ readonly at?: string }
+export interface Owed { readonly key: string; readonly kind: OutboxKind; readonly tip?: string; readonly authorised?: true; /** A board hint's event. */ readonly event?: string; /** When it was owed, from the event's own column. */ readonly at?: string }
 
 function inTransaction<T>(repoRoot: string, run: (entry: StoreEntry) => T): T {
   return withDb(repoRoot, true, entry => {

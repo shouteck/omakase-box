@@ -20,7 +20,8 @@ import { promisedTotal } from './money.js';
 import { ownerStatusLine,waitingSummary } from './owner-text.js';
 import { boardAddress,boardLine,boardNotToldLine,boardTold } from './board.js';
 import { paymentOf,payToLine,UNATTRIBUTED } from './pay.js';
-import { applicableAttempts,attemptsOf,endedCount,endedRecords,isOpenStage,listRecords,loadRecord,openRecords,persistRecord,recordDir,retiredRoute,setOpenSurfacesSync,trackedRecordFiles } from './record.js';
+import { applicableAttempts,attemptsOf,endedCount,endedRecords,isOpenStage,listRecords,loadRecord,openRecords,appendEvents,recordDir,retiredRoute,setOpenSurfacesSync,trackedRecordFiles } from './record.js';
+import { carriesPatch } from './fold.js';
 import { corruptFiles,endedContaining,localEvents,outboxRows,sharedEnded,sharedEndedCount,sharedOpen,sharedRead } from './store.js';
 import { refreshSharedMemory } from './chain.js';
 import { adoptOpenShared } from './adopt.js';
@@ -315,7 +316,7 @@ const scanFindingLines = (record: BountyRecord, indent: string): string[] => {
 export function renderHistory(repoRoot: string, id: string): string {
   loadRecord(repoRoot, id); // an unknown id refuses by name, as status <id> does
   const what = (kind: string, json: string): string => {
-    if (kind === 'patched') {
+    if (carriesPatch(kind)) {
       const patch = JSON.parse(json) as { set: [string[], unknown][]; unset: string[][]; events: { stage?: string }[] };
       const paths = [...patch.set.map(([path]) => path.join('.')), ...patch.unset.map(path => `${path.join('.')} (removed)`)];
       const stages = patch.events.map(event => event.stage).filter(Boolean).map(stage => `stage → ${stage}`);
@@ -550,7 +551,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
       if (options.full && record.allowedBy !== undefined) lines.push(`      allowed by: the owner's ${record.allowedBy.decision === 'allowed' ? `${record.allowedBy.level === 'default' ? 'all-projects setting' : 'repository entry'} "allowed" written ${record.allowedBy.decisionAt}` : 'one-bounty answer'}`);
       if (record.github?.outside !== undefined) {
         record.github.seenPullRequests = [...record.github.seenPullRequests ?? [], ...record.github.availablePullRequests?.filter(pr => !record.github?.seenPullRequests?.some(seen => seen.n === pr.n && seen.commit === pr.commit)) ?? []];
-        persistRecord(repoRoot, record);
+        appendEvents(repoRoot, record, 'seen-marked');
       }
       if (attempts.length > 0) {
         const applicable = applicableAttempts(attempts);
@@ -582,7 +583,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
           lines.push(`      current code now: ${fresh.kind === 'clean' ? 'attempt #' + applicable[0]!.n + ' would merge cleanly onto the current branch' : fresh.kind === 'conflict' ? `attempt #${applicable[0]!.n} would conflict in ${fresh.paths.map(showPath).join(', ')}` : `the merge cannot be tested — ${fresh.detail}`}`);
         }
         record.attempts = attempts.map(attempt => attempt.seenAt === undefined ? { ...attempt, seenAt: new Date().toISOString() } : attempt);
-        persistRecord(repoRoot, record);
+        appendEvents(repoRoot, record, 'seen-marked');
         if (options.full) for (const attempt of ordered.slice(1)) {
           lines.push(`      report: solution #${attempt.n}, recorded ${attempt.at}`);
           for (const line of attempt.report.filter(notNext)) lines.push(`        ${line}`);

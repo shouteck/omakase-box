@@ -5,7 +5,7 @@ import { emitMergeNotice, showPath } from './notice.js';
 import { checkSolutionHistory } from './collect.js';
 import { BountyRefused } from './errors.js';
 import { git,gitOutcome } from './git.js';
-import { attemptsOf,persistRecord } from './record.js';
+import { attemptsOf,appendEvents } from './record.js';
 import type { BountyRecord } from './record.js';
 import { readDecision } from './settings.js';
 import { boundAmount,formatFact,formatFor,readFormat,renderFormat } from './format.js';
@@ -34,7 +34,7 @@ export function syncGitHubDecision(root: string, record: BountyRecord): void {
     if (signedAccount(root) !== publication.account) return invalid('github-account-changed', 'the account that started this post must finish outside work; next: sign in with gh auth login');
     if (publication.issue === null) {
       publication.issue = recoverIssue(root, publication);
-      persistRecord(root, record);
+      appendEvents(root, record, 'issue-recorded');
     }
     if (publication.issue !== null) {
       const endpoint = `repos/${publication.repository}/issues/${publication.issue.number}`;
@@ -131,7 +131,7 @@ export function syncGitHubDecision(root: string, record: BountyRecord): void {
           ? 'next: ask the owner — this head will not be moved onto the bounty branch, so GitHub will not mark this pull request merged; whether to credit it and when to remove the branch are the owner\'s call'
           : `next: omakase-box close ${record.id} retries this`;
         publication.pending = `github-decision-pending (bounty-branch-not-advanced: ${advanced.notAdvanced}): local merged stands; ${publication.branch} stays as it is; ${next}`;
-        persistRecord(root, record);
+        appendEvents(root, record, 'decision-pending');
         return;
       }
       if (advanced.deleted) changed = true;
@@ -170,9 +170,9 @@ export function syncGitHubDecision(root: string, record: BountyRecord): void {
     // recorded decision with today's vocabulary.
     const local = ({ undo: 'revert', reject: 'close', withdraw: 'close' } as Record<string, string>)[event.command ?? ''] ?? event.command;
     publication.pending = `github-decision-pending${detail}: local ${local} stands; retry omakase-box close ${record.id} to comment, close the issue and remove ${publication.branch}`;
-    if (error instanceof DoorRefused) { persistRecord(root, record); throw error; }
+    if (error instanceof DoorRefused) { appendEvents(root, record, 'decision-refused'); throw error; }
   }
-  persistRecord(root, record);
+  appendEvents(root, record, publication.state === 'closed' && publication.pending === null ? 'decision-sent' : 'decision-pending');
 }
 
 const branchChanged = (publication: GitHubPublication, tip: string): BountyRefused =>

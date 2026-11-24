@@ -671,13 +671,16 @@ things and needs no account or credential for any of them:
   the bounty id and the event name (`posted`, `merged`, `closed`, `paid`).
   Never a path, file, diff, task text, branch name or setting. The board
   treats it as "read this issue now" and takes every fact from GitHub, so a
-  hint cannot change what the board shows. A hint that does not arrive is
-  kept in the local store and resent at the end of the next command, at most
-  ten a command, one per bounty (a look reads the whole bounty); `status`
-  says `the board has not been told yet: <reason>; next: any later command
-  sends it again`, and `post`, `apply`, `close` and `config`
-  print the same line on stderr when theirs did not arrive. The command
-  itself succeeds exactly as before.
+  hint cannot change what the board shows. The hint is owed in the local
+  store's outbox (`board:<id>`) and sent at the end of a command that changes
+  something, rebuilt then from the bounty's record; a read (`status`, `look`,
+  `find`, `describe`, `help`, `config` with no change, the hook, a
+  `--preview`) sends the board nothing. A hint that does not arrive stays
+  owed and goes with the next such command, at most ten a command, one per
+  bounty (a look reads the whole bounty); `status` says `the board has not
+  been told yet: <reason>; next: any later command sends it again`, and
+  `post`, `apply`, `close` and `config` print the same line on stderr when
+  theirs did not arrive. The command itself succeeds exactly as before.
 - **`status` says what the board shows.** For open posted bounties and the
   five most recently merged rewarded ones, `status` reads
   `/bounties/<id>.json` (at most five reads a command, stalest first, kept

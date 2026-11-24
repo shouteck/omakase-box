@@ -1,7 +1,7 @@
 import { syncBeforeAction } from './adopt.js';
 import { BountyRefused } from './errors.js';
 import { postBounty } from './commands.js';
-import { listRecords, loadRecord, openRecords, persistRecord, retiredRoute, trackedRecordFiles } from './record.js';
+import { listRecords, loadRecord, openRecords, appendEvents, retiredRoute, trackedRecordFiles } from './record.js';
 import { promisedTotal } from './money.js';
 import { DECISION_WORDS, ownerBlock } from './owner-text.js';
 import { attemptsOf } from './record.js';
@@ -181,7 +181,7 @@ export function allowBounty(repoRoot: string, id: string): string {
   // post, and a later `post` reuses it only while the published state still
   // matches — drift drops it (github-preview-stale or a fresh wait).
   record.waiting = { ...waiting, answered: { at: new Date().toISOString(), ...(waiting.shown === undefined ? {} : { shown: waiting.shown }) } };
-  persistRecord(repoRoot, record);
+  appendEvents(repoRoot, record, 'owner-answered');
   const posted = postBounty(repoRoot, id, waiting.to, { answered: true, ...(waiting.choice === undefined ? {} : { choice: waiting.choice }) });
   return `${id}: answered once; posted to ${posted.destination} — it states $${boundAmount(posted.record) ?? 0}. No repository decision changed.`;
 }
@@ -473,7 +473,7 @@ function recordPaid(repoRoot: string, id: string, withdraw: boolean): string {
   if (withdraw && payment.paidAt === null) throw new BountyRefused('paid-not-recorded', `${id} has no paid record to withdraw — it reads owed $${amount}; nothing changed; next: omakase-box config set paid ${id} records the payment`);
   const at = new Date().toISOString();
   record.events.push({ stage: 'paid', at, amount, by: 'owner', ...(withdraw ? { withdrawn: true } : {}) });
-  persistRecord(repoRoot, record);
+  appendEvents(repoRoot, record, 'paid-recorded');
   // The paid fact travels with the shared bounty memory (decision 4): a
   // `paid` chain event carrying only amount, whose word and the withdrawal
   // mark — never the solver, never the link, nothing to the issue.

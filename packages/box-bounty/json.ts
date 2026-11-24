@@ -27,7 +27,7 @@ import type { previewTake } from './take.js';
 import { publishLists } from './never-ship.js';
 import { adoptOpenShared } from './adopt.js';
 import { BountyRefused } from './errors.js';
-import { applicableAttempts,attemptsOf,baseCommitOf,isOpenStage,listRecords,loadRecord,persistRecord,trackedRecordFiles } from './record.js';
+import { applicableAttempts,attemptsOf,baseCommitOf,isOpenStage,listRecords,loadRecord,appendEvents,trackedRecordFiles } from './record.js';
 import { promisedTotal } from './money.js';
 import { boardAddress,boardFact,boardTold } from './board.js';
 import { paymentOf } from './pay.js';
@@ -340,12 +340,12 @@ export function statusDocument(repoRoot: string, options: StatusDocumentOptions,
     if (record.shared === true) continue; // a shared row carries no seen state — the chain is the fact
     if (record.github?.outside !== undefined) {
       record.github.seenPullRequests = [...record.github.seenPullRequests ?? [], ...record.github.availablePullRequests?.filter(pr => !record.github?.seenPullRequests?.some(seen => seen.n === pr.n && seen.commit === pr.commit)) ?? []];
-      persistRecord(repoRoot, record);
+      appendEvents(repoRoot, record, 'seen-marked');
     }
     const attempts = attemptsOf(record);
     if (attempts.length > 0) {
       record.attempts = attempts.map(attempt => attempt.seenAt === undefined ? { ...attempt, seenAt: new Date().toISOString() } : attempt);
-      persistRecord(repoRoot, record);
+      appendEvents(repoRoot, record, 'seen-marked');
     }
   }
   for (const entry of ended) {

@@ -7,7 +7,7 @@ import { BountyRefused } from './errors.js';
 import { gitOutcome } from './git.js';
 import { SOLVER_WORDS } from './untrusted.js';
 import { resolveAttempt } from './collect.js';
-import { attemptsOf,baseCommitOf,loadRecord,persistRecord,requireCurrentDelivery } from './record.js';
+import { attemptsOf,baseCommitOf,loadRecord,appendEvents,requireCurrentDelivery } from './record.js';
 import type { Attempt,BountyRecord } from './record.js';
 
 // `look` is a print path: the change the solver's pull request makes against
@@ -79,7 +79,7 @@ export function lookBounty(root: string, id: string, target: LookTarget, options
   collected = resolved.collected;
   // Shown means seen: status marks the attempt seen-since from this run.
   record.attempts = attemptsOf(record).map(entry => entry.n === attempt.n && entry.seenAt === undefined ? { ...entry, seenAt: new Date().toISOString() } : entry);
-  persistRecord(root, record);
+  appendEvents(root, record, 'seen-marked');
   // The diff runs against the commit the bounty was made on: the published
   // commit for a history post, else the record's base — new records store
   // no snapshot, so the base the resume context recorded stands in (it is

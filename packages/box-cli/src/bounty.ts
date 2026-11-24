@@ -107,8 +107,11 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
   // noticed, printed the moment it happens.
   setMergeNoticeListener(aside);
   // BT101 stage 3: a read only observes. What a read notices (a hand merge, a collected solution) is owed, and the next
-  // mutating command for that bounty sends it; inside a read, reconcile sends nothing.
-  if (subcommand === undefined || ['look', 'status', 'find', 'hook', 'describe', 'discover'].includes(subcommand)) readOnlyProcess();
+  // mutating command for that bounty sends it; inside a read, reconcile sends nothing. Stage 4: the board hint too, so
+  // every command that only shows something is a read: `help`, `config` with no change, and a `--preview`.
+  const showsOnly = subcommand === 'help' || bountyArgs.includes('--preview')
+    || subcommand === 'config' && !bountyArgs.some(arg => arg === 'set' || arg === 'add' || arg === 'remove');
+  if (subcommand === undefined || ['look', 'status', 'find', 'hook', 'describe', 'discover'].includes(subcommand) || showsOnly) readOnlyProcess();
   // PF5: whatever this command changed, or an earlier one left unsent, goes to
   // the board as the process ends, on every exit path. A hook has a time budget.
   if (!(subcommand === 'take' && bountyArgs.includes('--preview')) && subcommand !== 'hook' && !(subcommand === 'status' && bountyArgs.some(arg => arg === '--wait' || arg === '--timeout' || arg.startsWith('--timeout=')))) {
@@ -358,7 +361,6 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         } finally { process.removeListener('SIGINT', cancel); process.removeListener('SIGTERM', cancel); }
         return;
       }
-      flushBoardHints(root);
       readBoardFacts(root, id);
       if (parsed.switches.has('--history')) {
         if (id === undefined) usageError('--history lists one bounty\'s changes; name it: omakase-box status <id> --history');

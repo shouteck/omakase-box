@@ -6,9 +6,11 @@ import { syncBuiltinESMExports } from 'node:module';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { allowRepository, answerGitHub, BOARD_DEFAULT, boardAddress, boardNotToldLine, boardTold, changeConfig, checkMergedSolutions, createBounty, flushBoardHints, hintOf, loadRecord, metaKeys, metaSet, postBounty, readBoardFacts, renderConfig, renderStatus, setMergeNoticeListener } from '../../../packages/box-bounty/index.js';
-import { fixture, sharedPostedFixture } from './github-fixture.js';
+import { allowRepository, answerGitHub, BOARD_DEFAULT, boardAddress, boardNotToldLine, boardTold, changeConfig, checkMergedSolutions, createBounty, flushBoardHints, hintOf, loadRecord, metaKeys, metaSet, outboxRows, owe, postBounty, readBoardFacts, renderConfig, renderStatus, setMergeNoticeListener } from '../../../packages/box-bounty/index.js';
+import { fixture, postedFixture, sharedPostedFixture } from './github-fixture.js';
 import { CLI_DIST, git, readRecord, rewriteRecordRaw, runRoot, write, writeRecord } from './support.js';
+
+const boardRows = (repo: string): string[] => outboxRows(repo).filter(row => row.kind === 'board' && row.state === 'pending').map(row => row.key);
 
 const STANDIN = fileURLToPath(new URL('./board-standin.cjs', import.meta.url));
 const CLOSED_PORT = 'http://127.0.0.1:9'; // the discard port: nothing answers here
@@ -61,7 +63,7 @@ describe('the hint', { timeout: 180000 }, () => {
   it('is exactly repository, issue, bounty and event; nothing else leaves the machine', () => fixture(({ repo, id, scratch }) => {
     rewarded(scratch, board);
     const posted = postBounty(repo, id, 'github');
-    expect(metaKeys(repo, 'board_hint:')).toEqual([`board_hint:${id}:posted`]);
+    expect(boardRows(repo)).toEqual([`board:${id}`]);
     expect(flushBoardHints(repo).pending).toBe(0);
     const sent = requests();
     expect(sent.map(request => [request.method, request.path])).toEqual([['POST', '/api/hint']]);
@@ -73,23 +75,25 @@ describe('the hint', { timeout: 180000 }, () => {
     expect(Object.keys(sent[0]!.headers).filter(name => /auth|cookie|token/i.test(name))).toEqual([]);
   }));
 
-  it('a stored row with anything added still sends only the four fields; a hostile row is dropped', () => fixture(({ repo, id, scratch }) => {
+  // BT101 stage 4: the hint is an outbox row, rebuilt at send time from the folded record; text on the owed event is
+  // never sent, and a row nothing hintable stands behind is dropped.
+  it('an owed hint with anything added still sends only the four fields; one with no posted record is dropped', () => postedFixture(({ repo, id, scratch }) => {
     rewarded(scratch, board);
-    const hint = { repository: 'owner/project', issue: 3, bounty: id, event: 'closed' };
-    metaSet(repo, `board_hint:${id}:closed`, JSON.stringify({ ...hint, path: 'src/secret.ts', task: 'the task text', branch: 'wip' }));
-    metaSet(repo, `board_hint:${id}:merged`, JSON.stringify({ ...hint, repository: '../../secrets' }));
+    owe(repo, id, 'board', { event: 'closed', path: 'src/secret.ts', task: 'the task text', repository: '../../secrets' } as never);
+    owe(repo, 'bt-0123456789ab', 'board', { event: 'posted' });
     flushBoardHints(repo);
-    expect(requests().map(request => JSON.parse(request.body))).toEqual([hint]);
-    expect(metaKeys(repo, 'board_hint:')).toEqual([]);
+    const issue = loadRecord(repo, id).github!.issue!.number;
+    expect(requests().map(request => JSON.parse(request.body))).toEqual([{ repository: 'owner/project', issue, bounty: id, event: 'closed' }]);
+    expect(boardRows(repo)).toEqual([]);
   }));
 
-  it('a merge and a close in one command are one hint: the board reads the whole bounty on one look', () => fixture(({ repo, id, scratch }) => {
+  it('a merge and a close in one command are one hint: the board reads the whole bounty on one look', () => postedFixture(({ repo, id, scratch }) => {
     rewarded(scratch, board);
-    for (const event of ['merged', 'closed']) metaSet(repo, `board_hint:${id}:${event}`, JSON.stringify({ repository: 'owner/project', issue: 3, bounty: id, event }));
+    for (const event of ['merged', 'closed']) owe(repo, id, 'board', { event });
     // The real board refuses a second look within a minute; a second hint would stay queued.
     expect(flushBoardHints(repo)).toEqual({ pending: 0, reason: null });
     expect(requests().length).toBe(1);
-    expect(metaKeys(repo, 'board_hint:')).toEqual([]);
+    expect(boardRows(repo)).toEqual([]);
   }));
 
   it.each([
@@ -152,7 +156,7 @@ describe('the board unreachable or off', { timeout: 180000 }, () => {
       syncBuiltinESMExports();
     }
     expect(requests()).toEqual([]);
-    expect(metaKeys(repo, 'board_hint:')).toEqual([]);
+    expect(boardRows(repo)).toEqual([]);
     expect(loadRecord(repo, id).github!.pay!.accepts).toBeUndefined();
   }));
 
@@ -465,7 +469,7 @@ describe('the CLI, end to end, with the board on', () => {
       write(world.repo, 'AGENTS.md', 'team notes\n');
       changeConfig(world.repo, 'set', 'instructions', 'true');
       const draft = createBounty({ repoPath: world.repo, taskPath: join(world.repo, 'TASK.md'), why: 'a second hand-off', title: 'Second task' });
-      metaSet(world.repo, `board_hint:${world.id}:posted`, JSON.stringify({ repository: 'owner/project', issue: 1, bounty: world.id, event: 'posted' }));
+      owe(world.repo, world.id, 'board', { event: 'posted' });
       const file = join(world.repo, 'AGENTS.md');
       const block = readFileSync(file);
       const remoteRefs = () => execFileSync('git', ['-c', `safe.directory=${world.bare}`, 'ls-remote', world.bare, 'refs/box-bounty-records/*'], { encoding: 'utf8' });
@@ -480,11 +484,18 @@ describe('the CLI, end to end, with the board on', () => {
       expect(localRefs(), 'a read moved a chain').toBe(local);
       expect(remoteRefs(), 'a read pushed').toBe(remote);
       for (const request of requests()) {
-        if (request.method === 'POST') expect(Object.keys(JSON.parse(request.body)).sort()).toEqual(['bounty', 'event', 'issue', 'repository']);
+        // BT101 stage 4 (D-2026-11-25-board-hint-behind-the-door): a read sends the board nothing; it only reads.
         // PF20 adds one read: pay on merge's state for a repository, by its name alone, as its issue already shows it.
-        else expect(request.path).toMatch(/^\/(bounties\/bt-[a-f\d]{12}\.json|api\/solver\/[\w-]+|api\/pay-on-merge\?repository=[\w.-]+%2F[\w.-]+)$/);
+        expect(request.method, `a read sent the board ${request.path}`).not.toBe('POST');
+        expect(request.path).toMatch(/^\/(bounties\/bt-[a-f\d]{12}\.json|api\/solver\/[\w-]+|api\/pay-on-merge\?repository=[\w.-]+%2F[\w.-]+)$/);
       }
-      expect(requests().some(request => request.method === 'POST')).toBe(true);
+      expect(outboxRows(world.repo, world.id).filter(row => row.kind === 'board' && row.state === 'pending')).toHaveLength(1);
+      // The next command that changes something sends it, identifiers only.
+      const close = cli(world.repo, ['close', world.id]);
+      expect(close.status, close.stderr).toBe(0);
+      const posts = requests().filter(request => request.method === 'POST');
+      expect(posts).toHaveLength(1);
+      expect(Object.keys(JSON.parse(posts[0]!.body)).sort()).toEqual(['bounty', 'event', 'issue', 'repository']);
     });
   });
 
@@ -492,7 +503,7 @@ describe('the CLI, end to end, with the board on', () => {
     const world = sharedPostedFixture({ collected: true });
     world.run(() => {
       rewarded(world.scratch, board);
-      metaSet(world.repo, `board_hint:${world.id}:posted`, JSON.stringify({ repository: 'owner/project', issue: 1, bounty: world.id, event: 'posted' }));
+      owe(world.repo, world.id, 'board', { event: 'posted' });
       expect(cli(world.repo, ['hook', 'start']).status).toBe(0);
       expect(requests()).toEqual([]);
     });

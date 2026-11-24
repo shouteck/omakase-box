@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
-import { answerGitHub, applyBounty, finalizeBounty, loadRecord, persistRecord, planBounty, postBounty, renderStatus } from '../../../packages/box-bounty/index.js';
+import { answerGitHub, applyBounty, finalizeBounty, loadRecord, appendEvents, planBounty, postBounty, renderStatus } from '../../../packages/box-bounty/index.js';
 import { fixture, refused } from './github-fixture.js';
 import type { GithubFixture } from './github-fixture.js';
 import { CLI_DIST, fingerprint, git, makeRepo, readRecordRaw, runRoot, write, writeRecordRaw } from './support.js';
@@ -67,7 +67,7 @@ it('refuses to read comments on an existing issue that is not this bounty\'s, an
   const record = loadRecord(context.repo, context.id);
   if (record.github === undefined) throw new Error('publication missing');
   record.github = { ...record.github, issue: { number: 2, url: stranger.html_url } };
-  persistRecord(context.repo, record);
+  appendEvents(context.repo, record, 'stage-changed');
   const before = context.state().comments.length;
   refused(() => renderStatus(context.repo, { id: context.id, comments: true }), 'github-issue-mismatch');
   expect(context.state().comments).toHaveLength(before);

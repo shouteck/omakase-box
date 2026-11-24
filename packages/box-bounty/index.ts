@@ -66,7 +66,7 @@ export type { ResolvedProgram } from './program.js';
 export { NOTHING_RUN } from './notice.js';
 export { BUILTIN_RULES, changePublishList, loadOwnerList, neverPublishEntries, OWNER_LIST_FILE, publishListed, publishLists, shipRules } from './never-ship.js';
 export type { NeverShipRule, PublishLists } from './never-ship.js';
-export { applicableAttempts, attemptRefName, attemptsOf, canonicalForNew, endedCount, endedRecords, isOpenStage, listRecords, loadRecord, noticeMergedOnce, openRecords, persistRecord, recordDir, recordPath, refName, requireCurrentDelivery, retiredRoute, trackedRecordFiles, transitionTo, writeNewRecord } from './record.js';
+export { applicableAttempts, attemptRefName, attemptsOf, canonicalForNew, endedCount, endedRecords, isOpenStage, listRecords, loadRecord, noticeMergedOnce, openRecords, appendEvents, recordDir, recordPath, refName, requireCurrentDelivery, retiredRoute, trackedRecordFiles, transitionTo, writeNewRecord } from './record.js';
 export { anyJsonContaining, closeStores, countCorrupt, corruptFiles, dropStored, endedContaining, forgetFileSha, listEndedRecent, listOpen, recordExists, recordIds, readStored, searchRecords, seedStored, storeDbPath, storedIds, storedRaw } from './store.js';
 export { ownerGate, waitForOwner } from './gate.js';
 export { assertMinimumReward, assertPromiseRoom, promisedTotal, rewardForPost, withPromiseLock } from './money.js';
@@ -110,7 +110,7 @@ export type { HookHost, HookRun, HookSlot } from './hook.js';
 export { limitGitHubCalls } from './gh.js';
 export { CHAIN_NS, CHAIN_REMOTE_NS, chainRef, syncChains, observeChains, refreshSharedMemory, sharePosted, noteSolution, shareMerged, noteMerged, shareClosed, sharePaid, appendEvent, pushChain } from './chain.js';
 export type { PushResult } from './chain.js';
-export { sharedOpen, sharedEnded, sharedRead, sharedSearch, metaGet, metaSet, metaKeys } from './store.js';
+export { sharedOpen, sharedEnded, sharedRead, sharedSearch, metaGet, metaSet, metaKeys, owe, outboxRows } from './store.js';
 export type { SharedRow } from './store.js';
 // BT101 stage 3: a read only observes.
 export { asRead, readOnlyProcess } from './reconcile.js';

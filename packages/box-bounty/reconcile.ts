@@ -9,7 +9,7 @@ import { BountyRefused } from './errors.js';
 import { api, ensureLabel, invalid, isObject, issueNumber, namesGitHubCause, recoverIssue, remoteGit } from './gh.js';
 import { emitMergeNotice, emitSentEarlier, inRead } from './notice.js';
 import { checkedForIssue, decisionGranted, DoorRefused } from './outbound.js';
-import { persistRecord, type BountyRecord } from './record.js';
+import { appendEvents, type BountyRecord } from './record.js';
 import { outboxRows, owe, owedBehind, pendingOwed, readStored, settleOwed, type Owed, type OutboxRow } from './store.js';
 
 export interface Sent {
@@ -36,7 +36,7 @@ function sendIssue(root: string, id: string): string {
   try {
     remoteGit(root, repository, ['push', `${checked}:refs/heads/${publication.branch}`]);
     publication.state = 'branch-pushed';
-    persistRecord(root, record);
+    appendEvents(root, record, 'branch-pushed');
     if (publication.issue === null) {
       publication.issue = recoverIssue(root, publication) ?? (() => {
         ensureLabel(root, repository);
@@ -47,11 +47,11 @@ function sendIssue(root: string, id: string): string {
       })();
     }
     publication.state = 'posted'; publication.pending = null;
-    persistRecord(root, record);
+    appendEvents(root, record, 'issue-recorded');
     return `issue ${publication.issue.url}`;
   } catch (error) {
     publication.pending = `post-incomplete: ${publication.state}; issue ${publication.issue?.url ?? 'not recorded'}; retry omakase-box post ${id} or remove with omakase-box close ${id}`;
-    persistRecord(root, record);
+    appendEvents(root, record, 'post-incomplete');
     // A named GitHub cause travels with the refusal (BT50); its own next step is dropped, since this one says how to
     // resume the post.
     const cause = namesGitHubCause(error) ? `; ${error.reason}: ${error.message.split('; next:')[0]}` : '';
@@ -67,7 +67,7 @@ function sendDecisionRow(root: string, id: string, owed: Owed): string | null {
   if (record === null || publication === undefined) return 'nothing to send';
   if (!decisionGranted(root, record, owed)) {
     publication.pending = `github-decision-pending (owner-permission-needed): this machine's owner has given no permission for this repository, so GitHub was not touched; next: ask the owner — omakase-box allow <owner/name>, then omakase-box close ${record.id}`;
-    persistRecord(root, record);
+    appendEvents(root, record, 'decision-refused');
     throw new DoorRefused('owner-permission-needed', publication.pending);
   }
   syncGitHubDecision(root, record);
@@ -116,7 +116,8 @@ export { asRead, inRead, readOnlyProcess } from './notice.js';
 /** Send what one bounty owes, oldest row first; each outcome is returned for the command to name. */
 export function reconcile(root: string, id: string): Sent[] {
   if (inRead()) return [];
-  return outboxRows(root, id).filter(row => row.state === 'pending').map(row => {
+  // A board hint goes with the end-of-command flush (board.ts), not here.
+  return outboxRows(root, id).filter(row => row.state === 'pending' && row.kind !== 'board').map(row => {
     const owedAt = owedBehind(root, row)?.at;
     const sent = sendOne(root, row);
     if (sent.outcome === 'sent') emitSentEarlier(sent.key, sent.detail, owedAt);

@@ -9,9 +9,9 @@ import { CHARGE_WORDS, PAYPAL_WORDS } from '../box-platform/src/charge-words.js'
 import { acceptsShape, checkedAccepts, checkedWays, methodWords, paymentOf, type PayAccepts } from './pay.js';
 import { isOpenStage, listRecords, type BountyRecord } from './record.js';
 import { loadSettings } from './settings.js';
-import { metaGet, metaKeys, metaSet, sharedEnded, sharedOpen } from './store.js';
+import { metaGet, metaKeys, metaSet, outboxRows, owe, owedBehind, readStored, settleOwed, sharedEnded, sharedOpen } from './store.js';
 import { solverAccount } from './untrusted.js';
-import { quoteForeign } from './notice.js';
+import { inRead, quoteForeign } from './notice.js';
 
 /** The public deployment's address. Settings choose another or none; no test run may reach it (boardAddress). */
 export const BOARD_DEFAULT = 'https://omakasebox.dev';
@@ -23,7 +23,6 @@ const READS_PER_COMMAND = 5;
 const ENDED_SHOWN = 5;
 const READ_FRESH_MS = 300000; // The board itself says polling faster gains nothing.
 
-const HINT_PREFIX = 'board_hint:';
 const HINT_ERROR = 'board_hint_error';
 const readKey = (id: string): string => `board_read:${id}`;
 
@@ -166,52 +165,54 @@ export function hintOf(repository: unknown, issue: unknown, bounty: unknown, eve
   return { repository, issue, bounty, event: event as HintEvent };
 }
 
-// Called where a change becomes shared (chain.ts). A repeat overwrites itself.
+// Called where a change becomes shared (chain.ts). BT101 stage 4 (D-2026-11-25-board-hint-behind-the-door): the hint is
+// an outbox row, `board:<id>`, owed with the event it tells; a repeat re-arms the one row, so one look per bounty stays
+// enough. Only a command that changes things sends it, at its end: a read sends nothing.
 export function queueBoardHint(root: string, record: BountyRecord, event: HintEvent): void {
   if (boardAddress() === '') return;
   try {
     const hint = hintOf(record.github?.repository, record.github?.issue?.number, record.id, event);
     if (hint === null) return;
-    metaSet(root, `${HINT_PREFIX}${hint.bounty}:${hint.event}`, JSON.stringify(hint));
+    owe(root, hint.bounty, 'board', { event: hint.event });
     metaSet(root, readKey(hint.bounty), null); // what was read before this change is out of date
   } catch { /* the board is never a reason a command fails */ }
 }
 
 export interface BoardTold { readonly pending: number; readonly reason: string | null }
 
+const pendingHints = (root: string) => outboxRows(root).filter(row => row.kind === 'board' && row.state === 'pending');
+
 export function boardTold(root: string): BoardTold {
   try {
-    const pending = boardAddress() === '' ? 0 : metaKeys(root, HINT_PREFIX).length;
+    const pending = boardAddress() === '' ? 0 : pendingHints(root).length;
     return { pending, reason: pending === 0 ? null : metaGet(root, HINT_ERROR) ?? 'it has not been tried yet' };
   } catch { return { pending: 0, reason: null }; }
 }
 
-// Sends what is queued. What the board took, or refused as unreadable, goes;
-// everything else stays for the next command.
+// Sends what is owed, from a command that changes things; inside a read it sends nothing. Each hint is rebuilt at send
+// time from the record as folded now and the event its owed event names, through hintOf's allow-list, never from text on
+// the row. What the board took, or refused as unreadable, is settled; everything else stays for the next command.
 export function flushBoardHints(root: string): BoardTold {
-  if (!boardOn()) return boardTold(root);
+  if (!boardOn() || inRead()) return boardTold(root);
   try {
-    const keys = metaKeys(root, HINT_PREFIX).slice(0, HINTS_PER_COMMAND);
-    if (keys.length === 0) return boardTold(root);
-    const sendable = keys.flatMap(key => {
-      let stored: Record<string, unknown> = {};
-      try { stored = JSON.parse(metaGet(root, key) ?? '{}') as Record<string, unknown>; } catch { /* not a hint: dropped below */ }
-      const hint = hintOf(stored['repository'], stored['issue'], stored['bounty'], stored['event']);
-      if (hint === null) { metaSet(root, key, null); return []; }
-      return [{ key, hint }];
+    const rows = pendingHints(root).slice(0, HINTS_PER_COMMAND);
+    if (rows.length === 0) return boardTold(root);
+    const sendable = rows.flatMap(row => {
+      const owed = owedBehind(root, row);
+      const record = owed === null ? null : readStored(root, row.bountyId).record;
+      const hint = record === null ? null : hintOf(record.github?.repository, record.github?.issue?.number, row.bountyId, owed?.event);
+      if (hint === null) { settleOwed(root, row, 'refused', { reason: 'not-a-hint', detail: `${row.key}: no hint can be made from what stands behind it; nothing was sent` }); return []; }
+      return [{ row, hint }];
     });
-    // One look reads the whole bounty, so one hint per bounty is enough: a
-    // second would only be refused as too soon and stay queued.
-    const once = sendable.filter(({ hint }, index) => sendable.findIndex(other => other.hint.bounty === hint.bounty) === index);
-    if (once.length === 0) return boardTold(root);
-    const replies = boardCalls(once.map(({ hint }) => ({ path: '/api/hint', body: JSON.stringify(hint) })));
+    if (sendable.length === 0) return boardTold(root);
+    const replies = boardCalls(sendable.map(({ hint }) => ({ path: '/api/hint', body: JSON.stringify(hint) })));
     let reason: string | null = null;
-    once.forEach(({ hint }, index) => {
+    sendable.forEach(({ row }, index) => {
       const reply = replies[index]!;
       if ('failed' in reply) reason = reason ?? reply.failed;
       else if (reply.status === 429) reason = reason ?? 'it asked the tool to wait';
       else if (reply.status >= 500) reason = reason ?? `it answered ${reply.status}`;
-      else for (const { key } of sendable) if (key.startsWith(`${HINT_PREFIX}${hint.bounty}:`)) metaSet(root, key, null);
+      else settleOwed(root, row, reply.status < 300 ? 'sent' : 'refused', { ...(reply.status < 300 ? {} : { reason: 'board-refused' }), detail: `the board answered ${reply.status}` });
     });
     metaSet(root, HINT_ERROR, reason);
   } catch { /* the board is never a reason a command fails */ }

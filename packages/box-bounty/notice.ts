@@ -4,6 +4,7 @@
 // recognised and closed on, or a close-up on GitHub the owner did not answer
 // for (merged.ts and github.ts emit through here). The CLI registers a
 // printer; library callers see the same truth in the record's events.
+import { sentEarlierLine } from './wording.js';
 let mergeNoticeListener: ((line: string) => void) | null = null;
 export function setMergeNoticeListener(next: ((line: string) => void) | null): void {
   mergeNoticeListener = next;
@@ -26,7 +27,7 @@ export function readOnlyProcess(): void { reading += 1; }
 // it goes out; a row this command owed itself is told by the command's own output.
 const startedAt = new Date().toISOString();
 export const emitSentEarlier = (key: string, detail: string, owedAt: string | undefined): void => {
-  if (owedAt !== undefined && owedAt < startedAt) emitMergeNotice(`sent ${key}: ${detail}`);
+  if (owedAt !== undefined && owedAt < startedAt) emitMergeNotice(sentEarlierLine(key, detail));
 };
 
 // A stranger's text — a solver's path, a line of a solver's change, a line of

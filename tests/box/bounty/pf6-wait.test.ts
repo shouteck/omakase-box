@@ -198,7 +198,7 @@ describe('PF6 built status --wait', () => {
     world.run(() => {
       const path = join(settings, 'settings.json');
       writeFileSync(path, JSON.stringify({ ...JSON.parse(readFileSync(path, 'utf8')), board: boardBase }));
-      bounty.metaSet(world.repo, `board_hint:${world.id}:posted`, JSON.stringify({ repository: 'owner/project', issue: 1, bounty: world.id, event: 'posted' }));
+      bounty.owe(world.repo, world.id, 'board', { event: 'posted' });
       for (const key of bounty.metaKeys(world.repo, 'gh_probe:')) bounty.metaSet(world.repo, key, null);
       bounty.closeStores();
     });

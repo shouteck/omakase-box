@@ -11,7 +11,7 @@ import { checkProjectClaims,shipRules } from './never-ship.js';
 import { allowedByFor,ownerGate,sameShown,waitForOwner } from './gate.js';
 import { boardAddress } from './board.js';
 import { sharePosted } from './chain.js';
-import { loadRecord,persistRecord,recordScanFinding,retiredRoute,settleScanFindings,transitionTo } from './record.js';
+import { loadRecord,appendEvents,recordScanFinding,retiredRoute,settleScanFindings,transitionTo } from './record.js';
 import { assertMinimumReward, assertPromiseRoom, rewardForPost, withPromiseLock } from './money.js';
 import type { BountyRecord } from './record.js';
 import { repositoryAddress } from './repository.js';
@@ -265,7 +265,7 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
     if (hits.length > 0) {
       waitForOwner(root, record, { for: 'post', reason: 'secrets', at: new Date().toISOString(), to: 'github', choice, hits, shown: shownOfPlan(plan) });
       recordScanFinding(record, hits, 'post');
-      persistRecord(root, record);
+      appendEvents(root, record, 'post-held');
       // A hit in the bounty's own text has no file for the owner's lists to
       // settle (BT45): the agent takes it out and creates the bounty again.
       const fileHits = hits.some(hit => !isTextField(hit.path));
@@ -335,7 +335,7 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
       record.reward = { amount: reward!.amount };
       record.github = publication;
       git(root, ['update-ref', publicationRef(id), publication.commit]);
-      persistRecord(root, record);
+      appendEvents(root, record, 'post-planned');
     };
     if (reward!.amount === 0) bind(); else withPromiseLock(root, bind);
   }
@@ -400,7 +400,7 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
     record.allowedBy = allowedByFor(root, record, opts?.answered === true, true);
     record.github = publication;
     git(root, ['update-ref', publicationRef(id), publication.commit]);
-    persistRecord(root, record);
+    appendEvents(root, record, 'post-planned');
   }
   const branchTip = remoteBranchSha(root, repository, record.github.branch);
   if (branchTip !== null && branchTip !== record.github.commit) {
@@ -419,7 +419,7 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
   if (publication.issue === null) return invalid('github-post-incomplete', `post-incomplete: ${publication.state}; issue not recorded; next: retry omakase-box post ${id} or remove it with omakase-box close ${id}`);
   settleScanFindings(root, posted, 'went-out');
   if (posted.stage !== 'posted') transitionTo(root, posted, 'posted', { destination: publication.issue.url });
-  else persistRecord(root, posted);
+  else appendEvents(root, posted, 'issue-recorded');
   // BT32: the posted milestone is a shared chain event — scanned, appended,
   // pushed; a push that cannot land is held locally and retried, never a
   // reason the post itself fails.
