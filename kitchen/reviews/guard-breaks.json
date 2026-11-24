@@ -132,9 +132,9 @@
    "guarantees": [
     "P2"
    ],
-   "file": "packages/box-bounty/post.ts",
-   "find": "const checked = checkOutbound(root, repository, publication.commit, shipRules(root), id);",
-   "replace": "const checked = publication.commit;",
+   "file": "packages/box-bounty/outbound.ts",
+   "find": "return checkOutbound(root, publication.repository, publication.commit, shipRules(root), record.id);",
+   "replace": "return publication.commit;",
    "note": "the first-publication push no longer passes through the sink check",
    "tests": [
     "tests/box/bounty/bt69.test.ts"
