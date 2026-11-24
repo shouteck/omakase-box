@@ -13,7 +13,7 @@ import type { BountyRecord, WaitingFor } from './record.js';
 import { relative } from 'node:path';
 import { checkInstructionFile, checkInstructionMarkers, discoverInstructions, instructionNotices, syncInstructions } from './instructions.js';
 import { checkInstructionSettingsWrite, readInstructions, writeInstructions } from './settings.js';
-import { changePublishList, publishLists } from './never-ship.js';
+import { changePublishList, neverPublishEntries, neverScopeText, publishLists } from './never-ship.js';
 import { githubRemotes, repositoryAddress } from './repository.js';
 import { boundAmount } from './format.js';
 import { boardAddress, payOnMergeLines } from './board.js';
@@ -271,7 +271,9 @@ export function renderConfig(repoRoot: string | null, options?: { readonly full?
     const publish = publishLists(repoRoot);
     // Every listed path is quoted (BT43 correction 5): the owner lists the
     // names a scan hold showed, and after an apply those can be a solver's.
-    lines.push(`never publish: ${publish.never.length === 0 ? 'none listed' : publish.never.map(showPath).join(', ')} — kept out of every bounty; change: omakase-box config add never-publish <path>, or remove never-publish <path>`);
+    // BT77: each entry says where it holds — every copy of the repository, or this folder only.
+    const never = neverPublishEntries(repoRoot);
+    lines.push(`never publish: ${never.length === 0 ? 'none listed' : never.map(entry => `${showPath(entry.path)} (${neverScopeText(entry.scope)})`).join(', ')} — kept out of every bounty; change: omakase-box config add never-publish <path>, or remove never-publish <path>`);
     lines.push(`safe to publish: ${publish.safe.length === 0 ? 'none listed' : publish.safe.map(showPath).join(', ')} — paths the pre-publish scan does not hold a bounty over; change: omakase-box config add safe-to-publish <path>, or remove safe-to-publish <path>`);
     const choice = readInstructions(repoRoot);
     lines.push(`instructions: ${choice.enabled ? 'on' : 'off'}; change: omakase-box config set instructions <true|false>`);
