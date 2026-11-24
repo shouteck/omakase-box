@@ -183,15 +183,20 @@ describe('BT69: the never-ship check at the publication sink', () => {
   });
 
   // @guards P2
-  it('post.ts has one first-publication push, of the checked SHA, after the check and before the issue', () => {
-    const source = readFileSync(fileURLToPath(new URL('../../../packages/box-bounty/post.ts', import.meta.url)), 'utf8');
+  // BT101 stage 2: the first-publication push moved from post.ts to reconcile.ts's issue sender, behind the door.
+  it('reconcile.ts has one first-publication push, of the checked SHA, after the check and before the issue', () => {
+    const read = (file: string) => readFileSync(fileURLToPath(new URL(`../../../packages/box-bounty/${file}`, import.meta.url)), 'utf8');
+    const source = read('reconcile.ts');
+    expect([...read('post.ts').matchAll(/remoteGit\([^;]*'push'[^;]*\);/g)]).toEqual([]);
     const pushesInSource = [...source.matchAll(/remoteGit\([^;]*'push'[^;]*\);/g)].map(match => match[0]);
     expect(pushesInSource).toEqual(['remoteGit(root, repository, [\'push\', `${checked}:refs/heads/${publication.branch}`]);']);
-    const check = source.indexOf('const checked = checkOutbound(root, repository, publication.commit, shipRules(root), id);');
+    const check = source.indexOf('const checked = checkedForIssue(root, record);');
     const push = source.indexOf(pushesInSource[0]!);
     const issue = source.indexOf('`repos/${repository}/issues`');
     expect(check).toBeGreaterThan(-1);
     expect(check).toBeLessThan(push);
     expect(push).toBeLessThan(issue);
+    // The door's check returns the sink's checked commit, under the rules as they are at send time.
+    expect(read('outbound.ts')).toContain('return checkOutbound(root, publication.repository, publication.commit, shipRules(root), record.id);');
   });
 });

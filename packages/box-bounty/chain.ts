@@ -13,7 +13,7 @@
 // allow-list, its field types and the 8,000-character bound before it is
 // imported. The same boundary gates WRITES: a local chain ref may be
 // pushed only when its tip carries persisted per-id provenance — the exact
-// sha the tool itself authored (`chain_authored:`/`chain_pending:`), the
+// sha the tool itself authored (`chain_authored:`, or the tip a `chain:<id>` outbox row owes), the
 // tip it previously pushed (`chain_pushed:`), or the remote tip it
 // imported (`chain_tip:`). Namespace membership alone is never upload
 // authorization: a planted ref, or one replaced with an unscanned
@@ -38,7 +38,7 @@ import { emitMergeNotice } from './notice.js';
 import type { Attempt, BountyRecord } from './record.js';
 import { scanText } from './scan.js';
 import { loadState, requireRepository, saveState } from './settings.js';
-import { importShared, metaGet, metaKeys, metaSet } from './store.js';
+import { importShared, metaGet, metaKeys, metaSet, outboxRows, owe, owedBehind, pendingOwed, settleOwed } from './store.js';
 import type { SharedRow } from './store.js';
 import { toolVersion } from './create.js';
 
@@ -137,14 +137,23 @@ const isChainCommit = (root: string, sha: string): boolean =>
 
 const IDENTITY = ['-c', 'user.name=box-bounty', '-c', 'user.email=box-bounty@localhost'];
 
-// Persisted per-id provenance (decision 2, write side). `chain_authored:` /
-// `chain_pending:` record the exact tip this tool committed (pending also
-// marks a push still owed); `chain_pushed:` the last tip this machine put
+// Persisted per-id provenance (decision 2, write side). `chain_authored:` and
+// the owed `chain:<id>` row record the exact tip this tool committed (the row
+// also marks a push still owed); `chain_pushed:` the last tip this machine put
 // on the remote; `chain_tip:` the remote tip it imported. A local tip is
 // pushable only when it equals one of these — a planted ref, or a trusted
 // ref swapped for an unscanned descendant, matches none.
+// BT101 stage 2: the owed push is the `chain:<id>` outbox row, and the tip it may send is the one its `owed` event names
+// (it was `chain_pending:<id>`; store.ts moves an older store's keys over on first open).
+const owedTip = (root: string, id: string): string | null => pendingOwed(root, `chain:${id}`)?.tip ?? null;
+// Owe the push of exactly this tip; owing the tip already owed writes nothing.
+const oweTip = (root: string, id: string, tip: string): void => { if (owedTip(root, id) !== tip) owe(root, id, 'chain', { tip }); };
+const settleTip = (root: string, id: string, tip: string): void => {
+  const row = outboxRows(root, id).find(entry => entry.key === `chain:${id}` && entry.state === 'pending');
+  if (row !== undefined) settleOwed(root, row, 'sent', { detail: `chain pushed at ${tip}` });
+};
 const toolTip = (root: string, id: string, tip: string): boolean =>
-  metaGet(root, `chain_authored:${id}`) === tip || metaGet(root, `chain_pending:${id}`) === tip;
+  metaGet(root, `chain_authored:${id}`) === tip || owedTip(root, id) === tip;
 const provenTip = (root: string, id: string, tip: string): boolean =>
   toolTip(root, id, tip) ||
   metaGet(root, `chain_pushed:${id}`) === tip ||
@@ -180,7 +189,7 @@ export function appendEvent(root: string, id: string, event: ChainEvent): string
   const commit = commitEvent(root, id, JSON.stringify(event) + '\n', parent);
   // From this moment the authored tip is a pending push — a crash before
   // pushChain still retries it, bound to exactly this tip.
-  metaSet(root, `chain_pending:${id}`, commit);
+  oweTip(root, id, commit);
   return commit;
 }
 
@@ -209,7 +218,7 @@ function mergeRemoteTip(root: string, id: string): 'new' | 'identical' | 'ahead'
     return 'ff';
   }
   const merge = commitEvent(root, id, JSON.stringify({ v: 1, type: 'merge' }) + '\n', [local, remote]);
-  metaSet(root, `chain_pending:${id}`, merge);
+  oweTip(root, id, merge);
   return 'merged';
 }
 
@@ -248,7 +257,7 @@ export function pushChain(root: string, id: string, knownTip?: string): PushResu
   };
   const firstTip = proven(knownTip);
   if (firstTip === null) return { pushed: false, reason: 'the local chain tip has no tool-authored or remote provenance' };
-  if (url === null) { metaSet(root, `chain_pending:${id}`, firstTip); return { pushed: false, reason: 'the repository remote is not settled' }; }
+  if (url === null) { oweTip(root, id, firstTip); return { pushed: false, reason: 'the repository remote is not settled' }; }
   const pushedBefore = metaGet(root, `chain_pushed:${id}`) !== null;
   let restored = false;
   for (let attempt = 1; attempt <= PUSH_TRIES; attempt += 1) {
@@ -260,14 +269,14 @@ export function pushChain(root: string, id: string, knownTip?: string): PushResu
     if (attemptTip === null) {
       // The authored tip is still owed — keep the LAST PROVEN sha as pending
       // rather than blessing (or forgetting under) the replacement.
-      metaSet(root, `chain_pending:${id}`, firstTip);
+      oweTip(root, id, firstTip);
       return { pushed: false, reason: 'the local chain tip changed to a ref with no tool-authored or remote provenance' };
     }
     if (pushOnce(root, url, id, attemptTip)) {
       // Record exactly the sha this push put on the remote — reading the
       // local ref here would bless whatever a swap installed.
       metaSet(root, `chain_pushed:${id}`, attemptTip);
-      metaSet(root, `chain_pending:${id}`, null);
+      settleTip(root, id, attemptTip);
       return { pushed: true, restored };
     }
     fetchOne(root, url, id);
@@ -281,7 +290,7 @@ export function pushChain(root: string, id: string, knownTip?: string): PushResu
     mergeRemoteTip(root, id);
   }
   const owed = proven();
-  if (owed !== null) metaSet(root, `chain_pending:${id}`, owed);
+  if (owed !== null) oweTip(root, id, owed);
   return { pushed: false, reason: 'the remote chain moved each time (non-fast-forward)' };
 }
 
@@ -612,7 +621,7 @@ function adoptAndImport(root: string): ChainView {
       // A genuinely diverged chain this machine is entitled to publish:
       // join the tips under an empty merge event and owe the push.
       const merge = commitEvent(root, id, JSON.stringify({ v: 1, type: 'merge' }) + '\n', [local, remote]);
-      metaSet(root, `chain_pending:${id}`, merge);
+      oweTip(root, id, merge);
     } else {
       // A foreign diverged tip is never grafted onto the remote graph —
       // adopt the remote tip and leave its objects unreferenced.
@@ -660,10 +669,12 @@ function retryPending(root: string, url?: string, view?: ChainView): void {
   const remoteTip = (id: string): string | null =>
     view !== undefined ? view.remoteTips.get(id) ?? null : tipOf(root, remoteRef(root, id));
   const ids = new Set<string>();
-  for (const key of metaKeys(root, 'chain_pending:')) {
-    const id = key.slice('chain_pending:'.length);
+  for (const row of outboxRows(root)) {
+    if (row.kind !== 'chain' || row.state !== 'pending') continue;
+    const id = row.bountyId;
     if (!CHAIN_ID.test(id)) continue;
-    const expected = metaGet(root, key);
+    // A row no owed event stands behind names no tip, so it can never drive a push.
+    const expected = owedBehind(root, row)?.tip ?? null;
     if (expected === null) continue;
     // A replaced or foreign ref never matches the recorded tip. Where the
     // view's snapshot predates an adoption-time merge of this very chain,

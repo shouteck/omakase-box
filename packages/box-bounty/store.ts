@@ -177,7 +177,7 @@ function dropFts(db: DatabaseSync): void {
   }
 }
 
-const SCHEMA_VERSION = 5;
+const SCHEMA_VERSION = 6;
 
 // BT101: every write to a record row appends one local event in the same savepoint, so the row is always the fold of the
 // bounty's events (fold.ts). A copy handed out by the store remembers, out of band, the row text it was read from; its write
@@ -185,6 +185,8 @@ const SCHEMA_VERSION = 5;
 // undo another writer's change to a path it did not touch. A path changed both since the read and by this copy is refused
 // `record-changed`. A copy with no remembered read (new, or built by spreading) writes a whole `replaced` document.
 const readFrom = new WeakMap<BountyRecord, string>();
+// An owed effect's row: owing it again re-arms it, bound to the newest owed event.
+const OWE_ROW = "INSERT INTO outbox(key, bounty_id, event_seq, kind, state, result, done_at) VALUES(?, ?, ?, ?, 'pending', NULL, NULL) ON CONFLICT(key) DO UPDATE SET bounty_id=excluded.bounty_id, event_seq=excluded.event_seq, kind=excluded.kind, state='pending', result=NULL, done_at=NULL";
 
 function setUp(db: DatabaseSync): void {
   db.exec('PRAGMA busy_timeout=5000');
@@ -230,9 +232,20 @@ function setUp(db: DatabaseSync): void {
         CREATE INDEX IF NOT EXISTS shared_open_updated ON shared(open, updated_at);
         -- BT101: the local event log; the records row is its fold's cache.
         CREATE TABLE IF NOT EXISTS events(bounty_id TEXT NOT NULL, seq INTEGER NOT NULL, at TEXT NOT NULL, kind TEXT NOT NULL, json TEXT NOT NULL, PRIMARY KEY(bounty_id, seq));
+        -- BT101 stage 2: what is owed outside, one row per effect; its owed event is the authority, the row only a queue.
+        CREATE TABLE IF NOT EXISTS outbox(key TEXT PRIMARY KEY, bounty_id TEXT NOT NULL, event_seq INTEGER NOT NULL, kind TEXT NOT NULL, state TEXT NOT NULL, result TEXT, done_at TEXT);
       `);
       // BT101: a record from before the log starts it with one `created` event holding the row exactly; safe to repeat.
       db.exec("INSERT INTO events(bounty_id, seq, at, kind, json) SELECT r.id, 1, r.updated_at, 'created', r.json FROM records r WHERE NOT EXISTS (SELECT 1 FROM events e WHERE e.bounty_id = r.id)");
+      // BT101 stage 2: a chain push an older store still owed (`chain_pending:<id>`, bound to the exact tip) becomes an owed
+      // chain row; the key goes in the same transaction, so this runs once.
+      for (const pending of db.prepare("SELECT key, value FROM meta WHERE key GLOB 'chain_pending:*'").all() as unknown as { key: string; value: string }[]) {
+        const id = pending.key.slice('chain_pending:'.length);
+        const seq = (db.prepare('SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM events WHERE bounty_id=?').get(id) as { n: number }).n;
+        db.prepare("INSERT INTO events(bounty_id, seq, at, kind, json) VALUES(?, ?, ?, 'owed', ?)").run(id, seq, new Date().toISOString(), JSON.stringify({ key: `chain:${id}`, kind: 'chain', tip: pending.value }));
+        db.prepare(OWE_ROW).run(`chain:${id}`, id, seq, 'chain');
+        db.prepare('DELETE FROM meta WHERE key=?').run(pending.key);
+      }
       const columns = (db.prepare('PRAGMA table_info(records)').all() as unknown as { name: string }[]).map(column => column.name);
       if (!columns.includes('search_text')) db.exec("ALTER TABLE records ADD COLUMN search_text TEXT NOT NULL DEFAULT ''");
       // Version 1 rows have no search text; version 2 derived it from fewer
@@ -419,9 +432,10 @@ const deleteRow = (entry: StoreEntry, id: string): void => atomically(entry, () 
 });
 
 // One local event, the next for the bounty, inside the caller's savepoint.
-const appendLocal = (entry: StoreEntry, id: string, kind: string, value: unknown): void => {
+const appendLocal = (entry: StoreEntry, id: string, kind: string, value: unknown): number => {
   const seq = ((stmt(entry, 'SELECT COALESCE(MAX(seq), 0) AS n FROM events WHERE bounty_id=?').get(id) as { n: number }).n) + 1;
   stmt(entry, 'INSERT INTO events(bounty_id, seq, at, kind, json) VALUES(?, ?, ?, ?, ?)').run(id, seq, new Date().toISOString(), kind, JSON.stringify(value));
+  return seq;
 };
 const atomically = <T>(entry: StoreEntry, run: () => T): T => {
   entry.db.exec('SAVEPOINT bt101_write');
@@ -1041,6 +1055,75 @@ export function storedIds(repoRoot: string): string[] {
   } finally {
     try { db?.close(); } catch { /* best-effort */ }
   }
+}
+
+// ---- the outbox (BT101 stage 2) ---------------------------------------------------------------------------------------
+// One row per effect owed outside: `issue:<id>` (the branch push and the issue), `decision:<id>` (the decision comments,
+// the issue's state and the branch's removal) and `chain:<id>` (the shared chain's push). A row is only a queue: what it
+// may send stands on its `owed` event, and what it sends is rebuilt from the folded record at send time (reconcile.ts).
+
+export type OutboxKind = 'issue' | 'decision' | 'chain';
+export interface OutboxRow { readonly key: string; readonly bountyId: string; readonly eventSeq: number; readonly kind: string; readonly state: string; readonly result: string | null; readonly doneAt: string | null }
+/** What an owed event says: its row's key and kind, and the owe-time facts the door weighs (a chain tip, a grant). */
+export interface Owed { readonly key: string; readonly kind: OutboxKind; readonly tip?: string; readonly authorised?: true }
+
+function inTransaction<T>(repoRoot: string, run: (entry: StoreEntry) => T): T {
+  return withDb(repoRoot, true, entry => {
+    entry!.db.exec('BEGIN IMMEDIATE');
+    try { const result = run(entry!); entry!.db.exec('COMMIT'); return result; }
+    catch (error) { entry!.db.exec('ROLLBACK'); throw error; }
+  });
+}
+
+/** Owe one effect: its `owed` event and its row, in one transaction. Owing it again re-arms the row. */
+export function owe(repoRoot: string, id: string, kind: OutboxKind, detail: Omit<Owed, 'key' | 'kind'> = {}): string {
+  const key = `${kind}:${id}`;
+  inTransaction(repoRoot, entry => {
+    const seq = appendLocal(entry, id, 'owed', { key, kind, ...detail });
+    stmt(entry, OWE_ROW).run(key, id, seq, kind);
+  });
+  return key;
+}
+
+const toRow = (row: Record<string, unknown>): OutboxRow => ({
+  key: row['key'] as string, bountyId: row['bounty_id'] as string, eventSeq: row['event_seq'] as number, kind: row['kind'] as string,
+  state: row['state'] as string, result: (row['result'] as string | null) ?? null, doneAt: (row['done_at'] as string | null) ?? null
+});
+
+/** The outbox, oldest first; one bounty's rows, or every row. */
+export function outboxRows(repoRoot: string, id?: string): OutboxRow[] {
+  return withDb(repoRoot, false, entry => entry === undefined ? []
+    : (id === undefined ? stmt(entry, 'SELECT * FROM outbox ORDER BY rowid').all() : stmt(entry, 'SELECT * FROM outbox WHERE bounty_id=? ORDER BY rowid').all(id))
+      .map(row => toRow(row as Record<string, unknown>)));
+}
+
+/** The `owed` event a row stands on, or null: the event at the row's seq must be `owed`, of the row's own key and kind. */
+export function owedBehind(repoRoot: string, row: OutboxRow): Owed | null {
+  return withDb(repoRoot, false, entry => {
+    if (entry === undefined) return null;
+    const event = stmt(entry, 'SELECT kind, json FROM events WHERE bounty_id=? AND seq=?').get(row.bountyId, row.eventSeq) as { kind: string; json: string } | undefined;
+    if (event?.kind !== 'owed') return null;
+    try {
+      const owed = JSON.parse(event.json) as Owed;
+      return owed.key === row.key && owed.kind === row.kind && row.key === `${row.kind}:${row.bountyId}` ? owed : null;
+    } catch { return null; }
+  });
+}
+
+/** The pending row of a key with the owed event behind it — how a chain push finds the exact tip it may send. */
+export function pendingOwed(repoRoot: string, key: string): Owed | null {
+  const row = withDb(repoRoot, false, entry => entry === undefined ? undefined : stmt(entry, "SELECT * FROM outbox WHERE key=? AND state='pending'").get(key) as Record<string, unknown> | undefined);
+  return row === undefined ? null : owedBehind(repoRoot, toRow(row));
+}
+
+/** A row's outcome: `sent` (done) or `refused`, with its event, in one transaction. A send that failed leaves the row
+    pending and notes why, with no event: it is still owed. */
+export function settleOwed(repoRoot: string, row: OutboxRow, outcome: 'sent' | 'refused' | 'failed', result: { reason?: string; detail: string }): void {
+  inTransaction(repoRoot, entry => {
+    if (outcome !== 'failed') appendLocal(entry, row.bountyId, outcome, { key: row.key, ...result });
+    stmt(entry, 'UPDATE outbox SET state=?, result=?, done_at=? WHERE key=? AND event_seq=?')
+      .run(outcome === 'sent' ? 'done' : outcome === 'refused' ? 'refused' : 'pending', result.reason ?? result.detail, outcome === 'failed' ? null : new Date().toISOString(), row.key, row.eventSeq);
+  });
 }
 
 /** BT101: a bounty's local events, oldest first: the history `status <id> --history` prints and the fold reads. */

@@ -11,7 +11,7 @@ const EXPECTED = [
   'git-push packages/box-bounty/close.ts advanceBountyBranch',
   'git-push packages/box-bounty/close.ts advanceBountyBranch',
   'git-push packages/box-bounty/close.ts syncGitHubDecision',
-  'git-push packages/box-bounty/post.ts postGitHub',
+  'git-push packages/box-bounty/reconcile.ts sendIssue',
   'git-push packages/box-bounty/take.ts takeBounty',
   // GitHub writes (a payload or a method, or a GraphQL mutation)
   'github-write packages/box-bounty/attempt.ts submitTakenResult',
@@ -21,7 +21,7 @@ const EXPECTED = [
   'github-write packages/box-bounty/close.ts syncGitHubDecision',
   'github-write packages/box-bounty/close.ts syncGitHubDecision',
   'github-write packages/box-bounty/gh.ts ensureLabel',
-  'github-write packages/box-bounty/post.ts postGitHub',
+  'github-write packages/box-bounty/reconcile.ts sendIssue',
   'github-write packages/box-bounty/take.ts closeTaken',
   'github-write packages/box-bounty/take.ts forkOf',
   'github-write packages/box-bounty/take.ts takeBounty',

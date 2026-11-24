@@ -100,7 +100,7 @@ A refusal is a `BountyRefused` (`errors.ts:5`) whose first argument is a stable 
 
 **Job.** For the agent (or owner): land the chosen solution as one ordinary merge commit on current code — or end the bounty — and let the tool close the loop outside, whatever way the merge happened.
 
-**Commands and options.** `omakase-box apply <id> [n]` (`bounty.ts:243`, `answer.ts:160` `applyBounty`), `omakase-box close <id> [--reason]` (`commands.ts:38` `closeBounty`), the outside-merge recognition (`merged.ts`), `close.ts` `syncGitHubDecision`.
+**Commands and options.** `omakase-box apply <id> [n]` (`bounty.ts:243`, `answer.ts:160` `applyBounty`), `omakase-box close <id> [--reason]` (`commands.ts:38` `closeBounty`), the outside-merge recognition (`merged.ts`), `close.ts` `syncGitHubDecision` (since BT101 stage 2, sent only by `reconcile.ts` for a `decision` outbox row).
 
 **Inputs and outputs.** Reads the record, attempts, owner decision, the worktree state, Git ancestry. Writes the merge commit, `applied`/`rejected`/`withdrawn` stage, `merged`/`closed` chain events (`shareMerged`, `shareClosed`), GitHub decision comment, issue close, branch removal (`close.ts`).
 

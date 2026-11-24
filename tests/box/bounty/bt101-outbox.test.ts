@@ -5,7 +5,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { appendEvent, closeBounty, denyRepository, loadRecord, postBounty, renderHistory } from '../../../packages/box-bounty/index.js';
+import { allowRepository, appendEvent, closeBounty, denyRepository, loadRecord, postBounty, renderHistory } from '../../../packages/box-bounty/index.js';
 import { closeStores, localEvents, metaGet, outboxRows } from '../../../packages/box-bounty/store.js';
 import { reconcile } from '../../../packages/box-bounty/reconcile.js';
 import { fixture, postedFixture, refused } from './github-fixture.js';
@@ -64,7 +64,7 @@ describe('BT101 stage 2: the door', () => {
     update({ fail: '/issues' });
     refused(() => postBounty(repo, id, 'github'), 'github-post-incomplete');
     update({ fail: undefined });
-    denyRepository(repo);
+    allowRepository(repo); denyRepository(repo); // the fixture allows through the all-projects default; deny needs a listed entry
     const before = state().calls.length;
     const said = reconcile(repo, id);
     expect(said.map(line => [line.outcome, line.reason])).toEqual([['refused', 'owner-word-withdrawn']]);

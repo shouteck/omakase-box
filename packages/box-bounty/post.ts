@@ -1,6 +1,8 @@
 import { bountyIssueTitle, ISSUE_BODY_MAX, ISSUE_TITLE_MAX, renderBountyIssue } from './issue.js';
 import { type GitHubPlan,PREVIEW_PUBLIC_NAMES,planGitHub,shownOfPlan } from './publish-plan.js';
-import { invalid,type GitHubChoice,digest,isObject,publicRepository,signedAccount,type GitHubPublication,publicationRef,remoteBranchSha,remoteGit,recoverIssue,ensureLabel,api,issueNumber,namesGitHubCause } from './gh.js';
+import { invalid,type GitHubChoice,digest,isObject,publicRepository,signedAccount,type GitHubPublication,publicationRef,remoteBranchSha } from './gh.js';
+import { reconcile } from './reconcile.js';
+import { owe } from './store.js';
 import { lstatSync,readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { toolVersion } from './create.js';
@@ -16,7 +18,6 @@ import { repositoryAddress } from './repository.js';
 import { readReward, repoReward } from './settings.js';
 import { boundAmount,formatFor,publicText } from './format.js';
 import { showPath } from './notice.js';
-import { checkOutbound } from './publish-sink.js';
 import { hitPlace, isTextField, scanFields } from './scan.js';
 import { SCAN_LIMIT_LINE, WITHHELD } from './wording.js';
 
@@ -405,43 +406,23 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
   if (branchTip !== null && branchTip !== record.github.commit) {
     return invalid('github-branch-changed', `${record.github.branch} on the remote is ${branchTip}, not the ${record.github.commit} this tool approved — it was changed outside the tool; nothing was posted; next: ask the owner — the remote branch was changed outside the tool`);
   }
-  const publication = record.github;
   // A publication frozen by an older version may never have been measured.
-  assertTitleFits(id, publication.title);
-  assertBodyFits(id, characters(publication.body), 0);
-  // BT69: fresh posts and persisted retries alike meet the sink's own read of
-  // what this push sends, under the rules as they are now.
-  const checked = checkOutbound(root, repository, publication.commit, shipRules(root), id);
-  let destination: string;
-  try {
-    remoteGit(root, repository, ['push', `${checked}:refs/heads/${publication.branch}`]);
-    publication.state = 'branch-pushed';
-    persistRecord(root, record);
-    if (publication.issue === null) {
-      publication.issue = recoverIssue(root, publication) ?? (() => {
-        ensureLabel(root, repository);
-        const created = api(root, `repos/${repository}/issues`, { title: publication.title, body: publication.body, labels: ['box-bounty'] });
-        const labels = isObject(created) && Array.isArray(created['labels']) ? created['labels'] : [];
-        if (!labels.some(entry => isObject(entry) && entry['name'] === 'box-bounty')) return invalid('github-response-invalid', 'the box-bounty label did not land on the issue; next: check the issue on GitHub; omakase-box status shows what was recorded');
-        return issueNumber(created, repository);
-      })();
-    }
-    publication.state = 'posted'; publication.pending = null;
-    settleScanFindings(root, record, 'went-out');
-    if (record.stage !== 'posted') transitionTo(root, record, 'posted', { destination: publication.issue.url });
-    else persistRecord(root, record);
-    destination = publication.issue.url;
-  } catch (error) {
-    publication.pending = `post-incomplete: ${publication.state}; issue ${publication.issue?.url ?? 'not recorded'}; retry omakase-box post ${id} or remove with omakase-box close ${id}`;
-    persistRecord(root, record);
-    // A named GitHub cause travels with the refusal (BT50); its own next step
-    // is dropped, since this one says how to resume the post.
-    const cause = namesGitHubCause(error) ? `; ${error.reason}: ${error.message.split('; next:')[0]}` : '';
-    return invalid('github-post-incomplete', `${publication.pending}${cause}; next: retry omakase-box post ${id} or remove it with omakase-box close ${id}`);
-  }
+  assertTitleFits(id, record.github.title);
+  assertBodyFits(id, characters(record.github.body), 0);
+  // BT101: the branch push and the issue are owed, then sent by reconcile through the door, which runs the owner's
+  // word, the scan and BT69's never-ship sink at send time. A refusal or an incomplete send is this command's to name.
+  const key = owe(root, id, 'issue');
+  const sent = reconcile(root, id).find(entry => entry.key === key);
+  if (sent?.error !== undefined) throw sent.error;
+  const posted = loadRecord(root, id);
+  const publication = posted.github!;
+  if (publication.issue === null) return invalid('github-post-incomplete', `post-incomplete: ${publication.state}; issue not recorded; next: retry omakase-box post ${id} or remove it with omakase-box close ${id}`);
+  settleScanFindings(root, posted, 'went-out');
+  if (posted.stage !== 'posted') transitionTo(root, posted, 'posted', { destination: publication.issue.url });
+  else persistRecord(root, posted);
   // BT32: the posted milestone is a shared chain event — scanned, appended,
   // pushed; a push that cannot land is held locally and retried, never a
   // reason the post itself fails.
-  sharePosted(root, record, record.content?.task.text ?? record.title);
-  return { record, destination };
+  sharePosted(root, posted, posted.content?.task.text ?? posted.title);
+  return { record: posted, destination: publication.issue.url };
 }

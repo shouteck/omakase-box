@@ -1,6 +1,6 @@
 import { invalid,isObject,signedAccount,type GitHubPublication,publicationRef,remoteBranchSha,remoteGit,recoverIssue,api,login } from './gh.js';
-import { adoptedWithoutPermission } from './adopt.js';
 import { readPayAccepts } from './board.js';
+import { DoorRefused, scanOutgoing } from './outbound.js';
 import { emitMergeNotice, showPath } from './notice.js';
 import { checkSolutionHistory } from './collect.js';
 import { BountyRefused } from './errors.js';
@@ -8,7 +8,6 @@ import { git,gitOutcome } from './git.js';
 import { attemptsOf,persistRecord } from './record.js';
 import type { BountyRecord } from './record.js';
 import { readDecision } from './settings.js';
-import type { DecisionRead } from './settings.js';
 import { boundAmount,formatFact,formatFor,readFormat,renderFormat } from './format.js';
 import { parsePayTo,unattributedOf,type PayOutcome,type Unattributed } from './pay.js';
 
@@ -18,16 +17,11 @@ import { parsePayTo,unattributedOf,type PayOutcome,type Unattributed } from './p
 // this runs whatever the standing answer is; when the answer is not
 // 'allowed' and this run actually changed GitHub, one line says so through
 // the merge-notice listener.
-export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { answered?: boolean; decision?: DecisionRead; authorised?: boolean }): void {
+// BT101: called only by reconcile, as the `decision` row's sender, past the door: the owner's word for a bounty picked
+// up from another machine (BT52) is checked there, and each decision comment meets the scan here before it is sent.
+export function syncGitHubDecision(root: string, record: BountyRecord): void {
   const publication = record.github;
   if (publication === undefined) return;
-  // A bounty picked up from another machine writes nothing to GitHub until this
-  // machine's owner has given permission: a shared record grants none (BT52).
-  if (opts?.authorised !== true && publication.state !== 'closed' && adoptedWithoutPermission(root, record)) {
-    publication.pending = `github-decision-pending (owner-permission-needed): this machine's owner has given no permission for this repository, so GitHub was not touched; next: ask the owner — omakase-box allow <owner/name>, then omakase-box close ${record.id}`;
-    persistRecord(root, record);
-    return;
-  }
   // 'reject', 'withdraw' and 'undo' stay in the list for records written
   // while those commands existed; 'close' carries the same work now.
   const decisions = record.events.filter(entry => ['apply', 'reject', 'withdraw', 'undo', 'merged', 'close'].includes(entry.command ?? ''));
@@ -55,6 +49,8 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
           : 'Withdrawn.';
         const body = `${fact}\n\n${marker}`;
         if (!comments.some(entry => isObject(entry) && entry['body'] === body && isObject(entry['user']) && entry['user']['login'] === publication.account)) {
+          // A recorded reason is the agent's own text: it meets the scan as it goes out (BT101's door).
+          scanOutgoing(record.id, [['(decision comment)', fact]]);
           const response = api(root, `${endpoint}/comments`, { body });
           if (!isObject(response) || response['body'] !== body || !isObject(response['user']) || response['user']['login'] !== publication.account) return invalid('github-response-invalid', 'GitHub did not confirm the decision comment; next: run omakase-box close again; omakase-box status shows what is recorded');
           comments.push(response);
@@ -160,7 +156,7 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
     if (changed) {
       let answer = 'not given';
       try {
-        const read = opts?.decision ?? readDecision(root);
+        const read = readDecision(root);
         if (read.decision === 'allowed') answer = '';
         else if (read.decision === 'ask') answer = 'ask me each time';
         else if (read.denied === true || read.decision === 'off') answer = 'deny';
@@ -174,6 +170,7 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
     // recorded decision with today's vocabulary.
     const local = ({ undo: 'revert', reject: 'close', withdraw: 'close' } as Record<string, string>)[event.command ?? ''] ?? event.command;
     publication.pending = `github-decision-pending${detail}: local ${local} stands; retry omakase-box close ${record.id} to comment, close the issue and remove ${publication.branch}`;
+    if (error instanceof DoorRefused) { persistRecord(root, record); throw error; }
   }
   persistRecord(root, record);
 }

@@ -11,7 +11,7 @@ import { waitForOwner } from './gate.js';
 import { mergeWaitLines,waitingSummary } from './owner-text.js';
 import type { Attempt,BountyRecord } from './record.js';
 import { checkSolutionHistory, resolveAttempt } from './collect.js';
-import { syncGitHubDecision } from './close.js';
+import { sendDecision } from './reconcile.js';
 import { dropMergeAnswer,readDecision,readMergeAnswer,recordFirstMerge } from './settings.js';
 import { boundAmount } from './format.js';
 import { payNotice } from './pay.js';
@@ -164,7 +164,7 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget, 
   let record = loadRecord(repoRoot, id);
   requireCurrentDelivery(record);
   if (record.stage === 'applied' && record.github !== undefined) {
-    syncGitHubDecision(repoRoot, record);
+    record = sendDecision(repoRoot, id);
     const event = [...record.events].reverse().find(entry => entry.command === 'apply' || entry.command === 'merged' || entry.command === 'shared');
     const retryPay = payNotice(record, boundAmount(record));
     return { record, outcome: 'applied', attempt: event?.attempt ?? 1, mergeCommit: event?.merge, ...(retryPay === null ? {} : { payMessage: retryPay }) };
@@ -310,8 +310,8 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget, 
     // The bounty ended: every durability ref's work is done — the snapshot's
     // and all the other attempts'.
     dropDurabilityRefs(repoRoot, record);
-    // Past the gate above, the owner's answer is the authority (BT52).
-    syncGitHubDecision(repoRoot, record, { decision: mergeRead, authorised: true });
+    // Past the gate above, the owner's answer is the authority (BT52): the owed decision carries it as its grant.
+    if (record.github !== undefined) record = sendDecision(repoRoot, id, { authorised: true });
     // BT32: the merge milestone is a shared chain event.
     shareMerged(repoRoot, record, attempt.n, mergeCommit, false);
     const notice = attempt.author !== undefined && attempt.author === record.github?.account ? null : recordFirstMerge(repoRoot, mergeCommit);

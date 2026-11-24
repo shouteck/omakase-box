@@ -22,7 +22,7 @@ import { attemptsOf,baseCommitOf,dropDurabilityRefs,openRecords,persistRecord,se
 import { api,isObject } from './gh.js';
 import type { Attempt,BountyRecord } from './record.js';
 import { adoptedWithoutPermission } from './adopt.js';
-import { syncGitHubDecision } from './close.js';
+import { sendDecision } from './reconcile.js';
 import { emitMergeNotice as emit,showPath } from './notice.js';
 import { readDecision,recordFirstMerge } from './settings.js';
 import { boundAmount } from './format.js';
@@ -314,7 +314,7 @@ function closeOne(repoRoot: string, record: BountyRecord, branch: string, candid
     ...(partial.length > 0 ? { partial } : {})
   });
   dropDurabilityRefs(repoRoot, record);
-  syncGitHubDecision(repoRoot, record, { decision });
+  if (record.github !== undefined) record = sendDecision(repoRoot, record.id);
   if (!adoptedWithoutPermission(repoRoot, record)) shareMerged(repoRoot, record, candidate.attempt?.n, merge, unasked);
   emit(`${record.id} — ${label} is merged on ${branch} at ${merge.slice(0, 12)} — the bounty is closed (recorded applied)`);
   if (record.github !== undefined) emit(`${record.id} — this merge counts for the solver once ${branch} is pushed to the default branch on GitHub; the tool never pushes it`);
