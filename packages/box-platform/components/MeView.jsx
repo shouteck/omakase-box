@@ -236,7 +236,8 @@ const RoleTitle = ({ role, sub }) => (
   </header>
 );
 
-/** The account menu: your public profile and signing out, off the page's foot (Vercel's account menu). */
+/** The account menu: your public profile and signing out, off the page's foot (Vercel's account menu).
+    PF61: "Sign out everywhere" ends every session of this GitHub account, a lost device's included. */
 function AccountMenu({ login, signOut }) {
   return (
     <details data-account className="relative">
@@ -249,7 +250,8 @@ function AccountMenu({ login, signOut }) {
         <a role="menuitem" href={`/solver/${login}/`} className="block px-2.5 py-1.5 rounded-lg" style={{ color: 'var(--color-ink)', textDecoration: 'none' }}>Your public profile as a solver</a>
         <a role="menuitem" href={`/owner/${login}/`} className="block px-2.5 py-1.5 rounded-lg" style={{ color: 'var(--color-ink)', textDecoration: 'none' }}>Your public profile as an owner</a>
         <div className="h-px bg-line my-1.5 mx-1" />
-        <button type="button" role="menuitem" onClick={signOut} className="block w-full text-left px-2.5 py-1.5 rounded-lg">Sign out</button>
+        <button type="button" role="menuitem" onClick={() => signOut(false)} className="block w-full text-left px-2.5 py-1.5 rounded-lg">Sign out</button>
+        <button type="button" role="menuitem" data-sign-out-everywhere onClick={() => signOut(true)} className="block w-full text-left px-2.5 py-1.5 rounded-lg">Sign out everywhere</button>
       </div>
     </details>
   );
@@ -305,8 +307,8 @@ export default function MeView() {
     setRoleState(next);
     try { window.localStorage.setItem(ROLE_KEY, next); } catch { /* storage may be blocked */ }
   };
-  const signOut = async () => {
-    await fetch('/auth/sign-out', { method: 'POST' });
+  const signOut = async everywhere => {
+    await fetch('/auth/sign-out', everywhere ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ all: true }) } : { method: 'POST' });
     setMe({ signed_in: false });
   };
   if (failed) return <p className="max-w-prose">The board could not be reached. Next: reload this page.</p>;
