@@ -42,13 +42,18 @@ it('drives the post-refusal path: clashing apply, own merge, a later command clo
   // No resolving command is offered — nothing says "run apply again".
   expect(conflict.stdout).not.toMatch(/run omakase-box apply/);
   expect(git(repo, ['rev-parse', 'HEAD'])).toBe(head);
-  // The agent merges the solution commit itself, then any later command ends it.
+  // The agent merges the solution commit itself; the next read ends it here, and the next close sends the ending
+  // to GitHub (BT101 stage 3: a read sends nothing).
   const merge = mergeSolution(repo, waitingPr);
   const status = cli(repo, process.env, 'status');
   console.log('--- status after the agent merge ---\n' + status.stdout);
   expect(status.status).toBe(0);
   expect(status.stdout).toContain(`${id} — solution 1 is merged on main at ${merge.slice(0, 12)} — the bounty is closed (recorded applied)`);
   expect(status.stdout).toContain('applied');
+  expect(state().issues[0]!.state).toBe('open');
+  const close = cli(repo, process.env, 'close', id);
+  expect(close.status, close.stderr).toBe(0);
+  expect(close.stdout).toContain(`sent decision:${id}`);
   expect(state().issues[0]!.state).toBe('closed');
   expect(state().comments.some(c => c.body.includes(`<!-- box-bounty:${id}:merged -->`) && c.body.includes(merge))).toBe(true);
   expect(git(bare, ['show-ref'])).not.toContain(`refs/heads/box-bounty/${id}`); // BT32: the chain ref stays; the solver branch is what close removes

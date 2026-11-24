@@ -22,12 +22,13 @@ import { attemptsOf,baseCommitOf,dropDurabilityRefs,openRecords,persistRecord,se
 import { api,isObject } from './gh.js';
 import type { Attempt,BountyRecord } from './record.js';
 import { adoptedWithoutPermission } from './adopt.js';
-import { sendDecision } from './reconcile.js';
+import { owe } from './store.js';
+import { inRead, sendDecision } from './reconcile.js';
+import { payNotice } from './pay.js';
 import { emitMergeNotice as emit,showPath } from './notice.js';
 import { readDecision,recordFirstMerge } from './settings.js';
 import { boundAmount } from './format.js';
-import { payNotice } from './pay.js';
-import { shareMerged } from './chain.js';
+import { noteMerged, shareMerged } from './chain.js';
 
 // One line per recognised merge or un-checkable record, printed by whichever
 // command noticed. The CLI registers a printer; library callers see the same
@@ -314,20 +315,30 @@ function closeOne(repoRoot: string, record: BountyRecord, branch: string, candid
     ...(partial.length > 0 ? { partial } : {})
   });
   dropDurabilityRefs(repoRoot, record);
-  if (record.github !== undefined) record = sendDecision(repoRoot, record.id);
-  if (!adoptedWithoutPermission(repoRoot, record)) shareMerged(repoRoot, record, candidate.attempt?.n, merge, unasked);
+  // BT101 stage 3: inside a read the ending is owed, never sent: the decision row and the merged chain event wait for the
+  // next close or apply of this bounty, which sends them and prints the pay message. Any other command sends them now.
+  const reading = inRead();
+  if (record.github !== undefined) {
+    if (inRead()) owe(repoRoot, record.id, 'decision');
+    if (!inRead()) record = sendDecision(repoRoot, record.id);
+  }
+  if (!adoptedWithoutPermission(repoRoot, record)) {
+    if (inRead()) noteMerged(repoRoot, record, candidate.attempt?.n, merge, unasked);
+    if (!inRead()) shareMerged(repoRoot, record, candidate.attempt?.n, merge, unasked);
+  }
   emit(`${record.id} — ${label} is merged on ${branch} at ${merge.slice(0, 12)} — the bounty is closed (recorded applied)`);
   if (record.github !== undefined) emit(`${record.id} — this merge counts for the solver once ${branch} is pushed to the default branch on GitHub; the tool never pushes it`);
   if (unasked) emit(`${record.id} — fact: the owner was not asked before this merge`);
   if (partial.length > 0) emit(`${record.id} — fact: of the files the solution changed, the merge left these as they were: ${partial.map(showPath).join(', ')}`);
   const author = candidate.attempt?.author ?? record.github?.seenPullRequests?.find(pr => pr.n === candidate.pr && pr.commit === candidate.commit)?.author;
   const firstMerge = (candidate.attempt !== undefined && author === undefined || author !== undefined && author !== record.github?.account) ? recordFirstMerge(repoRoot, merge) : null;
-  // A bounty with a reward hands the owner message to whichever command
-  // noticed the merge — whom to pay and where (BT11b); a recorded
-  // first-merge fact rides inside that same block (BT14).
-  const pay = payNotice(record, boundAmount(record), firstMerge?.recorded === true ? { firstMerge: true } : undefined);
+  // A bounty with a reward hands the owner message to the command that sent the decision — whom to pay and where
+  // (BT11b), read from the pull request at that send; a recorded first-merge fact rides inside that same block (BT14).
+  // A read sent nothing, so it names the command that will (BT101 stage 3).
+  const pay = reading ? null : payNotice(record, boundAmount(record), firstMerge?.recorded === true ? { firstMerge: true } : undefined);
   pay?.forEach(emit);
   if (firstMerge !== null && (firstMerge.recorded !== true || pay === null)) emit(firstMerge.line);
+  if (reading && record.github !== undefined && (boundAmount(record) ?? 0) > 0) emit(`${record.id} — the owner's message about paying the solver comes with the closing on GitHub; next: omakase-box close ${record.id}`);
   for (const hit of extras) {
     emit(`${record.id} — fact: the merge also carries ${showPath(hit.path)}, which the never-ship rule '${hit.rule}' keeps out — the history stays as the owner made it`);
   }

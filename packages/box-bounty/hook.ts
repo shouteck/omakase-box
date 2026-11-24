@@ -29,6 +29,7 @@ import { walkProjectPath } from './instructions.js';
 import { attemptsOf,openRecords } from './record.js';
 import { countCorrupt,endedContaining } from './store.js';
 import { refreshSharedMemory } from './chain.js';
+import { asRead } from './notice.js';
 import type { BountyRecord } from './record.js';
 import { readDecision } from './settings.js';
 import { boundAmount } from './format.js';
@@ -161,7 +162,11 @@ export interface HookRun {
 //
 // Everything is best-effort: the hook must never block a session, so a
 // failure lands as a named fact line and the run still exits 0.
+// BT101 stage 3: the hook only observes; what it notices is owed, and reconcile never runs inside it (BT93's budget).
 export function runHook(repoRoot: string, slot: HookSlot, notices: readonly string[]): HookRun {
+  return asRead(() => runHookAsRead(repoRoot, slot, notices));
+}
+function runHookAsRead(repoRoot: string, slot: HookSlot, notices: readonly string[]): HookRun {
   // `notices` is the live listener array — merge-recognition and
   // instruction-refusal lines arrive DURING the record scan below, so they
   // are folded in only when the envelope is built, never copied at entry:
@@ -759,9 +764,9 @@ export function hookDisclosure(repoRoot: string, host: HookHost): string {
   ];
   const decision = (() => { try { return readDecision(repoRoot); } catch { return null; } })();
   if (decision !== null && decision.decision === 'allowed') {
-    lines.push('- under the standing rules in force (the tool\'s merges are not gated), when a solution the tool handed out is merged, the hook reading the records closes the bounty: the GitHub issue is closed with a comment and nobody is asked');
+    lines.push('- under the standing rules in force (the tool\'s merges are not gated), when a solution the tool handed out is merged, the hook reading the records closes the bounty here and sends nothing; the next close or apply of it sends the ending: the GitHub issue is closed with a comment and nobody is asked');
   } else if (decision !== null && decision.decision === 'ask') {
-    lines.push('- under the standing rules in force (ask me each time), the tool\'s own merge waits for the owner\'s answer; a merge the agent lands by hand still closes the bounty — the GitHub issue is closed with a comment and it is stated that the owner was not asked');
+    lines.push('- under the standing rules in force (ask me each time), the tool\'s own merge waits for the owner\'s answer; a merge the agent lands by hand still closes the bounty here, and the next close or apply of it sends the ending: the GitHub issue is closed with a comment and it is stated that the owner was not asked');
   }
   lines.push(
     '',

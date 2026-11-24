@@ -7,9 +7,10 @@ import { pushChain } from './chain.js';
 import { syncGitHubDecision } from './close.js';
 import { BountyRefused } from './errors.js';
 import { api, ensureLabel, invalid, isObject, issueNumber, namesGitHubCause, recoverIssue, remoteGit } from './gh.js';
+import { emitMergeNotice, emitSentEarlier, inRead } from './notice.js';
 import { checkedForIssue, decisionGranted, DoorRefused } from './outbound.js';
 import { persistRecord, type BountyRecord } from './record.js';
-import { outboxRows, owe, owedBehind, readStored, settleOwed, type Owed, type OutboxRow } from './store.js';
+import { outboxRows, owe, owedBehind, pendingOwed, readStored, settleOwed, type Owed, type OutboxRow } from './store.js';
 
 export interface Sent {
   readonly key: string;
@@ -93,7 +94,11 @@ function sendOne(root: string, row: OutboxRow): Sent {
         : settle('sent', { detail: done });
     }
     if (owed.kind === 'chain') {
-      const pushed = pushChain(root, row.bountyId);
+      // The push names the exact commit the owed event names, the one its scan passed, never the ref, which could have
+      // been swapped since.
+      const pushed = pushChain(root, row.bountyId, owed.tip);
+      if (!pushed.pushed) emitMergeNotice(`shared bounty memory not pushed yet (${pushed.reason}); it will be retried`);
+      else if (pushed.restored === true) emitMergeNotice(`shared bounty memory for ${row.bountyId} was gone from the remote — restored from this machine`);
       return pushed.pushed ? { ...base, outcome: 'sent', detail: 'chain pushed' } : { ...base, outcome: 'pending', detail: pushed.reason ?? 'chain push still owed' };
     }
     return settle('refused', { reason: 'not-owed', detail: `${row.key}: no sender for this kind; nothing was sent` });
@@ -104,15 +109,28 @@ function sendOne(root: string, row: OutboxRow): Sent {
   }
 }
 
+// BT101 stage 3: a read only observes (notice.ts keeps the flag, below every module that asks it). Inside a read,
+// reconcile sends nothing.
+export { asRead, inRead, readOnlyProcess } from './notice.js';
+
 /** Send what one bounty owes, oldest row first; each outcome is returned for the command to name. */
 export function reconcile(root: string, id: string): Sent[] {
-  return outboxRows(root, id).filter(row => row.state === 'pending').map(row => sendOne(root, row));
+  if (inRead()) return [];
+  return outboxRows(root, id).filter(row => row.state === 'pending').map(row => {
+    const owedAt = owedBehind(root, row)?.at;
+    const sent = sendOne(root, row);
+    if (sent.outcome === 'sent') emitSentEarlier(sent.key, sent.detail, owedAt);
+    return sent;
+  });
 }
 
 /** An ending owes its decision outside, then reconcile sends it. The record as it now stands is returned, since the send
     wrote its own copy. `authorised` is the owner's answer an `apply` passed the merge gate with (BT52). */
 export function sendDecision(root: string, id: string, grant?: { readonly authorised: true }): BountyRecord {
-  owe(root, id, 'decision', grant ?? {});
+  // A decision already owed (by a read that noticed a hand merge, or a send that failed) keeps the event that owed it,
+  // unless this command adds the owner's answer to it.
+  const pending = pendingOwed(root, `decision:${id}`);
+  if (pending === null || grant?.authorised === true && pending.authorised !== true) owe(root, id, 'decision', grant ?? {});
   reconcile(root, id);
   const record = folded(root, id);
   if (record === null) throw new BountyRefused('record-corrupt', `the record of ${id} could not be read after its decision was sent; next: omakase-box status ${id}`);

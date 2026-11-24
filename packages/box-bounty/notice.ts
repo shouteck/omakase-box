@@ -10,6 +10,25 @@ export function setMergeNoticeListener(next: ((line: string) => void) | null): v
 }
 export const emitMergeNotice = (line: string): void => { mergeNoticeListener?.(line); };
 
+// BT101 stage 3: a read only observes. Inside asRead (and for the whole process of a CLI read: look, status, find, the
+// hook) whatever a read notices is owed, not sent: every send is behind `if (!inRead())`, a guard K75's
+// read-writes-outward scanner models, and reconcile does nothing.
+let reading = 0;
+export function asRead<T>(run: () => T): T {
+  reading += 1;
+  try { return run(); } finally { reading -= 1; }
+}
+export const inRead = (): boolean => reading > 0;
+/** The CLI runs one command per process: a read command is a read for the whole process, `--wait`'s polling included. */
+export function readOnlyProcess(): void { reading += 1; }
+
+// BT101 stage 3: an outbox row an earlier command owed (a read that noticed a hand merge, a send that failed) is named as
+// it goes out; a row this command owed itself is told by the command's own output.
+const startedAt = new Date().toISOString();
+export const emitSentEarlier = (key: string, detail: string, owedAt: string | undefined): void => {
+  if (owedAt !== undefined && owedAt < startedAt) emitMergeNotice(`sent ${key}: ${detail}`);
+};
+
 // A stranger's text — a solver's path, a line of a solver's change, a line of
 // another account's comment — is shown quoted and on one line: it can carry
 // words, separators or spaces that would read as the tool's own prose. JSON

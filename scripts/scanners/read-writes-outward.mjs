@@ -4,28 +4,55 @@
 // `boardCalls` with a body, or a raw `fetch`) and is reachable by name from a read command's branch in the CLI. The graph
 // is by function name across packages/box-bounty and packages/box-cli/src, so it over-reaches where two functions share a
 // name, never under-reaches a direct call. tests/box/bounty/exit-sites.ts is the full exit walk; this is its read-side view.
-// Mode: report, until BT100 settles reads and writes.
+// Mode: fail since BT101 stage 3, where a read only owes: the hand-merge scan, the chain refresh and collection inside a
+// read append and owe, and the next mutating command sends. One read send stays, by the owner's design, and is listed
+// with its reason: the board hint (PF5), identifiers only, to the board rather than GitHub.
 import { enclosingFunction, functionName, lineOf, parse, short, ts, visit } from './ast.mjs';
 
 export const id = 'read-writes-outward';
-export const mode = 'report';
+export const mode = 'fail';
 export const from = 'BT100: a read that writes outward';
-export const switchesIn = 'BT100';
+export const switchesIn = 'BT101';
+
+/** `file#function: kind` → why a read may send it. */
+export const ALLOWED = {
+  'packages/box-bounty/board.ts#flushBoardHints: board-send': 'PF5: a read tells the board what an earlier command left untold — the bounty, event, issue and repository identifiers only (pf5.test.ts "T1 and T4"); the board is not GitHub'
+};
+export const failing = findings => findings.filter(finding => finding.allowed === null);
 export const dirs = ['packages/box-bounty', 'packages/box-cli/src'];
 export const READ_COMMANDS = ['look', 'status', 'find', 'describe', 'discover'];
 export const CLI = 'packages/box-cli/src/bounty.ts';
 
-const calledNames = (node, sf) => {
+// BT101 stage 3: `if (!inRead()) <send>` runs only outside a read. The CLI marks each read command's process read
+// (`readOnlyProcess()`), so a call under that guard is not reached from a read, provided the CLI does mark them; scan()
+// checks it does, and otherwise counts the guarded calls too.
+const READ_GUARD = '!inRead()';
+const calledNames = (node, sf, guarded = true) => {
   const names = new Set();
-  visit(node, inner => {
+  const go = inner => {
+    if (guarded && ts.isIfStatement(inner) && inner.expression.getText(sf) === READ_GUARD) {
+      if (inner.elseStatement !== undefined) go(inner.elseStatement);
+      return;
+    }
     if (ts.isCallExpression(inner)) {
       const callee = inner.expression;
       if (ts.isIdentifier(callee)) names.add(callee.text);
       else if (ts.isPropertyAccessExpression(callee)) names.add(callee.name.text);
     }
-  });
+    ts.forEachChild(inner, go);
+  };
+  go(node);
   return names;
 };
+// A call inside the then-branch of `if (!inRead())`.
+const underGuard = (node, sf) => {
+  for (let at = node; at.parent !== undefined; at = at.parent) {
+    if (ts.isIfStatement(at.parent) && at.parent.thenStatement === at && at.parent.expression.getText(sf) === READ_GUARD) return true;
+  }
+  return false;
+};
+// The CLI's read branches are marked read when the dispatcher calls readOnlyProcess() for every read command.
+const marksReads = text => /readOnlyProcess\(\)/.test(text) && READ_COMMANDS.every(name => text.includes(`'${name}'`));
 
 function sends(call, sf) {
   if (!ts.isIdentifier(call.expression)) return null;
@@ -44,19 +71,21 @@ export function scan(sources) {
   const callsOf = new Map();
   const exits = [];
   let entries = new Set();
+  const cli = sources.find(source => source.file === CLI);
+  const guarded = cli !== undefined && marksReads(cli.text);
   for (const source of sources) {
     const sf = parse(source);
     visit(sf, node => {
       if (ts.isFunctionDeclaration(node) && node.name !== undefined && node.body !== undefined) {
         const set = callsOf.get(node.name.text) ?? new Set();
-        for (const name of calledNames(node.body, sf)) set.add(name);
+        for (const name of calledNames(node.body, sf, guarded)) set.add(name);
         callsOf.set(node.name.text, set);
       } else if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer !== undefined && (ts.isArrowFunction(node.initializer) || ts.isFunctionExpression(node.initializer))) {
         const set = callsOf.get(node.name.text) ?? new Set();
-        for (const name of calledNames(node.initializer, sf)) set.add(name);
+        for (const name of calledNames(node.initializer, sf, guarded)) set.add(name);
         callsOf.set(node.name.text, set);
       }
-      if (ts.isCallExpression(node)) {
+      if (ts.isCallExpression(node) && !(guarded && underGuard(node, sf))) {
         const kind = sends(node, sf);
         if (kind !== null) exits.push({ file: source.file, line: lineOf(node, sf), fn: functionName(enclosingFunction(node), sf), kind, detail: short(node.getText(sf)) });
       }
@@ -75,6 +104,6 @@ export function scan(sources) {
     reached.add(name);
     for (const next of callsOf.get(name) ?? []) if (!reached.has(next)) queue.push(next);
   }
-  return exits.filter(exit => reached.has(exit.fn)).map(exit => ({ file: exit.file, line: exit.line, fn: exit.fn, detail: `${exit.kind}: ${exit.detail}` }))
+  return exits.filter(exit => reached.has(exit.fn)).map(exit => ({ file: exit.file, line: exit.line, fn: exit.fn, detail: `${exit.kind}: ${exit.detail}`, allowed: ALLOWED[`${exit.file}#${exit.fn}: ${exit.kind}`] ?? null }))
     .sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line);
 }

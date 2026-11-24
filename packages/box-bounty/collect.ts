@@ -9,7 +9,8 @@ import { attemptRefName,attemptsOf,isOpenStage,loadRecord,persistRecord,requireC
 import type { Attempt,BountyRecord } from './record.js';
 import { boundAmount,formatFact,formatFor } from './format.js';
 import { parsePayTo,payToLine,UNATTRIBUTED,unattributedOf,type Containment,type FirstSight,type PayToFact } from './pay.js';
-import { shareSolution,syncChains } from './chain.js';
+import { noteSolution,observeChains,shareSolution,syncChains } from './chain.js';
+import { inRead } from './notice.js';
 import { adoptedWithoutPermission,settleFromChain } from './adopt.js';
 import type { GitHubReadOptions } from './gh.js';
 
@@ -156,7 +157,8 @@ export function refreshGitHubStatus(root: string, record: BountyRecord): void {
     // A closed issue on an open record: it may have ended on another machine.
     // The chain is asked now, past the once-a-minute limit (BT52).
     if (issue['state'] === 'closed') {
-      syncChains(root, true);
+      if (inRead()) observeChains(root, true);
+      if (!inRead()) syncChains(root, true);
       settleFromChain(root, record, issue);
       if (!isOpenStage(record.stage)) return;
     }
@@ -483,6 +485,9 @@ function collectHistoryPullRequest(root: string, record: BountyRecord, publicati
   persistRecord(root, record);
   // BT32: collecting a pull request is a shared chain milestone. A machine
   // with no permission reads and pushes nothing to the remote (BT52).
-  if (!adoptedWithoutPermission(root, record)) shareSolution(root, record, attempt, firstSight);
+  if (!adoptedWithoutPermission(root, record)) {
+    if (inRead()) noteSolution(root, record, attempt, firstSight);
+    if (!inRead()) shareSolution(root, record, attempt, firstSight);
+  }
   return { record, outcome: 'answered' as const, attempt: n, report, ...(merge.kind === 'conflict' ? { conflicts: merge.paths } : {}) };
 }

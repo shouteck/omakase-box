@@ -5,7 +5,7 @@
 // repository.
 import { lstatSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { actingOn, loadSettings, repositoryIdentity, applyBounty, BountyRefused, BountyUsage, closeBounty, createBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, parseOptions, commandHelp, OPTIONS_NOTE, postBounty, readDecision, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, renderHistory, repoReward, requireRepository, resolveRepoRoot, setMergeNoticeListener, setInstructionNoticeListener, renderOverview, showPath, statusDocument, lookDocument, configDocument, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, hookDisclosure, hookHost, hookOff, hookOn, hookStatus, limitGitHubCalls, runHook } from '../../box-bounty/index.js';
+import { actingOn, loadSettings, repositoryIdentity, applyBounty, BountyRefused, BountyUsage, closeBounty, createBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, parseOptions, commandHelp, OPTIONS_NOTE, postBounty, readDecision, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, renderHistory, repoReward, requireRepository, resolveRepoRoot, setMergeNoticeListener, setInstructionNoticeListener, renderOverview, showPath, statusDocument, lookDocument, configDocument, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, hookDisclosure, hookHost, hookOff, hookOn, hookStatus, limitGitHubCalls, runHook, readOnlyProcess } from '../../box-bounty/index.js';
 import { boardAddress, boardNotToldLine, flushBoardHints, readBoardFacts } from '../../box-bounty/index.js';
 import { waitBounty, renderWait } from '../../box-bounty/index.js';
 import type { ParsedOptions } from '../../box-bounty/index.js';
@@ -106,6 +106,9 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
   // close the bounty — the one line saying so belongs to whichever command
   // noticed, printed the moment it happens.
   setMergeNoticeListener(aside);
+  // BT101 stage 3: a read only observes. What a read notices (a hand merge, a collected solution) is owed, and the next
+  // mutating command for that bounty sends it; inside a read, reconcile sends nothing.
+  if (subcommand === undefined || ['look', 'status', 'find', 'hook', 'describe', 'discover'].includes(subcommand)) readOnlyProcess();
   // PF5: whatever this command changed, or an earlier one left unsent, goes to
   // the board as the process ends, on every exit path. A hook has a time budget.
   if (!(subcommand === 'take' && bountyArgs.includes('--preview')) && subcommand !== 'hook' && !(subcommand === 'status' && bountyArgs.some(arg => arg === '--wait' || arg === '--timeout' || arg.startsWith('--timeout=')))) {
