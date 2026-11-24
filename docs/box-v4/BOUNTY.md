@@ -446,6 +446,11 @@ the tool never pushes, and a merge comment posted to the issue says the merge
 reaches the repository when the owner pushes. On your
 own working tree your filters apply as in plain Git: after a clean `apply`,
 filtered files are in their working-tree form and `git status` is clean.
+Just before the merge, after the owner's merge gate, `apply` reads the
+solution's whole new history again under the never-ship rules in force at
+that moment, so a path the owner listed, or a release added, after the
+solution was collected is refused (`answer-never-ship`, "nothing was
+merged") with the working tree, index, branch and record untouched.
 
 That same plain-Git behaviour is the one place your own configuration can
 betray the boundary. A filter or merge driver whose command resolves inside

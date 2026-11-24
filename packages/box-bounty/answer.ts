@@ -10,7 +10,7 @@ import { applicableAttempts,attemptsOf,dropDurabilityRefs,isOpenStage,loadRecord
 import { waitForOwner } from './gate.js';
 import { mergeWaitLines,waitingSummary } from './owner-text.js';
 import type { Attempt,BountyRecord } from './record.js';
-import { resolveAttempt } from './collect.js';
+import { checkSolutionHistory, resolveAttempt } from './collect.js';
 import { syncGitHubDecision } from './close.js';
 import { dropMergeAnswer,readDecision,readMergeAnswer,recordFirstMerge } from './settings.js';
 import { boundAmount } from './format.js';
@@ -237,6 +237,12 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget, 
   if (unsafe.length > 0) {
     throw new BountyRefused('apply-unsafe-config', `the owner's Git configuration could run a program a solution supplies or changes during this merge — apply refuses before anything is touched: ${unsafe.map(item => `${item.key} = ${showPath(item.command)} — ${item.detail}`).join('; ')}; next: ask the owner to point the configured commands outside the repository or remove them, or end the bounty with omakase-box close ${id} --reason "<why>"`);
   }
+  // BT80: the never-ship question again, at the point of effect. Collection
+  // read the solution's history under the rules of that moment; the owner's
+  // list, a release's built-ins or another copy's entries can have grown
+  // since. After the owner's gate (a held merge names nothing to an agent
+  // that only waits), before any byte is saved or the merge runs.
+  if (record.github?.kind === 'history') checkSolutionHistory(repoRoot, record, record.github, attempt.commit, 'nothing was merged');
   // HEAD is the attribute view for every read and the merge below: the
   // solver's files have not landed yet, so HEAD is the owner's committed
   // state — a returned .gitattributes names nothing until the owner applies it.

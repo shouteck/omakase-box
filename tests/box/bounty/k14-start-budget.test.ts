@@ -115,7 +115,9 @@ const BUDGET: Record<string, { git: number; gh: number }> = {
   // gh +1 — reading the pull request back.
   // PF27: +1 gh — apply reads the pull request's current head, so a version
   // pushed after collection is never merged unseen.
-  'apply': { git: 29, gh: 6 },
+  // BT80: Git +3 — the never-ship question again just before the merge, under the rules in force then: ls-tree tree safety,
+  // rev-list new history, one never-ship read per new commit (this journey's head has one).
+  'apply': { git: 32, gh: 6 },
   'status-applied': { git: 3, gh: 0 }, // BT32: +6 — same refresh + import as status-posted
   'close-ended': { git: 4, gh: 3 },
   'close-reason': { git: 3, gh: 0 },
