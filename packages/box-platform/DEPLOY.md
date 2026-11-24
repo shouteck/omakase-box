@@ -74,7 +74,7 @@ node node_modules/next/dist/bin/next build
 node node_modules/wrangler/bin/wrangler.js deploy
 ```
 
-If asked, choose a `workers.dev` subdomain. **It becomes part of the board's public address**, so pick a name you are happy to show. The command prints the address: `https://open-bounty-board.<your-subdomain>.workers.dev`. The steps below call it the board's address.
+If asked, choose a `workers.dev` subdomain. **It becomes part of the board's public address**, so pick a name you are happy to show. The command prints the address: `https://open-bounty-board.<your-subdomain>.workers.dev`. The steps below call it the board's address. This repository's board is also served at its own domain, **https://omakasebox.dev**, a custom domain on the same Worker set in Cloudflare's dashboard (not in `wrangler.toml`); that is the address users and the launch documents name, and both answer with the same `/version.json`.
 
 Open that address. The board now answers and reads GitHub a little every minute. A new address can refuse secure connections for its first minute. The front page should appear at once; the board's list may stay short or empty until step 7. Sign-in says it is not set up until step 6.
 
@@ -278,8 +278,8 @@ Putting the previous code back. Tried for real on a throwaway Worker in PF37. Fr
 
 `.github/workflows/watch.yml` runs every 30 minutes (at :17 and :47) and on demand from the repository's Actions tab. It reads the board's front page and `/numbers.json`, and fails when the board does not answer, says its last read of GitHub failed, or has not read GitHub for 60 minutes. A healthy board shows up to about 30, since `numbers.json` keeps its answer for 15. **A failed run is the notice:** GitHub emails the repository's owner. It has no secret and no permission, and it writes nothing.
 
-- To watch another address, set a repository variable `BOARD_ADDRESS` (Settings, Secrets and variables, Actions, Variables).
-- To run it by hand: `node scripts/watch.mjs https://open-bounty-board.box-platform.workers.dev` from the repository's root.
+- To watch another address, set a repository variable `BOARD_ADDRESS` (Settings, Secrets and variables, Actions, Variables). Unset, the watch reads the `workers.dev` address, the same Worker as https://omakasebox.dev; set it to `https://omakasebox.dev` to watch the public address itself.
+- To run it by hand: `node scripts/watch.mjs https://omakasebox.dev` from the repository's root.
 - **GitHub turns off a scheduled workflow after 60 days with no activity in the repository.** The Actions tab then shows "This scheduled workflow is disabled"; its **Enable workflow** button turns it back on.
 
 What it cannot see: a payment that fails, a Stripe or PayPal webhook that never arrives, sign-in being broken. The board publishes no number for these yet (PF37's Result proposes some).
