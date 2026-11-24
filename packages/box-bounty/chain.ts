@@ -40,6 +40,7 @@ import { scanText } from './scan.js';
 import { loadState, requireRepository, saveState } from './settings.js';
 import { importShared, metaGet, metaKeys, metaSet } from './store.js';
 import type { SharedRow } from './store.js';
+import { TOOL_VERSION } from './create.js';
 
 // BT58: where a bounty's shared record lives. A bounty has two things on GitHub with almost the same name: its branch,
 // `refs/heads/box-bounty/<id>`, and its record. Git resolves a short name to `refs/<name>` before `refs/heads/<name>`
@@ -783,7 +784,7 @@ function foldEvents(id: string, events: readonly ChainEvent[]): SharedRow | null
     ...(typeof posted['partOf'] === 'string' ? { partOf: posted['partOf'] } : {}),
     noteSource: 'legacy',
     stage,
-    content: { task: { file: '(shared)', text: task }, note: null, tool: 'box-bounty@0.1.0' },
+    content: { task: { file: '(shared)', text: task }, note: null, tool: TOOL_VERSION },
     createdAt,
     resume: followup !== null
       ? { kind: 'recorded', branch: '(shared)', commit: typeof posted['base'] === 'string' ? posted['base'] : '', changed: [], note: followup }

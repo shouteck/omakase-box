@@ -1410,11 +1410,16 @@ gets no exception:
 - `dot-box` — any `.box` path segment: the tool's own records under
   `.box/bounties/` never ship inside a later bounty. Exact segment only, so
   `.boxignore` itself still ships (and still means nothing to this rule).
-- `private-key` — `*.key *.pem *.p12 *.pfx *.jks *.keystore *.ppk *.gpg`,
+- `private-key` — `*.key *.pem *.p12 *.pfx *.jks *.keystore *.ppk *.gpg *.p8 *.pkcs12`,
   and any basename starting `id_rsa`/`id_dsa`/`id_ecdsa`/`id_ed25519`
   (`id_rsa.pub`, `id_rsa_backup`, `id_rsa.old` all count)
 - `certificate` — `*.crt *.cer *.der *.cert *.p7b *.p7c *.asc`
-- `credentials-file` — `.netrc .pgpass .htpasswd .git-credentials .npmrc .pypirc .dockercfg .yarnrc .yarnrc.yml`, `.aws/credentials`, `.docker/config.json`
+- `credentials-file` — `.netrc _netrc .pgpass .htpasswd .git-credentials .npmrc .pypirc .dockercfg .yarnrc .yarnrc.yml`,
+  `kubeconfig kubeconfig.yaml kubeconfig.yml application_default_credentials.json .terraformrc terraform.rc .s3cfg`
+  `sftp-config.json .ftpconfig .remote-sync.json`, `*.kubeconfig *.tfstate *.tfstate.* *.tfvars *.tfvars.json`,
+  `*.kdbx *.keychain *.psafe3 *.agilekeychain *.kwallet`, and under any folder `.aws/credentials`, `.docker/config.json`,
+  `.kube/config`, `.config/gh/hosts.yml`, `.gem/credentials`, `.vscode/sftp.json`. These stores' contents have no fixed
+  shape for the secret scan, so the name keeps them out; a harmless file of one of these names is kept out too (rename it to ship it)
 - `owner-list` — patterns from `.boxignore` at the repository root:
   `name` (file or dir, any depth), `name/` (dir contents), `*.ext` (basename
   glob), `dir/*.ext` (root-anchored glob), `/exact/path`. `#` comments, no `!`

@@ -69,9 +69,28 @@ const extension = (path: string): string => {
   return dot > 0 ? base.slice(dot + 1) : '';
 };
 
-const KEY_EXTENSIONS = new Set(['key', 'pem', 'p12', 'pfx', 'jks', 'keystore', 'ppk', 'gpg']);
+const KEY_EXTENSIONS = new Set(['key', 'pem', 'p12', 'pfx', 'jks', 'keystore', 'ppk', 'gpg',
+  'p8', 'pkcs12' // BT72: Apple App Store Connect and push keys; the long spelling of .p12
+]);
 const CERT_EXTENSIONS = new Set(['crt', 'cer', 'der', 'cert', 'p7b', 'p7c', 'asc']);
-const CREDENTIAL_NAMES = new Set(['.netrc', '.pgpass', '.htpasswd', '.git-credentials', '.npmrc', '.pypirc', '.dockercfg', '.yarnrc', '.yarnrc.yml']);
+const CREDENTIAL_NAMES = new Set(['.netrc', '.pgpass', '.htpasswd', '.git-credentials', '.npmrc', '.pypirc', '.dockercfg', '.yarnrc', '.yarnrc.yml',
+  // BT72 (sources in waves/BT72.md): stores whose content has no fixed shape for the scan to see.
+  'kubeconfig', 'kubeconfig.yaml', 'kubeconfig.yml', // Kubernetes cluster access, the client key in base64
+  'application_default_credentials.json', // a Google Cloud developer login
+  '.terraformrc', 'terraform.rc', // Terraform CLI configuration: registry and Terraform Cloud tokens
+  '_netrc', // the Windows spelling of .netrc
+  '.s3cfg', // S3cmd access keys
+  'sftp-config.json', '.ftpconfig', '.remote-sync.json' // editor plugins' server passwords
+]);
+// BT72: path endings, matched at the root or under any folder.
+const CREDENTIAL_PATHS = ['.aws/credentials', '.docker/config.json',
+  '.kube/config', // Kubernetes cluster access
+  '.config/gh/hosts.yml', // the GitHub command line's own token
+  '.gem/credentials', // the RubyGems API key
+  '.vscode/sftp.json' // an editor plugin's server passwords
+];
+// BT72: by basename ending, as GitHub's Terraform.gitignore and shhgit write them.
+const CREDENTIAL_ENDINGS = /\.(?:kubeconfig|tfstate|tfvars|tfvars\.json|kdbx|keychain|psafe3|agilekeychain|kwallet)$|\.tfstate\./; // a kubeconfig; Terraform state (and its backups) and variables in plain text; password-manager databases
 
 // The table as written, on an already-folded path. Everything else uses
 // BUILTIN_RULES; this is exported so a test can show the fold is what catches.
@@ -100,8 +119,8 @@ export const UNFOLDED_RULES: readonly NeverShipRule[] = [
     name: 'credentials-file',
     match: path =>
       CREDENTIAL_NAMES.has(basename(path)) ||
-      path.endsWith('/.aws/credentials') || path === '.aws/credentials' ||
-      path.endsWith('/.docker/config.json') || path === '.docker/config.json'
+      CREDENTIAL_PATHS.some(tail => path === tail || path.endsWith(`/${tail}`)) ||
+      CREDENTIAL_ENDINGS.test(basename(path))
   }
 ];
 

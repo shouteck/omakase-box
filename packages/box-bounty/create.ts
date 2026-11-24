@@ -16,8 +16,11 @@ import { readDecision, repoReward, requireRepository } from './settings.js';
 import { readMany } from './read-many.js';
 import { createSnapshot } from './snapshot.js';
 import type { SnapshotFile, SnapshotRemoval } from './snapshot.js';
+import { packageVersion } from '../box-cli/src/version.js';
 
-export const TOOL_VERSION = 'box-bounty@0.1.0';
+// BT72: the label stored on every new record (never published): the real package name and version, from the one place the
+// build stamps it. Records already written keep what they hold.
+export const TOOL_VERSION = `omakase-box@${packageVersion()}`;
 const PREVIEW_NAMES_PER_RULE = 20;
 
 export interface CreateOptions {
