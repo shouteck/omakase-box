@@ -3,7 +3,7 @@ import { type GitHubPlan,PREVIEW_PUBLIC_NAMES,planGitHub,shownOfPlan } from './p
 import { invalid,type GitHubChoice,digest,isObject,publicRepository,signedAccount,type GitHubPublication,publicationRef,remoteBranchSha,remoteGit,recoverIssue,ensureLabel,api,issueNumber,namesGitHubCause } from './gh.js';
 import { lstatSync,readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { TOOL_VERSION } from './create.js';
+import { toolVersion } from './create.js';
 import { git } from './git.js';
 import { checkProjectClaims,shipRules } from './never-ship.js';
 import { allowedByFor,ownerGate,sameShown,waitForOwner } from './gate.js';
@@ -64,7 +64,7 @@ function bountyContent(record: BountyRecord): NonNullable<BountyRecord['content'
   try { value = JSON.parse(bytes.toString('utf8')); } catch { return invalid('record-corrupt', `the old draft public text is unreadable; next: end it with omakase-box close ${record.id} and create a new one`); }
   const inputText = (item: unknown): item is { file: string; text: string } => isObject(item) && typeof item['file'] === 'string' && typeof item['text'] === 'string';
   if (!isObject(value) || value['id'] !== record.id || !isObject(value['snapshot']) || value['snapshot']['commit'] !== record.snapshot?.commit || record.snapshot === undefined || !inputText(value['task']) || value['note'] !== null && !inputText(value['note'])) return invalid('record-corrupt', `the old draft public text is unreadable; next: end it with omakase-box close ${record.id} and create a new one`);
-  return { task: value['task'], note: value['note'], tool: typeof value['tool'] === 'string' ? value['tool'] : TOOL_VERSION };
+  return { task: value['task'], note: value['note'], tool: typeof value['tool'] === 'string' ? value['tool'] : toolVersion() };
 }
 
 function listingHistory(record: BountyRecord, repository: string, plan: GitHubPlan, reward: number): { branch: string; title: string; body: string } {
