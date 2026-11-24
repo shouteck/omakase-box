@@ -86,7 +86,7 @@ A refusal is a `BountyRefused` (`errors.ts:5`) whose first argument is a stable 
 **Guarantees.**
 - R1. Nothing a solver wrote is ever run — collection and the dry merge read objects only; `unsafeOwnerCommands` (`git.ts:550`) makes in-repo config that would execute a named refusal, and diffs pin `GIT_ATTR_SOURCE` (`git.ts` header).
 - R2. Facts, never a verdict — a solution that does not fix the task is still a numbered attempt (`answer.test.ts:112`).
-- R3. A solver's never-ship path in the return is refused before recording (`collect.ts:288` `answer-never-ship`) — hard stop 1, inbound side.
+- R3. A solver's never-ship path in the return is refused before recording (`collect.ts:423` `answer-never-ship`, "nothing was collected"), and again at `apply` just before the merge under the rules in force then (`answer.ts:245`, `collect.ts:422`, "nothing was merged"; BT80, `bt80.test.ts`) — hard stop 1, inbound side.
 - R4. A return that changes nothing is `answer-empty`, never a pass (`collect.ts:292`).
 - R5. A hostile link, submodule or unsafe path in the PR tree is refused (`collect.ts:265` `answer-unsafe-path`).
 - R6. A PR that does not descend from the bounty branch, or whose base branch changed, is refused, not compared (`collect.ts:254-258` `github-pr-not-descended`, `github-branch-changed`).

@@ -380,18 +380,23 @@ export function resolveAttempt(root: string, record: BountyRecord, n: number, vi
   return invalid('unknown-attempt', `solution ${n} does not exist on ${record.id} — the bounty knows ${known}; ${way}; next: omakase-box status ${record.id}`);
 }
 
+type Consequence = 'nothing was collected' | 'nothing was merged';
+
 // What a pull request's head must pass before the tool takes it: tree safety
 // and never-ship across its new history. Collection refuses on it; the closing
 // step runs it again before moving the bounty branch, because a hand-merged
-// head may never have been collected (BT51). Returns the new commits.
-export function checkSolutionHistory(root: string, record: BountyRecord, publication: GitHubPublication, commit: string): string[] {
+// head may never have been collected (BT51); `apply` runs it again just before
+// the merge, under the rules in force then (BT80). `consequence` names what a
+// refusal left undone: "nothing was collected" or "nothing was merged".
+// Returns the new commits.
+export function checkSolutionHistory(root: string, record: BountyRecord, publication: GitHubPublication, commit: string, consequence: Consequence = 'nothing was collected'): string[] {
   const tree = gitOutcome(root, ['ls-tree', '-rz', commit]);
-  if (tree.status !== 0) return invalid('github-pr-unreadable', 'Git could not read the pull request tree; next: check signed-in Git and rerun the same command');
+  if (tree.status !== 0) return invalid('github-pr-unreadable', `Git could not read the pull request tree; ${consequence}; next: check signed-in Git and rerun the same command`);
   for (const entry of tree.stdout.split('\0')) {
     if (entry === '') continue;
     const match = /^(100644|100755) blob ([a-f\d]{40})\t(.+)$/s.exec(entry);
-    if (match === null || match[3] === undefined || match[3].split('/').some(segment => segment === '' || segment === '.' || segment === '..') || /[\\:\x00-\x1f]/.test(match[3])) return invalid('answer-unsafe-path', `the pull request tree holds a link, a submodule or an unsafe path; nothing was collected; next: do not collect it, or end the bounty with omakase-box close ${record.id} --reason "<why>"`);
-    if (redact(match[3]) !== match[3]) return invalid('github-response-invalid', `a pull request path contains credential-shaped text; nothing was collected; next: do not collect it, or end the bounty with omakase-box close ${record.id} --reason "<why>"`);
+    if (match === null || match[3] === undefined || match[3].split('/').some(segment => segment === '' || segment === '.' || segment === '..') || /[\\:\x00-\x1f]/.test(match[3])) return invalid('answer-unsafe-path', `the pull request tree holds a link, a submodule or an unsafe path; ${consequence}; next: do not collect it, or end the bounty with omakase-box close ${record.id} --reason "<why>"`);
+    if (redact(match[3]) !== match[3]) return invalid('github-response-invalid', `a pull request path contains credential-shaped text; ${consequence}; next: do not collect it, or end the bounty with omakase-box close ${record.id} --reason "<why>"`);
   }
   // Never-ship on everything the pull request introduces: a path it touches
   // anywhere in its new history — added, changed or deleted — is refused,
@@ -409,11 +414,13 @@ export function checkSolutionHistory(root: string, record: BountyRecord, publica
     });
   const violations: { path: string; rule: string }[] = [];
   for (const sha of newCommits) {
-    violations.push(...neverShipViolations(commitStatuses(root, sha, 'nothing was collected', firstParents.get(sha) ?? EMPTY_TREE), rules));
+    violations.push(...neverShipViolations(commitStatuses(root, sha, consequence, firstParents.get(sha) ?? EMPTY_TREE), rules));
   }
   if (violations.length > 0) {
     const named = [...new Map(violations.map(v => [v.path, v])).values()];
-    return invalid('answer-never-ship', `the pull request touches never-ship paths in its history — refused, nothing was collected: ${named.map(v => `${showPath(v.path)} (rule '${v.rule}')`).join(', ')}; next: end the bounty with omakase-box close ${record.id} --reason "<why>" — never-ship paths cannot be collected`);
+    const list = named.map(v => `${showPath(v.path)} (rule '${v.rule}')`).join(', ');
+    if (consequence === 'nothing was merged') return invalid('answer-never-ship', `the solution touches paths the never-ship rules name now in its history — refused, nothing was merged: ${list}; next: end the bounty with omakase-box close ${record.id} --reason "<why>", or ask the solver for a version without these paths`);
+    return invalid('answer-never-ship', `the pull request touches never-ship paths in its history — refused, nothing was collected: ${list}; next: end the bounty with omakase-box close ${record.id} --reason "<why>" — never-ship paths cannot be collected`);
   }
   return newCommits;
 }

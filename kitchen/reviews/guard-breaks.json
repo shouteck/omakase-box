@@ -146,7 +146,7 @@
     "R3"
    ],
    "file": "packages/box-bounty/collect.ts",
-   "find": "violations.push(...neverShipViolations(commitStatuses(root, sha, 'nothing was collected', firstParents.get(sha) ?? EMPTY_TREE), rules));",
+   "find": "violations.push(...neverShipViolations(commitStatuses(root, sha, consequence, firstParents.get(sha) ?? EMPTY_TREE), rules));",
    "replace": "void rules;",
    "note": "a solver's pull request is no longer checked for never-ship paths in its history",
    "tests": [
@@ -154,6 +154,19 @@
     "tests/box/bounty/bt15-guarantees.test.ts",
     "tests/box/bounty/github-history.test.ts",
     "tests/box/bounty/github.test.ts"
+   ]
+  },
+  {
+   "id": "apply-recheck-never-ship",
+   "guarantees": [
+    "R3"
+   ],
+   "file": "packages/box-bounty/answer.ts",
+   "find": "  if (record.github?.kind === 'history') checkSolutionHistory(repoRoot, record, record.github, attempt.commit, 'nothing was merged');",
+   "replace": "  void checkSolutionHistory;",
+   "note": "apply stops asking the never-ship question again at the merge: a path the rules came to name after collection is merged",
+   "tests": [
+    "tests/box/bounty/bt80.test.ts"
    ]
   },
   {
