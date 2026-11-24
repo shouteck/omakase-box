@@ -237,7 +237,7 @@ const RoleTitle = ({ role, sub }) => (
 );
 
 /** The account menu: your public profile and signing out, off the page's foot (Vercel's account menu).
-    PF61: "Sign out everywhere" ends every session of this GitHub account, a lost device's included. */
+    PF61: "Sign out of all devices" (Netflix's words for it) ends every session of this GitHub account, a lost device's included. */
 function AccountMenu({ login, signOut }) {
   return (
     <details data-account className="relative">
@@ -251,7 +251,7 @@ function AccountMenu({ login, signOut }) {
         <a role="menuitem" href={`/owner/${login}/`} className="block px-2.5 py-1.5 rounded-lg" style={{ color: 'var(--color-ink)', textDecoration: 'none' }}>Your public profile as an owner</a>
         <div className="h-px bg-line my-1.5 mx-1" />
         <button type="button" role="menuitem" onClick={() => signOut(false)} className="block w-full text-left px-2.5 py-1.5 rounded-lg">Sign out</button>
-        <button type="button" role="menuitem" data-sign-out-everywhere onClick={() => signOut(true)} className="block w-full text-left px-2.5 py-1.5 rounded-lg">Sign out everywhere</button>
+        <button type="button" role="menuitem" data-sign-out-everywhere onClick={() => signOut(true)} className="block w-full text-left px-2.5 py-1.5 rounded-lg">Sign out of all devices</button>
       </div>
     </details>
   );
