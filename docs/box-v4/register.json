@@ -177,6 +177,10 @@
    "surface",
    "exit-sites"
   ],
+  "packages/box-bounty/fold.ts": [
+   "surface",
+   "exit-sites"
+  ],
   "packages/box-bounty/folder.ts": [
    "surface",
    "exit-sites"

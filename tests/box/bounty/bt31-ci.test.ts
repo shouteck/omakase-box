@@ -82,7 +82,7 @@ describe('BT31-ci — one plain search on every Node', () => {
     expect(renderStatus(repo)).toContain('batching');
     expectSeedAnswers(repo);
     expect(ftsNames(repo)).toEqual([]);
-    expect(userVersion(repo)).toBe(4);
+    expect(userVersion(repo)).toBe(5);
   });
 
   it('find parser returns a record with "parser" and one with "subparser"', () => {
@@ -104,7 +104,7 @@ describe('BT31-ci — one plain search on every Node', () => {
       expect(found(repo, 'parser')).toEqual(['batching drafted why', 'cache drafted task', 'inner drafted task']);
       expect(found(repo, 'guide')).toEqual(['docs drafted why']);
       expect(ftsNames(repo)).toEqual([]);
-      expect(userVersion(repo)).toBe(4);
+      expect(userVersion(repo)).toBe(5);
       expect(inspect(repo, db => db.prepare("SELECT value FROM meta WHERE key='fts_stale'").get())).toBeUndefined();
       expect(inspect(repo, db => (db.prepare("SELECT COUNT(*) AS n FROM records WHERE search_text=''").get() as { n: number }).n)).toBe(0);
       expect(inspect(repo, db => (db.prepare('PRAGMA integrity_check').get() as { integrity_check: string }).integrity_check)).toBe('ok');
@@ -112,7 +112,7 @@ describe('BT31-ci — one plain search on every Node', () => {
       create(repo, 'later', 'the parser again', 'tidy up');
       expect(found(repo, 'parser')).toHaveLength(4);
       expect(found(repo, 'tidy')).toEqual(['later drafted task']);
-      expect(userVersion(repo)).toBe(4);
+      expect(userVersion(repo)).toBe(5);
     });
   }
 
@@ -137,7 +137,7 @@ describe('BT31-ci — one plain search on every Node', () => {
     expect(ftsNames(repo)).toContain('records_fts');
     expectSeedAnswers(repo);
     expect(ftsNames(repo)).toEqual([]);
-    expect(userVersion(repo)).toBe(4);
+    expect(userVersion(repo)).toBe(5);
     expect(inspect(repo, db => (db.prepare('PRAGMA integrity_check').get() as { integrity_check: string }).integrity_check)).toBe('ok');
   });
 });

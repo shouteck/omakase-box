@@ -76,6 +76,12 @@ hidden alias.
 
 ## Wait for a solution
 
+`omakase-box status <id> --history` lists every local change to the bounty, oldest
+first: when, of what kind, and which fields it touched, never their values (a
+value can hold a stranger's text or a secret the scan held). The record is the
+fold of this log (BT101); a stale copy of a record changes only the fields it
+changed, and one field changed by two commands at once refuses `record-changed`.
+
 `omakase-box status <id> --wait [--timeout <seconds>] [--json] [--repo <path>]`
 observes a posted bounty without changing it. It returns on an open pull request
 targeting the bounty's recorded branch whose PR number and head commit are not
