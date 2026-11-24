@@ -239,6 +239,6 @@ describe('BT72: the stored tool label', () => {
     write(repo, 'TASK.md', 'the task\n');
     const result = finalizeBounty(planBounty({ repoPath: repo, why: 'a reason', title: 'a task', taskPath: join(repo, 'TASK.md') }));
     const packageVersion = (JSON.parse(readFileSync(join(ROOT, 'packages', 'box-cli', 'package.json'), 'utf8')) as { version: string }).version;
-    expect(readRecord(repo, result.id).content.tool).toBe(`omakase-box@${packageVersion}`);
+    expect(readRecord(repo, result.id).content?.tool).toBe(`omakase-box@${packageVersion}`);
   });
 });
