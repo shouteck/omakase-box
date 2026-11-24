@@ -9,7 +9,7 @@ export default function Page() {
       <Section title="If you sign in" id="signed-in">
         <ul className="list-disc pl-5 flex flex-col gap-2 max-w-prose">
           <li>Your GitHub user number and login, while you are signed in. Signing out removes them, except where they sit beside something you chose below.</li>
-          <li>A cookie that keeps you signed in, for up to 30 days. The board keeps only a fingerprint of it.</li>
+          <li>A cookie that keeps you signed in, for up to 30 days. The board keeps only a fingerprint of it, tied to your GitHub account's number, not its name. &ldquo;Sign out of all devices&rdquo; on your page ends every one of them at once.</li>
           <li>The GitHub token is used once to read who you are, then discarded. It is never stored.</li>
         </ul>
       </Section>

@@ -65,6 +65,8 @@ async function record(events: Record<string, unknown>[]): Promise<void> {
 beforeEach(async () => {
   // The token's budget: one tick reads every seeded bounty, so a new chain event lands at once.
   r = await rig('standin-read');
+  // PF61: GitHub gives these logins these IDs, so the board stores the IDs the tests sign in with.
+  for (const who of [OWNER, THIRD, OTHER_MERGED]) r.standin.accountIds.set(who.login, who.id);
   seedStates(r.standin, NOW);
   await refreshUntilDone(r);
 });
@@ -276,22 +278,26 @@ describe('writes', () => {
 });
 
 describe('the rule, as a table', () => {
-  const base: PaymentFacts = { amount: 45, poster: OWNER.login, merged: [{ number: 1, author: PAYEE.login }], record: null, receipt: null };
+  // PF61: the rule reads GitHub IDs; logins are names only.
+  const as = (who: { id: number; login: string }) => ({ github_id: who.id, login: who.login });
+  const base: PaymentFacts = { amount: 45, poster: OWNER.login, poster_id: OWNER.id, merged: [{ number: 1, author: PAYEE.login, author_id: PAYEE.id }], record: null, receipt: null };
   const recorded = { at: '2026-10-30T00:00:00Z', amount: 45, withdrawn: 0 };
   const says = (value: 'received' | 'not-received', record_at = recorded.at) => ({ says: value, record_at, at: '2026-10-31T00:00:00Z' });
-  it.each<[string, PaymentFacts, string | null, boolean]>([
-    ['owed, the poster', base, OWNER.login, true],
-    ['owed, the poster in another case', base, OWNER.login.toUpperCase(), true],
-    ['owed, a stranger', base, THIRD.login, false],
+  it.each<[string, PaymentFacts, { github_id: number; login: string } | null, boolean]>([
+    ['owed, the poster', base, as(OWNER), true],
+    ['owed, the poster\'s GitHub ID under a login in another case', base, { github_id: OWNER.id, login: OWNER.login.toUpperCase() }, true],
+    ['owed, the poster\'s old login under another GitHub ID (PF61)', base, { github_id: OWNER.id + 1, login: OWNER.login }, false],
+    ['owed, a row with no poster ID (PF61)', { ...base, poster_id: null }, as(OWNER), false],
+    ['owed, a stranger', base, as(THIRD), false],
     ['owed, nobody signed in', base, null, false],
-    ['owed, the payee (their own view is /me/)', base, PAYEE.login, false],
-    ['recorded, the poster', { ...base, record: recorded }, OWNER.login, false],
-    ['recorded, says not received, the poster', { ...base, record: recorded, receipt: says('not-received') }, OWNER.login, true],
-    ['recorded, says not received, a stranger', { ...base, record: recorded, receipt: says('not-received') }, THIRD.login, false],
-    ['recorded, says received, the poster', { ...base, record: recorded, receipt: says('received') }, OWNER.login, false],
-    ['two merged, the poster', { ...base, merged: [{ number: 1, author: PAYEE.login }, { number: 2, author: 'example-rook' }] }, OWNER.login, false],
-    ['no reward, the poster', { ...base, amount: 0 }, OWNER.login, false],
-    ['nothing merged, the poster', { ...base, merged: [] }, OWNER.login, false]
+    ['owed, the payee (their own view is /me/)', base, as(PAYEE), false],
+    ['recorded, the poster', { ...base, record: recorded }, as(OWNER), false],
+    ['recorded, says not received, the poster', { ...base, record: recorded, receipt: says('not-received') }, as(OWNER), true],
+    ['recorded, says not received, a stranger', { ...base, record: recorded, receipt: says('not-received') }, as(THIRD), false],
+    ['recorded, says received, the poster', { ...base, record: recorded, receipt: says('received') }, as(OWNER), false],
+    ['two merged, the poster', { ...base, merged: [{ number: 1, author: PAYEE.login, author_id: PAYEE.id }, { number: 2, author: 'example-rook', author_id: OTHER_MERGED.id }] }, as(OWNER), false],
+    ['no reward, the poster', { ...base, amount: 0 }, as(OWNER), false],
+    ['nothing merged, the poster', { ...base, merged: [] }, as(OWNER), false]
   ])('%s', (_name, facts, viewer, allowed) => {
     expect(ownerOnlyAllowed(facts, viewer)).toBe(allowed);
   });

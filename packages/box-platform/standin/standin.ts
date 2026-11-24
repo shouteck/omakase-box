@@ -1,6 +1,7 @@
 // A GitHub stand-in: the endpoints the board reads, on localhost, with every
 // fact seeded so a test can check the board against it. No real GitHub, no token.
 import { createServer, type IncomingMessage, type Server } from 'node:http';
+import { createHash } from 'node:crypto';
 import { renderFormat } from '../../box-bounty/format.js';
 import type { ReplayReads } from './replay.js';
 
@@ -70,6 +71,8 @@ export class Standin {
   /** Every authorize address asked for, so a test can read what it requested. */
   authorizeAsked: string[] = [];
   private codes = new Map<string, { id: number; login: string }>();
+  /** PF61: the S256 challenge GitHub was given with each code; the exchange must carry the verifier it was made from. */
+  private challenges = new Map<string, string>();
   private tokens = new Map<string, { id: number; login: string }>();
   private nextOauth = 1;
   private server: Server | null = null;
@@ -83,15 +86,23 @@ export class Standin {
       if (url.searchParams.get('client_id') !== this.oauthClientId) return { status: 404 };
       const code = `code-${this.nextOauth++}`;
       this.codes.set(code, this.signInAs);
+      const challenge = url.searchParams.get('code_challenge');
+      if (challenge !== null) {
+        if (url.searchParams.get('code_challenge_method') !== 'S256') return { status: 400 };
+        this.challenges.set(code, challenge);
+      }
       const back = new URL(url.searchParams.get('redirect_uri') ?? '');
       back.searchParams.set('code', code);
       back.searchParams.set('state', url.searchParams.get('state') ?? '');
       return { status: 302, location: back.href };
     }
     if (url.pathname === '/login/oauth/access_token' && request.method === 'POST') {
-      const sent = JSON.parse(body) as { client_id?: string; client_secret?: string; code?: string };
+      const sent = JSON.parse(body) as { client_id?: string; client_secret?: string; code?: string; code_verifier?: string };
       const who = this.codes.get(sent.code ?? '');
       if (sent.client_secret !== this.oauthClientSecret || who === undefined) return { status: 200, json: { error: 'bad_verification_code' } };
+      const challenge = this.challenges.get(sent.code!);
+      if (challenge !== undefined && createHash('sha256').update(sent.code_verifier ?? '').digest('base64url') !== challenge) return { status: 200, json: { error: 'bad_verification_code' } };
+      this.challenges.delete(sent.code!);
       this.codes.delete(sent.code!);
       const token = `standin-access-${this.nextOauth++}-${who.id}`;
       this.tokens.set(token, who);
