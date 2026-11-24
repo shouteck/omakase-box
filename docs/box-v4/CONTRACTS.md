@@ -15,7 +15,7 @@ A refusal is a `BountyRefused` (`errors.ts:5`) whose first argument is a stable 
 **States.** none → `drafted`.
 
 **Guarantees.**
-- C1. No never-ship file enters the draft's captured files; removed files are named only as `(rule 'name')` removals (`snapshot.ts`, never-ship.test.ts) — hard stop 1, create side.
+- C1. No never-ship file enters the draft's captured files; removed files are named only as `(rule 'name')` removals (`snapshot.ts`, never-ship.test.ts) — hard stop 1, create side. The owner's `never publish` entries hold in every checkout of the repository's GitHub address, and pre-BT77 folder entries in their folder (`never-ship.ts` `publishLists`, `bt77.test.ts`).
 - C2. Links and junctions resolving outside the repository are refused, never followed (`snapshot.ts:112` `link-escape`).
 - C3. `create` performs no network I/O and writes no `refs/box-bounty-records/<id>` ref (nor the old `refs/box-bounty/<id>`) — the draft is local (`bt32.test.ts` case 1, `record.test.ts:54`).
 - C4. `--why` is required and stored only in the record — never in any shipped artifact (`create.ts:129`, `missing-why`).

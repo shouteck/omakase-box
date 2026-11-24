@@ -810,7 +810,10 @@ still mark something told
 without touching the owner's file; a state file the tool cannot read is
 reset with one line, never a refusal, because nothing the owner decided
 lives there. Both are written atomically (temp file then rename), so a
-crash mid-write leaves the previous whole file.
+crash mid-write leaves the previous whole file. An honest limit: the folder
+belongs to the owner's own account, so an agent running as that account can
+edit these files directly; the tool cannot prevent that, as Git cannot for
+its own config.
 
 A repository entry is keyed by its GitHub address, owner/name, with letter
 case and a trailing .git normalized. Every copy on this machine is covered.
@@ -1021,6 +1024,17 @@ outside the repository:
 - **`never publish`** — `config add never-publish <path>` is the owner's
   own addition to the never-ship table: a listed path is kept out of every
   bounty — snapshot, first-published commit, named file, returned solution.
+  It is kept for the repository's GitHub address (`neverPublish` in
+  `settings.json`), so it holds in every checkout of that repository on this
+  machine: a second clone in another folder, or a fresh clone after the first
+  is deleted. A fork is another address and does not inherit it; a checkout
+  whose remotes name several repositories reads the entries of each. A checkout
+  with no single GitHub address keeps the entry for its folder only, and
+  entries written before BT77 stay with their folder. `config` names where each
+  entry holds: `(every copy of owner/name)` or `(this folder only)`. `remove`
+  takes an entry out of the repository's list and this folder's.
+  `safe to publish` stays with the folder: it loosens the scan, so it never
+  spreads to another copy.
 
 Entries are repository-relative paths validated before the write: a path
 resolving outside the repository or through a link is refused

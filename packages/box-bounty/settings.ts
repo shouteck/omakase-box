@@ -66,6 +66,10 @@ export interface OwnerSettings {
       a never-ship rule; `safe` paths are the ones the pre-publish scan does
       not hold a bounty over. Both live here and never in the project. */
   readonly publishing?: Readonly<Record<string, { readonly never: readonly string[]; readonly safe: readonly string[] }>>;
+  /** BT77: the owner's `never publish` entries for a repository, keyed by its GitHub address, so they hold in every checkout of
+      it on this machine. A separate key on purpose: an entry under `repositories` is a posting decision. Folder-keyed `never`
+      entries in `publishing` (written before BT77, or for a checkout with no single address) still hold in their folder. */
+  readonly neverPublish?: Readonly<Record<string, readonly string[]>>;
   /** Owner answers to held merges (BT13), keyed `<repository>#<bounty-id>`.
       They live here, outside every repository, because the bounty record is
       inside it: an approval written on the record could be forged where the
@@ -449,7 +453,7 @@ export function loadSettings(): OwnerSettings {
   try { parsed = JSON.parse(readFileSync(path, 'utf8')); } catch { return bad('not readable JSON'); }
   if (!isObject(parsed)) return bad('must hold a JSON object');
   if (parsed['board'] !== undefined && (typeof parsed['board'] !== 'string' || boardAddressOf(parsed['board']) !== parsed['board'])) return bad('board must be a web address with nothing after the host, or empty');
-  for (const name of Object.keys(parsed)) if (!['board', 'kind', 'default', 'projects', 'repositories', 'migrations', 'firstMerges', 'instructions', 'publishing', 'reward', 'rewardLimit', 'retiredReward', 'rewardPromiseSaid', 'rewardNoticeAt', 'askMergeNoticeAt', 'mergeAnswers', 'said', 'solving'].includes(name)) unknownSetting(name);
+  for (const name of Object.keys(parsed)) if (!['board', 'kind', 'default', 'projects', 'repositories', 'migrations', 'firstMerges', 'instructions', 'publishing', 'neverPublish', 'reward', 'rewardLimit', 'retiredReward', 'rewardPromiseSaid', 'rewardNoticeAt', 'askMergeNoticeAt', 'mergeAnswers', 'said', 'solving'].includes(name)) unknownSetting(name);
   if (parsed['kind'] !== undefined && parsed['kind'] !== 'box-owner-settings') return bad('kind must be box-owner-settings');
   const repositories: Record<string, SettingsLevel> = {};
   const rawRepositories = parsed['repositories'];
@@ -497,6 +501,16 @@ export function loadSettings(): OwnerSettings {
       publishing[key] = { never: lists(value['never'] ?? []), safe: lists(value['safe'] ?? []) };
     }
   }
+  const neverPublish: Record<string, readonly string[]> = {};
+  const rawNeverPublish = parsed['neverPublish'];
+  if (rawNeverPublish !== undefined) {
+    if (!isObject(rawNeverPublish)) return bad('neverPublish must hold an object keyed by GitHub address');
+    for (const [key, list] of Object.entries(rawNeverPublish)) {
+      if (repositoryAddress(key) !== key) return bad(`neverPublish key ${JSON.stringify(key)} is not a GitHub address`);
+      if (!Array.isArray(list) || list.some(entry => typeof entry !== 'string')) return bad('a neverPublish list is unreadable');
+      neverPublish[key] = list as string[];
+    }
+  }
   // The all-projects extra never carries a reward: money is promised only
   // for a repository the owner named (BT11c). A hand-written file that puts
   // one there fails loudly like every other wrong shape.
@@ -541,7 +555,7 @@ export function loadSettings(): OwnerSettings {
     }
   }
   const solving = parsed['solving'] === undefined ? undefined : solvingSetting(parsed['solving']);
-  const settings: OwnerSettings = { ...(parsed['board'] === undefined ? {} : { board: parsed['board'] as string }), ...(defaultLevel !== undefined ? { default: defaultLevel } : {}), repositories, ...(rawInstructions === undefined ? {} : { instructions }), ...(rawPublishing === undefined ? {} : { publishing }), ...(Object.keys(mergeAnswers).length === 0 ? {} : { mergeAnswers }), ...(solving === undefined ? {} : { solving }) };
+  const settings: OwnerSettings = { ...(parsed['board'] === undefined ? {} : { board: parsed['board'] as string }), ...(defaultLevel !== undefined ? { default: defaultLevel } : {}), repositories, ...(rawInstructions === undefined ? {} : { instructions }), ...(rawPublishing === undefined ? {} : { publishing }), ...(rawNeverPublish === undefined ? {} : { neverPublish }), ...(Object.keys(mergeAnswers).length === 0 ? {} : { mergeAnswers }), ...(solving === undefined ? {} : { solving }) };
   const legacy = parsed['projects'];
   if (legacy !== undefined && !isObject(legacy)) return bad('projects must hold an object keyed by legacy folder path');
   const carried = STATE_KEYS.some(key => parsed[key] !== undefined) || Object.keys(movedInstructionNotes).length > 0;
