@@ -52,6 +52,20 @@
    ]
   },
   {
+   "id": "never-ship-bt72-stores",
+   "guarantees": [
+    "C1",
+    "R3"
+   ],
+   "file": "packages/box-bounty/never-ship-paths.ts",
+   "find": "      CREDENTIAL_PATHS.some(tail => path === tail || path.endsWith(`/${tail}`)) ||\n      CREDENTIAL_ENDINGS.test(basename(path))",
+   "replace": "      path.endsWith('/.aws/credentials') || path === '.aws/credentials' ||\n      path.endsWith('/.docker/config.json') || path === '.docker/config.json'",
+   "note": "BT72's path endings and basename endings stop matching (kubeconfigs, Terraform state and variables, gh's hosts.yml, password databases): create stops removing them and the return stops refusing them",
+   "tests": [
+    "tests/box/bounty/never-ship-layers.test.ts"
+   ]
+  },
+  {
    "id": "create-filter",
    "guarantees": [
     "C1"

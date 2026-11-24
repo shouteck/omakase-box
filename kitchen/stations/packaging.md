@@ -13,7 +13,7 @@ Each trap names the wave that taught it; that wave file has the story.
 - **Wording is product** and lives in `packages/box-bounty/wording.ts` alone. **Changing a printed line means sweeping the suite for the old wording** - BT36's only FAIL was a stale bt11b assertion.
 - **A user-facing line has branches** (BT41): test the one a fresh project takes (untracked, compact), not only the legacy/full one; a fresh agent given only the README and the tool catches text a unit test misses.
 - **Current availability is not seen history** (BT37): one PR can have many head revisions. Count current waiting PRs once by number; an explicit empty available list overrides append-only seen history. Pin re-push and closed-PR cases, not just a first arrival.
-- **A fast path needs proof it ran** (BT46): a differential test passes when the fast path silently falls back. Bite it; if removing a rule turns nothing red, the path never ran. Keep the tree-id table in `bt46.test.ts` for any change to what `create` trusts.
+- **A fast path needs proof it ran** (BT46): a differential test passes when it silently falls back. Bite it; if removing a rule turns nothing red, the path never ran. Keep the tree-id table in `bt46.test.ts` for any change to what `create` trusts.
 - **Fast paths preserve capture and spelling** (BT39): copying the real index can hide assume-unchanged/skip-worktree edits; native realpath can change printed disk-case spelling. Pin live captured bytes and displayed paths, not just file counts. A PR file-list cache must include its remote base tip as well as head facts.
 - **A next marker is not an action** (BT40): inspect the state at the throw and follow its step. AST guards catch missing markers, bogus commands and literal interpolation; they cannot prove usefulness. Keep owner blocks intact and do not mistake a true hard-stop fact for recovery guidance.
 - Three hard stops only: never-ship, no private repository outside, the owner's standing rules. Do not add a refusal that polices a choice. Solver text is never the tool's; apply puts it in the owner's tree. Guard output at the sink; quote every path (BT43).
@@ -58,12 +58,10 @@ Each trap names the wave that taught it; that wave file has the story.
 - **Verify outside state independently** (`gh api`, `git ls-remote`), never the tool's word. `undone` is terminal; closed-by-base-deletion reads as rejection (BT6a). `allowedDestinations` gates both directions.
 - **Fresh-reader journeys reuse `bt8b-fixtures.mjs`** (per-case repos, isolated settings, the exact SHA's built CLI); cold ones reuse `bt17-measure.mjs` (evidence card).
 - Name negative candidates by the actual source mutation: a cosmetic change is not a probe. **A clean install proves nothing**; only loading the code shows a dangling link (A0).
-- **A produced artifact is not evidence of what it claims:** rebuild from the current commit first (K16).
+- **A produced artifact is not evidence of what it claims:** rebuild from the current commit first (K16). Read `package.json` lazily: tests relocate the bundle (BT72).
 - **Parseable is not the promised wire format** — validate or normalize at the boundary; test malformed *and* parseable-but-nonconforming (BT35).
 - **The root `.gitignore` ignores any `data/` folder** (K43's sample world went uncommitted). **Verify in a clean worktree** needs the Playwright revision under its `.runtime/browsers`: copy from `%LOCALAPPDATA%/ms-playwright`, never download.
-
-- **A stand-in hides what a host charges for** (PF8): count database calls with a wrapper, and batch.
-- **A default naming a live service reaches it from tests** (PF8): fixtures build their own environment; read its log during verify.
+- **A stand-in hides what a host charges for** (PF8): count and batch database calls. **A default naming a live service reaches it from tests:** fixtures build their own environment.
 
 ## Before merging
 

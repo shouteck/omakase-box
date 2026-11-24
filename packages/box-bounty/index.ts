@@ -56,7 +56,7 @@ export type { IssueComment } from './collect.js';
 export type { ApplyResult, ApplyTarget } from './answer.js';
 export { BountyUsage, parseCreateArgs, parseOptions, commandHelp, BOUNTY_COMMANDS, OPTIONS_NOTE } from './args.js';
 export type { CreateArgs, ParsedOptions } from './args.js';
-export { deriveTitle, renderPreview, resolveRepoRoot, TITLE_LIMIT, TOOL_VERSION } from './create.js';
+export { deriveTitle, renderPreview, resolveRepoRoot, TITLE_LIMIT, toolVersion } from './create.js';
 export type { BountyPlan, BountyResult, CreateOptions, PlanFile, RuleRemoval } from './create.js';
 export { BountyRefused } from './errors.js';
 export { GitFailed, git, gitOutcome, ownerGit, ownerGitOutcome } from './git.js';

@@ -16,8 +16,12 @@ import { readDecision, repoReward, requireRepository } from './settings.js';
 import { readMany } from './read-many.js';
 import { createSnapshot } from './snapshot.js';
 import type { SnapshotFile, SnapshotRemoval } from './snapshot.js';
+import { packageVersion } from '../box-cli/src/version.js';
 
-export const TOOL_VERSION = 'box-bounty@0.1.0';
+// BT72: the label stored on every new record (never published): the real package name and version, from the one place the
+// build stamps it. Records already written keep what they hold. Read when a record is written, never at load, so a command that
+// writes none does not depend on the package file.
+export const toolVersion = (): string => `omakase-box@${packageVersion()}`;
 const PREVIEW_NAMES_PER_RULE = 20;
 
 export interface CreateOptions {
@@ -401,7 +405,7 @@ export function finalizeBounty(plan: BountyPlan): BountyResult {
     id, title: plan.title, why: plan.why, createdAt,
     ...(plan.partOf !== undefined ? { partOf: plan.partOf } : {}),
     resume: plan.resume,
-    content: { task: plan.task, note, tool: TOOL_VERSION },
+    content: { task: plan.task, note, tool: toolVersion() },
     noteSource: 'generated',
     scanFindings: plan.scan.hits.length === 0 ? [] : [{ at: createdAt, where: 'create', hits: [...plan.scan.hits], settled: null }]
   });

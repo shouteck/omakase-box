@@ -5,13 +5,14 @@
 //   a case alias on disk, the owner's list), planned and finalised once, with the removal report checked against level 1.
 // The old tests (never-ship.test.ts) built a repository per spelling; what each of them caught is covered here, shown by breaking
 // the code one place at a time (waves/K65.md).
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
-import { finalizeBounty, planBounty } from '../../../packages/box-bounty/index.js';
+import { BountyRefused, finalizeBounty, planBounty } from '../../../packages/box-bounty/index.js';
 import { BUILTIN_RULES, loadOwnerList, matchingSkeleton } from '../../../packages/box-bounty/never-ship.js';
-import { makeRepo, write } from './support.js';
+import { collectPullRequest, postToGitHub } from './github-solver.js';
+import { makeRepo, ownerSays, readRecord, ROOT, runRoot, write } from './support.js';
 
 const ruleOf = (path: string): string | null => BUILTIN_RULES.find(rule => rule.match(path))?.name ?? null;
 
@@ -37,7 +38,22 @@ const CASES: readonly (readonly [string, string | null])[] = [
   // nothing may match: ordinary words and files that only look related
   ['secretary/minutes.txt', null], ['secretariat/x.md', null], ['src/app.py', null], ['TASK.md', null], ['notes.txt', null], ['open.txt', null],
   ['.boxignore', null], ['environment.ts', null], ['src/envelope.py', null], ['docs/keyboard.md', null], ['monkey.py', null], ['license.txt', null],
-  ['.github/workflows/ci.yml', null], ['data/file.key2', null], ['a.pem.txt', null], ['certs.md', null], ['envrc.md', null], ['.gitignore', null], ['.gitattributes', null]
+  ['.github/workflows/ci.yml', null], ['data/file.key2', null], ['a.pem.txt', null], ['certs.md', null], ['envrc.md', null], ['.gitignore', null], ['.gitattributes', null],
+  // BT72: credential stores whose content has no fixed shape, named by file (sources and reasons in waves/BT72.md)
+  ['kubeconfig', 'credentials-file'], ['deploy/kubeconfig.yaml', 'credentials-file'], ['kubeconfig.yml', 'credentials-file'], ['clusters/prod.kubeconfig', 'credentials-file'],
+  ['.kube/config', 'credentials-file'], ['home/.kube/config', 'credentials-file'],
+  ['terraform.tfstate', 'credentials-file'], ['infra/terraform.tfstate.backup', 'credentials-file'], ['.terraform.tfstate.lock.info', 'credentials-file'],
+  ['prod.tfvars', 'credentials-file'], ['infra/terraform.tfvars.json', 'credentials-file'], ['.terraformrc', 'credentials-file'], ['terraform.rc', 'credentials-file'],
+  ['AuthKey_ABC123.p8', 'private-key'], ['certs/bundle.pkcs12', 'private-key'],
+  ['.config/gh/hosts.yml', 'credentials-file'], ['home/.config/gh/hosts.yml', 'credentials-file'],
+  ['.config/gcloud/application_default_credentials.json', 'credentials-file'], ['application_default_credentials.json', 'credentials-file'],
+  ['_netrc', 'credentials-file'], ['.s3cfg', 'credentials-file'], ['.gem/credentials', 'credentials-file'], ['home/.gem/credentials', 'credentials-file'],
+  ['.vscode/sftp.json', 'credentials-file'], ['sftp-config.json', 'credentials-file'], ['.ftpconfig', 'credentials-file'], ['.remote-sync.json', 'credentials-file'],
+  ['vault.kdbx', 'credentials-file'], ['login.keychain', 'credentials-file'], ['safe.psafe3', 'credentials-file'], ['1p.agilekeychain', 'credentials-file'], ['kdewallet.kwallet', 'credentials-file'],
+  // BT72's near misses: ordinary project files that only look related
+  ['terraform.md', null], ['docs/kubernetes.md', null], ['k8s/deployment.yaml', null], ['tfstate-notes.txt', null], ['app.p8.txt', null], ['config/hosts.yml.example', null],
+  ['terraform/main.tf', null], ['variables.tf', null], ['docs/kubeconfig.md', null], ['.vscode/settings.json', null], ['src/sftp.json', null], ['notes.p8.md', null],
+  ['gh/hosts.yml', null], ['terraform.tfvars.example', null], ['kube/config', null]
 ];
 
 describe('K65 level 1: the built-in rules as data', () => {
@@ -174,5 +190,55 @@ describe('K65 level 2: one repository, every route a path takes to the rule', ()
       if (entry.rule === 'owner-list') continue;
       for (const path of entry.paths) expect(ruleOf(path), path).toBe(entry.rule);
     }
+  });
+});
+
+describe('BT72 level 2: the credential stores the table missed, through create and the return', () => {
+  // A kubeconfig's key is base64 and Terraform's values have no fixed shape: only the name can keep them out.
+  const FAMILIES: Readonly<Record<string, string>> = {
+    'deploy/kubeconfig': 'apiVersion: v1\nusers:\n- name: admin\n  user:\n    client-key-data: ZmFrZQ==\n',
+    'infra/terraform.tfstate': '{"resources":[{"instances":[{"attributes":{"password":"fake-plain"}}]}]}\n',
+    'ios/AuthKey_FAKE.p8': 'fake apple key\n',
+    '.config/gh/hosts.yml': 'github.com:\n    oauth_token: fake\n'
+  };
+
+  // @guards C1
+  it('create removes a kubeconfig, a .tfstate, a .p8 and the gh hosts file, each named only as a rule removal', () => {
+    const repo = makeRepo({ 'src/app.py': 'x\n', 'terraform/main.tf': 'resource "x" "y" {}\n', ...FAMILIES });
+    write(repo, 'TASK.md', 'the task\n');
+    const result = finalizeBounty(planBounty({ repoPath: repo, why: 'a reason', title: 'a task', taskPath: join(repo, 'TASK.md') }));
+    expect(result.plan.files.map(file => file.path).sort()).toEqual(['TASK.md', 'src/app.py', 'terraform/main.tf']);
+    const removed = new Map(result.plan.ruleRemovals.map(entry => [entry.rule, [...entry.paths].sort()]));
+    expect(removed.get('credentials-file')).toEqual(['.config/gh/hosts.yml', 'deploy/kubeconfig', 'infra/terraform.tfstate']);
+    expect(removed.get('private-key')).toEqual(['ios/AuthKey_FAKE.p8']);
+  });
+
+  // @guards R3
+  it('a solution that adds one is refused by name on the way back, and nothing lands', () => {
+    const repo = makeRepo({ 'src/app.py': 'x\n' });
+    write(repo, 'TASK.md', 'the task\n');
+    const result = finalizeBounty(planBounty({ repoPath: repo, why: 'a reason', title: 'a task', taskPath: join(repo, 'TASK.md') }));
+    ownerSays(repo, 'allowed');
+    const { destination } = postToGitHub(repo, result.id);
+    const returned = join(runRoot('BT72-return'), 'returned');
+    cpSync(destination, returned, { recursive: true });
+    for (const [path, text] of Object.entries(FAMILIES)) write(returned, `repo/${path}`, text);
+    let refusal: unknown = null;
+    try { collectPullRequest(repo, result.id, returned); } catch (error) { refusal = error; }
+    expect(refusal).toBeInstanceOf(BountyRefused);
+    expect((refusal as BountyRefused).reason).toBe('answer-never-ship');
+    for (const path of Object.keys(FAMILIES)) expect((refusal as BountyRefused).message).toContain(path);
+    expect(readRecord(repo, result.id).stage).toBe('posted');
+    for (const path of Object.keys(FAMILIES)) expect(existsSync(join(repo, path))).toBe(false);
+  });
+});
+
+describe('BT72: the stored tool label', () => {
+  it("a new record's content.tool is the real package name and version, not the old hard-coded label", () => {
+    const repo = makeRepo({ 'src/app.py': 'x\n' });
+    write(repo, 'TASK.md', 'the task\n');
+    const result = finalizeBounty(planBounty({ repoPath: repo, why: 'a reason', title: 'a task', taskPath: join(repo, 'TASK.md') }));
+    const packageVersion = (JSON.parse(readFileSync(join(ROOT, 'packages', 'box-cli', 'package.json'), 'utf8')) as { version: string }).version;
+    expect(readRecord(repo, result.id).content?.tool).toBe(`omakase-box@${packageVersion}`);
   });
 });
