@@ -5,4 +5,3 @@ export type { GitHubPlan } from './publish-plan.js';
 export { approveGitHub, previewGitHub, postGitHub } from './post.js';
 export { listGitHubAnswers, refreshGitHubStatus, refreshGitHubFormat, issueComments, answerGitHub, resolveAttempt } from './collect.js';
 export type { IssueComment } from './collect.js';
-export { syncGitHubDecision } from './close.js';

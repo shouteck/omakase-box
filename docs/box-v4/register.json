@@ -257,6 +257,10 @@
    "surface",
    "exit-sites"
   ],
+  "packages/box-bounty/outbound.ts": [
+   "surface",
+   "exit-sites"
+  ],
   "packages/box-bounty/owner-text.ts": [
    "surface",
    "exit-sites"
@@ -286,6 +290,10 @@
    "exit-sites"
   ],
   "packages/box-bounty/read-many.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/reconcile.ts": [
    "surface",
    "exit-sites"
   ],

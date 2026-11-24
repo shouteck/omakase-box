@@ -21,7 +21,7 @@ import { ownerStatusLine,waitingSummary } from './owner-text.js';
 import { boardAddress,boardLine,boardNotToldLine,boardTold } from './board.js';
 import { paymentOf,payToLine,UNATTRIBUTED } from './pay.js';
 import { applicableAttempts,attemptsOf,endedCount,endedRecords,isOpenStage,listRecords,loadRecord,openRecords,persistRecord,recordDir,retiredRoute,setOpenSurfacesSync,trackedRecordFiles } from './record.js';
-import { corruptFiles,endedContaining,localEvents,metaKeys,sharedEnded,sharedEndedCount,sharedOpen,sharedRead } from './store.js';
+import { corruptFiles,endedContaining,localEvents,outboxRows,sharedEnded,sharedEndedCount,sharedOpen,sharedRead } from './store.js';
 import { refreshSharedMemory } from './chain.js';
 import { adoptOpenShared } from './adopt.js';
 import { RESUME_STAYED,SETUP_LINES } from './wording.js';
@@ -321,6 +321,13 @@ export function renderHistory(repoRoot: string, id: string): string {
       const stages = patch.events.map(event => event.stage).filter(Boolean).map(stage => `stage → ${stage}`);
       return [...paths, ...stages].join(', ') || 'no change';
     }
+    // BT101 stage 2: what was owed outside and how it ended, by the row's key (the tool's own `kind:id`) and, for a
+    // refusal, the reason's name — never the detail, which can quote GitHub's answer.
+    if (kind === 'owed' || kind === 'sent' || kind === 'refused') {
+      const said = JSON.parse(json) as { key?: unknown; reason?: unknown };
+      const key = typeof said.key === 'string' && /^[a-z]+:bt-[a-f\d]{12}$/.test(said.key) ? said.key : '(unnamed row)';
+      return kind === 'refused' && typeof said.reason === 'string' && /^[a-z-]+$/.test(said.reason) ? `${key} (${said.reason})` : key;
+    }
     return kind === 'dropped' ? 'the record was removed' : 'the whole record';
   };
   return [
@@ -395,8 +402,8 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
   const corrupt = listed.filter(entry => entry.record === null);
   const lines: string[] = [...notPickedUp];
   // Pending shared-memory pushes are named in the overview (BT32).
-  for (const key of metaKeys(repoRoot, 'chain_pending:')) {
-    lines.push(`${key.slice('chain_pending:'.length)} — shared bounty memory not pushed yet; it will be retried`);
+  for (const row of outboxRows(repoRoot)) {
+    if (row.kind === 'chain' && row.state === 'pending') lines.push(`${row.bountyId} — shared bounty memory not pushed yet; it will be retried`);
   }
   // A shared-only bounty names its origin — the chain, not this machine.
   for (const entry of listed) {

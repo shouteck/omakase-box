@@ -11,7 +11,7 @@ import { adoptedWithoutPermission,syncBeforeAction } from './adopt.js';
 import { BountyRefused } from './errors.js';
 import { boundAmount } from './format.js';
 import { postGitHub } from './post.js';
-import { syncGitHubDecision } from './close.js';
+import { sendDecision } from './reconcile.js';
 import { payNotice } from './pay.js';
 import { dropDurabilityRefs,isOpenStage,loadRecord,settleScanFindings,transitionTo } from './record.js';
 import { shareClosed } from './chain.js';
@@ -47,9 +47,9 @@ export function closeBounty(repoRoot: string, id: string, reason?: string): Clos
     throw new BountyRefused('owner-permission-needed', `${id} was posted from another machine, and this machine's owner has given no permission for this repository; a shared record grants none; nothing changed; next: ask the owner — omakase-box allow <owner/name> gives it`);
   }
   if (!isOpenStage(record.stage)) {
-    if (record.github !== undefined) syncGitHubDecision(repoRoot, record);
-    const retryPay = payNotice(record, boundAmount(record));
-    return { record, outcome: 'already-ended', ...(retryPay === null ? {} : { payMessage: retryPay }) };
+    const settled = record.github === undefined ? record : sendDecision(repoRoot, id);
+    const retryPay = payNotice(settled, boundAmount(settled));
+    return { record: settled, outcome: 'already-ended', ...(retryPay === null ? {} : { payMessage: retryPay }) };
   }
   settleScanFindings(repoRoot, record, 'ended');
   if (text !== '') {
@@ -58,12 +58,12 @@ export function closeBounty(repoRoot: string, id: string, reason?: string): Clos
     transitionTo(repoRoot, record, 'withdrawn', { command: 'close' });
   }
   dropDurabilityRefs(repoRoot, record);
-  syncGitHubDecision(repoRoot, record);
+  const ended = record.github === undefined ? record : sendDecision(repoRoot, id);
   // BT32: a posted bounty ending is a shared chain event (a draft's close
   // is not — the draft never left the machine, so its ending does not either).
-  if (record.github?.issue !== undefined && record.github?.issue !== null) {
-    shareClosed(repoRoot, record, text !== '' ? 'rejected' : 'withdrawn', text !== '' ? text : undefined, false);
+  if (ended.github?.issue !== undefined && ended.github?.issue !== null) {
+    shareClosed(repoRoot, ended, text !== '' ? 'rejected' : 'withdrawn', text !== '' ? text : undefined, false);
   }
-  const payMessage = payNotice(record, boundAmount(record));
-  return { record, outcome: text !== '' ? 'rejected' : 'withdrawn', ...(payMessage === null ? {} : { payMessage }) };
+  const payMessage = payNotice(ended, boundAmount(ended));
+  return { record: ended, outcome: text !== '' ? 'rejected' : 'withdrawn', ...(payMessage === null ? {} : { payMessage }) };
 }
