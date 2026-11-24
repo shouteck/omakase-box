@@ -54,8 +54,35 @@ export const KITCHEN_TEST_READS = [
 // two prefixes here, so reach and coverage cannot drift apart.
 const isKitchenRead = path => KITCHEN_TEST_READS.includes(path) || LIVE_RULE_FILES.includes(path)
   || /^waves\/[^/]+\.md$/.test(path) || /^kitchen\/(roles|stations)\/[^/]+\.md$/.test(path);
+// K76 — what product tests and packages read is derived, never listed: a path
+// is product-read when any tracked file under tests/box/, tests/platform/ or
+// packages/ (build output excluded) contains its text. The hand lists above
+// had it wrong in the dangerous direction: bounty tests load
+// kitchen/demo/gh-standin.cjs, and bt12, bt41, pf6 and bt10 read
+// FIRST-FIVE-MINUTES.md, docs/box-v4/LAUNCH.md and BOUNTY-FORMAT.md, which
+// counted as kitchen-only or inert. The scan over-counts (a comment naming a
+// file makes it product-read), which only ever runs more; a path a test builds
+// from pieces is not seen. One scan per process; an unreadable listing names
+// everything.
+const PRODUCT_SOURCE = /^(?:tests\/box|tests\/platform|packages)\/.+\.(?:ts|tsx|mjs|cjs|js|json)$/;
+const BUILD_OUTPUT = /(?:^|\/)(?:dist|dist-package|out|node_modules|\.next)\//;
+const productTexts = new Map();
+function productText(rootDir) {
+  if (!productTexts.has(rootDir)) {
+    const listed = gitLines(rootDir, ['ls-files', '-z']);
+    productTexts.set(rootDir, listed === null ? null : listed.split('\0')
+      .filter(path => PRODUCT_SOURCE.test(path) && !BUILD_OUTPUT.test(path))
+      .map(path => { try { return readFileSync(join(rootDir, ...path.split('/')), 'utf8'); } catch { return ''; } })
+      .join('\0'));
+  }
+  return productTexts.get(rootDir);
+}
+export const productNames = (path, rootDir = root) => {
+  const text = productText(rootDir);
+  return text === null || text.includes(path);
+};
 // Prose and process only: no test reads these.
-export const isInert = path => !isKitchenRead(path) && (path.endsWith('.md') || /^(docs|waves|kitchen|templates|milestones|research|tasks|\.devin|\.cursor)\//.test(path) || path === '.gitignore');
+export const isInert = path => !isKitchenRead(path) && !productNames(path) && (path.endsWith('.md') || /^(docs|waves|kitchen|templates|milestones|research|tasks|\.devin|\.cursor)\//.test(path) || path === '.gitignore');
 function checkSuitesForPath(path) {
   // Non-inert but read by no check suite — test:kitchen owes them instead
   // (kitchenSuiteReason below), so `check` owes them nothing.
@@ -131,7 +158,8 @@ export function kitchenSuiteReason(paths) {
 // Does this step read this path? K23's ancestor reuse and K24's dirty-tree
 // reuse share the one answer: the files a kitchen test reads
 // (KITCHEN_TEST_READS, waves/*.md — the paths kitchenSuiteReason reports)
-// count as read by test:kitchen alone; to every other step they are the docs
+// count as read by test:kitchen alone, unless a product file names them (K76);
+// to every other step they are the docs
 // they look like. Any other non-inert path every step reads — an unmapped
 // path always means "run it", never "skip it".
 export const stepReadsPath = (step, path) =>
@@ -139,7 +167,7 @@ export const stepReadsPath = (step, path) =>
     ? ['eslint.config.mjs', 'tsconfig.json', 'package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', '.node-version', 'scripts/pnpm.mjs', 'scripts/toolchain.json', 'scripts/verify.mjs', 'scripts/suite.mjs'].includes(path)
       || path.startsWith('scripts/tooling/')
       || (/^packages\/box-platform\/.*\.ts$/.test(path) && !/(^|\/)(dist|out|node_modules|\.next)\//.test(path))
-    : kitchenSuiteReason([path]) === KITCHEN_READ_REASON ? step === 'test:kitchen' : !isInert(path);
+    : kitchenSuiteReason([path]) === KITCHEN_READ_REASON && !productNames(path) ? step === 'test:kitchen' : !isInert(path);
 
 // --- which kitchen test files a diff can reach (K45) --------------------------
 
