@@ -5,7 +5,7 @@ import { answerGitHub as answerGitHubCommand,listGitHubAnswers as listGitHubAnsw
 import { previewGitHub as previewGitHubCommand,previewGitHubFacts as previewGitHubFactsCommand } from './post.js';
 import { createBounty as createBountyCommand,finalizeBounty as finalizeBountyCommand,planBounty as planBountyCommand } from './create.js';
 import { closeBounty as closeBountyCommand,postBounty as postBountyCommand } from './commands.js';
-import { renderStatus as renderStatusCommand } from './render.js';
+import { renderHistory as renderHistoryCommand, renderStatus as renderStatusCommand } from './render.js';
 import { lookBounty as lookBountyCommand } from './look.js';
 import { statusDocument as statusDocumentCommand,configDocument as configDocumentCommand } from './json.js';
 import { findBounties as findBountiesCommand,findDocument as findDocumentCommand,renderFind as renderFindCommand } from './find.js';
@@ -30,6 +30,7 @@ export const planBounty = command(planBountyCommand);
 export const postBounty = command(postBountyCommand);
 export const closeBounty = command(closeBountyCommand);
 export const renderStatus = command(renderStatusCommand);
+export const renderHistory = command(renderHistoryCommand);
 export const lookBounty = command(lookBountyCommand);
 // The --json documents (BT19): same reads the text views make, so the same
 // pin-window treatment. `lookDocument` is a pure map of the LookResult —

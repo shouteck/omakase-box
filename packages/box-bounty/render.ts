@@ -21,7 +21,7 @@ import { ownerStatusLine,waitingSummary } from './owner-text.js';
 import { boardAddress,boardLine,boardNotToldLine,boardTold } from './board.js';
 import { paymentOf,payToLine,UNATTRIBUTED } from './pay.js';
 import { applicableAttempts,attemptsOf,endedCount,endedRecords,isOpenStage,listRecords,loadRecord,openRecords,persistRecord,recordDir,retiredRoute,setOpenSurfacesSync,trackedRecordFiles } from './record.js';
-import { corruptFiles,endedContaining,metaKeys,sharedEnded,sharedEndedCount,sharedOpen,sharedRead } from './store.js';
+import { corruptFiles,endedContaining,localEvents,metaKeys,sharedEnded,sharedEndedCount,sharedOpen,sharedRead } from './store.js';
 import { refreshSharedMemory } from './chain.js';
 import { adoptOpenShared } from './adopt.js';
 import { RESUME_STAYED,SETUP_LINES } from './wording.js';
@@ -310,6 +310,25 @@ const scanFindingLines = (record: BountyRecord, indent: string): string[] => {
 // of the current code, and the next step; ended bounties one compact line; an
 // empty project says so and says what to do. `--comments` prints the issue's
 // comments marked as written by others. Never prints nothing.
+// BT101: what changed in the owner's name, from the local log alone. Each change by kind and the paths it touched; never a
+// value, since a value can hold a stranger's text or a secret the scan held.
+export function renderHistory(repoRoot: string, id: string): string {
+  loadRecord(repoRoot, id); // an unknown id refuses by name, as status <id> does
+  const what = (kind: string, json: string): string => {
+    if (kind === 'patched') {
+      const patch = JSON.parse(json) as { set: [string[], unknown][]; unset: string[][]; events: { stage?: string }[] };
+      const paths = [...patch.set.map(([path]) => path.join('.')), ...patch.unset.map(path => `${path.join('.')} (removed)`)];
+      const stages = patch.events.map(event => event.stage).filter(Boolean).map(stage => `stage → ${stage}`);
+      return [...paths, ...stages].join(', ') || 'no change';
+    }
+    return kind === 'dropped' ? 'the record was removed' : 'the whole record';
+  };
+  return [
+    `${id}: every local change, oldest first; values are not shown`,
+    ...localEvents(repoRoot, id).map(event => `  ${String(event.seq).padStart(3)}  ${event.at}  ${event.kind.padEnd(8)}  ${what(event.kind, event.json)}`)
+  ].join('\n');
+}
+
 export function renderStatus(repoRoot: string, options: { readonly id?: string; readonly full?: boolean; readonly comments?: boolean } = {}): string {
   // BT32: `status` is one of the five commands that refresh shared memory.
   refreshSharedMemory(repoRoot);

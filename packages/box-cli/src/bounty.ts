@@ -5,7 +5,7 @@
 // repository.
 import { lstatSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { actingOn, loadSettings, repositoryIdentity, applyBounty, BountyRefused, BountyUsage, closeBounty, createBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, parseOptions, commandHelp, OPTIONS_NOTE, postBounty, readDecision, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, repoReward, requireRepository, resolveRepoRoot, setMergeNoticeListener, setInstructionNoticeListener, renderOverview, showPath, statusDocument, lookDocument, configDocument, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, hookDisclosure, hookHost, hookOff, hookOn, hookStatus, limitGitHubCalls, runHook } from '../../box-bounty/index.js';
+import { actingOn, loadSettings, repositoryIdentity, applyBounty, BountyRefused, BountyUsage, closeBounty, createBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, parseOptions, commandHelp, OPTIONS_NOTE, postBounty, readDecision, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, renderHistory, repoReward, requireRepository, resolveRepoRoot, setMergeNoticeListener, setInstructionNoticeListener, renderOverview, showPath, statusDocument, lookDocument, configDocument, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, hookDisclosure, hookHost, hookOff, hookOn, hookStatus, limitGitHubCalls, runHook } from '../../box-bounty/index.js';
 import { boardAddress, boardNotToldLine, flushBoardHints, readBoardFacts } from '../../box-bounty/index.js';
 import { waitBounty, renderWait } from '../../box-bounty/index.js';
 import type { ParsedOptions } from '../../box-bounty/index.js';
@@ -357,7 +357,11 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       }
       flushBoardHints(root);
       readBoardFacts(root, id);
-      if (parsed.switches.has('--json')) {
+      if (parsed.switches.has('--history')) {
+        if (id === undefined) usageError('--history lists one bounty\'s changes; name it: omakase-box status <id> --history');
+        if (parsed.switches.has('--json') || since !== undefined) usageError('--history prints the change list alone; drop --json and --since: omakase-box status <id> --history');
+        say(renderHistory(root, id!));
+      } else if (parsed.switches.has('--json')) {
         // BT19: one document on standard output and nothing else. Everything
         // the text view prints — the acting-on line, the once-only notices,
         // a recognised merge — is stderr here; --since is a text report

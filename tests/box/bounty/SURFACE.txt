@@ -621,6 +621,7 @@ option setup -h switch
 option status --comments switch
 option status --full switch
 option status --help switch
+option status --history switch
 option status --json switch
 option status --repo value
 option status --since value
@@ -790,6 +791,7 @@ refusal publish-list-not-listed
 refusal publish-list-outside
 refusal publish-list-settings-link
 refusal pull-request-moved
+refusal record-changed
 refusal record-corrupt
 refusal repository-address-invalid
 refusal repository-address-required

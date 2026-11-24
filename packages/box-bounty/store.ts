@@ -25,6 +25,7 @@ import { join } from 'node:path';
 import type { DatabaseSync,StatementSync } from 'node:sqlite';
 import { BountyRefused } from './errors.js';
 import type { BountyRecord,ListedBounty } from './record.js';
+import { applyPatch, diffLeaves, readPath, type LocalEvent, type Patch } from './fold.js';
 
 // The record shape is record.ts's to define, and record.ts imports this
 // module — the store validates through a seam registered at record.ts's
@@ -176,7 +177,14 @@ function dropFts(db: DatabaseSync): void {
   }
 }
 
-const SCHEMA_VERSION = 4;
+const SCHEMA_VERSION = 5;
+
+// BT101: every write to a record row appends one local event in the same savepoint, so the row is always the fold of the
+// bounty's events (fold.ts). A copy handed out by the store remembers, out of band, the row text it was read from; its write
+// becomes a `patched` event holding only the leaves it changed, folded onto the row as it is now, so a stale copy cannot
+// undo another writer's change to a path it did not touch. A path changed both since the read and by this copy is refused
+// `record-changed`. A copy with no remembered read (new, or built by spreading) writes a whole `replaced` document.
+const readFrom = new WeakMap<BountyRecord, string>();
 
 function setUp(db: DatabaseSync): void {
   db.exec('PRAGMA busy_timeout=5000');
@@ -220,7 +228,11 @@ function setUp(db: DatabaseSync): void {
           search_text TEXT NOT NULL DEFAULT ''
         );
         CREATE INDEX IF NOT EXISTS shared_open_updated ON shared(open, updated_at);
+        -- BT101: the local event log; the records row is its fold's cache.
+        CREATE TABLE IF NOT EXISTS events(bounty_id TEXT NOT NULL, seq INTEGER NOT NULL, at TEXT NOT NULL, kind TEXT NOT NULL, json TEXT NOT NULL, PRIMARY KEY(bounty_id, seq));
       `);
+      // BT101: a record from before the log starts it with one `created` event holding the row exactly; safe to repeat.
+      db.exec("INSERT INTO events(bounty_id, seq, at, kind, json) SELECT r.id, 1, r.updated_at, 'created', r.json FROM records r WHERE NOT EXISTS (SELECT 1 FROM events e WHERE e.bounty_id = r.id)");
       const columns = (db.prepare('PRAGMA table_info(records)').all() as unknown as { name: string }[]).map(column => column.name);
       if (!columns.includes('search_text')) db.exec("ALTER TABLE records ADD COLUMN search_text TEXT NOT NULL DEFAULT ''");
       // Version 1 rows have no search text; version 2 derived it from fewer
@@ -399,13 +411,48 @@ function fileMarkers(entry: StoreEntry): Map<string, FileMeta> {
   return markers;
 }
 
-const deleteRow = (entry: StoreEntry, id: string): void => {
+const deleteRow = (entry: StoreEntry, id: string): void => atomically(entry, () => {
+  if (stmt(entry, 'SELECT 1 AS y FROM records WHERE id=?').get(id) !== undefined) appendLocal(entry, id, 'dropped', {});
   stmt(entry, 'DELETE FROM records WHERE id=?').run(id);
   entry.records.delete(id);
   entry.epoch++;
-};
+});
 
-const upsertRow = (entry: StoreEntry, record: BountyRecord): void => {
+// One local event, the next for the bounty, inside the caller's savepoint.
+const appendLocal = (entry: StoreEntry, id: string, kind: string, value: unknown): void => {
+  const seq = ((stmt(entry, 'SELECT COALESCE(MAX(seq), 0) AS n FROM events WHERE bounty_id=?').get(id) as { n: number }).n) + 1;
+  stmt(entry, 'INSERT INTO events(bounty_id, seq, at, kind, json) VALUES(?, ?, ?, ?, ?)').run(id, seq, new Date().toISOString(), kind, JSON.stringify(value));
+};
+const atomically = <T>(entry: StoreEntry, run: () => T): T => {
+  entry.db.exec('SAVEPOINT bt101_write');
+  try { const result = run(); entry.db.exec('RELEASE bt101_write'); return result; }
+  catch (error) { entry.db.exec('ROLLBACK TO bt101_write'); entry.db.exec('RELEASE bt101_write'); throw error; }
+};
+type WriteKind = 'auto' | 'created' | 'imported';
+// The document this write stores, and the event that records it.
+function foldWrite(entry: StoreEntry, given: BountyRecord, kind: WriteKind): BountyRecord {
+  const row = stmt(entry, 'SELECT json FROM records WHERE id=?').get(given.id) as { json: string } | undefined;
+  if (kind !== 'auto' || row === undefined || !readFrom.has(given)) {
+    appendLocal(entry, given.id, kind === 'imported' ? 'imported' : row === undefined ? 'created' : 'replaced', given);
+    return given;
+  }
+  const base = JSON.parse(readFrom.get(given)!) as BountyRecord & Record<string, unknown>;
+  const current = JSON.parse(row.json) as BountyRecord & Record<string, unknown>;
+  const changed = diffLeaves(base, given);
+  const touched = [...changed.set.map(([path]) => path), ...changed.unset];
+  for (const path of touched) {
+    const now = JSON.stringify(readPath(current, path));
+    if (now !== JSON.stringify(readPath(base, path)) && now !== JSON.stringify(readPath(given, path))) {
+      throw new BountyRefused('record-changed', `bounty ${given.id} changed at ${path.join('.')} since this command read it; nothing was written; next: rerun the same command`);
+    }
+  }
+  const patch: Patch = { set: changed.set, unset: changed.unset, events: given.events.slice(base.events.length) };
+  appendLocal(entry, given.id, 'patched', patch);
+  applyPatch(current, patch);
+  return current;
+}
+const upsertRow = (entry: StoreEntry, given: BountyRecord, kind: WriteKind = 'auto'): void => atomically(entry, () => {
+  const record = foldWrite(entry, given, kind);
   const last = record.events.at(-1)?.at ?? record.createdAt;
   const ended = openStage(record.stage) ? null : last;
   const json = JSON.stringify(record, null, 2) + '\n';
@@ -417,8 +464,11 @@ const upsertRow = (entry: StoreEntry, record: BountyRecord): void => {
   // mutating its own reference after the write must not move the cache.
   const canonical = record.github === undefined ? cloneRecord(record) : (validate(cloneRecord(record)) ?? cloneRecord(record));
   entry.records.set(record.id, { json, record: canonical });
+  // The caller's copy is never rewritten (callers hold references into it, as post.ts holds `publication`). Its own text
+  // becomes its base, so its next write patches only what it changes next and never reverts another writer's change.
+  readFrom.set(given, record === given ? json : JSON.stringify(given, null, 2) + String.fromCharCode(10));
   entry.epoch++;
-};
+});
 
 // Import what `.box/bounties/*.json` carries that the database has not
 // already seen — fingerprinted by sha256. Every store operation runs this,
@@ -482,7 +532,7 @@ function syncJsonFiles(entry: StoreEntry, repoRoot: string): void {
       deleteRow(entry, id);
       setMeta.run('corrupt_file:', name, sha);
     } else {
-      upsertRow(entry, record);
+      upsertRow(entry, record, 'imported');
       stmt(entry, "DELETE FROM meta WHERE key='corrupt_file:' || ?").run(name);
     }
     setMeta.run('file_sha:', name, sha);
@@ -515,7 +565,10 @@ const canonicalRecord = (entry: StoreEntry, id: string, json: string): BountyRec
 const cloneRecord = (record: BountyRecord): BountyRecord => ({ ...record, events: [...record.events] });
 const rowToRecord = (entry: StoreEntry, id: string, json: string): BountyRecord | null => {
   const record = canonicalRecord(entry, id, json);
-  return record === null ? null : cloneRecord(record);
+  if (record === null) return null;
+  const copy = cloneRecord(record);
+  readFrom.set(copy, json);
+  return copy;
 };
 
 export interface StoredRead {
@@ -532,7 +585,7 @@ export function readStored(repoRoot: string, id: string): StoredRead {
     // the pragma is a cheaper round trip than SELECT json and the json-compare.
     refreshDataVersion(entry);
     const hit = entry.records.get(id);
-    if (hit !== undefined) return { record: cloneRecord(hit.record), state: 'ok' };
+    if (hit !== undefined) { const record = cloneRecord(hit.record); readFrom.set(record, hit.json); return { record, state: 'ok' }; }
     const row = stmt(entry, 'SELECT json FROM records WHERE id=?').get(id) as { json: string } | undefined;
     if (row !== undefined) {
       const record = rowToRecord(entry, id, row.json);
@@ -760,7 +813,7 @@ export function seedStored(repoRoot: string, records: readonly BountyRecord[]): 
     refreshDataVersion(entry!);
     entry!.db.exec('BEGIN IMMEDIATE');
     try {
-      for (const record of records) upsertRow(entry!, record);
+      for (const record of records) upsertRow(entry!, record, 'created');
       entry!.db.exec('COMMIT');
     } catch (error) {
       entry!.db.exec('ROLLBACK');
@@ -988,4 +1041,9 @@ export function storedIds(repoRoot: string): string[] {
   } finally {
     try { db?.close(); } catch { /* best-effort */ }
   }
+}
+
+/** BT101: a bounty's local events, oldest first: the history `status <id> --history` prints and the fold reads. */
+export function localEvents(repoRoot: string, id: string): LocalEvent[] {
+  return withDb(repoRoot, false, entry => entry === undefined ? [] : (stmt(entry, 'SELECT seq, at, kind, json FROM events WHERE bounty_id=? ORDER BY seq').all(id) as unknown as LocalEvent[]));
 }
