@@ -1,0 +1,396 @@
+{
+ "about": "K75: the walkthrough register (docs/box-v4/WALKTHROUGH.md). tables: one row per register row; run is the built check scripts/walkthrough.mjs runs. files: every product file under packages/box-bounty, packages/box-cli/src and packages/box-platform/src, mapped to the ids of the built tables whose check reads it, or \"not pinned\". A product file missing here fails scripts/walkthrough.mjs. Coverage is per file, not per line: the checklist is for the rest.",
+ "tables": [
+  {
+   "id": "surface",
+   "table": "tests/box/bounty/SURFACE.txt",
+   "tests": [
+    "tests/box/bounty/bt62.test.ts",
+    "tests/box/bounty/bt62-record.test.ts"
+   ],
+   "holds": "every command, option, refusal, --json field",
+   "wave": "BT62; values lines BT99",
+   "built": true,
+   "run": "node scripts/surface.mjs",
+   "references": []
+  },
+  {
+   "id": "exit-sites",
+   "table": "tests/box/bounty/exit-sites.ts",
+   "tests": [
+    "tests/box/bounty/bt82.test.ts"
+   ],
+   "holds": "every place data leaves",
+   "wave": "BT82; the door BT83",
+   "built": true,
+   "run": "node scripts/suite.mjs box --suite bounty tests/box/bounty/bt82.test.ts",
+   "references": []
+  },
+  {
+   "id": "memory-spec",
+   "table": "docs/box-v4/MEMORY-SPEC.md section 3",
+   "tests": [
+    "bt75.test.ts"
+   ],
+   "holds": "where each fact lives",
+   "wave": "BT75",
+   "built": false,
+   "references": []
+  },
+  {
+   "id": "owner-surface",
+   "table": "docs/box-v4/OWNER-SURFACE.md",
+   "tests": [
+    "owner-surface.test.ts"
+   ],
+   "holds": "every owner decision, its owner, tighten or loosen",
+   "wave": "BT89",
+   "built": false,
+   "references": []
+  },
+  {
+   "id": "claims",
+   "table": "docs/box-v4/CLAIMS.md",
+   "tests": [
+    "claims.test.ts"
+   ],
+   "holds": "every claim made to agents, with its guards",
+   "wave": "BT92",
+   "built": false,
+   "references": []
+  },
+  {
+   "id": "git-defences",
+   "table": "docs/box-v4/GIT-DEFENCES.md",
+   "tests": [
+    "git-defences.test.ts"
+   ],
+   "holds": "every Git defence, on every call",
+   "wave": "BT97",
+   "built": false,
+   "references": []
+  },
+  {
+   "id": "channels",
+   "table": "docs/box-v4/CHANNELS.md",
+   "tests": [
+    "channels.test.ts"
+   ],
+   "holds": "every install channel and its next step",
+   "wave": "BT91",
+   "built": false,
+   "references": []
+  },
+  {
+   "id": "skill-targets",
+   "table": "packages/box-bounty/skill-targets.json",
+   "tests": [
+    "bt91.test.ts",
+    "skill-targets.mjs --check"
+   ],
+   "holds": "each agent's skill folder",
+   "wave": "BT91",
+   "built": false,
+   "references": []
+  },
+  {
+   "id": "secret-rules",
+   "table": "packages/box-bounty/secret-rules.json",
+   "tests": [
+    "gitleaks-rules.mjs --check"
+   ],
+   "holds": "the scan's rules",
+   "wave": "BT78",
+   "built": false,
+   "references": []
+  },
+  {
+   "id": "proof-map",
+   "table": "docs/box-v4/CONTRACTS.md guard ids",
+   "tests": [
+    "scripts/proof-map.mjs --check"
+   ],
+   "holds": "each guarantee has a test",
+   "wave": "existing",
+   "built": true,
+   "run": "node scripts/proof-map.mjs --check",
+   "references": []
+  },
+  {
+   "id": "provider-shapes",
+   "table": "tests/platform/provider-shapes.json",
+   "tests": [
+    "provider-shapes.test.ts"
+   ],
+   "holds": "our stand-ins match real providers",
+   "wave": "PF56",
+   "built": false,
+   "references": []
+  }
+ ],
+ "files": {
+  "packages/box-bounty/adopt.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/answer.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/args.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/attempt.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/board.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/chain.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/close.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/collect.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/commands.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/create.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/errors.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/find.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/folder.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/format.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/gate.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/gh-direct.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/gh.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/git.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/github-auth.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/github.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/hook.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/index.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/instructions.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/issue.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/json.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/look.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/merged.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/money.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/never-ship-paths.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/never-ship.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/notice.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/owner-text.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/owner.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/pay.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/post.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/program.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/publish-plan.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/publish-sink.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/read-many.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/record.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/render.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/repository.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/scan.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/settings.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/setup.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/snapshot.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/solving.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/store.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/take.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/tell.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/untrusted.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/wait.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-bounty/wording.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-cli/src/bounty.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-cli/src/box.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-cli/src/cli.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-cli/src/node-check.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-cli/src/version.ts": [
+   "surface",
+   "exit-sites"
+  ],
+  "packages/box-platform/src/account.ts": "not pinned",
+  "packages/box-platform/src/agent-branch.ts": "not pinned",
+  "packages/box-platform/src/agent-import.ts": "not pinned",
+  "packages/box-platform/src/agent-input.ts": "not pinned",
+  "packages/box-platform/src/agent-prepare.ts": "not pinned",
+  "packages/box-platform/src/api.ts": "not pinned",
+  "packages/box-platform/src/attempt.ts": "not pinned",
+  "packages/box-platform/src/charge-words.ts": "not pinned",
+  "packages/box-platform/src/charge.ts": "not pinned",
+  "packages/box-platform/src/feed.ts": "not pinned",
+  "packages/box-platform/src/github.ts": "not pinned",
+  "packages/box-platform/src/hint.ts": "not pinned",
+  "packages/box-platform/src/listing.ts": "not pinned",
+  "packages/box-platform/src/llms.ts": "not pinned",
+  "packages/box-platform/src/local-db.ts": "not pinned",
+  "packages/box-platform/src/local.ts": "not pinned",
+  "packages/box-platform/src/mcp.ts": "not pinned",
+  "packages/box-platform/src/methods.ts": "not pinned",
+  "packages/box-platform/src/numbers.ts": "not pinned",
+  "packages/box-platform/src/pay-ways.ts": "not pinned",
+  "packages/box-platform/src/payments.ts": "not pinned",
+  "packages/box-platform/src/paypal-pay.ts": "not pinned",
+  "packages/box-platform/src/paypal.ts": "not pinned",
+  "packages/box-platform/src/query.ts": "not pinned",
+  "packages/box-platform/src/refresh.ts": "not pinned",
+  "packages/box-platform/src/security-headers.ts": "not pinned",
+  "packages/box-platform/src/sitemap.ts": "not pinned",
+  "packages/box-platform/src/store.ts": "not pinned",
+  "packages/box-platform/src/stripe.ts": "not pinned",
+  "packages/box-platform/src/visibility.ts": "not pinned",
+  "packages/box-platform/src/worker.ts": "not pinned"
+ }
+}

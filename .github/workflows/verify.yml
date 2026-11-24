@@ -40,6 +40,8 @@ on:
       - 'docs/box-v4/CONTRACTS.md'
       - 'kitchen/reviews/proof-gaps.json'
       - 'kitchen/reviews/guard-breaks.json'
+      - 'docs/box-v4/WALKTHROUGH.md'
+      - 'docs/box-v4/register.json'
       - 'waves/*.md'
       # K35: the rulebook guard reads every live rule/role/card/adapter file.
       - 'kitchen/README.md'
