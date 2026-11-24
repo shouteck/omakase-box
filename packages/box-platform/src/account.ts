@@ -11,7 +11,7 @@ import { type BountyPayment, emptyPayment, factsOf, landedOf, loadPayments, notC
 import { listIssue, removeListed } from './listing.js';
 import { FROM_LISTED, readBounty, stateOf } from './query.js';
 import { LOGIN } from './refresh.js';
-import { ownerOnlyAllowed, payeeOf, roleOf, same } from './visibility.js';
+import { ownerOnlyAllowed, payeeOf, payeePull, roleOf, same } from './visibility.js';
 
 const SESSION_COOKIE = '__Host-board_session';
 const STATE_COOKIE = '__Host-board_oauth_state';
@@ -42,6 +42,17 @@ const cookieOf = (request: Request, name: string): string | null => {
 };
 
 const randomToken = (): string => [...crypto.getRandomValues(new Uint8Array(32))].map(byte => byte.toString(16).padStart(2, '0')).join('');
+// PF61: PKCE (RFC 7636, S256), as GitHub supports for OAuth apps. The verifier is a secret for one sign-in: it lives in the
+// __Host- state cookie beside `state` and nowhere else; the authorize address carries only its challenge.
+const base64url = (bytes: Uint8Array): string => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const newVerifier = (): string => base64url(crypto.getRandomValues(new Uint8Array(32)));
+const challengeOf = async (verifier: string): Promise<string> => base64url(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier))));
+const VERIFIER = /^[A-Za-z0-9_-]{43,128}$/;
+async function withChallenge(to: URL, verifier: string): Promise<URL> {
+  to.searchParams.set('code_challenge', await challengeOf(verifier));
+  to.searchParams.set('code_challenge_method', 'S256');
+  return to;
+}
 async function hashOf(token: string): Promise<string> {
   const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token)));
   return [...digest].map(byte => byte.toString(16).padStart(2, '0')).join('');
@@ -69,23 +80,25 @@ async function readBody(request: Request): Promise<{ value: unknown } | { refuse
   try { return { value: JSON.parse(text) }; } catch { return { refused: json(400, { error: 'That is not JSON. Next: use the page.' }) }; }
 }
 
-function startSignIn(env: Env, url: URL): Response {
+async function startSignIn(env: Env, url: URL): Promise<Response> {
   if (env.GITHUB_OAUTH_CLIENT_ID === undefined || env.GITHUB_OAUTH_CLIENT_SECRET === undefined) return redirect('/sign-in/?error=not-set-up');
   const state = randomToken();
+  const verifier = newVerifier();
   // No scope parameter: GitHub grants public information only.
   const to = new URL('/login/oauth/authorize', env.GITHUB_WEB ?? 'https://github.com');
   to.searchParams.set('client_id', env.GITHUB_OAUTH_CLIENT_ID);
   to.searchParams.set('redirect_uri', `${url.origin}/auth/github/callback`);
   to.searchParams.set('state', state);
-  return redirect(to.href, [cookie(STATE_COOKIE, state, 600)]);
+  await withChallenge(to, verifier);
+  return redirect(to.href, [cookie(STATE_COOKIE, `${state}.${verifier}`, 600)]);
 }
 
 /** PF32: a fresh sign-in's token for one listing, returned to the caller to use once and drop. Never stored. */
-async function tokenFrom(env: Env, code: string, redirectUri: string): Promise<string | null> {
+async function tokenFrom(env: Env, code: string, redirectUri: string, verifier: string): Promise<string | null> {
   const exchanged = await fetch(`${env.GITHUB_WEB ?? 'https://github.com'}/login/oauth/access_token`, {
     method: 'POST', signal: AbortSignal.timeout(15000),
     headers: { accept: 'application/json', 'content-type': 'application/json', 'user-agent': 'open-bounty-board' },
-    body: JSON.stringify({ client_id: env.GITHUB_OAUTH_CLIENT_ID, client_secret: env.GITHUB_OAUTH_CLIENT_SECRET, code, redirect_uri: redirectUri })
+    body: JSON.stringify({ client_id: env.GITHUB_OAUTH_CLIENT_ID, client_secret: env.GITHUB_OAUTH_CLIENT_SECRET, code, redirect_uri: redirectUri, code_verifier: verifier })
   });
   if (!exchanged.ok) return null;
   const token = (await exchanged.json() as { access_token?: unknown }).access_token;
@@ -93,17 +106,10 @@ async function tokenFrom(env: Env, code: string, redirectUri: string): Promise<s
 }
 
 /** The token is held only in this function's locals: exchanged, used once, dropped. */
-async function identityFrom(env: Env, code: string, redirectUri: string): Promise<Viewer | null> {
+async function identityFrom(env: Env, code: string, redirectUri: string, verifier: string): Promise<Viewer | null> {
   const signal = AbortSignal.timeout(15000);
-  const web = env.GITHUB_WEB ?? 'https://github.com';
-  const exchanged = await fetch(`${web}/login/oauth/access_token`, {
-    method: 'POST', signal,
-    headers: { accept: 'application/json', 'content-type': 'application/json', 'user-agent': 'open-bounty-board' },
-    body: JSON.stringify({ client_id: env.GITHUB_OAUTH_CLIENT_ID, client_secret: env.GITHUB_OAUTH_CLIENT_SECRET, code, redirect_uri: redirectUri })
-  });
-  if (!exchanged.ok) return null;
-  const token = (await exchanged.json() as { access_token?: unknown }).access_token;
-  if (typeof token !== 'string') return null;
+  const token = await tokenFrom(env, code, redirectUri, verifier);
+  if (token === null) return null;
   const user = await fetch(`${env.GITHUB_API ?? 'https://api.github.com'}/user`, { signal, headers: { accept: 'application/vnd.github+json', 'user-agent': 'open-bounty-board', authorization: `Bearer ${token}` } });
   if (!user.ok) return null;
   const { id, login } = await user.json() as { id?: unknown; login?: unknown };
@@ -114,9 +120,11 @@ async function finishSignIn(request: Request, env: Env, url: URL, now: number): 
   const clearState = cookie(STATE_COOKIE, '', 0);
   const state = url.searchParams.get('state');
   const code = url.searchParams.get('code');
-  if (state === null || code === null || state !== cookieOf(request, STATE_COOKIE)) return redirect('/sign-in/?error=try-again', [clearState]);
+  const [keptState, verifier] = (cookieOf(request, STATE_COOKIE) ?? '').split('.');
+  // A callback whose cookie holds no verifier is refused like a bad state (PF61).
+  if (state === null || code === null || state !== keptState || verifier === undefined || !VERIFIER.test(verifier)) return redirect('/sign-in/?error=try-again', [clearState]);
   let identity: Viewer | null = null;
-  try { identity = await identityFrom(env, code, `${url.origin}/auth/github/callback`); } catch { identity = null; }
+  try { identity = await identityFrom(env, code, `${url.origin}/auth/github/callback`, verifier); } catch { identity = null; }
   if (identity === null) return redirect('/sign-in/?error=github', [clearState]);
   const { github_id, login } = identity;
   const db = env.DB;
@@ -130,10 +138,21 @@ async function finishSignIn(request: Request, env: Env, url: URL, now: number): 
   return redirect('/me/', [clearState, cookie(SESSION_COOKIE, token, SESSION_DAYS * DAY_SECONDS)]);
 }
 
-async function signOut(request: Request, env: Env): Promise<Response> {
+// PF61: `{ "all": true }` (JSON, from the board's own page) ends every session of this GitHub ID: a lost device's included.
+async function signOut(request: Request, env: Env, now: number): Promise<Response> {
+  let all = false;
+  if (/^application\/json\b/i.test(request.headers.get('content-type') ?? '')) {
+    const body = await readBody(request);
+    if ('refused' in body) return body.refused;
+    all = (body.value as { all?: unknown } | null)?.all === true;
+  }
   const token = cookieOf(request, SESSION_COOKIE);
-  if (token !== null) await env.DB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(await hashOf(token)).run();
-  return json(200, { signed_in: false }, { 'set-cookie': cookie(SESSION_COOKIE, '', 0) });
+  if (all) {
+    const viewer = await viewerOf(request, env, now);
+    if (viewer === null) return json(401, SIGN_IN_FIRST);
+    await env.DB.prepare('DELETE FROM sessions WHERE github_id = ?').bind(viewer.github_id).run();
+  } else if (token !== null) await env.DB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(await hashOf(token)).run();
+  return json(200, { signed_in: false, ...(all ? { everywhere: true } : {}) }, { 'set-cookie': cookie(SESSION_COOKIE, '', 0) });
 }
 
 const METHOD_COLUMNS = 'kind, value, chain, visibility';
@@ -366,11 +385,12 @@ async function paymentView(env: Env, id: string, viewer: Viewer | null, now: num
   if (input === null) return json(404, NOT_ON_BOARD);
   const facts = factsOf(input);
   const login = viewer?.login ?? null;
-  const role = roleOf(facts, login);
+  const role = roleOf(facts, viewer);
   const payee = payeeOf(facts);
+  const payeeNumber = payeePull(facts)?.number ?? null;
   const payees = facts.amount > 0 ? await Promise.all(facts.merged.map(async ({ author, number }) => {
     const all = await methodsOfLogin(env, author);
-    const methods = (author === payee && ownerOnlyAllowed(facts, login) ? all : publicOnly(all)).map(shown);
+    const methods = (number === payeeNumber && ownerOnlyAllowed(facts, viewer) ? all : publicOnly(all)).map(shown);
     // Once a payment is recorded, asking how to be paid is no longer the next step (PF19).
     // PF32: when the owner chooses, each candidate carries their own one-click offers, so the window shows every way.
     const own = role === 'owner' && payee === null && facts.record === null ? await offers(env, id, viewer!, author) : null;
@@ -383,7 +403,7 @@ async function paymentView(env: Env, id: string, viewer: Viewer | null, now: num
     viewer: login, role, payee, payees, on_merge: onMerge,
     payment: paymentOf(input),
     recorded: facts.record === null ? null : { at: facts.record.at, amount: facts.record.amount },
-    owner_only_hidden: role === 'owner' && payee !== null && !ownerOnlyAllowed(facts, login),
+    owner_only_hidden: role === 'owner' && payee !== null && !ownerOnlyAllowed(facts, viewer),
     receipt: facts.receipt,
     // PF31b: only a payment the owner recorded by hand asks the solver; Stripe's or PayPal's word is the record itself.
     can_answer: role === 'payee' && facts.record !== null && !byProvider(facts.record),
@@ -406,7 +426,7 @@ async function recordPaid(request: Request, env: Env, id: string, viewer: Viewer
   const input = await paymentInput(env, id, now);
   if (input === null) return json(404, NOT_ON_BOARD);
   const facts = factsOf(input);
-  if (roleOf(facts, viewer.login) !== 'owner') return json(403, { error: 'Only the poster of this bounty can record its payment. Nothing changed.' });
+  if (roleOf(facts, viewer) !== 'owner') return json(403, { error: facts.poster_id === null ? "Recording is refused: this bounty's account could not be confirmed by GitHub id; nothing changed. Next: the board fills the id at its next read of the issue on GitHub." : 'Only the poster of this bounty can record its payment. Nothing changed.' });
   const at = new Date(now).toISOString();
   const save = (to: string | null, amount: number | null, withdrawn: number) => env.DB.prepare(`INSERT INTO paid_clicks (bounty_id, by_login, to_login, amount, withdrawn, at) VALUES (?, ?, ?, ?, ?, ?)
     ON CONFLICT (bounty_id) DO UPDATE SET by_login = excluded.by_login, to_login = excluded.to_login, amount = excluded.amount, withdrawn = excluded.withdrawn, at = excluded.at`)
@@ -442,7 +462,7 @@ async function answerReceipt(request: Request, env: Env, id: string, viewer: Vie
   const input = await paymentInput(env, id, now);
   if (input === null) return json(404, NOT_ON_BOARD);
   const facts = factsOf(input);
-  if (roleOf(facts, viewer.login) !== 'payee') return json(403, { error: 'Only the author of the merged solution can answer this. Nothing changed.' });
+  if (roleOf(facts, viewer) !== 'payee') return json(403, { error: (payeePull(facts)?.author_id ?? null) === null && payeePull(facts) !== null ? "Recording is refused: this bounty's account could not be confirmed by GitHub id; nothing changed. Next: the board fills the id at its next read of the issue on GitHub." : 'Only the author of the merged solution can answer this. Nothing changed.' });
   if (facts.record === null) return json(409, { error: 'No payment is recorded on this bounty. Nothing to answer. Next: nothing to do until the owner records one.' });
   await env.DB.prepare('DELETE FROM receipts WHERE bounty_id = ?').bind(id).run();
   if (says !== null) await env.DB.prepare('INSERT INTO receipts (bounty_id, payee, says, record_at, at) VALUES (?, ?, ?, ?, ?)').bind(id, viewer.login, says as string, facts.record.at, new Date(now).toISOString()).run();
@@ -621,9 +641,9 @@ const loginFrom = (text: string): string | null => {
 export async function accountResponse(request: Request, env: Env, url: URL, now: number): Promise<Response | null> {
   const { pathname: path } = url;
   const { method } = request;
-  if (method === 'GET' && path === '/auth/github') return startSignIn(env, url);
+  if (method === 'GET' && path === '/auth/github') return await startSignIn(env, url);
   if (method === 'GET' && path === '/auth/github/callback') return finishSignIn(request, env, url, now);
-  if (method === 'POST' && path === '/auth/sign-out') return writeRefusal(request, url, false) ?? signOut(request, env);
+  if (method === 'POST' && path === '/auth/sign-out') return writeRefusal(request, url, false) ?? signOut(request, env, now);
   if (method === 'GET' && (path === '/auth/paypal' || path === '/auth/paypal/callback')) {
     if (!paypalOn(env)) return redirect('/me/?paypal=not-set-up#paypal');
     const viewer = await viewerOf(request, env, now);
@@ -670,22 +690,24 @@ export async function accountResponse(request: Request, env: Env, url: URL, now:
     const viewer = await viewerOf(request, env, now);
     if (viewer === null || env.GITHUB_OAUTH_CLIENT_ID === undefined) return redirect('/me/');
     const state = randomToken();
-    const pending = encodeURIComponent(JSON.stringify({ state, issue: url.searchParams.get('issue') ?? '', reward: url.searchParams.get('reward') ?? '' }));
+    const verifier = newVerifier();
+    const pending = encodeURIComponent(JSON.stringify({ state, verifier, issue: url.searchParams.get('issue') ?? '', reward: url.searchParams.get('reward') ?? '' }));
     const to = new URL('/login/oauth/authorize', env.GITHUB_WEB ?? 'https://github.com');
     to.searchParams.set('client_id', env.GITHUB_OAUTH_CLIENT_ID);
     to.searchParams.set('redirect_uri', `${url.origin}/auth/github/list/callback`);
     to.searchParams.set('state', state);
+    await withChallenge(to, verifier);
     return redirect(to.href, [cookie(LIST_COOKIE, pending, 600)]);
   }
   if (method === 'GET' && path === '/auth/github/list/callback') {
     const clear = cookie(LIST_COOKIE, '', 0);
     const viewer = await viewerOf(request, env, now);
-    let pending: { state?: unknown; issue?: unknown; reward?: unknown } = {};
+    let pending: { state?: unknown; verifier?: unknown; issue?: unknown; reward?: unknown } = {};
     try { pending = JSON.parse(decodeURIComponent(cookieOf(request, LIST_COOKIE) ?? '')); } catch { pending = {}; }
     const code = url.searchParams.get('code');
-    if (viewer === null || code === null || typeof pending.state !== 'string' || pending.state !== url.searchParams.get('state')) return redirect('/me/?list_error=try-again#bounties', [clear]);
+    if (viewer === null || code === null || typeof pending.state !== 'string' || pending.state !== url.searchParams.get('state') || typeof pending.verifier !== 'string' || !VERIFIER.test(pending.verifier)) return redirect('/me/?list_error=try-again#bounties', [clear]);
     let token: string | null = null;
-    try { token = await tokenFrom(env, code, `${url.origin}/auth/github/list/callback`); } catch { token = null; }
+    try { token = await tokenFrom(env, code, `${url.origin}/auth/github/list/callback`, pending.verifier); } catch { token = null; }
     if (token === null) return redirect('/me/?list_error=github#bounties', [clear]);
     const listing = await listIssue(env, viewer, pending.issue, Number(pending.reward), now, token);
     token = null;
@@ -740,7 +762,7 @@ export async function accountResponse(request: Request, env: Env, url: URL, now:
       if (viewer === null) return json(401, SIGN_IN_FIRST);
       const input = await paymentInput(env, id, now);
       if (input === null) return json(404, NOT_ON_BOARD);
-      if (roleOf(factsOf(input), viewer.login) !== 'owner' || !await isPoster(env, id, viewer)) return json(403, { error: 'Only the poster of this bounty can pay from this page. Nothing changed.' });
+      if (roleOf(factsOf(input), viewer) !== 'owner' || !await isPoster(env, id, viewer)) return json(403, { error: 'Only the poster of this bounty can pay from this page. Nothing changed.' });
       const via = payment[2] === 'pay-paypal' ? { on: paypalOn(env), name: 'PayPal' } : { on: stripeOn(env), name: 'Stripe' };
       if (!via.on) return json(409, { error: `Paying through ${via.name} is not set up on this board. Nothing changed. Next: use the other ways to pay on this page.` });
       try {
