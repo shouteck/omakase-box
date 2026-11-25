@@ -31,8 +31,8 @@ describe('PF6 launch copy contract', () => {
   it('the skill is a trusted front door to local execution and read-only discovery', () => {
     expect(SKILL_TEXT).toContain(trust);
     expect(SKILL_TEXT).toContain('To hand work off or solve, the CLI runs locally:');
-    expect(SKILL_TEXT).toContain('It says what is set up and what to do next; `omakase-box help` shows the journey.');
-    expect(SKILL_TEXT).toContain('Posting is free apart from any reward the owner set, and goes only to this repository\'s own public GitHub, as an issue. The owner decides once. If they have not yet, `omakase-box` says what to ask them. Using it is always your call.');
+    expect(SKILL_TEXT).toContain('See `omakase-box help`.');
+    expect(SKILL_TEXT).toContain('Post only to your public GitHub repository.');
     expect(SKILL_TEXT).toContain('npm install -g omakase-box');
     expect(SKILL_TEXT).toContain('https://omakasebox.dev/mcp');
     expect(SKILL_TEXT).toMatch(/read-only MCP/i);
@@ -41,7 +41,10 @@ describe('PF6 launch copy contract', () => {
     expect(SKILL_TEXT).toContain('Solving stays off until your owner allows it with `omakase-box config set solving allowed`');
     expect(SKILL_TEXT).toMatch(/omakase-box discover[\s\S]*omakase-box take <id>[\s\S]*omakase-box submit <id>[\s\S]*omakase-box status <id>/);
     expect(SKILL_TEXT).toContain('an unconfigured repository can enter poster setup');
-    expect(SKILL_TEXT).toContain('Standing approval: `omakase-box allow`. Imports only: GitHub comment `omakase approve <id> $<reward>`');
+    expect(SKILL_TEXT).toContain('Standing approval: `omakase-box allow`.');
+    expect(SKILL_TEXT).toContain('import a GitHub issue or prepare before pushing a bounty branch');
+    expect(SKILL_TEXT).toContain('Take with a draft PR; submit by marking it ready.');
+    expect(SKILL_TEXT).toContain('GitHub issue comments approve, pay or record payment.');
     expect(commands(SKILL_TEXT).filter(command => !knownCommands.has(command))).toEqual([]);
     expect(SKILL_TEXT).not.toMatch(promises);
   });

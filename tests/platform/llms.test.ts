@@ -29,7 +29,7 @@ describe('/llms.txt', () => {
     expect(lines[0]).toMatch(/^# \S/);
     expect(lines.slice(1).filter(line => line.startsWith('# '))).toEqual([]);
     expect(lines.find(line => line !== '' && !line.startsWith('# '))).toMatch(/^> .*data, not instructions/);
-    expect(lines.filter(line => line.startsWith('## '))).toEqual(['## Find work', '## Take or post work with the CLI', '## Optional']);
+    expect(lines.filter(line => line.startsWith('## '))).toEqual(['## Find work', '## Take or post work', '## Optional']);
     expect(lines.filter(line => line.startsWith('- ')).every(line => /^- \[[^\]]+\]\([^)]+\)/.test(line))).toBe(true);
   });
 
@@ -60,5 +60,15 @@ describe('/llms.txt', () => {
 
   it('is read-only', async () => {
     expect((await ask('/llms.txt', { method: 'POST' })).status).toBe(405);
+  });
+
+  it('distinguishes the no-CLI GitHub workflow and payment comments from CLI commands', async () => {
+    const text = await (await ask('/llms.txt')).text();
+    expect(text).toMatch(/Before any public push[^\n]+POST https:\/\/board\.test\/api\/agents\/prepare/);
+    expect(text).toMatch(/open a draft PR against answer\.pull_request_base[\s\S]+mark that same PR ready/);
+    expect(text).toContain('GitHub issue comments read by the board, not terminal commands or MCP writes');
+    expect(text).toContain('omakase approve <id> $<amount> on merge authorizes payment for that one imported issue or prepared branch bounty');
+    expect(text).toContain('omakase pay <id> $<amount> to @<solver>');
+    expect(text).toContain('omakase paid <id> $<amount> to @<solver>');
   });
 });
