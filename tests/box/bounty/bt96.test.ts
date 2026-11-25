@@ -64,6 +64,7 @@ interface Seed {
   readonly seqs?: readonly number[];
   readonly outbox?: readonly { key: string; kind: string; state?: string; eventSeq?: number }[];
   readonly meta?: readonly { key: string; value: string }[];
+  readonly shared?: boolean;
   readonly corruptEventJson?: boolean;
 }
 
@@ -79,6 +80,8 @@ function seedLegacyStore(repo: string, seeds: readonly Seed[]): void {
       const record = validRecord(seed.id, seed.title ?? `${seed.id} local draft`);
       const json = JSON.stringify(record);
       db.prepare('INSERT INTO records(id, stage, open, created_at, updated_at, ended_at, json, search_text) VALUES(?, ?, 1, ?, ?, NULL, ?, ?)')
+        .run(seed.id, record.stage, AT, AT, json, `${record.id}\n${record.title}`.toLowerCase());
+      if (seed.shared === true) db.prepare('INSERT INTO shared(id, stage, open, created_at, updated_at, ended_at, json, search_text) VALUES(?, ?, 1, ?, ?, NULL, ?, ?)')
         .run(seed.id, record.stage, AT, AT, json, `${record.id}\n${record.title}`.toLowerCase());
       const seqs = seed.seqs ?? [1];
       for (const seq of seqs) {
@@ -129,7 +132,7 @@ describe('BT96 the store moves under Git common storage', () => {
   it('moves a first legacy store whole and leaves the old database renamed, never deleted', () => {
     const repo = makeRepo({ 'a.txt': 'a\n' });
     const id = 'bt-aaaa1111bbbb';
-    seedLegacyStore(repo, [{ id, seqs: [1, 2], meta: [{ key: `chain_tip:${id}`, value: 'c'.repeat(40) }] }]);
+    seedLegacyStore(repo, [{ id, seqs: [1, 2], shared: true, outbox: [{ key: `chain:${id}`, kind: 'chain', eventSeq: 2 }], meta: [{ key: `chain_tip:${id}`, value: 'c'.repeat(40) }] }]);
     expect(existsSync(sharedDb(repo))).toBe(false);
 
     expect(listOpen(repo).map(row => row.id)).toEqual([id]);
@@ -146,6 +149,44 @@ describe('BT96 the store moves under Git common storage', () => {
     closeStores();
     expect(existsSync(`${shared}-wal`)).toBe(false);
     expect(existsSync(`${shared}-shm`)).toBe(false);
+    const original = join(dirname(legacyDb(repo)), names.find(name => name.startsWith('box.db.moved-'))!);
+    const before = new DatabaseSync(original, { readOnly: true });
+    const after = new DatabaseSync(shared, { readOnly: true });
+    try {
+      const counts = (db: DatabaseSync) => Object.fromEntries(['records', 'events', 'outbox', 'shared', 'meta'].map(table => [table, (db.prepare(`SELECT COUNT(*) AS n FROM ${table}`).get() as { n: number }).n]));
+      const afterCounts = counts(after);
+      expect(counts(before)).toEqual({ records: 1, events: 2, outbox: 1, shared: 1, meta: 1 });
+      expect([afterCounts['records'], afterCounts['events'], afterCounts['outbox'], afterCounts['shared']]).toEqual([1, 2, 1, 1]);
+      expect(afterCounts['meta']).toBeGreaterThanOrEqual(1);
+    } finally {
+      before.close();
+      after.close();
+    }
+    closeStores();
+  });
+
+  it('git clean -fdx removes checkout-local files but the draft, pending outbox row and chain provenance survive', () => {
+    const repo = makeRepo({ 'a.txt': 'a\n' });
+    const id = 'bt-aaaa5555cccc';
+    seedLegacyStore(repo, [{
+      id,
+      outbox: [{ key: `chain:${id}`, kind: 'chain', eventSeq: 1 }],
+      meta: [
+        { key: `chain_authored:${id}`, value: 'a'.repeat(40) },
+        { key: `chain_pushed:${id}`, value: 'b'.repeat(40) },
+        { key: `chain_tip:${id}`, value: 'c'.repeat(40) }
+      ]
+    }]);
+    expect(listOpen(repo).map(row => row.id)).toEqual([id]);
+
+    git(repo, ['clean', '-fdx']);
+
+    expect(existsSync(join(repo, '.box'))).toBe(false);
+    expect(listOpen(repo).map(row => row.id)).toEqual([id]);
+    expect(outboxRows(repo, id).some(row => row.key === `chain:${id}` && row.state === 'pending')).toBe(true);
+    expect(metaGet(repo, `chain_authored:${id}`)).toBe('a'.repeat(40));
+    expect(metaGet(repo, `chain_pushed:${id}`)).toBe('b'.repeat(40));
+    expect(metaGet(repo, `chain_tip:${id}`)).toBe('c'.repeat(40));
   });
 
   it('racing first movers install exactly one shared store and both keep their rows', async () => {
@@ -289,7 +330,9 @@ describe('BT96 a later worktree joins by bounty', () => {
       title: 'other local history',
       outbox: [
         { key: `chain:${both}`, kind: 'chain' },
-        { key: `board:${both}`, kind: 'board' }
+        { key: `board:${both}`, kind: 'board' },
+        { key: `issue:${both}`, kind: 'issue' },
+        { key: `decision:${both}`, kind: 'decision' }
       ]
     }]);
 
@@ -300,6 +343,8 @@ describe('BT96 a later worktree joins by bounty', () => {
     expect(output).toContain('which nothing reads');
     expect(output).toContain('a shared-memory push');
     expect(output).toContain('a board hint');
+    expect(output).toContain('an issue');
+    expect(output).toContain('a decision comment');
     const db = new DatabaseSync(sharedDb(main), { readOnly: true });
     try {
       expect((db.prepare('SELECT json FROM records WHERE id=?').get(both) as { json: string }).json).toContain('shared winner');
@@ -433,12 +478,14 @@ describe('BT96 the outbox reads only what is owed', () => {
       const indexes = db.prepare("SELECT name, sql FROM sqlite_master WHERE type='index' AND tbl_name='outbox'").all() as { name: string; sql: string | null }[];
       expect(indexes.some(index => index.sql?.toLowerCase().includes('state'))).toBe(true);
     } finally { db.close(); }
-    const source = readFileSync(fileURLToPath(new URL('../../../packages/box-bounty/store.ts', import.meta.url)), 'utf8');
-    expect(source).toContain('pendingOutbox');
-    expect(source).toContain("WHERE state='pending'");
-    expect(readFileSync(fileURLToPath(new URL('../../../packages/box-bounty/chain.ts', import.meta.url)), 'utf8')).toContain('pendingOutbox');
-    expect(readFileSync(fileURLToPath(new URL('../../../packages/box-bounty/render.ts', import.meta.url)), 'utf8')).toContain('pendingOutbox');
-    expect(readFileSync(fileURLToPath(new URL('../../../packages/box-bounty/board.ts', import.meta.url)), 'utf8')).toContain('pendingOutbox');
+    const detail = (sql: string, values: string[] = []): string => {
+      const explained = new DatabaseSync(storeDbPath(repo), { readOnly: true });
+      try { return (explained.prepare(`EXPLAIN QUERY PLAN ${sql}`).all(...values) as { detail: string }[]).map(row => row.detail).join('\n'); }
+      finally { explained.close(); }
+    };
+    expect(detail("SELECT * FROM outbox WHERE state='pending'")).toContain('USING INDEX outbox_state');
+    expect(detail("SELECT * FROM outbox WHERE state='pending' AND bounty_id=?", ['bt-4444cccc5555'])).toContain('USING INDEX outbox_state');
+    expect(detail("SELECT * FROM outbox WHERE state='pending' AND kind=?", ['chain'])).toContain('USING INDEX outbox_state');
   });
 
   it('settled rows stay forever and still do not reappear as pending work', () => {
@@ -452,6 +499,12 @@ describe('BT96 the outbox reads only what is owed', () => {
       ]
     }]);
     expect(listOpen(repo).map(row => row.id)).toEqual([id]);
+    expect(storeDbPath(repo)).toBe(sharedDb(repo));
+    closeStores();
+    const settledDb = new DatabaseSync(storeDbPath(repo), { readOnly: true });
+    try {
+      expect((settledDb.prepare('SELECT state FROM outbox WHERE bounty_id=? ORDER BY state').all(id) as { state: string }[]).map(row => row.state)).toEqual(['done', 'refused']);
+    } finally { settledDb.close(); }
     expect(outboxRows(repo, id).map(row => row.state).sort()).toEqual(['done', 'refused']);
     expect(boardTold(repo).pending).toBe(0);
     const key = owe(repo, id, 'chain', { tip: 'd'.repeat(40) });

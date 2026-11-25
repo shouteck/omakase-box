@@ -403,9 +403,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
   const corrupt = listed.filter(entry => entry.record === null);
   const lines: string[] = [...notPickedUp];
   // Pending shared-memory pushes are named in the overview (BT32).
-  for (const row of outboxRows(repoRoot)) {
-    if (row.kind === 'chain' && row.state === 'pending') lines.push(`${row.bountyId} — shared bounty memory not pushed yet; it will be retried`);
-  }
+  for (const row of pendingOutbox(repoRoot, { kind: 'chain' })) lines.push(`${row.bountyId} — shared bounty memory not pushed yet; it will be retried`);
   // A shared-only bounty names its origin — the chain, not this machine.
   for (const entry of listed) {
     if (entry.record?.shared === true) lines.push(`${entry.record.id} — posted from another machine (shared bounty memory)`);
