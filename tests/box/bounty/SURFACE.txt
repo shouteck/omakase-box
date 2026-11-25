@@ -848,3 +848,44 @@ schema box-bounty/status@1
 schema box-bounty/submit@1
 schema box-bounty/take-preview@1
 schema box-bounty/take@1
+values box-bounty/apply@1 foreignFields[].source closed other%20account|solver
+values box-bounty/apply@1 outcome open applied|conflict
+values box-bounty/apply@1 stage open answered|applied|confirmed|drafted|posted|rejected|taken|undone|waiting|withdrawn
+values box-bounty/close@1 foreignFields[].source closed other%20account|solver
+values box-bounty/close@1 outcome open already-ended|rejected|withdrawn
+values box-bounty/close@1 stage open answered|applied|confirmed|drafted|posted|rejected|taken|undone|waiting|withdrawn
+values box-bounty/config@1 allProjects open allowed|ask|off
+values box-bounty/config@1 decision open allowed|ask|off
+values box-bounty/config@1 repositories{}.decision open allowed|ask|off
+values box-bounty/config@1 waiting[].for open close|merge|post
+values box-bounty/config@1 waiting[].reason open owner-allow|owner-ask|owner-off|secrets|untracked-file
+values box-bounty/create@1 foreignFields[].source closed other%20account|solver
+values box-bounty/discover@1 began open bookmark|now|start
+values box-bounty/discover@1 foreignFields[].source closed other%20account|solver
+values box-bounty/discover@1 solving.mode open allowed|ask|off
+values box-bounty/find@1 matches[].stage open answered|applied|confirmed|drafted|posted|rejected|taken|undone|waiting|withdrawn
+values box-bounty/look@1 foreignFields[].source closed other%20account|solver
+values box-bounty/look@1 payTo open none|recognised|test-mode|unrecognised
+values box-bounty/post@1 stage open answered|applied|confirmed|drafted|posted|rejected|taken|undone|waiting|withdrawn
+values box-bounty/refusal@1 refused open allow-arguments|allow-scan-held|already-ended|already-taken|answer-empty|answer-never-ship|answer-unsafe-path|apply-ambiguous|apply-unsafe-config|apply-worktree-dirty|attempt-ended|attempt-mismatch|attempt-retargeted|attempt-withdrawn|authority-arguments|below-owner-floor|board-off|board-unread|bounty-ambiguous|bounty-branch-moved|bounty-id-invalid|bounty-not-open|checks-removed|command-removed|config-command-removed|config-value-invalid|create-option-retired|discover-from-invalid|failed|first-merge-notice-malformed|first-merge-notice-unsafe-path|folder-delivery-retired|git-missing|git-too-old|github-account-changed|github-branch-changed|github-call-budget|github-cli-missing|github-cli-too-old|github-cli-unsafe|github-command-failed|github-filter-failed|github-fork-failed|github-git-failed|github-include-invalid|github-include-missing|github-include-never-ship|github-issue-changed|github-issue-mismatch|github-never-ship|github-no-public-base|github-non-plain-path|github-not-signed-in|github-permission-denied|github-post-incomplete|github-pr-changed|github-pr-missing|github-pr-not-descended|github-pr-unreadable|github-pr-wrong-branch|github-preview-stale|github-private-repository|github-publish-never-ship|github-push-denied|github-rate-limited|github-remote-mismatch|github-remote-required|github-repository-changed|github-repository-missing|github-response-invalid|github-unavailable|github-unmerged-paths|github-unreachable|github-visibility-unreadable|hook-already-on|hook-not-on|hook-settings-blocked|hook-settings-escape|hook-settings-malformed|hook-unknown-host|instruction-file-changed|instruction-file-link|instruction-file-missing|instruction-file-not-file|instruction-file-outside-repo|instruction-file-tool-owned|instruction-import-cycle|instruction-import-unmaintained|instruction-markers-damaged|instruction-settings-link|instruction-settings-not-file|invalid-boxignore|issue-too-large|language-invalid|legacy-delivery-retired|legacy-task-unavailable|limit-below-reward|link-escape|local-store-path-blocked|manifest-tampered|merge-approval-agent|merge-approval-stale|merge-failed|merge-held|merge-in-progress|missing-part-of|missing-query|missing-reason|missing-task|missing-why|never-ship-input|no-applicable-attempt|not-a-repository|not-github-posted|not-postable|not-posted|not-taken|not-taken-yet|not-waiting|nothing-to-submit|outside-owner-limits|owner-answer-not-waiting|owner-permission-needed|paid-already-recorded|paid-not-recorded|paid-nothing-owed|project-claims-list|project-claims-reward|promise-limit-busy|promise-limit-exceeded|publish-held|publish-list-link|publish-list-never-ship|publish-list-not-listed|publish-list-outside|publish-list-settings-link|pull-request-moved|record-changed|record-corrupt|repository-address-invalid|repository-address-required|repository-choice-needed|repository-destination-mismatch|repository-not-listed|repository-several-allowed|reward-agent-set|reward-all-projects|reward-amount-invalid|reward-needs-limit|reward-repository-unlisted|reward-required|settings-inside-repo|settings-malformed|settings-write-failed|shared-issue-closed|shared-only|shared-record-disputed|shared-record-mismatch|solution-unreadable|solving-off|summary-time-invalid|taken-record-unreadable|taken-status-options|title-too-long|unknown-attempt|unknown-bounty|unreadable-path|usage|wait-bounty-ended|wait-not-posted|wait-upstream-unreadable|workspace-exists|wrong-stage
+values box-bounty/status-wait@1 outcome open cancelled|solution|timeout
+values box-bounty/status@1 bounties[].events[].stage open answered|applied|confirmed|drafted|paid|posted|rejected|taken|undone|waiting|withdrawn
+values box-bounty/status@1 bounties[].github.formatRead open absent|differs-from-record|invalid|matches-record
+values box-bounty/status@1 bounties[].github.formatRepair open preserved-invalid|update-failed|updated
+values box-bounty/status@1 bounties[].github.lifecycle open branch-pushed|closed|posted|preparing
+values box-bounty/status@1 bounties[].github.pullRequests[].payTo open none|recognised|test-mode|unrecognised
+values box-bounty/status@1 bounties[].github.state open branch-pushed|closed|posted|preparing
+values box-bounty/status@1 bounties[].mergeNow.result open clean|conflict|untestable
+values box-bounty/status@1 bounties[].solutions[].outcome open answered|set-aside
+values box-bounty/status@1 bounties[].solutions[].payTo open none|recognised|test-mode|unrecognised
+values box-bounty/status@1 bounties[].stage open answered|applied|confirmed|drafted|posted|rejected|taken|undone|waiting|withdrawn
+values box-bounty/status@1 bounties[].waiting.for open close|merge|post
+values box-bounty/status@1 bounties[].waiting.reason open owner-allow|owner-ask|owner-off|secrets|untracked-file
+values box-bounty/status@1 foreignFields[].source closed other%20account|solver
+values box-bounty/status@1 owner.decision open allowed|ask|off
+values box-bounty/submit@1 foreignFields[].source closed other%20account|solver
+values box-bounty/submit@1 outcome open already-ready|submitted
+values box-bounty/take-preview@1 foreignFields[].source closed other%20account|solver
+values box-bounty/take@1 foreignFields[].source closed other%20account|solver
+values box-bounty/take@1 outcome open taken|waiting
+values box-bounty/take@1 stage open submitted|taken|waiting|withdrawn

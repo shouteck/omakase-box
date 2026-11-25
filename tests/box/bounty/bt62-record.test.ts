@@ -24,4 +24,16 @@ describe('BT62: the surface record reads plainly', () => {
     const unowned = lines.filter(line => line.startsWith('field ')).map(line => line.split(' ')[1]!).filter(schema => OWNERS[schema] === undefined);
     expect([...new Set(unowned)], 'fields recorded for a document no test owns').toEqual([]);
   });
+
+  it('every values line is well formed, owned, attached to a field, and carries at least one encoded value', () => {
+    const lines = record();
+    const fields = new Set(lines.filter(line => line.startsWith('field ')).map(line => line.split(' ').slice(1, 3).join(' ')));
+    const bad: string[] = [];
+    for (const line of lines.filter(line => line.startsWith('values '))) {
+      const parts = line.split(' ');
+      const [, schema, path, openness, encoded] = parts;
+      if (parts.length !== 5 || OWNERS[schema!] === undefined || !fields.has(`${schema} ${path}`) || (openness !== 'open' && openness !== 'closed') || encoded === undefined || encoded.length === 0) bad.push(line);
+    }
+    expect(bad, 'a malformed, unowned or fieldless values line').toEqual([]);
+  });
 });

@@ -248,6 +248,23 @@ one complete document, so a field an agent assumed was there can never be
 missing because nobody asked for it. A field-list mode could be added
 later without breaking `@1`.
 
+**Forward compatibility.** Inside one schema version a document may gain keys, and an open field may gain values; a reader written for `@1` must ignore keys it does not know and must not treat an unknown value in an open field as an error. A key disappearing or being renamed, a type changing, a closed field gaining a value, any listed value disappearing, or a meaning changing is breaking and belongs in `@2`. The value-like fields are on record in `tests/box/bounty/SURFACE.txt` as `values <schema> <path> open|closed ...`; values are `|`-separated and percent-encoded when they contain whitespace. Every value-like field is open except `foreignFields[].source`, whose only values are `solver` and `other account`. The open fields are:
+
+- `box-bounty/apply@1`: `outcome`, `stage`
+- `box-bounty/close@1`: `outcome`, `stage`
+- `box-bounty/config@1`: `allProjects`, `decision`, `repositories{}.decision`, `solving.mode`, `waiting[].for`, `waiting[].reason`
+- `box-bounty/discover@1`: `began`, `solving.mode`
+- `box-bounty/find@1`: `matches[].stage`
+- `box-bounty/look@1`: `payTo`
+- `box-bounty/post@1`: `stage`
+- `box-bounty/refusal@1`: `refused`
+- `box-bounty/status-wait@1`: `outcome`
+- `box-bounty/status@1`: `bounties[].events[].stage`, `bounties[].github.formatRead`, `bounties[].github.formatRepair`, `bounties[].github.lifecycle`, `bounties[].github.pullRequests[].payTo`, `bounties[].github.state`, `bounties[].mergeNow.result`, `bounties[].solutions[].outcome`, `bounties[].solutions[].payTo`, `bounties[].stage`, `bounties[].waiting.for`, `bounties[].waiting.reason`, `owner.decision`
+- `box-bounty/submit@1`: `outcome`
+- `box-bounty/take@1`: `outcome`, `stage`
+
+`tests/box/bounty/SURFACE.txt` is the machine-readable record this contract is checked against. A compatible change updates it through `node scripts/surface.mjs --write`; the command refuses a breaking change unless the same change moves that document's schema to `@2`.
+
 What the text view prints as lines — an acting-on notice, a merge
 recognised, a said-once explanation — goes to standard error under
 `--json` for those four, unchanged; standard output carries the document alone. A refusal

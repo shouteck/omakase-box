@@ -1,4 +1,6 @@
-# How we write tests for this tool
+#
+Since BT99 the surface record also carries `values` lines for the value-like JSON fields. `surface.mjs` classifies an added key or a new value in an open field as compatible, and refuses to write a removed or renamed key, a changed type, a removed value, or a new value in a closed field unless that schema moves to `@2`. The record's `open`/`closed` label is derived from the one table in `tests/box/bounty/surface.ts`; its values are read from the product's types and constants, never typed into the record by hand.
+ How we write tests for this tool
 
 ## Current commands
 

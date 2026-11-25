@@ -62,6 +62,133 @@ const literal = (node: ts.Node | undefined): string | undefined =>
   node !== undefined && (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) ? node.text : undefined;
 const eachNode = (sf: ts.SourceFile, visit: (node: ts.Node) => void) => { const walk = (node: ts.Node) => { visit(node); ts.forEachChild(node, walk); }; walk(sf); };
 
+// ---------------------------------------------------------------------------------------------------------------------
+// BT99: the values a value-like field may take. The open/closed label is this file's short table; the values themselves
+// come from the product's own union types and constants through the TypeScript parser, never from a second typed list here.
+
+type TypeSource = { readonly kind: 'type'; readonly file: string; readonly type: string; readonly property?: string };
+type ConstantSource = { readonly kind: 'constant'; readonly file: string; readonly constant: string };
+type RefusalSource = { readonly kind: 'refusals' };
+type ValueSource = TypeSource | ConstantSource | RefusalSource;
+type ValueField = { readonly schema: string; readonly path: string; readonly openness: 'open' | 'closed'; readonly source: ValueSource };
+
+const typeSource = (file: string, type: string, property?: string): TypeSource => ({ kind: 'type', file, type, ...(property === undefined ? {} : { property }) });
+const constantSource = (file: string, constant: string): ConstantSource => ({ kind: 'constant', file, constant });
+const refusalSource: RefusalSource = { kind: 'refusals' };
+
+const typeDeclarations = (file: string): ReadonlyMap<string, ts.TypeAliasDeclaration | ts.InterfaceDeclaration> => {
+  const declarations = new Map<string, ts.TypeAliasDeclaration | ts.InterfaceDeclaration>();
+  eachNode(source(file), node => {
+    if ((ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) && !declarations.has(node.name.text)) declarations.set(node.name.text, node);
+  });
+  return declarations;
+};
+
+const stringLiteralsOfTypeNode = (node: ts.TypeNode, declarations: ReadonlyMap<string, ts.TypeAliasDeclaration | ts.InterfaceDeclaration>, depth = 0): string[] => {
+  if (depth > 8) return [];
+  if (ts.isLiteralTypeNode(node) && (ts.isStringLiteral(node.literal) || ts.isNoSubstitutionTemplateLiteral(node.literal))) return [node.literal.text];
+  if (ts.isUnionTypeNode(node) || ts.isIntersectionTypeNode(node)) return node.types.flatMap(part => stringLiteralsOfTypeNode(part, declarations, depth + 1));
+  if (ts.isParenthesizedTypeNode(node)) return stringLiteralsOfTypeNode(node.type, declarations, depth + 1);
+  if (ts.isTypeReferenceNode(node) && ts.isIdentifier(node.typeName)) {
+    const declaration = declarations.get(node.typeName.text);
+    if (declaration !== undefined && ts.isTypeAliasDeclaration(declaration)) return stringLiteralsOfTypeNode(declaration.type, declarations, depth + 1);
+  }
+  return [];
+};
+
+const propertyTypeNodes = (node: ts.TypeNode | ts.InterfaceDeclaration, property: string, declarations: ReadonlyMap<string, ts.TypeAliasDeclaration | ts.InterfaceDeclaration>, depth = 0): ts.TypeNode[] => {
+  if (depth > 8) return [];
+  if (ts.isInterfaceDeclaration(node)) {
+    return node.members.flatMap(member => ts.isPropertySignature(member) && member.type !== undefined && member.name.getText() === property ? [member.type] : []);
+  }
+  if (ts.isTypeLiteralNode(node)) {
+    return node.members.flatMap(member => ts.isPropertySignature(member) && member.type !== undefined && member.name.getText() === property ? [member.type] : []);
+  }
+  if (ts.isUnionTypeNode(node) || ts.isIntersectionTypeNode(node)) return node.types.flatMap(part => propertyTypeNodes(part, property, declarations, depth + 1));
+  if (ts.isParenthesizedTypeNode(node)) return propertyTypeNodes(node.type, property, declarations, depth + 1);
+  if (ts.isTypeReferenceNode(node) && ts.isIdentifier(node.typeName)) {
+    const declaration = declarations.get(node.typeName.text);
+    if (declaration !== undefined) return propertyTypeNodes(ts.isTypeAliasDeclaration(declaration) ? declaration.type : declaration, property, declarations, depth + 1);
+  }
+  return [];
+};
+
+const typeValues = (query: TypeSource): string[] => {
+  const declarations = typeDeclarations(query.file);
+  const declaration = declarations.get(query.type);
+  if (declaration === undefined) throw new Error(`BT99 values source not found: ${query.file} ${query.type}`);
+  const nodes = query.property === undefined
+    ? ts.isTypeAliasDeclaration(declaration) ? [declaration.type] : []
+    : propertyTypeNodes(ts.isTypeAliasDeclaration(declaration) ? declaration.type : declaration, query.property, declarations);
+  return [...new Set(nodes.flatMap(node => stringLiteralsOfTypeNode(node, declarations)))].sort();
+};
+
+const constantValues = (query: ConstantSource): string[] => {
+  const values: string[] = [];
+  eachNode(source(query.file), node => {
+    if (!ts.isVariableDeclaration(node) || !ts.isIdentifier(node.name) || node.name.text !== query.constant || node.initializer === undefined) return;
+    const walk = (part: ts.Node) => {
+      if (ts.isStringLiteral(part) || ts.isNoSubstitutionTemplateLiteral(part)) values.push(part.text);
+      ts.forEachChild(part, walk);
+    };
+    walk(node.initializer);
+  });
+  return [...new Set(values)].sort();
+};
+
+const sourceValues = (sourceOf: ValueSource): string[] => {
+  if (sourceOf.kind === 'type') return typeValues(sourceOf);
+  if (sourceOf.kind === 'constant') return constantValues(sourceOf);
+  return refusalNames().names;
+};
+
+const foreign = (schema: string): ValueField => ({ schema, path: 'foreignFields[].source', openness: 'closed', source: typeSource('packages/box-bounty/untrusted.ts', 'ForeignSource') });
+const bountyStage = typeSource('packages/box-bounty/record.ts', 'BountyStage');
+
+/** The contract's open/closed table. Open is the default; `source` is closed because solver/other account is a fact of who wrote the text. */
+export const VALUE_FIELDS: readonly ValueField[] = [
+  ...['apply', 'close', 'create', 'discover', 'look', 'status', 'submit', 'take', 'take-preview'].map(schema => foreign(`box-bounty/${schema}@1`)),
+  { schema: 'box-bounty/status@1', path: 'bounties[].stage', openness: 'open', source: bountyStage },
+  { schema: 'box-bounty/status@1', path: 'bounties[].events[].stage', openness: 'open', source: typeSource('packages/box-bounty/record.ts', 'StageEvent', 'stage') },
+  { schema: 'box-bounty/status@1', path: 'bounties[].solutions[].outcome', openness: 'open', source: typeSource('packages/box-bounty/record.ts', 'AttemptOutcome') },
+  { schema: 'box-bounty/status@1', path: 'bounties[].solutions[].payTo', openness: 'open', source: typeSource('packages/box-bounty/pay.ts', 'PayToFact', 'state') },
+  { schema: 'box-bounty/status@1', path: 'bounties[].github.pullRequests[].payTo', openness: 'open', source: typeSource('packages/box-bounty/pay.ts', 'PayToFact', 'state') },
+  { schema: 'box-bounty/status@1', path: 'bounties[].waiting.for', openness: 'open', source: typeSource('packages/box-bounty/record.ts', 'WaitingFor', 'for') },
+  { schema: 'box-bounty/status@1', path: 'bounties[].waiting.reason', openness: 'open', source: typeSource('packages/box-bounty/record.ts', 'WaitingFor', 'reason') },
+  { schema: 'box-bounty/status@1', path: 'bounties[].mergeNow.result', openness: 'open', source: typeSource('packages/box-bounty/git.ts', 'DryMerge', 'kind') },
+  { schema: 'box-bounty/status@1', path: 'bounties[].github.formatRead', openness: 'open', source: typeSource('packages/box-bounty/gh.ts', 'GitHubPublication', 'formatRead') },
+  { schema: 'box-bounty/status@1', path: 'bounties[].github.formatRepair', openness: 'open', source: typeSource('packages/box-bounty/gh.ts', 'GitHubPublication', 'formatRepair') },
+  { schema: 'box-bounty/status@1', path: 'bounties[].github.state', openness: 'open', source: typeSource('packages/box-bounty/gh.ts', 'GitHubPublication', 'state') },
+  { schema: 'box-bounty/status@1', path: 'bounties[].github.lifecycle', openness: 'open', source: typeSource('packages/box-bounty/gh.ts', 'GitHubPublication', 'state') },
+  { schema: 'box-bounty/status@1', path: 'owner.decision', openness: 'open', source: typeSource('packages/box-bounty/settings.ts', 'OwnerDecision') },
+  { schema: 'box-bounty/config@1', path: 'decision', openness: 'open', source: typeSource('packages/box-bounty/settings.ts', 'OwnerDecision') },
+  { schema: 'box-bounty/config@1', path: 'allProjects', openness: 'open', source: typeSource('packages/box-bounty/settings.ts', 'OwnerDecision') },
+  { schema: 'box-bounty/config@1', path: 'repositories{}.decision', openness: 'open', source: typeSource('packages/box-bounty/settings.ts', 'OwnerDecision') },
+  { schema: 'box-bounty/config@1', path: 'waiting[].for', openness: 'open', source: typeSource('packages/box-bounty/record.ts', 'WaitingFor', 'for') },
+  { schema: 'box-bounty/config@1', path: 'waiting[].reason', openness: 'open', source: typeSource('packages/box-bounty/record.ts', 'WaitingFor', 'reason') },
+  { schema: 'box-bounty/post@1', path: 'stage', openness: 'open', source: bountyStage },
+  { schema: 'box-bounty/apply@1', path: 'stage', openness: 'open', source: bountyStage },
+  { schema: 'box-bounty/apply@1', path: 'outcome', openness: 'open', source: typeSource('packages/box-bounty/answer.ts', 'ApplyResult', 'outcome') },
+  { schema: 'box-bounty/close@1', path: 'stage', openness: 'open', source: bountyStage },
+  { schema: 'box-bounty/close@1', path: 'outcome', openness: 'open', source: typeSource('packages/box-bounty/commands.ts', 'CloseOutcome', 'outcome') },
+  { schema: 'box-bounty/find@1', path: 'matches[].stage', openness: 'open', source: bountyStage },
+  { schema: 'box-bounty/status-wait@1', path: 'outcome', openness: 'open', source: typeSource('packages/box-bounty/wait.ts', 'WaitResult', 'outcome') },
+  { schema: 'box-bounty/take@1', path: 'stage', openness: 'open', source: typeSource('packages/box-bounty/take.ts', 'TakenStage') },
+  { schema: 'box-bounty/take@1', path: 'outcome', openness: 'open', source: typeSource('packages/box-bounty/take.ts', 'TakeResult', 'kind') },
+  { schema: 'box-bounty/submit@1', path: 'outcome', openness: 'open', source: typeSource('packages/box-bounty/attempt.ts', 'SubmitResult', 'outcome') },
+  { schema: 'box-bounty/refusal@1', path: 'refused', openness: 'open', source: refusalSource },
+  { schema: 'box-bounty/discover@1', path: 'solving.mode', openness: 'open', source: typeSource('packages/box-bounty/settings.ts', 'SolvingSettings', 'mode') },
+  { schema: 'box-bounty/discover@1', path: 'began', openness: 'open', source: typeSource('packages/box-bounty/solving.ts', 'DiscoverResult', 'began') },
+  { schema: 'box-bounty/look@1', path: 'payTo', openness: 'open', source: typeSource('packages/box-bounty/pay.ts', 'PayToFact', 'state') }
+];
+
+/** `values <schema> <path> open|closed <value|value>` lines, derived from the sources the table names. */
+export const valueLines = (): string[] => VALUE_FIELDS.map(field => {
+  const values = sourceValues(field.source);
+  if (values.length === 0) throw new Error(`BT99 values source gave no values for ${field.schema} ${field.path}`);
+  return `values ${field.schema} ${field.path} ${field.openness} ${values.map(value => encodeURIComponent(value)).join('|')}`;
+}).sort();
+
 /** Every `process.exit(<number>)` in the CLI entry points. */
 export const exitCodes = (): number[] => {
   const codes = new Set<number>();
@@ -119,6 +246,7 @@ export const staticLines = (): string[] => {
   for (const reason of heldReasons()) lines.push(`held ${reason}`);
   for (const reason of refusalNames().names) lines.push(`refusal ${reason}`);
   for (const schema of Object.keys(OWNERS)) lines.push(`schema ${schema}`);
+  lines.push(...valueLines());
   return [...new Set(lines)].sort();
 };
 
