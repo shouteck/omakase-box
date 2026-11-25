@@ -280,6 +280,28 @@ field box-bounty/look@1 report array
 field box-bounty/look@1 report[] string
 field box-bounty/look@1 schema string
 field box-bounty/look@1 tooLarge null
+field box-bounty/post-preview@1 base string
+field box-bounty/post-preview@1 branch string
+field box-bounty/post-preview@1 foreignFields array
+field box-bounty/post-preview@1 foreignFields[] object
+field box-bounty/post-preview@1 foreignFields[].field string
+field box-bounty/post-preview@1 foreignFields[].source string
+field box-bounty/post-preview@1 head string
+field box-bounty/post-preview@1 id string
+field box-bounty/post-preview@1 include array
+field box-bounty/post-preview@1 issueBody string
+field box-bounty/post-preview@1 lines array
+field box-bounty/post-preview@1 lines[] string
+field box-bounty/post-preview@1 notices array
+field box-bounty/post-preview@1 posted boolean
+field box-bounty/post-preview@1 pushed array
+field box-bounty/post-preview@1 repository string
+field box-bounty/post-preview@1 schema string
+field box-bounty/post-preview@1 tip string
+field box-bounty/post-preview@1 title string
+field box-bounty/post-preview@1 untracked number
+field box-bounty/post-preview@1 wip null
+field box-bounty/post-preview@1 withChanges boolean
 field box-bounty/post@1 base string
 field box-bounty/post@1 branch string
 field box-bounty/post@1 commit string
@@ -840,6 +862,7 @@ schema box-bounty/help@1
 schema box-bounty/hook@1
 schema box-bounty/look-export@1
 schema box-bounty/look@1
+schema box-bounty/post-preview@1
 schema box-bounty/post@1
 schema box-bounty/refusal@1
 schema box-bounty/setup@1
@@ -848,3 +871,71 @@ schema box-bounty/status@1
 schema box-bounty/submit@1
 schema box-bounty/take-preview@1
 schema box-bounty/take@1
+values box-bounty/allow@1 decision open allowed|ask
+values box-bounty/allow@1 kind open bounty|repository
+values box-bounty/apply@1 foreignFields[].source closed other%20account|solver
+values box-bounty/apply@1 outcome open applied|conflict
+values box-bounty/apply@1 stage open answered|applied|confirmed|drafted|posted|rejected|taken|undone|waiting|withdrawn
+values box-bounty/close@1 foreignFields[].source closed other%20account|solver
+values box-bounty/close@1 outcome open already-ended|attempt-withdrawn|rejected|withdrawn
+values box-bounty/close@1 stage open answered|applied|confirmed|drafted|posted|rejected|taken|undone|waiting|withdrawn
+values box-bounty/config@1 allProjects open allowed|ask|off
+values box-bounty/config@1 decision open allowed|ask|off
+values box-bounty/config@1 decisionLevel open default|project
+values box-bounty/config@1 instructions.found[].refused open allow-arguments|allow-scan-held|already-ended|already-taken|answer-empty|answer-never-ship|answer-unsafe-path|apply-ambiguous|apply-unsafe-config|apply-worktree-dirty|attempt-ended|attempt-mismatch|attempt-retargeted|attempt-withdrawn|authority-arguments|below-owner-floor|board-off|board-unread|bounty-ambiguous|bounty-branch-moved|bounty-id-invalid|bounty-not-open|checks-removed|command-removed|config-command-removed|config-value-invalid|create-option-retired|discover-from-invalid|failed|first-merge-notice-malformed|first-merge-notice-unsafe-path|folder-delivery-retired|git-missing|git-too-old|github-account-changed|github-branch-changed|github-call-budget|github-cli-missing|github-cli-too-old|github-cli-unsafe|github-command-failed|github-filter-failed|github-fork-failed|github-git-failed|github-include-invalid|github-include-missing|github-include-never-ship|github-issue-changed|github-issue-mismatch|github-never-ship|github-no-public-base|github-non-plain-path|github-not-signed-in|github-permission-denied|github-post-incomplete|github-pr-changed|github-pr-missing|github-pr-not-descended|github-pr-unreadable|github-pr-wrong-branch|github-preview-stale|github-private-repository|github-publish-never-ship|github-push-denied|github-rate-limited|github-remote-mismatch|github-remote-required|github-repository-changed|github-repository-missing|github-response-invalid|github-unavailable|github-unmerged-paths|github-unreachable|github-visibility-unreadable|hook-already-on|hook-not-on|hook-settings-blocked|hook-settings-escape|hook-settings-malformed|hook-unknown-host|instruction-file-changed|instruction-file-link|instruction-file-missing|instruction-file-not-file|instruction-file-outside-repo|instruction-file-tool-owned|instruction-import-cycle|instruction-import-unmaintained|instruction-markers-damaged|instruction-settings-link|instruction-settings-not-file|invalid-boxignore|issue-too-large|language-invalid|legacy-delivery-retired|legacy-task-unavailable|limit-below-reward|link-escape|local-store-path-blocked|manifest-tampered|merge-approval-agent|merge-approval-stale|merge-failed|merge-held|merge-in-progress|missing-part-of|missing-query|missing-reason|missing-task|missing-why|never-ship-input|no-applicable-attempt|not-a-repository|not-github-posted|not-postable|not-posted|not-taken|not-taken-yet|not-waiting|nothing-to-submit|outside-owner-limits|owner-answer-not-waiting|owner-permission-needed|paid-already-recorded|paid-not-recorded|paid-nothing-owed|project-claims-list|project-claims-reward|promise-limit-busy|promise-limit-exceeded|publish-held|publish-list-link|publish-list-never-ship|publish-list-not-listed|publish-list-outside|publish-list-settings-link|pull-request-moved|record-changed|record-corrupt|repository-address-invalid|repository-address-required|repository-choice-needed|repository-destination-mismatch|repository-not-listed|repository-several-allowed|reward-agent-set|reward-all-projects|reward-amount-invalid|reward-needs-limit|reward-repository-unlisted|reward-required|settings-inside-repo|settings-malformed|settings-write-failed|shared-issue-closed|shared-only|shared-record-disputed|shared-record-mismatch|solution-unreadable|solving-off|summary-time-invalid|taken-record-unreadable|taken-status-options|title-too-long|unknown-attempt|unknown-bounty|unreadable-path|usage|wait-bounty-ended|wait-not-posted|wait-upstream-unreadable|workspace-exists|wrong-stage
+values box-bounty/config@1 repositories{}.decision open allowed|ask|denied|off
+values box-bounty/config@1 repositories{}.history[].decision open allowed|ask|denied|off
+values box-bounty/config@1 solving.mode open allowed|ask|off
+values box-bounty/config@1 waiting[].for open close|merge|post
+values box-bounty/config@1 waiting[].reason open owner-allow|owner-ask|owner-off|secrets|untracked-file
+values box-bounty/create@1 foreignFields[].source closed other%20account|solver
+values box-bounty/deny@1 kind open bounty|repository
+values box-bounty/describe@1 mode open description|rules|solving
+values box-bounty/discover@1 began open bookmark|now|start
+values box-bounty/discover@1 foreignFields[].source closed other%20account|solver
+values box-bounty/discover@1 solving.mode open allowed|ask|off
+values box-bounty/find@1 matches[].stage open answered|applied|confirmed|drafted|posted|rejected|taken|undone|waiting|withdrawn
+values box-bounty/hook@1 action open disclosure|off|on|status
+values box-bounty/look-export@1 source open solver
+values box-bounty/look@1 files[].change open added|changed|deleted
+values box-bounty/look@1 foreignFields[].source closed other%20account|solver
+values box-bounty/look@1 payTo open none|recognised|test-mode|unrecognised
+values box-bounty/look@1 tooLarge.reason open solution-too-large-to-show
+values box-bounty/post-preview@1 foreignFields[].source closed other%20account|solver
+values box-bounty/post@1 stage open answered|applied|confirmed|drafted|posted|rejected|taken|undone|waiting|withdrawn
+values box-bounty/refusal@1 refused open allow-arguments|allow-scan-held|already-ended|already-taken|answer-empty|answer-never-ship|answer-unsafe-path|apply-ambiguous|apply-unsafe-config|apply-worktree-dirty|attempt-ended|attempt-mismatch|attempt-retargeted|attempt-withdrawn|authority-arguments|below-owner-floor|board-off|board-unread|bounty-ambiguous|bounty-branch-moved|bounty-id-invalid|bounty-not-open|checks-removed|command-removed|config-command-removed|config-value-invalid|create-option-retired|discover-from-invalid|failed|first-merge-notice-malformed|first-merge-notice-unsafe-path|folder-delivery-retired|git-missing|git-too-old|github-account-changed|github-branch-changed|github-call-budget|github-cli-missing|github-cli-too-old|github-cli-unsafe|github-command-failed|github-filter-failed|github-fork-failed|github-git-failed|github-include-invalid|github-include-missing|github-include-never-ship|github-issue-changed|github-issue-mismatch|github-never-ship|github-no-public-base|github-non-plain-path|github-not-signed-in|github-permission-denied|github-post-incomplete|github-pr-changed|github-pr-missing|github-pr-not-descended|github-pr-unreadable|github-pr-wrong-branch|github-preview-stale|github-private-repository|github-publish-never-ship|github-push-denied|github-rate-limited|github-remote-mismatch|github-remote-required|github-repository-changed|github-repository-missing|github-response-invalid|github-unavailable|github-unmerged-paths|github-unreachable|github-visibility-unreadable|hook-already-on|hook-not-on|hook-settings-blocked|hook-settings-escape|hook-settings-malformed|hook-unknown-host|instruction-file-changed|instruction-file-link|instruction-file-missing|instruction-file-not-file|instruction-file-outside-repo|instruction-file-tool-owned|instruction-import-cycle|instruction-import-unmaintained|instruction-markers-damaged|instruction-settings-link|instruction-settings-not-file|invalid-boxignore|issue-too-large|language-invalid|legacy-delivery-retired|legacy-task-unavailable|limit-below-reward|link-escape|local-store-path-blocked|manifest-tampered|merge-approval-agent|merge-approval-stale|merge-failed|merge-held|merge-in-progress|missing-part-of|missing-query|missing-reason|missing-task|missing-why|never-ship-input|no-applicable-attempt|not-a-repository|not-github-posted|not-postable|not-posted|not-taken|not-taken-yet|not-waiting|nothing-to-submit|outside-owner-limits|owner-answer-not-waiting|owner-permission-needed|paid-already-recorded|paid-not-recorded|paid-nothing-owed|project-claims-list|project-claims-reward|promise-limit-busy|promise-limit-exceeded|publish-held|publish-list-link|publish-list-never-ship|publish-list-not-listed|publish-list-outside|publish-list-settings-link|pull-request-moved|record-changed|record-corrupt|repository-address-invalid|repository-address-required|repository-choice-needed|repository-destination-mismatch|repository-not-listed|repository-several-allowed|reward-agent-set|reward-all-projects|reward-amount-invalid|reward-needs-limit|reward-repository-unlisted|reward-required|settings-inside-repo|settings-malformed|settings-write-failed|shared-issue-closed|shared-only|shared-record-disputed|shared-record-mismatch|solution-unreadable|solving-off|summary-time-invalid|taken-record-unreadable|taken-status-options|title-too-long|unknown-attempt|unknown-bounty|unreadable-path|usage|wait-bounty-ended|wait-not-posted|wait-upstream-unreadable|workspace-exists|wrong-stage
+values box-bounty/setup@1 action open help|remove|setup
+values box-bounty/status-wait@1 outcome open cancelled|solution|timeout
+values box-bounty/status@1 bounties[].allowedBy.decision open allowed|once
+values box-bounty/status@1 bounties[].allowedBy.level open default|project|this-bounty
+values box-bounty/status@1 bounties[].board.kind open listed|not-listed|unreachable
+values box-bounty/status@1 bounties[].board.payment open confirmed|merged-not-on-default|no-reward|nothing-owed|owed|owner-decides|recorded|says-not-received
+values box-bounty/status@1 bounties[].events[].stage open answered|applied|confirmed|drafted|paid|posted|rejected|taken|undone|waiting|withdrawn
+values box-bounty/status@1 bounties[].github.formatRead open absent|differs-from-record|invalid|matches-record
+values box-bounty/status@1 bounties[].github.formatRepair open preserved-invalid|update-failed|updated
+values box-bounty/status@1 bounties[].github.kind open history
+values box-bounty/status@1 bounties[].github.lifecycle open branch-pushed|closed|posted|preparing
+values box-bounty/status@1 bounties[].github.pay.unattributed open local-contained|local-unknown|missing|remote-contained|remote-unknown
+values box-bounty/status@1 bounties[].github.pullRequests[].firstSight.local open contained|new|unknown
+values box-bounty/status@1 bounties[].github.pullRequests[].firstSight.remote open contained|new|unknown
+values box-bounty/status@1 bounties[].github.pullRequests[].payTo open none|recognised|test-mode|unrecognised
+values box-bounty/status@1 bounties[].github.state open closed|open
+values box-bounty/status@1 bounties[].github.unavailable.reason open allow-arguments|allow-scan-held|already-ended|already-taken|answer-empty|answer-never-ship|answer-unsafe-path|apply-ambiguous|apply-unsafe-config|apply-worktree-dirty|attempt-ended|attempt-mismatch|attempt-retargeted|attempt-withdrawn|authority-arguments|below-owner-floor|board-off|board-unread|bounty-ambiguous|bounty-branch-moved|bounty-id-invalid|bounty-not-open|checks-removed|command-removed|config-command-removed|config-value-invalid|create-option-retired|discover-from-invalid|failed|first-merge-notice-malformed|first-merge-notice-unsafe-path|folder-delivery-retired|git-missing|git-too-old|github-account-changed|github-branch-changed|github-call-budget|github-cli-missing|github-cli-too-old|github-cli-unsafe|github-command-failed|github-filter-failed|github-fork-failed|github-git-failed|github-include-invalid|github-include-missing|github-include-never-ship|github-issue-changed|github-issue-mismatch|github-never-ship|github-no-public-base|github-non-plain-path|github-not-signed-in|github-permission-denied|github-post-incomplete|github-pr-changed|github-pr-missing|github-pr-not-descended|github-pr-unreadable|github-pr-wrong-branch|github-preview-stale|github-private-repository|github-publish-never-ship|github-push-denied|github-rate-limited|github-remote-mismatch|github-remote-required|github-repository-changed|github-repository-missing|github-response-invalid|github-status-unavailable|github-unavailable|github-unmerged-paths|github-unreachable|github-visibility-unreadable|hook-already-on|hook-not-on|hook-settings-blocked|hook-settings-escape|hook-settings-malformed|hook-unknown-host|instruction-file-changed|instruction-file-link|instruction-file-missing|instruction-file-not-file|instruction-file-outside-repo|instruction-file-tool-owned|instruction-import-cycle|instruction-import-unmaintained|instruction-markers-damaged|instruction-settings-link|instruction-settings-not-file|invalid-boxignore|issue-too-large|language-invalid|legacy-delivery-retired|legacy-task-unavailable|limit-below-reward|link-escape|local-store-path-blocked|manifest-tampered|merge-approval-agent|merge-approval-stale|merge-failed|merge-held|merge-in-progress|missing-part-of|missing-query|missing-reason|missing-task|missing-why|never-ship-input|no-applicable-attempt|not-a-repository|not-github-posted|not-postable|not-posted|not-taken|not-taken-yet|not-waiting|nothing-to-submit|outside-owner-limits|owner-answer-not-waiting|owner-permission-needed|paid-already-recorded|paid-not-recorded|paid-nothing-owed|project-claims-list|project-claims-reward|promise-limit-busy|promise-limit-exceeded|publish-held|publish-list-link|publish-list-never-ship|publish-list-not-listed|publish-list-outside|publish-list-settings-link|pull-request-moved|record-changed|record-corrupt|repository-address-invalid|repository-address-required|repository-choice-needed|repository-destination-mismatch|repository-not-listed|repository-several-allowed|reward-agent-set|reward-all-projects|reward-amount-invalid|reward-needs-limit|reward-repository-unlisted|reward-required|settings-inside-repo|settings-malformed|settings-write-failed|shared-issue-closed|shared-only|shared-record-disputed|shared-record-mismatch|solution-unreadable|solving-off|summary-time-invalid|taken-record-unreadable|taken-status-options|title-too-long|unknown-attempt|unknown-bounty|unreadable-path|usage|wait-bounty-ended|wait-not-posted|wait-upstream-unreadable|workspace-exists|wrong-stage
+values box-bounty/status@1 bounties[].landingChecks[].state open not-landed|not-merged|unknown|waiting
+values box-bounty/status@1 bounties[].mergeNow.result open clean|conflict|untestable
+values box-bounty/status@1 bounties[].scanFindings[].where open create|post
+values box-bounty/status@1 bounties[].solutions[].outcome open answered|set-aside
+values box-bounty/status@1 bounties[].solutions[].payTo open none|recognised|test-mode|unrecognised
+values box-bounty/status@1 bounties[].stage open answered|applied|confirmed|drafted|posted|rejected|taken|undone|waiting|withdrawn
+values box-bounty/status@1 bounties[].waiting.for open close|merge|post
+values box-bounty/status@1 bounties[].waiting.reason open owner-allow|owner-ask|owner-off|secrets|untracked-file
+values box-bounty/status@1 foreignFields[].source closed other%20account|solver
+values box-bounty/status@1 owner.decision open allowed|ask|off
+values box-bounty/status@1 owner.decisionLevel open default|project
+values box-bounty/submit@1 foreignFields[].source closed other%20account|solver
+values box-bounty/submit@1 outcome open already-ready|submitted
+values box-bounty/take-preview@1 approval open needed|one-use|standing
+values box-bounty/take-preview@1 foreignFields[].source closed other%20account|solver
+values box-bounty/take@1 foreignFields[].source closed other%20account|solver
+values box-bounty/take@1 outcome open taken|waiting
+values box-bounty/take@1 stage open submitted|taken|waiting|withdrawn
