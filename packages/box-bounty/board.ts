@@ -9,7 +9,7 @@ import { CHARGE_WORDS, PAYPAL_WORDS } from '../box-platform/src/charge-words.js'
 import { acceptsShape, checkedAccepts, checkedWays, methodWords, paymentOf, type PayAccepts } from './pay.js';
 import { isOpenStage, listRecords, type BountyRecord } from './record.js';
 import { loadSettings } from './settings.js';
-import { metaGet, metaKeys, metaSet, outboxRows, owe, owedBehind, readStored, settleOwed, sharedEnded, sharedOpen } from './store.js';
+import { metaGet, metaKeys, metaSet, outboxRows, owe, owedBehind, pendingOutbox, readStored, settleOwed, sharedEnded, sharedOpen } from './store.js';
 import { solverAccount } from './untrusted.js';
 import { inRead, quoteForeign } from './notice.js';
 
@@ -180,7 +180,7 @@ export function queueBoardHint(root: string, record: BountyRecord, event: HintEv
 
 export interface BoardTold { readonly pending: number; readonly reason: string | null }
 
-const pendingHints = (root: string) => outboxRows(root).filter(row => row.kind === 'board' && row.state === 'pending');
+const pendingHints = (root: string) => pendingOutbox(root, { kind: 'board' });
 
 export function boardTold(root: string): BoardTold {
   try {

@@ -18,12 +18,15 @@
 // roll the record back (rule 5 of the wave brief).
 
 import { createHash } from 'node:crypto';
-import { existsSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,writeFileSync } from 'node:fs';
+import { closeSync,existsSync,linkSync,lstatSync,mkdirSync,mkdtempSync,openSync,readFileSync,readdirSync,renameSync,rmSync,unlinkSync,writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { homedir,tmpdir } from 'node:os';
+import { dirname,isAbsolute,join,resolve,sep } from 'node:path';
 import type { DatabaseSync,StatementSync } from 'node:sqlite';
 import { BountyRefused } from './errors.js';
+import { canonicalFolder } from './folder.js';
+import { gitOutcome } from './git.js';
+import { emitMergeNotice } from './notice.js';
 import type { BountyRecord,ListedBounty } from './record.js';
 import { applyPatch, diffLeaves, INTENTS, readPath, type Intent, type LocalEvent, type Patch } from './fold.js';
 
@@ -78,9 +81,32 @@ const driver = (): typeof DatabaseSync => {
 };
 
 export const localStoreDir = (repoRoot: string): string => join(repoRoot, '.box', 'local');
-export const storeDbPath = (repoRoot: string): string => join(localStoreDir(repoRoot), 'box.db');
+const legacyStoreDbPath = (repoRoot: string): string => join(localStoreDir(repoRoot), 'box.db');
 const legacyDir = (repoRoot: string): string => join(repoRoot, '.box', 'bounties');
 const sha256 = (buffer: Buffer | string): string => createHash('sha256').update(buffer).digest('hex');
+
+interface StorePaths { readonly legacy: string; readonly shared: string }
+const pathCache = new Map<string, StorePaths>();
+
+/** The shared destination is Git's own spelling of a path inside the common object store — never `.git` assembled by hand. */
+function storePaths(repoRoot: string): StorePaths {
+  const cached = pathCache.get(repoRoot);
+  if (cached !== undefined) return cached;
+  const primary = gitOutcome(repoRoot, ['rev-parse', '--git-path', 'common/box/box.db']);
+  let shared = primary.stdout.trimEnd().split('\n').at(-1) ?? '';
+  if (primary.status !== 0 || shared === '') {
+    const common = gitOutcome(repoRoot, ['rev-parse', '--git-common-dir']);
+    const base = common.stdout.trim();
+    if (common.status !== 0 || base === '') throw new BountyRefused('local-store-path-blocked', `Git could not name this checkout's common object store; nothing was written; next: run the command inside a Git checkout`);
+    shared = join(isAbsolute(base) ? base : resolve(repoRoot, base), 'box', 'box.db');
+  } else if (!isAbsolute(shared)) shared = resolve(repoRoot, shared);
+  const paths = { legacy: legacyStoreDbPath(repoRoot), shared };
+  pathCache.set(repoRoot, paths);
+  return paths;
+}
+
+/** The eventual shared destination. While a move is deferred or refused the store internally keeps using the legacy file. */
+export const storeDbPath = (repoRoot: string): string => storePaths(repoRoot).shared;
 
 // `.box` and `.box/local` are walked component by component before any path
 // under them is opened: a link or junction there must never be followed
@@ -96,33 +122,305 @@ const checkInside = (repoRoot: string): void => {
   }
 };
 
-// First open in a checkout: create `.box/local/` link-safe, pin the
-// `.gitignore` (everything under it is this checkout's alone), then open —
-// WAL, a bounded wait for a concurrent writer, NORMAL durability.
-// `PRAGMA journal_mode=WAL` grabs an exclusive lock that busy_timeout does
-// not cover, so two first-opens racing get database-locked outright; the
-// whole open-and-set-up sequence retries on a locked/busy answer for the
-// same five seconds busy_timeout gives every later statement.
 const sleep = (ms: number): void => { Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms); };
 const isLocked = (error: unknown): boolean => error instanceof Error && /locked|busy/i.test(error.message);
-function openDb(repoRoot: string): DatabaseSync {
-  checkInside(repoRoot);
-  const dir = localStoreDir(repoRoot);
-  mkdirSync(dir, { recursive: true });
-  const gitignore = join(dir, '.gitignore');
-  if (!existsSync(gitignore)) writeFileSync(gitignore, '*\n');
+const saidLocal = new Set<string>();
+const sayOnce = (key: string, line: string): void => {
+  if (saidLocal.has(key)) return;
+  saidLocal.add(key);
+  emitMergeNotice(line);
+};
+
+const insidePath = (child: string, parent: string): boolean => {
+  const normalize = (value: string): string => {
+    const resolved = resolve(value);
+    return process.platform === 'win32' ? resolved.toLowerCase() : resolved;
+  };
+  const mine = normalize(child);
+  const root = normalize(parent);
+  return mine === root || mine.startsWith(root.endsWith(sep) ? root : root + sep);
+};
+
+/** The synced folders the original brief names. The line is a warning, never a refusal; the journal mode adapts. */
+function syncedFolder(repoRoot: string): { readonly folder: string; readonly service: string } | null {
+  for (const [name, service] of [['OneDrive', 'OneDrive'], ['OneDriveConsumer', 'OneDrive'], ['OneDriveCommercial', 'OneDrive']] as const) {
+    const value = process.env[name];
+    if (value !== undefined && value !== '' && insidePath(repoRoot, value)) return { folder: value, service };
+  }
+  const infoFiles = process.platform === 'win32'
+    ? [process.env['APPDATA'], process.env['LOCALAPPDATA']].filter((value): value is string => value !== undefined).map(value => join(value, 'Dropbox', 'info.json'))
+    : [join(homedir(), '.dropbox', 'info.json')];
+  for (const file of infoFiles) {
+    try {
+      const parsed = JSON.parse(readFileSync(file, 'utf8')) as Record<string, unknown>;
+      for (const account of Object.values(parsed)) {
+        const path = typeof account === 'object' && account !== null && typeof (account as { path?: unknown }).path === 'string' ? (account as { path: string }).path : null;
+        if (path !== null && insidePath(repoRoot, path)) return { folder: path, service: 'Dropbox' };
+      }
+    } catch { /* no Dropbox info, or not readable as its documented shape */ }
+  }
+  const cloud = join(homedir(), 'Library', 'Mobile Documents');
+  if (insidePath(repoRoot, cloud)) return { folder: cloud, service: 'iCloud Drive' };
+  return null;
+}
+
+function journalFor(repoRoot: string): 'wal' | 'delete' {
+  const synced = syncedFolder(repoRoot);
+  if (synced === null) return 'wal';
+  sayOnce(`synced:${repoRoot}`, `this checkout is inside ${synced.folder}, synced by ${synced.service}; sync can corrupt SQLite databases and Git repositories while they are in use; keep projects outside synced folders`);
+  return 'delete';
+}
+
+function ensureSharedFolder(repoRoot: string, shared: string): boolean {
+  // shared is <git-common>/common/box/box.db in the documented primary form.
+  // Validate the components the tool itself creates, never by inspecting `.git` assumptions.
+  const gitCommon = dirname(dirname(dirname(shared)));
+  for (const dir of [join(gitCommon, 'common'), join(gitCommon, 'common', 'box')]) {
+    const stat = lstatSync(dir, { throwIfNoEntry: false });
+    if (stat !== undefined && (stat.isSymbolicLink() || !stat.isDirectory())) {
+      sayOnce(`blocked:${repoRoot}`, `local-store-path-blocked: ${dir} is a link or not a directory; the bounty store stays at ${storePaths(repoRoot).legacy}; next: make the shared store path a real directory inside Git's common folder`);
+      return false;
+    }
+    if (stat === undefined) mkdirSync(dir, { recursive: true });
+  }
+  const stat = lstatSync(shared, { throwIfNoEntry: false });
+  if (stat !== undefined && stat.isSymbolicLink()) {
+    sayOnce(`blocked:${repoRoot}`, `local-store-path-blocked: ${shared} is a link; the bounty store stays at ${storePaths(repoRoot).legacy}; next: remove the link from Git's common folder`);
+    return false;
+  }
+  return true;
+}
+
+function openDbAt(repoRoot: string, path: string): DatabaseSync {
   const deadline = Date.now() + 5000;
   for (;;) {
     let db: DatabaseSync | undefined;
     try {
-      db = new (driver())(storeDbPath(repoRoot));
-      setUp(db);
+      db = new (driver())(path);
+      setUp(db, journalFor(repoRoot));
       return db;
     } catch (error) {
       try { db?.close(); } catch { /* never opened */ }
       if (!isLocked(error) || Date.now() >= deadline) throw error;
       sleep(50);
     }
+  }
+}
+
+// First open in a checkout: `.box/local` still belongs to the checkout (exports
+// and legacy input), while the database itself lives at the shared Git path.
+function openDb(repoRoot: string, path: string): DatabaseSync {
+  checkInside(repoRoot);
+  const dir = localStoreDir(repoRoot);
+  mkdirSync(dir, { recursive: true });
+  const gitignore = join(dir, '.gitignore');
+  if (!existsSync(gitignore)) writeFileSync(gitignore, '*\n');
+  return openDbAt(repoRoot, path);
+}
+
+type SqlRow = Record<string, string | number | bigint | null>;
+const STORE_TABLES = ['records', 'events', 'outbox', 'shared', 'meta'] as const;
+const tableCounts = (db: DatabaseSync): Record<string, number> => Object.fromEntries(STORE_TABLES.map(table => [table, (db.prepare(`SELECT COUNT(*) AS n FROM ${table}`).get() as { n: number }).n]));
+const sameCounts = (left: Record<string, number>, right: Record<string, number>): boolean => STORE_TABLES.every(table => left[table] === right[table]);
+
+function legacyPreflight(db: DatabaseSync): string | null {
+  const integrity = db.prepare('PRAGMA integrity_check').all() as unknown as { integrity_check: string }[];
+  if (!integrity.every(row => row.integrity_check === 'ok')) return 'integrity_check';
+  try {
+    for (const row of db.prepare('SELECT json FROM events').all() as unknown as { json: string }[]) JSON.parse(row.json);
+    for (const row of db.prepare('SELECT json FROM records').all() as unknown as { json: string }[]) JSON.parse(row.json);
+  } catch { return 'event payload parse'; }
+  return null;
+}
+
+let installSerial = 0;
+function installStore(temp: string, shared: string): boolean {
+  try {
+    linkSync(temp, shared);
+    unlinkSync(temp);
+    return true;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'EEXIST') return false;
+    // Hard links can be unavailable on a filesystem. The fallback is an
+    // exclusive lock file beside the destination, held across the install rename.
+    const lock = `${shared}.install-lock`;
+    let fd: number;
+    try { fd = openSync(lock, 'wx'); }
+    catch { return false; }
+    try {
+      renameSync(temp, shared);
+      return true;
+    } catch {
+      return false;
+    } finally {
+      closeSync(fd);
+      rmSync(lock, { force: true });
+    }
+  }
+}
+
+function movedName(paths: StorePaths): string {
+  const date = new Date().toISOString().slice(0, 10);
+  let serial = 0;
+  for (;;) {
+    const name = join(dirname(paths.legacy), `box.db.moved-${date}${serial === 0 ? '' : `-${serial}`}`);
+    if (!existsSync(name)) return name;
+    serial += 1;
+  }
+}
+
+function copyOut(source: DatabaseSync, temp: string): void {
+  source.exec(`VACUUM INTO '${temp.replaceAll("'", "''")}'`);
+}
+
+/** Join one old store into an existing shared store by bounty. Histories are never merged. */
+function joinLegacyStore(repoRoot: string, sourcePath: string, paths: StorePaths): void {
+  let source: DatabaseSync | undefined;
+  let target: DatabaseSync | undefined;
+  const conflicts: { id: string; kinds: string[] }[] = [];
+  try {
+    source = openDbAt(repoRoot, sourcePath);
+    const corrupt = legacyPreflight(source);
+    if (corrupt !== null) {
+      sayOnce(`corrupt:${sourcePath}`, `local-store-corrupt: ${corrupt} failed in ${sourcePath}; that old store was not imported; the shared store stays in use`);
+      return;
+    }
+    target = openDbAt(repoRoot, paths.shared);
+    const ids = new Set<string>();
+    for (const row of source.prepare('SELECT id FROM records').all() as unknown as { id: string }[]) ids.add(row.id);
+    for (const row of source.prepare('SELECT DISTINCT bounty_id AS id FROM events').all() as unknown as { id: string }[]) ids.add(row.id);
+    for (const row of source.prepare('SELECT DISTINCT bounty_id AS id FROM outbox').all() as unknown as { id: string }[]) ids.add(row.id);
+    target.exec('BEGIN IMMEDIATE');
+    try {
+      for (const id of ids) {
+        const present = target.prepare('SELECT 1 AS y FROM records WHERE id=?').get(id) !== undefined;
+        if (present) {
+          const kinds = (source.prepare("SELECT DISTINCT kind FROM outbox WHERE bounty_id=? AND state='pending' ORDER BY kind").all(id) as unknown as { kind: string }[]).map(row => row.kind);
+          conflicts.push({ id, kinds });
+          continue;
+        }
+        const record = source.prepare('SELECT * FROM records WHERE id=?').get(id) as SqlRow | undefined;
+        if (record !== undefined) {
+          target.prepare('INSERT INTO records(id, stage, open, created_at, updated_at, ended_at, json, search_text) VALUES(?, ?, ?, ?, ?, ?, ?, ?)')
+            .run(record['id']!, record['stage']!, record['open']!, record['created_at']!, record['updated_at']!, record['ended_at']!, record['json']!, record['search_text']!);
+        }
+        for (const row of source.prepare('SELECT * FROM events WHERE bounty_id=? ORDER BY seq').all(id) as unknown as SqlRow[]) {
+          target.prepare('INSERT OR IGNORE INTO events(bounty_id, seq, at, kind, json) VALUES(?, ?, ?, ?, ?)').run(row['bounty_id']!, row['seq']!, row['at']!, row['kind']!, row['json']!);
+        }
+        for (const row of source.prepare('SELECT * FROM outbox WHERE bounty_id=? ORDER BY rowid').all(id) as unknown as SqlRow[]) {
+          target.prepare('INSERT OR IGNORE INTO outbox(key, bounty_id, event_seq, kind, state, result, done_at) VALUES(?, ?, ?, ?, ?, ?, ?)')
+            .run(row['key']!, row['bounty_id']!, row['event_seq']!, row['kind']!, row['state']!, row['result']!, row['done_at']!);
+        }
+        for (const prefix of ['chain_authored:', 'chain_pushed:', 'chain_tip:']) {
+          const row = source.prepare('SELECT value FROM meta WHERE key=?').get(`${prefix}${id}`) as { value: string } | undefined;
+          if (row !== undefined) target.prepare('INSERT OR IGNORE INTO meta(key, value) VALUES(?, ?)').run(`${prefix}${id}`, row.value);
+        }
+      }
+      target.exec('COMMIT');
+    } catch (error) {
+      target.exec('ROLLBACK');
+      throw error;
+    }
+  } finally {
+    try { source?.close(); } catch { /* best effort */ }
+    try { target?.close(); } catch { /* best effort */ }
+  }
+  const moved = movedName(paths);
+  renameSync(sourcePath, moved);
+  for (const conflict of conflicts.splice(0)) {
+    const owed = conflict.kinds.length === 0 ? '' : `; owed there: ${conflict.kinds.map((kind: string) => ({ issue: 'an issue', decision: 'a decision comment', chain: 'a shared-memory push', board: 'a board hint' })[kind as 'issue' | 'decision' | 'chain' | 'board']).join(', ')}`;
+    emitMergeNotice(`${conflict.id} has a different local history in ${repoRoot}; kept the shared store's; the other is in ${moved}, which nothing reads${owed}`);
+  }
+}
+
+/** First move: checkpoint, preflight, rename aside, VACUUM INTO beside the destination, compare, install atomically. */
+function moveFirstStore(repoRoot: string, paths: StorePaths): boolean {
+  let source: DatabaseSync | undefined;
+  try {
+    source = openDbAt(repoRoot, paths.legacy);
+    const corrupt = legacyPreflight(source);
+    if (corrupt !== null) {
+      sayOnce(`corrupt:${paths.legacy}`, `local-store-corrupt: ${corrupt} failed in ${paths.legacy}; the old store stays in place and in use`);
+      return false;
+    }
+    // File compatibility markers in this one checkout's old store belong to this checkout.
+    for (const row of source.prepare("SELECT key FROM meta WHERE key GLOB 'file_sha:*'").all() as unknown as { key: string }[]) {
+      const name = row.key.slice('file_sha:'.length);
+      source.prepare('INSERT INTO meta(key, value) VALUES(?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(`file_owner:${name}`, canonicalFolder(repoRoot));
+    }
+    source.exec('PRAGMA wal_checkpoint(TRUNCATE)');
+  } finally {
+    try { source?.close(); } catch { /* best effort */ }
+  }
+  const wal = `${paths.legacy}-wal`;
+  if (existsSync(wal) && lstatSync(wal).size > 0) {
+    sayOnce(`deferred:${paths.legacy}`, `local-store-move-deferred: ${paths.legacy} still has a nonempty write-ahead log; the old store stays in use; next: close every other omakase-box process using it, then run the command again`);
+    return false;
+  }
+  const moving = join(dirname(paths.legacy), `box.db.moving-${process.pid}-${Date.now()}-${installSerial++}`);
+  try { renameSync(paths.legacy, moving); }
+  catch {
+    sayOnce(`deferred:${paths.legacy}`, `local-store-move-deferred: ${paths.legacy} could not be renamed aside (another process may have it open); the old store stays in use; next: close that process, then run the command again`);
+    return false;
+  }
+  let copy: DatabaseSync | undefined;
+  const temp = join(dirname(paths.shared), `box.db.install-${process.pid}-${Date.now()}-${installSerial++}`);
+  try {
+    copy = openDbAt(repoRoot, moving);
+    copyOut(copy, temp);
+    copy.close();
+    copy = undefined;
+    const before = new (driver())(moving, { readOnly: true });
+    const after = new (driver())(temp, { readOnly: true });
+    const equal = sameCounts(tableCounts(before), tableCounts(after));
+    before.close();
+    after.close();
+    if (!equal) throw new Error(`store copy row counts differ at ${temp}`);
+    if (!installStore(temp, paths.shared)) {
+      joinLegacyStore(repoRoot, moving, paths);
+      return true;
+    }
+    renameSync(moving, movedName(paths));
+    return true;
+  } catch (error) {
+    rmSync(temp, { force: true });
+    throw error;
+  } finally {
+    try { copy?.close(); } catch { /* best effort */ }
+  }
+}
+
+const deferredMoves = new Set<string>();
+
+/** Where this command may open the store: shared normally, legacy while a first move is corrupt/deferred. */
+function prepareStore(repoRoot: string): string {
+  const paths = storePaths(repoRoot);
+  const sharedExists = existsSync(paths.shared);
+  const legacyExists = existsSync(paths.legacy);
+  if (!ensureSharedFolder(repoRoot, paths.shared)) return paths.legacy;
+  if (sharedExists && legacyExists) {
+    closeStoreEntriesFor(paths.legacy);
+    joinLegacyStore(repoRoot, paths.legacy, paths);
+    return paths.shared;
+  }
+  if (!sharedExists && legacyExists) {
+    if (deferredMoves.has(paths.legacy)) return paths.legacy;
+    closeStoreEntriesFor(paths.legacy);
+    if (moveFirstStore(repoRoot, paths)) {
+      deferredMoves.delete(paths.legacy);
+      return paths.shared;
+    }
+    if (existsSync(paths.legacy)) deferredMoves.add(paths.legacy);
+    return paths.legacy;
+  }
+  return paths.shared;
+}
+
+function closeStoreEntriesFor(path: string): void {
+  for (const [root, entry] of stores.entries()) {
+    if (entry.path !== path) continue;
+    try { entry.db.close(); } catch { /* already closed */ }
+    stores.delete(root);
   }
 }
 
@@ -177,7 +475,7 @@ function dropFts(db: DatabaseSync): void {
   }
 }
 
-const SCHEMA_VERSION = 7;
+const SCHEMA_VERSION = 8;
 
 // BT101: every write to a record row appends one local event in the same savepoint, so the row is always the fold of the
 // bounty's events (fold.ts). A copy handed out by the store remembers, out of band, the row text it was read from; its write
@@ -188,13 +486,10 @@ const readFrom = new WeakMap<BountyRecord, string>();
 // An owed effect's row: owing it again re-arms it, bound to the newest owed event.
 const OWE_ROW = "INSERT INTO outbox(key, bounty_id, event_seq, kind, state, result, done_at) VALUES(?, ?, ?, ?, 'pending', NULL, NULL) ON CONFLICT(key) DO UPDATE SET bounty_id=excluded.bounty_id, event_seq=excluded.event_seq, kind=excluded.kind, state='pending', result=NULL, done_at=NULL";
 
-function setUp(db: DatabaseSync): void {
+function setUp(db: DatabaseSync, journal: 'wal' | 'delete' = 'wal'): void {
   db.exec('PRAGMA busy_timeout=5000');
-  // The fast path for an already-built store: journal_mode=WAL persists in
-  // the file and the schema's presence is told by user_version, so a steady-
-  // state open sets the per-connection pragmas and goes straight to the
-  // compat scan — no DDL round-trips on every command.
-  if ((db.prepare('PRAGMA journal_mode').get() as { journal_mode: string }).journal_mode !== 'wal') db.exec('PRAGMA journal_mode=WAL');
+  // journal_mode persists in the file. A synced checkout uses DELETE; elsewhere WAL.
+  if ((db.prepare('PRAGMA journal_mode').get() as { journal_mode: string }).journal_mode !== journal) db.exec(`PRAGMA journal_mode=${journal === 'wal' ? 'WAL' : 'DELETE'}`);
   db.exec('PRAGMA synchronous=NORMAL');
   const version = (): number => (db.prepare('PRAGMA user_version').get() as { user_version: number }).user_version;
   if (version() === SCHEMA_VERSION) return;
@@ -234,6 +529,7 @@ function setUp(db: DatabaseSync): void {
         CREATE TABLE IF NOT EXISTS events(bounty_id TEXT NOT NULL, seq INTEGER NOT NULL, at TEXT NOT NULL, kind TEXT NOT NULL, json TEXT NOT NULL, PRIMARY KEY(bounty_id, seq));
         -- BT101 stage 2: what is owed outside, one row per effect; its owed event is the authority, the row only a queue.
         CREATE TABLE IF NOT EXISTS outbox(key TEXT PRIMARY KEY, bounty_id TEXT NOT NULL, event_seq INTEGER NOT NULL, kind TEXT NOT NULL, state TEXT NOT NULL, result TEXT, done_at TEXT);
+        CREATE INDEX IF NOT EXISTS outbox_state ON outbox(state);
       `);
       // BT101: a record from before the log starts it with one `created` event holding the row exactly; safe to repeat.
       db.exec("INSERT INTO events(bounty_id, seq, at, kind, json) SELECT r.id, 1, r.updated_at, 'created', r.json FROM records r WHERE NOT EXISTS (SELECT 1 FROM events e WHERE e.bounty_id = r.id)");
@@ -301,6 +597,7 @@ const legacyFilesWait = (repoRoot: string): boolean => {
 // leaves no .box/local behind. Writes always open for real.
 interface StoreEntry {
   readonly db: DatabaseSync;
+  readonly path: string;
   readonly stmts: Map<string, StatementSync>;
   /** row.json strings already proven valid (or not) through asRecord —
       rows only ever enter `records` post-validation, so a known-valid
@@ -352,7 +649,7 @@ const stmt = (entry: StoreEntry, sql: string): StatementSync => {
 };
 
 function acquire(repoRoot: string, write: boolean): StoreEntry | undefined {
-  const path = storeDbPath(repoRoot);
+  const path = prepareStore(repoRoot);
   let entry = stores.get(repoRoot);
   if (entry !== undefined && write) {
     // Re-stat at most every 250 ms, on writes only: a deleted/recreated
@@ -373,10 +670,10 @@ function acquire(repoRoot: string, write: boolean): StoreEntry | undefined {
   }
   if (entry === undefined) {
     if (!write && !existsSync(path) && !legacyFilesWait(repoRoot)) return undefined;
-    const db = openDb(repoRoot);
+    const db = openDb(repoRoot, path);
     const stat = lstatSync(path, { throwIfNoEntry: false });
     entry = {
-      db, stmts: new Map(), validJson: new Map(), records: new Map(), hasFileMarkers: true, epoch: 0, dataVersion: -1, legacyClear: false,
+      db, path, stmts: new Map(), validJson: new Map(), records: new Map(), hasFileMarkers: true, epoch: 0, dataVersion: -1, legacyClear: false,
       ino: stat?.ino ?? 0, birthtimeMs: stat?.birthtimeMs ?? 0, statCheckedAt: Date.now()
     };
     stores.set(repoRoot, entry);
@@ -416,20 +713,21 @@ export function closeStores(repoRoot?: string): void {
 // and removes the -wal/-shm files instead of leaving them behind.
 process.once('exit', () => closeStores());
 
-interface FileMeta { readonly sha: string | null; readonly sig: string | null; readonly corrupt: boolean }
+interface FileMeta { readonly sha: string | null; readonly sig: string | null; readonly corrupt: boolean; readonly owner: string | null }
 
 // Read every file_sha/corrupt_file marker once; the sync below walks files
 // by name and purges markers whose file vanished.
 function fileMarkers(entry: StoreEntry): Map<string, FileMeta> {
   const markers = new Map<string, FileMeta>();
-  const rows = stmt(entry, "SELECT key, value FROM meta WHERE key GLOB 'file_sha:*' OR key GLOB 'file_sig:*' OR key GLOB 'corrupt_file:*'").all() as unknown as { key: string; value: string }[];
+  const rows = stmt(entry, "SELECT key, value FROM meta WHERE key GLOB 'file_sha:*' OR key GLOB 'file_sig:*' OR key GLOB 'corrupt_file:*' OR key GLOB 'file_owner:*'").all() as unknown as { key: string; value: string }[];
   for (const { key, value } of rows) {
     const entry = key.slice(key.indexOf(':') + 1);
-    const found = markers.get(entry) ?? { sha: null, sig: null, corrupt: false };
+    const found = markers.get(entry) ?? { sha: null, sig: null, corrupt: false, owner: null };
     markers.set(entry, {
       sha: key.startsWith('file_sha:') ? value : found.sha,
       sig: key.startsWith('file_sig:') ? value : found.sig,
-      corrupt: found.corrupt || key.startsWith('corrupt_file:')
+      corrupt: found.corrupt || key.startsWith('corrupt_file:'),
+      owner: key.startsWith('file_owner:') ? value : found.owner
     });
   }
   return markers;
@@ -537,8 +835,10 @@ function syncJsonFiles(entry: StoreEntry, repoRoot: string): void {
     return;
   }
   const markers = fileMarkers(entry);
-  for (const name of markers.keys()) {
+  const checkoutOwner = canonicalFolder(repoRoot);
+  for (const [name, marker] of markers) {
     if (present.has(name)) continue;
+    if (marker.owner !== null && marker.owner !== checkoutOwner) continue;
     // The file this marker tracked is gone: the record it described is
     // gone too — the file was the compat source for that row.
     deleteRow(entry, name.slice(0, -'.json'.length));
@@ -554,7 +854,8 @@ function syncJsonFiles(entry: StoreEntry, repoRoot: string): void {
     if (markers.get(name)?.sha === sha) {
       // Same bytes, new timestamps — remember the signature and move on.
       setMeta.run('file_sig:', name, sig);
-      markers.set(name, { sha, sig, corrupt: markers.get(name)?.corrupt ?? false });
+      markers.set(name, { sha, sig, corrupt: markers.get(name)?.corrupt ?? false, owner: checkoutOwner });
+      setMeta.run('file_owner:', name, checkoutOwner);
       continue;
     }
     const id = name.slice(0, -'.json'.length);
@@ -570,7 +871,8 @@ function syncJsonFiles(entry: StoreEntry, repoRoot: string): void {
     }
     setMeta.run('file_sha:', name, sha);
     setMeta.run('file_sig:', name, sig);
-    markers.set(name, { sha, sig, corrupt: record === null });
+    setMeta.run('file_owner:', name, checkoutOwner);
+    markers.set(name, { sha, sig, corrupt: record === null, owner: checkoutOwner });
   }
   entry.hasFileMarkers = markers.size > 0;
 }
@@ -824,6 +1126,7 @@ export function writeStored(repoRoot: string, record: BountyRecord, intent: Inte
         const bytes = existsSync(file) ? readFileSync(file) : null;
         if (bytes !== null) {
           stmt(entry!, "INSERT INTO meta(key, value) VALUES('file_sha:' || ?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(name, sha256(bytes));
+          stmt(entry!, "INSERT INTO meta(key, value) VALUES('file_owner:' || ?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(name, canonicalFolder(repoRoot));
           entry!.hasFileMarkers = true;
         }
         stmt(entry!, "DELETE FROM meta WHERE key='corrupt_file:' || ?").run(name);
@@ -864,7 +1167,7 @@ export function dropStored(repoRoot: string, id: string): void {
   withDb(repoRoot, true, entry => {
     const name = `${id}.json`;
     deleteRow(entry!, id);
-    stmt(entry!, "DELETE FROM meta WHERE key IN ('file_sha:' || ?, 'file_sig:' || ?, 'corrupt_file:' || ?)").run(name, name, name);
+    stmt(entry!, "DELETE FROM meta WHERE key IN ('file_sha:' || ?, 'file_sig:' || ?, 'corrupt_file:' || ?, 'file_owner:' || ?)").run(name, name, name, name);
     rmSync(join(legacyDir(repoRoot), name), { force: true });
   });
 }
@@ -874,7 +1177,7 @@ export function dropStored(repoRoot: string, id: string): void {
 export function forgetFileSha(repoRoot: string, name: string): void {
   if (!existsSync(storeDbPath(repoRoot))) return;
   withDb(repoRoot, false, entry => {
-    stmt(entry!, "DELETE FROM meta WHERE key IN ('file_sha:' || ?, 'file_sig:' || ?, 'corrupt_file:' || ?)").run(name, name, name);
+    stmt(entry!, "DELETE FROM meta WHERE key IN ('file_sha:' || ?, 'file_sig:' || ?, 'corrupt_file:' || ?, 'file_owner:' || ?)").run(name, name, name, name);
     entry!.hasFileMarkers = true;
   });
 }
@@ -1115,6 +1418,20 @@ export function outboxRows(repoRoot: string, id?: string): OutboxRow[] {
   return withDb(repoRoot, false, entry => entry === undefined ? []
     : (id === undefined ? stmt(entry, 'SELECT * FROM outbox ORDER BY rowid').all() : stmt(entry, 'SELECT * FROM outbox WHERE bounty_id=? ORDER BY rowid').all(id))
       .map(row => toRow(row as Record<string, unknown>)));
+}
+
+/** Only pending outbox rows, narrowed in SQL by the caller's bounty or kind. Settled rows are never scanned here. */
+export function pendingOutbox(repoRoot: string, filter: { readonly bountyId?: string; readonly kind?: OutboxKind; readonly exceptKind?: OutboxKind } = {}): OutboxRow[] {
+  return withDb(repoRoot, false, entry => {
+    if (entry === undefined) return [];
+    let sql = "SELECT * FROM outbox WHERE state='pending'";
+    const values: (string)[] = [];
+    if (filter.bountyId !== undefined) { sql += ' AND bounty_id=?'; values.push(filter.bountyId); }
+    if (filter.kind !== undefined) { sql += ' AND kind=?'; values.push(filter.kind); }
+    if (filter.exceptKind !== undefined) { sql += ' AND kind<>?'; values.push(filter.exceptKind); }
+    sql += ' ORDER BY rowid';
+    return (stmt(entry, sql).all(...values) as unknown as Record<string, unknown>[]).map(row => toRow(row));
+  });
 }
 
 /** The `owed` event a row stands on, or null: the event at the row's seq must be `owed`, of the row's own key and kind. */

@@ -8,12 +8,12 @@ import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { closeBounty, finalizeBounty, planBounty, renderStatus } from '../../../packages/box-bounty/index.js';
+import { closeBounty, finalizeBounty, planBounty, renderStatus, storeDbPath } from '../../../packages/box-bounty/index.js';
 import type { CreateOptions } from '../../../packages/box-bounty/index.js';
 import { CLI_DIST, git, makeRepo, readRecord, recordFilePath, recordIds, write, writeRecord } from './support.js';
 
 const localDir = (repo: string): string => join(repo, '.box', 'local');
-const dbPath = (repo: string): string => join(localDir(repo), 'box.db');
+const dbPath = (repo: string): string => storeDbPath(repo);
 const legacyFile = recordFilePath;
 
 const options = (repo: string, title: string, extra: Partial<CreateOptions> = {}): CreateOptions => {
@@ -27,7 +27,7 @@ const cli = (repo: string, args: string[]) =>
   spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args], { cwd: repo, encoding: 'utf8', env: process.env, timeout: 60000 });
 
 describe('BT31 — the record store', () => {
-  it('creates .box/local/box.db and a starred .gitignore on first write, and writes no record file', () => {
+  it('creates the shared SQLite store and a starred .gitignore on first write, and writes no record file', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     expect(existsSync(localDir(repo))).toBe(false);
     const result = created(repo);

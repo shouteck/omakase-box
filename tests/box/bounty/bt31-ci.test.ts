@@ -11,11 +11,11 @@
 import { DatabaseSync } from 'node:sqlite';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { closeStores, finalizeBounty, findBounties, planBounty, renderStatus, searchRecords } from '../../../packages/box-bounty/index.js';
+import { closeStores, finalizeBounty, findBounties, planBounty, renderStatus, searchRecords, storeDbPath } from '../../../packages/box-bounty/index.js';
 import type { CreateOptions } from '../../../packages/box-bounty/index.js';
 import { makeRepo, write } from './support.js';
 
-const dbPath = (repo: string): string => join(repo, '.box', 'local', 'box.db');
+const dbPath = (repo: string): string => storeDbPath(repo);
 
 const probe = new DatabaseSync(':memory:');
 const hostHasFts5 = (probe.prepare("SELECT sqlite_compileoption_used('ENABLE_FTS5') AS f").get() as { f: number }).f === 1;
@@ -82,7 +82,7 @@ describe('BT31-ci — one plain search on every Node', () => {
     expect(renderStatus(repo)).toContain('batching');
     expectSeedAnswers(repo);
     expect(ftsNames(repo)).toEqual([]);
-    expect(userVersion(repo)).toBe(7);
+    expect(userVersion(repo)).toBe(8);
   });
 
   it('find parser returns a record with "parser" and one with "subparser"', () => {
@@ -104,7 +104,7 @@ describe('BT31-ci — one plain search on every Node', () => {
       expect(found(repo, 'parser')).toEqual(['batching drafted why', 'cache drafted task', 'inner drafted task']);
       expect(found(repo, 'guide')).toEqual(['docs drafted why']);
       expect(ftsNames(repo)).toEqual([]);
-      expect(userVersion(repo)).toBe(7);
+      expect(userVersion(repo)).toBe(8);
       expect(inspect(repo, db => db.prepare("SELECT value FROM meta WHERE key='fts_stale'").get())).toBeUndefined();
       expect(inspect(repo, db => (db.prepare("SELECT COUNT(*) AS n FROM records WHERE search_text=''").get() as { n: number }).n)).toBe(0);
       expect(inspect(repo, db => (db.prepare('PRAGMA integrity_check').get() as { integrity_check: string }).integrity_check)).toBe('ok');
@@ -112,7 +112,7 @@ describe('BT31-ci — one plain search on every Node', () => {
       create(repo, 'later', 'the parser again', 'tidy up');
       expect(found(repo, 'parser')).toHaveLength(4);
       expect(found(repo, 'tidy')).toEqual(['later drafted task']);
-      expect(userVersion(repo)).toBe(7);
+      expect(userVersion(repo)).toBe(8);
     });
   }
 
@@ -137,7 +137,7 @@ describe('BT31-ci — one plain search on every Node', () => {
     expect(ftsNames(repo)).toContain('records_fts');
     expectSeedAnswers(repo);
     expect(ftsNames(repo)).toEqual([]);
-    expect(userVersion(repo)).toBe(7);
+    expect(userVersion(repo)).toBe(8);
     expect(inspect(repo, db => (db.prepare('PRAGMA integrity_check').get() as { integrity_check: string }).integrity_check)).toBe('ok');
   });
 });

@@ -29,7 +29,7 @@
 import { resolve } from 'node:path';
 import { canonicalFolder } from './folder.js';
 import { BountyRefused } from './errors.js';
-import { git, gitNamedBlobs, gitOutcome, gitRefsWrite, gitStdin, gitWriteBlob } from './git.js';
+import { git, gitNamedBlobs, gitOutcome, gitRefCompareAndSwap, gitRefsWrite, gitStdin, gitWriteBlob } from './git.js';
 import type { RefWrite } from './git.js';
 import { isObject } from './gh.js';
 import { firstSightShape,type FirstSight } from './pay.js';
@@ -38,7 +38,7 @@ import { emitMergeNotice, emitSentEarlier, inRead } from './notice.js';
 import type { Attempt, BountyRecord } from './record.js';
 import { scanText } from './scan.js';
 import { loadState, requireRepository, saveState } from './settings.js';
-import { importShared, metaGet, metaKeys, metaSet, outboxRows, owe, owedBehind, pendingOwed, settleOwed } from './store.js';
+import { importShared, metaGet, metaKeys, metaSet, outboxRows, owe, owedBehind, pendingOutbox, pendingOwed, settleOwed } from './store.js';
 import type { SharedRow } from './store.js';
 import { toolVersion } from './create.js';
 
@@ -150,7 +150,7 @@ const owedTip = (root: string, id: string): string | null => pendingOwed(root, `
 const oweTip = (root: string, id: string, tip: string): void => { if (owedTip(root, id) !== tip) owe(root, id, 'chain', { tip }); };
 const settleTip = (root: string, id: string, tip: string): void => {
   const row = outboxRows(root, id).find(entry => entry.key === `chain:${id}` && entry.state === 'pending');
-  if (row !== undefined) settleOwed(root, row, 'sent', { detail: `chain pushed at ${tip}` });
+  if (row !== undefined && owedBehind(root, row)?.tip === tip) settleOwed(root, row, 'sent', { detail: `chain pushed at ${tip}` });
 };
 const toolTip = (root: string, id: string, tip: string): boolean =>
   metaGet(root, `chain_authored:${id}`) === tip || owedTip(root, id) === tip;
@@ -160,37 +160,56 @@ const provenTip = (root: string, id: string, tip: string): boolean =>
   metaGet(root, `chain_tip:${id}`) === tip;
 
 // Write one event commit: tree = {event.json: <blob>}, parents given; the
-// local chain ref moves to it. Working tree, index and branches untouched.
-// The commit is recorded as this machine's authored tip — the provenance
-// that later authorizes pushing it.
-function commitEvent(root: string, id: string, eventJson: string, parents: readonly string[]): string {
+// local chain ref moves to it only when it still holds the head the event was
+// built on. Working tree, index and branches untouched. The commit is recorded
+// as this machine's authored tip — the provenance that later authorizes pushing
+// it — only after that compare-and-swap succeeds. Null means the head moved;
+// the objects may exist as ordinary unreachable Git objects, but no ref,
+// provenance row or outbox row moved.
+function commitEvent(root: string, id: string, eventJson: string, parents: readonly string[], expectedOld: string | null): string | null {
   const blob = gitWriteBlob(root, Buffer.from(eventJson, 'utf8'));
   const tree = gitStdin(root, ['mktree'], `100644 blob ${blob}\tevent.json\n`);
   const args = [...IDENTITY, 'commit-tree', tree, '-m', `box-bounty ${id} chain event`];
   for (const parent of parents) args.push('-p', parent);
   const commit = git(root, args);
-  gitRefsWrite(root, [{ update: chainRef(root, id), sha: commit }]);
+  if (!gitRefCompareAndSwap(root, chainRef(root, id), commit, expectedOld)) return null;
   metaSet(root, `chain_authored:${id}`, commit);
   return commit;
 }
 
+const exactObjectId = (value: string | undefined): boolean => value !== undefined && (/^[a-f\d]{40}$/.test(value) || /^[a-f\d]{64}$/.test(value));
+const chainChanged = (id: string): BountyRefused => new BountyRefused('chain-changed', `${id}'s shared memory changed while this ran; nothing was written; next: run it again`);
+
 // Append a built event onto the local chain. The parent is the current tip
 // only when it is itself a chain commit AND carries proven provenance — a
 // planted or swapped local ref is never a parent: a forged tip would
-// otherwise launder its graph under a tool-authored event.
+// otherwise launder its graph under a tool-authored event. The ref update is
+// compare-and-swap: one mismatch rebuilds the same event on the head that won;
+// a second means nothing visible was written.
 export function appendEvent(root: string, id: string, event: ChainEvent): string {
-  // K71: the tip and "does its tree carry event.json" in one `rev-parse` (it names the commit, then the blob at <ref>:event.json, and
-  // exits non-zero when either is missing), where it was a `rev-parse` and then a `cat-file -e`. Either failing means no parent, as before.
   const ref = chainRef(root, id);
-  const resolved = gitOutcome(root, ['rev-parse', ref, `${ref}:event.json`]);
-  const [named, blob] = resolved.stdout.trim().split('\n').map(line => line.trim());
-  const tip = resolved.status === 0 && /^[a-f\d]{40}$/.test(named ?? '') && /^[a-f\d]{40}$/.test(blob ?? '') ? named! : null;
-  const parent = tip !== null && provenTip(root, id, tip) ? [tip] : [];
-  const commit = commitEvent(root, id, JSON.stringify(event) + '\n', parent);
-  // From this moment the authored tip is a pending push — a crash before
-  // pushChain still retries it, bound to exactly this tip.
-  oweTip(root, id, commit);
-  return commit;
+  const json = JSON.stringify(event) + '\n';
+  const attempt = (): string | null => {
+    // K71: the tip and "does its tree carry event.json" in one `rev-parse` (it names the commit, then the blob at <ref>:event.json, and
+    // exits non-zero when either is missing), where it was a `rev-parse` and then a `cat-file -e`. The first stdout line is still the
+    // ref's object id when the blob probe fails, so the actual head — chain-shaped or not — is the compare-and-swap expectation.
+    const resolved = gitOutcome(root, ['rev-parse', ref, `${ref}:event.json`]);
+    const [named, blob] = resolved.stdout.trim().split('\n').map(line => line.trim());
+    const current = exactObjectId(named) ? named! : null;
+    const chainTip = resolved.status === 0 && current !== null && exactObjectId(blob) ? current : null;
+    const parent = chainTip !== null && provenTip(root, id, chainTip) ? [chainTip] : [];
+    return commitEvent(root, id, json, parent, current);
+  };
+  for (let tried = 0; tried < 2; tried += 1) {
+    const commit = attempt();
+    if (commit !== null) {
+      // From this moment the authored tip is a pending push — a crash before
+      // pushChain still retries it, bound to exactly this tip.
+      oweTip(root, id, commit);
+      return commit;
+    }
+  }
+  throw chainChanged(id);
 }
 
 // git-bug's merge of the remote-tracking tip into the local chain:
@@ -217,7 +236,8 @@ function mergeRemoteTip(root: string, id: string): 'new' | 'identical' | 'ahead'
     gitRefsWrite(root, [{ update: chainRef(root, id), sha: remote }]);
     return 'ff';
   }
-  const merge = commitEvent(root, id, JSON.stringify({ v: 1, type: 'merge' }) + '\n', [local, remote]);
+  const merge = commitEvent(root, id, JSON.stringify({ v: 1, type: 'merge' }) + '\n', [local, remote], local);
+  if (merge === null) return 'none'; // the local head moved; the next push/sync pass re-reads it
   oweTip(root, id, merge);
   return 'merged';
 }
@@ -649,8 +669,8 @@ function adoptAndImport(root: string): ChainView {
     } else if (provenTip(root, id, local)) {
       // A genuinely diverged chain this machine is entitled to publish:
       // join the tips under an empty merge event and owe the push.
-      const merge = commitEvent(root, id, JSON.stringify({ v: 1, type: 'merge' }) + '\n', [local, remote]);
-      oweTip(root, id, merge);
+      const merge = commitEvent(root, id, JSON.stringify({ v: 1, type: 'merge' }) + '\n', [local, remote], local);
+      if (merge !== null) oweTip(root, id, merge);
     } else {
       // A foreign diverged tip is never grafted onto the remote graph —
       // adopt the remote tip and leave its objects unreferenced.
@@ -699,8 +719,7 @@ function retryPending(root: string, url?: string, view?: ChainView, own?: string
     view !== undefined ? view.remoteTips.get(id) ?? null : tipOf(root, remoteRef(root, id));
   const ids = new Set<string>();
   const owedAt = new Map<string, string | undefined>();
-  for (const row of outboxRows(root)) {
-    if (row.kind !== 'chain' || row.state !== 'pending') continue;
+  for (const row of pendingOutbox(root, { kind: 'chain' })) {
     const id = row.bountyId;
     if (!CHAIN_ID.test(id) || id === own) continue;
     // A row no owed event stands behind names no tip, so it can never drive a push.
