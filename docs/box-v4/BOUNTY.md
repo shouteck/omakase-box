@@ -250,17 +250,24 @@ later without breaking `@1`.
 
 **Forward compatibility.** Inside one schema version a document may gain keys, and an open field may gain values; a reader written for `@1` must ignore keys it does not know and must not treat an unknown value in an open field as an error. A key disappearing or being renamed, a type changing, a closed field gaining a value, any listed value disappearing, or a meaning changing is breaking and belongs in `@2`. The value-like fields are on record in `tests/box/bounty/SURFACE.txt` as `values <schema> <path> open|closed ...`; values are `|`-separated and percent-encoded when they contain whitespace. Every value-like field is open except `foreignFields[].source`, whose only values are `solver` and `other account`. The open fields are:
 
+- `box-bounty/allow@1`: `decision`, `kind`
 - `box-bounty/apply@1`: `outcome`, `stage`
 - `box-bounty/close@1`: `outcome`, `stage`
-- `box-bounty/config@1`: `allProjects`, `decision`, `repositories{}.decision`, `solving.mode`, `waiting[].for`, `waiting[].reason`
+- `box-bounty/config@1`: `allProjects`, `decision`, `decisionLevel`, `repositories{}.decision`, `repositories{}.history[].decision`, `solving.mode`, `waiting[].for`, `waiting[].reason`
+- `box-bounty/deny@1`: `kind`
+- `box-bounty/describe@1`: `mode`
 - `box-bounty/discover@1`: `began`, `solving.mode`
 - `box-bounty/find@1`: `matches[].stage`
-- `box-bounty/look@1`: `payTo`
+- `box-bounty/hook@1`: `action`
+- `box-bounty/look-export@1`: `source`
+- `box-bounty/look@1`: `files[].change`, `payTo`, `tooLarge.reason`
 - `box-bounty/post@1`: `stage`
 - `box-bounty/refusal@1`: `refused`
+- `box-bounty/setup@1`: `action`
 - `box-bounty/status-wait@1`: `outcome`
-- `box-bounty/status@1`: `bounties[].events[].stage`, `bounties[].github.formatRead`, `bounties[].github.formatRepair`, `bounties[].github.lifecycle`, `bounties[].github.pullRequests[].payTo`, `bounties[].github.state`, `bounties[].mergeNow.result`, `bounties[].solutions[].outcome`, `bounties[].solutions[].payTo`, `bounties[].stage`, `bounties[].waiting.for`, `bounties[].waiting.reason`, `owner.decision`
+- `box-bounty/status@1`: `bounties[].allowedBy.decision`, `bounties[].allowedBy.level`, `bounties[].board.kind`, `bounties[].board.payment`, `bounties[].events[].stage`, `bounties[].github.formatRead`, `bounties[].github.formatRepair`, `bounties[].github.kind`, `bounties[].github.lifecycle`, `bounties[].github.pay.unattributed`, `bounties[].github.pullRequests[].payTo`, `bounties[].github.state`, `bounties[].github.unavailable.reason`, `bounties[].landingChecks[].state`, `bounties[].mergeNow.result`, `bounties[].scanFindings[].where`, `bounties[].solutions[].outcome`, `bounties[].solutions[].payTo`, `bounties[].stage`, `bounties[].waiting.for`, `bounties[].waiting.reason`, `owner.decision`, `owner.decisionLevel`
 - `box-bounty/submit@1`: `outcome`
+- `box-bounty/take-preview@1`: `approval`
 - `box-bounty/take@1`: `outcome`, `stage`
 
 `tests/box/bounty/SURFACE.txt` is the machine-readable record this contract is checked against. A compatible change updates it through `node scripts/surface.mjs --write`; the command refuses a breaking change unless the same change moves that document's schema to `@2`.

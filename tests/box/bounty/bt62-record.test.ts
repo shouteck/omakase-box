@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { BOUNTY_COMMANDS } from '../../../packages/box-bounty/index.js';
-import { OWNERS, SURFACE_FILE } from './surface.js';
+import { OWNERS, SURFACE_FILE, VALUE_FIELDS } from './surface.js';
 
 const record = () => readFileSync(SURFACE_FILE, 'utf8').split('\n').filter(line => line !== '');
 
@@ -25,15 +25,15 @@ describe('BT62: the surface record reads plainly', () => {
     expect([...new Set(unowned)], 'fields recorded for a document no test owns').toEqual([]);
   });
 
-  it('every values line is well formed, owned, attached to a field, and carries at least one encoded value', () => {
+  it('every values line is well formed, owned, named by the value table, and carries at least one encoded value', () => {
     const lines = record();
-    const fields = new Set(lines.filter(line => line.startsWith('field ')).map(line => line.split(' ').slice(1, 3).join(' ')));
+    const declared = new Set(VALUE_FIELDS.map(field => `${field.schema} ${field.path}`));
     const bad: string[] = [];
     for (const line of lines.filter(line => line.startsWith('values '))) {
       const parts = line.split(' ');
       const [, schema, path, openness, encoded] = parts;
-      if (parts.length !== 5 || OWNERS[schema!] === undefined || !fields.has(`${schema} ${path}`) || (openness !== 'open' && openness !== 'closed') || encoded === undefined || encoded.length === 0) bad.push(line);
+      if (parts.length !== 5 || OWNERS[schema!] === undefined || !declared.has(`${schema} ${path}`) || (openness !== 'open' && openness !== 'closed') || encoded === undefined || encoded.length === 0) bad.push(line);
     }
-    expect(bad, 'a malformed, unowned or fieldless values line').toEqual([]);
+    expect(bad, 'a malformed, unowned or undeclared values line').toEqual([]);
   });
 });

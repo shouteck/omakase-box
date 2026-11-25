@@ -1,6 +1,4 @@
-#
-Since BT99 the surface record also carries `values` lines for the value-like JSON fields. `surface.mjs` classifies an added key or a new value in an open field as compatible, and refuses to write a removed or renamed key, a changed type, a removed value, or a new value in a closed field unless that schema moves to `@2`. The record's `open`/`closed` label is derived from the one table in `tests/box/bounty/surface.ts`; its values are read from the product's types and constants, never typed into the record by hand.
- How we write tests for this tool
+# How we write tests for this tool
 
 ## Current commands
 
@@ -11,6 +9,10 @@ env HOME=$HOME/kitchen-home node scripts/verify.mjs test:box-bounty
 ```
 
 For kitchen documentation, use `env HOME=$HOME/kitchen-home node scripts/verify.mjs test:kitchen`. Current suites are `test:box-bounty`, `test:platform` and `test:kitchen`. The retired `test:box-package` exits 2, `Unknown package script`; old wave Results and review excerpts retain historical commands and output, not current acceptance instructions.
+
+## The --json surface
+
+`tests/box/bounty/SURFACE.txt` records the command surface and the shape of every JSON document; since BT99 it also records `values` lines for value-like fields. `node scripts/surface.mjs` derives the record from the built tool and classifies every difference: an added key or a new value in an open field is compatible; a removed or renamed key, a changed type, a removed value, or a new value in a closed field is breaking. `--write` accepts compatible differences but refuses breaking ones unless the same change moves that document's schema to `@2`. The `open`/`closed` label comes only from the table in `tests/box/bounty/surface.ts`; the values themselves are read from the product's types, constants and construction sites, never typed into the record by hand.
 
 Written by the CTO on 12 November 2026 from the evidence in [K51](../../kitchen/reviews/K51-tests.md) to [K65](../../waves/K65.md): the suite grew one wave at a time, mostly as one real repository per test; 31% of the bounty tests take 82% of the time; and a pilot ([K65](../../waves/K65.md)) showed the same guard tested as data plus one repository is about four to five times cheaper (13 tests at 9.9 s against 70 at 2.2 s, start-up included) and catches more. Sources and their limits are in [K51d](../../kitchen/reviews/K51d-how-we-test.md). The cost argument is about the shape of the tests, not any machine: a repository per spelling grows with every spelling on every system.
 

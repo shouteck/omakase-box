@@ -72,9 +72,30 @@ describe('BT99: surface differences are classified by the contract', () => {
     expect(result.versioned).toContain('removed field box-bounty/status@1 bounties[].stage string');
   });
 
+  it('a value removed from an open field is breaking and named', () => {
+    const after = BASE.map(line => line.startsWith('values box-bounty/status@1 bounties[].stage ')
+      ? 'values box-bounty/status@1 bounties[].stage open drafted|posted'
+      : line).sort();
+    const result = classify(BASE, after);
+    expect(result.breaking).toEqual(['removed value box-bounty/status@1 bounties[].stage waiting']);
+  });
+
+  it('a changed field type is breaking and named', () => {
+    const after = BASE.map(line => line === 'field box-bounty/status@1 bounties[].stage string'
+      ? 'field box-bounty/status@1 bounties[].stage null|string'
+      : line).sort();
+    const result = classify(BASE, after);
+    expect(result.breaking).toEqual([
+      'changed type field box-bounty/status@1 bounties[].stage null|string',
+      'changed type removed field box-bounty/status@1 bounties[].stage string'
+    ]);
+  });
+
   it('the values lines are derived, including the open stage list and the one closed source list', () => {
     const lines = staticLines();
     expect(lines).toContain('values box-bounty/status@1 bounties[].stage open answered|applied|confirmed|drafted|posted|rejected|taken|undone|waiting|withdrawn');
     expect(lines).toContain('values box-bounty/status@1 foreignFields[].source closed other%20account|solver');
+    expect(lines).toContain('values box-bounty/status@1 bounties[].landingChecks[].state open not-landed|not-merged|unknown|waiting');
+    expect(lines).toContain('values box-bounty/config@1 solving.mode open allowed|ask|off');
   });
 });
