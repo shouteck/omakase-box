@@ -220,20 +220,20 @@ function mergeRemoteTip(root: string, id: string): 'new' | 'identical' | 'ahead'
   const remote = tipOf(root, remoteRef(root, id));
   if (remote === null) return 'none';
   if (local === null || !isChainCommit(root, local)) {
-    gitRefsWrite(root, [{ update: chainRef(root, id), sha: remote }]);
+    gitRefsWrite(root, [{ update: chainRef(root, id), sha: remote, old: local ?? '0'.repeat(remote.length) }]);
     return 'new';
   }
   if (local === remote) return 'identical';
   if (gitOutcome(root, ['merge-base', '--is-ancestor', remote, local]).status === 0) return 'ahead';
   if (gitOutcome(root, ['merge-base', '--is-ancestor', local, remote]).status === 0) {
-    gitRefsWrite(root, [{ update: chainRef(root, id), sha: remote }]);
+    gitRefsWrite(root, [{ update: chainRef(root, id), sha: remote, old: local }]);
     return 'ff';
   }
   if (!provenTip(root, id, local)) {
     // A diverged local tip with no provenance is foreign: never graft its
     // graph onto the remote chain under an authorized merge commit. Adopt
     // the remote tip and leave the planted objects unreferenced.
-    gitRefsWrite(root, [{ update: chainRef(root, id), sha: remote }]);
+    gitRefsWrite(root, [{ update: chainRef(root, id), sha: remote, old: local }]);
     return 'ff';
   }
   const merge = commitEvent(root, id, JSON.stringify({ v: 1, type: 'merge' }) + '\n', [local, remote], local);
@@ -659,13 +659,13 @@ function adoptAndImport(root: string): ChainView {
     const local = localTips.get(id);
     if (local === remote) continue;
     if (local === undefined || !chainCommits.has(local)) {
-      writes.push({ update: chainRef(root, id), sha: remote });
+      writes.push({ update: chainRef(root, id), sha: remote, old: local ?? '0'.repeat(remote.length) });
     } else if (ancestorsOf(local).has(remote)) {
       // local strictly ahead — pushChain's pending/retry side handles it,
       // and only when the tip has provenance; a planted descendant is
       // never uploaded.
     } else if (ancestorsOf(remote).has(local)) {
-      writes.push({ update: chainRef(root, id), sha: remote }); // fast-forward
+      writes.push({ update: chainRef(root, id), sha: remote, old: local! }); // fast-forward
     } else if (provenTip(root, id, local)) {
       // A genuinely diverged chain this machine is entitled to publish:
       // join the tips under an empty merge event and owe the push.
@@ -674,7 +674,7 @@ function adoptAndImport(root: string): ChainView {
     } else {
       // A foreign diverged tip is never grafted onto the remote graph —
       // adopt the remote tip and leave its objects unreferenced.
-      writes.push({ update: chainRef(root, id), sha: remote });
+      writes.push({ update: chainRef(root, id), sha: remote, old: local! });
     }
   }
   gitRefsWrite(root, writes);
