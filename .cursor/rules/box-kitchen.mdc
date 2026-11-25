@@ -5,10 +5,10 @@ alwaysApply: true
 
 Read AGENTS.md, then STATUS.md. They are the rules and the current state. The brigade, roles and stations are in kitchen/README.md and are the same on every host; this file adds only what is specific to Cursor.
 
-- A bare START.md request means: you are the head chef. If native pstack is installed, invoke `/poteto-mode`; otherwise read `.devin/plugins/box-pstack/skills/poteto-mode/SKILL.md`. Then follow kitchen/roles/cto.md.
-- Cursor has no named profiles in this repository. Staff each role by starting a fresh agent with the role file, the wave file and the station card as its whole prompt.
+- A bare START.md request means: you are D3vin. If native pstack is installed, invoke `/poteto-mode`; otherwise read `.devin/plugins/box-pstack/skills/poteto-mode/SKILL.md`. When D3vin assigns you a wave or part, follow kitchen/roles/cto.md.
+- Cursor has no named profiles in this repository. Staff a fresh-agent check by starting a fresh agent with the role file, the wave file and the station card as its whole prompt.
 - Native pstack is not installed on this machine. Installing it is the owner's decision; do not claim it ran.
-- Use `git -c safe.directory=C:/Users/shout/Desktop/Projects/private-task-mvp <arguments>` for every Git call.
+- Use `git -c safe.directory=<this checkout's forward-slash absolute path> <arguments>` for every Git call (main checkout: `C:/Users/shout/orca/omakase-box`; Orca worktree: its own path).
 <!-- box-bounty -->
 box bounty can hand a task to an outside solver and bring solutions back
 as facts — `box bounty describe` says what it does, what it costs and when it

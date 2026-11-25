@@ -30,12 +30,12 @@ What will be true when this is done, as something a person can observe or a comm
 - <if the owner approves a page's looks: screenshots are full pages with the sticky menu static; section shots read as a cut-off site (PF17)>
 - <if the wave changes a page: read the running page as its user before the first candidate; PF3 and PF4 found wording faults only there, after verify passed>
 - <if the wave adds a new deployable part: its first milestone includes one measurement at size; the board never had the scale wave the tool had (K49)>
-- <if a brief sets a timing target for a command (seconds, runs), derive it from a measured run or a declared map (e.g. the `// reads:` headers), never from the head chef's estimate of which files read what (K45)>
+- <if a brief sets a timing target for a command (seconds, runs), derive it from a measured run or a declared map (e.g. the `// reads:` headers), never from the carrying bot's estimate of which files read what (K45)>
 - <if the brief names a run to find something out: do the run, or write "not done" in the Result; reading the code instead is weaker evidence (BT53)>
 
 ## Lenses
 
-Tick the ones that apply. The CTO answers every ticked one in the Result.
+Tick the ones that apply. The bot carrying the wave answers every ticked one in the Result.
 
 - [ ] **Security:** does this add or change a check that keeps something out (hosts, paths, roles, identities, inputs)? Attack it with hostile inputs and say which you tried.
 - [ ] **User experience:** does a person see or operate this? Use it as that person would and say what was unclear; prefer a scripted check of what they would see (a second clone, the exact text or document) to a fresh-agent run, which the owner uses only on request (23 November 2026).
@@ -51,7 +51,7 @@ Decisions already made, interfaces to reuse, traps. Keep it short; link instead 
 
 <One or two lines per item. Detail goes in a notes file next to the evidence, linked from here.>
 
-- CTO: <host / model>
+- Carried by: <area bot, host / model>
 - Commit: `<SHA>`
 - Verify: `<summary line>`
 - Checks: the three questions answered · Level: ui-verified | test-verified | typecheck-only

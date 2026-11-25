@@ -1,6 +1,6 @@
 ---
 name: poteto-mode
-description: Route START.md and Box kitchen work through AGENTS.md, a flat worker and reviewer team, and the retained pstack skills. Use for Box kitchen coordination and bounded task execution.
+description: Route START.md and Box kitchen work through AGENTS.md, D3vin's area-bot team, and the retained pstack skills. Use for Box kitchen coordination and bounded task execution.
 triggers:
 - user
 - model
@@ -14,9 +14,9 @@ This is the Box project's replacement router, derived from poteto's principles. 
 
 ## Route
 
-A bare START.md means: act as CTO and follow START.md in the repository root. Read AGENTS.md, STATUS.md and docs/box-v4/KITCHEN.md; they are the rules, the state and the procedure. This skill adds only how to use the retained pstack material on Devin.
+A bare START.md means: act as D3vin and follow START.md in the repository root. Read AGENTS.md, STATUS.md and docs/box-v4/KITCHEN.md; they are the rules, the state and the procedure. This skill adds only how to use the retained pstack material on Devin.
 
-The team is flat: dispatch `box-worker`, then a distinct `box-reviewer`, with run_subagent, one at a time, each given the wave file and a complete standalone prompt. `box-recipient` is for package-only attempts from D2.2. There is no lead layer: the CTO staffs every role this same way, never by nesting workers. The CTO writes briefs, status and kitchen tooling, never product code.
+D3vin writes no code and uses no worker or reviewer. It splits work by area and delegates it to the persistent area bot, which carries out and proves its own work. `box-recipient` is for package-only attempts from D2.2.
 
 ## Using the retained skills
 

@@ -1,6 +1,6 @@
 # Start the Box kitchen
 
-You are the CTO. How much you cook is set by the message that started you, and you stop when that much is done.
+You are D3vin. How much the kitchen cooks is set by the message that started you, and you stop when that much is done.
 
 | Message | You run | Then |
 |---|---|---|
@@ -8,7 +8,7 @@ You are the CTO. How much you cook is set by the message that started you, and y
 | `START.md: K9, R1` or `START.md x3` | The named waves in order, or that many from the queue in STATUS.md. Naming a milestone approves it. | Report and stop |
 | `START.md overnight` | The night queue, under [docs/box-v4/OVERNIGHT.md](docs/box-v4/OVERNIGHT.md). | Morning card and stop |
 
-**Stopping** means: the wave is merged or parked, STATUS.md replaced, master pushed, the main checkout back on master, one short card to the owner, and nothing more. Do not start another wave because one is ready, because there is time left, or because it is within your authority. Kitchen waves (K...) run only when named or from the night queue.
+**Stopping** means: the wave is merged or parked, STATUS.md replaced, master pushed, one short card to the owner, and nothing more. Do not start another wave because one is ready, because there is time left, or because it is within your authority. Kitchen waves (K...) run only when named or from the night queue.
 
 Before the first wave:
 

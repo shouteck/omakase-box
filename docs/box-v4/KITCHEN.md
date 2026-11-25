@@ -5,19 +5,19 @@ The rules are in [AGENTS.md](../../AGENTS.md). This file is the procedure. The r
 ## Units of work
 
 - A **milestone** (D2, D3, ...) is what the CEO approves. It has an outcome the CEO can observe.
-- A **wave** is one task inside a milestone: one brief, one branch, carried out by the CTO. The CTO opens and closes waves without asking, but only as many as the START message allows; then it stops.
+- A **wave** is one task inside a milestone: one brief, one branch, done by the bot or bots D3vin assigns. D3vin opens and closes only as many waves as the START message allows; then it stops.
 
 ## A wave, start to finish
 
-1. **Brief.** Copy [the template](../../templates/wave.md) to `waves/<id>.md` and fill it in, naming the station it belongs to (see [the brigade](../../kitchen/README.md)) and the [owner decisions](DECISIONS.md) it relies on. One page; if it does not fit, the task is too big — split it. `node scripts/brief-check.mjs` checks its references before dispatch (START.md step 4).
-2. **Branch.** `wave/<id>` from current master. The main checkout is the default; separate worktrees are only for genuinely parallel writers (one writer per branch).
-3. **Plan, if long.** A wave that is long by clock or by concept (several dependent steps, a design unknown, more than one sitting of focused work) starts with `/plan`; the brief says `Horizon: long` where that is already known. The agreed plan goes in the wave file under `## Plan`, so a later session can resume from it. A host without `/plan` writes the same section first. An overnight run writes it without waiting.
-4. **Implement.** The CTO builds on the branch, with the playbook and the station card, and commits.
-5. **Verify and check.** The CTO pushes the committed candidate, reads its hosted run (Verification below), then answers "Checking the work" below in the wave file: commit SHA, run id, level, findings. A failure is fixed and rerun on the new SHA, with no new approval. If the scope has to change, edit the wave file first. A failure whose cause is a design choice with no precedent goes to a prototype wave.
-6. **Close.** When the checks hold, the CTO merges with `--no-ff`, pushes master, removes every resource the wave created, replaces STATUS.md and deletes the merged branch with `git branch -d` (the owner gave standing approval on 6 October 2026). If your host still wants a confirmation for that, do not ask and do not hold the close: leave the branch; the next kickoff sweeps merged `wave/*` branches. It also records the wave's verify cost — `node scripts/kitchen-stats.mjs --wave=<id>`; its `line`, counts and provenance go in the Result. Local history only, missing on a fresh clone.
-7. **Reflect.** Before the next wave, the CTO writes two lines in the Result: what went wrong or was repeated, and which script, template line, check or profile it becomes. Sort each lesson by reach. **Wave:** nothing more to do. **Station:** add it to the station card. **Kitchen:** add one line to `kitchen/INBOX.md`. "Nothing" is an acceptable answer; a lesson left as prose in a report is not.
+1. **Brief.** Copy [the template](../../templates/wave.md) to `waves/<id>.md` and fill it in, naming its station (see [the brigade](../../kitchen/README.md)) and its [owner decisions](DECISIONS.md). One page; if it does not fit, split it. `node scripts/brief-check.mjs` checks its references before dispatch (START.md step 4).
+2. **Branch.** `wave/<id>` from current master. The writer D3vin names works in its own Orca worktree, never the main checkout; parallel writers use separate worktrees, one writer per branch.
+3. **Plan, if long.** A wave long by clock or concept (several dependent steps, a design unknown, more than one sitting) starts with `/plan`; the brief says `Horizon: long` where known. The agreed plan goes in the wave file under `## Plan`, so a later session can resume. A host without `/plan` writes the same section first. An overnight run writes it without waiting.
+4. **Implement.** The bot builds on the branch, with the playbook and the station card, and commits.
+5. **Verify and check.** The bot pushes the committed candidate, reads its hosted run (Verification below), then answers "Checking the work" below in the wave file: commit SHA, run id, level, findings. A failure is fixed and rerun on the new SHA with no new approval. If scope has to change, edit the wave file first. A failure whose cause is a design choice with no precedent goes to a prototype wave.
+6. **Close.** When checks hold, the bot writes the Result and reports the green branch to D3vin. D3vin merges `--no-ff`, pushes master, replaces STATUS.md and deletes the merged branch with `git branch -d` (owner approval, 6 October 2026). If the host wants confirmation, do not ask or hold the close: leave the branch; the next kickoff sweeps merged `wave/*` branches. The close removes the wave's resources and records verify cost (`node scripts/kitchen-stats.mjs --wave=<id>`: `line`, counts, provenance) in the Result. Local history only, missing on a fresh clone.
+7. **Reflect.** Before the next wave, the bot writes two lines in the Result: what went wrong or repeated, and which script, template line, check or profile it becomes. Sort by reach. **Wave:** nothing more. **Station:** add it to the station card. **Kitchen:** add one line to `kitchen/INBOX.md`. "Nothing" is acceptable; a lesson left as prose in a report is not.
 
-When the last wave of a milestone closes, send the CEO the finished card with the next proposal. While a decision is with the CEO, keep doing everything that does not depend on it: briefs, read-only investigation, cleanup. Do not sit idle behind a gate.
+When a milestone's last wave closes, D3vin sends the CEO the finished card with the next proposal. While a decision is with the CEO, work continues on what does not depend on it: briefs, read-only investigation, cleanup. Do not sit idle behind a gate.
 
 Keep ceremony in proportion: a one-command check needs no page of brief.
 
@@ -44,21 +44,21 @@ A wave that needs a real GitHub journey runs it in the sandbox `shouteck/box-bou
 
 ## Checking the work
 
-There is no reviewer, so the CTO checks its own commit from the real artifact, not from memory of writing it, and answers three questions in the Result: does `git diff master...<SHA>` do what the brief says and nothing else, does verify pass on this exact commit, and would the checks have caught a wrong implementation? For the third, try the behaviour directly and ask of each new test whether it would still pass if the code under test returned nothing; a test that would is not a check. Break the guarantee once in a scratch copy and show the test fail.
+There is no reviewer, so the bot checks its own commit from the real artifact, not memory, and answers three questions in the Result: does `git diff master...<SHA>` do what the brief says and nothing else, does verify pass on this exact commit, and would the checks have caught a wrong implementation? For the third, try the behaviour and ask whether each new test would still pass if the code under test returned nothing; a test that would is not a check. Break the guarantee once in a scratch copy and show the test fail.
 
 The result carries its level, because "passed" means different things: `ui-verified` (a person-facing flow was exercised for real), `test-verified` (behavioural tests ran on the commit) or `typecheck-only`. Behavioural work needs better than `typecheck-only`.
 
-**Lenses.** The brief ticks the lenses that apply (security, user experience, measurement fairness), and the CTO answers each ticked one in the Result: what was tried and what was found. An unanswered ticked lens means no merge. Tick only what applies; most waves need one or none. With no second reader, blind spots are covered mechanically: tests that must fail, hostile inputs, scripted checks of what an agent sees, and the hosted run on three systems.
+**Lenses.** The brief ticks the lenses that apply (security, user experience, measurement fairness), and the bot answers each ticked one in the Result: what was tried and what was found. An unanswered ticked lens means no merge. Tick only what applies; most waves need one or none. With no second reader, blind spots are mechanical: tests that must fail, hostile inputs, scripted checks of what an agent sees, and the hosted run on three systems.
 
 **Models.** Record the host and model that carried out the wave in the Result. Never claim one that was not used.
 
 ## Recipients
 
-From D2.2 on, some waves need a `box-recipient`: an agent given only an exported Box folder outside this checkout and no repository access, standing in for an outside contributor. Its report of what was missing is evidence, not a defect. The CTO gives it the folder path and nothing else. Such an agent is not an independent human and is never reported as one.
+From D2.2 on, some waves need a `box-recipient`: an agent given only an exported Box folder outside this checkout, with no repository access, standing in for an outside contributor. Its report of what was missing is evidence, not a defect. The bot gives it the folder path and nothing else. It is never reported as an independent human.
 
 ## When work stalls
 
-- Two attempts at the same blocker with no new information: stop. Write down the one assumption both attempts shared and question it before a third fix. Then the CTO simplifies the task, changes the approach or escalates with one recommendation.
+- Two attempts at the same blocker with no new information: stop. Write down the one assumption both attempts shared and question it before a third fix. Then the bot simplifies, changes approach or escalates to D3vin with one recommendation.
 - A wave running at three times its size guess gets the same treatment.
 - Separate environment failures from product defects in the report. If the environment is the problem, fix the environment as its own small wave before continuing the product task.
 - Never stack unknowns. A wave that changes product code does not also introduce a new runtime, a new verification route or a new agent host.
@@ -71,11 +71,11 @@ When a wave has to choose a design nobody here has built before, do not argue it
 
 - **Empty the inbox at every kickoff.** Each line in `kitchen/INBOX.md` is adopted or dropped, with the reason in the commit message. The inbox holds ten lines at most.
 - **Adopt in the strongest form that fits:** a check in a script (through a kitchen wave); else a line in the wave template or a role file; else a station card line. A new rule in AGENTS.md or this file is the last resort and must replace an old one: the two files together stay under 20 KB.
-- **About one wave in six is for the kitchen itself.** Kitchen waves run only when the owner names them or from the night queue. Pick it from the numbers, not from opinion, and run it as an experiment with a before and an after (the hillclimb playbook). Improvement does not wait for a mistake: an idea from any agent's report can earn an inbox line.
+- **About one wave in six is for the kitchen itself.** Kitchen waves run only when the owner names them or from the night queue. Pick from the numbers, not opinion, and run it as an experiment with a before and after (the hillclimb playbook). Improvement does not wait for a mistake: an idea from any agent's report can earn an inbox line.
 
 ## Resources
 
-Anything a wave creates outside Git (containers, databases, temp directories, background processes) is named `kitchen-<wave id>-...` and removed at close. Scratch roots live outside the checkout; verify refuses a dirty tree. The owner has given standing approval (6 October 2026) to delete, at every wave close and with no test running, the items in the system temp folder named `box-d21-*`, `box-k6-*` and `kitchen-verify-pg*`, and to stop an embedded test database a killed verify leaves, with its own stop command: only this kitchen's tests create them. Do it without asking. After a wave closes, `docker ps -a` shows nothing of ours. Nothing synthetic is preserved "just in case"; Git and the verify logs are the record.
+Anything a wave creates outside Git (containers, databases, temp directories, background processes) is named `kitchen-<wave id>-...` and removed at close. Scratch roots live outside the checkout; verify refuses a dirty tree. The owner gave standing approval (6 October 2026) to delete, at every wave close with no test running, temp items named `box-d21-*`, `box-k6-*` and `kitchen-verify-pg*`, and to stop a leftover embedded test database with its own stop command: only this kitchen's tests create them. Do it without asking. After close, `docker ps -a` shows nothing of ours. Nothing synthetic is preserved "just in case"; Git and the verify logs are the record.
 
 ## Records
 
