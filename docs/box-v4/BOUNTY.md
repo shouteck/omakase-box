@@ -248,12 +248,12 @@ one complete document, so a field an agent assumed was there can never be
 missing because nobody asked for it. A field-list mode could be added
 later without breaking `@1`.
 
-**Forward compatibility.** Inside one schema version a document may gain keys, and an open field may gain values; a reader written for `@1` must ignore keys it does not know and must not treat an unknown value in an open field as an error. A key disappearing or being renamed, a type changing, a closed field gaining a value, any listed value disappearing, or a meaning changing is breaking and belongs in `@2`. The value-like fields are on record in `tests/box/bounty/SURFACE.txt` as `values <schema> <path> open|closed ...`; values are `|`-separated and percent-encoded when they contain whitespace. Every value-like field is open except `foreignFields[].source`, whose only values are `solver` and `other account`. The open fields are:
+**Forward compatibility.** Inside one schema version a document may gain keys, and an open field may gain values; a reader written for `@1` must ignore keys it does not know and must not treat an unknown value in an open field as an error. A key disappearing or being renamed, a type changing, a closed field gaining a value, any listed value disappearing, or a meaning changing is breaking and belongs in `@2`. The value-like fields are on record in `tests/box/bounty/SURFACE.txt` as `values <schema> <path> open|closed ...`; values are `|`-separated and percent-encoded where a character needs it. Every value-like field is open except `foreignFields[].source`, whose only values are `solver` and `other account`. The open fields are:
 
 - `box-bounty/allow@1`: `decision`, `kind`
 - `box-bounty/apply@1`: `outcome`, `stage`
 - `box-bounty/close@1`: `outcome`, `stage`
-- `box-bounty/config@1`: `allProjects`, `decision`, `decisionLevel`, `repositories{}.decision`, `repositories{}.history[].decision`, `solving.mode`, `waiting[].for`, `waiting[].reason`
+- `box-bounty/config@1`: `allProjects`, `decision`, `decisionLevel`, `instructions.found[].refused`, `repositories{}.decision`, `repositories{}.history[].decision`, `solving.mode`, `waiting[].for`, `waiting[].reason`
 - `box-bounty/deny@1`: `kind`
 - `box-bounty/describe@1`: `mode`
 - `box-bounty/discover@1`: `began`, `solving.mode`
@@ -265,7 +265,7 @@ later without breaking `@1`.
 - `box-bounty/refusal@1`: `refused`
 - `box-bounty/setup@1`: `action`
 - `box-bounty/status-wait@1`: `outcome`
-- `box-bounty/status@1`: `bounties[].allowedBy.decision`, `bounties[].allowedBy.level`, `bounties[].board.kind`, `bounties[].board.payment`, `bounties[].events[].stage`, `bounties[].github.formatRead`, `bounties[].github.formatRepair`, `bounties[].github.kind`, `bounties[].github.lifecycle`, `bounties[].github.pay.unattributed`, `bounties[].github.pullRequests[].payTo`, `bounties[].github.state`, `bounties[].github.unavailable.reason`, `bounties[].landingChecks[].state`, `bounties[].mergeNow.result`, `bounties[].scanFindings[].where`, `bounties[].solutions[].outcome`, `bounties[].solutions[].payTo`, `bounties[].stage`, `bounties[].waiting.for`, `bounties[].waiting.reason`, `owner.decision`, `owner.decisionLevel`
+- `box-bounty/status@1`: `bounties[].allowedBy.decision`, `bounties[].allowedBy.level`, `bounties[].board.kind`, `bounties[].board.payment`, `bounties[].events[].stage`, `bounties[].github.formatRead`, `bounties[].github.formatRepair`, `bounties[].github.kind`, `bounties[].github.lifecycle`, `bounties[].github.pay.unattributed`, `bounties[].github.pullRequests[].firstSight.local`, `bounties[].github.pullRequests[].firstSight.remote`, `bounties[].github.pullRequests[].payTo`, `bounties[].github.state`, `bounties[].github.unavailable.reason`, `bounties[].landingChecks[].state`, `bounties[].mergeNow.result`, `bounties[].scanFindings[].where`, `bounties[].solutions[].outcome`, `bounties[].solutions[].payTo`, `bounties[].stage`, `bounties[].waiting.for`, `bounties[].waiting.reason`, `owner.decision`, `owner.decisionLevel`
 - `box-bounty/submit@1`: `outcome`
 - `box-bounty/take-preview@1`: `approval`
 - `box-bounty/take@1`: `outcome`, `stage`
