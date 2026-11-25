@@ -46,8 +46,7 @@ Reconciled against `origin/master` at `ebe17a82` on 26 November 2026. Git is the
   - K52 left ignored local leftovers in this checkout that Git never tracked (the prototype's build output, about 11 MB under `.execution\`): delete `.execution\` and `kitchen\platform-prototype\` here whenever you like; nothing reads them.
   - PF18's test objects in "shoutecknik sandbox" (45 test accounts, customers, one webhook): take the access policy off that sandbox's key for a cleanup run, or delete the sandbox; then `%TEMP%\kitchen-PF18-bench` goes.
   - The user variables `STRIPE_TEST_SANDBOX_KEY`, `STRIPE_TEST_RESTRICTED_KEY`, `STRIPE_TEST_KEY` and the `kitchen-pf18` restricted keys in both sandboxes; roll the sandbox secret keys. PayPal's sandbox secret from the PF13 chat: regenerate it and remove the six `PAYPAL_SANDBOX_*` variables.
-  - The private `shouteck/kitchen-PF8-private`; the stray `node.exe` from BT44 (PID 16324) and a `bench.mjs` from `%TEMP%\kitchen-PF13-paypal` (PID 472568), if still running.
-  - The participant sessions of BT42, BT52, PF2, PF7, PF8, PF15, PF16 and their `%TEMP%` folders (`kitchen-BT52-proof`, `kitchen-PF2-*`, `kitchen-PF7-*`, `kitchen-PF8-reader`, `kitchen-PF15`, `kitchen-PF16*`); six empty `%TEMP%\kitchen-K43-*` folders.
+  - The private `shouteck/kitchen-PF8-private`; the stray `node.exe` from BT44 (PID 16324) and a `bench.mjs` from `%TEMP%\kitchen-PF13-paypal` (PID 472568), if still running; the participant sessions of BT42, BT52, PF2, PF7, PF8, PF15, PF16 and their `%TEMP%` folders (`kitchen-BT52-proof`, `kitchen-PF2-*`, `kitchen-PF7-*`, `kitchen-PF8-reader`, `kitchen-PF15`, `kitchen-PF16*`); six empty `%TEMP%\kitchen-K43-*` folders.
 
 ## Next
 
