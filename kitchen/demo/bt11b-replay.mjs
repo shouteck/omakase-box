@@ -222,7 +222,12 @@ async function main() {
     // the GitHub remote URL in spawnSync('git', ...) args to the local bare
     // remote (what the old wrapper did; a url.insteadOf rewrite is refused by
     // the tool's own repository-destination-mismatch guard).
-    writeFileSync(shim, `const cp = require('node:child_process');\nconst { syncBuiltinESMExports } = require('node:module');\nconst standin = process.env.REPLAY_GH_STANDIN;\nconst bare = process.env.REPLAY_BARE;\nconst remoteUrl = process.env.REPLAY_REMOTE_URL;\nconst original = cp.spawnSync;\ncp.spawnSync = function (file, args, options) {\n  const base = String(file).split(/[\\\\/]/).pop().toLowerCase();\n  if (standin && (base === 'gh' || base === 'gh.exe')) return original.call(this, process.execPath, [standin, ...(args ?? [])], options);\n  if (bare && remoteUrl && (base === 'git' || base === 'git.exe')) return original.call(this, file, (args ?? []).map(a => a === remoteUrl ? bare : a), options);\n  return original.call(this, file, args, options);\n};\ntry { syncBuiltinESMExports(); } catch {}\n`);
+    writeFileSync(shim, `const cp = require('node:child_process');\nconst { syncBuiltinESMExports } = require('node:module');\nconst standin = process.env.REPLAY_GH_STANDIN;\nconst bare = process.env.REPLAY_BARE;\nconst remoteUrl = process.env.REPLAY_REMOTE_URL;\nconst original = cp.spawnSync;\ncp.spawnSync = function (file, args, options) {\n  const base = String(file).split(/[\\\\/]/).pop().toLowerCase();\n  if (standin && (base === 'gh' || base === 'gh.exe')) return original.call(this, process.execPath, [standin, ...(args ?? [])], options);\n  if (bare && remoteUrl && (base === 'git' || base === 'git.exe')) {
+    let rewritten = false;
+    const mapped = (args ?? []).map(a => { const next = a === remoteUrl ? bare : a; rewritten ||= next !== a; return next; });
+    if (rewritten && options?.env?.GIT_ALLOW_PROTOCOL === 'https') options = { ...options, env: { ...options.env, GIT_ALLOW_PROTOCOL: 'https:file' } };
+    return original.call(this, file, mapped, options);
+  }\n  return original.call(this, file, args, options);\n};\ntry { syncBuiltinESMExports(); } catch {}\n`);
     env.NODE_OPTIONS = `${process.env.NODE_OPTIONS ?? ''} --require ${shim}`.trim();
     env.REPLAY_STATE = join(scratch, 'state.json');
     env.REPLAY_BARE = bare;

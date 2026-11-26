@@ -33,7 +33,15 @@ const original = cp.spawnSync;
 cp.spawnSync = function (file, args, options) {
   const base = String(file).split(/[\\/]/).pop().toLowerCase();
   if (/^gh(?:\.exe)?$/.test(base)) return original.call(this, process.execPath, [process.env.REPLAY_GH_STANDIN, ...args], options);
-  if (/^git(?:\.exe)?$/.test(base)) args = args.map(arg => arg === process.env.REPLAY_REMOTE_URL ? process.env.REPLAY_BARE : arg);
+  if (/^git(?:\.exe)?$/.test(base)) {
+    let rewritten = false;
+    args = args.map(arg => {
+      const next = arg === process.env.REPLAY_REMOTE_URL ? process.env.REPLAY_BARE : arg;
+      rewritten ||= next !== arg;
+      return next;
+    });
+    if (rewritten && options?.env?.GIT_ALLOW_PROTOCOL === 'https') options = { ...options, env: { ...options.env, GIT_ALLOW_PROTOCOL: 'https:file' } };
+  }
   return original.call(this, file, args, options);
 };
 require('node:module').syncBuiltinESMExports();

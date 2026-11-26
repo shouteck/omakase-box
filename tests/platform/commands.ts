@@ -17,7 +17,16 @@ const original = cp.spawnSync;
 cp.spawnSync = function (file, args, options) {
   const base = String(file).split(/[\\\\/]/).pop().toLowerCase();
   if (base === 'gh' || base === 'gh.exe') return original.call(this, process.execPath, [process.env.REPLAY_GH_STANDIN, ...(args ?? [])], options);
-  if (base === 'git' || base === 'git.exe') return original.call(this, file, (args ?? []).map(a => a === process.env.REPLAY_REMOTE_URL ? process.env.REPLAY_BARE : a), options);
+  if (base === 'git' || base === 'git.exe') {
+    let rewritten = false;
+    const mapped = (args ?? []).map(a => {
+      const next = a === process.env.REPLAY_REMOTE_URL ? process.env.REPLAY_BARE : a;
+      rewritten ||= next !== a;
+      return next;
+    });
+    if (rewritten && options?.env?.GIT_ALLOW_PROTOCOL === 'https') options = { ...options, env: { ...options.env, GIT_ALLOW_PROTOCOL: 'https:file' } };
+    return original.call(this, file, mapped, options);
+  }
   return original.call(this, file, args, options);
 };
 try { syncBuiltinESMExports(); } catch {}
