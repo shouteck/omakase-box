@@ -60,6 +60,7 @@ on:
       - 'FIRST-FIVE-MINUTES.md'
       - 'README.md'
       - 'docs/box-v4/BOUNTY-FORMAT.md'
+      - 'docs/box-v4/GIT-DEFENCES.md'
       - 'docs/box-v4/LAUNCH.md'
       - 'docs/box-v4/launch/getting-started.md'
       - 'docs/box-v4/launch/queue-handoff.md'

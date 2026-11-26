@@ -1,19 +1,17 @@
 import { remoteUrl,invalid,type GitHubChoice } from './gh.js';
-import { spawnSync } from 'node:child_process';
 import { lstatSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { isAbsolute,join,relative,resolve } from 'node:path';
 import { canonicalFolder } from './folder.js';
 import { BountyRefused } from './errors.js';
 import { showPath } from './notice.js';
-import { git,gitBlob,gitFilteredBlob,gitIndexWrite,gitOutcome,gitProgram,gitRefsWrite,ownerGitOutcome } from './git.js';
+import { git,gitBlob,gitFilteredBlob,gitIndexWrite,gitOutcome,gitRefsWrite,gitStdinOutcome,ownerGitOutcome } from './git.js';
 import type { IndexChange } from './git.js';
 import { publishListed,publishLists } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
 import type { BountyRecord,WaitingFor } from './record.js';
 import { binaryPatchPaths,looksBinary,scanPatch,scanText } from './scan.js';
 import type { ScanHit } from './scan.js';
-import { withoutTokens } from './github-auth.js';
 
 // ---------------------------------------------------------------------------
 // The history path (BT6a): a bounty is an issue on the code that is already
@@ -59,20 +57,12 @@ function scanRemote(root: string, repository: string, id: string): string[] {
 // git with a stdin payload — the exclusion list for `rev-list --stdin` can be
 // longer than a command line allows on this host.
 function gitStdin(repo: string, args: readonly string[], input: string): string {
-  const result = spawnSync(gitProgram(), ['-c', `safe.directory=${repo.replaceAll(BS, '/')}`, '-c', 'core.hooksPath=/dev/null', '-C', repo, ...args], {
-    input,
-    encoding: 'utf8',
-    env: { ...withoutTokens(process.env), GIT_OPTIONAL_LOCKS: '0' }, // BT59: never the token under its own names
-    windowsHide: true,
-    // rev-list output grows with history — the same named ceiling every
-    // other Git read carries (GitFailed via the check below).
-    maxBuffer: 512 * 1024 * 1024
-  });
+  const result = gitStdinOutcome(repo, args, input);
   if (result.status !== 0 || result.error !== undefined) {
     const detail = ((result.stderr ?? '') || (result.stdout ?? '') || result.error?.message || `exit ${result.status}`).trim();
     throw new BountyRefused('github-git-failed', `git ${args.join(' ')} failed: ${detail}; next: fix what git reported, then rerun the same command`);
   }
-  return result.stdout ?? '';
+  return result.stdout;
 }
 
 interface NamedStatus { readonly status: string; readonly path: string }

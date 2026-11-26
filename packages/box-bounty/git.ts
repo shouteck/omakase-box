@@ -41,9 +41,9 @@ export function gitProgram(): string {
 //  - GIT_OPTIONAL_LOCKS=0 on every invocation, so reads (status, ls-files,
 //    ls-tree) never opportunistically rewrite .git/index — creating a bounty
 //    must leave the index byte-for-byte as found.
-//  - The per-invocation safe.directory override (never a global config change)
-//    lets it read a checkout owned by a different account, matching how every
-//    kitchen git call is made.
+//  - Git's ownership check stays in force: a repository Git refuses as owned
+//    by another account is a named refusal. Trusting one is the owner's own
+//    configuration choice, never an override this layer carries.
 // Extra environment (GIT_INDEX_FILE for the snapshot's temporary index) is
 // passed through by callers; it never leaks into the real index.
 //
@@ -76,6 +76,21 @@ export class GitFailed extends Error {
 }
 
 const BACKSLASH = String.fromCharCode(92);
+
+const posixRepo = (repo: string): string => repo.replaceAll(BACKSLASH, '/');
+
+// Git's ownership refusal means the repository's own configuration is not the
+// owner's to run under. The tool names that boundary instead of overriding it:
+// the person who trusts the checkout adds the exception to their own global
+// configuration, and this process never runs a configured program to get there.
+export function throwIfRepositoryNotTrusted(repo: string, result: { readonly stderr?: unknown }): void {
+  const stderr = typeof result.stderr === 'string' ? result.stderr : Buffer.isBuffer(result.stderr) ? result.stderr.toString('utf8') : '';
+  const first = stderr.split(/\r?\n/, 1)[0] ?? '';
+  const ownership = first.match(/^fatal: detected dubious ownership in repository at '(.+)'$/) ?? first.match(/^fatal: unsafe repository \('(.+)' is owned by someone else\)/);
+  if (ownership === null) return;
+  const path = posixRepo(ownership[1] ?? repo);
+  throw new BountyRefused('git-repository-not-trusted', `Git does not trust \`${path}\`: it is owned by another account, and its configuration could run programs. Nothing was run. next: if you trust it, run git config --global --add safe.directory \`${path}\` yourself`);
+}
 
 // BT59: a GitHub token in GH_TOKEN or GITHUB_TOKEN is never handed to Git under those names; a call that reaches github.com
 // while the token is in use gets it as its credential helper's answer instead (github-auth.ts), and only that call.
@@ -168,7 +183,8 @@ export function commandConfig(repo: string): readonly ConfigEntry[] {
   const remembered = pinsByRepo ?? commandPins;
   const known = remembered?.get(repo);
   if (known !== undefined) return known;
-  const config = spawnSync(gitProgram(), ['-c', `safe.directory=${repo.replaceAll(BACKSLASH, '/')}`, ...ALWAYS, '-C', repo, 'config', '-z', '--show-origin', '--get-regexp', CONFIG_KEYS], { encoding: 'utf8', env: gitEnvironment(), windowsHide: true, maxBuffer: GIT_OUTPUT_LIMIT });
+  const config = spawnSync(gitProgram(), [...ALWAYS, '-C', repo, 'config', '-z', '--show-origin', '--get-regexp', CONFIG_KEYS], { encoding: 'utf8', env: gitEnvironment(), windowsHide: true, maxBuffer: GIT_OUTPUT_LIMIT });
+  throwIfRepositoryNotTrusted(repo, config);
   if (config.error !== undefined || config.status !== 0 && config.status !== 1) throw new GitFailed('Git configuration could not be read safely; nothing was run');
   // With -z each record is `origin\0 key\nvalue\0` — alternating fields.
   const entries: ConfigEntry[] = [];
@@ -189,7 +205,7 @@ export function commandConfig(repo: string): readonly ConfigEntry[] {
 const OBJECT_AND_REF_ONLY = new Set(['rev-parse', 'cat-file', 'ls-tree', 'merge-base', 'rev-list', 'for-each-ref', 'show-ref', 'symbolic-ref', 'update-ref', 'ls-remote', 'remote', 'commit-tree', 'hash-object', 'branch', 'log', 'mktree', 'fetch']);
 
 function safeArgs(repo: string, args: readonly string[], content: GitContent): string[] {
-  const prefix = ['-c', `safe.directory=${repo.replaceAll(BACKSLASH, '/')}`, ...ALWAYS, '-C', repo];
+  const prefix = [...ALWAYS, '-C', repo];
   if (content === 'owner') return prefix;
   const operation = args[operationIndex(args)];
   if (operation !== undefined && OBJECT_AND_REF_ONLY.has(operation)) return prefix;
@@ -220,6 +236,7 @@ function run(repo: string, args: readonly string[], env: GitEnv, content: GitCon
     windowsHide: true,
     maxBuffer: GIT_OUTPUT_LIMIT
   });
+  throwIfRepositoryNotTrusted(repo, result);
   return { status: result.status, stdout: result.stdout ?? '', stderr: result.stderr ?? '', ...(result.error !== undefined ? { error: result.error } : {}) };
 }
 
@@ -262,6 +279,7 @@ export function gitFilteredBlob(repo: string, path: string, bytes: Buffer): stri
     windowsHide: true,
     maxBuffer: GIT_OUTPUT_LIMIT
   });
+  throwIfRepositoryNotTrusted(repo, result);
   if (result.status !== 0 || result.error !== undefined) {
     const detail = ((result.stderr?.toString() ?? result.error?.message ?? `exit ${result.status}`)).trim();
     throw new GitFailed(`git hash-object --path=${showPath(path)} failed in ${repo}: ${detail}`);
@@ -280,6 +298,7 @@ export function gitWriteBlob(repo: string, bytes: Buffer): string {
     windowsHide: true,
     maxBuffer: GIT_OUTPUT_LIMIT
   });
+  throwIfRepositoryNotTrusted(repo, result);
   if (result.status !== 0 || result.error !== undefined) {
     const detail = (result.stderr?.toString() ?? result.error?.message ?? `exit ${result.status}`).trim();
     throw new GitFailed(`git hash-object failed in ${repo}: ${detail}`);
@@ -353,6 +372,7 @@ export function gitBlob(repo: string, commit: string, path: string, env: GitEnv 
     maxBuffer: GIT_OUTPUT_LIMIT,
     windowsHide: true
   });
+  throwIfRepositoryNotTrusted(repo, result);
   if (result.status !== 0 || result.error !== undefined) return null;
   return result.stdout;
 }
@@ -368,6 +388,7 @@ function gitBatchBlobs(repo: string, names: readonly string[]): Map<string, Buff
     maxBuffer: GIT_OUTPUT_LIMIT,
     windowsHide: true
   });
+  throwIfRepositoryNotTrusted(repo, result);
   if (result.error !== undefined) throw result.error;
   const stdout = Buffer.isBuffer(result.stdout) ? result.stdout : Buffer.from(result.stdout ?? '');
   let at = 0;
@@ -416,6 +437,7 @@ export function gitObjectCheck(repo: string, names: readonly string[]): Map<stri
     windowsHide: true,
     maxBuffer: GIT_OUTPUT_LIMIT
   });
+  throwIfRepositoryNotTrusted(repo, result);
   const lines = (result.stdout ?? '').split('\n');
   names.forEach((name, index) => {
     const line = lines[index] ?? '';
@@ -446,6 +468,7 @@ export function gitIndexWrite(repo: string, index: string, changes: readonly Ind
     windowsHide: true,
     maxBuffer: GIT_OUTPUT_LIMIT
   });
+  throwIfRepositoryNotTrusted(repo, result);
   if (result.status !== 0 || result.error !== undefined) {
     const detail = (result.stderr?.toString() || result.error?.message || `exit ${result.status}`).trim();
     throw new GitFailed(`git update-index --index-info failed in ${repo}: ${detail}`);
@@ -467,6 +490,7 @@ export function gitStdinOutcome(repo: string, args: readonly string[], input: st
     windowsHide: true,
     maxBuffer: GIT_OUTPUT_LIMIT
   });
+  throwIfRepositoryNotTrusted(repo, result);
   return { status: result.status, stdout: result.stdout ?? '', stderr: result.stderr ?? '', ...(result.error === undefined ? {} : { error: result.error }) };
 }
 
@@ -480,6 +504,7 @@ export function gitStdin(repo: string, args: readonly string[], input: string | 
     windowsHide: true,
     maxBuffer: GIT_OUTPUT_LIMIT
   });
+  throwIfRepositoryNotTrusted(repo, result);
   if (result.status !== 0 || result.error !== undefined) {
     const detail = ((result.stderr ?? '') || result.error?.message || `exit ${result.status}`).trim();
     throw new GitFailed(`git ${args.join(' ')} failed in ${repo}: ${detail}`);
@@ -496,6 +521,7 @@ export function gitRefsWrite(repo: string, writes: readonly RefWrite[]): void {
     windowsHide: true,
     maxBuffer: GIT_OUTPUT_LIMIT
   });
+  throwIfRepositoryNotTrusted(repo, result);
   if (result.status !== 0 || result.error !== undefined) {
     const detail = (result.stderr?.toString() || result.error?.message || `exit ${result.status}`).trim();
     throw new GitFailed(`git update-ref --stdin failed in ${repo}: ${detail}`);
