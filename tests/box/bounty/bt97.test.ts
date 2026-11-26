@@ -3,7 +3,7 @@
 // local-path clone can bypass the pack parser, so the GitHub stand-in's URL is
 // rewritten to a file:// URL for product clone/fetch calls.
 import childProcess, { spawn, spawnSync, type ChildProcess } from 'node:child_process';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { syncBuiltinESMExports } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -11,7 +11,7 @@ import { pathToFileURL, fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { BountyRefused, changeConfig, finalizeBounty, loadRecord, loadTaken, lookBounty, planBounty, postBounty, takeBounty } from '../../../packages/box-bounty/index.js';
 import { fixture, postedFixture } from './github-fixture.js';
-import { git, makeRepo, runRoot, write } from './support.js';
+import { CLI_DIST, git, makeRepo, runRoot, write } from './support.js';
 
 const posix = (path: string): string => path.replaceAll('\\', '/');
 
@@ -84,7 +84,7 @@ function packTransport<T>(repository: string, bare: string, run: () => T): T {
   }
 }
 
-function hostileGitmodulesCommit(repo: string, bare: string, scratch: string, id: string): { sha: string; files: string[] } {
+function hostileGitmodulesCommit(repo: string, bare: string, scratch: string, id: string): { sha: string; blob: string; files: string[] } {
   const solver = join(scratch, 'bt97-hostile-solver');
   git(repo, ['clone', '--quiet', '--single-branch', '--branch', `box-bounty/${id}`, bare, solver]);
   write(solver, 'app.txt', 'fixed\n');
@@ -92,8 +92,49 @@ function hostileGitmodulesCommit(repo: string, bare: string, scratch: string, id
   git(solver, ['add', '-A']);
   git(solver, ['commit', '-qm', 'hostile gitmodules']);
   const sha = git(solver, ['rev-parse', 'HEAD']);
+  const blob = git(solver, ['rev-parse', 'HEAD:.gitmodules']);
   git(solver, ['push', 'origin', `HEAD:refs/pull/1/head`]);
-  return { sha, files: ['app.txt', '.gitmodules'] };
+  return { sha, blob, files: ['app.txt', '.gitmodules'] };
+}
+
+function literalObject(repo: string, type: 'commit' | 'tree', bytes: Buffer): string {
+  const result = spawnSync('git', ['-c', `safe.directory=${posix(repo)}`, '-C', repo, 'hash-object', '-t', type, '--literally', '-w', '--stdin'], { input: bytes, encoding: 'utf8' });
+  if (result.status !== 0) throw new Error(`hash-object ${type} failed: ${result.stderr}`);
+  return result.stdout.trim();
+}
+
+function legacyBranchCommit(solver: string, kind: 'badTimezone' | 'missingSpaceBeforeDate' | 'zeroPaddedFilemode'): string {
+  const parent = git(solver, ['rev-parse', 'HEAD']);
+  const author = kind === 'badTimezone'
+    ? 'Legacy Author <legacy@example.invalid> 1234567890 +251800'
+    : kind === 'missingSpaceBeforeDate'
+      ? 'Legacy Author <legacy@example.invalid>1234567890 +0000'
+      : 'Legacy Author <legacy@example.invalid> 1234567890 +0000';
+  let tree = git(solver, ['rev-parse', 'HEAD^{tree}']);
+  if (kind === 'zeroPaddedFilemode') {
+    const blob = git(solver, ['rev-parse', 'HEAD:app.txt']);
+    tree = literalObject(solver, 'tree', Buffer.concat([Buffer.from(`0100644 app.txt\0`, 'utf8'), Buffer.from(blob, 'hex')]));
+  }
+  const text = `tree ${tree}\nparent ${parent}\nauthor ${author}\ncommitter ${author}\n\nlegacy ${kind}\n`;
+  return literalObject(solver, 'commit', Buffer.from(text, 'utf8'));
+}
+
+function pushLegacyBranch(bare: string, scratch: string, id: string, kind: 'badTimezone' | 'missingSpaceBeforeDate' | 'zeroPaddedFilemode'): void {
+  const solver = join(scratch, `bt97-legacy-${kind}`);
+  git(scratch, ['clone', '--quiet', '--single-branch', '--branch', `box-bounty/${id}`, bare, solver]);
+  const sha = legacyBranchCommit(solver, kind);
+  git(solver, ['push', 'origin', `${sha}:refs/heads/box-bounty/${id}`]);
+}
+
+function hostileBranch(bare: string, scratch: string, id: string): { blob: string } {
+  const solver = join(scratch, 'bt97-hostile-branch-solver');
+  git(scratch, ['clone', '--quiet', '--single-branch', '--branch', `box-bounty/${id}`, bare, solver]);
+  write(solver, '.gitmodules', '[submodule "x"]\n\tpath = x\n\turl = https://example.invalid/x.git\n\tupdate = !touch bt97-pwned\n');
+  git(solver, ['add', '.gitmodules']);
+  git(solver, ['commit', '-qm', 'hostile branch object']);
+  const blob = git(solver, ['rev-parse', 'HEAD:.gitmodules']);
+  git(solver, ['push', 'origin', `HEAD:refs/heads/box-bounty/${id}`]);
+  return { blob };
 }
 
 const BOARD_STANDIN = fileURLToPath(new URL('./board-standin.cjs', import.meta.url));
@@ -117,6 +158,37 @@ const listed = (bare: string, id: string, over: Record<string, unknown> = {}) =>
   return base;
 };
 const allowSolving = () => { changeConfig(null, 'set', 'board', board); changeConfig(null, 'set', 'solving', 'allowed'); };
+
+const ADVISORIES = JSON.parse(readFileSync(new URL('../../../packages/box-bounty/git-advisories.json', import.meta.url), 'utf8')) as { fixedVersions: string[] }[];
+
+function gitVersionPreload(version: string): string {
+  const folder = runRoot('bt97-git-version');
+  mkdirSync(folder, { recursive: true });
+  const preload = join(folder, 'git-version.mjs');
+  writeFileSync(preload, `
+    import childProcess from 'node:child_process';
+    import { syncBuiltinESMExports } from 'node:module';
+    const real = childProcess.spawnSync;
+    childProcess.spawnSync = function(command, args, options) {
+      if (/(?:^|[\\\\/])git(?:\\.exe)?$/i.test(String(command)) && Array.isArray(args) && args.length === 1 && args[0] === 'version') {
+        const stdout = 'git version ${version}\\n';
+        return { pid: 0, output: [null, stdout, ''], stdout, stderr: '', status: 0, signal: null };
+      }
+      return real.call(this, command, args, options);
+    };
+    syncBuiltinESMExports();
+  `);
+  return preload;
+}
+
+function cliWithGitVersion(cwd: string, args: readonly string[], version: string) {
+  const preload = gitVersionPreload(version);
+  return spawnSync(process.execPath, ['--import', pathToFileURL(preload).href, CLI_DIST, ...args], { cwd, encoding: 'utf8', env: process.env, timeout: 120000 });
+}
+
+function upgradeLines(output: string): string[] {
+  return output.split('\n').filter(line => line.includes('is older than the releases that fix known clone vulnerabilities'));
+}
 
 describe('BT97 ownership boundary', { timeout: 120000 }, () => {
   // @guards R1
@@ -164,21 +236,28 @@ describe('BT97 stranger-object intake', { timeout: 120000 }, () => {
   }));
 
   // @guards R1
-  it('take refuses git-objects-rejected when the stranger bounty branch carries hostile objects', () => postedFixture(({ bare, id }) => {
+  it('take refuses git-objects-rejected when the stranger bounty branch carries hostile objects', () => postedFixture(({ bare, id, scratch }) => {
     allowSolving();
-    const solver = join(runRoot('bt97-hostile-branch'), 'solver');
-    const scratch = runRoot('bt97-hostile-scratch');
-    git(scratch, ['clone', '--quiet', '--single-branch', '--branch', `box-bounty/${id}`, bare, solver]);
-    write(solver, '.gitmodules', '[submodule "x"]\n\tpath = x\n\turl = https://example.invalid/x.git\n\tupdate = !touch bt97-pwned\n');
-    git(solver, ['add', '.gitmodules']);
-    git(solver, ['commit', '-qm', 'hostile branch object']);
-    git(solver, ['push', 'origin', `HEAD:refs/heads/box-bounty/${id}`]);
+    hostileBranch(bare, scratch, id);
     listed(bare, id);
     packTransport('owner/project', bare, () => {
       expect(() => takeBounty(id)).toThrow(expect.objectContaining({ reason: 'git-objects-rejected' }));
     });
     expect(loadTaken(id)).toBeNull();
   }));
+
+  for (const kind of ['badTimezone', 'missingSpaceBeforeDate', 'zeroPaddedFilemode'] as const) {
+    // @guards R1
+    it(`take accepts a legacy ${kind} object with Git's warning visible`, () => postedFixture(({ bare, id, scratch }) => {
+      allowSolving();
+      pushLegacyBranch(bare, scratch, id, kind);
+      listed(bare, id);
+      const result = packTransport('owner/project', bare, () => takeBounty(id));
+      expect(result.kind).toBe('taken');
+      const text = result.lines.join('\n');
+      expect(text).toMatch(new RegExp(`warning[^\\n]*${kind}`));
+    }));
+  }
 });
 
 describe('BT97 intake policy sealing and protocol', { timeout: 120000 }, () => {
@@ -189,11 +268,26 @@ describe('BT97 intake policy sealing and protocol', { timeout: 120000 }, () => {
     context.update({ prs: [{ number: 1, user: { login: 'solver' }, base: { ref: `box-bounty/${context.id}`, repo: { full_name: 'owner/project' } }, head: { sha: hostile.sha }, files: hostile.files.map(filename => ({ filename })) }] });
     const home = runRoot('bt97-weakening-home');
     mkdirSync(home, { recursive: true });
-    writeFileSync(join(home, '.gitconfig'), `[fetch "fsck"]\n\thasDotgit = ignore\n\tskipList = ${join(home, 'skip')}\n`);
-    writeFileSync(join(home, 'skip'), `${hostile.sha}\n`);
+    writeFileSync(join(home, '.gitconfig'), `[fetch "fsck"]\n\thasDotgit = ignore\n\tskipList = ${posix(join(home, 'skip'))}\n`);
+    writeFileSync(join(home, 'skip'), `${hostile.blob}\n`);
     packTransport('owner/project', context.bare, () => {
       expect(() => withEnv({ HOME: home, USERPROFILE: home }, () => lookBounty(context.repo, context.id, 1))).toThrow(expect.objectContaining({ reason: 'git-objects-rejected' }));
     });
+  }));
+
+  // @guards R1
+  it('an inherited fetch.fsck skipList or severity downgrade cannot make take intake pass', () => postedFixture(({ bare, id, scratch }) => {
+    allowSolving();
+    const hostile = hostileBranch(bare, scratch, id);
+    listed(bare, id);
+    const home = runRoot('bt97-take-weakening-home');
+    mkdirSync(home, { recursive: true });
+    writeFileSync(join(home, '.gitconfig'), `[fetch "fsck"]\n\thasDotgit = ignore\n\tskipList = ${posix(join(home, 'skip'))}\n`);
+    writeFileSync(join(home, 'skip'), `${hostile.blob}\n`);
+    packTransport('owner/project', bare, () => {
+      expect(() => withEnv({ HOME: home, USERPROFILE: home }, () => takeBounty(id))).toThrow(expect.objectContaining({ reason: 'git-objects-rejected' }));
+    });
+    expect(loadTaken(id)).toBeNull();
   }));
 
   // @guards R1
@@ -221,5 +315,54 @@ describe('BT97 intake policy sealing and protocol', { timeout: 120000 }, () => {
     expect(clone?.env?.['GIT_ALLOW_PROTOCOL']).toBe('https');
     const ownerCalls = seen.filter(call => !call.args.includes('clone') && call.args.some(arg => arg.includes('github.com') || arg.includes('git@github.com')));
     expect(ownerCalls.every(call => call.env?.['GIT_ALLOW_PROTOCOL'] === undefined)).toBe(true);
+  }));
+});
+
+describe('BT97 old Git version line', { timeout: 120000 }, () => {
+  const oldGit = '2.45.0';
+  const newGit = '2.50.1';
+  const expectedFixed = ['2.45.1', '2.45.4'];
+  const expectOneAdvisoryLine = (output: string, version: string) => {
+    const lines = upgradeLines(output);
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toContain(`your Git ${version} is older than the releases that fix known clone vulnerabilities`);
+    for (const fixed of expectedFixed) {
+      expect(ADVISORIES.some(advisory => advisory.fixedVersions.includes(fixed))).toBe(true);
+      expect(lines[0]).toContain(fixed);
+    }
+    expect(lines[0]).toContain("the tool's own calls avoid them, but your agent's own Git commands in a bounty's workspace do not");
+    expect(lines[0]).toContain('https://git-scm.com');
+  };
+
+  // @guards R1
+  it('an older stand-in Git prints the upgrade line once on bare omakase-box and on take', () => postedFixture(({ bare, id, scratch }) => {
+    allowSolving();
+    listed(bare, id);
+    const empty = join(scratch, 'nowhere');
+    mkdirSync(empty, { recursive: true });
+    const overview = cliWithGitVersion(empty, [], oldGit);
+    expect(overview.status, overview.stderr).toBe(0);
+    expectOneAdvisoryLine(`${overview.stdout}\n${overview.stderr}`, oldGit);
+
+    const into = join(scratch, 'take-old-git');
+    const taken = cliWithGitVersion(empty, ['take', id, '--into', into], oldGit);
+    expect(taken.status, taken.stderr).toBe(0);
+    expectOneAdvisoryLine(`${taken.stdout}\n${taken.stderr}`, oldGit);
+  }));
+
+  // @guards R1
+  it('a newer stand-in Git prints no upgrade line on bare omakase-box or take', () => postedFixture(({ bare, id, scratch }) => {
+    allowSolving();
+    listed(bare, id);
+    const empty = join(scratch, 'nowhere-new');
+    mkdirSync(empty, { recursive: true });
+    const overview = cliWithGitVersion(empty, [], newGit);
+    expect(overview.status, overview.stderr).toBe(0);
+    expect(upgradeLines(`${overview.stdout}\n${overview.stderr}`)).toEqual([]);
+
+    const into = join(scratch, 'take-new-git');
+    const taken = cliWithGitVersion(empty, ['take', id, '--into', into], newGit);
+    expect(taken.status, taken.stderr).toBe(0);
+    expect(upgradeLines(`${taken.stdout}\n${taken.stderr}`)).toEqual([]);
   }));
 });
