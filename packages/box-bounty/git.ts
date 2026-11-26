@@ -7,6 +7,7 @@ import { resolveProgram } from './program.js';
 import { BountyRefused } from './errors.js';
 import { showPath } from './notice.js';
 import { gitCredentialEnvironment, withoutTokens } from './github-auth.js';
+import advisories from './git-advisories.json' with { type: 'json' };
 
 // The least Git the tool runs on: merges and dry merges pin GIT_ATTR_SOURCE
 // (git 2.40) so a solver-carried .gitattributes can name nothing, and the dry
@@ -15,26 +16,68 @@ import { gitCredentialEnvironment, withoutTokens } from './github-auth.js';
 // way to ask, and it is one spawn a command pays only when it uses Git.
 export const GIT_LEAST = '2.40';
 
+interface VersionCore { readonly major: number; readonly minor: number; readonly patch: number }
+interface GitVersion extends VersionCore { readonly display: string }
+
+const coreOf = (text: string): VersionCore | null => {
+  const found = /^(\d+)\.(\d+)(?:\.(\d+))?/.exec(text);
+  return found === null ? null : { major: Number(found[1]), minor: Number(found[2]), patch: Number(found[3] ?? 0) };
+};
+const compareCore = (a: VersionCore, b: VersionCore): number => a.major - b.major || a.minor - b.minor || a.patch - b.patch;
+const compareGeneration = (a: VersionCore, b: VersionCore): number => a.major - b.major || a.minor - b.minor;
+
+// The advisory file names one fixed release per maintained minor line. The
+// same line is fixed at or after its named patch; a line newer than every
+// named line carries the fix because it forked after the fix, while any
+// older or unnamed line is treated as still open — the warning is the safe
+// side, and GIT_LEAST below remains the hard floor.
+function fixedFor(version: VersionCore, fixedVersions: readonly string[]): boolean {
+  const fixed = fixedVersions.map(coreOf).filter((core): core is VersionCore => core !== null).sort(compareCore);
+  const sameLine = fixed.find(core => compareGeneration(core, version) === 0);
+  if (sameLine !== undefined) return compareCore(version, sameLine) >= 0;
+  const first = fixed[0];
+  const last = fixed.at(-1);
+  if (first === undefined || last === undefined) return false;
+  return compareGeneration(version, first) >= 0 && compareGeneration(version, last) > 0;
+}
+const FIXED_VERSIONS = [...new Set(advisories.flatMap(advisory => advisory.fixedVersions))]
+  .sort((a, b) => compareCore(coreOf(a) ?? { major: 0, minor: 0, patch: 0 }, coreOf(b) ?? { major: 0, minor: 0, patch: 0 }));
+
 let pinnedGit: string | undefined;
+let pinnedVersion: GitVersion | undefined;
 export function gitProgram(): string {
   // The pin saves one probe spawn per call; a path that vanished (a stripped
   // PATH in a test, a Git upgrade mid-session) falls back to resolving again.
   if (pinnedGit !== undefined && existsSync(pinnedGit)) return pinnedGit;
   pinnedGit = undefined;
+  pinnedVersion = undefined;
   let program: string;
   try { program = resolve(resolveProgram('git').path); }
   catch { throw new BountyRefused('git-missing', `Git ${GIT_LEAST} or later is required — none was found on PATH. Get it at https://git-scm.com; next: install Git from https://git-scm.com, then rerun the same command`); }
   const probe = spawnSync(program, ['version'], { encoding: 'utf8', windowsHide: true });
-  const found = /git version (\d+)\.(\d+)/.exec(probe.stdout ?? '');
+  const found = /git version ((\d+)\.(\d+)(?:\.(\d+))?[^\s]*)/.exec(probe.stdout ?? '');
   if (probe.error !== undefined || probe.status !== 0 || found === null) {
     throw new BountyRefused('git-missing', `Git ${GIT_LEAST} or later is required — the program at ${program} did not answer 'git version'. Get it at https://git-scm.com; next: install Git from https://git-scm.com, then rerun the same command`);
   }
-  const major = Number(found[1]); const minor = Number(found[2]);
+  const major = Number(found[2]); const minor = Number(found[3]);
   if (major < 2 || major === 2 && minor < 40) {
-    throw new BountyRefused('git-too-old', `Git ${GIT_LEAST} or later is required — found git ${found[1]}.${found[2]}. Get it at https://git-scm.com; next: upgrade Git from https://git-scm.com, then rerun the same command`);
+    throw new BountyRefused('git-too-old', `Git ${GIT_LEAST} or later is required — found git ${found[2]}.${found[3]}. Get it at https://git-scm.com; next: upgrade Git from https://git-scm.com, then rerun the same command`);
   }
+  pinnedVersion = { display: found[1]!, major, minor, patch: Number(found[4] ?? 0) };
   pinnedGit = program;
   return pinnedGit;
+}
+
+// BT97 outcome 4: the pinned clone-advisory data decides whether the Git the
+// agent will keep using inside a taken workspace is named once. The tool's
+// own invocations avoid the exploits' preconditions; this line is about the
+// agent's later, unpinned Git commands. It is advisory only — GIT_LEAST is
+// still the hard refusal boundary.
+export function oldGitUpgradeLine(): string | null {
+  gitProgram();
+  if (pinnedVersion === undefined) return null;
+  if (!advisories.some(advisory => !fixedFor(pinnedVersion!, advisory.fixedVersions))) return null;
+  return `your Git ${pinnedVersion.display} is older than the releases that fix known clone vulnerabilities (${FIXED_VERSIONS.join(', ')}); the tool's own calls avoid them, but your agent's own Git commands in a bounty's workspace do not; upgrade from https://git-scm.com`;
 }
 
 // Git entry point for the bounty tool. Two rules differ from a casual call:

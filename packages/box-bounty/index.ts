@@ -60,7 +60,7 @@ export type { CreateArgs, ParsedOptions } from './args.js';
 export { deriveTitle, renderPreview, resolveRepoRoot, TITLE_LIMIT, toolVersion } from './create.js';
 export type { BountyPlan, BountyResult, CreateOptions, PlanFile, RuleRemoval } from './create.js';
 export { BountyRefused } from './errors.js';
-export { GitFailed, git, gitOutcome, ownerGit, ownerGitOutcome } from './git.js';
+export { GitFailed, git, gitOutcome, oldGitUpgradeLine, ownerGit, ownerGitOutcome } from './git.js';
 export { ProgramLaunchUnsupported, ProgramUnavailable, resolveProgram } from './program.js';
 export type { ResolvedProgram } from './program.js';
 export { NOTHING_RUN } from './notice.js';

@@ -11,7 +11,7 @@ import { waitBounty, renderWait } from '../../box-bounty/index.js';
 import type { ParsedOptions } from '../../box-bounty/index.js';
 import { appliedRevert, applyDocument, closeAttemptDocument, closeDocument, createDocument, ownerDocument, postDocument, postPreviewDocument, previewGitHub, previewGitHubFacts, refusalDocument, submitDocument, submitTakenResult, takeDocument, textDocument, UNKNOWN_ROLLBACK } from '../../box-bounty/index.js';
 import { attemptStatus, closeTaken, discover, discoverDocument, loadTaken, renderDescribeSolving, renderDiscover, submitTaken, takeBounty, takenOverview } from '../../box-bounty/index.js';
-import { escapeControls, exportLook, findDocument, lookBounty, solverBlock, SOLVER_WORDS, renderFind, renderResume, openRecords, endedContaining, readGitPinsOncePerProcess, boundAmount, payToLine, gitOutcome } from '../../box-bounty/index.js';
+import { escapeControls, exportLook, findDocument, lookBounty, solverBlock, SOLVER_WORDS, renderFind, renderResume, openRecords, endedContaining, readGitPinsOncePerProcess, boundAmount, payToLine, gitOutcome, oldGitUpgradeLine } from '../../box-bounty/index.js';
 import { previewTake, takePreviewDocument } from '../../box-bounty/index.js';
 
 // Does .git/config name this remote — read as bytes, so the apply output
@@ -95,6 +95,10 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
   // The command's own lines, collected as they are printed, so a document carries the text as data (and the text is unchanged).
   const out: string[] = [];
   const say = (line: string): void => { out.push(line); if (!jsonRequested) console.log(line); };
+  const sayOldGitUpgrade = (): void => {
+    const line = oldGitUpgradeLine();
+    if (line !== null) aside(line);
+  };
   // describe, help and hook: the text is the content, so the document is its lines.
   const showText = (command: 'describe' | 'help' | 'hook', text: string, facts: Record<string, unknown> = {}): void => {
     if (jsonRequested) printDocument(textDocument(command, facts, text.split('\n'), notices));
@@ -194,6 +198,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         process.exit(0);
       }
       const parsed = parse('overview');
+      sayOldGitUpgrade();
       try { say(renderOverview(resolveRepoRoot(repoPath(parsed), 'overview'))); }
       catch (error) {
         if (!(error instanceof BountyRefused) || error.reason !== 'not-a-repository' || parsed.values['--repo'] !== undefined) throw error;
@@ -301,6 +306,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         else say(result.lines.join('\n'));
         return;
       }
+      sayOldGitUpgrade();
       const result = takeBounty(id, into === undefined ? {} : { into: resolve(into) });
       if (jsonRequested) printDocument(takeDocument(result, id, notices));
       else say(result.lines.join('\n'));
