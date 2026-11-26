@@ -1253,9 +1253,19 @@ in the owner's settings outside the repository.
 
 ## The record — the bounty outlives the agent
 
-`create` also writes the record inside the repository — since BT31, one row
-per bounty in the checkout's SQLite store at `.box/local/box.db` (a folder
-the tool keeps ignored; nothing under it is ever shipped or committed).
+`create` also writes the record inside the repository — since BT96, one row
+per bounty in the checkout's shared SQLite store. Its path is the one Git names
+for `common/box/box.db` (`git rev-parse --git-path common/box/box.db`), so every
+worktree of one repository opens the same file. `node:sqlite` is a release
+candidate from Node 24.15 and experimental on the tool's minimum, Node 22.13;
+the packaging tests on Linux, Windows and macOS guard against an API change.
+Before BT96 the store was `.box/local/box.db` (a folder the tool keeps ignored;
+what remains there for the agent, such as `look --export`'s solutions, is never
+shipped or committed). The first open moves that old store once, whole, into the
+shared path. A later worktree's old store joins by bounty: an absent bounty is
+copied with its events, outbox rows and own chain provenance; a bounty present
+in both is not merged. The tool keeps the shared store's copy, renames the other
+file `box.db.moved-<date>` and leaves it readable.
 `find` is one plain case-insensitive substring search over a lower-cased text
 column, the same on every Node; SQLite's FTS5 is not used.
 Records written before that wave sat at `.box/bounties/<id>.json`; those
@@ -1278,6 +1288,16 @@ drafted → posted → taken → answered → applied
  stages and still load — a `confirmed` record's written yes
  stands and the bounty posts)
 ```
+
+The one-time move never hides a failure. A link or non-directory in the
+shared path is named `local-store-path-blocked`; a failed integrity check or
+unreadable payload is `local-store-corrupt`; a non-empty write-ahead log or a
+database that cannot be renamed aside is `local-store-move-deferred`. In each
+case nothing is installed in the shared path and the old store stays in use,
+with the line naming what to remove or close. A shared-memory write names the
+chain tip it was built on. If another writer moved it, the event is rebuilt on
+the new tip once; if it loses again the command refuses `chain-changed`, nothing
+was written, and the next step is to run the command again.
 
 `answered` is a waiting stage, not an ending: every answer lands there —
 nothing is run and nothing is merged until `apply` runs — and an answer that
@@ -1502,8 +1522,10 @@ bounty carries a second, quiet history beside the issue: a Git ref
 `refs/box-bounty-records/<id>` on the project's own remote (a record under the old name `refs/box-bounty/<id>`, written before version 0.2.0, is no longer read: K73), where every milestone is
 one commit holding one small JSON event (`posted`, `solution`, `merged`,
 `closed`; `paid` is reserved). An event is written when the milestone happens
-and pushed right away; two machines racing get an empty merge event joining
-both tips, and nothing is lost.
+and pushed right away. Its ref update names the tip it was built on; when two
+machines race, the loser rebuilds its event on the winner once rather than
+overwriting it, and a second lost race refuses `chain-changed` with nothing
+written.
 
 What is shared is exactly the event table — the title, task, why, the issue,
 which commits were published, which pull requests came back and what became
