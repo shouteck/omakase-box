@@ -2,10 +2,10 @@
 // are written at the legacy `.box/local/box.db` path by hand: once the product
 // moves first stores, using the product to make them would move them before the
 // scenario starts.
-import childProcess, { execFileSync, spawn, spawnSync } from 'node:child_process';
+import childProcess, { execFileSync, spawnSync } from 'node:child_process';
 import { syncBuiltinESMExports } from 'node:module';
-import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
-import { dirname, isAbsolute, join, resolve } from 'node:path';
+import fs, { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { basename, dirname, isAbsolute, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 import { DatabaseSync } from 'node:sqlite';
@@ -123,6 +123,16 @@ function noticed<T>(run: () => T): { readonly result: T; readonly lines: string[
   finally { setMergeNoticeListener(null); }
 }
 
+const errorCode = (error: unknown): string | undefined => {
+  if (typeof error === 'object' && error !== null && 'code' in error && typeof error.code === 'string') return error.code;
+  return undefined;
+};
+
+const samePath = (left: string, right: string): boolean => {
+  const normalize = (value: string): string => process.platform === 'win32' ? resolve(value).toLowerCase() : resolve(value);
+  return normalize(left) === normalize(right);
+};
+
 afterEach(() => {
   setMergeNoticeListener(null);
   closeStores();
@@ -189,27 +199,54 @@ describe('BT96 the store moves under Git common storage', () => {
     expect(metaGet(repo, `chain_tip:${id}`)).toBe('c'.repeat(40));
   });
 
-  it('racing first movers install exactly one shared store and both keep their rows', async () => {
+  it('racing first movers install exactly one shared store and both keep their rows', () => {
     const { main, side } = linkedRepos();
     const first = 'bt-1111aaaa2222';
     const second = 'bt-3333bbbb4444';
     seedLegacyStore(main, [{ id: first }]);
     seedLegacyStore(side, [{ id: second }]);
 
-    const cli = fileURLToPath(new URL('../../../packages/box-cli/dist/cli.js', import.meta.url));
-    const run = (repo: string) => new Promise<{ status: number | null; stdout: string; stderr: string }>((resolveRun, reject) => {
-      const child = spawn(process.execPath, [cli, 'status'], { cwd: repo, stdio: ['ignore', 'pipe', 'pipe'] });
-      let stdout = '';
-      let stderr = '';
-      child.stdout.on('data', chunk => { stdout += chunk; });
-      child.stderr.on('data', chunk => { stderr += chunk; });
-      child.on('error', reject);
-      child.on('close', status => resolveRun({ status, stdout, stderr }));
+    const shared = sharedDb(main);
+    const realLinkSync = fs.linkSync;
+    let phase: 'waiting' | 'winner' | 'loser' = 'waiting';
+    let installCalls = 0;
+    let winnerRows: string[] = [];
+    let loserCode: string | undefined;
+    const hooked = new Proxy(realLinkSync, {
+      apply(target, receiver, args) {
+        const [source, destination] = args;
+        const install = typeof source === 'string' && typeof destination === 'string'
+          && samePath(destination, shared) && basename(source).startsWith('box.db.install-');
+        if (!install) return Reflect.apply(target, receiver, args);
+        installCalls += 1;
+        if (phase === 'waiting') {
+          phase = 'winner';
+          winnerRows = listOpen(side).map(row => row.id);
+          phase = 'loser';
+        }
+        try {
+          return Reflect.apply(target, receiver, args);
+        } catch (error) {
+          if (phase === 'loser') loserCode = errorCode(error);
+          throw error;
+        }
+      }
     });
-    const results = await Promise.all([run(main), run(side)]);
-    expect(results.map(result => result.status)).toEqual([0, 0]);
-    expect(results.map(result => result.stderr).join('\n')).not.toContain('database is locked');
+    fs.linkSync = hooked;
+    syncBuiltinESMExports();
+    let movedRows: string[] = [];
+    try {
+      movedRows = listOpen(main).map(row => row.id);
+    } finally {
+      fs.linkSync = realLinkSync;
+      syncBuiltinESMExports();
+    }
 
+    expect(phase).toBe('loser');
+    expect(installCalls).toBe(2);
+    expect(winnerRows).toEqual([second]);
+    expect(loserCode).toBe('EEXIST');
+    expect(movedRows.sort()).toEqual([first, second].sort());
     closeStores();
     expect(listOpen(main).map(row => row.id).sort()).toEqual([first, second].sort());
     expect(listOpen(side).map(row => row.id).sort()).toEqual([first, second].sort());
