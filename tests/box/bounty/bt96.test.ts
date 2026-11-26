@@ -11,7 +11,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { DatabaseSync } from 'node:sqlite';
 import { appendEvent, boardTold, CHAIN_NS, closeStores, listOpen, metaGet, metaSet, outboxRows, owe, setMergeNoticeListener, storeDbPath } from '../../../packages/box-bounty/index.js';
 import type { BountyRecord } from '../../../packages/box-bounty/index.js';
-import { git, makeRepo, runRoot, write } from './support.js';
+import { git, makeRepo, recordFilePath, runRoot, write } from './support.js';
 
 const AT = '2026-11-20T00:00:00.000Z';
 const legacyDb = (repo: string): string => join(repo, '.box', 'local', 'box.db');
@@ -362,13 +362,14 @@ describe('BT96 a later worktree joins by bounty', () => {
 
     // The side checkout joins a bounty and leaves the legacy compatibility JSON in its worktree.
     seedLegacyStore(side, [{ id }]);
-    mkdirSync(join(side, '.box', 'bounties'), { recursive: true });
-    writeFileSync(join(side, '.box', 'bounties', `${id}.json`), JSON.stringify(validRecord(id, 'json-backed draft'), null, 2) + '\n');
+    const compatFile = recordFilePath(side, id);
+    mkdirSync(dirname(compatFile), { recursive: true });
+    writeFileSync(compatFile, JSON.stringify(validRecord(id, 'json-backed draft'), null, 2) + '\n');
     expect(listOpen(side).map(row => row.id).sort()).toEqual([other, id].sort());
     closeStores();
 
     // Main has never had that file: its sync must not delete the row side imported.
-    rmSync(join(side, '.box', 'bounties', `${id}.json`), { force: true });
+    rmSync(compatFile, { force: true });
     expect(listOpen(main).map(row => row.id).sort()).toEqual([other, id].sort());
     closeStores();
     expect(listOpen(side).map(row => row.id)).toEqual([other]);

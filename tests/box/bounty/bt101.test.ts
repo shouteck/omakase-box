@@ -3,10 +3,9 @@
 // events; `status <id> --history` lists every change without its values.
 import { spawnSync } from 'node:child_process';
 import { DatabaseSync } from 'node:sqlite';
-import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { applyBounty, BountyRefused, closeBounty, loadRecord, lookBounty, appendEvents, transitionTo } from '../../../packages/box-bounty/index.js';
-import { closeStores, localEvents, recordIds, storedRaw } from '../../../packages/box-bounty/store.js';
+import { closeStores, localEvents, recordIds, storeDbPath, storedRaw } from '../../../packages/box-bounty/store.js';
 import { foldLocal } from '../../../packages/box-bounty/fold.js';
 import { fixture, postedFixture } from './github-fixture.js';
 import { CLI_DIST, readRecordRaw, removeRecord, writeRecordRaw } from './support.js';
@@ -19,7 +18,7 @@ const foldEqualsRow = (repo: string, id: string): void => {
   expect(row, `a row for ${id}`).not.toBeNull();
   expect(foldLocal(localEvents(repo, id)), `the fold of ${id}'s events is its row`).toEqual(JSON.parse(row!));
 };
-const db = (repo: string) => { closeStores(); return new DatabaseSync(join(repo, '.box', 'local', 'box.db')); };
+const db = (repo: string) => { closeStores(); return new DatabaseSync(storeDbPath(repo)); };
 
 describe('BT101 stage 1: no lost update', () => {
   it('a stale copy written after another writer applied: applied stands, and the stale change is kept', () => postedFixture(({ repo, id }) => {

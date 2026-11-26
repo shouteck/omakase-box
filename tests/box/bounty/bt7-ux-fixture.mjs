@@ -1,7 +1,7 @@
 // Disposable offline recipient repository. This script never contacts GitHub.
 import { spawnSync } from 'node:child_process';
 import { chmodSync, copyFileSync, existsSync, linkSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const source = fileURLToPath(new URL('../../../', import.meta.url));
@@ -169,12 +169,13 @@ write(stateFile, JSON.stringify(state));
 // new, once.
 // A standalone script cannot import support.ts — RECORDS_DIR mirrors its
 // RECORDS_DIR_REL ('.box' + '/' + 'bounties') and is the only spelling here.
-// BT31: the record lives in .box/local/box.db once the store exists; the
-// edit is written back as a compat .json, which the next command re-imports
-// — the same path a hand-edited file in an older checkout takes.
+// BT96: the record lives in the store under Git's common folder once the
+// store exists; the edit is written back as a compat .json, which the next
+// command re-imports — the same path a hand-edited file in an older checkout takes.
 const RECORDS_DIR = '.box/' + 'bounties';
 const recordFile = join(repo, RECORDS_DIR, `${id}.json`);
-const dbFile = join(repo, '.box', 'local', 'box.db');
+const shownDbFile = git(repo, ['rev-parse', '--git-path', 'common/box/box.db']);
+const dbFile = isAbsolute(shownDbFile) ? shownDbFile : resolve(repo, shownDbFile);
 let record;
 if (existsSync(dbFile)) {
   const { DatabaseSync } = await import('node:sqlite');
