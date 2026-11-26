@@ -279,7 +279,13 @@ const cp = require('node:child_process');
 const originalSpawn = cp.spawnSync;
 cp.spawnSync = function (program, args, options) {
   if (/(^|[\\/])git(?:\.exe)?$/i.test(program) && Array.isArray(args)) {
-    args = args.map(arg => arg === (process.env.BT6_GH_REMOTE_URL ?? 'https://github.com/owner/project.git') ? process.env.BT8A_GIT_REMOTE : arg);
+    let rewritten = false;
+    args = args.map(arg => {
+      const next = arg === (process.env.BT6_GH_REMOTE_URL ?? 'https://github.com/owner/project.git') ? process.env.BT8A_GIT_REMOTE : arg;
+      rewritten ||= next !== arg;
+      return next;
+    });
+    if (rewritten && options?.env?.GIT_ALLOW_PROTOCOL === 'https') options = { ...options, env: { ...options.env, GIT_ALLOW_PROTOCOL: 'https:file' } };
   }
   return originalSpawn.call(this, program, args, options);
 };
