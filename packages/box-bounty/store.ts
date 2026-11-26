@@ -21,7 +21,7 @@ import { createHash } from 'node:crypto';
 import { closeSync,existsSync,linkSync,lstatSync,mkdirSync,mkdtempSync,openSync,readFileSync,readdirSync,renameSync,rmSync,unlinkSync,writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { homedir,tmpdir } from 'node:os';
-import { dirname,isAbsolute,join,resolve,sep } from 'node:path';
+import { basename,dirname,isAbsolute,join,resolve,sep } from 'node:path';
 import type { DatabaseSync,StatementSync } from 'node:sqlite';
 import { BountyRefused } from './errors.js';
 import { canonicalFolder } from './folder.js';
@@ -177,10 +177,12 @@ function journalFor(repoRoot: string): 'wal' | 'delete' {
 }
 
 function ensureSharedFolder(repoRoot: string, shared: string): boolean {
-  // shared is <git-common>/common/box/box.db in the documented primary form.
+  // Primary form: <git-common>/common/box/box.db. Fallback form: <git-common>/box/box.db.
   // Validate the components the tool itself creates, never by inspecting `.git` assumptions.
-  const gitCommon = dirname(dirname(dirname(shared)));
-  for (const dir of [join(gitCommon, 'common'), join(gitCommon, 'common', 'box')]) {
+  const boxDir = dirname(shared);
+  const parent = dirname(boxDir);
+  const dirs = basename(parent) === 'common' ? [parent, boxDir] : [boxDir];
+  for (const dir of dirs) {
     const stat = lstatSync(dir, { throwIfNoEntry: false });
     if (stat !== undefined && (stat.isSymbolicLink() || !stat.isDirectory())) {
       sayOnce(`blocked:${repoRoot}`, `local-store-path-blocked: ${dir} is a link or not a directory; the bounty store stays at ${storePaths(repoRoot).legacy}; next: make the shared store path a real directory inside Git's common folder`);
@@ -240,23 +242,29 @@ function legacyPreflight(db: DatabaseSync): string | null {
 
 let installSerial = 0;
 function installStore(temp: string, shared: string): boolean {
+  const lose = (): boolean => {
+    rmSync(temp, { force: true });
+    return false;
+  };
   try {
     linkSync(temp, shared);
     unlinkSync(temp);
     return true;
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'EEXIST') return false;
+    if ((error as NodeJS.ErrnoException).code === 'EEXIST') return lose();
     // Hard links can be unavailable on a filesystem. The fallback is an
-    // exclusive lock file beside the destination, held across the install rename.
+    // exclusive lock file beside the destination; the destination is checked
+    // again inside it so a later loser cannot rename over the winner.
     const lock = `${shared}.install-lock`;
     let fd: number;
     try { fd = openSync(lock, 'wx'); }
-    catch { return false; }
+    catch { return lose(); }
     try {
+      if (existsSync(shared)) return lose();
       renameSync(temp, shared);
       return true;
     } catch {
-      return false;
+      return lose();
     } finally {
       closeSync(fd);
       rmSync(lock, { force: true });
@@ -952,7 +960,8 @@ export function readStoredSnapshot(repoRoot: string, id: string): BountyRecord |
   const fileStat = legacyStat?.isDirectory() && !legacyStat.isSymbolicLink() ? lstatSync(legacy, { throwIfNoEntry: false }) : undefined;
   if (fileStat?.isSymbolicLink()) return corrupt();
   const bytes = fileStat?.isFile() ? readFileSync(legacy) : null;
-  const path = storeDbPath(repoRoot);
+  const paths = storePaths(repoRoot);
+  const path = existsSync(paths.shared) ? paths.shared : paths.legacy;
   if (!existsSync(path)) return bytes === null ? null : parse(bytes.toString('utf8'));
   const work = mkdtempSync(join(tmpdir(), 'box-pf6-read-'));
   let db: DatabaseSync | undefined;

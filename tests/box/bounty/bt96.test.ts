@@ -12,6 +12,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { appendEvent, boardTold, CHAIN_NS, closeStores, listOpen, metaGet, metaSet, outboxRows, owe, setMergeNoticeListener, storeDbPath } from '../../../packages/box-bounty/index.js';
 import type { BountyRecord } from '../../../packages/box-bounty/index.js';
 import { git, makeRepo, recordFilePath, runRoot, write } from './support.js';
+import { readStoredSnapshot } from '../../../packages/box-bounty/store.js';
 
 const AT = '2026-11-20T00:00:00.000Z';
 const legacyDb = (repo: string): string => join(repo, '.box', 'local', 'box.db');
@@ -253,6 +254,7 @@ describe('BT96 the store moves under Git common storage', () => {
     expect(existsSync(legacyDb(main))).toBe(false);
     expect(existsSync(legacyDb(side))).toBe(false);
     expect(existsSync(sharedDb(main))).toBe(true);
+    expect(readdirSync(dirname(sharedDb(main))).some(name => name.startsWith('box.db.install-'))).toBe(false);
     expect(realpathSync(sharedDb(main))).toBe(realpathSync(sharedDb(side)));
   });
 
@@ -290,6 +292,16 @@ describe('BT96 the store moves under Git common storage', () => {
     expect(existsSync(sharedDb(repo))).toBe(false);
     expect(existsSync(legacyDb(repo))).toBe(true);
     expect(listOpen(repo).map(row => row.id)).toEqual([id]);
+  });
+
+  it('a read-only snapshot reads an unmigrated legacy store without moving it', () => {
+    const repo = makeRepo({ 'a.txt': 'a\n' });
+    const id = 'bt-5555eeee6666';
+    seedLegacyStore(repo, [{ id }]);
+
+    expect(readStoredSnapshot(repo, id)?.id).toBe(id);
+    expect(existsSync(legacyDb(repo))).toBe(true);
+    expect(existsSync(sharedDb(repo))).toBe(false);
   });
 
   it('a synced checkout is named once and opens delete-mode, while an unsynced checkout stays wal', () => {
