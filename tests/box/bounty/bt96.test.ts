@@ -1,4 +1,4 @@
-// BT96 — one bounty store under Git's common folder. The fixture databases here
+// BT96 â€” one bounty store under Git's common folder. The fixture databases here
 // are written at the legacy `.box/local/box.db` path by hand: once the product
 // moves first stores, using the product to make them would move them before the
 // scenario starts.
@@ -140,6 +140,7 @@ afterEach(() => {
 });
 
 describe('BT96 the store moves under Git common storage', () => {
+  // @guards M9
   it('moves a first legacy store whole and leaves the old database renamed, never deleted', () => {
     const repo = makeRepo({ 'a.txt': 'a\n' });
     const id = 'bt-aaaa1111bbbb';
@@ -335,6 +336,7 @@ describe('BT96 the store moves under Git common storage', () => {
 });
 
 describe('BT96 a later worktree joins by bounty', () => {
+  // @guards M10
   it('imports an absent bounty whole: rows, original event sequence, outbox and scoped chain meta', () => {
     const { main, side } = linkedRepos();
     const first = 'bt-1212abab3434';
@@ -474,6 +476,7 @@ describe('BT96 chain append names the expected head', () => {
     git(repo, ['rev-list', '--topo-order', '--reverse', `${CHAIN_NS}/${id}`]).split('\n').filter(line => line !== '')
       .map(commit => JSON.parse(git(repo, ['cat-file', 'blob', `${commit}:event.json`])) as Record<string, unknown>);
 
+  // @guards M11
   it('a racing first append is rebuilt on the winner instead of overwriting it', () => {
     const repo = makeRepo({ 'a.txt': 'a\n' });
     const id = 'bt-ab12cd34ef56';
@@ -518,6 +521,7 @@ describe('BT96 chain append names the expected head', () => {
 });
 
 describe('BT96 the outbox reads only what is owed', () => {
+  // @guards M12
   it('the store schema indexes outbox state and the call sites query pending rows by kind or bounty', () => {
     const repo = makeRepo({ 'a.txt': 'a\n' });
     seedLegacyStore(repo, [{ id: 'bt-4444cccc5555' }]);
