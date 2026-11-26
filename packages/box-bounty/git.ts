@@ -6,7 +6,7 @@ import { canonicalFolder, canonicalPath } from './folder.js';
 import { resolveProgram } from './program.js';
 import { BountyRefused } from './errors.js';
 import { showPath } from './notice.js';
-import { gitCredentialEnvironment, withoutTokens } from './github-auth.js';
+import { GITHUB_HTTPS, gitCredentialEnvironment, withoutTokens } from './github-auth.js';
 import advisories from './git-advisories.json' with { type: 'json' };
 
 // The least Git the tool runs on: merges and dry merges pin GIT_ATTR_SOURCE
@@ -140,7 +140,8 @@ export function throwIfRepositoryNotTrusted(repo: string, result: { readonly std
 function gitEnvironment(env: GitEnv = {}, args: readonly string[] = []): NodeJS.ProcessEnv {
   const inherited = withoutTokens(process.env);
   for (const key of ['GIT_DIR', 'GIT_COMMON_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_ALLOW_PROTOCOL']) delete inherited[key];
-  return { ...inherited, GIT_OPTIONAL_LOCKS: '0', ...gitCredentialEnvironment(args), ...env };
+  const prompt = args.some(arg => arg.startsWith(GITHUB_HTTPS)) ? { GIT_TERMINAL_PROMPT: '0' } : {};
+  return { ...inherited, GIT_OPTIONAL_LOCKS: '0', ...prompt, ...gitCredentialEnvironment(args), ...env };
 }
 
 function operationIndex(args: readonly string[]): number {
