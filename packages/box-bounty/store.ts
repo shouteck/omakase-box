@@ -88,6 +88,11 @@ const sha256 = (buffer: Buffer | string): string => createHash('sha256').update(
 interface StorePaths { readonly legacy: string; readonly shared: string }
 const pathCache = new Map<string, StorePaths>();
 
+/** Remember a shared path Git already answered in this process, so resolving the store never costs a second Git start. */
+export function rememberStorePath(repoRoot: string, shared: string): void {
+  pathCache.set(repoRoot, { legacy: legacyStoreDbPath(repoRoot), shared });
+}
+
 /** The shared destination is Git's own spelling of a path inside the common object store — never `.git` assembled by hand. */
 function storePaths(repoRoot: string): StorePaths {
   const cached = pathCache.get(repoRoot);
