@@ -11,7 +11,7 @@ import { join } from 'node:path';
 import { boardAddress, readBountyDetail } from './board.js';
 import { BountyRefused } from './errors.js';
 import { api, invalid, isObject, login as accountLogin, readOnlyApi, remoteGit, signedAccount } from './gh.js';
-import { git } from './git.js';
+import { GitFailed,git,gitOutcome,TAKE_FSCK_LEGACY_WARNINGS,TAKE_OBJECT_CHECK_ARGS,throwIfFetchFsckWeakened,throwIfObjectsRejected } from './git.js';
 import { repositoryAddress } from './repository.js';
 import { loadSettings, saveSettings, settingsDir, writeToolFile } from './settings.js';
 import { solvingOf } from './solving.js';
@@ -174,7 +174,15 @@ export function takeBounty(id: string, options: TakeOptions = {}): TakeResult {
   const target = canPush ? facts.repository : forkOf(root, facts.repository, login);
   const workspace = join(root, 'work');
   // A public clone of the bounty branch only, in Git's foreign mode: no hook, filter or merge driver runs.
-  git(root, ['clone', '--quiet', '--no-tags', '--single-branch', '--branch', facts.bountyBranch, `https://github.com/${facts.repository}.git`, workspace]);
+  throwIfFetchFsckWeakened(root, TAKE_FSCK_LEGACY_WARNINGS, 'taken');
+  const cloneArgs = [...TAKE_OBJECT_CHECK_ARGS, 'clone', '--quiet', '--no-tags', '--single-branch', '--branch', facts.bountyBranch, `https://github.com/${facts.repository}.git`, workspace];
+  const clone = gitOutcome(root, cloneArgs, { GIT_ALLOW_PROTOCOL: 'https' });
+  throwIfObjectsRejected(clone, 'taken');
+  if (clone.status !== 0 || clone.error !== undefined) {
+    const detail = (clone.stderr || clone.stdout || clone.error?.message || `exit ${clone.status}`).trim();
+    throw new GitFailed(`git ${cloneArgs.join(' ')} failed in ${root}: ${detail}`);
+  }
+  const intakeWarnings = clone.stderr.split(/\r?\n/).filter(line => line.startsWith('warning:'));
   const head = git(workspace, ['rev-parse', 'HEAD']);
   if (facts.closesIssue === null && head !== facts.baseCommit) throw new BountyRefused('bounty-branch-moved', `${facts.bountyBranch} is at ${head.slice(0, 12)} on GitHub, not the ${facts.baseCommit.slice(0, 12)} the board lists; nothing was taken and the workspace at ${workspace} is left as it is; next: wait for the board to read the bounty again, then take it`);
   const branch = `box-solve/${id}`;
@@ -202,6 +210,7 @@ export function takeBounty(id: string, options: TakeOptions = {}): TakeResult {
   return { kind: 'taken', taken, lines: [
     `${id} — taken: draft pull request #${number} ${url}, from ${target} ${branch}${canPush ? '' : ' (your fork)'}`,
     `workspace: ${workspace} — ${facts.closesIssue === null ? 'the bounty branch' : `the default branch, ${facts.bountyBranch},`} at ${head.slice(0, 12)}, with an empty start commit`,
+    ...(intakeWarnings.length === 0 ? [] : ['Git object warnings from the clone:', ...intakeWarnings.map(line => `  ${line}`)]),
     'the tool ran nothing from this repository. Run its tests only here, and keep your credentials out of this folder. The tool pushed with your own gh sign-in, and this machine stays signed in to GitHub; it cannot stop an agent reaching that sign-in.',
     ...(ownBounty ? [`${id} was posted by ${login}, the account taking it: a merge here is not counted in the owner's record.`] : []),
     `next: work in ${workspace}, commit, and push to ${target} ${branch} — the draft updates as you push; omakase-box submit ${id} once it is ready for review; omakase-box close ${id} withdraws the attempt`

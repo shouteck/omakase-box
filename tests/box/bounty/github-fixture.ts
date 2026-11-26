@@ -459,7 +459,14 @@ function withGhEnv<T>(world: World, run: () => T): T {
       if (/(?:^|[\\/])git(?:\.exe)?$/i.test(String(args[0])) && Array.isArray(args[1])) {
         // PF25: once a test has made the solver's fork (a second bare remote beside the first), any other GitHub repository is that fork.
         const fork = join(world.scratch, 'fork.git');
-        mapped[1] = args[1].map(arg => arg === `https://github.com/${world.repository}.git` ? world.bare : typeof arg === 'string' && existsSync(fork) && /^https:\/\/github\.com\/[^/]+\/[^/]+\.git$/.test(arg) ? fork : arg);
+        let rewritten = false;
+        mapped[1] = args[1].map(arg => {
+          const next = arg === `https://github.com/${world.repository}.git` ? world.bare : typeof arg === 'string' && existsSync(fork) && /^https:\/\/github\.com\/[^/]+\/[^/]+\.git$/.test(arg) ? fork : arg;
+          rewritten ||= next !== arg;
+          return next;
+        });
+        const options = args[2] as { env?: NodeJS.ProcessEnv } | undefined;
+        if (rewritten && options?.env?.['GIT_ALLOW_PROTOCOL'] === 'https') mapped[2] = { ...options, env: { ...options.env, GIT_ALLOW_PROTOCOL: 'https:file' } };
       }
       return Reflect.apply(target, receiver, mapped);
     }

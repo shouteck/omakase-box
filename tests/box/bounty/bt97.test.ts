@@ -61,7 +61,9 @@ function ownershipFixture(): { repo: string; marker: string; task: string } {
 // Rewrite only the product's GitHub HTTPS transport to the fixture's bare
 // remote as a file:// URL. The outer fixture rewrites the same URL to a local
 // path; that is fine for most tests, but local-path transport does not pack and
-// therefore cannot prove fetch-side fsck. Other local git plumbing is untouched.
+// therefore cannot prove fetch-side fsck. The file URL stands in for GitHub's
+// HTTPS transport here, so the child alone may use it; captures outside this
+// seam still see the product's HTTPS-only environment.
 function packTransport<T>(repository: string, bare: string, run: () => T): T {
   const previous = childProcess.spawnSync;
   const https = `https://github.com/${repository}.git`;
@@ -71,6 +73,8 @@ function packTransport<T>(repository: string, bare: string, run: () => T): T {
       const mapped = [...args];
       if (/(?:^|[\\/])git(?:\.exe)?$/i.test(String(args[0])) && Array.isArray(args[1])) {
         mapped[1] = args[1].map(arg => arg === https ? packed : arg);
+        const options = args[2] as { env?: NodeJS.ProcessEnv } | undefined;
+        if (options?.env?.['GIT_ALLOW_PROTOCOL'] === 'https') mapped[2] = { ...options, env: { ...options.env, GIT_ALLOW_PROTOCOL: 'https:file' } };
       }
       return Reflect.apply(target, receiver, mapped);
     }
@@ -320,22 +324,24 @@ describe('BT97 intake policy sealing and protocol', { timeout: 120000 }, () => {
     allowSolving();
     listed(bare, id);
     const seen: { args: string[]; env: NodeJS.ProcessEnv | undefined }[] = [];
-    const previous = childProcess.spawnSync;
-    const capture = new Proxy(previous, {
-      apply(target, receiver, args) {
-        if (/(?:^|[\\/])git(?:\.exe)?$/i.test(String(args[0])) && Array.isArray(args[1])) {
-          seen.push({ args: args[1].map(String), env: (args[2] as { env?: NodeJS.ProcessEnv } | undefined)?.env });
+    packTransport('owner/project', bare, () => {
+      const packedTransport = childProcess.spawnSync;
+      const capture = new Proxy(packedTransport, {
+        apply(target, receiver, args) {
+          if (/(?:^|[\\/])git(?:\.exe)?$/i.test(String(args[0])) && Array.isArray(args[1])) {
+            seen.push({ args: args[1].map(String), env: (args[2] as { env?: NodeJS.ProcessEnv } | undefined)?.env });
+          }
+          return Reflect.apply(target, receiver, args);
         }
-        return Reflect.apply(target, receiver, args);
+      });
+      childProcess.spawnSync = capture;
+      syncBuiltinESMExports();
+      try { takeBounty(id); }
+      finally {
+        childProcess.spawnSync = packedTransport;
+        syncBuiltinESMExports();
       }
     });
-    childProcess.spawnSync = capture;
-    syncBuiltinESMExports();
-    try { packTransport('owner/project', bare, () => takeBounty(id)); }
-    finally {
-      childProcess.spawnSync = previous;
-      syncBuiltinESMExports();
-    }
     const clone = seen.find(call => call.args.includes('clone'));
     expect(clone?.env?.['GIT_ALLOW_PROTOCOL']).toBe('https');
     const ownerCalls = seen.filter(call => !call.args.includes('clone') && call.args.some(arg => arg.includes('github.com') || arg.includes('git@github.com')));
