@@ -59,7 +59,7 @@ export function gitProgram(): string {
 // commit: the same tree, parent, message and dates always give the same sha,
 // so the GitHub preview, the record and the push can never disagree about
 // which commit it is.
-export interface GitEnv { readonly GIT_INDEX_FILE?: string; readonly GIT_ATTR_SOURCE?: string; readonly GIT_AUTHOR_DATE?: string; readonly GIT_COMMITTER_DATE?: string; readonly GIT_LITERAL_PATHSPECS?: string; readonly GIT_AUTHOR_NAME?: string; readonly GIT_AUTHOR_EMAIL?: string; readonly GIT_COMMITTER_NAME?: string; readonly GIT_COMMITTER_EMAIL?: string }
+export interface GitEnv { readonly GIT_INDEX_FILE?: string; readonly GIT_ATTR_SOURCE?: string; readonly GIT_AUTHOR_DATE?: string; readonly GIT_COMMITTER_DATE?: string; readonly GIT_LITERAL_PATHSPECS?: string; readonly GIT_AUTHOR_NAME?: string; readonly GIT_AUTHOR_EMAIL?: string; readonly GIT_COMMITTER_NAME?: string; readonly GIT_COMMITTER_EMAIL?: string; readonly GIT_ALLOW_PROTOCOL?: string }
 
 export interface GitOutcome {
   readonly status: number | null;
@@ -96,7 +96,7 @@ export function throwIfRepositoryNotTrusted(repo: string, result: { readonly std
 // while the token is in use gets it as its credential helper's answer instead (github-auth.ts), and only that call.
 function gitEnvironment(env: GitEnv = {}, args: readonly string[] = []): NodeJS.ProcessEnv {
   const inherited = withoutTokens(process.env);
-  for (const key of ['GIT_DIR', 'GIT_COMMON_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE']) delete inherited[key];
+  for (const key of ['GIT_DIR', 'GIT_COMMON_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_ALLOW_PROTOCOL']) delete inherited[key];
   return { ...inherited, GIT_OPTIONAL_LOCKS: '0', ...gitCredentialEnvironment(args), ...env };
 }
 
@@ -176,7 +176,7 @@ const ALWAYS = ['-c', 'core.hooksPath=/dev/null', '-c', 'commit.gpgSign=false', 
 // relative include or attributes path can be resolved against the including
 // file's directory exactly as Git resolves it — and the include chain is
 // already followed, to any depth, by git itself.
-const CONFIG_KEYS = '^(filter\\..*\\.(clean|smudge|process|required)|merge\\..*\\.driver|include\\.path|includeif\\..*\\.path|core\\.attributesfile|alias\\..*|remote\\..*\\.(url|pushurl)|url\\..*\\.(insteadof|pushinsteadof))$';
+const CONFIG_KEYS = '^(filter\\..*\\.(clean|smudge|process|required)|merge\\..*\\.driver|include\\.path|includeif\\..*\\.path|core\\.attributesfile|alias\\..*|remote\\..*\\.(url|pushurl)|url\\..*\\.(insteadof|pushinsteadof)|fetch\\.fsck\\..*)$';
 const PIN_KEYS = /^(filter\..*\.(clean|smudge|process|required)|merge\..*\.driver)$/;
 
 export function commandConfig(repo: string): readonly ConfigEntry[] {
@@ -197,6 +197,36 @@ export function commandConfig(repo: string): readonly ConfigEntry[] {
   }
   remembered?.set(repo, entries);
   return entries;
+}
+
+export const SOLUTION_OBJECT_CHECK_ARGS = ['-c', 'fetch.fsckObjects=true'] as const;
+export const TAKE_FSCK_LEGACY_WARNINGS = ['badTimezone', 'missingSpaceBeforeDate', 'zeroPaddedFilemode'] as const;
+export const TAKE_OBJECT_CHECK_ARGS = [
+  '-c', 'transfer.fsckObjects=true',
+  '-c', 'fetch.fsck.badTimezone=warn',
+  '-c', 'fetch.fsck.missingSpaceBeforeDate=warn',
+  '-c', 'fetch.fsck.zeroPaddedFilemode=warn'
+] as const;
+
+const FETCH_FSCK_PREFIX = 'fetch.fsck.';
+export function throwIfFetchFsckWeakened(repo: string, controlled: readonly string[], consequence: string): void {
+  const controlledKeys = new Set(controlled.map(id => `${FETCH_FSCK_PREFIX}${id.toLowerCase()}`));
+  const weakened = commandConfig(repo).filter(({ key, value }) => {
+    const name = key.toLowerCase();
+    if (!name.startsWith(FETCH_FSCK_PREFIX) || controlledKeys.has(name)) return false;
+    if (name === 'fetch.fsck.skiplist') return true;
+    const severity = value.trim().toLowerCase();
+    return severity === 'warn' || severity === 'ignore';
+  });
+  if (weakened.length === 0) return;
+  const settings = weakened.map(({ origin, key, value }) => `${key}=${value} in ${origin}`).join('; ');
+  throw new BountyRefused('git-objects-rejected', `inherited Git configuration would weaken object checking (${settings}); nothing was ${consequence}; next: remove or narrow that fetch.fsck configuration yourself, then rerun the same command`);
+}
+
+export function throwIfObjectsRejected(result: GitOutcome, consequence: string): void {
+  const detail = `${result.stderr}\n${result.stdout}`.trim();
+  if (!/fsck error in pack(?:ed)? objects?/i.test(detail)) return;
+  throw new BountyRefused('git-objects-rejected', `Git rejected the stranger objects: ${detail}\nnothing was ${consequence}; next: do not use this solution or repository`);
 }
 
 // These read or write objects and refs only — never working-tree content, never

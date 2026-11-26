@@ -7,7 +7,7 @@ import { resolveProgram } from './program.js';
 import { BountyRefused } from './errors.js';
 import { directRequest } from './gh-direct.js';
 import { recordSignIn, signedInWith, tokenFromEnvironment, useTokenForGit } from './github-auth.js';
-import { gitOutcome } from './git.js';
+import { gitOutcome, type GitOutcome } from './git.js';
 import { requireRepository } from './settings.js';
 import { metaGet,metaSet,storeDbPath } from './store.js';
 import { type FirstSight,type PayOutcome,type PayToFact } from './pay.js';
@@ -405,8 +405,12 @@ export function publicRepository(root: string): string {
   return info['full_name'];
 }
 
-export function remoteGit(root: string, repository: string, args: readonly string[]): void {
-  const result = gitOutcome(root, [...args.slice(0, 1), `https://github.com/${repository}.git`, ...args.slice(1)]);
+export function remoteGitOutcome(root: string, repository: string, args: readonly string[], config: readonly string[] = []): GitOutcome {
+  return gitOutcome(root, [...config, ...args.slice(0, 1), `https://github.com/${repository}.git`, ...args.slice(1)]);
+}
+
+export function remoteGit(root: string, repository: string, args: readonly string[], config: readonly string[] = []): void {
+  const result = remoteGitOutcome(root, repository, args, config);
   if (result.status !== 0 || result.error !== undefined) return invalid('github-git-failed', 'Git could not complete the GitHub operation; next: check signed-in Git and rerun the same command');
 }
 

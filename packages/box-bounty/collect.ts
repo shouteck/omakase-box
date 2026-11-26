@@ -1,8 +1,8 @@
 import { parseNameStatus,neverShipViolations,commitStatuses,EMPTY_TREE } from './publish-plan.js';
-import { invalid,isObject,type GitHubPublication,remoteBranchSha,remoteGit,api,pages,number,redact,login,READABLE_LOGIN,namesGitHubCause } from './gh.js';
+import { invalid,isObject,type GitHubPublication,remoteBranchSha,remoteGitOutcome,api,pages,number,redact,login,READABLE_LOGIN,namesGitHubCause } from './gh.js';
 import { NOTHING_RUN,quoteForeign,showPath } from './notice.js';
 import { BountyRefused } from './errors.js';
-import { dryMergeOnto,git,gitOutcome } from './git.js';
+import { dryMergeOnto,git,gitOutcome,SOLUTION_OBJECT_CHECK_ARGS,throwIfFetchFsckWeakened,throwIfObjectsRejected } from './git.js';
 import type { DryMerge } from './git.js';
 import { shipRules } from './never-ship.js';
 import { attemptRefName,attemptsOf,isOpenStage,loadRecord,appendEvents,requireCurrentDelivery,retiredRoute,transitionTo } from './record.js';
@@ -330,7 +330,10 @@ export function answerGitHub(root: string, id: string, pr: number, via?: 'look' 
   const author = login(data['user']['login']);
   // The pull request's head lands on FETCH_HEAD alone — no scratch ref to
   // create and delete around the read.
-  remoteGit(root, repository, ['fetch', '--no-tags', '--no-recurse-submodules', `refs/pull/${pr}/head`]);
+  throwIfFetchFsckWeakened(root, [], 'collected');
+  const intake = remoteGitOutcome(root, repository, ['fetch', '--no-tags', '--no-recurse-submodules', `refs/pull/${pr}/head`], SOLUTION_OBJECT_CHECK_ARGS);
+  throwIfObjectsRejected(intake, 'collected');
+  if (intake.status !== 0 || intake.error !== undefined) return invalid('github-git-failed', 'Git could not complete the GitHub operation; nothing was collected; next: check signed-in Git and rerun the same command');
   const commit = git(root, ['rev-parse', 'FETCH_HEAD']);
   if (commit !== data['head']['sha']) return invalid('github-pr-changed', 'the pull request changed during collection; next: rerun the same command to collect its current version');
   const body = typeof data['body'] === 'string' ? data['body'] : '';
