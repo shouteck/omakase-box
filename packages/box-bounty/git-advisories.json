@@ -1,0 +1,20 @@
+[
+  {
+    "id": "GHSA-8h77-4q3w-gfgv",
+    "cve": "CVE-2024-32002",
+    "address": "https://github.com/git/git/security/advisories/GHSA-8h77-4q3w-gfgv",
+    "fixedVersions": ["2.39.4", "2.40.2", "2.41.1", "2.42.2", "2.43.4", "2.44.1", "2.45.1"]
+  },
+  {
+    "id": "GHSA-xfc6-vwr8-r389",
+    "cve": "CVE-2024-32004",
+    "address": "https://github.com/git/git/security/advisories/GHSA-xfc6-vwr8-r389",
+    "fixedVersions": ["2.39.4", "2.40.2", "2.41.1", "2.42.2", "2.43.4", "2.44.1", "2.45.1"]
+  },
+  {
+    "id": "GHSA-vwqx-4fm8-6qc9",
+    "cve": "CVE-2025-48384",
+    "address": "https://github.com/git/git/security/advisories/GHSA-vwqx-4fm8-6qc9",
+    "fixedVersions": ["2.43.7", "2.44.4", "2.45.4", "2.46.4", "2.47.3", "2.48.2", "2.49.1", "2.50.1"]
+  }
+]
