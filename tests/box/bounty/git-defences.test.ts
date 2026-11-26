@@ -7,9 +7,9 @@ import { syncBuiltinESMExports } from 'node:module';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { changeConfig, finalizeBounty, lookBounty, planBounty, postBounty, takeBounty } from '../../../packages/box-bounty/index.js';
+import { changeConfig, finalizeBounty, loadRecord, lookBounty, planBounty, postBounty, takeBounty } from '../../../packages/box-bounty/index.js';
 import { fixture, postedFixture } from './github-fixture.js';
-import { git, makeRepo, runRoot } from './support.js';
+import { git, makeRepo, runRoot, write } from './support.js';
 
 interface CapturedCall {
   readonly args: string[];
@@ -79,7 +79,7 @@ describe('BT97 Git defence pins', { timeout: 120000 }, () => {
   // @guards R1
   it('compares the table with captured create, solution-intake and take calls', () => {
     const rows = defenceRows();
-    for (const id of ['ownership-respected', 'hooks-off', 'fsmonitor-off', 'signing-programs-off', 'submodule-recursion-off', 'background-maintenance-off', 'external-diff-off', 'textconv-off', 'foreign-attributes-inert', 'optional-locks-off', 'git-environment-scrubbed', 'snapshot-index-isolated', 'literal-pathspecs', 'terminal-prompt-off', 'tokens-scoped', 'solution-objects-checked', 'take-objects-checked', 'take-protocol-https', 'old-git-named']) {
+    for (const id of ['ownership-respected', 'hooks-off', 'fsmonitor-off', 'signing-programs-off', 'submodule-recursion-off', 'background-maintenance-off', 'external-diff-off', 'textconv-off', 'foreign-attributes-inert', 'optional-locks-off', 'git-environment-scrubbed', 'snapshot-index-isolated', 'literal-pathspecs', 'deterministic-tool-commit', 'terminal-prompt-off', 'tokens-scoped', 'solution-objects-checked', 'take-objects-checked', 'take-protocol-https', 'old-git-named']) {
       expect(rows.has(id), `GIT-DEFENCES.md row ${id}`).toBe(true);
     }
 
@@ -87,8 +87,11 @@ describe('BT97 Git defence pins', { timeout: 120000 }, () => {
     const created = captureGit(() => finalizeBounty(planBounty({ repoPath: repo, why: 'defence capture', taskPath: join(repo, 'TASK.md') })));
     const calls = [...created.calls];
 
+    let wipCreatedAt: string | undefined;
     fixture(context => {
-      calls.push(...captureGit(() => postBounty(context.repo, context.id, 'github')).calls);
+      write(context.repo, 'app.txt', 'fixed\npublish-plan capture\n');
+      calls.push(...captureGit(() => postBounty(context.repo, context.id, 'github', { choice: { withChanges: true, include: [] } })).calls);
+      wipCreatedAt = loadRecord(context.repo, context.id).createdAt;
       context.pr('solver');
       calls.push(...captureGit(() => lookBounty(context.repo, context.id, 1)).calls);
     });
@@ -131,6 +134,30 @@ describe('BT97 Git defence pins', { timeout: 120000 }, () => {
       if ((operation === 'merge-tree' || operation === 'merge') && call.env?.['GIT_ATTR_SOURCE'] === undefined) fail('foreign-attributes-inert', `${operation} has no GIT_ATTR_SOURCE`);
       if (operation === 'add' && call.args.includes('--pathspec-from-file=-') && call.env?.['GIT_LITERAL_PATHSPECS'] !== '1') fail('literal-pathspecs', 'snapshot pathspec add lacks GIT_LITERAL_PATHSPECS=1');
       if (call.args.some(arg => arg.startsWith('https://github.com/')) && call.env?.['GIT_TERMINAL_PROMPT'] !== '0') fail('terminal-prompt-off', `GitHub call lacks GIT_TERMINAL_PROMPT=0: ${call.args.join(' ')}`);
+    }
+
+    const isolatedCalls = callsInScope.filter(call => {
+      const operation = operationOf(call.args);
+      return operation === 'read-tree' || operation === 'write-tree' || operation === 'add' || operation === 'update-index' && call.args.includes('--index-info');
+    });
+    const publishReadTree = callsInScope.find(call => operationOf(call.args) === 'read-tree' && call.args.includes('HEAD'));
+    if (publishReadTree === undefined) fail('snapshot-index-isolated', 'no publish-plan temporary-index read-tree was captured');
+    for (const call of isolatedCalls) {
+      if (call.env?.['GIT_INDEX_FILE'] === undefined || call.env['GIT_INDEX_FILE'] === '') fail('snapshot-index-isolated', `index call lacks GIT_INDEX_FILE: ${call.args.join(' ')}`);
+    }
+    if (publishReadTree?.env?.['GIT_INDEX_FILE'] !== undefined) {
+      const index = publishReadTree.env['GIT_INDEX_FILE'];
+      for (const operation of ['update-index', 'write-tree']) {
+        if (!callsInScope.some(call => operationOf(call.args) === operation && call.env?.['GIT_INDEX_FILE'] === index)) fail('snapshot-index-isolated', `publish-plan ${operation} was not captured on the read-tree index`);
+      }
+    }
+
+    const wipCommit = callsInScope.find(call => operationOf(call.args) === 'commit-tree' && call.args.some(arg => arg.endsWith(': work in progress')));
+    if (wipCommit === undefined) fail('deterministic-tool-commit', 'no publish-plan tool-built commit was captured');
+    else {
+      if (wipCreatedAt === undefined) fail('deterministic-tool-commit', 'the posted record createdAt was not read');
+      if (wipCommit.env?.['GIT_AUTHOR_DATE'] !== wipCreatedAt) fail('deterministic-tool-commit', `GIT_AUTHOR_DATE is ${String(wipCommit.env?.['GIT_AUTHOR_DATE'])}, not ${String(wipCreatedAt)}`);
+      if (wipCommit.env?.['GIT_COMMITTER_DATE'] !== wipCreatedAt) fail('deterministic-tool-commit', `GIT_COMMITTER_DATE is ${String(wipCommit.env?.['GIT_COMMITTER_DATE'])}, not ${String(wipCreatedAt)}`);
     }
 
     const solutionFetch = callsInScope.find(call => operationOf(call.args) === 'fetch' && call.args.some(arg => arg.startsWith('refs/pull/')));
