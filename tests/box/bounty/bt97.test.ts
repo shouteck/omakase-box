@@ -159,35 +159,60 @@ const listed = (bare: string, id: string, over: Record<string, unknown> = {}) =>
 };
 const allowSolving = () => { changeConfig(null, 'set', 'board', board); changeConfig(null, 'set', 'solving', 'allowed'); };
 
-const ADVISORIES = JSON.parse(readFileSync(new URL('../../../packages/box-bounty/git-advisories.json', import.meta.url), 'utf8')) as { fixedVersions: string[] }[];
+interface Advisory {
+  readonly id: string;
+  readonly cve: string;
+  readonly address: string;
+  readonly fixedVersions: string[];
+}
 
-function gitVersionPreload(version: string): string {
+const ADVISORIES = JSON.parse(readFileSync(new URL('../../../packages/box-bounty/git-advisories.json', import.meta.url), 'utf8')) as Advisory[];
+const FIXED_VERSIONS = [...new Set(ADVISORIES.flatMap(advisory => advisory.fixedVersions))];
+
+function gitVersionPreload(): { preload: string; probeLog: string } {
   const folder = runRoot('bt97-git-version');
   mkdirSync(folder, { recursive: true });
-  const preload = join(folder, 'git-version.mjs');
+  const preload = join(folder, 'git-version.cjs');
+  const probeLog = join(folder, 'probes.txt');
   writeFileSync(preload, `
-    import childProcess from 'node:child_process';
-    import { syncBuiltinESMExports } from 'node:module';
-    const real = childProcess.spawnSync;
-    childProcess.spawnSync = function(command, args, options) {
-      if (/(?:^|[\\\\/])git(?:\\.exe)?$/i.test(String(command)) && Array.isArray(args) && args.length === 1 && args[0] === 'version') {
-        const stdout = 'git version ${version}\\n';
-        return { pid: 0, output: [null, stdout, ''], stdout, stderr: '', status: 0, signal: null };
-      }
-      return real.call(this, command, args, options);
-    };
-    syncBuiltinESMExports();
-  `);
-  return preload;
+const fs = require('node:fs');
+const childProcess = require('node:child_process');
+const real = childProcess.spawnSync;
+childProcess.spawnSync = function(command, args, options) {
+  const argv = Array.isArray(args) ? args.map(String) : [];
+  if (/(^|[\\\\/])git(?:\\.exe)?$/i.test(String(command)) && argv.length === 1 && argv[0] === 'version') {
+    const version = process.env.BT97_GIT_VERSION;
+    if (process.env.BT97_GIT_PROBE_LOG) fs.appendFileSync(process.env.BT97_GIT_PROBE_LOG, version + '\\n');
+    const stdout = 'git version ' + version + '\\n';
+    return { pid: process.pid, output: [null, stdout, ''], stdout, stderr: '', status: 0, signal: null };
+  }
+  return real.apply(this, arguments);
+};
+require('node:module').syncBuiltinESMExports();
+`);
+  writeFileSync(probeLog, '');
+  return { preload, probeLog };
 }
 
 function cliWithGitVersion(cwd: string, args: readonly string[], version: string) {
-  const preload = gitVersionPreload(version);
-  return spawnSync(process.execPath, ['--import', pathToFileURL(preload).href, CLI_DIST, ...args], { cwd, encoding: 'utf8', env: process.env, timeout: 120000 });
+  const { preload, probeLog } = gitVersionPreload();
+  const run = spawnSync(process.execPath, ['--require', posix(preload), CLI_DIST, ...args], {
+    cwd,
+    encoding: 'utf8',
+    env: { ...process.env, BT97_GIT_VERSION: version, BT97_GIT_PROBE_LOG: probeLog },
+    timeout: 120000
+  });
+  return { run, probeLog };
 }
 
-function upgradeLines(output: string): string[] {
-  return output.split('\n').filter(line => line.includes('is older than the releases that fix known clone vulnerabilities'));
+function upgradeWarnings(output: string, version: string): string[] {
+  const prefix = `your Git ${version} is older than the releases that fix known clone vulnerabilities (`;
+  const suffix = `); the tool's own calls avoid them, but your agent's own Git commands in a bounty's workspace do not; upgrade from https://git-scm.com`;
+  return output.split(/\r?\n/).flatMap(line => line.startsWith(prefix) && line.endsWith(suffix) ? [line.slice(prefix.length, line.length - suffix.length)] : []);
+}
+
+function expectProbe(runProbeLog: string, version: string): void {
+  expect(readFileSync(runProbeLog, 'utf8').split(/\r?\n/).filter(Boolean)).toContain(version);
 }
 
 describe('BT97 ownership boundary', { timeout: 120000 }, () => {
@@ -268,7 +293,7 @@ describe('BT97 intake policy sealing and protocol', { timeout: 120000 }, () => {
     context.update({ prs: [{ number: 1, user: { login: 'solver' }, base: { ref: `box-bounty/${context.id}`, repo: { full_name: 'owner/project' } }, head: { sha: hostile.sha }, files: hostile.files.map(filename => ({ filename })) }] });
     const home = runRoot('bt97-weakening-home');
     mkdirSync(home, { recursive: true });
-    writeFileSync(join(home, '.gitconfig'), `[fetch "fsck"]\n\thasDotgit = ignore\n\tskipList = ${posix(join(home, 'skip'))}\n`);
+    writeFileSync(join(home, '.gitconfig'), `[fetch "fsck"]\n\thasDotgit = ignore\n\tgitmodulesUpdate = ignore\n\tskipList = ${posix(join(home, 'skip'))}\n`);
     writeFileSync(join(home, 'skip'), `${hostile.blob}\n`);
     packTransport('owner/project', context.bare, () => {
       expect(() => withEnv({ HOME: home, USERPROFILE: home }, () => lookBounty(context.repo, context.id, 1))).toThrow(expect.objectContaining({ reason: 'git-objects-rejected' }));
@@ -282,7 +307,7 @@ describe('BT97 intake policy sealing and protocol', { timeout: 120000 }, () => {
     listed(bare, id);
     const home = runRoot('bt97-take-weakening-home');
     mkdirSync(home, { recursive: true });
-    writeFileSync(join(home, '.gitconfig'), `[fetch "fsck"]\n\thasDotgit = ignore\n\tskipList = ${posix(join(home, 'skip'))}\n`);
+    writeFileSync(join(home, '.gitconfig'), `[fetch "fsck"]\n\thasDotgit = ignore\n\tgitmodulesUpdate = ignore\n\tskipList = ${posix(join(home, 'skip'))}\n`);
     writeFileSync(join(home, 'skip'), `${hostile.blob}\n`);
     packTransport('owner/project', bare, () => {
       expect(() => withEnv({ HOME: home, USERPROFILE: home }, () => takeBounty(id))).toThrow(expect.objectContaining({ reason: 'git-objects-rejected' }));
@@ -319,50 +344,64 @@ describe('BT97 intake policy sealing and protocol', { timeout: 120000 }, () => {
 });
 
 describe('BT97 old Git version line', { timeout: 120000 }, () => {
-  const oldGit = '2.45.0';
-  const newGit = '2.50.1';
-  const expectedFixed = ['2.45.1', '2.45.4'];
+  const oldGit = '2.45.3';
+  const newGit = '2.45.4';
+
+  // @guards R1
+  it('the pinned advisory data names the three clone advisories and their fixed versions', () => {
+    expect(ADVISORIES).toEqual([
+      { id: 'GHSA-8h77-4q3w-gfgv', cve: 'CVE-2024-32002', address: 'https://github.com/git/git/security/advisories/GHSA-8h77-4q3w-gfgv', fixedVersions: ['2.39.4', '2.40.2', '2.41.1', '2.42.2', '2.43.4', '2.44.1', '2.45.1'] },
+      { id: 'GHSA-xfc6-vwr8-r389', cve: 'CVE-2024-32004', address: 'https://github.com/git/git/security/advisories/GHSA-xfc6-vwr8-r389', fixedVersions: ['2.39.4', '2.40.2', '2.41.1', '2.42.2', '2.43.4', '2.44.1', '2.45.1'] },
+      { id: 'GHSA-vwqx-4fm8-6qc9', cve: 'CVE-2025-48384', address: 'https://github.com/git/git/security/advisories/GHSA-vwqx-4fm8-6qc9', fixedVersions: ['2.43.7', '2.44.4', '2.45.4', '2.46.4', '2.47.3', '2.48.2', '2.49.1', '2.50.1'] }
+    ]);
+    expect(FIXED_VERSIONS).toHaveLength(15);
+  });
+
   const expectOneAdvisoryLine = (output: string, version: string) => {
-    const lines = upgradeLines(output);
-    expect(lines).toHaveLength(1);
-    expect(lines[0]).toContain(`your Git ${version} is older than the releases that fix known clone vulnerabilities`);
-    for (const fixed of expectedFixed) {
-      expect(ADVISORIES.some(advisory => advisory.fixedVersions.includes(fixed))).toBe(true);
-      expect(lines[0]).toContain(fixed);
-    }
-    expect(lines[0]).toContain("the tool's own calls avoid them, but your agent's own Git commands in a bounty's workspace do not");
-    expect(lines[0]).toContain('https://git-scm.com');
+    const warnings = upgradeWarnings(output, version);
+    expect(warnings, `old-Git warning count in:\n${output}`).toHaveLength(1);
+    const entries = warnings[0]!.split(',').map(entry => entry.trim()).filter(entry => entry !== '');
+    expect(new Set(entries).size).toBe(entries.length);
+    expect([...entries].sort()).toEqual([...FIXED_VERSIONS].sort());
   };
 
   // @guards R1
-  it('an older stand-in Git prints the upgrade line once on bare omakase-box and on take', () => postedFixture(({ bare, id, scratch }) => {
+  it('an older stand-in Git prints the exact upgrade line once on bare omakase-box and on take', () => postedFixture(({ bare, id, repo, scratch }) => {
     allowSolving();
     listed(bare, id);
     const empty = join(scratch, 'nowhere');
     mkdirSync(empty, { recursive: true });
-    const overview = cliWithGitVersion(empty, [], oldGit);
-    expect(overview.status, overview.stderr).toBe(0);
-    expectOneAdvisoryLine(`${overview.stdout}\n${overview.stderr}`, oldGit);
 
-    const into = join(scratch, 'take-old-git');
-    const taken = cliWithGitVersion(empty, ['take', id, '--into', into], oldGit);
-    expect(taken.status, taken.stderr).toBe(0);
-    expectOneAdvisoryLine(`${taken.stdout}\n${taken.stderr}`, oldGit);
+    const overview = cliWithGitVersion(repo, [], oldGit);
+    expectProbe(overview.probeLog, oldGit);
+    expect(overview.run.status, overview.run.stderr).toBe(0);
+    expect(overview.run.stdout).toContain('omakase-box can hand work to an outside solver');
+    expectOneAdvisoryLine(`${overview.run.stdout}\n${overview.run.stderr}`, oldGit);
+
+    const taken = cliWithGitVersion(empty, ['take', id], oldGit);
+    expectProbe(taken.probeLog, oldGit);
+    expect(taken.run.status, taken.run.stderr).toBe(0);
+    expect(taken.run.stdout).toContain(`${id} — taken:`);
+    expectOneAdvisoryLine(`${taken.run.stdout}\n${taken.run.stderr}`, oldGit);
   }));
 
   // @guards R1
-  it('a newer stand-in Git prints no upgrade line on bare omakase-box or take', () => postedFixture(({ bare, id, scratch }) => {
+  it('a fixed stand-in Git prints no upgrade line on bare omakase-box or take', () => postedFixture(({ bare, id, repo, scratch }) => {
     allowSolving();
     listed(bare, id);
     const empty = join(scratch, 'nowhere-new');
     mkdirSync(empty, { recursive: true });
-    const overview = cliWithGitVersion(empty, [], newGit);
-    expect(overview.status, overview.stderr).toBe(0);
-    expect(upgradeLines(`${overview.stdout}\n${overview.stderr}`)).toEqual([]);
 
-    const into = join(scratch, 'take-new-git');
-    const taken = cliWithGitVersion(empty, ['take', id, '--into', into], newGit);
-    expect(taken.status, taken.stderr).toBe(0);
-    expect(upgradeLines(`${taken.stdout}\n${taken.stderr}`)).toEqual([]);
+    const overview = cliWithGitVersion(repo, [], newGit);
+    expectProbe(overview.probeLog, newGit);
+    expect(overview.run.status, overview.run.stderr).toBe(0);
+    expect(overview.run.stdout).toContain('omakase-box can hand work to an outside solver');
+    expect(upgradeWarnings(`${overview.run.stdout}\n${overview.run.stderr}`, newGit)).toEqual([]);
+
+    const taken = cliWithGitVersion(empty, ['take', id], newGit);
+    expectProbe(taken.probeLog, newGit);
+    expect(taken.run.status, taken.run.stderr).toBe(0);
+    expect(taken.run.stdout).toContain(`${id} — taken:`);
+    expect(upgradeWarnings(`${taken.run.stdout}\n${taken.run.stderr}`, newGit)).toEqual([]);
   }));
 });

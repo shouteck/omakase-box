@@ -88,7 +88,7 @@ describe('BT97 Git defence pins', { timeout: 120000 }, () => {
     const calls = [...created.calls];
 
     fixture(context => {
-      postBounty(context.repo, context.id, 'github');
+      calls.push(...captureGit(() => postBounty(context.repo, context.id, 'github')).calls);
       context.pr('solver');
       calls.push(...captureGit(() => lookBounty(context.repo, context.id, 1)).calls);
     });
