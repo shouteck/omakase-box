@@ -10,7 +10,7 @@ import { api, ensureLabel, invalid, isObject, issueNumber, namesGitHubCause, rec
 import { emitMergeNotice, emitSentEarlier, inRead } from './notice.js';
 import { checkedForIssue, decisionGranted, DoorRefused } from './outbound.js';
 import { appendEvents, type BountyRecord } from './record.js';
-import { outboxRows, owe, owedBehind, pendingOwed, readStored, settleOwed, type Owed, type OutboxRow } from './store.js';
+import { owe, owedBehind, pendingOutbox, pendingOwed, readStored, settleOwed, type Owed, type OutboxRow } from './store.js';
 
 export interface Sent {
   readonly key: string;
@@ -117,7 +117,7 @@ export { asRead, inRead, readOnlyProcess } from './notice.js';
 export function reconcile(root: string, id: string): Sent[] {
   if (inRead()) return [];
   // A board hint goes with the end-of-command flush (board.ts), not here.
-  return outboxRows(root, id).filter(row => row.state === 'pending' && row.kind !== 'board').map(row => {
+  return pendingOutbox(root, { bountyId: id, exceptKind: 'board' }).map(row => {
     const owedAt = owedBehind(root, row)?.at;
     const sent = sendOne(root, row);
     if (sent.outcome === 'sent') emitSentEarlier(sent.key, sent.detail, owedAt);

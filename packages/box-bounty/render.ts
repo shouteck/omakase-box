@@ -22,7 +22,7 @@ import { boardAddress,boardLine,boardNotToldLine,boardTold } from './board.js';
 import { paymentOf,payToLine,UNATTRIBUTED } from './pay.js';
 import { applicableAttempts,attemptsOf,endedCount,endedRecords,isOpenStage,listRecords,loadRecord,openRecords,appendEvents,recordDir,retiredRoute,setOpenSurfacesSync,trackedRecordFiles } from './record.js';
 import { carriesPatch } from './fold.js';
-import { corruptFiles,endedContaining,localEvents,outboxRows,sharedEnded,sharedEndedCount,sharedOpen,sharedRead } from './store.js';
+import { corruptFiles,endedContaining,localEvents,outboxRows,pendingOutbox,sharedEnded,sharedEndedCount,sharedOpen,sharedRead } from './store.js';
 import { refreshSharedMemory } from './chain.js';
 import { adoptOpenShared } from './adopt.js';
 import { RESUME_STAYED,SETUP_LINES } from './wording.js';
@@ -403,9 +403,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
   const corrupt = listed.filter(entry => entry.record === null);
   const lines: string[] = [...notPickedUp];
   // Pending shared-memory pushes are named in the overview (BT32).
-  for (const row of outboxRows(repoRoot)) {
-    if (row.kind === 'chain' && row.state === 'pending') lines.push(`${row.bountyId} — shared bounty memory not pushed yet; it will be retried`);
-  }
+  for (const row of pendingOutbox(repoRoot, { kind: 'chain' })) lines.push(`${row.bountyId} — shared bounty memory not pushed yet; it will be retried`);
   // A shared-only bounty names its origin — the chain, not this machine.
   for (const entry of listed) {
     if (entry.record?.shared === true) lines.push(`${entry.record.id} — posted from another machine (shared bounty memory)`);

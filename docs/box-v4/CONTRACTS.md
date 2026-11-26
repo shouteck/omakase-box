@@ -2,7 +2,7 @@
 
 Written by the K30 cook on 19 October 2026, from the code — every claim below names the file and function that keeps it. The roadmap this contracts is PLAN.md's engineering table. Stages: `drafted → confirmed → waiting → posted → taken → answered → applied | rejected | withdrawn | undone` (`record.ts:58-60` `OpenStage`/`EndedStage`; `confirmed` is the retired pre-BT15 spelling, still loadable).
 
-A refusal is a `BountyRefused` (`errors.ts:5`) whose first argument is a stable reason name. Three constructors produce them: `throw new BountyRefused('name', …)`, the `invalid('name', …)` helper (`gh.ts:85`), and the ternaries in `gate.ts:56-58`, `settings.ts:195`, `snapshot.ts:112/118` and `retiredRoute` (`record.ts:744-749`). 134 distinct names exist; each appears under exactly one section below. Section order follows the journey.
+A refusal is a `BountyRefused` (`errors.ts:5`) whose first argument is a stable reason name. Three constructors produce them: `throw new BountyRefused('name', …)`, the `invalid('name', …)` helper (`gh.ts:85`), and the ternaries in `gate.ts:56-58`, `settings.ts:195`, `snapshot.ts:112/118` and `retiredRoute` (`record.ts:744-749`). The K30 audit found 134 distinct names, each under exactly one section below; later waves have added names, so the machine-checked surface record is the current complete list. Section order follows the journey.
 
 ## create
 
@@ -10,7 +10,7 @@ A refusal is a `BountyRefused` (`errors.ts:5`) whose first argument is a stable 
 
 **Commands and options.** `omakase-box create` (`cli/src/bounty.ts:143`, `create.ts:396` `createBounty`): `--task <file>` / `--task -` (stdin), `--why`, `--part-of`, `--resume`, retired spellings (`--to folder`, `--job`, `--checks`, `--reward`, folder delivery) refused by name. `planBounty`/`snapshot` build the pinned tree.
 
-**Inputs and outputs.** Reads the task text (file or stdin), the repository (tracked + untracked files via a temporary `GIT_INDEX_FILE`, `snapshot.ts`), the never-ship rules (`never-ship.ts:35` `BUILTIN_RULES` plus the owner's `.boxignore`/owner list). Writes a record at stage `drafted` into `.box/local/box.db` (`record.ts:647`, `store.ts`) and the instruction-block/OPEN surfaces (`render.ts` sync). No GitHub calls, no pushes, no chain ref.
+**Inputs and outputs.** Reads the task text (file or stdin), the repository (tracked + untracked files via a temporary `GIT_INDEX_FILE`, `snapshot.ts`), the never-ship rules (`never-ship.ts:35` `BUILTIN_RULES` plus the owner's `.boxignore`/owner list). Writes a record at stage `drafted` into the checkout's shared SQLite store at Git's `common/box/box.db` path (`record.ts:647`, `store.ts` `storePaths`) and the instruction-block/OPEN surfaces (`render.ts` sync). No GitHub calls, no pushes, no chain ref.
 
 **States.** none → `drafted`.
 
@@ -150,7 +150,7 @@ A refusal is a `BountyRefused` (`errors.ts:5`) whose first argument is a stable 
 
 **Commands and options.** Every command writes through `record.ts`/`store.ts`; the shared part travels as per-bounty Git event chains under `refs/box-bounty-records/<id>` (`chain.ts`; The old name `refs/box-bounty/<id>` (versions before 0.2.0) is never fetched, read, written or deleted since K73 (BT58). Why the name: Git resolves a short name to `refs/<name>` before `refs/heads/<name>`, so a record at `refs/box-bounty/<id>` answered `git fetch origin box-bounty/<id>`, the bounty branch's own name), explicitly fetched (`syncChains`) and imported into the shared table; `sharedRead` answers cross-machine reads.
 
-**Inputs and outputs.** Writes one event per stage transition (`record.ts` `transitionTo`, `events` append-only); the store is `.box/local/box.db` (node:sqlite WAL, `store.ts`) with `.box/bounties/*.json` import compatibility; chain events are `{event.json}` commits, validated on import (`chain.ts:89` `validEvent`).
+**Inputs and outputs.** Writes one event per stage transition (`record.ts` `transitionTo`, `events` append-only); the store is the SQLite database Git names for `common/box/box.db` (`store.ts` `storePaths`; normally `<git-common-dir>/common/box/box.db`, shared by every worktree) with `.box/bounties/*.json` import compatibility. `node:sqlite` is a release candidate from Node 24.15 and experimental on the tool's minimum, Node 22.13; the packaging tests on all three systems are the API-change guard. The store uses WAL outside known synced folders and `journal_mode=DELETE` inside them. A pre-BT96 `.box/local/box.db` moves once into the shared path; a later worktree's old store joins by bounty. Chain events are `{event.json}` commits, validated on import (`chain.ts:89` `validEvent`).
 
 **States.** All of them; `undone` is terminal (packaging card).
 
@@ -163,8 +163,12 @@ A refusal is a `BountyRefused` (`errors.ts:5`) whose first argument is a stable 
 - M6. An ordinary clone downloads no chain refs (`bt32.test.ts:84-86`).
 - M7. A corrupt or superseded record shape degrades to a named corrupt fact or migrates; a bad shared event is skipped (`record.ts` `asRecord`, `bt32.test.ts:192`).
 - M8. History is never rewritten — `events` appends (`record.ts` header).
+- M9. The store moves once, never destructively: preflight (`integrity_check` and payload parsing), WAL checkpoint, rename aside, `VACUUM INTO`, per-table count compare and an atomic install; the original is renamed `box.db.moved-<date>`, never deleted (`store.ts` `moveFirstStore`, `installStore`; `bt96.test.ts`). A link or non-directory in the shared path keeps the legacy store in use and names `local-store-path-blocked` (`ensureSharedFolder`).
+- M10. A later old store joins by bounty, never by merging duplicate histories: absent bounties copy with their events, outbox rows and only their own chain provenance keys; a bounty present in both stays shared, the other file is renamed, and owed kinds are named (`store.ts` `joinLegacyStore`).
+- M11. A chain ref write names the old tip it was built on; one mismatch is rebuilt on the tip actually read, and a second refuses `chain-changed` with nothing written (`chain.ts` `commitEvent`, `appendEvent`; `git.ts` `gitRefCompareAndSwap`).
+- M12. Sent outbox rows are never deleted; readers query pending rows through the `outbox_state` index rather than scanning settled history (`store.ts` `pendingOutbox`, schema migration; `bt96.test.ts`).
 
-**Refusals.** `adopt.ts`: `shared-record-mismatch`, `shared-record-disputed`, `shared-issue-closed`, `shared-only` (it ended on another machine); `owner-permission-needed` (`commands.ts`); `unknown-bounty`, `record-corrupt`, `local-store-path-blocked` (`store.ts:92`).
+**Refusals.** `adopt.ts`: `shared-record-mismatch`, `shared-record-disputed`, `shared-issue-closed`, `shared-only` (it ended on another machine); `owner-permission-needed` (`commands.ts`); `unknown-bounty`, `record-corrupt`, `local-store-path-blocked` (`store.ts:92`); `chain-changed` (`chain.ts:181`). The move's named non-throwing refusals are `local-store-corrupt` and `local-store-move-deferred`: the command keeps using the old store and no shared store is installed (`store.ts` `moveFirstStore`).
 
 **Scale target.** 100,000 records — met locally (PLAN.md); `kitchen/memory/storage/benchmark.mjs` (K27).
 
@@ -223,4 +227,4 @@ A refusal is a `BountyRefused` (`errors.ts:5`) whose first argument is a stable 
 
 ## Refusals fitting no single stage
 
-None: all 133 names map to exactly one section above. Verified mechanically (see `kitchen/reviews/K30-contracts.md`).
+None was unmapped at the K30 audit (see `kitchen/reviews/K30-contracts.md`); `chain-changed`, added by BT96, belongs to memory above.

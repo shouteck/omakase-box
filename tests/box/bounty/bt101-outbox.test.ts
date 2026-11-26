@@ -6,12 +6,12 @@ import { DatabaseSync } from 'node:sqlite';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { allowRepository, appendEvent, closeBounty, denyRepository, loadRecord, postBounty, renderHistory } from '../../../packages/box-bounty/index.js';
-import { closeStores, localEvents, metaGet, outboxRows } from '../../../packages/box-bounty/store.js';
+import { closeStores, localEvents, metaGet, outboxRows, storeDbPath } from '../../../packages/box-bounty/store.js';
 import { reconcile } from '../../../packages/box-bounty/reconcile.js';
 import { fixture, postedFixture, refused } from './github-fixture.js';
 import { git } from './support.js';
 
-const db = (repo: string) => { closeStores(); return new DatabaseSync(join(repo, '.box', 'local', 'box.db')); };
+const db = (repo: string) => { closeStores(); return new DatabaseSync(storeDbPath(repo)); };
 const row = (repo: string, key: string) => outboxRows(repo).find(entry => entry.key === key);
 const settled = (repo: string, id: string, kind: 'sent' | 'refused', key: string) =>
   localEvents(repo, id).filter(event => event.kind === kind && (JSON.parse(event.json) as { key?: string }).key === key);

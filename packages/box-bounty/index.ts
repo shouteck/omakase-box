@@ -110,7 +110,7 @@ export type { HookHost, HookRun, HookSlot } from './hook.js';
 export { limitGitHubCalls } from './gh.js';
 export { CHAIN_NS, CHAIN_REMOTE_NS, chainRef, syncChains, observeChains, refreshSharedMemory, sharePosted, noteSolution, shareMerged, noteMerged, shareClosed, sharePaid, appendEvent, pushChain } from './chain.js';
 export type { PushResult } from './chain.js';
-export { sharedOpen, sharedEnded, sharedRead, sharedSearch, metaGet, metaSet, metaKeys, owe, outboxRows } from './store.js';
+export { sharedOpen, sharedEnded, sharedRead, sharedSearch, metaGet, metaSet, metaKeys, owe, outboxRows, pendingOutbox } from './store.js';
 export type { SharedRow } from './store.js';
 // BT101 stage 3: a read only observes.
 export { asRead, readOnlyProcess } from './reconcile.js';

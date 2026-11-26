@@ -455,7 +455,7 @@ export function gitIndexWrite(repo: string, index: string, changes: readonly Ind
 // One `update-ref --stdin` applies every listed ref update or delete — the
 // batch form of per-ref `update-ref` / `update-ref -d` calls. A delete of a
 // missing ref is a no-op, matching `update-ref -d` on an absent name.
-export type RefWrite = { readonly delete: string } | { readonly update: string; readonly sha: string };
+export type RefWrite = { readonly delete: string } | { readonly update: string; readonly sha: string; readonly old?: string };
 
 // gitStdin's outcome, stdout untrimmed: for -z output whose first or last
 // name may begin or end with whitespace.
@@ -489,7 +489,7 @@ export function gitStdin(repo: string, args: readonly string[], input: string | 
 
 export function gitRefsWrite(repo: string, writes: readonly RefWrite[]): void {
   if (writes.length === 0) return;
-  const input = writes.map(write => 'delete' in write ? `delete ${write.delete}` : `update ${write.update} ${write.sha}`).join('\n') + '\n';
+  const input = writes.map(write => 'delete' in write ? `delete ${write.delete}` : `update ${write.update} ${write.sha}${write.old === undefined ? '' : ` ${write.old}`}`).join('\n') + '\n';
   const result = spawnSync(gitProgram(), [...safeArgs(repo, ['update-ref'], 'foreign'), 'update-ref', '--stdin'], {
     input,
     env: gitEnvironment(),
@@ -499,6 +499,22 @@ export function gitRefsWrite(repo: string, writes: readonly RefWrite[]): void {
   if (result.status !== 0 || result.error !== undefined) {
     const detail = (result.stderr?.toString() || result.error?.message || `exit ${result.status}`).trim();
     throw new GitFailed(`git update-ref --stdin failed in ${repo}: ${detail}`);
+  }
+}
+
+/** Move one ref only when it still holds `expectedOld` (null: it must not exist). False means the ref moved;
+    every other update-ref failure is thrown unchanged. The all-zero expected value is derived from the new
+    object id's length, so SHA-1 and SHA-256 repositories both express "create only" exactly. */
+export function gitRefCompareAndSwap(repo: string, ref: string, sha: string, expectedOld: string | null): boolean {
+  const old = expectedOld ?? '0'.repeat(sha.length);
+  try {
+    gitRefsWrite(repo, [{ update: ref, sha, old }]);
+    return true;
+  } catch (error) {
+    const current = gitOutcome(repo, ['rev-parse', '--verify', '-q', ref]);
+    const value = current.status === 0 && new RegExp(`^[a-f\\d]{${sha.length}}$`).test(current.stdout.trim()) ? current.stdout.trim() : null;
+    if (value !== expectedOld) return false;
+    throw error;
   }
 }
 

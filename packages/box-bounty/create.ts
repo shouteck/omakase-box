@@ -16,6 +16,7 @@ import { readDecision, repoReward, requireRepository } from './settings.js';
 import { readMany } from './read-many.js';
 import { createSnapshot } from './snapshot.js';
 import type { SnapshotFile, SnapshotRemoval } from './snapshot.js';
+import { rememberStorePath } from './store.js';
 import { packageVersion } from '../box-cli/src/version.js';
 
 // BT72: the label stored on every new record (never published): the real package name and version, from the one place the
@@ -123,12 +124,19 @@ export function deriveTitle(raw: string): { readonly title: string; readonly sho
 
 export function resolveRepoRoot(repoPath: string, command?: string): string {
   const repo = resolve(repoPath);
-  const top = gitOutcome(repo, ['rev-parse', '--show-toplevel']);
-  if (top.status !== 0 || top.stdout.trim() === '') {
+  // One rev-parse answers the checkout root and the shared store path. Every CLI command already pays the first;
+  // remembering the second keeps BT96 from adding one Git start to each one-shot command.
+  const top = gitOutcome(repo, ['rev-parse', '--show-toplevel', '--git-path', 'common/box/box.db']);
+  const lines = top.stdout.trimEnd().split('\n');
+  const topmost = lines[0] ?? '';
+  if (top.status !== 0 || topmost === '') {
     const verb = command !== undefined ? `omakase-box ${command}` : 'omakase-box';
     throw new BountyRefused('not-a-repository', `${repo} is not inside a Git checkout — ${verb} needs a repository to work in; next: run ${verb} inside a Git checkout`);
   }
-  return canonicalFolder(top.stdout.trim());
+  const root = canonicalFolder(topmost);
+  const shared = lines[1] ?? '';
+  if (shared !== '') rememberStorePath(root, isAbsolute(shared) ? shared : resolve(repo, shared));
+  return root;
 }
 
 export function planBounty(options: CreateOptions): BountyPlan {
